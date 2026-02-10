@@ -34,7 +34,7 @@ cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent
 The setup script provides several options. For a complete setup (recommended for first-time users):
 
 ```bash
-source setup.sh setup
+source setup.sh --setup
 ```
 
 ### 3. Alternative Setup Options
@@ -42,30 +42,17 @@ source setup.sh setup
 For more granular control, the setup script provides individual commands:
 
 ```bash
-# Set environment variables only
-source setup.sh setenv
 
 # Start services only (after setup)
-source setup.sh up
+source setup.sh --run
 
 # Stop services
-source setup.sh down
+source setup.sh --stop
 
 # Restart services
-source setup.sh restart
-
-# Check service status
-source setup.sh status
-
+source setup.sh --restart
 ```
 
-### 4. Verify
-
-Check Smart Route Planning Agent health:
-
-```bash
-curl -s -X GET http://localhost:8082/health
-```
 
 ## Manual Setup (Advanced Users)
 
@@ -73,7 +60,7 @@ For advanced users who need more control over the configuration, you can manuall
 
 ### Manual Environment Configuration
 
-If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details. 
+If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details.
 
 ### Manual Docker Compose Deployment
 

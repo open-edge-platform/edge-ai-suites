@@ -30,17 +30,19 @@ Prepare the target system following the [official documentation](https://docs.op
 
 ### Build
 
-To build the ITS Planner packages, export `ROS_DISTRO` env variable to desired platform and run `make build` command:
+To build the ITS Planner packages, set `ROS_DISTRO` to one of the supported ROS 2 distributions (`humble` or `jazzy`) and run `make build`:
 
 ```bash
 ROS_DISTRO=humble make build
+# or
+ROS_DISTRO=jazzy make build
 ```
 
-This will build the following packages:
-- `ros-humble-its-planner`
-- `ros-humble-its-relocalization`
-- `ros-humble-its-send-localization`
-- `ros-humble-nav2-bringup-collab`
+This will build the following packages (using the selected ROS distribution prefix):
+- `ros-${ROS_DISTRO}-its-planner`
+- `ros-${ROS_DISTRO}-its-relocalization`
+- `ros-${ROS_DISTRO}-its-send-localization`
+- `ros-${ROS_DISTRO}-nav2-bringup-collab`
 
 The built packages will be available in the root directory.
 
@@ -52,23 +54,23 @@ make clean
 
 ### Install
 
-If Ubuntu 22.04 with Humble is used, then run:
+If Ubuntu 22.04 with Humble or Ubuntu 24.04 with Jazzy is used, source the matching ROS setup:
 
 ```bash
-source /opt/ros/humble/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash   # ROS_DISTRO=humble or jazzy
 ```
 
-Install the ``ros-humble-its-planner`` Debian package from the Intel Robotics AI Suite APT repo:
+Install the ``ros-${ROS_DISTRO}-its-planner`` Debian package from the Intel Robotics AI Suite APT repo:
 
 ```bash
-sudo apt install ros-humble-its-planner
+sudo apt install ros-${ROS_DISTRO}-its-planner
 ```
 
 Or install the locally built Debian package:
 
 ```bash
 sudo apt update
-sudo apt install ./ros-humble-its-planner_*_amd64.deb
+sudo apt install ./ros-${ROS_DISTRO}-its-planner_*_amd64.deb
 ```
 
 ### Development
@@ -107,7 +109,7 @@ source-package       Create source package tarball
 
 ### Configuration Parameters
 
-To use this plugin, the following parameters need to be added to the `nav2_params.yaml`:
+To use this plugin, add the following parameters to the distro-specific nav2 params file (e.g., `nav2_params_${ROS_DISTRO}.yaml`):
 
 ```yaml
 planner_server:
@@ -116,14 +118,14 @@ planner_server:
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "its_planner/ITSPlanner"
+      plugin: "its_planner::ITSPlanner"
       interpolation_resolution: 0.05
       catmull_spline: False
       smoothing_window: 15
       buffer_size: 10
       build_road_map_once: True
       min_samples: 250
-      roadmap: "PROBABLISTIC"
+      roadmap: "PROBABILISTIC"
       w: 32
       h: 32
       n: 2
@@ -136,31 +138,43 @@ planner_server:
 - `buffer_size`: during the roadmap generation, the samples are generated away from obstacles. The buffer size dictates how far the roadmap samples should be away from obstacles
 - `build_road_map_once`: If true, the roadmap will be loaded from the saved file, otherwise a new roadmap will be generated
 - `min_samples`: minimum number of samples required to generate the roadmap
-- `roadmap`: can be either `PROBABLISTIC` or `DETERMINISTIC`
+- `roadmap`: can be either `PROBABILISTIC` or `DETERMINISTIC`
 - `w`: the width of the window for intelligent sampling
 - `h`: the height of the window for intelligent sampling
 - `n`: the minimum number of samples that is required in an area defined by `w` and `h`
 
 ### Running ITS Planner
 
-Run the following script to set environment variables:
+Run the following script to set environment variables (select your distro):
 
 ```bash
-source /opt/ros/humble/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
+source /opt/ros/$ROS_DISTRO/setup.bash        # ROS_DISTRO=humble or jazzy
+export TURTLEBOT3_MODEL=waffle
+
+# Set Gazebo model path (variable name differs between distributions)
+if [ "$ROS_DISTRO" = "jazzy" ]; then
+    export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+else
+    export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+fi
 ```
 
 To launch the default ITS planner which is based on differential drive robot, run:
 
 ```bash
-ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
+ros2 launch nav2_bringup tb3_simulation_launch.py \
+  headless:=False \
+  params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_${ROS_DISTRO}.yaml \
+  default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
 ```
 
 ITS Planner also supports Ackermann steering; to launch the Ackermann ITS planner run:
 
 ```bash
-ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params_dubins.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
+ros2 launch nav2_bringup tb3_simulation_launch.py \
+  headless:=False \
+  params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_dubins_${ROS_DISTRO}.yaml \
+  default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
 ```
 
 ### Navigation Usage
@@ -179,7 +193,7 @@ For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation u
 
 This plugin also supports a global path planner based on ITS for Ackermann steering vehicles, which maneuver with car-like controls and a limited turning radius. This version of the planner is based on the concept of [Dubins Paths](https://en.wikipedia.org/wiki/Dubins_path), and uses an adapted version of [AndrewWalker's Dubins Curves implementation](https://github.com/AndrewWalker/Dubins-Curves).
 
-The Ackermann steering version of this plugin utilizes some additional parameters which can be found in `nav2_params_dubins.yaml`:
+The Ackermann steering version of this plugin utilizes some additional parameters which can be found in `nav2_params_dubins_${ROS_DISTRO}.yaml`:
 
 <!-- markdownlint-disable MD033 -->
 <pre><code>planner_server:
@@ -188,14 +202,14 @@ The Ackermann steering version of this plugin utilizes some additional parameter
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "its_planner/ITSPlanner"
+      plugin: "its_planner::ITSPlanner"
       interpolation_resolution: 0.05
       catmull_spline: False
       smoothing_window: 15
       buffer_size: 10
       build_road_map_once: True
       min_samples: 250
-      roadmap: "PROBABLISTIC"
+      roadmap: "PROBABILISTIC"
       w: 32
       h: 32
       n: 2

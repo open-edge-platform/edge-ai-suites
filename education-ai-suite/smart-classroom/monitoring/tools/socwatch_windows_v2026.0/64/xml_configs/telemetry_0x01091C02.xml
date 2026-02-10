@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_soc_LTR_STS_C2P2_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL S0C LTR STS C2P2 PCD-S</TELEM:description>
+	<TELEM:uniqueid>0x01091C02</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x23a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_PG5_PMA0" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PG5_PMA0">
+			<TELC:description>PG5_PMA0 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_TCSS" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_TCSS">
+			<TELC:description>TCSS Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x23a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_PG5_PMA1" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PG5_PMA1">
+			<TELC:description>PG5_PMA1 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_PCH_PMC" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PCH_PMC">
+			<TELC:description>PCH_PMC Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x23b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_DG5_PMA0" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_DG5_PMA0">
+			<TELC:description>DG5_PMA0 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_1" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_1">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>C2P2_LTR_STS_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

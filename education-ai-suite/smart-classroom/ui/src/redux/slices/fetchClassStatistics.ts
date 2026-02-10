@@ -16,6 +16,8 @@ interface ClassStatistics {
 interface ClassStatisticsState {
   statistics: ClassStatistics;
   lastUpdated: number | null;
+  isStreaming: boolean;
+  error: string | null;
 }
 
 const initialState: ClassStatisticsState = {
@@ -26,6 +28,8 @@ const initialState: ClassStatisticsState = {
     stand_reid: [],
   },
   lastUpdated: null,
+  isStreaming: false,
+  error: null,
 };
 
 const classStatisticsSlice = createSlice({
@@ -35,13 +39,33 @@ const classStatisticsSlice = createSlice({
     setClassStatistics: (state, action: PayloadAction<ClassStatistics>) => {
       state.statistics = action.payload;
       state.lastUpdated = Date.now();
+      state.error = null;
+    },
+    setStreamingStatus: (state, action: PayloadAction<boolean>) => {
+      state.isStreaming = action.payload;
+    },
+    setError: (state, action: PayloadAction<string>) => {
+      state.error = action.payload;
+      state.isStreaming = false;
+    },
+    clearError: (state) => {
+      state.error = null;
     },
     clearClassStatistics: (state) => {
       state.statistics = initialState.statistics;
       state.lastUpdated = null;
+      state.isStreaming = false;
+      state.error = null;
     },
   },
 });
 
-export const { setClassStatistics, clearClassStatistics } = classStatisticsSlice.actions;
+export const { 
+  setClassStatistics, 
+  setStreamingStatus, 
+  setError, 
+  clearError, 
+  clearClassStatistics 
+} = classStatisticsSlice.actions;
+
 export default classStatisticsSlice.reducer;

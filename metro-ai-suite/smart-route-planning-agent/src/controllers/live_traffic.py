@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import requests
 from typing import Optional, List
 
@@ -66,22 +69,22 @@ class LiveTrafficController(RouteStatusInterface):
                         logger.debug(
                             f"Sending request to Intersection API: {host}{api_endpoint}"
                         )
-                        response = requests.get(f"{host}{api_endpoint}")
-                        response.raise_for_status()  # Raise an exception for HTTP errors
+                        http_response = requests.get(f"{host}{api_endpoint}")
+                        http_response.raise_for_status()
                         # Parse the response
-                        api_responses.append(response.json())
+                        api_responses.append(http_response.json())
                     except requests.RequestException as e:
                         logger.error(
                             f"Error fetching data from intersection at {host}: {e}"
                         )
 
             # List to store the final response as list of LiveTrafficData
-            live_traffic_intersection_records = []
+            live_traffic_intersection_records: list[LiveTrafficData] = []
 
             # Look for intersections that match our current coordinates
-            for response in api_responses:
+            for response_data in api_responses:
                 # Check if intersection data is present
-                intersection_data = response.get("data", {})
+                intersection_data = response_data.get("data", {})
                 if not intersection_data:
                     continue
 
@@ -98,10 +101,10 @@ class LiveTrafficController(RouteStatusInterface):
                 traffic_density = intersection_data.get("total_density", 0)
 
                 # Get weather and incident status if available
-                weather_status = response.get("weather_data", {}).get(
+                weather_status = response_data.get("weather_data", {}).get(
                     "short_forecast", WeatherStatus.CLEAR
                 )
-                incident_status = response.get("incident", {}).get(
+                incident_status = response_data.get("incident", {}).get(
                     "incident_type", IncidentStatus.CLEAR
                 )
 

@@ -1,7 +1,10 @@
 
 # Get Started
 
-Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video feeds, identifying individuals lingering in designated areas. It provides a modular architecture that integrates seamlessly with various input sources and leverages AI models to deliver accurate and actionable insights.
+Loitering Detection leverages advanced AI algorithms to monitor and analyze real-time video
+feeds, identifying individuals lingering in designated areas. It provides a modular
+architecture that integrates seamlessly with various input sources and leverages AI models to
+deliver accurate and actionable insights.
 
 By following this guide, you will learn how to:
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
@@ -9,27 +12,12 @@ By following this guide, you will learn how to:
 - **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
-- Verify that your system meets the [minimum requirements](./system-requirements.md).
+- Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
 - Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
-
-
-<!--
-**Setup and First Use**: Include installation instructions, basic operation, and initial validation.
--->
 ## Set up and first use
-
-<!--
-**User Story 1**: Setting Up the Application
-- **As a developer**, I want to set up the application in my environment, so that I can start exploring its functionality.
-
-**Acceptance Criteria**:
-1. Step-by-step instructions for downloading and installing the application.
-2. Verification steps to ensure successful setup.
-3. Troubleshooting tips for common installation issues.
--->
 
 1. **Clone the Repository**:
    - Run:
@@ -43,7 +31,11 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      ```bash
      ./install.sh loitering-detection
      ```
-     Note: For environments requiring a specific host IP address (such as when using Edge Manageability Toolkit or deploying across different network interfaces), you can explicitly specify the IP address (Replace `<HOST_IP>` with your target IP address.): `./install.sh loitering-detection <HOST_IP>`
+
+> **Note:** For environments requiring a specific host IP address (such as when using Edge
+> Manageability Toolkit or deploying across different network interfaces), you can explicitly
+> specify the IP address: `./install.sh loitering-detection <HOST_IP>` (Replace `<HOST_IP>` with
+> your target IP address.)
 
 ## Run the application
 
@@ -89,7 +81,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
      </summary>
 
      - To stop the pipelines without waiting for video streams to finish replay:
-     > NOTE: This will stop all the pipelines and the streams. DO NOT run this if you want to see loitering detection
+     > **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection
        ```bash
        ./sample_stop.sh
        ```
@@ -104,30 +96,29 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
    - Check under the Dashboards section for the application-specific preloaded dashboard.
    - **Expected Results**: The dashboard displays real-time video streams with AI overlays and detection metrics.
 
-
 ## **Access the Application and Components** ##
 
 ### **Nginx Dashboard** ###
-- **URL**: [https://localhost](https://localhost)
+- **URL**: `https://localhost`
 
 ### **Grafana UI** ###
-- **URL**: [https://localhost/grafana](https://localhost/grafana)
+- **URL**: `https://localhost/grafana`
 - **Log in with credentials**:
     - **Username**: `admin`
     - **Password**: `admin` (You will be prompted to change it on first login.)
 - In Grafana UI, the dashboard displays detected people and cars
-      ![Grafana Dashboard](_images/grafana.png)
+      ![Grafana Dashboard](./_assets/grafana.png)
 
 ### **NodeRED UI** ###
-- **URL**: [https://localhost/nodered/](https://localhost/nodered/)
+- **URL**: `https://localhost/nodered/`
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: [https://localhost/api/pipelines](https://localhost/api/pipelines)
+- **REST API**: `https://localhost/api/pipelines`
   - **Check Pipeline Status**:
     ```bash
     curl -k https://localhost/api/pipelines
     ```
-- **WebRTC**: [https://localhost/mediamtx/object_tracking_1/](https://localhost/mediamtx/object_tracking_1/)
+- **WebRTC**: `https://localhost/mediamtx/object_tracking_1/`
 
 ## **Stop the Application**:
 
@@ -136,14 +127,17 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
   docker compose down
   ```
 
-## Other Deployment Option
+## Other Deployment Options
 
 Choose one of the following methods to deploy the Loitering Detection Sample Application:
 
-- **[Deploy Using Helm](./how-to-deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
+- [Deploy Using Helm](./get-started/how-to-deploy-with-helm.md): Use Helm to deploy the
+application to a Kubernetes cluster for scalable and production-ready deployments.
+- [Deploy with Edge Orchestrator](./get-started/how-to-deploy-with-edge-orchestrator.md): Use
+a simplified edge application deployment process.
 
 ## Next Steps
-- [How to Customize the Application](how-to-customize-application.md)
+- [How to Customize the Application](./how-to-customize-application.md)
 
 ## Troubleshooting
 
@@ -167,7 +161,7 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
     - Update the URL from `http://localhost:8083` to `http://host-ip:8083`.
 
 4. **Failed Grafana Deployment**
-    - If unable to deploy grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the ~/.docker/config.json as shown below:
+    - If unable to deploy the Grafana container successfully due to fail to GET "https://grafana.com/api/plugins/yesoreyeram-infinity-datasource/versions": context deadline exceeded, please ensure the proxy is configured in the `~/.docker/config.json` as shown below:
 
       ```bash
               "proxies": {
@@ -189,3 +183,14 @@ Choose one of the following methods to deploy the Loitering Detection Sample App
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+get-started/how-to-deploy-with-helm.md
+get-started/how-to-deploy-with-edge-orchestrator.md
+
+:::
+hide_directive-->

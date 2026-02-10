@@ -1870,7 +1870,7 @@ requires-dist = [
     { name = "isort" },
     { name = "langgraph", specifier = "==1.0.7" },
     { name = "mypy" },
-    { name = "numpy" },
+    { name = "numpy", specifier = ">1.24.3" },
     { name = "pandas" },
     { name = "pillow", specifier = ">=10.4.0" },
     { name = "pydantic" },

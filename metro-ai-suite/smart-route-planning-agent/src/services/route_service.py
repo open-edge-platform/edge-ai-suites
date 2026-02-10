@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from typing import Any, Dict, List, Optional, Tuple
 
 from agents import RoutePlanner, RoutePlannerState
@@ -11,7 +14,7 @@ from config import (
 from utils.gpx_parser import MapDataParser
 from utils.logging_config import get_logger
 from utils.map_creator import MapCreator
-from schema import GeoCoordinates, LiveTrafficData
+from schema import LiveTrafficData
 
 logger = get_logger(__name__)
 
@@ -31,7 +34,6 @@ class RouteService:
         self.alternate_route: Optional[Dict] = None
         self.alternate_route_names: List[str] = []  # Keeps track of all alt route names
         self.new_alt_route_idx: int = 0  # Needed to identify new alt route and color it differently than others in list
-        self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {}
         self.alt_route_trackpoints: list[list] = []
         self.route_state: Optional[RoutePlannerState] = None
 
@@ -40,16 +42,16 @@ class RouteService:
 
     def _load_direct_shortest_route(
         self, source: str, destination: str
-    ) -> MapDataParser:
+    ) -> MapDataParser | None:
         """Load the shortest trivial route data using the RoutePlanner agent at startup"""
 
         try:
             # Running the agent for first time - finds direct trivial route.
-            self.route_state: RoutePlannerState = self.route_planner.plan_route(
-                source, destination
-            )
+            self.route_state = self.route_planner.plan_route(source, destination)
 
-            direct_route_name = self.route_state["direct_route"]["route_name"]
+            direct_route_name = self.route_state.get("direct_route", {}).get(
+                "route_name", ""
+            )
             map_data_parser = MapDataParser(GPX_DIR / direct_route_name)
             self.main_route = map_data_parser.get_route_data()
 
@@ -66,8 +68,9 @@ class RouteService:
         except Exception as e:
             logger.error(f"Error loading direct route file: {e}")
             self.main_route = None
+            return None
 
-    def _setup_locations(self, map_data_parser: MapDataParser) -> None:
+    def _setup_locations(self, map_data_parser: MapDataParser | None) -> None:
         """Setup location lists based on GPX data if available"""
         if map_data_parser:
             start_location, end_location = map_data_parser.get_start_end_locations()
@@ -86,7 +89,7 @@ class RouteService:
 
         try:
             # Pass the previous saved route_state and get the updated state as result
-            self.route_state: RoutePlannerState = self.route_planner.plan_route(
+            self.route_state = self.route_planner.plan_route(
                 source, destination, self.route_state
             )
 
@@ -94,7 +97,7 @@ class RouteService:
 
             # Instantiate object for alternate route based on optimal route name recieved from route_state
             alternate_route_name = self.route_state.get("optimal_route", {}).get(
-                "route_name"
+                "route_name", ""
             )
             if alternate_route_name:
                 # Push the new route name to list if not already present. Get index of new route anyway.
@@ -109,28 +112,6 @@ class RouteService:
                 temp_parser = MapDataParser(GPX_DIR / alternate_route_name)
                 self.alternate_route = temp_parser.get_route_data()
 
-            # Instantitate objects for blocked routes based on blocked route names recieved from route_state
-            blocked_route_names: list[str] = self.route_state.get("blocked_routes", [])
-            blocked_route_invalid_names: list[str] = self.route_state.get("blocked_routes_invalid", [])
-
-            self.blocked_routes: Dict[str, List[Dict[str, Any]]] = {"valid": [], "invalid": []}
-
-            # Update valid blocked routes. Valid because user set correct weather/incident data to block it.
-            for blocked_route in blocked_route_names:
-                logger.debug(
-                    f"Route blocked due to issues at intersection: {blocked_route}"
-                )
-                temp_parser = MapDataParser(GPX_DIR / blocked_route)
-                self.blocked_routes["valid"].append(temp_parser.get_route_data())
-
-            # Update invalid blocked routes. Invalid because user set incorrect weather/incident data to block it.
-            for blocked_route in blocked_route_invalid_names:
-                logger.debug(
-                    f"Route blocked due to incorrect weather/incident setting by user at intersection: {blocked_route}"
-                )
-                temp_parser = MapDataParser(GPX_DIR / blocked_route)
-                self.blocked_routes["invalid"].append(temp_parser.get_route_data())
-
             logger.info(
                 f"Successfully loaded alternate route file: {alternate_route_name}"
             )
@@ -142,8 +123,6 @@ class RouteService:
                     f"Found {len(self.alternate_route['tracks'][0]['track_points'])} track points"
                 )
         except Exception as e:
-            import traceback
-            traceback.print_exc()
             logger.error(f"Error loading alternate route : {e}")
             self.alternate_route = None
 
@@ -205,7 +184,10 @@ class RouteService:
         else:
             if event_name := optimal_route_data.get("event_name"):
                 congestion_level = optimal_route_data.get("traffic_history")
-                route_issue = f"planned event '{event_name}' with expected {congestion_level.value} traffic congestion on the route."
+                if congestion_level is not None:
+                    route_issue = f"planned event '{event_name}' with expected {congestion_level.value} traffic congestion on the route."
+                else:
+                    route_issue = f"planned event '{event_name}' on the route."
             elif congestion_level := optimal_route_data.get("traffic_history"):
                 route_issue = f"'{congestion_level.value}' historical traffic trends on the route."
             elif weather_condition := optimal_route_data.get("weather_status"):
@@ -219,10 +201,9 @@ class RouteService:
 
                     route_issue = f"high traffic density of {live_traffic.get('traffic_density')} at {live_traffic.get('intersection_name')}"
 
-                    if live_traffic.get("traffic_description"):
-                        route_issue += (
-                            f" - {live_traffic.get('traffic_description')[:900]} ..."
-                        )
+                    traffic_description = live_traffic.get("traffic_description")
+                    if traffic_description:
+                        route_issue += f" - {traffic_description[:900]} ..."
         return route_issue
 
     def _get_next_data_source(self) -> str:
@@ -231,9 +212,11 @@ class RouteService:
         This information is used to display what conditions agent is going to analyze next.
         """
 
-        if self.route_state.get("static_optimizers"):
+        if self.route_state and self.route_state.get("static_optimizers"):
             # If any static optimizer is available, it will be used as next data source to optimize route
-            optimizer: StaticOptimizerName = self.route_state["static_optimizers"][-1]
+            optimizer: StaticOptimizerName = self.route_state.get(
+                "static_optimizers", []
+            )[-1]
             # Get description respective to the StaticOptimizerName
             return optimizer.get_description()
         else:
@@ -249,10 +232,10 @@ class RouteService:
         )
 
     def create_direct_route_map(
-        self, start_location: str, end_location: str, game_data: Optional[dict] = None
+        self, start_location: str, end_location: str
     ) -> tuple[str, float, str]:
         """Create initial map showing only the main route before AI analysis"""
-        map_data_parser: MapDataParser = self._load_direct_shortest_route(
+        map_data_parser: MapDataParser | None = self._load_direct_shortest_route(
             start_location, end_location
         )
 
@@ -261,16 +244,16 @@ class RouteService:
 
         # Get the next data source to be used for route optimization and current route map
         next_data_source = self._get_next_data_source()
-        direct_route_map = self.create_route_map(
-            start_location, end_location, game_data=game_data
-        )
+        direct_route_map = self.create_route_map(start_location, end_location)
         distance = (
-            self.route_state["optimal_route"]["distance"] if self.route_state else 0.0
+            self.route_state.get("optimal_route", {}).get("distance", 0.0)
+            if self.route_state
+            else 0.0
         )
         return next_data_source, distance, direct_route_map
 
     def create_alternate_route_map(
-        self, start_location: str, end_location: str, game_data: Optional[dict] = None
+        self, start_location: str, end_location: str
     ) -> tuple[str, str, float, bool, str]:
         """Create map showing alternative route"""
 
@@ -283,9 +266,11 @@ class RouteService:
         next_data_source = self._get_next_data_source()
 
         # Get intersection images and lat and long for route incidents (if any) from live traffic data
-        incident_location: Optional[GeoCoordinates] = None
+        incident_location: Optional[dict[str, Any]] = None
         # intersection_images: Optional[dict[str, str]] = None
-        if live_traffic := self.route_state.get("live_traffic", {}):
+        if self.route_state and (
+            live_traffic := self.route_state.get("live_traffic", {})
+        ):
             # intersection_images = live_traffic.get("intersection_images")
             incident_location = {
                 "name": live_traffic.get("intersection_name"),
@@ -293,14 +278,22 @@ class RouteService:
             }
 
         # Get the complete live traffic data for all intersections
-        all_routes: List[LiveTrafficData] = self.route_state.get("all_routes_data", [])
+        all_routes: List[LiveTrafficData] = (
+            self.route_state.get("all_routes_data", []) if self.route_state else []
+        )
 
         # Create alternate route map for the alternate route
         alternate_map = self.create_route_map(
-            start_location, end_location, incident_location, game_data, all_routes
+            start_location, end_location, incident_location, all_routes
         )
-        distance = self.route_state.get("optimal_route", {}).get("distance", 0.0)
-        is_sub_optimal = self.route_state.get("is_sub_optimal", False)
+        distance = (
+            self.route_state.get("optimal_route", {}).get("distance", 0.0)
+            if self.route_state
+            else 0.0
+        )
+        is_sub_optimal = (
+            self.route_state.get("is_sub_optimal", False) if self.route_state else False
+        )
 
         return (
             next_data_source,
@@ -315,7 +308,6 @@ class RouteService:
         start_location: str,
         end_location: str,
         incident_location: Optional[dict[str, Any]] = None,
-        game_data: Optional[dict] = None,
         all_routes: Optional[List[LiveTrafficData]] = None,
     ) -> str:
         """Create a complete route map with all routes and markers"""
@@ -360,22 +352,6 @@ class RouteService:
             f"length of alt_route_trackpoints: {len(self.alt_route_trackpoints)}"
         )
 
-        blocked_routes_trackpoints_valid: list[list] = []
-        # Load valid blocked routes, if any (blocked by setting correct weather/incident data). To be shown in red. 
-        if self.route_state and (valid_blocked_routes := self.blocked_routes.get("valid")):
-            for blocked_route in valid_blocked_routes:
-                blocked_routes_trackpoints_valid.append(
-                    self._get_route_trackpoints(blocked_route)
-                )
-
-        blocked_routes_trackpoints_invalid: list[list] = []
-        # Load invalid blocked routes, if any (blocked by setting incorrect weather/incident data). To be shown in yellow.
-        if self.route_state and (invalid_blocked_routes := self.blocked_routes.get("invalid")):
-            for blocked_route in invalid_blocked_routes:
-                blocked_routes_trackpoints_invalid.append(
-                    self._get_route_trackpoints(blocked_route)
-                )
-
         # Calculate map center and zoom
         all_points = main_route_trackpoints[:]
         if self.alt_route_trackpoints:
@@ -416,24 +392,6 @@ class RouteService:
                 f"Direct Shortest Route from {start_location} to {end_location}",
             )
 
-        # Paint the valid blocked routes in red (valid because user set correct weather/incident data to block it)
-        for blocked_route_trackpoint in blocked_routes_trackpoints_valid:
-            self.map_creator.add_route_line(
-                map_obj,
-                blocked_route_trackpoint,
-                MAP_COLORS["blocked_routes_valid"],
-                f"Correctly Blocked Route from {start_location} to {end_location}",
-            )
-
-        # Paint the invalid blocked routes in yellow (invalid because user set incorrect weather/incident data to block it)
-        for blocked_route_trackpoint in blocked_routes_trackpoints_invalid:
-            self.map_creator.add_route_line(
-                map_obj,
-                blocked_route_trackpoint,
-                MAP_COLORS["blocked_routes_invalid"],
-                f"Incorrectly Blocked Route from {start_location} to {end_location}",
-            )
-
         # Add location markers
         self.map_creator.add_location_markers(
             map_obj, start_location, end_location, start_coords, end_coords
@@ -441,11 +399,9 @@ class RouteService:
 
         # Add intersection markers with incident location (location of high traffic congestion) if available
         if all_routes or incident_location:
-            self.map_creator.add_intersection_marker(map_obj, incident_location, all_routes)
-
-        # Add game mode markers if game data provided
-        if game_data:
-            self.map_creator.add_game_mode_markers(map_obj, game_data)
+            self.map_creator.add_intersection_marker(
+                map_obj, incident_location, all_routes
+            )
 
         # Add waypoint markers for longer routes using trackpoints
         if main_route_trackpoints and len(main_route_trackpoints) > 10:
