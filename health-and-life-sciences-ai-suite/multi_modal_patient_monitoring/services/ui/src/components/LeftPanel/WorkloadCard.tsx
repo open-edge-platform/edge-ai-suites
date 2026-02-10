@@ -21,6 +21,7 @@ interface WorkloadCardProps {
   isExpanded: boolean;
   onExpand: () => void;
   waveform?: number[];
+  frameData?: string; // ✅ Add frame data prop
 }
 
 const WorkloadCard: React.FC<WorkloadCardProps> = ({
@@ -32,6 +33,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   isExpanded,
   onExpand,
   waveform,
+  frameData, // ✅ Add frame data prop
 }) => {
 
 
@@ -187,7 +189,29 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
           </div>
         )}
       </div>
-
+        {/* ✅ Add Video Frame Display */}
+      {config.id === '3d-pose' && frameData && (
+        <div className="video-frame" style={{ marginTop: '12px' }}>
+          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
+            Live Video Feed
+          </h4>
+          <img
+            src={frameData}
+            alt="3D Pose Detection"
+            style={{
+              width: '100%',
+              maxHeight: isExpanded ? '300px' : '200px',
+              objectFit: 'contain',
+              borderRadius: '4px',
+              border: '1px solid #e0e0e0',
+              backgroundColor: '#f8f9fa'
+            }}
+            onError={(e) => {
+              console.error('Failed to load frame:', e);
+            }}
+          />
+        </div>
+      )}
       {/* Waveform */}
       {config.hasWaveform && waveform && waveform.length > 0 && (
         <div className="waveform-preview" style={{ marginTop: '12px' }}>
