@@ -1,16 +1,14 @@
 """
-gRPC Publisher for Pose Data
-Sends pose estimation results frame-by-frame (unary calls)
+gRPC Publisher for Pose Data Only (no frame data)
 """
 
 import grpc
-import base64
 from typing import Dict
 from proto import pose_pb2, pose_pb2_grpc
 
 
 class GrpcPosePublisher:
-    """Publishes pose data via gRPC unary calls (one frame at a time)"""
+    """Publishes pose data only via gRPC unary calls"""
 
     def __init__(self, aggregator_address: str, source_id: str = "3d-pose-camera-1"):
         """
@@ -30,7 +28,7 @@ class GrpcPosePublisher:
             'total_sent': 0,
             'total_failed': 0,
             'last_error': None,
-            'total_bytes_sent': 0
+            'total_poses_sent': 0
         }
         
         # Connect
@@ -46,8 +44,8 @@ class GrpcPosePublisher:
                     ('grpc.keepalive_time_ms', 10000),
                     ('grpc.keepalive_timeout_ms', 5000),
                     ('grpc.keepalive_permit_without_calls', True),
-                    ('grpc.max_send_message_length', 50 * 1024 * 1024),  # 50MB
-                    ('grpc.max_receive_message_length', 50 * 1024 * 1024),
+                    ('grpc.max_send_message_length', 10 * 1024 * 1024),  # Reduced to 10MB (no frame data)
+                    ('grpc.max_receive_message_length', 10 * 1024 * 1024),
                 ]
             )
             self.stub = pose_pb2_grpc.PoseServiceStub(self.channel)
@@ -59,10 +57,10 @@ class GrpcPosePublisher:
 
     def publish(self, data_packet: Dict) -> bool:
         """
-        Publish a single frame immediately (unary call)
+        Publish pose data only (no frame data)
         
         Args:
-            data_packet: Dictionary containing pose data
+            data_packet: Dictionary containing pose data only
             
         Returns:
             bool: True if published successfully
@@ -72,7 +70,7 @@ class GrpcPosePublisher:
             return False
         
         try:
-            # Create PoseFrame message
+            # Create PoseFrame message (no frame data)
             pose_frame = self._create_pose_frame(data_packet)
             
             # Send immediately (unary call)
@@ -80,9 +78,8 @@ class GrpcPosePublisher:
             
             if response.ok:
                 self.stats['total_sent'] += 1
-                # Track bytes sent (approximate)
-                if 'frame_base64' in data_packet:
-                    self.stats['total_bytes_sent'] += len(data_packet['frame_base64'])
+                # Track poses sent
+                self.stats['total_poses_sent'] += data_packet.get('num_persons', 0)
                 return True
             else:
                 self.stats['total_failed'] += 1
@@ -104,10 +101,10 @@ class GrpcPosePublisher:
 
     def _create_pose_frame(self, data_packet: Dict) -> pose_pb2.PoseFrame:
         """
-        Convert data packet to PoseFrame protobuf message
+        Convert data packet to PoseFrame protobuf message (no frame data)
         
         Args:
-            data_packet: Dictionary with pose data
+            data_packet: Dictionary with pose data only
             
         Returns:
             pose_pb2.PoseFrame: Protobuf message
@@ -120,15 +117,11 @@ class GrpcPosePublisher:
         poses_3d = data_packet.get("poses_3d", [])
         poses_2d = data_packet.get("poses_2d", [])
         
-        # Extract and decode frame data
-        frame_base64 = data_packet.get("frame_base64", "")
-        frame_data = base64.b64decode(frame_base64) if frame_base64 else b""
-        
-        # Create PoseFrame message
+        # Create PoseFrame message (no frame_data)
         pose_frame = pose_pb2.PoseFrame(
             timestamp_ms=timestamp_ms,
             source_id=source_id,
-            frame_data=frame_data,
+            frame_data=b"",  # Empty frame data - streaming via MJPEG instead
             frame_number=frame_number
         )
         
@@ -219,12 +212,11 @@ class GrpcPosePublisher:
         """Print publishing statistics"""
         total = self.stats['total_sent'] + self.stats['total_failed']
         success_rate = (self.stats['total_sent'] / total * 100) if total > 0 else 0
-        total_mb = self.stats['total_bytes_sent'] / (1024 * 1024)
         
         print("\n[STATS] Publisher Statistics:")
         print(f"  Total sent: {self.stats['total_sent']}")
         print(f"  Total failed: {self.stats['total_failed']}")
         print(f"  Success rate: {success_rate:.1f}%")
-        print(f"  Total data sent: {total_mb:.2f} MB")
+        print(f"  Total poses sent: {self.stats['total_poses_sent']}")
         if self.stats['last_error']:
             print(f"  Last error: {self.stats['last_error']}")

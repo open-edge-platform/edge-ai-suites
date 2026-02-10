@@ -21,7 +21,7 @@ interface WorkloadCardProps {
   isExpanded: boolean;
   onExpand: () => void;
   waveform?: number[];
-  frameData?: string; // ✅ Add frame data prop
+  frameData?: string;
 }
 
 const WorkloadCard: React.FC<WorkloadCardProps> = ({
@@ -33,10 +33,8 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   isExpanded,
   onExpand,
   waveform,
-  frameData, // ✅ Add frame data prop
+  frameData,
 }) => {
-
-
   const statusColors = {
     idle: '#6c757d',
     running: '#28a745',
@@ -49,9 +47,14 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
 
     if (key === 'prediction') return String(value);
     if (key === 'filename') return String(value);
+    if (key === 'activity') return String(value);
 
     if (key === 'HR' || key === 'RR' || key === 'SpO2' || key === 'CO2_ET' || key === 'BP_DIA') {
       return typeof value === 'number' ? value.toFixed(1) : '--';
+    }
+
+    if (key === 'confidence' && typeof value === 'number') {
+      return (value * 100).toFixed(1);
     }
 
     if (typeof value === 'number') {
@@ -71,6 +74,8 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
       BP_SYS: 'mmHg',
       prediction: '',
       joints: '',
+      confidence: '%',
+      activity: '',
     };
     return units[key] || '';
   };
@@ -156,85 +161,129 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
         <span className="status-text">{status}</span>
       </div>
 
-      {/* Vitals */}
-      <div className="workload-vitals">
-        {Object.keys(latestVitals).length > 0 ? (
-          <div className="vitals-list">
-            {config.dataKeys.map((key) => {
-              const value = latestVitals[key];
-
-              if (config.id === 'ai-ecg') {
-                console.log(`[WorkloadCard] AI-ECG rendering ${key}:`, value);
-              }
-
-              if (value === undefined || value === null) return null;
-
-              return (
-                <div key={key} className="vital-item">
-                  <span className="vital-label">{key}:</span>
-                  <span className="vital-value">{formatValue(key, value)}</span>
-                  <span className="vital-unit">{getUnit(key)}</span>
+      {/* ✅ For 3D Pose: Always show video frame (MJPEG when running, placeholder when stopped) */}
+      {config.id === '3d-pose' ? (
+        <div className="video-frame" style={{
+          marginTop: '0px',
+          flex: isExpanded ? '0 0 auto' : '1 1 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0
+        }}>
+          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
+            {status === 'running' ? 'Live Video Feed' : 'Video Feed (Stopped)'}
+          </h4>
+          {status === 'running' ? (
+            // ✅ MJPEG stream when running
+            <img
+              src="http://localhost:8085/video_feed"
+              alt="3D Pose Stream"
+              style={{
+                width: '100%',
+                height: isExpanded ? 'auto' : '100%',
+                maxHeight: isExpanded ? '300px' : 'none',
+                objectFit: 'contain',
+                borderRadius: '4px',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#000',
+                flex: isExpanded ? '0 0 auto' : '1 1 auto',      
+              }}
+              onError={(e) => {
+                console.error('Failed to load MJPEG stream:', e);
+              }}
+            />
+          ) : (
+            // ✅ Always show placeholder when not running (removed frameData check)
+            <div
+              style={{
+                width: '100%',
+                height: isExpanded ? '300px' : '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '4px',
+                border: '1px solid #e0e0e0',
+                backgroundColor: '#f0f0f0',
+                flex: isExpanded ? '0 0 auto' : '1 1 auto',
+                position: 'relative'
+              }}
+            >
+              <div style={{
+                textAlign: 'center',
+                color: '#999',
+                fontSize: '14px',
+                padding: '20px'
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                <div>Video feed paused</div>
+                <div style={{ fontSize: '12px', marginTop: '5px' }}>
+                  Press Start to resume
                 </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="no-vitals">
-            Waiting for data...
-            {config.id === 'ai-ecg' && (
-              <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
-                Debug: {JSON.stringify(latestVitals)}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* ✅ For other workloads: Show vitals */}
+          <div className="workload-vitals">
+            {Object.keys(latestVitals).length > 0 ? (
+              <div className="vitals-list">
+                {config.dataKeys.map((key) => {
+                  const value = latestVitals[key];
+
+                  if (config.id === 'ai-ecg') {
+                    console.log(`[WorkloadCard] AI-ECG rendering ${key}:`, value);
+                  }
+
+                  if (value === undefined || value === null) return null;
+
+                  return (
+                    <div key={key} className="vital-item">
+                      <span className="vital-label">{key}:</span>
+                      <span className="vital-value">{formatValue(key, value)}</span>
+                      <span className="vital-unit">{getUnit(key)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="no-vitals">
+                Waiting for data...
+                {config.id === 'ai-ecg' && (
+                  <div style={{ fontSize: '10px', color: '#999', marginTop: '4px' }}>
+                    Debug: {JSON.stringify(latestVitals)}
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
-        {/* ✅ Add Video Frame Display */}
-      {config.id === '3d-pose' && frameData && (
-        <div className="video-frame" style={{ marginTop: '12px' }}>
-          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            Live Video Feed
-          </h4>
-          <img
-            src={frameData}
-            alt="3D Pose Detection"
-            style={{
-              width: '100%',
-              maxHeight: isExpanded ? '300px' : '200px',
-              objectFit: 'contain',
-              borderRadius: '4px',
-              border: '1px solid #e0e0e0',
-              backgroundColor: '#f8f9fa'
-            }}
-            onError={(e) => {
-              console.error('Failed to load frame:', e);
-            }}
-          />
-        </div>
-      )}
-      {/* Waveform */}
-      {config.hasWaveform && waveform && waveform.length > 0 && (
-        <div className="waveform-preview" style={{ marginTop: '12px' }}>
-          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            {config.id === 'rppg'
-              ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)`
-              : config.id === 'ai-ecg'
-              ? `ECG Waveform (${waveform.length} samples @ 360Hz)`
-              : 'Waveform'}
-          </h4>
-          <canvas
-            ref={renderWaveform}
-            width={600}
-            height={isExpanded ? 150 : 100}
-            style={{
-              width: '100%',
-              height: isExpanded ? '150px' : '100px',
-              background: '#f8f9fa',
-              borderRadius: '4px',
-              border: '1px solid #e0e0e0',
-            }}
-          />
-        </div>
+
+          {/* Waveform - for other workloads */}
+          {config.hasWaveform && waveform && waveform.length > 0 && (
+            <div className="waveform-preview" style={{ marginTop: '12px' }}>
+              <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
+                {config.id === 'rppg'
+                  ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)`
+                  : config.id === 'ai-ecg'
+                  ? `ECG Waveform (${waveform.length} samples @ 360Hz)`
+                  : 'Waveform'}
+              </h4>
+              <canvas
+                ref={renderWaveform}
+                width={600}
+                height={isExpanded ? 150 : 100}
+                style={{
+                  width: '100%',
+                  height: isExpanded ? '150px' : '100px',
+                  background: '#f8f9fa',
+                  borderRadius: '4px',
+                  border: '1px solid #e0e0e0',
+                }}
+              />
+            </div>
+          )}
+        </>
       )}
 
       {/* Footer */}

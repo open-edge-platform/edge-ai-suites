@@ -11,7 +11,7 @@ export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localho
 export const WORKLOADS = [
   {
     id: 'rppg',
-    name: 'RPPG',
+    name: 'rPPG',
     color: '#0071c5',
     description: 'Remote Photoplethysmography - Heart Rate & Respiratory Rate',
     dataKeys: ['HR', 'RR'] as const, // Expected vital keys
@@ -38,7 +38,7 @@ export const WORKLOADS = [
     name: '3D Pose',
     color: '#0071c5',
     description: '3D Body Pose Estimation with joint tracking',
-    dataKeys: ['joints', 'confidence', 'activity'] as const, // Pose estimation keys
+    dataKeys: ['activity'] as const, // Pose estimation keys
     hasWaveform: false,
   },
 ] as const;

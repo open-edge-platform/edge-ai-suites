@@ -58,7 +58,7 @@ ENV SOURCE_ID=3d-pose-camera-1
 ENV DEPLOYMENT_ENV=production
 ENV POSE_3D_DEVICE=GPU
 
-EXPOSE 8083
+EXPOSE 8083 8085
 
 # Remove --device-config argument since app.py no longer supports it
 CMD python app.py \
