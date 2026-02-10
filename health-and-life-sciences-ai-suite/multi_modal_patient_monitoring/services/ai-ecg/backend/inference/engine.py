@@ -15,6 +15,13 @@ MODEL_MAP = {
     17920: os.path.join(MODEL_DIR, "ecg_17920_ir10_fp16.xml"),
 }
 
+LABEL_MAP = {
+    "N": "Normal sinus rhythm",
+    "A": "Atrial Fibrillation (AF)",
+    "O": "Other rhythm",
+    "~": "Too noisy to classify"
+}
+
 
 class ECGInferenceEngine:
     def __init__(self):
@@ -55,6 +62,7 @@ class ECGInferenceEngine:
 
         ecg = load.load_ecg(file_path)
 
+        # Preprocess into windows
         windows = self.preproc.process(ecg)
 
         all_preds = []
@@ -70,14 +78,15 @@ class ECGInferenceEngine:
 
         infer_time_ms = (time.time() - infer_start) * 1000
 
-        final = sst.mode(all_preds, keepdims=True).mode[0]
-        label = self.preproc.int_to_class[int(final)]
+        final_class = sst.mode(all_preds, keepdims=True).mode[0]
+        short_label = self.preproc.int_to_class[int(final_class)]
+        full_label = LABEL_MAP.get(short_label, short_label)
 
         first_window_len = windows[0][1]
 
         return {
             "signal": ecg[:first_window_len].tolist(),
-            "result": label,
+            "result": full_label,        
             "inference_ms": round(infer_time_ms, 2),
-            "length": len(ecg)
+            "length": len(ecg),
         }
