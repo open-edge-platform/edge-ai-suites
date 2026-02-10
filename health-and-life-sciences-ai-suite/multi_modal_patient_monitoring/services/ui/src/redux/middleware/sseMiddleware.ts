@@ -5,9 +5,6 @@ import { updateWorkloadData, setAggregatorStatus } from '../slices/servicesSlice
 export const sseMiddleware: Middleware = (store) => {
   let eventSource: EventSource | null = null;
 
-  const FRAME_INTERVAL = 1000 / 18; // ~55ms
-  let lastFrameUpdate: { [key: string]: number } = {};
-
   return (next) => (action) => {
     if (typeof action !== 'object' || action === null || !('type' in action)) {
       return next(action);
@@ -182,17 +179,10 @@ export const sseMiddleware: Middleware = (store) => {
               activity: payload.activity,
             };
           
+            // ✅ Always include frame data immediately (no throttling)
             if (payload.frame_base64) {
-              const now = Date.now();
-              const lastUpdate = lastFrameUpdate[workloadType] || 0;
-              
-              if (now - lastUpdate >= FRAME_INTERVAL) {
-                parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
-                lastFrameUpdate[workloadType] = now;
-                console.log(`[SSE] 🎬 Frame updated for ${workloadType} (${Math.round(1000 / (now - lastUpdate))} FPS)`);
-              } else {
-                console.log(`[SSE] ⏭️ Frame skipped for ${workloadType} (throttling to 18 FPS)`);
-              }
+              parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
+              console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
             }
             
             console.log('[SSE] ✓ Parsed 3D-Pose:', {
