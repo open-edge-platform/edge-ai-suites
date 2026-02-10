@@ -9,11 +9,7 @@ export function ConfigurationMetricsAccordion() {
   console.log('[ConfigurationMetricsAccordion] Rendering with data:', platformData);
 
   return (
-    <Accordion title="Configuration & Metrics" defaultOpen>
-      <div className="accordion-subtitle">
-        Platform & Software Configuration
-      </div>
-
+    <Accordion title="Configuration" defaultOpen>
       <div className="configuration-metrics">
         <div className="platform-configuration">
           <h3>Platform Configuration</h3>

@@ -33,46 +33,40 @@ const WorkloadStatusAccordion = () => {
   };
 
   return (
-    <Accordion title="Workload Devices" defaultOpen>
-      <div className="workload-status-list">
+  <Accordion title="Workload Devices" defaultOpen>
+      <div className="configuration-metrics">
         {WORKLOADS.map((workload) => {
-          const state = workloads[workload.id];
-          // ADD THIS: Get device info for this workload
           const deviceKey = deviceKeyMap[workload.id];
-          const deviceInfo = workloadDevices?.workloads?.[deviceKey as keyof typeof workloadDevices.workloads];
-          
+          const deviceInfo =
+            workloadDevices?.workloads?.[
+              deviceKey as keyof typeof workloadDevices.workloads
+            ];
+
           return (
-            <div key={workload.id} className="workload-status-item">
-              <div className="workload-status-header">
-                <span className="workload-name">{workload.name}</span>
-                   {/* ADD THIS: Show device info */}
-              {deviceInfo && (
-                <div style={{ 
-                  marginTop: '8px', 
-                  padding: '8px', 
-                  background: '#f8f9fa', 
-                  borderRadius: '4px',
-                  fontSize: '11px'
-                }}>
-                  <div style={{ marginBottom: '4px' }}>
+            <div
+              key={workload.id}
+              className="platform-configuration"
+            >
+              <h3>{workload.name}</h3>
+
+              {deviceInfo ? (
+                <>
+                  <p>
                     <strong>Device:</strong>{' '}
-                    <span style={{ 
-                      padding: '2px 6px', 
-                      background: '#0071c5', 
-                      color: 'white', 
-                      borderRadius: '3px',
-                      fontWeight: 'bold',
-                      fontSize: '10px'
-                    }}>
+                    <span className="value">
                       {deviceInfo.configured_device}
                     </span>
-                  </div>
-                  <div style={{ color: '#666', lineHeight: '1.4' }}>
-                    {deviceInfo.resolved_detail}
-                  </div>
-                </div>
+                  </p>
+                  <p>
+                    <strong>Details:</strong>{' '}
+                    <span className="value">
+                      {deviceInfo.resolved_detail}
+                    </span>
+                  </p>
+                </>
+              ) : (
+                <p className="muted">No device information available</p>
               )}
-              </div>                      
             </div>
           );
         })}
