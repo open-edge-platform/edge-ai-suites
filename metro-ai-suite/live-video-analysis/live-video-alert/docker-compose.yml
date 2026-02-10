@@ -12,9 +12,9 @@ services:
     command: sh -c "chown -R 5000:5000 /models && chmod -R 755 /models"
 
   ovms:
-    image: openvino/model_server:latest
+    image: openvino/model_server:2025.4.1
     container_name: ovms-vlm
-    user: "5000:5000"
+    user: "5000:5000" 
     restart: unless-stopped
     depends_on:
       ovms-init:
@@ -54,10 +54,10 @@ services:
       start_period: 300s
     network_mode: host
 
-  agentic-nvr:
+  live-video-alert:
     image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
     build: .
-    container_name: agentic-nvr
+    container_name: live-video-alert
     restart: unless-stopped
     ports:
       - "${PORT:-9000}:${PORT:-9000}"

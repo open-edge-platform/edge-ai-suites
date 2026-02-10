@@ -5,7 +5,6 @@ class Settings:
     # Application Config
     PORT: int = int(os.getenv("PORT", 9000))
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")
-    no_proxy: str = os.getenv("no_proxy")
     
     # AI Config
     RTSP_URL: str = os.getenv("RTSP_URL", "")

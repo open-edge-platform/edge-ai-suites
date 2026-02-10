@@ -36,8 +36,9 @@ async def lifespan(app: FastAPI):
         model_name=settings.MODEL_NAME          
     )
 
-    # Add default stream
-    manager.add_stream("default", settings.RTSP_URL)
+    # Add default stream if RTSP_URL is provided
+    if settings.RTSP_URL:
+        manager.add_stream("default", settings.RTSP_URL)
 
     # Start the manager in the background (uses dynamic agents from config)
     asyncio.create_task(manager.start())
