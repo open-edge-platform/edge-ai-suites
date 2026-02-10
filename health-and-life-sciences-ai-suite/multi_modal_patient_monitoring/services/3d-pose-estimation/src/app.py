@@ -34,8 +34,12 @@ class PoseEstimationService:
         """
         print("[INFO] Initializing Pose Estimation Service")
         
+        self.target_fps = 20
+        self.frame_interval = 1.0 / self.target_fps  
+        
         # Device selection is handled by inference.py using POSE_3D_DEVICE env var
         print(f"[INFO] Using OpenVINO device from environment: {os.getenv('POSE_3D_DEVICE', 'GPU')}")
+        print(f"[INFO] Target output FPS: {self.target_fps} (frame interval: {self.frame_interval:.3f}s)")
         
         # Initialize components - inference.py handles device selection internally
         self.inference = PoseInference(model_path)
@@ -110,10 +114,12 @@ class PoseEstimationService:
                 while not is_processing_enabled():
                     time.sleep(0.5)
     
-                print(f"[INFO] Processing enabled! Starting pose estimation...")
+                print(f"[INFO] Processing enabled! Starting pose estimation at {self.target_fps} FPS...")
                 
-                # Reset frame count for new session
+                # Reset frame count and timing for new session
                 session_frame_count = 0
+                last_frame_time = 0  # ✅ Initialize frame timing control
+                session_start_time = time.time()
                 
                 # Processing loop - continues until stop command
                 while is_processing_enabled():
@@ -140,6 +146,15 @@ class PoseEstimationService:
     
                     # Process frames from this video iteration
                     while is_processing_enabled():
+                        # ✅ Frame rate control: Check if enough time has passed
+                        current_time = time.time()
+                        if last_frame_time > 0 and (current_time - last_frame_time) < self.frame_interval:
+                            # Sleep for remaining time to maintain target FPS
+                            sleep_time = self.frame_interval - (current_time - last_frame_time)
+                            if sleep_time > 0:
+                                time.sleep(sleep_time)
+                                continue
+                        
                         ret, frame = cap.read()
                         
                         if not ret:
@@ -155,6 +170,9 @@ class PoseEstimationService:
     
                         self.frame_count += 1
                         session_frame_count += 1
+                        
+                        # ✅ Update frame timing after successful capture
+                        last_frame_time = current_time
     
                         # Process frame
                         start_time = time.perf_counter()
@@ -178,16 +196,21 @@ class PoseEstimationService:
                         # Publish to aggregator via gRPC
                         success = self.publisher.publish(data_packet)
     
-                        # Calculate metrics
-                        avg_time_ms = np.mean(self.fps_tracker) * 1000
-                        current_fps = 1000 / avg_time_ms if avg_time_ms > 0 else 0
+                        # ✅ Calculate actual output FPS based on frame timing
+                        session_duration = current_time - session_start_time
+                        actual_output_fps = session_frame_count / session_duration if session_duration > 0 else 0
+                        
+                        # Calculate inference performance
+                        avg_inference_ms = np.mean(self.fps_tracker) * 1000
+                        inference_fps = 1000 / avg_inference_ms if avg_inference_ms > 0 else 0
     
-                        # Log progress every 30 frames
-                        if session_frame_count % 30 == 0:
+                        # Log progress every 60 frames (every 3 seconds at 20 FPS)
+                        if session_frame_count % 40 == 0:
                             person_count = len(filtered_poses_3d)
                             status_msg = f"✓ {person_count} persons" if person_count > 0 else "No persons detected"
                             print(f"[INFO] Session frame {session_frame_count}: "
-                                  f"{avg_time_ms:.1f}ms | {current_fps:.1f} FPS | "
+                                  f"Inference: {avg_inference_ms:.1f}ms ({inference_fps:.1f} FPS) | "
+                                  f"Output: {actual_output_fps:.1f} FPS | "
                                   f"{status_msg} | Published: {'✓' if success else '✗'}")
     
                         # Check max frames limit (optional)
