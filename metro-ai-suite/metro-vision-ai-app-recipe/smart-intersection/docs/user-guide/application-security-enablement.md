@@ -2,17 +2,17 @@
 
 Edge AI is revolutionising traffic management and road safety, but it also introduces critical cybersecurity challenges. With AI systems handling sensitive city data and making autonomous decisions, robust security is essential. Intel platforms provide built-in security features to protect data, infrastructure, and AI processing.
 
-This tutorial provides steps and guidance to enable Intel buildt-in security features with the **Smart Intersection** application to ensure:
+This tutorial provides steps and guidance to enable built-in Intel security features with the **Smart Intersection** application to ensure:
 - **Comprehensive Data Privacy**: Protect sensitive personal data with strong encryption protocols and blockchain technology, ensuring secure transactions and compliance with regulations.
 - **Infrastructure Protection**: Safeguard your critical infrastructure with regular firmware updates and advanced threat detection systems, mitigating vulnerabilities in distributed edge devices.
 - **Secure AI Processing**: Leverage privacy-by-design principles and hardware-level security features to prevent AI model manipulation and ensure secure, compliant AI operations.
 
 This guide covers security enablement for the Smart Intersection application, including:
-- [Discrete Trusted Platform Module (dTPM)](./security_features/enable_dtpm.md).
-- [Full Disk Encryption (FDE)](./security_features/enable_full_disk_install.md).
-- [UEFI Secure Boot](./security_features/enable_uefi.md).
-- [Total Memory Encryption(TME)](./security_features/enable_tme.md).
-- [Trusted Compute deployment for isolated video analytics](./security_features/enable_trusted_compute.md).
+- [Discrete Trusted Platform Module (dTPM)](./security-features/enable_dtpm.md).
+- [UEFI Secure Boot](./security-features/enable_uefi.md).
+- [Full Disk Encryption (FDE)](./security-features/enable_full_disk_install.md).
+- [Total Memory Encryption(TME)](./security-features/enable_tme.md).
+- [Trusted Compute deployment for isolated video analytics](./security-features/enable_trusted_compute.md).
 
 These security features protect the Smart Intersection system from unauthorized access and ensure data integrity for traffic monitoring and analysis.
 
@@ -34,10 +34,10 @@ This comprehensive security implementation ensures that your Smart Intersection 
 :::{toctree}
 :hidden:
 
-security_features/enable_dtpm
-security_features/enable_full_disk_install
-security_features/enable_uefi
-security_features/enable_tme
-security_features/enable_trusted_compute
+security-features/enable_dtpm
+security-features/enable_uefi
+security-features/enable_full_disk_install
+security-features/enable_tme
+security-features/enable_trusted_compute
 :::
 hide_directive-->

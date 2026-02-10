@@ -25,7 +25,7 @@ def update_dashboard(debug_mode=False):
     """Update all dashboard components with fresh data"""
     try:
         # Load fresh data using API only
-        data = load_monitoring_data(api_url=Config.API_URL)
+        data = load_monitoring_data(api_url=Config.get_api_url())
         
         if not data:
             error_msg = "<div style='color: red; text-align: center; padding: 20px;'>❌ No data available</div>"
@@ -52,7 +52,7 @@ def create_dashboard_interface():
     """Create the main dashboard interface"""
     
     # Custom CSS for better styling - theme-aware
-    is_light_theme = Config.UI_THEME == "light"
+    is_light_theme = Config.get_ui_theme() == "light"
     
     # Define theme colors
     bg_primary = "#ffffff" if is_light_theme else "#1f2937"
@@ -151,8 +151,8 @@ def create_dashboard_interface():
     
     with gr.Blocks(
         css=css,
-        title=Config.APP_TITLE,
-        theme=gr.themes.Base() if Config.UI_THEME == "light" else gr.themes.Monochrome()
+        title=Config.get_app_title(),
+        theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome()
     ) as interface:
         
         # Header component
@@ -241,7 +241,7 @@ def create_dashboard_interface():
 
         # Auto refresh using Gradio Timer (server side)
         try:
-            auto_timer = gr.Timer(value=Config.REFRESH_INTERVAL_SECONDS)
+            auto_timer = gr.Timer(value=Config.get_refresh_interval())
             auto_timer.tick(
                 fn=refresh_data,
                 inputs=[debug_mode],
@@ -255,7 +255,7 @@ def create_dashboard_interface():
                     debug_panel_component
                 ]
             )
-            logger.info("Gradio Timer auto-refresh enabled (value=%ss)" % Config.REFRESH_INTERVAL_SECONDS)
+            logger.info("Gradio Timer auto-refresh enabled (value=%ss)" % Config.get_refresh_interval())
         except Exception as e:
             logger.warning(f"Unable to initialize Gradio Timer auto-refresh: {e}")
     
@@ -264,9 +264,9 @@ def create_dashboard_interface():
 def main():
     """Main application entry point"""
     logger.info("Starting RSU Monitoring Dashboard...")
-    logger.info(f"API URL: {Config.API_URL}")
-    logger.info(f"Refresh interval: {Config.REFRESH_INTERVAL_SECONDS} seconds")
-    logger.info(f"Server: {Config.APP_HOST}:{Config.APP_PORT}")
+    logger.info(f"API URL: {Config.get_api_url()}")
+    logger.info(f"Refresh interval: {Config.get_refresh_interval()} seconds")
+    logger.info(f"Server: {Config.get_app_host()}:{Config.get_app_port()}")
     logger.info("Configured to use API endpoint for data")
     
     try:
@@ -274,8 +274,8 @@ def main():
         interface = create_dashboard_interface()
         
         interface.launch(
-            server_name=Config.APP_HOST,
-            server_port=Config.APP_PORT,
+            server_name=Config.get_app_host(),
+            server_port=Config.get_app_port(),
             share=False,
             show_error=True,
             show_api=False,

@@ -1,0 +1,917 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_soc_S0ix_LPM_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL S0C S0ix LPM PCD-S</TELEM:description>
+	<TELEM:uniqueid>0x01091102</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x3500</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CLASS_PG" datatypeIDREF="tgeneric_sample" sampleID="CLASS_PG">
+			<TELC:description>Marker for CLASS_PG</TELC:description>
+			<TELC:sampleSubGroup>PG_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_0" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_0">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>PG_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x3508</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CLASS_RSC_REQ" datatypeIDREF="tgeneric_sample" sampleID="CLASS_RSC_REQ">
+			<TELC:description>Marker for CLASS_RSC_REQ</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_1" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_1">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x3510</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CLASS_VNNREQOFF" datatypeIDREF="tgeneric_sample" sampleID="CLASS_VNNREQOFF">
+			<TELC:description>Marker for CLASS_VNNREQOFF</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VNNREQOFF_ESPISPI" datatypeIDREF="tgeneric_sample" sampleID="VNNREQOFF_ESPISPI">
+			<TELC:description>ESPISPI VNNREQOFF Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x3518</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="VNNREQOFF_NPK" datatypeIDREF="tgeneric_sample" sampleID="VNNREQOFF_NPK">
+			<TELC:description>NPK VNNREQOFF Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_D3_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CLASS_D3" datatypeIDREF="tgeneric_sample" sampleID="CLASS_D3">
+			<TELC:description>Marker for CLASS_D3</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_D3_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x3520</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_2" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_2">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>D3_CSOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CLASS_CSOFF" datatypeIDREF="tgeneric_sample" sampleID="CLASS_CSOFF">
+			<TELC:description>Marker for CLASS_CSOFF</TELC:description>
+			<TELC:sampleSubGroup>D3_CSOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x3528</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CSOFF_SE_TCSS_PLL" datatypeIDREF="tgeneric_sample" sampleID="CSOFF_SE_TCSS_PLL">
+			<TELC:description>SE_TCSS_PLL CSOFF Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CSOFF_REF_PLL1" datatypeIDREF="tgeneric_sample" sampleID="CSOFF_REF_PLL1">
+			<TELC:description>REF_PLL1 CSOFF Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x3530</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CSOFF_GENLOCK_FILTER_PLL" datatypeIDREF="tgeneric_sample" sampleID="CSOFF_GENLOCK_FILTER_PLL">
+			<TELC:description>GENLOCK_FILTER_PLL CSOFF Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_MISCREQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CLASS_MISC_REQ" datatypeIDREF="tgeneric_sample" sampleID="CLASS_MISC_REQ">
+			<TELC:description>Marker for CLASS_MISC_REQ</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_MISCREQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x3538</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MISC_REQ_PXPA" datatypeIDREF="tgeneric_sample" sampleID="MISC_REQ_PXPA">
+			<TELC:description>PXPA MISC_REQ Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>MISCREQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MISC_REQ_PXPB" datatypeIDREF="tgeneric_sample" sampleID="MISC_REQ_PXPB">
+			<TELC:description>PXPB MISC_REQ Device Function Mask</TELC:description>
+			<TELC:sampleSubGroup>MISCREQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x3540</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CLASS_WAKEOFF_REQ" datatypeIDREF="tgeneric_sample" sampleID="CLASS_WAKEOFF_REQ">
+			<TELC:description>Marker for CLASS_WAKEOFF_REQ</TELC:description>
+			<TELC:sampleSubGroup>WAKEOFF_REQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_3" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_3">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>WAKEOFF_REQ_BLK_CNT_BDF_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x3548</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DDISP1_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DDISP1_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_DISP1 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="D2DNOC1_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DNOC1_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_NOC1 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x3550</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="P2SB0_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="P2SB0_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>P2SB0 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CSE_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="CSE_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>CSE PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x3558</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="P2SB1_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="P2SB1_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>P2SB1 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="OSSESMT1_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="OSSESMT1_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>OSSE_SMT1 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x3560</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DDISP0_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DDISP0_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_DISP0 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="TAM_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="TAM_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>TAM PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x3568</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DNOC2_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DNOC2_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D NOC2 PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="OSSE_PG_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="OSSE_PG_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>OSSE PG Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>PG_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x3570</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CORE_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="CORE_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>CORE RSC_REQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MEMORY_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="MEMORY_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>MEMORY RSC_REQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x3578</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PRIMD2D_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PRIMD2D_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PRIM D2D RSC_REQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PSF0_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PSF0_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PSF0 RSC_REQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x3580</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SB_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="SB_RSCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>SB RSC_REQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_VNNREQOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ESPISPI_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ESPISPI_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ESPISPI VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>RSC_REQ_VNNREQOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x3588</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="NPK_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="NPK_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>NPK VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="EXI_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="EXI_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>EXI VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x3590</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OSSE_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="OSSE_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>OSSE VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="P2D_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="P2D_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>P2D VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x3598</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SMB_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="SMB_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>SMB VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CSE_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="CSE_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>CSE VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x35a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="OSSE_SMT1_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="OSSE_SMT1_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>OSSE_SMT1 VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GPIOCOM3_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="GPIOCOM3_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>GPIOCOM3 VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x35a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GPIOCOM1_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="GPIOCOM1_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>GPIOCOM1 VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GPIOCOM0_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="GPIOCOM0_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>GPIOCOM0 VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x35b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DISPSHIM_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="DISPSHIM_VNNREQOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>DISP_SHIM VNNREQOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_D3_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPSS_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="LPSS_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>LPSS D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>VNNREQOFF_D3_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x35b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="XDCI_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="XDCI_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>XDCI D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="XHCI_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="XHCI_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>XHCI D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x35c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="UFSX2_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="UFSX2_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>UFSX2 D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="THC0_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="THC0_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>THC0 D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x35c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="THC1_D3_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="THC1_D3_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>THC1 D3 Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_CSOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="AON2_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="AON2_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>AON2 CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>D3_CSOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x35d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="AON4_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="AON4_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>AON4 CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="AON5_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="AON5_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>AON5 CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x35d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="AON3SPL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="AON3SPL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>AON3_SPL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x35e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="XTALAGGR_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="XTALAGGR_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>XTAL_AGGR CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="BLKEXTINJ_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="BLKEXTINJ_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>BLK_EXT_INJ CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x35e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DDI2PLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="DDI2PLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>DDI2_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SETCSSPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="SETCSSPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>SE_TCSS_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x35f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DDIPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="DDIPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>DDI_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FILTERPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="FILTERPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>FILTER_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x35f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PHYOCEXTINJ_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PHYOCEXTINJ_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PHY_OC_EXT_INJ CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FABRICPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="FABRICPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>FABRIC_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x3600</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SOCPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="SOCPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>SOC_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="REFPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="REFPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>REF_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_LPMREQ_MASK_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x3608</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="GENLOCKFILTERPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="GENLOCKFILTERPLL_CSOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>GENLOCK_FILTER_PLL CSOFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_MISC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PNDEMET_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PNDEMET_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PNDE_MET MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>CSOFF_MISC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x3610</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PG5PMA0GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PG5PMA0GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PG5_PMA0_GVNN MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="VNNSOC_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="VNNSOC_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>VNN_SOC MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x3618</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DNOCCFIQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DNOCCFIQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_NOC_CFI_QACTIVE MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="D2DNOCGPSBQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DNOCGPSBQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_NOC_GPSB_QACTIVE MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x3620</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PLTGREATER_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PLTGREATER_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PLT_GREATER MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ITSSCLKSRC_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSCLKSRC_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_CLK_REQ MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x3628</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PG5PMA1GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PG5PMA1GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PG5_PMA1_GVNN MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DG5PMA0GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="DG5PMA0GVNN_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>DG5_PMA0_GVNN MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x3630</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DISPDDIQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="DISPDDIQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_DISP_DDI_QACTIVE MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PREWAKE0_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PREWAKE0_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PREWAKE0 MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x3638</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PREWAKE1_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PREWAKE1_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PREWAKE1 MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PREWAKE2_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="PREWAKE2_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>PREWAKE2 MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_LPMREQ_MASK_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x3640</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="D2DDISPEDPQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="D2DDISPEDPQACTIVE_MISCREQ_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>D2D_DISP_ESP_QACTIVE MISCREQ Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_WAKE_OFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPSSWAKE0_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="LPSSWAKE0_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>LPSS_WAKE0 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>MISC_REQ_WAKE_OFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x3648</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPSSWAKE1_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="LPSSWAKE1_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>LPSS_WAKE1 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ITSSWAKE0_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE0_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE0 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x3650</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="ITSSWAKE1_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE1_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE1 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ITSSWAKE2_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE2_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE2 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x3658</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="ITSSWAKE3_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE3_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE3 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ITSSWAKE4_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE4_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE4 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x3660</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="ITSSWAKE5_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK" datatypeIDREF="tgeneric_sample" sampleID="ITSSWAKE5_WAKEOFF_BLK_CNTR_S0IXLPMREQ_MASK">
+			<TELC:description>ITSS_WAKE5 WAKE_OFF Blocker Counter S0ix Substate LPM Requirement Mask</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_1" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_1_1">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>WAKE_OFF_LPMREQ_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

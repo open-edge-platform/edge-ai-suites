@@ -10,7 +10,7 @@ These tutorials demonstrate how to use the Visual Search and QA reference implem
 
 In this tutorial, you will learn how to use your own dataset for searching.
 
-**Learning objectives**
+**Learning objectives**:
 
 - By the end of this tutorial, you will be able to ingest your own dataset to vector DB and conduct search and QA based on them.
 
@@ -30,7 +30,7 @@ In this tutorial, you will learn how to use your own dataset for searching.
 
 2. Go to the web UI, fill in `file directory on host` with the absolute path to your dataset directory, and click `UpdateDB`
 
-**Summary**
+**Summary**:
 
 In this tutorial, you learned how to use your own dataset for searching.
 
@@ -38,7 +38,7 @@ In this tutorial, you learned how to use your own dataset for searching.
 
 In this tutorial, you will learn how to ingest data along with metadata to support filtered search
 
-**Learning objectives**
+**Learning objectives**:
 
 - By the end of this tutorial, you will be able to ingest data with metadata by providing matched metadata json file for each media data file in the `file directory on host` used for updating DB
 - By the end of this tutorial, you will be able to manually ingest single data file with specified metadata using dataprep microservice API
@@ -116,19 +116,17 @@ In this tutorial, you will learn how to ingest data along with metadata to suppo
 
 ### Step 2: Use metadata as filter on web UI
 
-1. Once the metadata is available, it can be used for filtered search
+Once the metadata is available, it can be used for filtered search
 
-![Search without filter](./_images/filter_before.png)
+![Search without filter](./_assets/filter_before.png)\
+*Figure 1: Search without filter*
 
-Figure 1: Search without filter
-
-![Search with filter](./_images/filter_after.png)
-
-Figure 2: Search with filter
+![Search with filter](./_assets/filter_after.png)\
+*Figure 2: Search with filter*
 
 ### Supported filters
 
-**Summary**
+**Summary**:
 
 In this tutorial, you learned how to: ingest data with metadata (both via providing a json file or via API), and search with filters enabled
 
@@ -136,7 +134,7 @@ In this tutorial, you learned how to: ingest data with metadata (both via provid
 
 In this tutorial, you will learn how to adjust the configuarable parameters for the application
 
-**Learning objectives**
+**Learning objectives**:
 
 - By the end of this tutorial, you will be able to know which parameters to modify when needed
 
@@ -150,13 +148,11 @@ In this tutorial, you will learn how to adjust the configuarable parameters for 
 
 - Deduplicate switch and threshold: deduplicate switch decides whether or not to enable deduplication for similar search results. Note that this function currently supports video only. Once enabled, video search results that are the same video and start within the interval of threshold would be deduplicated. Only one remains. For example:
 
-![Search without deduplicate](./_images/deduplicate_before.png)
+![Search without deduplicate](./_assets/deduplicate_before.png)\
+*Figure 1: Search without deduplication*
 
-Figure 1: Search without deduplication
-
-![Search with deduplicate](./_images/deduplicate_after.png)
-
-Figure 2: Search with deduplication
+![Search with deduplicate](./_assets/deduplicate_after.png)\
+*Figure 2: Search with deduplication*
 
 Without deduplication enabled, the first row of results are from the same video, and the time difference among them are less than 5 seconds. Therefore, when deduplication is ticked, search button returns only one result from that video.
 
@@ -164,4 +160,4 @@ Without deduplication enabled, the first row of results are from the same video,
 
 - Deploy the application with the [Get Started](./get-started.md).
 - Understand the components, services, architecture, and data flow, in
-  the [Overview](./Overview.md).
+  the [Overview](./index.md).

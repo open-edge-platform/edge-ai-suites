@@ -24,13 +24,12 @@ using namespace cv;
 using namespace dnn;
 using namespace ov::preprocess;
 
-const size_t NUM_STREAMS = 8;
-const size_t NUM_STREAMS_INFER = 8;
+const size_t duration = 30;
 
-const std::string DEV_DET= "GPU";
+const size_t NUM_STREAMS = 16;
+const size_t NUM_STREAMS_INFER = 16;
 
-std::map<std::thread::id, std::deque<int>> thread_deques;
-std::vector<int> current_ids(NUM_STREAMS, 0);
+const std::string DEV_DET= "GPU.0";
 
 std::shared_ptr<ov::Model> loadAndPreprocessModel(std::string model_path) {
     ov::Core core;
@@ -116,15 +115,18 @@ int main(int argc, char* argv[])
     
     ov::Core core;
     // ov::CompiledModel compiled_model_det = core.compile_model(det_model, DEV_DET);
-    std::vector<ov::CompiledModel> vec_compiled_model_det(NUM_STREAMS_INFER);
+    const size_t num_compiled_models = 1;
+    std::vector<ov::CompiledModel> vec_compiled_model_det(num_compiled_models);
     std::vector<ov::InferRequest> infer_requests_det(NUM_STREAMS_INFER);
-
-    for(int i = 0; i < 4&&i<NUM_STREAMS_INFER; i++) {
+    for(int i = 0; i < num_compiled_models&&i<NUM_STREAMS_INFER; i++) {
         vec_compiled_model_det[i] = core.compile_model(det_model, DEV_DET);
     }
     for(int i = 0; i < NUM_STREAMS_INFER; i++) {
-        infer_requests_det[i] = vec_compiled_model_det[i * 4 / NUM_STREAMS_INFER].create_infer_request();
+        infer_requests_det[i] = vec_compiled_model_det[i * num_compiled_models / NUM_STREAMS_INFER].create_infer_request();
     }
+
+    volatile bool feedRunning = true;
+    volatile bool inferRunning = true;
 
     VPP_Init();
     for (int32_t id = 0; id < NUM_STREAMS; ++id) {
@@ -146,9 +148,9 @@ int main(int argc, char* argv[])
         usleep(1'000'000);
         int i = 0;
         int frame_counter = 0;
-        int skip_frames = 6;
+        int skip_frames = 3;
         bool isFirstRun = true;
-        while (1) {
+        while (inferRunning) {
             VPP_SURFACE_HDL hdl;
             if (id == 0) {
                 printWithTimestamp("Waiting for frame...");
@@ -180,14 +182,15 @@ int main(int argc, char* argv[])
                 // Convert NV12 to RGB for classification
                 cv::Mat nv12(origin_height + origin_height / 2, origin_width, CV_8UC1, vppSurfData.Y);
                 cv::Mat rgb_image;
-                cv::Mat input_image;
+                auto input_tensor = infer_requests_det[id].get_input_tensor(0);
+                cv::Mat input_image(640, 640, CV_8UC3, input_tensor.data<uint8_t>());
                 cv::cvtColor(nv12, rgb_image, cv::COLOR_YUV2BGR_NV12);
                 cv::resize(rgb_image, input_image, cv::Size(640, 640));
 
                 // Detection on GPU
-                ov::Tensor input_det_tensor{ov::element::u8, {batch, 640, 640, 3}, input_image.data};
-                std::vector<ov::Tensor> input_det_tensors = {input_det_tensor};
-                infer_requests_det[id].set_input_tensors(0, input_det_tensors);            
+                // ov::Tensor input_det_tensor{ov::element::u8, {batch, 640, 640, 3}, input_image.data};
+                // std::vector<ov::Tensor> input_det_tensors = {input_det_tensor};
+                // infer_requests_det[id].set_input_tensors(0, input_det_tensors);            
                 
                 if (id == 0) {
                     printWithTimestamp("Detection ...");
@@ -228,51 +231,63 @@ int main(int argc, char* argv[])
     for (int i = 0; i < NUM_STREAMS; i++) {
         threads.push_back(std::thread(getSurface, i));
     }
-    FILE* fp = fopen("/opt/video/car_1080p.h265", "rb");
+    auto feed = [&]() {
+        FILE* fp = fopen("/opt/video/car_1080p.h265", "rb");
 
-    const uint64_t size = 1 * 1024 * 1024;
-    void* addr = malloc(size);
-    while (true) {
-        uint64_t sizeTemp = fread(addr, 1, size, fp);
-        VPP_DECODE_STREAM_InputBuffer buffer;
-        buffer.pAddr = (uint8_t*)addr;
-        buffer.Length = sizeTemp;
-        buffer.BasePts = 0;
-        buffer.FlagEOStream = false;
+        const uint64_t size = 1 * 1024 * 1024;
+        void* addr = malloc(size);
+        while (feedRunning) {
+            uint64_t sizeTemp = fread(addr, 1, size, fp);
+            VPP_DECODE_STREAM_InputBuffer buffer;
+            buffer.pAddr = (uint8_t*)addr;
+            buffer.Length = sizeTemp;
+            buffer.BasePts = 0;
+            buffer.FlagEOStream = false;
 
-        if(sizeTemp < size) {
-            //buffer.FlagEOStream = true;
+            if(sizeTemp < size) {
+                //buffer.FlagEOStream = true;
+            }
+
+            std::thread* arrThread[NUM_STREAMS];
+            for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+                auto feed = [=]() {VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);};
+                arrThread[id] = new std::thread(feed);
+            }
+            for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+                arrThread[id]->join();
+                delete(arrThread[id]);
+            }
+
+
+            //for (int32_t id = 0; id < NUM_STREAMS; ++id) {
+            //VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);
+            //}
+            if(sizeTemp < size) {
+                //break;
+            fseek(fp, 0, SEEK_SET);
+            }
         }
+        fclose(fp);
+        free(addr);
+    };
+    std::thread feed_thread(feed);
 
-    	std::thread* arrThread[NUM_STREAMS];
-        for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-            auto feed = [=]() {VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);};
-            arrThread[id] = new std::thread(feed);
-        }
-        for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-            arrThread[id]->join();
-            delete(arrThread[id]);
-        }
+    usleep(duration * 1'000'000);
 
-
-        //for (int32_t id = 0; id < NUM_STREAMS; ++id) {
-        //VPP_DECODE_STREAM_FeedInput(id, &buffer, -1);
-        //}
-        if(sizeTemp < size) {
-            //break;
-	    fseek(fp, 0, SEEK_SET);
-        }
-    }
-
-    usleep(10000000);
+    feedRunning = false;
+    feed_thread.join();
+    
+    inferRunning = false;
     for (auto& th : threads) {
         th.join();
     }
-    free(addr);
     for (int32_t id = 0; id < NUM_STREAMS; ++id) {
         VPP_DECODE_STREAM_Stop(id);
+    }
+    for (int32_t id = 0; id < NUM_STREAMS; ++id) {
         VPP_DECODE_STREAM_Destroy(id);
     }
-    fclose(fp);
     VPP_DeInit();
+    
+    printf("Decode and detection finished.\n");
 }

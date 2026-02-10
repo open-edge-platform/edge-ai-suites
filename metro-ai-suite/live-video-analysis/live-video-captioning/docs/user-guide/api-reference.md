@@ -61,11 +61,6 @@ The SSE stream provides real-time metadata received from the MQTT broker. Each m
 }
 ```
 
-### WebSockets
-
-- `ws://localhost:4173/ws/collector` — Metrics collector connection (single connection)
-- `ws://localhost:4173/ws/clients` — Metrics broadcast to dashboard clients (multiple connections)
-
 ## Related docs
 
 - [Get Started](./get-started.md)

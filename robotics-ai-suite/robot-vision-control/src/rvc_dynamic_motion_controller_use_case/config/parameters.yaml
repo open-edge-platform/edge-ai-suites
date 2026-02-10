@@ -10,7 +10,8 @@
                 base_link: "base_link"
                 ee_link: "ee_link"
                 motion_controller: "RVCMotionController::Moveit2ServoMotionController"
-                #motion_controller: "RVCMotionController::DobbyMotionController"
+                # Note: Dobby motion controller is Intel IP available under NDA only.
+                # For customers interested in the Dobby motion planner, please contact eci.maintainer@intel.com
                 grasp_plugin: "RVCControl::NonOrientedGrasp"
                 #collision_boxes: []
                 #collision_boxes: ["SideConveyorBeltBox", "FrontConveyorBeltBox", "CameraBox"]

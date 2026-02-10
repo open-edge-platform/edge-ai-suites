@@ -111,21 +111,21 @@ spec:
         - name: REST_SERVER_PORT
           value: "8080"
         - name: no_proxy
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx,ia-mqtt-broker
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx,ia-mqtt-broker,{{ $.Values.config.seaweedfs_s3.name }}
         - name: NO_PROXY
-          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx,ia-mqtt-broker
+          value: localhost,127.0.0.1,.intel.com,{{ $.Values.env.RTSP_CAMERA_IP }},{{ $.Values.env.HOST_IP }},otel-collector,mediamtx,ia-mqtt-broker,{{ $.Values.config.seaweedfs_s3.name }}
         - name: http_proxy
           value: {{ $.Values.env.HTTP_PROXY }}
         - name: https_proxy
           value: {{ $.Values.env.HTTPS_PROXY }}
         - name: S3_STORAGE_HOST
-          value: "{{ $.Values.env.HOST_IP }}"
+          value: "{{ $.Values.config.seaweedfs_s3.name }}"
         - name: S3_STORAGE_PORT
-          value: "{{ $.Values.env.S3_STORAGE_PORT }}"
+          value: "8333"
         - name: S3_STORAGE_USER
-          value: "{{ $.Values.env.MINIO_ACCESS_KEY }}"
+          value: "{{ $.Values.env.S3_STORAGE_USERNAME }}"
         - name: S3_STORAGE_PASS
-          value: "{{ $.Values.env.MINIO_SECRET_KEY }}"
+          value: "{{ $.Values.env.S3_STORAGE_PASSWORD }}"
         - name: ENABLE_OPEN_TELEMETRY
           value: "{{ $.Values.env.ENABLE_OPEN_TELEMETRY }}"
         - name: OTEL_COLLECTOR_HOST

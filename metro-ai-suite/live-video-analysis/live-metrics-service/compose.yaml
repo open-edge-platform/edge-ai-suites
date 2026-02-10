@@ -1,0 +1,68 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Standalone Docker Compose for Metrics Service
+# This can be deployed independently on any host system with a collector
+
+name: ${PROJECT_NAME:-metrics-stack}
+
+services:
+  live-metrics-service:
+    image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
+    build: .
+    container_name: live-metrics-service
+    environment:
+      - no_proxy=localhost,127.0.0.1,collector,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,collector,${NO_PROXY}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - METRICS_PORT=${METRICS_PORT:-9090}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      # Optional: Configure target service polling
+      - TARGET_SERVICE_URL=${TARGET_SERVICE_URL:-}
+      - METRICS_ENDPOINT=${METRICS_ENDPOINT:-/api/metrics/status}
+      - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-2}
+    ports:
+      - "${METRICS_PORT:-9090}:9090"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9090/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - metrics_network
+
+  collector:
+    image: docker.io/intel/vippet-collector:2025.2.0
+    container_name: collector
+    ports:
+      - "${PROMETHEUS_PORT:-9273}:9273"
+    privileged: true
+    devices:
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - "/run:/run"
+      - "/proc:/proc"
+    pid: host
+    volumes:
+      - "./telegraf.conf:/etc/telegraf/telegraf.conf:ro"
+      - "./collector-signals:/app/.collector-signals"
+    restart: on-failure:5
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=localhost,127.0.0.1,live-metrics-service,${no_proxy}
+      - WEBSOCKET_URL=ws://live-metrics-service:9090/ws/collector
+    depends_on:
+      - live-metrics-service
+    networks:
+      - metrics_network
+
+networks:
+  metrics_network:
+    driver: bridge

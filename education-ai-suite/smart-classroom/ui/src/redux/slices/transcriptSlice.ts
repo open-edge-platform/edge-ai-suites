@@ -11,6 +11,13 @@ export interface TranscriptSegment {
 
 type SupportedLanguage = "en" | "zh";
 
+type TranscriptStatus =
+  | "idle"
+  | "streaming"
+  | "finalizing"
+  | "complete"
+  | "error";
+
 interface TranscriptState {
   segments: TranscriptSegment[];
   currentTypingIndex: number;
@@ -19,6 +26,7 @@ interface TranscriptState {
   totalDuration: number | null;
   speakerStats: { [speaker: string]: number };
   detectedLanguage: SupportedLanguage | null;
+  status: TranscriptStatus;
 }
 
 const initialState: TranscriptState = {
@@ -29,6 +37,7 @@ const initialState: TranscriptState = {
   totalDuration: null,
   speakerStats: {},
   detectedLanguage: null,
+  status: "idle",
 };
 
 const normalizeSpeaker = (s?: string | null) =>

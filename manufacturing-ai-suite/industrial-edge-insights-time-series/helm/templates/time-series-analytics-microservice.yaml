@@ -50,7 +50,7 @@ spec:
         supplementalGroups: [109,110,992]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
       containers:
       - name: ia-time-series-analytics-microservice
-        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           {{- if .Values.privileged_access_required }}

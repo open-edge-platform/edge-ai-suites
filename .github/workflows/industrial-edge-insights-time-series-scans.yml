@@ -211,11 +211,14 @@ jobs:
             VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
             MTX_WEBRTCICESERVERS2_0_USERNAME=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
             MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
+            S3_STORAGE_USERNAME=$(tr -dc 'a-zA-Z' < /dev/urandom | head -c 8)
+            S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
             HOST_IP=$(hostname -I | awk '{print $1}')
 
             echo "INFLUXDB_USERNAME: $INFLUXDB_USERNAME"
             echo "VISUALIZER_GRAFANA_USER: $VISUALIZER_GRAFANA_USER"
             echo "MTX_WEBRTCICESERVERS2_0_USERNAME: $MTX_WEBRTCICESERVERS2_0_USERNAME"
+            echo "S3_STORAGE_USERNAME: $S3_STORAGE_USERNAME"
             
             if [[ "${{ inputs.application }}" == "time-series" || "${{ inputs.application }}" == "both" ]]; then
               echo "Building Time Series Sample app and scanning docker images"
@@ -269,6 +272,8 @@ jobs:
               sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
               sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
               sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+              sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
+              sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
               sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
               make build
               make up
@@ -709,6 +714,8 @@ jobs:
           VISUALIZER_GRAFANA_PASSWORD=$(openssl rand -hex 10)
           MTX_WEBRTCICESERVERS2_0_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
           MTX_WEBRTCICESERVERS2_0_PASSWORD=$(openssl rand -hex 10)
+          S3_STORAGE_USERNAME=$(cat /dev/urandom | tr -dc 'a-zA-Z' | head -c 8)
+          S3_STORAGE_PASSWORD=$(openssl rand -hex 10)
           HOST_IP=$(hostname -I | awk '{print $1}')
 
           sed -i "s/INFLUXDB_USERNAME=.*/INFLUXDB_USERNAME=${INFLUXDB_USERNAME}/g" .env
@@ -717,6 +724,8 @@ jobs:
           sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
           sed -i "s/MTX_WEBRTCICESERVERS2_0_USERNAME=.*/MTX_WEBRTCICESERVERS2_0_USERNAME=${MTX_WEBRTCICESERVERS2_0_USERNAME}/g" .env
           sed -i "s/MTX_WEBRTCICESERVERS2_0_PASSWORD=.*/MTX_WEBRTCICESERVERS2_0_PASSWORD=${MTX_WEBRTCICESERVERS2_0_PASSWORD}/g" .env
+          sed -i "s/S3_STORAGE_USERNAME=.*/S3_STORAGE_USERNAME=${S3_STORAGE_USERNAME}/g" .env
+          sed -i "s/S3_STORAGE_PASSWORD=.*/S3_STORAGE_PASSWORD=${S3_STORAGE_PASSWORD}/g" .env
           sed -i "s/HOST_IP=.*/HOST_IP=${HOST_IP}/g" .env
 
           make build

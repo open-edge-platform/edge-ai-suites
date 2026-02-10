@@ -80,7 +80,7 @@ services:
   ia-time-series-analytics-microservice:
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
-    image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -207,7 +207,7 @@ services:
         no_proxy:
     hostname: ia-opcua-server
     read_only: true
-    image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    image: ${DOCKER_REGISTRY}${OPC_UA_SERVER_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     environment:
       LOG_LEVEL: ${LOG_LEVEL}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
@@ -239,7 +239,7 @@ services:
         https_proxy:
         no_proxy:
     read_only: true
-    image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}
+    image: ${DOCKER_REGISTRY}${MQTT_PUBLISHER_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
     restart: unless-stopped
     security_opt:
     - no-new-privileges
