@@ -50,7 +50,12 @@ class RPPGService:
             batch_size=self.config['model']['batch_size']
         )
         
-        self.inference = InferenceEngine(model_path=self.config['model']['path'])
+        # Pass batch_size so the inference engine can fix dynamic
+        # batch dimensions for NPU compilation when needed.
+        self.inference = InferenceEngine(
+            model_path=self.config['model']['path'],
+            batch_size=self.config['model']['batch_size'],
+        )
         
         self.postprocessor = SignalPostprocessor(
             sampling_rate=self.config['postprocessing']['sampling_rate'],

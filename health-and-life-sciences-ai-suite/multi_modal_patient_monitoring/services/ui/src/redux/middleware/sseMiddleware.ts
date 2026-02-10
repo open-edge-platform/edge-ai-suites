@@ -168,8 +168,9 @@ export const sseMiddleware: Middleware = (store) => {
               waveformType: parsedData.waveformType,
               waveformLength: parsedData.waveform?.length
             });
+            
           } else if (workloadType === '3d-pose') {
-            // 3D Pose sends: joints array + confidence
+            // 3D Pose sends: joints array + confidence + frame data
             parsedData = {
               joints: Array.isArray(payload.joints) 
                 ? payload.joints.length 
@@ -177,21 +178,23 @@ export const sseMiddleware: Middleware = (store) => {
               confidence: payload.confidence ?? 0,
               activity: payload.activity,
             };
+          
+            // ✅ Always include frame data immediately (no throttling)
+            if (payload.frame_base64) {
+              parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
+              console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
+            }
             
-            console.log('[SSE] ✓ Parsed 3D-Pose:', parsedData);
-
+            console.log('[SSE] ✓ Parsed 3D-Pose:', {
+              ...parsedData,
+              hasFrame: !!parsedData.frameData
+            });
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }
-      
-          // ✅ Update workload in servicesSlice (only if we have data)
-          if (workloadType && Object.keys(parsedData).length > 0) {
-            console.log(`[SSE] 📤 Dispatching updateWorkloadData:`, {
-              workloadId: workloadType,
-              parsedData,
-              timestamp
-            });
 
+          // ✅ Dispatch for ALL workload types (moved outside the if-else chain)
+          if (Object.keys(parsedData).length > 0) {
             store.dispatch(updateWorkloadData({
               workloadId: workloadType,
               payload: parsedData,
@@ -201,11 +204,10 @@ export const sseMiddleware: Middleware = (store) => {
             console.warn(`[SSE] ⚠️ No data to dispatch for ${workloadType}`);
           }
 
-        } catch (err) {
-          console.error('[SSE] ❌ Parse error:', err);
-          console.error('[SSE] Raw event data:', event.data);
+        } catch (error) {
+          console.error('[SSE] ❌ Error parsing event:', error);
         }
-      };
+      }; // ✅ Missing closing brace for onmessage
 
       eventSource.onerror = (error) => {
         console.error('[SSE] ❌ Connection error:', error);
@@ -227,7 +229,7 @@ export const sseMiddleware: Middleware = (store) => {
           }
         }, 5000);
       };
-    }
+    } // ✅ Missing closing brace for sse/connect action
 
     // Handle SSE disconnect
     if (action.type === 'sse/disconnect') {

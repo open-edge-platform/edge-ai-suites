@@ -22,6 +22,7 @@ const LeftPanel = () => {
       latestData: {},
       lastEventTime: null,
       waveform: undefined,
+      frameData: undefined,
     };
   };
 
@@ -43,6 +44,7 @@ const LeftPanel = () => {
                 latestVitals={getWorkloadState(expandedCard.id).latestData}
                 lastEventTime={getWorkloadState(expandedCard.id).lastEventTime}
                 waveform={getWorkloadState(expandedCard.id).waveform}
+                frameData={getWorkloadState(expandedCard.id).frameData}
                 isExpanded={true}
                 onExpand={() => handleExpand(expandedCard.id)}
               />
@@ -61,6 +63,7 @@ const LeftPanel = () => {
                     latestVitals={state.latestData}
                     lastEventTime={state.lastEventTime}
                     waveform={state.waveform}
+                    frameData={state.frameData}
                     isExpanded={false}
                     onExpand={() => handleExpand(workload.id)}
                   />
@@ -80,9 +83,10 @@ const LeftPanel = () => {
                 config={WORKLOAD_CONFIG[workload.id]}
                 status={state.status}
                 eventCount={state.eventCount}
-                latestVitals={state.latestData} // ✅ Should be latestData, not latestVitals
+                latestVitals={state.latestData}
                 lastEventTime={state.lastEventTime}
                 waveform={state.waveform}
+                frameData={state.frameData}
                 isExpanded={false}
                 onExpand={() => handleExpand(workload.id)}
               />
