@@ -11,6 +11,8 @@ const TopPanel = () => {
   const { isProcessing } = useAppSelector((state) => state.app);
   const [notification, setNotification] = useState<string>('');
   const [isBackendReady, setIsBackendReady] = useState(true);
+  const [isStarting, setIsStarting] = useState(false); // ADD THIS
+  const [isStopping, setIsStopping] = useState(false); // ADD THIS
 
   const handleStart = async () => {
     if (!isBackendReady) {
@@ -18,8 +20,12 @@ const TopPanel = () => {
       setTimeout(() => setNotification(''), 5000);
       return;
     }
+    if (isStarting || isProcessing) {
+      return; // FIXED: Prevent double-click
+    }
   
     try {
+      setIsStarting(true);
       setNotification('🚀 Starting workloads...');
       dispatch(startProcessing());
       dispatch(startAllWorkloads()); // ADD THIS
@@ -44,11 +50,17 @@ const TopPanel = () => {
       dispatch(stopProcessing());
       dispatch(stopAllWorkloads()); // ADD THIS
       setTimeout(() => setNotification(''), 5000);
+    }finally {
+      setIsStarting(false); // ADD THIS
     }
   };
 
   const handleStop = async () => {
+    if (isStopping || !isProcessing) {
+      return; // FIXED: Prevent double-click
+    }
     try {
+      setIsStopping(true);
       setNotification('⏹️ Stopping...');
       dispatch(stopProcessing());
       dispatch(stopAllWorkloads()); // ADD THIS
@@ -63,6 +75,9 @@ const TopPanel = () => {
       setNotification('❌ Failed to stop');
       setTimeout(() => setNotification(''), 3000);
     }
+    finally {
+      setIsStopping(false); // ADD THIS
+    }
   };
 
   return (
@@ -70,7 +85,7 @@ const TopPanel = () => {
       <div className="action-buttons">
       <button
         onClick={handleStart}
-        disabled={isProcessing || !isBackendReady}
+        disabled={isStarting || isProcessing || !isBackendReady}
         className="start-button"
         style={{
           opacity: isBackendReady && !isProcessing ? 1 : 0.5,
@@ -82,7 +97,7 @@ const TopPanel = () => {
 
         <button
           onClick={handleStop}
-          disabled={!isProcessing}
+          disabled={isStopping || !isProcessing}
           className="stop-button"
           title={!isProcessing ? 'No workloads running' : 'Stop all workloads'}
         >
