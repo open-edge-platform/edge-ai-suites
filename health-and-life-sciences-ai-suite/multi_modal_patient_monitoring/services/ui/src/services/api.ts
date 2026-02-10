@@ -1,10 +1,4 @@
 // src/services/api.ts
-
-// Extend ImportMeta to include env property
-interface ImportMeta {
-  env: Record<string, string>;
-}
-
 export type WorkloadType = 'rppg' | 'ai-ecg' | 'mdpnp' | '3d-pose' | 'all';
 export type StreamingStatus = { locked: boolean; remaining_seconds: number };
 export type StartResponse = { 
