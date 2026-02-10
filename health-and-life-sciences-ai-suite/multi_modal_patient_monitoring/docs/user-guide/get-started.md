@@ -2,19 +2,7 @@
 
 This guide walks you through building and running the multi‑modal patient monitoring reference application, including the RPPG (remote photoplethysmography) service running on Intel CPU, GPU, or NPU.
 
-> Prerequisites and basic usage here are intentionally high‑level. Adapt paths, proxies, and hardware configuration to your environment as needed.
-
-### Prerequisites
-
-- **Host OS:** Ubuntu 22.04 (or compatible Linux distribution).
-- **Docker and Docker Compose:**
-	- Docker Engine 24.x or newer.
-	- Docker Compose plugin (`docker compose` CLI) or standalone `docker-compose`.
-- **Intel hardware:**
-	- Intel CPU (required).
-	- Intel integrated GPU and/or Intel NPU (optional, for accelerator‑backed inference).
-- **Proxy configuration (optional):**
-	- If your environment uses HTTP/HTTPS proxies, export `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` before building.
+Before you begin, review the [System Requirements](system-requirements.md) to ensure your environment meets the recommended hardware and software prerequisites.
 
 ### Clone the Repository
 
@@ -29,19 +17,20 @@ Make sure you are in the `multi_modal_patient_monitoring` directory before runni
 
 ### Configure Hardware Target
 
-The RPPG service uses an environment variable to select the OpenVINO target device:
+Each AI workload uses a device environment variable to select its OpenVINO target device. These are defined in `configs/device.env`:
 
-- `RPPG_DEVICE=CPU` – run the MTTS‑CAN model on CPU.
-- `RPPG_DEVICE=GPU` – use Intel integrated GPU.
-- `RPPG_DEVICE=NPU` – use Intel NPU when available.
+- `ECG_DEVICE` – device for the AI‑ECG workload (for example, `GPU`).
+- `RPPG_DEVICE` – device for the RPPG workload (`CPU`, `GPU`, or `NPU`).
+- `MDPNP_DEVICE` – device for MDPnP processing (for example, `CPU`).
+- `POSE_3D_DEVICE` – device for the 3D‑pose estimation workload (for example, `GPU`).
 
-You can set this in the shell before starting the application with `make`:
+To configure these:
 
-```bash
-export RPPG_DEVICE=NPU    # or GPU, CPU
-```
+1. Open `configs/device.env` in a text editor.
+2. Locate the entries for `ECG_DEVICE`, `RPPG_DEVICE`, `MDPNP_DEVICE`, and `POSE_3D_DEVICE`.
+3. Set each to the appropriate device string supported on your system (typically `CPU` or `GPU`, and `NPU` where available and supported).
 
-The `docker-compose.yaml` (invoked by the Makefile) passes this value into the `rppg` service so that the inference engine compiles the OpenVINO model on the requested device, with automatic fallback to CPU if the chosen accelerator is not available or unsupported for the model.
+When you run `make run` or `make run REGISTRY=false`, the compose file reads `configs/device.env` and passes these values into the corresponding services so that each inference engine compiles its OpenVINO model on the requested device, with automatic fallback to CPU when necessary.
 
 ### Run Using Pre‑Built Images (Registry Mode)
 
