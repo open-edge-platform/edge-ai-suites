@@ -16,7 +16,7 @@ Enabling such use cases across multiple viewpoints helps in understanding the ob
 
 ## Key Benefits
 
-- **Accuracy**: Multiview Accuracy.
+- **Accuracy**: Multi view accuracy.
 - **Revenue Protection**: Advanced "Lift Axle" detection using Computer Vision allows for accurate tariffing.
 - **Audit Compliance**: Every transaction includes an "Image Evidence" for simplified auditing.
 
@@ -28,13 +28,13 @@ The system uses the **Metro Edge Architecture** based on three key principles:
 2. **Control**: SceneScape Controller aggregates metadata.
 3. **Analytics**: Node-RED transforms events into traffic insights (Traffic Volume, Flow Efficiency, Tariffing).
 
-For more details, refer to [How it Works](docs/user-guide/how-it-works.md).
+For more details, refer to [How it Works](./docs/user-guide/how-it-works.md).
 
 ## Learn More
 
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware, OS and Software Prerequisites.
-- [Get Started](docs/user-guide/get-started.md): Installation, Configuration and Launch steps.
-- [Technical Reference](./docs/user-guide/technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
+- [Get Started](./docs/user-guide/get-started.md): Installation, Configuration and Launch steps.
+- [Technical Reference](./docs/user-guide/how-it-works/technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
 - [Troubleshooting](./docs/user-guide/troubleshooting.md): Solutions to common issues.
 
 ## License

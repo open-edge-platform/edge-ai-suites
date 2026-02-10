@@ -1,6 +1,6 @@
 # Technical Reference
 
-## 1. Technical Deep Dive: The Perception Layer
+## 1. The Perception Layer
 
 The core of the system is the **DLStreamer Pipeline Server**, which orchestrates
 three parallel pipelines defined in `config.json`.
@@ -43,7 +43,7 @@ The system captures evidence from all angles to create a complete "Vehicle Packa
 Instead of sending raw video streams, adapters encode "Evidence Crops" as
 **Base64 strings** directly inside the JSON MQTT payload.
 
-## 2. Engineering Specifications (Performance & Optimization)
+## 2. Performance & Optimization
 
 The system achieves high-throughput processing on Edge hardware through specific optimizations defined in `config.json`.
 The `docker-compose.yml` file mentions all the services and the pipelines are configured in `config.json` file.
@@ -82,7 +82,7 @@ Raw metadata is valuable, but actionable insights come from the Analytics Pipeli
 - **Logic:** The **Function node** aggregates counts per region and calculates **Dwell Time** (congestion).
 - **Output:** The **InfluxDB OUT Node** writes normalized data points to InfluxDB.
 
-![Node-RED Flow](./_assets/smart_tolling_nodered.png)
+![Node-RED Flow](../_assets/smart_tolling_nodered.png)
 
 ### 3.2 Storage (InfluxDB)
 
@@ -90,14 +90,14 @@ InfluxDB acts as a single source of truth. All critical and shared data is
 stored in one location, ensuring every user and system accesses the same,
 accurate and consistent information.
 
-![InfluxDB Dashboard 1](./_assets/smart_tolling_influx_db.png)
+![InfluxDB Dashboard 1](../_assets/smart_tolling_influx_db.png)
 
 ### 3.3 Visualization (Grafana)
 
 The system ships with a pre-configured dashboard (`anthem-intersection.json` schema)
 focusing on Traffic Volume, Flow Efficiency and Safety Alerts.
 
-![Grafana Dashboard 1](./_assets/garfana_Dashboard1.png)
+![Grafana Dashboard 1](../_assets/garfana_Dashboard1.png)
 
 ## 4. API Reference
 

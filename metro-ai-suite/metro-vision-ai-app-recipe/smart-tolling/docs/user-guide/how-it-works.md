@@ -2,7 +2,7 @@
 
 This section provides a high-level view of how the application integrates with a typical system architecture.
 
-![High-Level System Diagram](./_assets/smart_tolling_architecture.svg)
+![High-Level System Diagram](./_assets/smart_tolling_architecture.png)
 
 ## Diagram Description
 
@@ -44,7 +44,16 @@ This section provides a high-level view of how the application integrates with a
   Check the hardware and software requirements for deploying the application.
 - [Get Started](./get-started.md):
   Follow step-by-step instructions to set up the application.
-- [Technical Reference](./technical-reference.md): Learn more about engineering specification and
+- [Technical Reference](./how-it-works/technical-reference.md): Learn more about engineering specification and
   how to use Zero-Copy Pipeline and API.
 - [Support and Troubleshooting](./troubleshooting.md):
   Find solutions to common issues and troubleshooting steps.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./how-it-works/technical-reference
+
+:::
+hide_directive-->

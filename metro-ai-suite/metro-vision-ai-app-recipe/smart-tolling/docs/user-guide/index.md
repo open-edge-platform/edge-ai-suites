@@ -4,19 +4,17 @@ The **Metro Smart Tolling Application** is a high-precision Edge AI solution des
 
 Enabling such use cases across multiple viewpoints helps in understanding the object interaction with the real world in 3-D space. All the components used run on a single system enabling low latency, simplified deployment and cost efficiency.
 
-![Smart Tolling System Architecture](./_assets/smart_tolling_architecture.png)
-
 ## Use Cases
 
 - **Vehicle Axle Detection**: Determines vehicle class based on axle and wheel count
-  - Usage: Used for toll classification and revenue calculation.
+  - Used for toll classification and revenue calculation.
 - **License Plate Detection**: Identifies vehicles uniquely using license plates
-  - Usage: Used for reading vehicle license plate text from both front and rear views.
-- **Visualization & Analytics**:Provides real-time and historical insights for toll operators.
+  - Used for reading vehicle license plate text from both front and rear views.
+- **Visualization & Analytics**: Provides real-time and historical insights for toll operators.
 
 ## Key Benefits
 
-- **Accuracy**: Multiview Accuracy.
+- **Accuracy**: Multi view accuracy.
 - **Revenue Protection**: Advanced "Lift Axle" detection using Computer Vision allows for accurate tariffing.
 - **Audit Compliance**: Every transaction includes an "Image Evidence" for simplified auditing.
 
@@ -34,7 +32,7 @@ For more details, refer to [How it Works](./how-it-works.md).
 
 - [System Requirements](./get-started/system-requirements.md): Hardware, OS and Software Prerequisites.
 - [Get Started](./get-started.md): Installation, Configuration and Launch steps.
-- [Technical Reference](./technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
+- [Technical Reference](./how-it-works/technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
 - [Troubleshooting](./troubleshooting.md): Solutions to common issues.
 
 <!--hide_directive
@@ -43,7 +41,6 @@ For more details, refer to [How it Works](./how-it-works.md).
 
 get-started
 how-it-works
-technical-reference
 troubleshooting
 
 :::
