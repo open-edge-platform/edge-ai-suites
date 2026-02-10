@@ -101,20 +101,44 @@ Edit `windturbine_anomaly_detector.py`:
 
 ```python
 # 1. Update loading
-def load_model(filename):
-    # Pickle (default)
-    import pickle
-    return pickle.load(open(filename, 'rb'))
-    
-    # ONNX
-    # import onnxruntime as rt
-    # return rt.InferenceSession(filename)
-    
-    # PyTorch
-    # model = YourModelClass()
-    # model.load_state_dict(torch.load(filename))
-    # return model.eval()
+def load_model(filename, format=None):
+    """
+    Load a model from disk.
 
+    Parameters
+    ----------
+    filename : str
+        Path to the model file.
+    format : str, optional
+        Model format: "pkl", "onnx", "pt"/"torch". If None, inferred from file extension.
+    """
+    import os
+
+    # Infer format from file extension if not provided
+    if format is None:
+        _, ext = os.path.splitext(filename)
+        format = ext.lstrip(".").lower()
+
+    # Pickle (default)
+    if format in ("pkl", "pickle", ""):
+        import pickle
+        with open(filename, "rb") as f:
+            return pickle.load(f)
+
+    # ONNX
+    # elif format == "onnx":
+    #     import onnxruntime as rt
+    #     return rt.InferenceSession(filename)
+
+    # PyTorch
+    # elif format in ("pt", "torch"):
+    #     import torch
+    #     model = YourModelClass()
+    #     model.load_state_dict(torch.load(filename))
+    #     return model.eval()
+
+    # Unknown / unsupported format
+    raise ValueError(f"Unsupported model format: {format!r}")
 # 2. Update inference (single point only)
 y_pred = self.model.predict(np.reshape(x, (-1, 1)))  # sklearn - single point
 # y_pred = self.model.run(None, {'input': x})[0]  # ONNX - single point
@@ -385,10 +409,13 @@ def evaluate(model, X_test, y_test):
     print(f"R²: {r2_score(y_test, y_pred):.4f}")
     
     # Inference speed
-    start = time.time()
-    for _ in range(1000):
+    num_iters = 1000
+    start = time.perf_counter()
+    for _ in range(num_iters):
         model.predict(X_test[:1])
-    print(f"Avg latency: {(time.time()-start):.2f} ms")
+    elapsed = time.perf_counter() - start
+    avg_latency_ms = (elapsed / num_iters) * 1000
+    print(f"Avg latency per inference: {avg_latency_ms:.2f} ms")
 ```
 
 ---
@@ -465,7 +492,7 @@ START
 
 ---
 
-## Appendix A: Hyperparameter Tuning Guidance
+## Appendix: Hyperparameter Tuning Guidance
 
 ### Random Forest Tuning
 
@@ -560,12 +587,12 @@ GridSearchCV(RandomForestRegressor(), param_grid, cv=5,
 
 ---
 
-## Appendix D: References and Resources
+## Appendix: References and Resources
 
 ### Documentation
-- [Training README](training/README.md)
-- [Application Config](time-series-analytics-config/config.json)
-- [UDF Implementation](time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
+- [Training README](../../../training/README.md)
+- [Application Config](../../../time-series-analytics-config/config.json)
+- [UDF Implementation](../../../time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
 
 ### Data Sources
 - **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)
