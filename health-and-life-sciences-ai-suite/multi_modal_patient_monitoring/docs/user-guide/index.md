@@ -19,7 +19,7 @@ Together, these components illustrate how vision- and signal-based AI workloads 
 Use the following pages to get started and understand the system:
 
 - **[System Requirements](system-requirements.md)** – Hardware, software, and network requirements, plus an overview of the AI models used by each workload.
-- **[System Design](System-design.md)** – High-level architecture, service responsibilities, and data/control flows.
+- **[System Design](system-design.md)** – High-level architecture, service responsibilities, and data/control flows.
 - **[Get Started](get-started.md)** – Step-by-step instructions to build and run the application using `make` and Docker.
 
 > This application is provided for development and evaluation purposes only and is *not* intended for clinical or diagnostic use.
