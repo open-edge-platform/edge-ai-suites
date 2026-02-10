@@ -1,4 +1,4 @@
-// src/components/RightPanel/WorkloadStatusAccordion.tsx
+import React from 'react';
 import { useAppSelector } from '../../redux/hooks';
 import Accordion from '../common/Accordion';
 import { WORKLOADS } from '../../constants';
@@ -8,6 +8,8 @@ const WorkloadStatusAccordion = () => {
   const isProcessing = useAppSelector((state) => state.app.isProcessing);
   const aggregatorStatus = useAppSelector((state) => state.services.aggregator.status);
   const workloads = useAppSelector((state) => state.services.workloads);
+  // ADD THIS:
+  const workloadDevices = useAppSelector((state) => state.metrics.workloadDevices);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -22,57 +24,55 @@ const WorkloadStatusAccordion = () => {
     }
   };
 
+  // ADD THIS: Map workload IDs to device keys
+  const deviceKeyMap: Record<string, string> = {
+    'rppg': 'rppg',
+    'ai-ecg': 'ai_ecg',
+    'mdpnp': 'mdpnp',
+    '3d-pose': 'pose_3d',
+  };
+
   return (
-    <Accordion title="📊 Workload Status" defaultOpen>
-      <div style={{ marginBottom: '16px' }}>
-        <strong>Processing:</strong> {isProcessing ? '🟢 Active' : '⚪ Idle'}
-      </div>
-
-      <div style={{ marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #e6e7e8' }}>
-        <strong>SSE Connection:</strong>{' '}
-        <span style={{ color: getStatusColor(aggregatorStatus) }}>
-          {aggregatorStatus.toUpperCase()}
-        </span>
-      </div>
-
+    <Accordion title="Workload Devices" defaultOpen>
       <div className="workload-status-list">
         {WORKLOADS.map((workload) => {
           const state = workloads[workload.id];
+          // ADD THIS: Get device info for this workload
+          const deviceKey = deviceKeyMap[workload.id];
+          const deviceInfo = workloadDevices?.workloads?.[deviceKey as keyof typeof workloadDevices.workloads];
           
           return (
             <div key={workload.id} className="workload-status-item">
               <div className="workload-status-header">
-                <span className="workload-icon" style={{ fontSize: '20px' }}>
-                  {workload.icon}
-                </span>
                 <span className="workload-name">{workload.name}</span>
-                <div className="status-indicator">
-                  <span 
-                    className="status-dot" 
-                    style={{ 
-                      backgroundColor: getStatusColor(state?.status || 'idle'),
-                      width: '10px',
-                      height: '10px',
-                      borderRadius: '50%',
-                      display: 'inline-block'
-                    }} 
-                  />
-                  <span className="status-text" style={{ marginLeft: '8px', fontSize: '12px' }}>
-                    {state?.status || 'idle'}
-                  </span>
+                   {/* ADD THIS: Show device info */}
+              {deviceInfo && (
+                <div style={{ 
+                  marginTop: '8px', 
+                  padding: '8px', 
+                  background: '#f8f9fa', 
+                  borderRadius: '4px',
+                  fontSize: '11px'
+                }}>
+                  <div style={{ marginBottom: '4px' }}>
+                    <strong>Device:</strong>{' '}
+                    <span style={{ 
+                      padding: '2px 6px', 
+                      background: '#0071c5', 
+                      color: 'white', 
+                      borderRadius: '3px',
+                      fontWeight: 'bold',
+                      fontSize: '10px'
+                    }}>
+                      {deviceInfo.configured_device}
+                    </span>
+                  </div>
+                  <div style={{ color: '#666', lineHeight: '1.4' }}>
+                    {deviceInfo.resolved_detail}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="workload-status-meta" style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
-                <span className="event-count">
-                  📊 {state?.eventCount || 0} events
-                </span>
-                {state?.lastEventTime && (
-                  <span style={{ marginLeft: '12px' }}>
-                    🕐 {new Date(state.lastEventTime).toLocaleTimeString()}
-                  </span>
-                )}
-              </div>
+              )}
+              </div>                      
             </div>
           );
         })}

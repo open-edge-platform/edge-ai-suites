@@ -1,7 +1,8 @@
-// src/components/TopPanel/TopPanel.tsx
-import { useState , useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
+// ADD THIS IMPORT:
+import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
 import { api } from '../../services/api';
 import '../../assets/css/TopPanel.css';
 
@@ -10,21 +11,6 @@ const TopPanel = () => {
   const { isProcessing } = useAppSelector((state) => state.app);
   const [notification, setNotification] = useState<string>('');
   const [isBackendReady, setIsBackendReady] = useState(true);
-
-  // useEffect(() => {
-  //   const checkBackend = async () => {
-  //     const isHealthy = await api.pingBackend();
-  //     setIsBackendReady(isHealthy);
-  //     if (!isHealthy) {
-  //       setNotification('⚠️ Backend unavailable');
-  //     } else if (notification.includes('unavailable')) {
-  //       setNotification('');
-  //     }
-  //   };
-  //   checkBackend();
-  //   const interval = setInterval(checkBackend, 10000); // Check every 10s
-  //   return () => clearInterval(interval);
-  // }, []);
 
   const handleStart = async () => {
     if (!isBackendReady) {
@@ -36,40 +22,36 @@ const TopPanel = () => {
     try {
       setNotification('🚀 Starting workloads...');
       dispatch(startProcessing());
+      dispatch(startAllWorkloads()); // ADD THIS
       
-      console.log('[TopPanel] 🔵 Calling API start...');
       const response = await api.start('all');
-      console.log('[TopPanel] 🟢 API response:', response);
       
       if (response.status === 'ok') {
-        const autoStopTime = response.auto_stop_in_seconds || 60;
-        setNotification(`✅ Started (auto-stop in ${autoStopTime}s)`);
+        setNotification('✅ Workloads started successfully'); // REMOVE auto-stop message
         
-        // Connect SSE
         const eventsUrl = api.getEventsUrl(['rppg', 'ai-ecg', 'mdpnp', '3d-pose']);
-        console.log('[TopPanel] 🟡 SSE URL:', eventsUrl);
-        console.log('[TopPanel] 🟡 Dispatching sse/connect...');
-        
         dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
         
-        console.log('[TopPanel] ✅ SSE connect dispatched');
-        
-        setTimeout(() => setNotification(''), 5000);
+        setTimeout(() => setNotification(''), 3000); // CHANGE from 5000 to 3000
       } else {
         setNotification('❌ Failed to start');
+        dispatch(stopAllWorkloads()); // ADD THIS
         setTimeout(() => setNotification(''), 3000);
       }
     } catch (error) {
       console.error('[TopPanel] ❌ Start failed:', error);
       setNotification('❌ Error starting workloads');
       dispatch(stopProcessing());
+      dispatch(stopAllWorkloads()); // ADD THIS
       setTimeout(() => setNotification(''), 5000);
     }
   };
+
   const handleStop = async () => {
     try {
       setNotification('⏹️ Stopping...');
       dispatch(stopProcessing());
+      dispatch(stopAllWorkloads()); // ADD THIS
       
       await api.stop('all');
       dispatch({ type: 'sse/disconnect' });
@@ -79,7 +61,6 @@ const TopPanel = () => {
     } catch (error) {
       console.error('[TopPanel] Stop failed:', error);
       setNotification('❌ Failed to stop');
-      dispatch(startProcessing()); // Revert
       setTimeout(() => setNotification(''), 3000);
     }
   };

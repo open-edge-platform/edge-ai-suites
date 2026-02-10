@@ -124,6 +124,16 @@ const servicesSlice = createSlice({
         hasWaveform: !!workload.waveform
       });
     },
+    startAllWorkloads: (state) => {
+      Object.keys(state.workloads).forEach((key) => {
+        state.workloads[key].status = 'running';
+      });
+    },
+    stopAllWorkloads: (state) => {
+      Object.keys(state.workloads).forEach((key) => {
+        state.workloads[key].status = 'stopped';
+      });
+    },
 
     resetWorkloadData: (state, action: PayloadAction<WorkloadId>) => {
       const workloadId = action.payload;
@@ -137,5 +147,6 @@ const servicesSlice = createSlice({
   },
 });
 
-export const { setAggregatorStatus, updateWorkloadData, resetWorkloadData } = servicesSlice.actions;
+export const { setAggregatorStatus, updateWorkloadData, resetWorkloadData, startAllWorkloads,
+  stopAllWorkloads, } = servicesSlice.actions;
 export default servicesSlice.reducer;
