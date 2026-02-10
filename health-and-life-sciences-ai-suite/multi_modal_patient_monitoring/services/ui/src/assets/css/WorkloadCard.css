@@ -219,8 +219,8 @@
 }
 
 .vital-value {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--color-dark);
   font-family: var(--font-mono);
   line-height: 1;
