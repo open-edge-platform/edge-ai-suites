@@ -33,48 +33,6 @@ const WorkloadStatusAccordion = () => {
   };
 
   return (
-  //   <Accordion title="Workload Devices" defaultOpen>
-  //     <div className="workload-status-list">
-  //       {WORKLOADS.map((workload) => {
-  //         const state = workloads[workload.id];
-  //         // ADD THIS: Get device info for this workload
-  //         const deviceKey = deviceKeyMap[workload.id];
-  //         const deviceInfo = workloadDevices?.workloads?.[deviceKey as keyof typeof workloadDevices.workloads];
-          
-  //         return (
-  //           <div key={workload.id} className="workload-status-item">
-  //             <div className="workload-status-header">
-  //               <span className="workload-name">{workload.name}</span>
-  //                  {/* ADD THIS: Show device info */}
-  //             {deviceInfo && (
-  //               <div style={{ 
-  //                 background: '#f8f9fa', 
-  //                 borderRadius: '4px',
-  //                 fontSize: '11px'
-  //               }}>
-  //                 <div style={{ marginBottom: '1px' }}>
-  //                   <strong>Device:</strong>{' '}
-  //                   <span style={{ 
-  //                     color: 'black', 
-  //                     borderRadius: '3px',
-  //                     fontWeight: 'bold',
-  //                     fontSize: '10px'
-  //                   }}>
-  //                     {deviceInfo.configured_device}
-  //                   </span>
-  //                 </div>
-  //                 <div style={{ lineHeight: '1.4' }}>
-  //                   {deviceInfo.resolved_detail}
-  //                 </div>
-  //               </div>
-  //             )}
-  //             </div>                      
-  //           </div>
-  //         );
-  //       })}
-  //     </div>
-  //   </Accordion>
-  // );
   <Accordion title="Workload Devices" defaultOpen>
       <div className="configuration-metrics">
         {WORKLOADS.map((workload) => {
