@@ -8,6 +8,7 @@ interface WorkloadState {
   lastEventTime: number | null;
   latestData: Record<string, any>;
   waveform?: number[];
+  frameData?: string; 
 }
 
 interface ServicesState {
@@ -23,7 +24,7 @@ const initialState: ServicesState = {
     'rppg': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
     'ai-ecg': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
     'mdpnp': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
-    '3d-pose': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {} },
+    '3d-pose': { status: 'idle', eventCount: 0, lastEventTime: null, latestData: {}, frameData: undefined },
   },
 };
 
@@ -108,12 +109,18 @@ const servicesSlice = createSlice({
           vitals: { HR: workload.latestData.HR, CO2_ET: workload.latestData.CO2_ET, BP_DIA: workload.latestData.BP_DIA },
           hasWaveform: !!workload.waveform
         });
-      }else if (workloadId === '3d-pose') {
+      } else if (workloadId === '3d-pose') {
         // 3D Pose sends: joints array
         if (payload.joints) {
           workload.latestData.joints = Array.isArray(payload.joints) ? payload.joints.length : payload.joints;
           workload.latestData.confidence = payload.confidence || 0;
           console.log(`[Redux] ✓ 3D Pose joints: ${workload.latestData.joints}`);
+        }
+
+        // ✅ Store frame data
+        if (payload.frameData) {
+          workload.frameData = payload.frameData;
+          console.log(`[Redux] ✓ 3D Pose frame updated`);
         }
       }
 
