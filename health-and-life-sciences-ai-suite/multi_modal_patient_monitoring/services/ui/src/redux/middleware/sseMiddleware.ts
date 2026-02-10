@@ -170,7 +170,7 @@ export const sseMiddleware: Middleware = (store) => {
             });
             
           } else if (workloadType === '3d-pose') {
-            // 3D Pose sends: joints array + confidence + frame data
+            // 3D Pose sends: joints array + confidence
             parsedData = {
               joints: Array.isArray(payload.joints) 
                 ? payload.joints.length 
@@ -179,16 +179,7 @@ export const sseMiddleware: Middleware = (store) => {
               activity: payload.activity,
             };
           
-            // ✅ Always include frame data immediately (no throttling)
-            if (payload.frame_base64) {
-              parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
-              console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
-            }
-            
-            console.log('[SSE] ✓ Parsed 3D-Pose:', {
-              ...parsedData,
-              hasFrame: !!parsedData.frameData
-            });
+            console.log('[SSE] ✓ Parsed 3D-Pose:', parsedData);
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }

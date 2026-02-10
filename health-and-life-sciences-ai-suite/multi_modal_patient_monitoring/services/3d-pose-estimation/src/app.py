@@ -1,6 +1,6 @@
 """
-3D Pose Estimation Service
-Main orchestrator for pose estimation inference and gRPC publishing
+3D Pose Estimation Service with MJPEG Streaming
+Main orchestrator for pose estimation inference, MJPEG streaming, and gRPC publishing
 """
 
 import sys
@@ -18,12 +18,14 @@ from inference import PoseInference
 from pose_encoder import PoseEncoder
 from publisher import GrpcPosePublisher
 from controller_start_stop import start_control_server, is_processing_enabled
+from mjpeg_streamer import MJPEGStreamer
 
 
 class PoseEstimationService:
-    """Main service orchestrator"""
+    """Main service orchestrator with MJPEG streaming"""
 
-    def __init__(self, model_path: str, aggregator_address: str, source_id: str = "camera-1"):
+    def __init__(self, model_path: str, aggregator_address: str, source_id: str = "camera-1",
+                 mjpeg_port: int = 8085, mjpeg_quality: int = 80):
         """
         Initialize the service
         
@@ -31,8 +33,10 @@ class PoseEstimationService:
             model_path: Path to OpenVINO IR model
             aggregator_address: Address of aggregator gRPC server
             source_id: Identifier for this video source
+            mjpeg_port: Port for MJPEG streaming
+            mjpeg_quality: JPEG quality for streaming (1-100)
         """
-        print("[INFO] Initializing Pose Estimation Service")
+        print("[INFO] Initializing Pose Estimation Service with MJPEG Streaming")
         
         self.target_fps = 20
         self.frame_interval = 1.0 / self.target_fps  
@@ -40,29 +44,26 @@ class PoseEstimationService:
         # Device selection is handled by inference.py using POSE_3D_DEVICE env var
         print(f"[INFO] Using OpenVINO device from environment: {os.getenv('POSE_3D_DEVICE', 'GPU')}")
         print(f"[INFO] Target output FPS: {self.target_fps} (frame interval: {self.frame_interval:.3f}s)")
+        print(f"[INFO] MJPEG streaming on port: {mjpeg_port}")
         
-        # Initialize components - inference.py handles device selection internally
+        # Initialize components
         self.inference = PoseInference(model_path)
-        self.encoder = PoseEncoder(source_id)
+        self.encoder = PoseEncoder(source_id)  # No frame encoding needed
         self.publisher = GrpcPosePublisher(aggregator_address, source_id)
+        
+        # Initialize MJPEG streamer
+        self.mjpeg_streamer = MJPEGStreamer(port=mjpeg_port, quality=mjpeg_quality)
+        self.mjpeg_streamer.start_server()
         
         # Performance tracking
         self.frame_count = 0
         self.fps_tracker = deque(maxlen=30)
         
         print("[INFO] Service initialized successfully")
+        print(f"[INFO] MJPEG stream available at: http://localhost:{mjpeg_port}/video_feed")
 
     def filter_valid_poses(self, poses_2d, poses_3d):
-        """
-        Filter poses to keep only high-quality detections
-        
-        Args:
-            poses_2d: List of 2D poses
-            poses_3d: List of 3D poses
-            
-        Returns:
-            Filtered poses_2d and poses_3d lists
-        """
+        """Filter poses to keep only high-quality detections"""
         filtered_2d = []
         filtered_3d = []
         
@@ -71,7 +72,6 @@ class PoseEstimationService:
                 continue
             
             # Parse keypoints from pose_2d
-            # Format: [x0, y0, conf0, x1, y1, conf1, ..., overall_score]
             num_joints = (len(pose_2d) - 1) // 3
             
             # Count valid keypoints (high confidence)
@@ -96,7 +96,7 @@ class PoseEstimationService:
 
     def process_video(self, video_source, flip: bool = False, max_frames: int = None):
         """
-        Main processing loop - keeps service alive and restartable
+        Main processing loop with MJPEG streaming
         
         Args:
             video_source: Path to video file or webcam index (0)
@@ -107,7 +107,7 @@ class PoseEstimationService:
         print(f"[INFO] Service ready - waiting for commands...")
     
         try:
-            # Main service loop - never exits, waits for start/stop commands
+            # Main service loop
             while True:
                 # Wait for start command
                 print(f"[INFO] Waiting for start command...")
@@ -118,7 +118,7 @@ class PoseEstimationService:
                 
                 # Reset frame count and timing for new session
                 session_frame_count = 0
-                last_frame_time = 0  # ✅ Initialize frame timing control
+                last_frame_time = 0
                 session_start_time = time.time()
                 
                 # Processing loop - continues until stop command
@@ -146,7 +146,7 @@ class PoseEstimationService:
     
                     # Process frames from this video iteration
                     while is_processing_enabled():
-                        # ✅ Frame rate control: Check if enough time has passed
+                        # Frame rate control: Check if enough time has passed
                         current_time = time.time()
                         if last_frame_time > 0 and (current_time - last_frame_time) < self.frame_interval:
                             # Sleep for remaining time to maintain target FPS
@@ -171,7 +171,7 @@ class PoseEstimationService:
                         self.frame_count += 1
                         session_frame_count += 1
                         
-                        # ✅ Update frame timing after successful capture
+                        # Update frame timing after successful capture
                         last_frame_time = current_time
     
                         # Process frame
@@ -185,18 +185,20 @@ class PoseEstimationService:
                         # Filter poses
                         filtered_poses_2d, filtered_poses_3d = self.filter_valid_poses(poses_2d, poses_3d)
     
-                        # Encode data with filtered poses
+                        # ✅ Stream annotated frame via MJPEG
+                        self.mjpeg_streamer.update_frame(annotated_frame)
+    
+                        # ✅ Encode pose data only (no frame data)
                         data_packet = self.encoder.encode_data(
-                            annotated_frame,
                             filtered_poses_3d,
                             filtered_poses_2d,
                             frame_number=self.frame_count
                         )
     
-                        # Publish to aggregator via gRPC
+                        # Publish pose data to aggregator via gRPC
                         success = self.publisher.publish(data_packet)
     
-                        # ✅ Calculate actual output FPS based on frame timing
+                        # Calculate actual output FPS based on frame timing
                         session_duration = current_time - session_start_time
                         actual_output_fps = session_frame_count / session_duration if session_duration > 0 else 0
                         
@@ -204,14 +206,14 @@ class PoseEstimationService:
                         avg_inference_ms = np.mean(self.fps_tracker) * 1000
                         inference_fps = 1000 / avg_inference_ms if avg_inference_ms > 0 else 0
     
-                        # Log progress every 60 frames (every 3 seconds at 20 FPS)
+                        # Log progress every 40 frames (every 2 seconds at 20 FPS)
                         if session_frame_count % 40 == 0:
                             person_count = len(filtered_poses_3d)
                             status_msg = f"✓ {person_count} persons" if person_count > 0 else "No persons detected"
                             print(f"[INFO] Session frame {session_frame_count}: "
                                   f"Inference: {avg_inference_ms:.1f}ms ({inference_fps:.1f} FPS) | "
                                   f"Output: {actual_output_fps:.1f} FPS | "
-                                  f"{status_msg} | Published: {'✓' if success else '✗'}")
+                                  f"{status_msg} | Streaming: ✓ | Published: {'✓' if success else '✗'}")
     
                         # Check max frames limit (optional)
                         if max_frames and session_frame_count >= max_frames:
@@ -238,7 +240,6 @@ class PoseEstimationService:
             print(f"[ERROR] Unexpected error: {e}")
             import traceback
             traceback.print_exc()
-            # Don't exit - stay alive for restart
             print("[INFO] Service will continue running...")
             time.sleep(1)
     
@@ -249,6 +250,7 @@ class PoseEstimationService:
             except:
                 pass
             
+            self.mjpeg_streamer.stop_server()
             print(f"[INFO] Total frames processed in this session: {self.frame_count}")
 
 
@@ -259,29 +261,33 @@ def main():
     control_port = os.getenv("CONTROL_PORT", "8083")
     print(f"[INFO] Control server started on port {control_port}")
     
-    parser = argparse.ArgumentParser(description="3D Pose Estimation Service")
+    parser = argparse.ArgumentParser(description="3D Pose Estimation Service with MJPEG Streaming")
     parser.add_argument("--model", required=True, help="Path to OpenVINO IR model XML")
     parser.add_argument("--video", default="0", help="Video file path or webcam index (default: 0)")
     parser.add_argument("--aggregator", default="localhost:50051", help="Aggregator gRPC address")
     parser.add_argument("--source-id", default="3d-pose-camera-1", help="Source identifier")
     parser.add_argument("--flip", action="store_true", help="Flip video horizontally (for webcams)")
     parser.add_argument("--max-frames", type=int, help="Maximum frames to process")
+    parser.add_argument("--mjpeg-port", type=int, default=8085, help="MJPEG streaming port")
+    parser.add_argument("--mjpeg-quality", type=int, default=80, help="MJPEG quality (1-100)")
 
     args = parser.parse_args()
 
-    # Initialize service (device selection handled by environment variables)
+    # Initialize service with MJPEG streaming
     service = PoseEstimationService(
         model_path=args.model,
         aggregator_address=args.aggregator,
-        source_id=args.source_id
+        source_id=args.source_id,
+        mjpeg_port=args.mjpeg_port,
+        mjpeg_quality=args.mjpeg_quality
     )
 
-    # Parse video source - handle both file paths and webcam indices
+    # Parse video source
     video_source = args.video
     if isinstance(video_source, str) and video_source.isdigit():
         video_source = int(video_source)
     
-    # Process video
+    # Process video with streaming
     service.process_video(
         video_source=video_source,
         flip=args.flip,
