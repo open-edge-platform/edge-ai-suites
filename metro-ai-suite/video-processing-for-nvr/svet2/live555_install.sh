@@ -1,5 +1,7 @@
 #!/bin/bash
-sudo apt install -y wget libssl-dev
+set -e
+apt update
+apt install -y wget libssl-dev unzip cmake build-essential
 
 if [ -d "live555-master" ]; then
     rm -rf live555-master

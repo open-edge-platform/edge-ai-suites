@@ -23,7 +23,7 @@ Before You Begin, ensure the following:
 
 ## Pull the helm chart (Optional)
 
-- Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
+> **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
 
 - Download helm chart with the following command
 
@@ -48,7 +48,7 @@ Before You Begin, ensure the following:
   - Run below command in the terminal
     ```bash
     # Install the Image-Based Video Search chart in the ibvs namespace
-    helm install ibvs . --create-namespace -n ibvs 
+    helm install ibvs . --create-namespace -n ibvs
     ```
 
     Some containers in the deployment requires network access. If you are in a proxy
@@ -65,7 +65,7 @@ Before You Begin, ensure the following:
 
 3. **Open IBVS UI**:
   - Now frontend should be accessible at `https://<ip-addr>:30443/`.
-    > Note: To access the above url remotely, replace the `<ip-addr>` with your system IP address. 
+    > **Note:** To access the above url remotely, replace the `<ip-addr>` with your system IP address.
 
 4. **Stop the application**:
   - The app can be uninstalled using the following command:
@@ -73,33 +73,8 @@ Before You Begin, ensure the following:
     helm uninstall -n ibvs ibvs
     ```
 
-## Troubleshooting
-
-1. **Helm Chart Not Found**:
-
-   - Check if the Helm repository was added:
-
-     ```bash
-     helm repo list
-     ```
-
-1. **Pods Not Running**:
-
-   - Review pod logs:
-
-     ```bash
-     kubectl logs {{pod-name}} -n {{namespace}}
-     ```
-
-1. **Service Unreachable**:
-
-   - Confirm the service configuration:
-
-     ```bash
-     kubectl get svc -n {{namespace}}
-     ```
-
 ## Supporting Resources
 
+- [Troubleshooting Helm Deployments](../troubleshooting.md#troubleshooting-helm-deployments)
 - [Kubernetes Documentation](https://kubernetes.io/docs/home/)
 - [Helm Documentation](https://helm.sh/docs/)

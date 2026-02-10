@@ -1,14 +1,13 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import base64
-import json
 import queue
 import threading
 import time
-from pathlib import Path
-from typing import Optional
 from io import BytesIO
 
 import gradio as gr
-from gradio_toggle import Toggle
 from PIL import Image
 
 from config import APP_DETAILS, INITIAL_MAP_HTML
@@ -22,35 +21,14 @@ current_route_info = None
 optimization_active = False
 optimization_thread = None
 curr_agent_iteration = 1
-game_mode_enabled = False  # Global flag for game mode
 UI_UPDATE_INTERVAL = 8  # Poll interval for new updates from data_queue used by thread
 OPTIMIZATION_INTERVAL = 12  # Seconds between agent invocations
 
 # Queue for passing data between agent thread and UI
-data_queue = queue.Queue()
+data_queue: queue.Queue[dict] = queue.Queue()
 
 # Lock for thread-safe access to shared variables
 thread_lock = threading.Lock()
-
-
-def load_game_data():
-    """Load game mode emoji data from JSON file"""
-    game_data_path = Path(__file__).parent / "data" / "game.json"
-    try:
-        with open(game_data_path, "r") as f:
-            return json.load(f)
-    except Exception as e:
-        logger.error(f"Error loading game data: {e}")
-        return {"fire_emojis": [], "flood_emojis": []}
-
-
-def toggle_game_mode(enabled: bool) -> str:
-    """Toggle game mode on/off"""
-    global game_mode_enabled
-    game_mode_enabled = enabled
-    status = "Game Mode: ON" if enabled else "Game Mode: OFF"
-    logger.info(status)
-    return status
 
 
 def get_direct_route(source: str, destination: str) -> tuple[str, str, str]:
@@ -61,16 +39,17 @@ def get_direct_route(source: str, destination: str) -> tuple[str, str, str]:
     # Validate input
     is_valid, error_message = route_service.validate_route_request(source, destination)
     if not is_valid:
-        return error_message, "", route_service.get_fallback_map_html(
-            "Select locations to see the route map"
+        return (
+            error_message,
+            "",
+            route_service.get_fallback_map_html(
+                "Select locations to see the route map"
+            ),
         )
-
-    # Get game data if game mode is enabled
-    game_data = load_game_data() if game_mode_enabled else None
 
     # Start planning the route
     next_data_source, distance, main_route_map = route_service.create_direct_route_map(
-        source, destination, game_data
+        source, destination
     )
 
     thinking_message = (
@@ -85,9 +64,7 @@ def get_direct_route(source: str, destination: str) -> tuple[str, str, str]:
     return agent_status_msg, thinking_message, main_route_map
 
 
-def get_optimal_route(
-    source: str, destination: str
-) -> tuple[str, str, Optional[dict[str, str]]]:
+def get_optimal_route(source: str, destination: str) -> tuple[str, str, str]:
     """
     Uses RouteService to trigger RoutePlanner agent and gets optimized route.
     """
@@ -100,15 +77,12 @@ def get_optimal_route(
             route_service.get_fallback_map_html(
                 "Select locations to see the route map"
             ),
-            None,
+            "",
         )
-
-    # Get game data if game mode is enabled
-    game_data = load_game_data() if game_mode_enabled else None
 
     # Start planning the route
     next_data_source, route_issue, distance, is_sub_optimal, optimized_route_map = (
-        route_service.create_alternate_route_map(source, destination, game_data)
+        route_service.create_alternate_route_map(source, destination)
     )
 
     thinking_message: str = f"\n #### Route: {source} -> {destination}\n\n"
@@ -338,17 +312,17 @@ def create_gradio_interface() -> gr.Blocks:
     css = """
     /* Modern Font Import */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-    
+
     /* Global Font Styles */
     body, .gradio-container, .gradio-container *, .gradio-container label, .gradio-container input, .gradio-container textarea, .gradio-container select, .gradio-container button {
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
     }
-    
+
     h1, h2, h3, h4, h5, h6 {
         font-family: 'Inter', sans-serif !important;
         font-weight: 600;
     }
-    
+
     .map-container {
         border-radius: 12px;
         overflow: hidden;
@@ -427,7 +401,7 @@ def create_gradio_interface() -> gr.Blocks:
     .settings-panel .block {
         width: 100%;
     }
-    
+
     /* Styling for the thinking output markdown component */
     .thinking-output {
         border-radius: 10px;
@@ -438,7 +412,7 @@ def create_gradio_interface() -> gr.Blocks:
         max-height: 50vh;
         line-height: 1.6;
     }
-    
+
     .thinking-output h1, .thinking-output h2, .thinking-output h3 {
         color: #b112cd;
         margin-top: 1em;
@@ -455,7 +429,7 @@ def create_gradio_interface() -> gr.Blocks:
     .thinking-output h4 {
         color: #950d85
     }
-    
+
     .thinking-output h5, .thinking-output h6 {
         color: #b942ab;
     }
@@ -467,7 +441,7 @@ def create_gradio_interface() -> gr.Blocks:
         font-family: 'Roboto Mono', monospace;
         font-size: 0.9em;
     }
-    
+
     .thinking-output pre {
         background-color: #f8fafc;
         padding: 12px;
@@ -475,15 +449,15 @@ def create_gradio_interface() -> gr.Blocks:
         border-left: 3px solid #4f46e5;
         overflow-x: auto;
     }
-    
+
     .thinking-output em, .thinking-output i {
         color: #8d3419;
     }
-    
+
     .thinking-output strong, .thinking-output b {
         color: #262E9E;
     }
-    
+
     .status-indicator {
         padding: 10px 16px;
         border-radius: 4px;
@@ -535,19 +509,6 @@ def create_gradio_interface() -> gr.Blocks:
 
             with gr.Column(scale=1):
                 with gr.Row():
-                    game_mode_toggle = Toggle(
-                        label="Game Mode",
-                        value=False,
-                        color="#2FFF2F",
-                        show_label=True,
-                        container=False,
-                        radius="lg",
-                        interactive=True,
-                    )
-                    game_mode_status = gr.Markdown(
-                        "Game Mode: OFF", elem_id="game-mode-status"
-                    )
-
                     with gr.Column(scale=1):
                         search_btn = gr.Button(
                             "Find Route",
@@ -628,10 +589,6 @@ def create_gradio_interface() -> gr.Blocks:
             intersection_image4,
         ]
 
-        game_mode_toggle.change(
-            fn=toggle_game_mode, inputs=[game_mode_toggle], outputs=[game_mode_status]
-        )
-
         # Connect the search button with initial route display and start the Route Planner agent
         search_btn.click(
             fn=start_agent,
@@ -645,11 +602,6 @@ def create_gradio_interface() -> gr.Blocks:
             fn=lambda: gr.update(elem_classes=["status-indicator", "status-active"]),
             inputs=None,
             outputs=agent_status,
-        ).then(
-            # Disable game mode toggle while route planning is active
-            fn=lambda: gr.update(interactive=False),
-            inputs=None,
-            outputs=game_mode_toggle,
         )
 
         stop_agent_btn.click(
@@ -666,11 +618,6 @@ def create_gradio_interface() -> gr.Blocks:
             fn=lambda: gr.update(elem_classes=["status-indicator", "status-inactive"]),
             inputs=None,
             outputs=agent_status,
-        ).then(
-            # Re-enable game mode toggle when planning stops
-            fn=lambda: gr.update(interactive=True),
-            inputs=None,
-            outputs=game_mode_toggle,
         )
 
         app.load(
@@ -698,9 +645,7 @@ if __name__ == "__main__":
 
     # Get configuration from environment variables
     server_name = os.getenv("GRADIO_SERVER_NAME", "0.0.0.0")
-    server_port = int(
-        os.getenv("GRADIO_SERVER_PORT", "7860")
-    )  # Changed default to match Dockerfile
+    server_port = int(os.getenv("GRADIO_SERVER_PORT", "7860"))
 
     server_config = {
         "server_name": server_name,
