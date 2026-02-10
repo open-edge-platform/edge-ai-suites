@@ -41,7 +41,7 @@ This section summarizes the recommended hardware, software, and network requirem
 
 - **Python (for helper scripts and tools):**
 	- Python 3.10 or newer recommended.
-	- Used primarily for asset preparation scripts and local tooling; application containers include their own Python runtimes (for example, Python 3.12 in the RPPG service image).
+	- Used primarily for asset preparation scripts and local tooling; application containers include their own Python runtimes (for example, Python 3.12 in the rPPG service image).
 
 - **Java (for MDPnP and DDS‑Bridge):**
 	- Java 17 JDK installed on the host.
