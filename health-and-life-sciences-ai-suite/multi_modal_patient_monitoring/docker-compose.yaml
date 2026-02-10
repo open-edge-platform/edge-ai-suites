@@ -243,7 +243,10 @@ services:
       - ./models:/models
       - ./videos:/videos
     devices:
-      - "/dev/dri:/dev/dri"  
+      - "/dev/dri:/dev/dri" 
+      - "/dev/accel/accel0:/dev/accel/accel0" 
+    group_add:
+      - video      
    
   ui:
     build:
