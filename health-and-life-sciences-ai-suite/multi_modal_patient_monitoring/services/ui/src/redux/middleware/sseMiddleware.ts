@@ -96,37 +96,24 @@ export const sseMiddleware: Middleware = (store) => {
             console.log('[SSE] 🔬 AI-ECG raw payload:', JSON.stringify(payload, null, 2));
             
             // AI-ECG sends: inference object + waveform
-            if (payload.inference) {
-              parsedData.prediction = payload.inference.prediction || payload.inference.label || 'Unknown';
-              parsedData.confidence = payload.inference.confidence ?? 0;
-              
-              console.log('[SSE] ✓ Extracted from payload.inference:', {
-                prediction: parsedData.prediction,
-                confidence: parsedData.confidence
-              });
-            }
-            // Fallback to direct fields
-            else if (payload.prediction !== undefined) {
-              parsedData.prediction = payload.prediction;
-              parsedData.confidence = payload.confidence ?? 0;
-              
-              console.log('[SSE] ✓ Extracted from direct fields:', {
-                prediction: parsedData.prediction,
-                confidence: parsedData.confidence
-              });
-            }
-            else {
-              console.warn('[SSE] ⚠️ No prediction data found in:', payload);
-            }
-            
-            // Extract waveform
-            if (payload.waveform && Array.isArray(payload.waveform)) {
+            parsedData.prediction = payload.inference ?? 'Unknown';
+
+            // ✅ Filename
+            parsedData.filename = payload.file ?? 'Unknown';
+
+            // ✅ Waveform
+            if (Array.isArray(payload.waveform)) {
               parsedData.waveform = payload.waveform;
+            }
+
+            // ✅ Waveform frequency (very useful for ECG chart scaling)
+            if (payload.waveform_frequency_hz) {
+              parsedData.waveformFrequency = payload.waveform_frequency_hz;
             }
             
             console.log('[SSE] ✅ Final AI-ECG parsedData:', {
               prediction: parsedData.prediction,
-              confidence: parsedData.confidence,
+              filename: parsedData.filename,
               waveformLength: parsedData.waveform?.length,
               allKeys: Object.keys(parsedData)
             });

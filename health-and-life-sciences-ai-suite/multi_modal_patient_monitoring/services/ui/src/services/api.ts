@@ -1,5 +1,4 @@
 // src/services/api.ts
-
 export type WorkloadType = 'rppg' | 'ai-ecg' | 'mdpnp' | '3d-pose' | 'all';
 export type StreamingStatus = { locked: boolean; remaining_seconds: number };
 export type StartResponse = { 
@@ -13,6 +12,11 @@ export type StopResponse = { status: string; message: string };
 const API_HOST = import.meta.env.VITE_API_HOST || window.location.hostname;
 const API_PORT = import.meta.env.VITE_API_PORT || '8001';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
+const AGGREGATOR_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
+// const METRICS_URL = import.meta.env.VITE_METRICS_BASE_URL || `http://${API_HOST}:${METRICS_PORT}`;
+
+console.log('[API] Aggregator URL:', AGGREGATOR_URL);
+// console.log('[API] Metrics URL:', METRICS_URL);
 
 console.log('[API] BASE_URL configured as:', BASE_URL);
 console.log('[API] Environment variables:', import.meta.env);
@@ -102,39 +106,64 @@ export async function stopWorkloads(target: WorkloadType = 'all'): Promise<StopR
 }
 
 export async function getPlatformInfo(): Promise<{
-  processor?: string;
-  npu?: string;
-  igpu?: string;
-  memory?: string;
-  storage?: string;
-  os?: string;
+  Processor?: string;
+  NPU?: string;
+  iGPU?: string;
+  Memory?: string;
+  Storage?: string;
+  OS?: string;
 }> {
+  console.log('[API] Fetching platform info from:', `${BASE_URL}/platform-info`);
   const response = await fetch(`${BASE_URL}/platform-info`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch platform info: ${response.statusText}`);
   }
   
-  return response.json();
+  const data = await response.json();
+  console.log('[API] Platform info response:', data);
+  return data;
 }
 
 /**
  * Get system resource metrics (CPU, GPU, memory, power)
  */
 export async function getResourceMetrics(): Promise<{
-  cpu_utilization: number[];
-  gpu_utilization: any[];
-  memory: number[];
-  power: number[];
+  cpu_utilization: Array<[string, number]>;
+  gpu_utilization: Array<[string, ...number[]]>;
+  memory: Array<[string, number, number, number, number]>;
+  power: Array<[string, ...number[]]>;
+  npu_utilization: Array<[string, number]>;
 }> {
+  console.log('[API] Fetching metrics from:', `${BASE_URL}/metrics`);
   const response = await fetch(`${BASE_URL}/metrics`);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch resource metrics: ${response.statusText}`);
   }
   
+  const data = await response.json();
+  console.log('[API] Metrics response:', data);
+  return data;
+}
+
+export async function getWorkloadDevices(): Promise<{
+  workloads: {
+    rppg?: { env_key: string; configured_device: string; resolved_detail: string };
+    ai_ecg?: { env_key: string; configured_device: string; resolved_detail: string };
+    mdpnp?: { env_key: string; configured_device: string; resolved_detail: string };
+    pose_3d?: { env_key: string; configured_device: string; resolved_detail: string };
+  };
+}> {
+  const response = await fetch(`${BASE_URL}/workload-devices`);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch workload devices: ${response.statusText}`);
+  }
+  
   return response.json();
 }
+
 
 export function getEventsUrl(workloads: WorkloadType[]): string {
   const params = workloads.map(w => `workload=${w}`).join('&');
@@ -150,6 +179,7 @@ export const api = {
   stop: stopWorkloads,
   getPlatformInfo,
   getResourceMetrics,
+  getWorkloadDevices,  
   getEventsUrl,
 };
 

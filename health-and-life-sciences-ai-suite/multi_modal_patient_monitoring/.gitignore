@@ -75,3 +75,6 @@ scripts/test_*.py
 # Temporary files
 fix_*.py
 *.tmp
+# env files
+.env
+device.env
