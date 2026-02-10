@@ -51,8 +51,12 @@ COPY ./scripts/install_ubuntu_gpu_drivers.sh /tmp/install_gpu_drivers.sh
 RUN chmod +x /tmp/install_gpu_drivers.sh
 RUN /tmp/install_gpu_drivers.sh
 
-RUN apt-get clean && rm -rf /tmp/install_gpu_drivers.sh && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /root/.cachetmp/*
+# Intel NPU user-space drivers (linux-npu-driver + Level Zero)
+COPY ./scripts/install_ubuntu_npu_drivers.sh /tmp/install_npu_drivers.sh
+RUN chmod +x /tmp/install_npu_drivers.sh
+RUN /tmp/install_npu_drivers.sh
 
+RUN apt-get clean && rm -rf /tmp/install_gpu_drivers.sh /tmp/install_npu_drivers.sh && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /root/.cachetmp/*
 
 # Copy proto definition
 COPY proto/ ./proto/
