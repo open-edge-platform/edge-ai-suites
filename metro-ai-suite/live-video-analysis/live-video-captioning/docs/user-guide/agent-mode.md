@@ -1,4 +1,4 @@
-# Agent Mode
+# Enable Agent Mode
 
 Agent Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback for binary classification prompts. When enabled, the application provides enhanced visual indicators for "Yes" or "No" responses, making it ideal for automated monitoring and surveillance scenarios.
 
