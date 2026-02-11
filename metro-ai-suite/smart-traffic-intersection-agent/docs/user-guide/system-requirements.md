@@ -2,7 +2,7 @@
 
 This section shows the hardware, software, and platform requirements to help you set up and run Smart Traffic Intersection Agent efficiently.
 
-The agent currently supports CPU- and GPU-based runs, and runs in the context of video summary pipeline. Hence, the system requirements is as per the documentation in the sample application. 
+The agent currently supports CPU- and GPU-based runs, and runs in the context of video summary pipeline. Hence, the system requirements is as per the documentation in the sample application.
 
 ## Supported Operating Systems
 
@@ -28,5 +28,5 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 
 ## Learn More
 
-- [Overview](Overview.md)
-- [API Reference](api-reference.md)
+- [Overview](./index.md)
+- [API Reference](./api-reference.md)

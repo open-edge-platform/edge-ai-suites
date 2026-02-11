@@ -55,9 +55,9 @@ The source code of this component can be found here:
 ## Getting Started
 
 Robotics AI Dev Kit provides a ROS 2 Deb package for the application,
-supported by the following platform:
+supported by the following platforms:
 
-- ROS 2 version: humble
+- ROS 2 version: humble or jazzy
 
 ## Prerequisites
 
@@ -69,33 +69,45 @@ supported by the following platform:
 
 ## Install Deb package
 
-Install the `ros-humble-its-planner` Deb package from the Intel®
+Install the `ros-${ROS_DISTRO}-its-planner` Deb package from the Intel®
 Robotics AI Dev Kit APT repository
 
 > ``` bash
-> sudo apt install ros-humble-its-planner
+> sudo apt install ros-${ROS_DISTRO}-its-planner
 > ```
 
 Run the following script to set environment variables:
 
 > ``` bash
-> source /opt/ros/humble/setup.bash
-> export TURTLEBOT3_MODEL=waffle_pi
-> export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
+> source /opt/ros/$ROS_DISTRO/setup.bash        # ROS_DISTRO=humble or jazzy
+> export TURTLEBOT3_MODEL=waffle
+> 
+> # Set Gazebo model path (variable name differs between distributions)
+> if [ "$ROS_DISTRO" = "jazzy" ]; then
+>     export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+> else
+>     export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+> fi
 > ```
 
 To launch the default ITS planner which is based on differential drive
 robot, run:
 
 > ``` bash
-> ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
+> ros2 launch nav2_bringup tb3_simulation_launch.py \
+>   headless:=False \
+>   params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_${ROS_DISTRO}.yaml \
+>   default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
 > ```
 
 ITS Planner also supports Ackermann steering; to launch the Ackermann
 ITS planner run:
 
 > ``` bash
-> ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False params_file:=/opt/ros/humble/share/its_planner/nav2_params_dubins.yaml default_bt_xml_filename:=/opt/ros/humble/share/its_planner/navigate_w_recovery.xml
+> ros2 launch nav2_bringup tb3_simulation_launch.py \
+>   headless:=False \
+>   params_file:=/opt/ros/$ROS_DISTRO/share/its_planner/nav2_params_dubins_${ROS_DISTRO}.yaml \
+>   default_bt_xml_filename:=/opt/ros/$ROS_DISTRO/share/its_planner/navigate_w_recovery_${ROS_DISTRO}.xml
 > ```
 
 [!NOTE]

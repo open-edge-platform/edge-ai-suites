@@ -73,10 +73,8 @@ docker compose -f docker/compose.yaml up -d traffic-intersection-agent
 docker compose -f docker/compose.yaml logs traffic-intersection-agent
 ```
 
-
 ## Learn More
 
-- [Get Started Guide](get-started.md)
-- [Environment Variables](environment-variables.md)
-- [System Requirements](system-requirements.md)
-
+- [Get Started Guide](./get-started.md)
+<!--- TODO [Environment Variables](./environment-variables.md)-->
+- [System Requirements](./system-requirements.md)

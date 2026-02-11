@@ -74,7 +74,7 @@ PRM::generateMilestones(
   vector<vector<bool>> visited(map_size.first, vector<bool>(map_size.second, false));
   std::random_device rd;
   while (count < n) {
-    if (plan == "PROBABLISTIC") {
+    if (plan == "PROBABILISTIC") {
       std::uniform_int_distribution<int> dist_one(0, map_size.first - 1);
       std::uniform_int_distribution<int> dist_two(0, map_size.second - 1);
       MapLocation rand_pos = {dist_one(rd), dist_two(rd)};
