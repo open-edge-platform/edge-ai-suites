@@ -7,7 +7,7 @@ Feel free to file new tickets there (after learning about the guidelines for [Co
 
 ## Troubleshooting Common Issues
 
-### 1. Containers Not Starting
+1. **Containers Not Starting**
 
 - **Issue**: The application containers fail to start.
 
@@ -19,23 +19,23 @@ Feel free to file new tickets there (after learning about the guidelines for [Co
 
   Check the logs for errors and resolve dependency issues.
 
-### 2. Port Conflicts
+2. **Port Conflicts**
 
 - **Issue**: Port conflicts with other running applications.
 
 - **Solution**: Update the ports section in the Docker Compose file.
 
-### 3. ibvs-milvusdb container is unhealthy
+3. **`ibvs-milvusdb` container is unhealthy**
 
-- **Issue**: ibvs-milvusdb container fails to start
+- **Issue**: `ibvs-milvusdb` container fails to start.
 
 - **Solution**:
 
-  Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file
+  Currently, milvusdb does not work with proxy servers. Make sure that the proxies `http_proxy`, `https_proxy` and `no_proxy` are set to empty string in `compose.yml` file.
 
-### 4. Empty search results after clicking on `Search Object`
+4. **Empty search results after clicking on `Search Object`**
 
-- **Issue**: Search results are empty after clicking on `Search Object` button
+- **Issue**: Search results are empty after clicking on `Search Object` button.
 
 - **Solution**:
 
@@ -44,8 +44,37 @@ Feel free to file new tickets there (after learning about the guidelines for [Co
   - Make sure you are using the right frame to search the object
   - Increase the 'To' timestamp in the search results to accommodate the latest results
 
-<!--
-## Support
-- **Developer Forum**: Join the community forum
-- **Contact Support**: [Support Page](#)
--->
+5. **Failure to launch `ibvs-app`, `ibvs-featurematching` or `ibvs-streaming` containers**
+
+- **Issue**: One of the above containers fails to come up.
+
+- **Solution**:
+
+  Try building the image locally as mentioned in Step 2 of
+  [Set up and First Use](./get-started.md#set-up-and-first-use) before bringing up the containers.
+
+## Troubleshooting Helm Deployments
+
+1. **Helm Chart Not Found**
+
+   - Check if the Helm repository was added:
+
+     ```bash
+     helm repo list
+     ```
+
+2. **Pods Not Running**:
+
+   - Review pod logs:
+
+     ```bash
+     kubectl logs {{pod-name}} -n {{namespace}}
+     ```
+
+3. **Service Unreachable**:
+
+   - Confirm the service configuration:
+
+     ```bash
+     kubectl get svc -n {{namespace}}
+     ```

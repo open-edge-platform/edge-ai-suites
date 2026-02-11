@@ -3,23 +3,17 @@
 | **STATUS** |  Work in Progress |
 |------------| ------------------|
 
-This application uses AI Agent to analyze a route between given source and destination. It communicates with other agents to fetch live analysis reports for traffic intersections found along all feasible routes between the source and destination. Subsequently, the agent finds an optimum route in real-time which is likely to be free from any possible incidents (like congestion, weather, roadblocks, accidents etc.).
+The Smart Route Planning Agent analyzes the route between a given source and destination, and communicates with other agents to fetch live analysis reports for traffic intersections found along feasible routes between the source and destination. Subsequently, the agent finds an optimal route in real-time, which is likely free from any possible incidents such as congestion, weather, roadblocks, and accidents.
 
-## Documentation
+## Get Started
+  - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to get started with the agent.
+  - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the agent.
 
-- **Overview**
-  - [Overview](docs/user-guide/Overview.md): A high-level introduction to the microservice and its features.
+## How It Works
+  - [Overview](docs/user-guide/index.md): A high-level introduction to the agent.
+  - [Environment Variables](docs/user-guide/environment-variables.md): Configure the microservice through environment variables.
+  - [Traffic Data Analysis Workflow](docs/user-guide/traffic-data-analysis-workflow.md): Guide to traffic analysis, VLM integration, trigger conditions, windowed analysis, and configuration parameters.
+  - [Build from Source](docs/user-guide/build-from-source.md): Instructions for building the agent from source code.
 
-- **Getting Started**
-  - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to getting started with the microservice.
-  - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the microservice.
-
-- **Configuration**
-  - [Environment Variables](docs/user-guide/environment-variables.md): Complete guide to configuring the microservice through environment variables.
-  - [Traffic Data Analysis Workflow](docs/user-guide/traffic-data-analysis-workflow.md): Comprehensive guide to traffic analysis, VLM integration, trigger conditions, windowed analysis, and configuration parameters.
-
-- **Deployment**
-  - [How to Build from Source](docs/user-guide/how-to-build-from-source.md): Instructions for building the microservice from source code.
-
-- **Release Notes**
-  - [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.
+## Learn More
+- [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.

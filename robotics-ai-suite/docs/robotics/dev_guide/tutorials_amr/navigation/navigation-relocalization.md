@@ -55,7 +55,7 @@ navigation, and TurtleBot3 robot in Gazebo simulation:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
+export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
@@ -66,7 +66,7 @@ ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 
 ```bash
 source /opt/ros/humble/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
+export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```

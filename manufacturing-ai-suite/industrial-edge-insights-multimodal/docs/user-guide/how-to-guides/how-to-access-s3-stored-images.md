@@ -68,3 +68,5 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
    ```
 
 4. Locate and open the file matching the `img_handle` (e.g., `X7TINNVPNX.jpg`).
+
+> **Note:** All data stored in SeaweedFS and InfluxDB is non-persistent and will be lost on container/pod restart.

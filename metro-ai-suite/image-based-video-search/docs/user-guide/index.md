@@ -1,4 +1,4 @@
-# Image-Based Video Search Sample Application
+# Image-Based Video Search
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-Performs near real-time analysis and image-based search to detect and retrieve
+Image-based Video Search sample application performs near real-time analysis and image-based search to detect and retrieve
 objects of interest in large video datasets.
 
 ## Overview
@@ -30,9 +30,10 @@ quickly locate objects of interest across large video datasets.
 
 ## How it Works
 
-The application workflow has three stages: inputs, processing, and outputs.
+The application workflow consists of three stages: inputs, processing, and outputs.
 
 ![architectural diagram](./_assets/architecture.svg)
+*Figure 1: Detailed Architecture of the Image-Based Video Search Application.*
 
 ### Inputs
 
@@ -44,12 +45,12 @@ continuously and appears in the UI as soon as the application starts.
 
 ### Processing
 
-- **Nginx reverse proxy server**: All interactions with user happens via Nginx server. It protects IBVS app by handling SSL/TLS encryption, filtering and validating requests and making the app directly inaccessible from external access.
+- **Nginx reverse proxy server**: All interactions with user happens via Nginx server. It protects the IBVS app by handling SSL/TLS encryption, filtering and validating requests, offering centralized access control and making the app directly inaccessible from external access.
 - **Video analysis with Deep Learning Streamer Pipeline Server and MediaMTX**:
   Select **Analyze Stream** to start the DL Streamer Pipeline Server pipeline.
   The Pipeline Server processes video through **MediaMTX**, which simulates
   remote video cameras and publishes live streams. The Pipeline Server extracts
-  frames and detects objects in each frame, publishing predictions through
+  frames from RTSP streams and detects objects in each frame, publishing predictions through
   **MQTT**.
 - **Feature extraction with Feature Matching**: DL Streamer Pipeline Server
   sends metadata and images through MQTT to the Feature Matching microservice.
@@ -75,7 +76,7 @@ continuously and appears in the UI as soon as the application starts.
 
 ## Learn More
 - [Get Started](./get-started.md)
-- [System Requirements](./system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 - [Release Notes](./release-notes.md)
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
@@ -84,9 +85,6 @@ continuously and appears in the UI as soon as the application starts.
 :hidden:
 
 get-started
-system-requirements
-how-to-deploy-helm
-how-to-deploy-with-edge-orchestrator
 how-it-works
 how-to-use-gpu-for-inference
 troubleshooting

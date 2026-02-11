@@ -3,12 +3,13 @@
 ## Docker deployment
 ### Prerequisites
 
-Follow steps 1 and 2 mentioned in [Get Started](./get-started.md#set-up-and-first-use) guide if not already done.
+Follow steps 1 and 2 mentioned in [Get Started](./get-started.md#set-up-and-first-use) guide
+if not already done.
 
 ### Volume mount GPU config
 
-Comment out CPU and NPU config and uncomment the GPU config present in [`compose.yml`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/image-based-video-search/compose.yml) file
-under `volumes` section as shown below:
+Comment out CPU and NPU config and uncomment the GPU config present in [compose.yml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/image-based-video-search/compose.yml)
+file under `volumes` section as shown below:
 
 ```sh
     volumes:
@@ -24,7 +25,7 @@ After the above changes to docker compose file, follow from step 3 as mentioned 
 
 ## Helm deployment
 ### Prerequisites
-Follow step 1 mentioned in this [document](./how-to-deploy-helm.md#steps-to-deploy) if not already done.
+Follow step 1 mentioned in this [document](./get-started/deploy-with-helm.md#steps-to-deploy) if not already done.
 
 ### Update values.yaml
 
@@ -49,4 +50,5 @@ dlstreamerpipelineserver:
 
 ### Start the application
 
-After above changes to `values.yaml` file, follow from step 2 as mentioned in this [document](./how-to-deploy-helm.md#steps-to-deploy).
+After above changes to `values.yaml` file, follow from step 2 as mentioned in the
+[Helm Deployment Guide](./get-started/deploy-with-helm.md#steps-to-deploy).

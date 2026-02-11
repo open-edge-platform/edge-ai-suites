@@ -12,33 +12,40 @@ To address this problem, we innovated a compute and memory efficient re-localiza
 
 ## Getting Started
 
-Robotics AI Suite provides a ROS2 Debian package for the application, supported by the following platform:
+Robotics AI Suite provides a ROS2 Debian package for the application, supported by the following platforms:
 
-- OS: Ubuntu 22.04
+- OS: Ubuntu 22.04 (Humble) or Ubuntu 24.04 (Jazzy)
 
-- ROS version: humble
+- ROS version: humble or jazzy
 
 ## Install Debian Package
 
-Install the ``ros-humble-its-relocalization-bringup`` Debian package from the Intel Robotics AI Suite APT repo
+Install the ``ros-${ROS_DISTRO}-its-relocalization-bringup`` Debian package from the Intel Robotics AI Suite APT repo
 
 ```sh
-sudo apt install ros-humble-its-relocalization-bringup
+sudo apt install ros-${ROS_DISTRO}-its-relocalization-bringup
 ```
 
 Run the following script to set environment variables and bringup ROS2 navigation, and Turtlebot3 in Gazebo:
 
 ```sh
-source /opt/ros/humble/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
-export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
+source /opt/ros/$ROS_DISTRO/setup.bash        # ROS_DISTRO=humble or jazzy
+export TURTLEBOT3_MODEL=waffle
+
+# Set Gazebo model path (variable name differs between distributions)
+if [ "$ROS_DISTRO" = "jazzy" ]; then
+    export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+else
+    export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models
+fi
+
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
 
 Once the ROS2 navigation is running in Gazebo, open a new terminal to bring up the re-localization:
 
 ```sh
-source /opt/ros/humble/setup.bash
+source /opt/ros/$ROS_DISTRO/setup.bash
 ros2 launch relocalization_bringup relocalization.launch.xml 
 ```
 

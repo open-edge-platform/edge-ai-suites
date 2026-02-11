@@ -36,11 +36,12 @@ The application includes a demonstration video for testing. The video loops cont
 ![Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results](./docs/user-guide/_assets/imagesearch2.png)
 
 ### Learn More
+
 - [Get Started](./docs/user-guide/get-started.md)
-- [System Requirements](./docs/user-guide/system-requirements.md)
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md)
 - [How It Works](./docs/user-guide/how-it-works.md)
-- [How to Deploy with Helm](./docs/user-guide/how-to-deploy-helm.md)
-- [How to Deploy with Edge Orchestrator](./docs/user-guide/how-to-deploy-with-edge-orchestrator.md)
+- [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md)
+- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/deploy-with-edge-orchestrator.md)
 - [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Important Notice
