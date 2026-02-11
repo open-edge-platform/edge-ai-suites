@@ -1,4 +1,4 @@
-# How to View Open Telemetry Data
+# View Open Telemetry Data
 
 DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The supported
 metrics currently are:

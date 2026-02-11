@@ -1,4 +1,4 @@
-# How to Customize Application
+# Customize the Application
 
 This comprehensive guide provides a detailed walkthrough of building a complete object tracking
 and loitering detection system. It utilizes a combination of technologies designed for ease of
