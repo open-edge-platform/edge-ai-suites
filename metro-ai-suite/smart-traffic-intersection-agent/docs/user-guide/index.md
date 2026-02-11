@@ -12,16 +12,12 @@ management of camera images to enhance traffic insights.
 The following figure shows the high-level architecture of the Smart Traffic Intersection Agent,
 showcasing its core components and their interactions with external systems.
 
-<p align="center">
-    <img src="./_assets/ITT_architecture.png" alt="Architecture" />
-</p>
+![ITT architecture](./_assets/ITT_architecture.png)
 
 The Smart Traffic UI below shows how traffic and weather data is analyzed, and how summary
 and alerts are shown to the user.
 
-<p align="center">
-    <img src="./_assets/traffic_agent_ui.png" alt="Traffic Intersection Agent UI" />
-</p>
+![traffic intersection agent UI](./_assets/traffic_agent_ui.png)
 
 ## Components
 
