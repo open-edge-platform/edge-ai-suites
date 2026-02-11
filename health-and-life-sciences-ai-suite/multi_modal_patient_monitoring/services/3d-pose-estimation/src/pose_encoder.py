@@ -18,9 +18,65 @@ class PoseEncoder:
             source_id: Identifier for this video source
         """
         self.source_id = source_id
+        self.num_joints = 19  # ✅ ADD THIS LINE - COCO format has 19 joints
+
+    # ✅ ADD THIS NEW METHOD
+    def detect_activity(self, joints_3d: List[Dict]) -> str:
+        """
+        Simple activity detection based on 3D joint positions
+        
+        Args:
+            joints_3d: List of 3D joint positions with x, y, z coordinates
+            
+        Returns:
+            Activity label string
+        """
+        if not joints_3d or len(joints_3d) < 15:
+            return "Unknown"
+        
+        try:
+            # Filter valid joints (exclude invalid joints marked as -1)
+            valid_joints = [j for j in joints_3d if j['x'] != -1.0 and j['y'] != -1.0 and j['z'] != -1.0]
+            
+            if len(valid_joints) < 10:
+                return "Unknown"
+            
+            # Get key joints using COCO format indices:
+            # 1: left shoulder, 2: right shoulder
+            # 9: left hip, 10: right hip
+            # 12: left knee, 13: right knee
+            
+            # Calculate average positions for stability
+            shoulder_y = (joints_3d[1]['y'] + joints_3d[2]['y']) / 2 if len(joints_3d) > 2 else 0
+            hip_y = (joints_3d[9]['y'] + joints_3d[10]['y']) / 2 if len(joints_3d) > 10 else 0
+            knee_y = (joints_3d[12]['y'] + joints_3d[13]['y']) / 2 if len(joints_3d) > 13 else 0
+            
+            # Calculate torso height and body angles
+            torso_height = abs(shoulder_y - hip_y)
+            hip_knee_distance = abs(hip_y - knee_y)
+            
+            # Activity classification based on body geometry
+            if torso_height < 30:  # Torso compressed
+                return "Sitting"
+            elif hip_knee_distance < 20:  # Legs bent significantly
+                return "Sitting"
+            elif torso_height > 60 and hip_knee_distance > 30:  # Upright posture
+                return "Standing"
+            elif torso_height > 40:  # Moderate torso extension
+                return "Walking"
+            else:
+                return "Moving"
+                
+        except Exception as e:
+            print(f"[Activity Detection] Error: {e}")
+            return "Unknown"
 
     def encode_poses_3d(self, poses_3d: List) -> List[Dict]:
-        """Encode 3D poses to dictionary format"""
+        """
+        Encode 3D poses to dictionary format
+        
+        ✅ Returns ALL 19 joints with their estimated positions, regardless of confidence
+        """
         encoded_poses = []
 
         for person_id, pose_3d in enumerate(poses_3d):
@@ -34,26 +90,46 @@ class PoseEncoder:
             if len(pose_array.shape) == 1:
                 pose_array = pose_array.reshape((-1, 4))
 
-            # Extract joints
-            joints_3d = []
-            confidence = []
+            # ✅ Initialize all 19 joints with invalid values
+            joints_3d = [{"x": -1.0, "y": -1.0, "z": -1.0, "visibility": 0.0} for _ in range(self.num_joints)]
+            confidence = [-1.0 for _ in range(self.num_joints)]
 
-            for joint_data in pose_array:
+            # ✅ Fill in ALL joints, including low-confidence ones
+            for joint_idx, joint_data in enumerate(pose_array):
+                if joint_idx >= self.num_joints:
+                    break
+            
                 x, y, z, conf = joint_data[:4]
 
-                if conf > 0:
-                    joints_3d.append({"x": float(x), "y": float(y), "z": float(z)})
-                    confidence.append(float(conf))
+                # ✅ CHANGED: Include ALL joints, even with low confidence
+                # Only mark as invalid if coordinates are actually invalid (NaN, inf, etc.)
+                is_valid = not (np.isnan(x) or np.isnan(y) or np.isnan(z) or 
+                              np.isinf(x) or np.isinf(y) or np.isinf(z))
+                
+                if is_valid:
+                    joints_3d[joint_idx] = {
+                        "x": float(x),
+                        "y": float(y),
+                        "z": float(z),
+                        "visibility": float(conf)  # ✅ Store confidence as visibility
+                    }
+                    confidence[joint_idx] = float(conf)
                 else:
-                    joints_3d.append({"x": -1.0, "y": -1.0, "z": -1.0})
-                    confidence.append(-1.0)
+                    # Only use -1 if coordinates are truly invalid
+                    joints_3d[joint_idx] = {
+                        "x": -1.0,
+                        "y": -1.0,
+                        "z": -1.0,
+                        "visibility": 0.0
+                    }
+                    confidence[joint_idx] = 0.0
 
-            if len(joints_3d) > 0:
-                encoded_poses.append({
-                    "person_id": person_id,
-                    "joints_3d": joints_3d,
-                    "confidence": confidence,
-                })
+            # ✅ Always append all 19 joints
+            encoded_poses.append({
+                "person_id": person_id,
+                "joints_3d": joints_3d,
+                "confidence": confidence,
+            })
 
         return encoded_poses
 
@@ -102,6 +178,7 @@ class PoseEncoder:
 
         return encoded_poses
 
+    # ✅ MODIFY THIS METHOD
     def encode_data(self, poses_3d: List, poses_2d: List, frame_number: int = 0) -> Dict[str, Any]:
         """
         Encode pose data only (no frame data)
@@ -118,6 +195,11 @@ class PoseEncoder:
         encoded_3d = self.encode_poses_3d(poses_3d)
         encoded_2d = self.encode_poses_2d(poses_2d)
 
+        # ✅ ADD: Detect activity from first person's pose
+        activity = "Unknown"
+        if len(encoded_3d) > 0 and 'joints_3d' in encoded_3d[0]:
+            activity = self.detect_activity(encoded_3d[0]['joints_3d'])
+
         # Create data packet (no frame data)
         data_packet = {
             "timestamp": int(time.time() * 1000),  # Milliseconds
@@ -126,6 +208,7 @@ class PoseEncoder:
             "poses_3d": encoded_3d,
             "poses_2d": encoded_2d,
             "num_persons": len(encoded_3d),
+            "activity": activity,  # ✅ ADD: Include activity in data packet
         }
 
         return data_packet

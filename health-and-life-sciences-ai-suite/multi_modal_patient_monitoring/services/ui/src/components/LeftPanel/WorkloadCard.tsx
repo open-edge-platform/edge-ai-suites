@@ -1,6 +1,7 @@
 import React from 'react';
 import fullscreenIcon from '../../assets/images/fullScreenIcon.svg';
 import minimizeIcon from '../../assets/images/minimize.svg';
+import Pose3DVisualizer from './Pose3DVisualizer';
 import '../../assets/css/WorkloadCard.css';
 
 interface WorkloadConfig {
@@ -22,6 +23,17 @@ interface WorkloadCardProps {
   onExpand: () => void;
   waveform?: number[];
   frameData?: string;
+  // ✅ Replace joints with people
+  people?: Array<{
+    person_id: number;
+    joints_3d: Array<{
+      x: number;
+      y: number;
+      z: number;
+      visibility?: number;
+    }>;
+    confidence?: number[];
+  }>;
 }
 
 const WorkloadCard: React.FC<WorkloadCardProps> = ({
@@ -34,6 +46,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   onExpand,
   waveform,
   frameData,
+  people, // ✅ Use people instead of joints
 }) => {
   const statusColors = {
     idle: '#6c757d',
@@ -135,6 +148,19 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     ctx.stroke();
   };
 
+  React.useEffect(() => {
+    if (config.id === '3d-pose') {
+      console.log('[WorkloadCard] 3D Pose Update:', {
+        hasPeople: !!people,
+        peopleCount: people?.length || 0,
+        peopleData: people,
+        isExpanded,
+        status,
+        latestVitals
+      });
+    }
+  }, [people, isExpanded, status, config.id, latestVitals]);
+
   return (
     <div
       className={`workload-card ${isExpanded ? 'expanded' : ''} ${status}`}
@@ -161,65 +187,146 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
         <span className="status-text">{status}</span>
       </div>
 
-      {/* ✅ For 3D Pose: Always show video frame (MJPEG when running, placeholder when stopped) */}
+      {/* ✅ For 3D Pose: Video + 3D Graph side-by-side when expanded */}
       {config.id === '3d-pose' ? (
-        <div className="video-frame" style={{
-          marginTop: '0px',
-          flex: isExpanded ? '0 0 auto' : '1 1 auto',
+        <div style={{
+          marginTop: '12px',
+          flex: '1 1 auto',
           display: 'flex',
-          flexDirection: 'column',
-          minHeight: 0
+          flexDirection: isExpanded ? 'row' : 'column', // ✅ Row when expanded
+          gap: isExpanded ? '16px' : '8px',
+          minHeight: 0,
+          overflow: 'hidden'
         }}>
-          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            {status === 'running' ? 'Live Video Feed' : 'Video Feed (Stopped)'}
-          </h4>
-          {status === 'running' ? (
-            // ✅ MJPEG stream when running
-            <img
-              src="http://localhost:8085/video_feed"
-              alt="3D Pose Stream"
-              style={{
+          {/* Video Stream Section */}
+          <div style={{
+            flex: isExpanded ? '1 1 50%' : '1 1 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: 0,
+            minWidth: 0
+          }}>
+            <h4 style={{ 
+              fontSize: '12px', 
+              marginBottom: '8px', 
+              color: '#6A6D75',
+              fontWeight: '500'
+            }}>
+              {status === 'running' ? '🎥 Live Video Feed' : '📹 Video Feed'}
+            </h4>
+            {status === 'running' ? (
+              <img
+                src="http://localhost:8085/video_feed"
+                alt="3D Pose Stream"
+                style={{
+                  width: '100%',
+                  height: isExpanded ? '400px' : '200px',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#000',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                onError={(e) => {
+                  console.error('[WorkloadCard] Failed to load video stream');
+                }}
+              />
+            ) : (
+              <div style={{
                 width: '100%',
-                height: isExpanded ? 'auto' : '100%',
-                maxHeight: isExpanded ? '300px' : 'none',
-                objectFit: 'contain',
-                borderRadius: '4px',
-                border: '1px solid #e0e0e0',
-                backgroundColor: '#000',
-                flex: isExpanded ? '0 0 auto' : '1 1 auto',      
-              }}
-              onError={(e) => {
-                console.error('Failed to load MJPEG stream:', e);
-              }}
-            />
-          ) : (
-            // ✅ Always show placeholder when not running (removed frameData check)
-            <div
-              style={{
-                width: '100%',
-                height: isExpanded ? '300px' : '100%',
+                height: isExpanded ? '400px' : '200px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 border: '1px solid #e0e0e0',
-                backgroundColor: '#f0f0f0',
-                flex: isExpanded ? '0 0 auto' : '1 1 auto',
-                position: 'relative'
-              }}
-            >
-              <div style={{
-                textAlign: 'center',
-                color: '#999',
-                fontSize: '14px',
-                padding: '20px'
+                backgroundColor: '#f8f9fa',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
               }}>
-                <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
-                <div>Video feed paused</div>
-                <div style={{ fontSize: '12px', marginTop: '5px' }}>
-                  Press Start to resume
+                <div style={{
+                  textAlign: 'center',
+                  color: '#999',
+                  fontSize: '14px',
+                  padding: '20px'
+                }}>
+                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                  <div style={{ fontWeight: '500' }}>Video feed paused</div>
+                  <div style={{ fontSize: '12px', marginTop: '5px', color: '#bbb' }}>
+                    Start the workload to see live stream
+                  </div>
                 </div>
               </div>
+            )}
+            
+            {/* ❌ REMOVE THIS ENTIRE SECTION - Activity Badge */}
+            {/* 
+            {latestVitals?.activity && (
+              <div style={{
+                marginTop: '12px',
+                padding: '10px 16px',
+                background: 'linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%)',
+                borderRadius: '8px',
+                fontSize: '13px',
+                color: '#0071c5',
+                fontWeight: '600',
+                textAlign: 'center',
+                border: '1px solid #b3d9ff',
+                boxShadow: '0 2px 4px rgba(0, 113, 197, 0.1)'
+              }}>
+                🏃 Activity: {latestVitals.activity}
+              </div>
+            )}
+            */}
+          </div>
+
+          {/* 3D Skeleton Visualization - Only when expanded */}
+          {isExpanded && (
+            <div style={{
+              flex: '1 1 50%',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              minWidth: 0
+            }}>
+              <h4 style={{ 
+                fontSize: '12px', 
+                marginBottom: '8px', 
+                color: '#6A6D75',
+                fontWeight: '500'
+              }}>
+                👤 3D Skeleton Visualization {people && people.length > 0 && `(${people.length} ${people.length === 1 ? 'person' : 'people'})`}
+              </h4>
+              
+              {status === 'running' ? (
+                <Pose3DVisualizer 
+                  people={people && people.length > 0 ? people : []}  // ✅ Pass all people
+                  isExpanded={isExpanded} 
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '400px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: '8px',
+                  border: '1px solid #e0e0e0',
+                  backgroundColor: '#f8f9fa',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                }}>
+                  <div style={{
+                    textAlign: 'center',
+                    color: '#999',
+                    fontSize: '14px'
+                  }}>
+                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>👤</div>
+                    <div style={{ fontWeight: '500' }}>Waiting for pose data</div>
+                    <div style={{ fontSize: '12px', marginTop: '5px', color: '#bbb' }}>
+                      Start the workload to see 3D skeleton
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
