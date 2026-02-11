@@ -36,6 +36,7 @@ export const sseMiddleware: Middleware = (store) => {
       };
 
       eventSource.onmessage = (event) => {
+<<<<<<< HEAD
         // Skip keepalive comments
         if (event.data.startsWith(':')) {
           return;
@@ -74,6 +75,20 @@ export const sseMiddleware: Middleware = (store) => {
           // ✅ Parse data based on workload type
           let parsedData: any = {};
       
+=======
+        try {
+          const rawData = JSON.parse(event.data);
+          console.log('[SSE] 📨 Raw message:', rawData);
+
+          const workloadType = rawData.workload_type || rawData.workload;
+          const eventType = rawData.event_type || 'data';
+          const payload = rawData.payload || rawData;
+          const timestamp = rawData.timestamp || Date.now();
+
+          // Parse workload-specific data
+          let parsedData: any = {};
+
+>>>>>>> dev
           if (workloadType === 'rppg') {
             // rPPG sends: HR, RR, SpO2, waveform
             parsedData = {
@@ -117,12 +132,21 @@ export const sseMiddleware: Middleware = (store) => {
               waveformLength: parsedData.waveform?.length,
               allKeys: Object.keys(parsedData)
             });
+<<<<<<< HEAD
+=======
+            
+>>>>>>> dev
           } else if (workloadType === 'mdpnp') {
             // MDPNP sends: device_type + metric + value/waveform
             console.log('[SSE] 🏥 MDPNP raw payload:', JSON.stringify(payload, null, 2));
             
+<<<<<<< HEAD
             const eventType = data.event_type;
             const deviceType = data.device_type || payload.device_type;
+=======
+            const eventType = rawData.event_type;
+            const deviceType = rawData.device_type || payload.device_type;
+>>>>>>> dev
             
             if (eventType === 'numeric') {
               // Map device metrics to unified vitals
@@ -170,6 +194,7 @@ export const sseMiddleware: Middleware = (store) => {
             });
             
           } else if (workloadType === '3d-pose') {
+<<<<<<< HEAD
             // 3D Pose sends: joints array + confidence + frame data
             parsedData = {
               joints: Array.isArray(payload.joints) 
@@ -179,20 +204,56 @@ export const sseMiddleware: Middleware = (store) => {
               activity: payload.activity,
             };
           
+=======
+            let allPeopleJoints: any[] = [];
+            
+            console.log('[SSE] Raw 3D Pose payload:', payload);
+            
+            if (payload.people && Array.isArray(payload.people) && payload.people.length > 0) {
+              // ✅ Extract joints from ALL people, not just the first one
+              allPeopleJoints = payload.people.map((person: any) => {
+                return {
+                  person_id: person.person_id,
+                  joints_3d: person.joints_3d || [],
+                  confidence: person.confidence || [],
+                };
+              });
+              
+              console.log('[SSE] ✓ Extracted joints from all people:', {
+                totalPeople: allPeopleJoints.length,
+                jointsPerPerson: allPeopleJoints.map(p => p.joints_3d.length),
+              });
+            }
+            
+            parsedData = {
+              activity: payload.activity || 'Unknown',
+              people: allPeopleJoints,  // ✅ Send all people
+              num_persons: payload.people?.length || 0,
+              frame_number: payload.frame_number || 0,
+            };
+
+>>>>>>> dev
             // ✅ Always include frame data immediately (no throttling)
             if (payload.frame_base64) {
               parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
               console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
             }
+<<<<<<< HEAD
             
             console.log('[SSE] ✓ Parsed 3D-Pose:', {
               ...parsedData,
               hasFrame: !!parsedData.frameData
             });
+=======
+
+            console.log('[SSE] ✓ Dispatching to Redux:', parsedData);
+            
+>>>>>>> dev
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }
 
+<<<<<<< HEAD
           // ✅ Dispatch for ALL workload types (moved outside the if-else chain)
           if (Object.keys(parsedData).length > 0) {
             store.dispatch(updateWorkloadData({
@@ -208,6 +269,26 @@ export const sseMiddleware: Middleware = (store) => {
           console.error('[SSE] ❌ Error parsing event:', error);
         }
       }; // ✅ Missing closing brace for onmessage
+=======
+          // Dispatch to Redux
+          store.dispatch(updateWorkloadData({
+            workloadId: workloadType,
+            data: parsedData,
+            timestamp: timestamp
+          }));
+
+          // Also add to events log
+          store.dispatch(addEvent({
+            workload: workloadType,
+            data: parsedData,
+            timestamp: timestamp
+          }));
+
+        } catch (error) {
+          console.error('[SSE] ❌ Parse error:', error);
+        }
+      };
+>>>>>>> dev
 
       eventSource.onerror = (error) => {
         console.error('[SSE] ❌ Connection error:', error);
@@ -218,18 +299,29 @@ export const sseMiddleware: Middleware = (store) => {
           eventSource = null;
         }
 
+<<<<<<< HEAD
         // ✅ Auto-reconnect after 5 seconds if still processing
+=======
+        // Auto-reconnect after 5 seconds
+>>>>>>> dev
         setTimeout(() => {
           const state = store.getState();
           if (state.app?.isProcessing) {
             console.log('[SSE] 🔄 Attempting reconnect...');
             store.dispatch({ type: 'sse/connect', payload: { url } });
+<<<<<<< HEAD
           } else {
             console.log('[SSE] ⏹️ Not reconnecting - processing stopped');
           }
         }, 5000);
       };
     } // ✅ Missing closing brace for sse/connect action
+=======
+          }
+        }, 5000);
+      };
+    }
+>>>>>>> dev
 
     // Handle SSE disconnect
     if (action.type === 'sse/disconnect') {

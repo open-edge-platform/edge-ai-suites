@@ -45,6 +45,10 @@ const LeftPanel = () => {
                 lastEventTime={getWorkloadState(expandedCard.id).lastEventTime}
                 waveform={getWorkloadState(expandedCard.id).waveform}
                 frameData={getWorkloadState(expandedCard.id).frameData}
+<<<<<<< HEAD
+=======
+                people={getWorkloadState(expandedCard.id).people} // ✅ Pass people array instead of joints
+>>>>>>> dev
                 isExpanded={true}
                 onExpand={() => handleExpand(expandedCard.id)}
               />
@@ -64,6 +68,10 @@ const LeftPanel = () => {
                     lastEventTime={state.lastEventTime}
                     waveform={state.waveform}
                     frameData={state.frameData}
+<<<<<<< HEAD
+=======
+                    people={state.people} // ✅ Pass people array instead of joints
+>>>>>>> dev
                     isExpanded={false}
                     onExpand={() => handleExpand(workload.id)}
                   />
@@ -87,6 +95,10 @@ const LeftPanel = () => {
                 lastEventTime={state.lastEventTime}
                 waveform={state.waveform}
                 frameData={state.frameData}
+<<<<<<< HEAD
+=======
+                people={state.people} // ✅ Pass people array instead of joints
+>>>>>>> dev
                 isExpanded={false}
                 onExpand={() => handleExpand(workload.id)}
               />
@@ -98,4 +110,8 @@ const LeftPanel = () => {
   );
 };
 
+<<<<<<< HEAD
 export default LeftPanel;
+=======
+export default LeftPanel;
+>>>>>>> dev

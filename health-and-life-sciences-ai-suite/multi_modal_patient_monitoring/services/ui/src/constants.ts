@@ -30,7 +30,11 @@ export const WORKLOADS = [
     name: 'MDPNP',
     color: '#0071c5',
     description: 'Medical Device Plug-and-Play Integration',
+<<<<<<< HEAD
     dataKeys: ['HR', 'RR', 'SpO2', 'CO2_ET', 'BP_DIA', 'BP_SYS'] as const, // Medical device vitals
+=======
+    dataKeys: ['HR', 'CO2_ET', 'BP_DIA'] as const, // Medical device vitals
+>>>>>>> dev
     hasWaveform: true,
   },
   {
@@ -38,7 +42,11 @@ export const WORKLOADS = [
     name: '3D Pose',
     color: '#0071c5',
     description: '3D Body Pose Estimation with joint tracking',
+<<<<<<< HEAD
     dataKeys: ['joints', 'confidence', 'activity'] as const, // Pose estimation keys
+=======
+    dataKeys: ['activity'] as const, // Pose estimation keys
+>>>>>>> dev
     hasWaveform: false,
   },
 ] as const;
@@ -48,6 +56,7 @@ export type WorkloadId = typeof WORKLOADS[number]['id'];
 export const WORKLOAD_CONFIG = WORKLOADS.reduce((acc, w) => {
   acc[w.id] = w;
   return acc;
+<<<<<<< HEAD
 }, {} as Record<WorkloadId, typeof WORKLOADS[number]>);
 
 export const WORKLOAD_INFO = [
@@ -191,3 +200,6 @@ export const ECG_CLASSIFICATIONS = [
   { code: 'O', name: 'Other Rhythm', description: 'Any rhythm not classified as Normal or Atrial Fibrillation' },
   { code: '~', name: 'Too Noisy', description: 'Signal quality too poor for accurate classification' }
 ];
+=======
+}, {} as Record<WorkloadId, typeof WORKLOADS[number]>);
+>>>>>>> dev

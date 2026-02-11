@@ -1,6 +1,9 @@
 # Core dependencies
+<<<<<<< HEAD
 # openvino>=2024.4.0
 # opencv-python>=4.8.0
+=======
+>>>>>>> dev
 openvino>=2024.6.0,<2025.0
 opencv-python-headless>=4.8.0
 numpy>=1.23.0,<2.0
@@ -11,9 +14,16 @@ grpcio>=1.60.0
 grpcio-tools>=1.60.0
 protobuf>=4.25.0,<5.0.0
 
+<<<<<<< HEAD
 # Control server
 fastapi>=0.104.0
 uvicorn>=0.24.0
+=======
+# Control server and MJPEG streaming
+fastapi>=0.104.0
+uvicorn>=0.24.0
+flask>=2.0.0
+>>>>>>> dev
 
 # Configuration
 pyyaml>=6.0.0
