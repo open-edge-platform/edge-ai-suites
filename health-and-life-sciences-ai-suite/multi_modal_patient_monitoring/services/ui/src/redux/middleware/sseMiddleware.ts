@@ -49,31 +49,102 @@ export const sseMiddleware: Middleware = (store) => {
           let parsedData: any = {};
 
           if (workloadType === 'rppg') {
+            // rPPG sends: HR, RR, SpO2, waveform
             parsedData = {
-              HR: payload.HR || payload.hr,
-              RR: payload.RR || payload.rr,
-              waveform: payload.waveform || payload.respiratory_waveform,
+              HR: payload.HR ?? payload.heart_rate,
+              RR: payload.RR ?? payload.respiratory_rate ?? payload.value,
+              SpO2: payload.SpO2 ?? payload.spo2,
             };
-          } 
-          else if (workloadType === 'ai-ecg') {
-            parsedData = {
-              prediction: payload.prediction,
-              confidence: payload.confidence,
-              filename: payload.filename,
-              waveform: payload.waveform || payload.ecg_waveform,
-            };
-          } 
-          else if (workloadType === 'mdpnp') {
-            parsedData = {
-              HR: payload.HR,
-              SpO2: payload.SpO2,
-              CO2_ET: payload.CO2_ET,
-              BP_DIA: payload.BP_DIA,
-              BP_SYS: payload.BP_SYS,
-              waveform: payload.waveform,
-            };
-          } 
-          else if (workloadType === '3d-pose') {
+            
+            // Extract waveform if present
+            if (payload.waveform && Array.isArray(payload.waveform)) {
+              parsedData.waveform = payload.waveform;
+            }
+            
+            console.log('[SSE] ✓ Parsed rPPG:', {
+              vitals: { HR: parsedData.HR, RR: parsedData.RR, SpO2: parsedData.SpO2 },
+              waveformLength: parsedData.waveform?.length
+            });
+
+          } else if (workloadType === 'ai-ecg') {
+            console.log('[SSE] 🔬 AI-ECG raw payload:', JSON.stringify(payload, null, 2));
+            
+            // AI-ECG sends: inference object + waveform
+            parsedData.prediction = payload.inference ?? 'Unknown';
+
+            // ✅ Filename
+            parsedData.filename = payload.file ?? 'Unknown';
+
+            // ✅ Waveform
+            if (Array.isArray(payload.waveform)) {
+              parsedData.waveform = payload.waveform;
+            }
+
+            // ✅ Waveform frequency (very useful for ECG chart scaling)
+            if (payload.waveform_frequency_hz) {
+              parsedData.waveformFrequency = payload.waveform_frequency_hz;
+            }
+            
+            console.log('[SSE] ✅ Final AI-ECG parsedData:', {
+              prediction: parsedData.prediction,
+              filename: parsedData.filename,
+              waveformLength: parsedData.waveform?.length,
+              allKeys: Object.keys(parsedData)
+            });
+            
+          } else if (workloadType === 'mdpnp') {
+            // MDPNP sends: device_type + metric + value/waveform
+            console.log('[SSE] 🏥 MDPNP raw payload:', JSON.stringify(payload, null, 2));
+            
+            const eventType = rawData.event_type;
+            const deviceType = rawData.device_type || payload.device_type;
+            
+            if (eventType === 'numeric') {
+              // Map device metrics to unified vitals
+              const metric = payload.metric;
+              
+              if (metric === 'MDC_ECG_HEART_RATE') {
+                parsedData.HR = payload.value;
+                console.log('[SSE] ✓ MDPNP HR:', payload.value);
+              } 
+              else if (metric === 'MDC_AWAY_CO2_ET') {
+                parsedData.CO2_ET = payload.value;
+                console.log('[SSE] ✓ MDPNP CO2_ET:', payload.value);
+              } 
+              else if (metric === 'MDC_PRESS_BLD_ART_ABP_DIA') {
+                parsedData.BP_DIA = payload.value;
+                console.log('[SSE] ✓ MDPNP BP_DIA:', payload.value);
+              }
+            } 
+            else if (eventType === 'waveform') {
+              // Extract waveform based on device type
+              if (payload.waveform && Array.isArray(payload.waveform)) {
+                // Store waveform with device identifier
+                if (payload.metric === 'MDC_ECG_LEAD_II') {
+                  parsedData.waveform = payload.waveform;
+                  parsedData.waveformType = 'ECG';
+                  console.log('[SSE] ✓ MDPNP ECG waveform:', payload.waveform.length, 'samples');
+                } 
+                else if (payload.metric === 'MDC_AWAY_CO2') {
+                  parsedData.waveform = payload.waveform;
+                  parsedData.waveformType = 'CO2';
+                  console.log('[SSE] ✓ MDPNP CO2 waveform:', payload.waveform.length, 'samples');
+                } 
+                else if (payload.metric === 'MDC_PRESS_BLD') {
+                  parsedData.waveform = payload.waveform;
+                  parsedData.waveformType = 'BP';
+                  console.log('[SSE] ✓ MDPNP BP waveform:', payload.waveform.length, 'samples');
+                }
+              }
+            }
+            
+            console.log('[SSE] ✓ Parsed MDPNP:', {
+              vitals: { HR: parsedData.HR, CO2_ET: parsedData.CO2_ET, BP_DIA: parsedData.BP_DIA },
+              waveformType: parsedData.waveformType,
+              waveformLength: parsedData.waveform?.length
+            });
+            
+          } else if (workloadType === '3d-pose') {
             let allPeopleJoints: any[] = [];
             
             console.log('[SSE] Raw 3D Pose payload:', payload);
@@ -101,7 +172,16 @@ export const sseMiddleware: Middleware = (store) => {
               frame_number: payload.frame_number || 0,
             };
 
+            // ✅ Always include frame data immediately (no throttling)
+            if (payload.frame_base64) {
+              parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
+              console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
+            }
+
             console.log('[SSE] ✓ Dispatching to Redux:', parsedData);
+            
+          } else {
+            console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }
 
           // Dispatch to Redux
