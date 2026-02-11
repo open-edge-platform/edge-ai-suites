@@ -189,8 +189,8 @@ a simplified edge application deployment process.
 :hidden:
 
 get-started/system-requirements.md
-get-started/how-to-deploy-with-helm.md
-get-started/how-to-deploy-with-edge-orchestrator.md
+get-started/deploy-with-helm.md
+get-started/deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->
