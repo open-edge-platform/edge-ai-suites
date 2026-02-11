@@ -1,10 +1,7 @@
 import React from 'react';
 import fullscreenIcon from '../../assets/images/fullScreenIcon.svg';
 import minimizeIcon from '../../assets/images/minimize.svg';
-<<<<<<< HEAD
-=======
 import Pose3DVisualizer from './Pose3DVisualizer';
->>>>>>> dev
 import '../../assets/css/WorkloadCard.css';
 
 interface WorkloadConfig {
@@ -25,9 +22,6 @@ interface WorkloadCardProps {
   isExpanded: boolean;
   onExpand: () => void;
   waveform?: number[];
-<<<<<<< HEAD
-  frameData?: string; // ✅ Add frame data prop
-=======
   frameData?: string;
   // ✅ Replace joints with people
   people?: Array<{
@@ -40,7 +34,6 @@ interface WorkloadCardProps {
     }>;
     confidence?: number[];
   }>;
->>>>>>> dev
 }
 
 const WorkloadCard: React.FC<WorkloadCardProps> = ({
@@ -52,12 +45,8 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   isExpanded,
   onExpand,
   waveform,
-<<<<<<< HEAD
-  frameData, // ✅ Add frame data prop
-=======
   frameData,
   people, // ✅ Use people instead of joints
->>>>>>> dev
 }) => {
   const statusColors = {
     idle: '#6c757d',
@@ -68,17 +57,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
 
   const formatValue = (key: string, value: any) => {
     if (value === undefined || value === null) return '--';
-<<<<<<< HEAD
-    if (key === 'prediction') return String(value);
-    if (key === 'filename') return String(value);
-    if (key === 'joints') return 'Detected';
-    
-    // Format all numeric vitals
-    if (key === 'HR' || key === 'RR' || key === 'SpO2' || key === 'CO2_ET' || key === 'BP_DIA' || key === 'BP_SYS') {
-      return typeof value === 'number' ? value.toFixed(1) : '--';
-    }
-
-=======
 
     if (key === 'prediction') return String(value);
     if (key === 'filename') return String(value);
@@ -92,7 +70,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
       return (value * 100).toFixed(1);
     }
 
->>>>>>> dev
     if (typeof value === 'number') {
       return value.toFixed(1);
     }
@@ -110,11 +87,8 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
       BP_SYS: 'mmHg',
       prediction: '',
       joints: '',
-<<<<<<< HEAD
-=======
       confidence: '%',
       activity: '',
->>>>>>> dev
     };
     return units[key] || '';
   };
@@ -141,11 +115,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
 
     ctx.clearRect(0, 0, width, height);
 
-<<<<<<< HEAD
-    // Draw baseline
-=======
     // Baseline
->>>>>>> dev
     ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -153,28 +123,16 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     ctx.lineTo(width, height / 2);
     ctx.stroke();
 
-<<<<<<< HEAD
-    // Calculate min/max for scaling
-=======
->>>>>>> dev
     let min = Math.min(...waveform);
     let max = Math.max(...waveform);
     let range = max - min || 1;
 
-<<<<<<< HEAD
-    // Special scaling for AI-ECG
-=======
->>>>>>> dev
     if (config.id === 'ai-ecg') {
       min = -200;
       max = 1400;
       range = max - min;
     }
 
-<<<<<<< HEAD
-    // Draw waveform
-=======
->>>>>>> dev
     ctx.strokeStyle = config.color;
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -182,10 +140,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     waveform.forEach((value, i) => {
       const x = (i / waveform.length) * width;
       const y = height - ((value - min) / range) * height;
-<<<<<<< HEAD
-=======
 
->>>>>>> dev
       if (i === 0) ctx.moveTo(x, y);
       else ctx.lineTo(x, y);
     });
@@ -193,8 +148,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     ctx.stroke();
   };
 
-<<<<<<< HEAD
-=======
   React.useEffect(() => {
     if (config.id === '3d-pose') {
       console.log('[WorkloadCard] 3D Pose Update:', {
@@ -208,7 +161,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     }
   }, [people, isExpanded, status, config.id, latestVitals]);
 
->>>>>>> dev
   return (
     <div
       className={`workload-card ${isExpanded ? 'expanded' : ''} ${status}`}
@@ -235,69 +187,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
         <span className="status-text">{status}</span>
       </div>
 
-<<<<<<< HEAD
-      {/* Vitals - Always Visible */}
-      <div className="workload-vitals">
-        {Object.keys(latestVitals).length > 0 ? (
-          <div className="vitals-list">
-            {config.dataKeys.map((key) => {
-              const value = latestVitals[key];
-              if (value === undefined || value === null) return null;
-
-              return (
-                <div key={key} className="vital-item">
-                  <span className="vital-label">{key}:</span>
-                  <span className="vital-value">{formatValue(key, value)}</span>
-                  <span className="vital-unit">{getUnit(key)}</span>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="no-vitals">Waiting for data...</div>
-        )}
-      </div>
-        {/* ✅ Add Video Frame Display */}
-      {config.id === '3d-pose' && frameData && (
-        <div className="video-frame" style={{ marginTop: '12px' }}>
-          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            Live Video Feed
-          </h4>
-          <img
-            src={frameData}
-            alt="3D Pose Detection"
-            style={{
-              width: '100%',
-              maxHeight: isExpanded ? '300px' : '200px',
-              objectFit: 'contain',
-              borderRadius: '4px',
-              border: '1px solid #e0e0e0',
-              backgroundColor: '#f8f9fa'
-            }}
-            onError={(e) => {
-              console.error('Failed to load frame:', e);
-            }}
-          />
-        </div>
-      )}
-      {/* Waveform */}
-      {isExpanded && config.hasWaveform && waveform && waveform.length > 0 && (
-        <div className="waveform-preview" style={{ marginTop: '12px' }}>
-          <h4 style={{ fontSize: '12px', marginBottom: '8px', color: '#6A6D75' }}>
-            {config.id === 'rppg'
-              ? `Respiratory Waveform (${waveform.length} samples @ 30Hz)`
-              : config.id === 'ai-ecg'
-              ? `ECG Waveform (${waveform.length} samples @ 360Hz)`
-              : 'Waveform'}
-          </h4>
-          <canvas
-            ref={renderWaveform}
-            width={600}
-            height={150}
-            className="waveform-canvas"
-          />
-        </div>
-=======
       {/* ✅ For 3D Pose: Video + 3D Graph side-by-side when expanded */}
       {config.id === '3d-pose' ? (
         <div style={{
@@ -502,7 +391,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
             </div>
           )}
         </>
->>>>>>> dev
       )}
 
       {/* Footer */}
@@ -522,8 +410,4 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   );
 };
 
-<<<<<<< HEAD
 export default WorkloadCard;
-=======
-export default WorkloadCard;
->>>>>>> dev
