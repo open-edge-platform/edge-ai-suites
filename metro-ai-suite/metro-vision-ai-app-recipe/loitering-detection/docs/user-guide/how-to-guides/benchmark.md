@@ -88,7 +88,7 @@ detection.
 start the desired application (e.g., Loitering Detection). This ensures all services,
 including the DL Streamer Pipeline Server, are running and available. For setup instructions,
 please refer to the `get-started.md` guide located in the specific application's documentation
-folder (e.g., [Get Started for Loitering Detection](./get-started.md)).
+folder (e.g., [Get Started for Loitering Detection](../get-started.md)).
 
 2.  **Navigate to Script Directory:** Open a terminal and navigate to the `metro-vision-ai-app-recipe` directory.
 

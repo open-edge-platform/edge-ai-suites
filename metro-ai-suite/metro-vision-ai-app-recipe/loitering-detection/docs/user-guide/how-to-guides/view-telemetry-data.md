@@ -25,5 +25,5 @@ browser to view the Prometheus console.
     - If you are starting multiple pipelines, then it can also be queried per pipeline ID.
     Example: `fps_per_pipeline{pipeline_id="658a5260f37d11ef94fc0242ac160005"}`
 
-![Open telemetry fps_per_pipeline example in prometheus](./_assets/prometheus_fps_per_pipeline.png)
+![Open telemetry fps_per_pipeline example in prometheus](../_assets/prometheus_fps_per_pipeline.png)
     *Open telemetry fps_per_pipeline example in Prometheus*

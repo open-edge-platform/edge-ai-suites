@@ -20,7 +20,6 @@ The Metro Vision AI App Recipe suite provides an integrated AI-powered solution 
 - **Flexible Deployment**: Support for various camera types and video sources
 - **No-Code Configuration**: Set up complex rules and workflows through intuitive interfaces
 
-
 ## How It Works
 
 The Metro Vision AI App Recipe architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics for transportation and safety & security scenarios. The system processes real-time video feeds from traffic cameras, applies deep learning models for object detection and classification, and generates actionable insights for traffic management.
@@ -80,27 +79,32 @@ When deployed with the optional Intel® SceneScape components, the system provid
 ## Use Cases
 
 ### Smart Intersection Management
+
 - Real-time traffic light optimization based on vehicle and pedestrian counts
 - Emergency vehicle detection and priority signal control
 - Pedestrian safety monitoring at crosswalks
 - Traffic violation detection and automated enforcement
 
 ### Loitering Detection
+
 - Security monitoring at transit stations and stops
 - Identification of suspicious behavior in hubs
 - Crowd management in high-traffic areas
 - Automated alerts for security personnel
 
 ### Smart Parking
+
 - Real-time parking space availability tracking
 - Automated payment and access control
 - Parking violation detection
 - Optimization of parking space utilization
 
 ## Get Started
-- [Smart Intersection](smart-intersection/docs/user-guide/index.md)
-- [Smart Parking](smart-parking/docs/user-guide/index.md)
-- [Loitering Detection](loitering-detection/docs/user-guide/index.md)
+
+- [Smart Intersection](./smart-intersection/docs/user-guide/index.md)
+- [Smart Parking](./smart-parking/docs/user-guide/index.md)
+- [Loitering Detection](./loitering-detection/docs/user-guide/index.md)
 
 ## Developing your own tolling application
-- [Tutorial](docs/user-guide/tutorial-1.md)
+
+- [Tutorial](./docs/user-guide/tutorial-1.md)

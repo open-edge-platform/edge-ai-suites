@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This section provides step-by-step instructions for deploying the Loitering Detection
 application using Helm.
@@ -212,7 +212,6 @@ Follow this procedure to stop the sample application and end this demonstration.
     helm uninstall loitering-detection -n ld
     ```
 
-
 2. Confirm the pods are no longer running.
 
     ```sh
@@ -223,7 +222,9 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 View the container logs using the following command:
 
-         kubectl logs -f <pod_name> -n ld
+    ```sh
+    kubectl logs -f <pod_name> -n ld
+    ```
 
 ## Troubleshooting
 
