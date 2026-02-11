@@ -38,8 +38,8 @@
     "videoAnalyticsFailed": "视频分析失败",
     "audio": "音频",
     "video": "视频",
-    "videoStreamingComplete": "串流完成",
-    "playbackReady": "流媒体播放视频"
+    "videoStreamingComplete": "视频处理完成",
+    "playbackMode": "回放模式"
   },
   "tooltips": {
     "checkingAudioDevices": "正在检查音频设备…",

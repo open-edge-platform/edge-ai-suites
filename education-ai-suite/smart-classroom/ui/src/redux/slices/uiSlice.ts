@@ -384,7 +384,7 @@ const uiSlice = createSlice({
       state.uploadedVideoFiles.board;
     if (hasFiles) {
       state.videoStatus = "completed";
-      state.videoPlaybackMode = true;
+      // state.videoPlaybackMode = true;
     }
 },
 

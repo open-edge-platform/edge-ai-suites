@@ -48,7 +48,6 @@ import {
 } from '../../services/api';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
-import { monitorVideoAnalyticsPipelines} from "../../services/api";
 
 interface HeaderBarProps {
   projectName: string;
@@ -64,15 +63,11 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [videoAnalyticsEnabled] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false); 
-  const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
   const dispatch = useAppDispatch();
-  const isBusy = useAppSelector((s) => s.ui.aiProcessing);
   const summaryEnabled = useAppSelector((s) => s.ui.summaryEnabled);
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
-  const transcriptStatus = useAppSelector((s) => s.transcript.status);
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
-  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const projectLocation = useAppSelector((s) => s.ui.projectLocation);
   const mindmapState = useAppSelector((s) => s.mindmap);
@@ -82,7 +77,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const backCamera = useAppSelector((s) => s.ui.backCamera);
   const boardCamera = useAppSelector((s) => s.ui.boardCamera);
   const videoAnalyticsActive = useAppSelector((s) => s.ui.videoAnalyticsActive);
-  const videoAnalyticsLoading = useAppSelector((s) => s.ui.videoAnalyticsLoading);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
   const hasAudioDevices = useAppSelector((s) => s.ui.hasAudioDevices);
@@ -90,8 +84,8 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
   const isRecording = useAppSelector((s) => s.ui.isRecording);
   const justStoppedRecording = useAppSelector((s) => s.ui.justStoppedRecording);
   const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
-  const [isUploading, setIsUploading] = useState(false);
   const isPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     dispatch(loadCameraSettingsFromStorage());
@@ -272,15 +266,12 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         break;
       case 'completed':
         setVideoNotification(
-          isPlaybackMode
-            ? t('notifications.playbackReady')
-            : t('notifications.videoStreamingComplete')
-        );
+          isPlaybackMode ? t('notifications.playbackMode') : t('notifications.videoStreamingComplete'));
         break;
       default:
         setVideoNotification(hasVideoCapability ? t('notifications.videoReady') : t('notifications.noVideoConfigured'));
     }
-  }, [videoStatus, justStoppedRecording, hasVideoCapability, t]);
+  }, [videoStatus, justStoppedRecording, hasVideoCapability, isPlaybackMode, t]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -413,7 +404,6 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
           dispatch(setVideoAnalyticsActive(true));
           dispatch(setActiveStream('all'));
           dispatch(setVideoStatus('streaming'));
-          monitorVideoAnalyticsPipelines(sharedSessionId);
           console.log(`🎥 Video analytics started successfully. Working: ${successfulPipelines.join(', ')}`);
           
           if (failedPipelines.length > 0) {

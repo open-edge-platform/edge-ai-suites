@@ -32,7 +32,9 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     aiProcessing,
     uploadedVideoFiles,
   } = useAppSelector((s) => s.ui);
-
+  const audioStatus = useAppSelector((s) => s.ui.audioStatus);
+  const mindmapState = useAppSelector((s) => s.mindmap);
+  const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
   const transcriptStatus = useAppSelector((s) => s.transcript.status);
 
   const streams = {
@@ -47,6 +49,23 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     { pipeline: "content", label: t("accordion.boardCamera") },
     { pipeline: "all", label: t("accordion.allCameras") },
   ];
+  
+  const hasAudio = Boolean(uploadedAudioPath);
+
+  const isMindmapDone =
+    audioStatus === "complete" ||
+    audioStatus === "error";
+
+  const areStreamsStopped =
+    videoStatus === "completed" ||
+    videoStatus === "ready" ||
+    videoStatus === "no-config" ||
+    videoStatus === "failed";
+
+  const audioReady = !hasAudio || isMindmapDone;
+  const videoReady = !hasUploadedVideoFiles || areStreamsStopped;
+
+  const isUploadEnabled = audioReady && videoReady;
 
   const isValidStream = (url?: string | null) =>
     !!url &&
@@ -129,9 +148,9 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     return "inactive";
   };
 
-  useEffect(() => {
-    dispatch(setVideoPlaybackMode(isPlaybackMode));
-  }, [isPlaybackMode, dispatch]);
+  // useEffect(() => {
+  //   dispatch(setVideoPlaybackMode(isPlaybackMode));
+  // }, [isPlaybackMode, dispatch]);
 
   useEffect(() => {
     if (isPlaybackMode) return;
@@ -264,11 +283,16 @@ const VideoStream: React.FC<VideoStreamProps> = ({
             <div className="stream-placeholder">
               <img src={streamingIcon} className="streaming-icon" />
               <p>{t("videoStream.configureCameras")}</p>
-              <button
-                className="upload-file-button"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                {t("videoStream.uploadFileButton")}
+                <button
+                  className="upload-file-button"
+                  disabled={!isUploadEnabled}
+                  onClick={isUploadEnabled ? () => setIsUploadModalOpen(true) : undefined}
+                  style={{
+                    opacity: isUploadEnabled ? 1 : 0.6,
+                    cursor: isUploadEnabled ? "pointer" : "not-allowed",
+                  }}
+                >
+                  {t("videoStream.uploadFileButton")}
               </button>
             </div>
           )}

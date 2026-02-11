@@ -38,8 +38,8 @@
       "videoAnalyticsFailed": "Video analytics failed",
       "audio": "Audio",
       "video": "Video",
-      "videoStreamingComplete": "Streaming completed",
-      "playbackReady": "Streaming Playback Video"
+      "videoStreamingComplete": "Video processing completed",
+      "playbackMode": "Playback Mode"
     },
     "tooltips": {
       "checkingAudioDevices": "Checking audio devices...",

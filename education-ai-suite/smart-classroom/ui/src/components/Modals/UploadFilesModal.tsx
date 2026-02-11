@@ -229,7 +229,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       let audioPath = '';
       if (hasAudioFile) {
-        setNotification('Uploading audio...');
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
         audioPath = audioResponse.path;

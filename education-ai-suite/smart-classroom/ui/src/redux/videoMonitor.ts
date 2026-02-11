@@ -22,9 +22,7 @@ export function useVideoPipelineMonitor() {
   const retryTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
-    if (!videoActive && !videoLoading) return;
-
+    if (!sessionId || !videoActive) return;
     abortRef.current = new AbortController();
 
     const startMonitor = async () => {
@@ -96,5 +94,5 @@ export function useVideoPipelineMonitor() {
         clearTimeout(retryTimer.current);
       }
     };
-  }, [sessionId, videoActive, videoLoading, dispatch]);
+  }, [sessionId, videoActive]);
 }
