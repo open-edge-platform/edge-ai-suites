@@ -254,8 +254,16 @@ def _metrics_js(metrics_ws_url: str):
           /* ── WebSocket ── */
           var rawUrl = "{metrics_ws_url}";
           var browserHost = window.location.hostname;
-          rawUrl = rawUrl.replace('localhost', browserHost).replace('127.0.0.1', browserHost);
-          var WS_URL = (location.protocol === 'https:' && rawUrl.indexOf('ws:') === 0) ? rawUrl.replace(/^ws:/, 'wss:') : rawUrl;
+          /* Extract port from configured URL and rebuild using browser's hostname */
+          try {{
+            var parsed = new URL(rawUrl);
+            var wsPort = parsed.port || '9090';
+            var wsPath = parsed.pathname || '/ws/clients';
+            var wsProto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+            var WS_URL = wsProto + '//' + browserHost + ':' + wsPort + wsPath;
+          }} catch(e) {{
+            var WS_URL = rawUrl.replace('localhost', browserHost).replace('127.0.0.1', browserHost);
+          }}
 
           var socket = null;
           var backoff = 1000;
