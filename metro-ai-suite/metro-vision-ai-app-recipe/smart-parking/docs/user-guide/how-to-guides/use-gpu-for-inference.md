@@ -53,7 +53,7 @@ DL Streamer document for selecting the GPU render device of your choice for VA c
 > **Note:** This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary GPU access to the containers.
 
-The pipeline `yolov11s_gpu` in [pipeline-server-config](../../src/dlstreamer-pipeline-server/config.json)
+The pipeline `yolov11s_gpu` in [pipeline-server-config](../../../src/dlstreamer-pipeline-server/config.json)
 contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline
 as follows:
 
@@ -61,4 +61,4 @@ as follows:
 ./sample_start.sh gpu
 ```
 
-Go to Grafana as explained in [Get Started](./get-started.md) to view the dashboard.
+Go to Grafana as explained in [Get Started](../get-started.md) to view the dashboard.

@@ -152,7 +152,7 @@ To stop the pipelines without waiting for video streams to finish replay:
   - **Password**: `admin` (You will be prompted to change it on first login)
 - The dashboard displays detected cars in the parking lot.
 
-  ![Grafana Dashboard](_assets/grafana-smart-parking.jpg)
+  ![Grafana Dashboard](../_assets/grafana-smart-parking.jpg)
 
 ### NodeRED UI
 - **URL**: `https://127.0.0.1/nodered/`

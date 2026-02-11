@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This section provides step-by-step instructions for deploying the Smart Parking sample application using Helm.
 

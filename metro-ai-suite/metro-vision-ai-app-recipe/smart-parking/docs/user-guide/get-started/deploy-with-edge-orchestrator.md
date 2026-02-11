@@ -1,4 +1,4 @@
-# How to Deploy with the Edge Orchestrator
+# Deploy with the Edge Orchestrator
 
 Edge Orchestrator, part of Intel’s Edge Software, simplifies edge application deployment and management, making it easier to deploy edge solutions at scale. Edge Orchestrator provides:
 
@@ -79,6 +79,6 @@ For more information on setting up a deployment, see [Set up a Deployment](https
 
 1. Download the kubeconfig file of the edge node cluster that contains the deployed application. See [Kubeconfig Download](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/clusters/accessing_clusters.html).
 
-2. Follow the steps in the **Smart Parking** [Documentation](./how-to-deploy-with-helm.md#step-3-deploy-the-application-and-run-multiple-ai-pipelines) on the usage of the application.
+2. Follow the steps in the **Smart Parking** [Documentation](./deploy-with-helm.md#step-3-deploy-the-application-and-run-multiple-ai-pipelines) on the usage of the application.
 
    > **Note:** Skip the Deploy Helm chart step.

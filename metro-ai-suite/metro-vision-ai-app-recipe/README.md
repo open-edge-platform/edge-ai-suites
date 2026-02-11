@@ -98,9 +98,9 @@ When deployed with the optional Intel® SceneScape components, the system provid
 - Optimization of parking space utilization
 
 ## Get Started
-- [Smart Intersection](smart-intersection/docs/user-guide/Overview.md)
-- [Smart Parking](smart-parking/docs/user-guide/Overview.md)
-- [Loitering Detection](loitering-detection/docs/user-guide/Overview.md)
+- [Smart Intersection](smart-intersection/docs/user-guide/index.md)
+- [Smart Parking](smart-parking/docs/user-guide/index.md)
+- [Loitering Detection](loitering-detection/docs/user-guide/index.md)
 
 ## Developing your own tolling application
 - [Tutorial](docs/user-guide/tutorial-1.md)
