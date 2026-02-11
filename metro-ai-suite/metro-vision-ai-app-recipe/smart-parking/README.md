@@ -52,6 +52,6 @@ for display in Grafana.
 
 ## Learn More
 
-- [How to customize the application](./docs/user-guide/how-to-guides/customize-application.md)
+- [Customize the Application](./docs/user-guide/how-to-guides/customize-application.md)
 - [Troubleshooting](./docs/user-guide/troubleshooting.md)
 - [Release Notes](./docs/user-guide/release-notes.md)

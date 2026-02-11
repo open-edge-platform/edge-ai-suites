@@ -1,4 +1,4 @@
-# How to Benchmark Performance
+# Benchmark Performance
 
 This document provides instructions on how to run performance benchmarks for the Vision AI applications using the provided benchmarking scripts. The script determines the maximum number of concurrent video streams a system can process (stream density) while maintaining a target performance level.
 

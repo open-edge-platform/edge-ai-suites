@@ -1,4 +1,4 @@
-# How to use GPU for inference
+# Use GPU for Inference
 
 ## Pre-requisites
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that

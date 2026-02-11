@@ -1,4 +1,4 @@
-# Customize Application
+# Customize the Application
 
 This section provides a detailed walkthrough of building a complete object tracking and smart parking system. It utilizes a combination of technologies designed for ease of use: the Deep Learning Streamer Pipeline Server (DL Streamer Pipeline Server), the visual programming tool Node-RED, and the data visualization platform Grafana. This approach caters to no-code/low-code users, enabling them to create sophisticated analytics solutions with minimal programming.
 

@@ -1,4 +1,4 @@
-# How to Generate and Deploy Offline Package
+# Generate and Deploy Offline Package
 
 ## Overview
 
