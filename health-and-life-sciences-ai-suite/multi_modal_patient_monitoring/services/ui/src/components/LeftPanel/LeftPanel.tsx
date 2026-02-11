@@ -45,6 +45,7 @@ const LeftPanel = () => {
                 lastEventTime={getWorkloadState(expandedCard.id).lastEventTime}
                 waveform={getWorkloadState(expandedCard.id).waveform}
                 frameData={getWorkloadState(expandedCard.id).frameData}
+                people={getWorkloadState(expandedCard.id).people} // ✅ Pass people array instead of joints
                 isExpanded={true}
                 onExpand={() => handleExpand(expandedCard.id)}
               />
@@ -64,6 +65,7 @@ const LeftPanel = () => {
                     lastEventTime={state.lastEventTime}
                     waveform={state.waveform}
                     frameData={state.frameData}
+                    people={state.people} // ✅ Pass people array instead of joints
                     isExpanded={false}
                     onExpand={() => handleExpand(workload.id)}
                   />
@@ -87,6 +89,7 @@ const LeftPanel = () => {
                 lastEventTime={state.lastEventTime}
                 waveform={state.waveform}
                 frameData={state.frameData}
+                people={state.people} // ✅ Pass people array instead of joints
                 isExpanded={false}
                 onExpand={() => handleExpand(workload.id)}
               />
