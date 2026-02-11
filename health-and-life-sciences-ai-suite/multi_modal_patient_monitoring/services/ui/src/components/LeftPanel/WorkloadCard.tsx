@@ -48,6 +48,10 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   frameData,
   people, // ✅ Use people instead of joints
 }) => {
+  // ✅ Add the poseStreamUrl definition here, right after the component props
+  const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+  const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
+
   const statusColors = {
     idle: '#6c757d',
     running: '#28a745',
@@ -216,7 +220,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
             </h4>
             {status === 'running' ? (
               <img
-                src="http://localhost:8085/video_feed"
+                src={poseStreamUrl}
                 alt="3D Pose Stream"
                 style={{
                   width: '100%',
