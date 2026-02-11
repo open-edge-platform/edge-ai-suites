@@ -1,7 +1,14 @@
 {
     "name": "intersection_1",
+<<<<<<< HEAD
     "latitude": 37.51358,
     "longitude": -122.25591,
     "agent_backend_port": "",
     "agent_ui_port": ""
+=======
+    "latitude": 33.3091336,
+    "longitude": -111.9353095,
+    "agent_backend_port": "8101",
+    "agent_ui_port": "7860"
+>>>>>>> 2ae584a0 (Integrate live metrics service)
 }

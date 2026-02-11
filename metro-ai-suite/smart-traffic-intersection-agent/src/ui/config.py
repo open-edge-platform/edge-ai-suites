@@ -72,3 +72,7 @@ class Config:
     @classmethod
     def get_moderate_density_threshold(cls) -> int:
         return int(cls.get_value_from_env("MODERATE_DENSITY_THRESHOLD", 5))
+
+    @staticmethod
+    def get_metrics_ws_url() -> str:
+        return os.getenv("METRICS_WS_URL", "ws://localhost:9090/ws/clients")
