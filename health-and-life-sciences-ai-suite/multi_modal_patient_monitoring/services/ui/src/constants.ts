@@ -38,7 +38,7 @@ export const WORKLOADS = [
     name: '3D Pose',
     color: '#0071c5',
     description: '3D Body Pose Estimation with joint tracking',
-    dataKeys: ['joints', 'confidence', 'activity'] as const, // Pose estimation keys
+    dataKeys: ['activity'] as const, // Pose estimation keys
     hasWaveform: false,
   },
 ] as const;

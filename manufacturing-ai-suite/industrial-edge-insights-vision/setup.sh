@@ -255,6 +255,7 @@ init_instance() {
     echo ""
 }
 
+# Helm-related functions (preserved for helm mode)
 YAML_FILE="helm/values.yaml"
 VARS_TO_EXPORT=("HOST_IP" "REST_SERVER_PORT" "SAMPLE_APP" )
 

@@ -431,6 +431,22 @@ class VitalService(vital_pb2_grpc.VitalServiceServicer):
             
             waveform_data = list(vital.waveform) if vital.waveform else []
             event_type = "waveform" if len(waveform_data) > 0 else "numeric"
+
+            # For MDPNP waveform data, forward only ECG lead II and
+            # drop other ECG leads (e.g., I, III, etc.). This keeps
+            # the SSE/UI stream limited to ECG_LEAD_II for mdpnp
+            # workloads while leaving other workloads unaffected.
+            if (
+                workload_type == "mdpnp"
+                and event_type == "waveform"
+                and vital.metric.startswith("MDC_ECG_LEAD_")
+                and vital.metric != "MDC_ECG_LEAD_II"
+            ):
+                print(
+                    f"[mdpnp] Skipping waveform metric {vital.metric} "
+                    f"for device {vital.device_id}"
+                )
+                continue
             
             print(
                 f"[{workload_type}] {vital.device_id}/{vital.metric}={vital.value:.1f} "

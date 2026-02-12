@@ -171,7 +171,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
   padding: 6px 10px;
   background: #f8f9fa;
   border-radius: 4px;
@@ -240,14 +240,13 @@
   text-align: center;
   padding: 16px 0;
 }
-/* Waveform animation */
 .waveform-preview {
   margin-top: 16px;
   padding: 16px;
   background: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e6e7e8;
-  animation: slideDown 0.3s ease;
+    animation: slideDown 0.3s ease;
 }
 
 @keyframes slideDown {

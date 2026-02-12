@@ -235,6 +235,7 @@ usage() {
 main() {
 
     # Parse arguments
+    # Include a flag -i for instance_name such that if config.yml is present then it can be used to get status of specific instance inside the while loop
     
     while [[ $# -gt 0 ]]; do
         case "$1" in
