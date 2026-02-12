@@ -21,7 +21,7 @@
 2. Set app specific values.yaml file.
 
    ```sh
-   cp helm/values_pcb_anomaly_detection.yaml helm/values.yaml
+   cp helm/values_pcb-anomaly-detection.yaml helm/values.yaml
    ```
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
@@ -284,8 +284,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```python
    import boto3
    url = "http://<HOST_IP>:30800"
-   user = "<value of MR_MINIO_ACCESS_KEY used in helm/values.yaml>"
-   password = "<value of MR_MINIO_SECRET_KEY used in helm/values.yaml>"
+   user = "<value of MINIO_ACCESS_KEY used in helm/values.yaml>"
+   password = "<value of MINIO_SECRET_KEY used in helm/values.yaml>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -328,7 +328,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    }'
    ```
 
-7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 

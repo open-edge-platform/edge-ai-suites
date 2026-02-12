@@ -74,7 +74,7 @@ TEST(PRMTest, buildRoadmap_Test) {
   EXPECT_EQ(plan.milestones_.size(), 0);
   EXPECT_EQ(plan.adj_list_.size(), 0);
 
-  plan.buildRoadMap(costmap_2d, 500, "PROBABLISTIC", inflation_map, 1);
+  plan.buildRoadMap(costmap_2d, 500, "PROBABILISTIC", inflation_map, 1);
 
   const string filename = "road_map.txt";
   std::ifstream file;

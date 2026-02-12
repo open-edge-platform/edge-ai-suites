@@ -54,13 +54,13 @@ class utils:
             logging.info('\n**********Setting up Docker environment**********')
             os.chdir(self.base_dir)
             if value.get("app") == "pdd":
-                subprocess.check_output("cp .env_pallet_defect_detection .env", shell=True, executable='/bin/bash')
+                subprocess.check_output("cp .env_pallet-defect-detection .env", shell=True, executable='/bin/bash')
             elif value.get("app") == "weld":
-                subprocess.check_output("cp .env_weld_porosity_classification .env", shell=True, executable='/bin/bash')
+                subprocess.check_output("cp .env_weld-porosity .env", shell=True, executable='/bin/bash')
             elif value.get("app") == "pcb":
-                subprocess.check_output("cp .env_pcb_anomaly_detection .env", shell=True, executable='/bin/bash')
+                subprocess.check_output("cp .env_pcb-anomaly-detection .env", shell=True, executable='/bin/bash')
             elif value.get("app") == "wsg":
-                subprocess.check_output("cp .env_worker_safety_gear_detection .env", shell=True, executable='/bin/bash')
+                subprocess.check_output("cp .env_worker-safety-gear-detection .env", shell=True, executable='/bin/bash')
 
             # Update .env file with required variables
             self._update_env_file({
@@ -68,8 +68,8 @@ class utils:
                 "MTX_WEBRTCICESERVERS2_0_USERNAME": "test1234",
                 "MTX_WEBRTCICESERVERS2_0_PASSWORD": "test1234",
                 "MTX_WEBRTCICESERVERS2_0_USERNAME": "test1234", 
-                "MR_MINIO_ACCESS_KEY": "minioadmin", 
-                "MR_MINIO_SECRET_KEY": "minioadmin", 
+                "MINIO_ACCESS_KEY": "minioadmin", 
+                "MINIO_SECRET_KEY": "minioadmin", 
                 "MR_PSQL_PASSWORD": "test1234"
             })
             
@@ -390,7 +390,7 @@ class utils:
             print(docker_ps_output)
             lines = docker_ps_output.strip().split('\n')[1:]
             running_containers = []
-            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'model-registry', 'otel-collector', 'mediamtx-server', 'mraas_postgres', 'mraas-minio', 'industrial-edge-insights-vision_vol_minio_data', 'industrial-edge-insights-vision_mr_postgres_data', 'industrial-edge-insights-vision_vol_pipeline_root']
+            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'model-registry', 'otel-collector', 'mediamtx-server', 'mraas_postgres', 'minio', 'industrial-edge-insights-vision_vol_minio_data', 'industrial-edge-insights-vision_mr_postgres_data', 'industrial-edge-insights-vision_vol_pipeline_root']
                 
             for line in lines:
                 if line.strip():
@@ -432,10 +432,10 @@ class utils:
             
             # Direct path mapping without app_configs
             app_paths = {
-                "pdd": "helm/values_pallet_defect_detection.yaml",
-                "weld": "helm/values_weld_porosity_classification.yaml", 
-                "pcb": "helm/values_pcb_anomaly_detection.yaml",
-                "wsg": "helm/values_worker_safety_gear_detection.yaml"
+                "pdd": "helm/values_pallet-defect-detection.yaml",
+                "weld": "helm/values_weld-porosity.yaml", 
+                "pcb": "helm/values_pcb-anomaly-detection.yaml",
+                "wsg": "helm/values_worker-safety-gear-detection.yaml"
             }
             
             app_names = {

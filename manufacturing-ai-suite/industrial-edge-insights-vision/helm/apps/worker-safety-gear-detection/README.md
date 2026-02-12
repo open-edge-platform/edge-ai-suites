@@ -18,7 +18,7 @@
     ```
 2. Set app specific values.yaml file.
     ```sh
-    cp helm/values_worker_safety_gear_detection.yaml helm/values.yaml
+    cp helm/values_worker-safety-gear-detection.yaml helm/values.yaml
     ```
 3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml

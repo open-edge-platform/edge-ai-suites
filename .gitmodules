@@ -42,3 +42,6 @@
 	url = https://github.com/open-edge-platform/edge-ai-suites.git
 	branch = exp/smart-traffic-adapter
   	shallow = true
+[submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
+	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp
+	url = https://github.com/mdpnp/mdpnp.git

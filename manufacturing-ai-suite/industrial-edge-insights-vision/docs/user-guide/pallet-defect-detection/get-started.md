@@ -22,7 +22,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 2. Set app-specific environment variable file
 
    ```bash
-   cp .env_pallet_defect_detection .env
+   cp .env_pallet-defect-detection .env
    ```
 
 3. Edit the below mentioned environment variables in the `.env` file as follows:
@@ -30,10 +30,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```bash
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-   MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
-
-   MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
@@ -59,6 +57,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```bash
    sudo systemctl start docker
    ```
+   
+    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -137,6 +137,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```
 
    > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
+   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
 4. Get the status of running pipeline instance(s):
 
@@ -198,6 +199,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    For example, `./sample_stop.sh --id 4b36b3ce52ad11f0ad60863f511204e2`
 
 6. Stop the Docker application.
+
+    >If you're running multiple instances of app, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v

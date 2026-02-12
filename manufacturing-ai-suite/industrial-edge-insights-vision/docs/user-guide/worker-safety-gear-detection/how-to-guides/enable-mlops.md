@@ -19,10 +19,8 @@ With this feature, during runtime, you can download a new model from the registr
     ``` sh
     HOST_IP= # <IP Adress of the host machine>
 
-    MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
-
-    MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-    MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+    MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+    MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
     MTX_WEBRTCICESERVERS2_0_USERNAME=  # Webrtc-mediamtx username. e.g intel1234
     MTX_WEBRTCICESERVERS2_0_PASSWORD=  # Webrtc-mediamtx password. e.g intel1234

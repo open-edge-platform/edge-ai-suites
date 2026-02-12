@@ -21,8 +21,8 @@ coding or deep learning expertise. Its key features are:
 - [Get Started](./docs/user-guide/get-started.md)
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md)
 - [Deploy with Docker Compose](./docs/user-guide/get-started.md#run-the-application)
-- [Deploy with Helm](./docs/user-guide/get-started/how-to-deploy-with-helm.md)
-- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/how-to-deploy-with-edge-orchestrator.md)
+- [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md)
+- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/deploy-with-edge-orchestrator.md)
 
 ## How It Works
 
@@ -52,6 +52,6 @@ for display in Grafana.
 
 ## Learn More
 
-- [How to customize the application](./docs/user-guide/how-to-customize-application.md)
+- [Customize the Application](./docs/user-guide/how-to-guides/customize-application.md)
 - [Troubleshooting](./docs/user-guide/troubleshooting.md)
 - [Release Notes](./docs/user-guide/release-notes.md)

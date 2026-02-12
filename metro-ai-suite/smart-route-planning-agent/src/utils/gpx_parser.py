@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -40,7 +43,10 @@ class MapDataParser:
         """
         gpx_file_path = self.gpx_file_path
 
-        if not Path.exists(gpx_file_path):
+        if gpx_file_path is None:
+            raise ValueError("GPX file path is not set")
+
+        if not Path(gpx_file_path).exists():
             raise FileNotFoundError(f"GPX file not found: {gpx_file_path}")
 
         try:

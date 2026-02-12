@@ -37,19 +37,24 @@ spec:
         app: seaweedfs-master
     spec:
       securityContext:
-        fsGroup: 65534
-        runAsUser: 65534
-        runAsGroup: 65534
+        fsGroup: {{ .Values.env.TIMESERIES_UID | int }}
+        runAsUser: {{ .Values.env.TIMESERIES_UID | int }}
+        runAsGroup: {{ .Values.env.TIMESERIES_UID | int }}
       containers:
       - name: seaweedfs-master
         image: {{ .Values.images.seaweedfs_image }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
-          readOnlyRootFilesystem: false
+          readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
+          runAsUser: {{ $.Values.env.TIMESERIES_UID | int }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID | int }}
+          runAsNonRoot: true
           capabilities:
             drop:
               - ALL
+          seccompProfile:
+            type: RuntimeDefault
         volumeMounts:
         - name: vol-seaweed-master-data
           mountPath: /data

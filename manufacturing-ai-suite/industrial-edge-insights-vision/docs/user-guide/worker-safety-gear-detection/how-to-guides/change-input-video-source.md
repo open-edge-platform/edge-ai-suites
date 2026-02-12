@@ -2,6 +2,8 @@
 
 Typically, a pipeline is started with a cURL request with JSON payload containing source, destination and parameters. For example, the following cURL request start an AI pipeline on a file inferencing on worker safety gear detection model.
 
+>If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+
          curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/<pipeline_name> -X POST -H 'Content-Type: application/json' -d '{
             "source": {
                "uri": "file:///home/pipeline-server/resources/videos/Safety_Full_Hat_and_Vest.avi",

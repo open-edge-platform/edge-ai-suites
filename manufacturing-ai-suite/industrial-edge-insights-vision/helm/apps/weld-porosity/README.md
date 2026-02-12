@@ -18,7 +18,7 @@
     ```
 2. Set app specific values.yaml file.
     ```sh
-    cp helm/values_weld_porosity_classification.yaml helm/values.yaml
+    cp helm/values_weld-porosity.yaml helm/values.yaml
     ```
 3.  Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
     ```yaml

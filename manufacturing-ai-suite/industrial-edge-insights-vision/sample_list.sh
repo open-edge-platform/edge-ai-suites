@@ -10,14 +10,15 @@ SCRIPT_DIR=$(dirname $(readlink -f "$0"))
 PIPELINE_ROOT="user_defined_pipelines" # Default root directory for pipelines
 PIPELINE="all"                         # Default to running all pipelines
 DEPLOYMENT_TYPE=""                     # Default deployment type (empty for existing flow)
+CONFIG_FILE=$SCRIPT_DIR/config.yml     # Config file path for multiple instances
 
 init() {
     # load environment variables from .env file if it exists
-    if [[ -f "$SCRIPT_DIR/.env" ]]; then
-        export $(grep -v -E '^\s*#' "$SCRIPT_DIR/.env" | sed -e 's/#.*$//' -e '/^\s*$/d' | xargs)
-        echo "Environment variables loaded from $SCRIPT_DIR/.env"
+    if [[ -f "$ENV_PATH" ]]; then
+        export $(grep -v -E '^\s*#' "$ENV_PATH" | sed -e 's/#.*$//' -e '/^\s*$/d' | xargs)
+        echo "Environment variables loaded from $ENV_PATH"
     else
-        err "No .env file found in $SCRIPT_DIR"
+        err "No .env file found in $ENV_PATH"
         exit 1
     fi
 
@@ -35,22 +36,72 @@ init() {
     fi
 
     # Set the appropriate HOST_IP with port for curl commands based on deployment type
-    if [[ "$DEPLOYMENT_TYPE" == "helm" ]]; then
-        CURL_HOST_IP="${HOST_IP}:30443"
-        echo "Using Helm deployment - curl commands will use: $CURL_HOST_IP"
+    # IF config.yml file exists, then set CURL_HOST_IP as HOST_IP:NGINX_HTTPS_PORT otherwise set CURL_HOST_IP as HOST_IP:30443 for helm deployment and HOST_IP for default 
+    if [[ -f "$CONFIG_FILE" ]]; then
+        if [[ "$DEPLOYMENT_TYPE" == "helm" ]]; then
+            CURL_HOST_IP="${HOST_IP}:30443"
+            echo "Using Helm deployment - curl commands will use: $CURL_HOST_IP"
+        else
+            CURL_HOST_IP="$HOST_IP:$NGINX_HTTPS_PORT"
+            echo "Using default deployment - curl commands will use: $CURL_HOST_IP"
+        fi
     else
-        CURL_HOST_IP="$HOST_IP"
-        echo "Using default deployment - curl commands will use: $CURL_HOST_IP"
+        if [[ "$DEPLOYMENT_TYPE" == "helm" ]]; then
+            CURL_HOST_IP="${HOST_IP}:30443"
+            echo "Using Helm deployment - curl commands will use: $CURL_HOST_IP"
+        else
+            CURL_HOST_IP="$HOST_IP"
+            echo "Using default deployment - curl commands will use: $CURL_HOST_IP"
+        fi
+    fi
+}
+
+list_pipelines() {
+    if [[ -f "$CONFIG_FILE" && -n "$INSTANCE_NAME" ]]; then
+        get_sample_app
+        ENV_PATH="$SCRIPT_DIR/temp_apps/$SAMPLE_APP/$INSTANCE_NAME/.env"
+        init
+        # check if dlstreamer-pipeline-server is running
+        get_status
+        # get the loaded pipelines
+        get_loaded_pipelines
+        return
+
+    # if config.yml exists and INSTANCE_NAME is not set
+    # Process all instances from config.yml
+    elif [[ -f "$CONFIG_FILE" && -z "$INSTANCE_NAME" ]]; then
+        while IFS='|' read -r sample_app instance_name; do
+            echo ""
+            echo "-------------------------------------------"
+            echo "Status of: $instance_name (SAMPLE_APP: $sample_app)"
+            echo "-------------------------------------------"
+            
+            ENV_PATH="$SCRIPT_DIR/temp_apps/$sample_app/$instance_name/.env"
+            init
+            
+            # check if dlstreamer-pipeline-server is running
+            get_status
+            # get the loaded pipelines
+            get_loaded_pipelines
+            
+        done < <(parse_config_yml)
+        return
+    # if config.yml does not exist
+    # load .env from SCRIPT_DIR
+    else
+        ENV_PATH="$SCRIPT_DIR/.env"
+        init
+        # check if dlstreamer-pipeline-server is running
+        get_status
+        # get the loaded pipelines
+        get_loaded_pipelines
+        return
     fi
 
 }
 
-list_pipelines() {
-    # initialize the sample app, load env
-    init
-    # check if dlstreamer-pipeline-server is running
-    get_status
-    # get loaded pipelines
+get_loaded_pipelines() {
+    echo "Getting list of loaded pipelines..."
     response=$(curl -s -k -w "\n%{http_code}" https://$CURL_HOST_IP/api/pipelines)
     # Split response and status
     body=$(echo "$response" | sed '$d')
@@ -63,7 +114,85 @@ list_pipelines() {
         echo "Loaded pipelines:"
         echo "$body"
     fi
+}
 
+# Function to parse config.yml and extract SAMPLE_APP, INSTANCE_NAME, and their key-value pairs
+parse_config_yml() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        err "Config file $CONFIG_FILE not found."
+        exit 1
+    fi
+    
+    awk '
+    BEGIN { 
+        sample_app = ""
+        instance_name = ""
+    }
+    /^[[:space:]]*$/ { next }
+    /^[[:space:]]*#/ { next }
+    
+    /^[a-zA-Z_][a-zA-Z0-9_-]*:/ {
+        sample_app = $1
+        gsub(/:/, "", sample_app)
+        next
+    }
+    
+    /^  [a-zA-Z_][a-zA-Z0-9_-]*:/ {
+        instance_name = $1
+        gsub(/^[[:space:]]+/, "", instance_name)
+        gsub(/:/, "", instance_name)
+        if (sample_app != "" && instance_name != "") {
+            print sample_app "|" instance_name
+        }
+    }
+    ' "$CONFIG_FILE"
+}
+
+# Function to get SAMPLE_APP for a given INSTANCE_NAME from config.yml
+get_sample_app() {
+    if [[ -z "$INSTANCE_NAME" ]]; then
+        err "INSTANCE_NAME not set"
+        exit 1
+    fi
+    
+    SAMPLE_APP=$(awk -v inst="$INSTANCE_NAME" '
+    BEGIN { 
+        sample_app = ""
+        found = 0
+    }
+    /^[[:space:]]*$/ { next }
+    /^[[:space:]]*#/ { next }
+    
+    /^[a-zA-Z_][a-zA-Z0-9_-]*:/ {
+        sample_app = $1
+        gsub(/:/, "", sample_app)
+        next
+    }
+    
+    /^  [a-zA-Z_][a-zA-Z0-9_-]*:/ {
+        instance_name = $1
+        gsub(/^[[:space:]]+/, "", instance_name)
+        gsub(/:/, "", instance_name)
+        if (instance_name == inst) {
+            print sample_app
+            found = 1
+            exit
+        }
+    }
+    
+    END {
+        if (!found) {
+            exit 1
+        }
+    }
+    ' "$CONFIG_FILE")
+    
+    if [[ $? -ne 0 || -z "$SAMPLE_APP" ]]; then
+        err "INSTANCE_NAME '$INSTANCE_NAME' not found in $CONFIG_FILE"
+        exit 1
+    fi
+    
+    echo "Found SAMPLE_APP: $SAMPLE_APP for INSTANCE_NAME: $INSTANCE_NAME"
 }
 
 get_status() {
@@ -91,16 +220,30 @@ usage() {
     echo "Arguments:"
     echo "  helm                            For Helm deployment (adds :30443 port to HOST_IP for curl commands)"
     echo "Options:"
+    echo "  -i, --instance <instance_name>  Specify the instance name to get the status of a specific instance from config.yml"
     echo "  -h, --help                      Show this help message"
 }
 
 main() {
 
     # Parse arguments
+    # Include a flag -i for instance_name such that if config.yml is present then it can be used to get status of specific instance inside the while loop
+    
     while [[ $# -gt 0 ]]; do
         case "$1" in
         helm)
             DEPLOYMENT_TYPE="helm"
+            shift
+            ;;
+        -i | --instance)
+            shift
+            if [[ -z "$1" || "$1" =~ ^- ]]; then
+                err "--instance requires a non-empty argument."
+                usage
+                exit 1
+            fi
+            INSTANCE_NAME="$1"
+            echo "Instance name set to: $INSTANCE_NAME"
             shift
             ;;
         -h | --help)

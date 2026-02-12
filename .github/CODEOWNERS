@@ -21,6 +21,17 @@ README.md          @xwu2intel
 /education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
 
 # ============================================================================
+# Health And Life Sciences AI Suite
+# ============================================================================
+
+# @xwu2intel added to keep the top ownership at the early development stage and the three-owner rule - remove once more owners are assigned
+/health-and-life-sciences-ai-suite/               @sachinkaushik @avinash-palleti @xwu2intel
+/health-and-life-sciences-ai-suite/README.md      @sachinkaushik @avinash-palleti @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+/health-and-life-sciences-ai-suite/**/docs/       @sachinkaushik @avinash-palleti @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/health-and-life-sciences-ai-suite/**/README.md   @sachinkaushik @avinash-palleti @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+
+# ============================================================================
 # Manufacturing-AI Suite
 # ============================================================================
 
@@ -59,8 +70,13 @@ README.md          @xwu2intel
 /metro-ai-suite/interactive-digital-avatar/docs/                 @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/interactive-digital-avatar/README.md             @senhui2intel @Junyu-B @wzq112358 @myqi @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
+/metro-ai-suite/live-video-analysis/                             @bharagha @yogeshmpandey  @hteeyeoh
+/metro-ai-suite/live-video-analysis/**/docs/                     @bharagha @yogeshmpandey  @hteeyeoh  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/live-video-analysis/**/README.md                 @bharagha @yogeshmpandey  @hteeyeoh  @open-edge-platform/open-edge-platform-docs-write
+
 # /metro-ai-suite/metro-sdk-manager/                             no codeowners, the top codeowners apply
 
+# inside vision ai recipe
 /metro-ai-suite/metro-vision-ai-app-recipe/docs/                           @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/README.md                       @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 
@@ -75,6 +91,11 @@ README.md          @xwu2intel
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/                  @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1 @tjanczak  @open-edge-platform/open-edge-platform-docs-write
+# this may need to be confirmed:
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/                  @rrajore @vagheshp @xwu2intel @ajagadi1
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/docs/             @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
+
 
 /metro-ai-suite/sensor-fusion-for-traffic-management/                      @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
 /metro-ai-suite/sensor-fusion-for-traffic-management/docs/                 @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
