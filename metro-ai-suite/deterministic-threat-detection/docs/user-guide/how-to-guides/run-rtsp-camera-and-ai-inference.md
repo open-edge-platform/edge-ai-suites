@@ -14,12 +14,13 @@ unzip -q pallet_defect_detection.zip -d models/
 cd docker
 ```
 
-## Configure Environment
+## Configure the Environment
 
 Before running the services, you need to configure the environment variables.
 
 ### Update .env file
-Set the `MQTT_PORT` in the `.env` file. If you are behind a proxy, configure the proxy settings as well.
+Set the `MQTT_PORT` in the `.env` file. If you are behind a proxy, configure the proxy
+settings as well.
 
 ```
 MQTT_PORT=1883
@@ -28,18 +29,23 @@ MQTT_PORT=1883
 ```
 
 ### Copy Configuration Files
-Copy the `ptp_frame_timestamp.py` and `config.json` from the `deterministic-threat-detection` module to the current docker directory.
+Copy the `ptp_frame_timestamp.py` and `config.json` from the `deterministic-threat-detection`
+module to the current docker directory.
 
 ```bash
 cp edge-ai-suites/metro-ai-suite/deterministic-threat-detection/rtsp_camera_stream/ptp_frame_timestamp.py .
 cp edge-ai-suites/metro-ai-suite/deterministic-threat-detection/rtsp_camera_stream/config.json .
 ```
 
-Note: Make sure to update the RTSP camera `<rtsp-camera-username>`, `<rtsp-camera-password>`, and `<rtsp-camera-url>` in the `config.json` file before proceeding. Also, add the RTSP camera IP to the no_proxy environment variable if you are behind a proxy.
+> **Note:** Make sure to update the RTSP camera `<rtsp-camera-username>`,
+`<rtsp-camera-password>`, and `<rtsp-camera-url>` in the `config.json` file before proceeding.
+Also, add the RTSP camera IP to the `no_proxy environment` variable if you are behind a proxy.
 
 ## Update Docker Compose File
 
-Comment the existing resources folder mapping and add volume mappings to the `docker-compose.yml` file to make the custom script and configuration available to the `dlstreamer-pipeline-server` container.
+Comment the existing resources folder mapping and add volume mappings to the `docker-compose.yml`
+file to make the custom script and configuration available to the `dlstreamer-pipeline-server`
+container.
 
 ```yaml
 services:
@@ -83,4 +89,4 @@ curl -k http://localhost:8080/pipelines/user_defined_pipelines/rtsp_camera_pipel
 }'
 ```
 
-Note: Update the topic name if you are running the pipeline on multiple machines.
+> **Note:** Update the topic name if you are running the pipeline on multiple machines.
