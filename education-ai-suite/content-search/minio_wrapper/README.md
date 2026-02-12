@@ -41,9 +41,10 @@ mc.exe alias set local http://127.0.0.1:9000 minioadmin minioadmin
 
 Create a bucket
 
-```
+```bat
 mc.exe mb local/content-search
 ```
+> Please note that the bucket name is "content-search", without "local/"
 
 Upload files into the bucket
 

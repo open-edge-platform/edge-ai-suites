@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 # Edit based on: https://github.com/Megvii-BaseDetection/YOLOX/blob/main/demo/OpenVINO/python/openvino_inference.py
 

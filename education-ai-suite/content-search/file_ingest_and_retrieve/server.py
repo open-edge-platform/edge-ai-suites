@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Body
@@ -124,9 +124,14 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
 
         proc_files = []
         metas = []
+        
+        # TODO: Supported file extensions, verify
+        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc', 
+                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md', '.rst')
+        
         with tempfile.TemporaryDirectory() as temp_dir:
             for object_name in store.list_object_names(prefix=folder_path, recursive=True):
-                if not object_name.lower().endswith((".jpg", ".png", ".jpeg", ".mp4")):
+                if not object_name.lower().endswith(supported_extensions):
                     logger.debug(f"Unsupported file type: {object_name}, skipped.")
                     continue
 

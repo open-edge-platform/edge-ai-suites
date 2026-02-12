@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Intel Corporation
+# Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
 from chromadb import Where
@@ -12,7 +12,7 @@ from multimodal_embedding_serving import get_model_handler, EmbeddingModel
 from chromadb_wrapper.chroma_client import ChromaClientWrapper
 
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "CLIP/clip-vit-b-16")
-
+# TODO: add for document processing
 class ChromaRetriever:
     def __init__(self, collection_name="default"):
         self.collection_name = collection_name
