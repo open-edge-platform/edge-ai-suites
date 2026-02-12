@@ -6,16 +6,16 @@ The Smart NVR is a next-generation network video recorder that integrates GenAI-
 
 - **Overview**
   - [Overview](docs/user-guide/index.md): A high-level introduction.
-  - [Overview Architecture](./docs/user-guide/index.md#how-it-works): Highlevel architecture.
+  - [Overview Architecture](./docs/user-guide/index.md#how-it-works): High level architecture.
 
 - **Getting Started**
   - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to get started with the sample application.
-  - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the sample application.
+  - [System Requirements](docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the sample application.
   - [How to Use the Application](./docs/user-guide/how-to-use-application.md): Explore the application's features and verify its functionality.
 
 - **Deployment**
-  - [How to Build from Source](docs/user-guide/how-to-build-from-source.md): Instructions for building from source code.
-  - [How to Build using Helm](docs/user-guide/deploy-with-helm.md): Instructions for building using helm.
+  - [How to Build from Source](docs/user-guide/get-started/build-from-source.md): Instructions for building from source code.
+  - [How to Build using Helm](docs/user-guide/get-started/deploy-with-helm.md): Instructions for building using helm.
 
 - **Advanced Integrations**
   - [Intel® SceneScape Integration](docs/user-guide/scenescape-integration.md): Complete guide for integrating with Intel® SceneScape for traffic analytics and vehicle counting.

@@ -10,6 +10,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 2. Bring up the containers.
 
+   >If you're running multiple instances of app, start the services using `./run.sh up` instead.
+   
    ```sh
    docker compose up -d
    ```
@@ -43,9 +45,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    ```python
    import boto3
-   url = "http://<HOST_IP>:8000"
-   user = "<value of MR_MINIO_ACCESS_KEY used in .env>"
-   password = "<value of MR_MINIO_SECRET_KEY used in .env>"
+   url = "http://<HOST_IP>:<MINIO_SERVER_PORT>"
+   user = "<value of MINIO_ACCESS_KEY used in .env>"
+   password = "<value of MINIO_SECRET_KEY used in .env>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -66,6 +68,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
+
+    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -88,6 +92,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    }'
    ```
 
-6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+6. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+
+    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)

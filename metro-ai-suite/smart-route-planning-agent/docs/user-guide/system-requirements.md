@@ -1,36 +1,47 @@
 # System Requirements
 
-This page provides detailed hardware, software, and platform requirements to help you set up and run the microservice efficiently.
+This page provides detailed hardware, software, and platform requirements to help you set up and run the Smart Route Planning Agent.
 
 ## Supported Platforms
 
-This microservice currently supports CPU and GPU based runs. This microservice is intended to run in the context of video summary pipeline. Hence, supported platform, OS configuration etc. is as per the documentation in the sample application. The documentation here, hence, does not provide separate requirements.
-
 **Operating Systems**
 
-- As per sample application documentation.
+| OS | Version |
+|----|---------|
+| Ubuntu | 22.04 LTS, 24.04 LTS |
 
 **Hardware Platforms**
 
-- As per sample application documentation.
+| Platform | Processor |
+|----------|-----------|
+| Intel® Xeon® | 6th Gen Intel® Xeon® Scalable processors (codenamed Granite Rapids) |
 
 ## Minimum Requirements
 
-- As per sample application documentation.
+| Component | Requirement |
+|-----------|-------------|
+| CPU | Intel® Xeon® 6 processor |
+| RAM | 16 GB |
+| Storage | 20 GB available disk space |
 
 ## Software Requirements
 
 **Required Software**:
 
-- Docker 24.0
-- Python 3.10
-- Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
+| Software | Version |
+|----------|---------|
+| Docker | 24.0 or later |
+| Docker Compose | 2.20 or later |
+| Python | 3.10 or later |
+
+For Docker installation, see [Get Docker](https://docs.docker.com/get-docker/).
+For Docker Compose installation, see [Install Docker Compose](https://docs.docker.com/compose/install/).
 
 ## Validation
 
-- Ensure all required software are installed and configured before proceeding to [Get Started](./get-started.md).
+Ensure all required software is installed and configured before proceeding to [Get Started](./get-started.md).
 
-## Supporting Resources
+## Learn More
 
-- [Overview](Overview.md)
-- [API Reference](api-reference.md)
+- [Overview](./Overview.md)
+- [Get Started](./get-started.md)

@@ -1,0 +1,321 @@
+.video-stream {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e6e7e8;
+  border-radius: 8px;
+  overflow: hidden;
+  height: var(--video-height);
+  transition: height 0.3s ease, width 0.3s ease;
+  z-index: 1000;
+}
+ 
+.video-stream.room-view {
+  width: 100%;
+  height: 50vh;
+  z-index: 1000;
+  position: relative;
+  flex-shrink: 0;
+}
+ 
+.video-stream.full-screen {
+  position: fixed;
+  top: calc(64px + 56px);
+  left: 0;
+  width: 100%;
+  height: calc(70vh - 64px - 56px);
+  z-index: 1000;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  transition: height 0.3s ease, width 0.3s ease;
+}
+ 
+.video-stream.collapsed {
+  height: auto;
+  min-height: 48px;
+}
+ 
+.video-stream.collapsed .video-stream-body,
+.video-stream.collapsed .stream-controls {
+  display: none;
+}
+ 
+.video-stream-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  color: #333;
+  border-bottom: 1px solid #e6e7e8;
+  min-height: 48px;
+  position: relative;
+  z-index: 10;
+}
+ 
+.room-view-toggle-wrapper {
+  display: flex;
+  align-items: center;
+}
+ 
+.room-view-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+ 
+.room-view-toggle input {
+  display: none;
+}
+ 
+.room-view-toggle .toggle-slider {
+  width: 40px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 10px;
+  position: relative;
+  transition: background 0.3s ease;
+  cursor: pointer;
+}
+ 
+.room-view-toggle .toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+ 
+.room-view-toggle input:checked + .toggle-slider {
+  background: #0071c5;
+}
+ 
+.room-view-toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+ 
+.stream-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+ 
+.stream-control-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+ 
+.stream-control-label.active {
+  background: #0054ae;
+  color: #fff;
+}
+ 
+.fullscreen-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+ 
+.video-stream-body {
+  flex: 1;
+  display: flex;
+  background: #f8f9fa;
+  overflow: hidden;
+}
+ 
+.stream-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: 1px dashed #ced4da;
+  border-radius: 10px;
+  margin: 20px;
+  width: 100%;
+}
+ 
+.streaming-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+ 
+.upload-file-button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+ 
+.upload-file-button:hover {
+  background-color: #0056b3;
+}
+ 
+/* NEW STREAM LAYOUT STYLES */
+.streams-layout {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+ 
+/* Multi-stream container (when "All" is selected) */
+.multi-stream-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  padding: 8px;
+  gap:2px;
+}
+ 
+/* Main stream (front camera) - 75% width */
+.main-stream {
+  flex: 3;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  width:75%;
+  gap:2px;
+}
+ 
+.side-streams-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap:2px;
+}
+ 
+/* Individual side streams */
+.side-stream {
+  flex: 1;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+ 
+/* Single stream view */
+.single-stream {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+  margin: 8px;
+}
+ 
+/* Stream overlay labels */
+.stream-overlay-label {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  color: white;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: bold;
+  border-radius: 4px;
+  z-index: 10;
+}
+ 
+/* Ensure HLS players fill their containers */
+.main-stream video,
+.side-stream video,
+.single-stream video,
+.main-stream .hls-player,
+.side-stream .hls-player,
+.single-stream .hls-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+ 
+/* Responsive design */
+@media (max-width: 768px) {
+  .multi-stream-container {
+    flex-direction: column;
+  }
+ 
+  .main-stream {
+    flex: 2;
+  }
+ 
+  .side-streams-container {
+    flex: 1;
+    flex-direction: row;
+  }
+}
+ 
+.side-stream:hover {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+  z-index: 5;
+}
+ 
+.side-stream:hover .stream-overlay-label,
+.main-stream:hover .stream-overlay-label {
+  background: rgba(0, 0, 0, 0.9);
+}
+.video-analytics-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+ 
+.spinner-circle {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+ 
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+ 
+.video-analytics-spinner p {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+ 
+.control-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-left: 8px;
+}
+ 
+.stream-control-label.disabled {
+  pointer-events: none;
+}
+ 

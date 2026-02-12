@@ -1,10 +1,11 @@
-# Intel® SceneScape Integration Guide
+# Integrate Intel® SceneScape with Smart NVR
 
 This guide covers the integration of Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from smart intersection application.
 
 ## Overview
 
 Smart NVR system integrates with Intel® SceneScape to enable:
+
 - Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
 - Automated event routing based on count thresholds
@@ -12,39 +13,39 @@ Smart NVR system integrates with Intel® SceneScape to enable:
 
 ## Prerequisites
 
-- **Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the Intel® SceneScape integration.
+**Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the integration with Intel® SceneScape.
 
-> **Please follow the below steps to run Smart Intersection Application.**
+1. Set up the Smart Intersection application.
 
-```bash
-# Clone smart intersection repository inside smart nvr directory if not already done
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b v1.2.0
+   ```bash
+   # Clone smart intersection repository inside smart nvr directory if not already done
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b v1.2.0
 
-# From the Smart NVR directory, copy the DL Streamer configuration (enables RTSP streaming)
-cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
+   # From the Smart NVR directory, copy the DL Streamer configuration (enables RTSP streaming)
+   cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
 
-# Copy the SceneScape compose configuration
-cp ./resources/compose-scenescape-rtsp.yml edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/compose-scenescape.yml
-```
+   # Copy the SceneScape compose configuration
+   cp ./resources/compose-scenescape-rtsp.yml edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/compose-scenescape.yml
+   ```
 
-After copying the files, start the Smart Intersection application:
+2. After copying the files, start the Smart Intersection application:
 
-```bash
-# Navigate to metro-vision-ai-app-recipe directory
-cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
+   ```bash
+   # Navigate to metro-vision-ai-app-recipe directory
+   cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
-# Start Smart Intersection
-./install.sh smart-intersection
-docker compose up -d
+   # Start Smart Intersection
+   ./install.sh smart-intersection
+   docker compose up -d
 
-# Navigate back to Smart NVR
-cd ../../../../smart-nvr
-```
+   # Navigate back to Smart NVR
+   cd ../../../../smart-nvr
+   ```
 
-These files provide:
+   The files provide:
 
-- RTSP streaming support in the DL Streamer pipeline
-- Intel® SceneScape-specific Docker Compose settings
+   - RTSP streaming support in the DL Streamer pipeline,
+   - Intel® SceneScape-specific Docker Compose settings.
 
 ## Installation and Setup
 
@@ -78,7 +79,8 @@ export SCENESCAPE_THROTTLE_INTERVAL=2.0  # Optional: throttle interval in second
 ./setup.sh restart
 ```
 
-**Note:** The setup script automatically copies Intel® SceneScape certificates from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
+> **Note:** The setup script automatically copies Intel® SceneScape certificates
+> from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
 
 ### Step 4: Verify Integration
 
@@ -139,7 +141,7 @@ When Intel® SceneScape is enabled but frigate source is selected:
 
 **SceneScape Rule Example:**
 
-```
+```text
 Source: scenescape
 Camera: camera1
 Count: 5
@@ -151,7 +153,7 @@ Action: Summarize
 
 **Frigate Rule Example:**
 
-```
+```text
 Source: frigate
 Camera: livingroom
 Label: person
@@ -165,6 +167,7 @@ Action: Add to Search
 ### Common Issues
 
 **SceneScape features not visible:**
+
 ```bash
 # Check and set environment variable
 echo $NVR_SCENESCAPE  # Should show 'true'
@@ -216,8 +219,4 @@ For Intel® SceneScape integration issues:
 6. **High Resource Usage**: If load average >10 or containers show >500% CPU, restart high-usage containers
 7. Review logs using debug commands above and contact support with relevant excerpts
 
-For general Smart NVR issues, see the [main documentation](get-started.md).
-
----
-
-*Last updated: October 2025*
+For general Smart NVR issues, see the [main documentation](./get-started.md).

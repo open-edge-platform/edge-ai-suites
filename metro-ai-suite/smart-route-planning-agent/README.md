@@ -1,19 +1,23 @@
 # Smart Route Planning Agent
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
-
-The Smart Route Planning Agent analyzes the route between a given source and destination, and communicates with other agents to fetch live analysis reports for traffic intersections found along feasible routes between the source and destination. Subsequently, the agent finds an optimal route in real-time, which is likely free from any possible incidents such as congestion, weather, roadblocks, and accidents.
+This application uses AI Agent to analyze a route between given source and destination. It communicates with other agents to fetch live analysis reports for traffic intersections found along all feasible routes between the source and destination. Subsequently, the agent finds an optimum route in real-time which is likely to be free from any possible incidents (like congestion, weather, roadblocks, accidents etc.).
 
 ## Get Started
   - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to get started with the agent.
   - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the agent.
 
-## How It Works
-  - [Overview](docs/user-guide/index.md): A high-level introduction to the agent.
-  - [Environment Variables](docs/user-guide/environment-variables.md): Configure the microservice through environment variables.
-  - [Traffic Data Analysis Workflow](docs/user-guide/traffic-data-analysis-workflow.md): Guide to traffic analysis, VLM integration, trigger conditions, windowed analysis, and configuration parameters.
-  - [Build from Source](docs/user-guide/build-from-source.md): Instructions for building the agent from source code.
+- **Overview**
+  - [Overview](docs/user-guide/Overview.md): A high-level introduction to the application and its features.
 
-## Learn More
-- [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.
+- **Getting Started**
+  - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to getting started with the application.
+  - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements for running the application.
+
+- **Configuration**
+  - [Environment Variables](docs/user-guide/environment-variables.md): Complete guide to configuring the application through environment variables.
+
+- **Deployment**
+  - [Build from Source](docs/user-guide/build-from-source.md): Instructions for building the application from source code.
+
+- **Release Notes**
+  - [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.

@@ -1,0 +1,11 @@
+
+services:
+  ecg:
+    container_name: ecg_service
+    build:
+      context: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/data:/app/data
+      - ../../models/ai-ecg:/models/ai-ecg

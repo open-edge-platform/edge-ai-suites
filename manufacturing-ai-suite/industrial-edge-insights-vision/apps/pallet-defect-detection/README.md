@@ -47,7 +47,7 @@ It also consists of the following third-party microservices:
 ## Learn More
 
 - [Helm based deployment](../../docs/user-guide/pallet-defect-detection/get-started/deploy-with-helm.md)
-- [MLOps using Model Registry](../../docs/user-guide/pallet-defect-detection/how-to-guides/enable-mlops.md)
+- [MLOps using Model Download](../../docs/user-guide/pallet-defect-detection/how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/run-multiple-ai-pipelines.md)
 - [Publish frames to S3 storage pipelines](../../docs/user-guide/pallet-defect-detection/how-to-guides/store-frames-in-s3.md)
 - [View telemetry data in Open Telemetry](../../docs/user-guide/pallet-defect-detection/how-to-guides/view-telemetry-data.md)

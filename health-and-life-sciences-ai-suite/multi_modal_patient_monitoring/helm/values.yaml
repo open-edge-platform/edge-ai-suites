@@ -1,0 +1,60 @@
+namespace: health-ai
+
+services:
+
+  mdpnp:
+    enabled: true
+    image: intel/hl-ai-mdpnp:1.0.0
+    replicas: 1
+    hostNetwork: true
+    containerPort: 7400
+    service:
+      enabled: false
+
+  dds-bridge:
+    enabled: true
+    image: intel/hl-ai-dds-bridge:1.0.0
+    replicas: 1
+    containerPort: 8082
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 8082
+
+  aggregator:
+    enabled: true
+    image: intel/hl-ai-aggregator-service:1.0.0
+    replicas: 1
+    containerPort: 50051        # gRPC
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 50051
+
+  ai-ecg:
+    enabled: true
+    image: intel/hl-ai-ecg:1.0.0
+    replicas: 1
+    containerPort: 8000
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 8000
+
+  pose:
+    enabled: true
+    image: intel/hl-ai-3dpose:1.0.0
+    replicas: 1
+    containerPort: 50051
+    service:
+      enabled: false
+
+  metrics:
+    enabled: true
+    image: intel/hl-ai-metrics-service:1.0.0
+    replicas: 1
+    containerPort: 9000
+    service:
+      enabled: true
+      type: ClusterIP
+      port: 9000

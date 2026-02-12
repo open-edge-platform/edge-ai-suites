@@ -141,8 +141,8 @@ By following this guide, you will learn how to:
 
 ## Other Deployment Options
 
-- [Deploy Using Helm](./get-started/how-to-deploy-with-helm.md): Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
-- [Deploy with Edge Orchestrator](./get-started/how-to-deploy-with-edge-orchestrator.md): Use a simplified
+- [Deploy Using Helm](./get-started/deploy-with-helm.md): Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
+- [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md): Use a simplified
 edge application deployment process.
 
 ## Supporting Resources
@@ -154,8 +154,8 @@ edge application deployment process.
 :hidden:
 
 get-started/system-requirements.md
-get-started/how-to-deploy-with-helm.md
-get-started/how-to-deploy-with-edge-orchestrator.md
+get-started/deploy-with-helm.md
+get-started/deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->

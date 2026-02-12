@@ -11,7 +11,7 @@ Both compose based as well as helm based deployments are supported by this appli
 ### Architecture
 It consists of the following microservices:
 - DL Streamer Pipeline Server
-- Model Registry Microservice(MRaaS)
+- Model Download*
 - MediaMTX server, Coturn server
 - Open Telemetry Collector
 - Prometheus
@@ -23,6 +23,7 @@ It consists of the following microservices:
     <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>
 </div>
 
+**Although not part of the application configuration files such as docker compose or helm templates, Model Download microservice helps downloading OpenVINO and Geti trained models that is used by DLStreamer Pipeline Server to demonstrate MLOps flow.*
 ### Directory structure
 
 Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.

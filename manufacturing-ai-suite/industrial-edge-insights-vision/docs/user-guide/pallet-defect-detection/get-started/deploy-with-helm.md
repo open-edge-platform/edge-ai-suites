@@ -21,7 +21,7 @@
 2. Set app specific values.yaml file.
 
    ```sh
-   cp helm/values_pallet_defect_detection.yaml helm/values.yaml
+   cp helm/values_pallet-defect-detection.yaml helm/values.yaml
    ```
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
@@ -56,8 +56,6 @@
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
-       POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-       MR_URL: https://<HOST_IP>:30443/registry/ # Model reigstry URL
        SAMPLE_APP: pallet-defect-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
@@ -293,8 +291,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```python
    import boto3
    url = "http://<HOST_IP>:30800"
-   user = "<value of MR_MINIO_ACCESS_KEY used in helm/values.yaml>"
-   password = "<value of MR_MINIO_SECRET_KEY used in helm/values.yaml>"
+   user = "<value of MINIO_ACCESS_KEY used in helm/values.yaml>"
+   password = "<value of MINIO_SECRET_KEY used in helm/values.yaml>"
    bucket_name = "ecgdemo"
 
    client= boto3.client(
@@ -337,7 +335,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    }'
    ```
 
-7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MR_MINIO_ACCESS_KEY` and `MR_MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
@@ -347,7 +345,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    helm uninstall app-deploy -n apps
    ```
 
-## MLOps using Model Registry
+## MLOps using Model Download
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
@@ -402,65 +400,59 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./sample_start.sh helm -p pallet_defect_detection_mlops
    ```
+   Note the instance-id.
 
 6. Download and prepare the model.
+   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
+
+   unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
    ```
 
-7. Run the following curl command to upload the local model.
+7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
 
    ```sh
-   curl -k -L -X POST "https://<HOST_IP>:30443/registry/models" \
-   -H 'Content-Type: multipart/form-data' \
-   -F 'name="YOLO_Test_Model"' \
-   -F 'precision="fp32"' \
-   -F 'version="v1"' \
-   -F 'origin="Geti"' \
-   -F 'file=@<model_file_path.zip>;type=application/zip' \
-   -F 'project_name="pallet-defect-detection"' \
-   -F 'architecture="YOLO"' \
-   -F 'category="Detection"'
+   
+   POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
    ```
 
-   > **Note:** Replace model_file_path.zip in the cURL request with the actual file path of your model's .zip file, and HOST_IP with the IP address of the host machine.
-
-8. Check if the model is uploaded successfully.
-
-    ```sh
-    curl -k 'https://<HOST_IP>:30443/registry/models'
-    ```
-
-9. Check the instance ID of the currently running pipeline to use it for the next step.
-
+7. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
    ```sh
-   curl -k --location -X GET https://<HOST_IP>:30443/api/pipelines/status
+   curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
 
-10. Restart the model with a new model from Model Registry.
+8. Modify the payload in `helm/apps/pallet-defect-detection/payload.json` to launch an instance for the mlops pipeline with this new model
 
-    The following curl command downloads the model from Model Registry using the specs provided in the payload. Upon download, the running pipeline is restarted with replacing the older model with this new model. Replace the `<instance_id_of_currently_running_pipeline>` in the URL below with the id of the pipeline instance currently running.
-
-    ```sh
-    curl -k 'https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
-    --header 'Content-Type: application/json' \
-    --data '{
-    "project_name": "pallet-defect-detection",
-    "version": "v1",
-    "category": "Detection",
-    "architecture": "YOLO",
-    "precision": "fp32",
-    "deploy": true,
-    "pipeline_element_name": "detection",
-    "origin": "Geti",
-    "name": "YOLO_Test_Model"
-    }'
-    ```
-
-    > **Note:**- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
+   ```json
+   [
+       {
+           "pipeline": "pallet_defect_detection_mlops",
+           "payload":{
+               "source": {
+                   "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+                   "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                   "type": "webrtc",
+                   "peer-id": "pdd"
+               }
+               },
+               "parameters": {
+                   "detection-properties": {
+                       "model": "/home/pipeline-server/resources/models/deployment/Detection/model/model.xml",
+                       "device": "CPU"
+                   }
+               }
+           }
+       }
+   ]
 
 11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
