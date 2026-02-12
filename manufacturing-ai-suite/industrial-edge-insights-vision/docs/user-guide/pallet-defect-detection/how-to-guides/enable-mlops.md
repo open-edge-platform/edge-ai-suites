@@ -1,20 +1,25 @@
 # Enable MLOps
 
-Applications for industrial vision can also be used to demonstrate MLOps workflow using Model Registry microservice.
-With this feature, during runtime, you can download a new model from the registry and restart the pipeline with the new model.
+Applications for industrial edge insights vision can also be used to demonstrate MLOps workflow using Model Download microservice.
+With this feature, during runtime, you can download a new model using the microservice and restart the pipeline with the new model.
+
+>To simplify this demonstration, we assume that models have already been downloaded to an accessible location (`/tmp/models`) using the Model Download from a running Geti server before restarting the pipeline.
 
 ## Contents
 
-### Launch a pipeline in DL Streamer Pipeline Server
+### Pre-requisites
+>NOTE: Model Download service has already downloaded the model to be updated to `/tmp/models`
 
+
+### Steps
 1. Set up the sample application to start a pipeline. A pipeline named `pallet_defect_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the pallet defect detection sample app.
 
-   > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the model-instance-id.
+   > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the `model-instance-id`.
 
    Navigate to the `[WORKDIR]/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision` directory and set up the app.
 
    ```sh
-   cp .env_pallet_defect_detection .env
+   cp .env_pallet-defect-detection .env
    ```
 
 2. Update the following variables in `.env` file.
@@ -22,10 +27,8 @@ With this feature, during runtime, you can download a new model from the registr
    ``` sh
    HOST_IP= # <IP Adress of the host machine>
 
-   MR_PSQL_PASSWORD=  #PostgreSQL service & client adapter e.g. intel1234
-
-   MR_MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-   MR_MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
    MTX_WEBRTCICESERVERS2_0_USERNAME=  # Webrtc-mediamtx username. e.g intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=  # Webrtc-mediamtx password. e.g intel1234
@@ -43,7 +46,7 @@ With this feature, during runtime, you can download a new model from the registr
    docker compose up -d
    ```
 
-5. Check to see if the pipeline is loaded is present which in our case is `pallet_defect_detection_mlops`.
+5. Check to see if the pipeline is present among the list of loaded pipelines which in our case is `pallet_defect_detection_mlops`.
 
    ```sh
    ./sample_list.sh
@@ -82,88 +85,60 @@ With this feature, during runtime, you can download a new model from the registr
    ```bash
    ./sample_start.sh -p pallet_defect_detection_mlops
    ```
+   Note the instance-id of the pipeline launched.
 
-### Upload a model to Model Registry
-
-The following section assumes Model Registry microservice is up and running.
-
-For this demonstration we will be using Geti trained pallet defect detection model. Usually, the newer model is the same as older, architecture wise, but is retrained for better performance. We will using the same model and call it a different version.
-
-1. Download and prepare the model.
-
-   ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
-
-   curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
-   ```
-
-2. Run the following curl command to upload the local model.
-
-   ```sh
-   curl -k -L -X POST "https://<HOST_IP>/registry/models" \
-   -H 'Content-Type: multipart/form-data' \
-   -F 'name="YOLO_Test_Model"' \
-   -F 'precision="fp32"' \
-   -F 'version="v1"' \
-   -F 'origin="Geti"' \
-   -F 'file=@<model_file_path.zip>;type=application/zip' \
-   -F 'project_name="pallet-defect-detection"' \
-   -F 'architecture="YOLO"' \
-   -F 'category="Detection"'
-   ```
-
-   > **Note:**: Replace model_file_path.zip in the cURL request with the actual file path of your model's .zip file, and HOST_IP with the IP address of the host machine.
-
-3. Check if the model is uploaded successfully.
-
-   ```sh
-   curl -k 'https://<HOST_IP>/registry/models'
-   ```
-
-### Steps to use the new model
-
-1. List all the registered models in the model registry
-
-   ```sh
-   curl -k 'https://<HOST_IP>/registry/models'
-   ```
-
-   If you do not have a model available, follow [the steps](#upload-a-model-to-model-registry) to upload a sample model in Model Registry.
-
-2. Check the instance ID of the currently running pipeline to use it for the next step.
-
-   ```sh
-   curl -k --location -X GET https://<HOST_IP>/api/pipelines/status
-   ```
-
-3. Restart the model with a new model from Model Registry.
-
-   The following curl command downloads the model from Model Registry using the specs provided in the payload. Upon download, the running pipeline is restarted with replacing the older model with this new model. Replace the `<instance_id_of_currently_running_pipeline>` in the URL below with the id of the pipeline instance currently running.
-
-   ```sh
-   curl -k 'https://<HOST_IP>/api/pipelines/user_defined_pipelines/pallet_defect_detection_mlops/{instance_id_of_currently_running_pipeline}/models' \
-   --header 'Content-Type: application/json' \
-   --data '{
-   "project_name": "pallet-defect-detection",
-   "version": "v1",
-   "category": "Detection",
-   "architecture": "YOLO",
-   "precision": "fp32",
-   "deploy": true,
-   "pipeline_element_name": "detection",
-   "origin": "Geti",
-   "name": "YOLO_Test_Model"
-   }'
-   ```
-
-    > **Note:**- The data above assumes there is a model in the registry that contains these properties. Also, the pipeline name that follows `user_defined_pipelines/`, will affect the `deployment` folder name.
-
-4. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+8. Verify the pipeline is running. You can View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
-5. You can also stop any running pipeline by using the pipeline instance "id".
+    ### Downloading model with Model Download 
+
+    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/Overview.md) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md).
+
+    For our demonstration, we will assume the pallet defect detection model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/tmp-models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
+
+9. Stop the running pipeline by using the pipeline instance "id".
 
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
+10. Start a new pipeline with this new model. Before that modify the payload.json to use this new model in `apps/pallet-defect-detection/payload.json`. Notice the model path in the payload has changed to the new model.
+    
+    ```json
+    [
+        {
+            "pipeline": "pallet_defect_detection_mlops",
+            "payload":{
+                "source": {
+                    "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+                    "type": "uri"
+                },
+                "destination": {
+                "frame": {
+                    "type": "webrtc",
+                    "peer-id": "pdd"
+                }
+                },
+                "parameters": {
+                    "detection-properties": {
+                        "model": "/tmp/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+    ```
+
+11. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+
+
+## Additional resources
+### Setting up Model Download
+To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#quick-start)
+
+### Downloading models from Geti Server
+To learn how to download models from a running Geti server, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#sample-usage-with-curl-command)
+
+
+> **Note:**: The downloaded model(s) must be accessible to the DLStreamer pipeline server container. If not, please add it to volumes section of dltreamer-pipeline-server in compose file, and restart the DLSPS service.

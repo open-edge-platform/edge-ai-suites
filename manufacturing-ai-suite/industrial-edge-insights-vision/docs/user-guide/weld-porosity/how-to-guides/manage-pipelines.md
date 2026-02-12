@@ -60,6 +60,8 @@ Follow this procedure to start the pipeline.
 
    In this example, a pipeline included in this sample application is `weld_porosity_classification`. Start this pipeline with the following cURL command.
 
+    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
        "source": {

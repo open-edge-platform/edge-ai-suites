@@ -57,6 +57,8 @@ Follow this procedure to start the pipeline.
 
 2. You use a Client URL (cURL) command to start the pipeline.
 
+    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
    In this example, a pipeline included in this sample application is `worker_safety_gear_detection`. Start this pipeline with the following cURL command.
 
    ```sh

@@ -1,0 +1,20 @@
+# Core ML/CV & Inference Dependencies
+opencv-python-headless==4.9.0.80
+numpy>=1.23.0,<2.0           # Must be <2.0 for compatibility
+scipy>=1.11.0
+
+# OpenVINO runtime for GPU inference
+openvino>=2024.6.0,<2025.0
+
+# gRPC runtime (protos are pre-generated)
+grpcio>=1.60.0
+protobuf>=4.25.0,<5.0.0
+
+# Configuration & Utilities
+pyyaml>=6.0.0
+requests>=2.31.0
+tqdm>=4.66.0
+
+# Control API
+fastapi>=0.115.0
+uvicorn>=0.30.0

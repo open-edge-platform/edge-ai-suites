@@ -1,0 +1,13 @@
+# Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Virtual environment
+venv/
+.env
+
+# Uploaded files
+uploads/

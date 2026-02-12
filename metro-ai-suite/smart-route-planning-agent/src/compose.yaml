@@ -6,7 +6,7 @@ networks:
     driver: bridge
 
 services:
-  agent:
+  route-planner-agent:
     image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}
     build:
       context: .

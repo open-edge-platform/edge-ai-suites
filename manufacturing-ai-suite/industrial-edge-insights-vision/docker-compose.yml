@@ -1,13 +1,9 @@
 services:
   dlstreamer-pipeline-server:
-    depends_on:
-      model_registry:
-        condition: service_healthy
     image: ${DLSTREAMER_PIPELINE_SERVER_IMAGE}
-    container_name: dlstreamer-pipeline-server
     hostname: dlstreamer-pipeline-server
     networks:
-    - mraas
+    - industrial-edge-vision
     restart: unless-stopped
     security_opt:
     - no-new-privileges
@@ -18,14 +14,14 @@ services:
       ENABLE_RTSP: false
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,model_registry,${MR_MINIO_HOSTNAME}
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,model_registry,${MR_MINIO_HOSTNAME}
+      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
+      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx-server,${MINIO_HOSTNAME}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
-      S3_STORAGE_HOST: ${MR_MINIO_HOSTNAME}
-      S3_STORAGE_PORT: ${MR_MINIO_SERVER_PORT}
-      S3_STORAGE_USER: ${MR_MINIO_ACCESS_KEY}
-      S3_STORAGE_PASS: ${MR_MINIO_SECRET_KEY}
+      S3_STORAGE_HOST: ${MINIO_HOSTNAME}
+      S3_STORAGE_PORT: ${MINIO_SERVER_PORT}
+      S3_STORAGE_USER: ${MINIO_ACCESS_KEY}
+      S3_STORAGE_PASS: ${MINIO_SECRET_KEY}
       SERVICE_NAME: "dlstreamer-pipeline-server"
       ENABLE_OPEN_TELEMETRY: true
       OTEL_COLLECTOR_HOST: ${OTEL_COLLECTOR_HOST}
@@ -37,18 +33,13 @@ services:
       OPCUA_SERVER_PASSWORD: ${OPCUA_SERVER_PASSWORD}
       MQTT_HOST: mqtt-broker
       MQTT_PORT: 1883
-      # Model Registry Microservice
-      MR_URL: ${MR_URL}
-      MR_SAVED_MODELS_DIR: ${MR_SAVED_MODELS_DIR}
-      MR_REQUEST_TIMEOUT: ${MR_REQUEST_TIMEOUT}
-      MR_VERIFY_CERT: ${MR_VERIFY_CERT}
       # NPU related environment variables
       ZE_ENABLE_ALT_DRIVERS: libze_intel_npu.so
     volumes:
     - vol_pipeline_root:/var/cache/pipeline_root:uid=1999,gid=1999
     - /var/tmp:/var/tmp
     - ./resources/${SAMPLE_APP}/:/home/pipeline-server/resources/
-    - ./apps/${SAMPLE_APP}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
+    - ${APP_DIR}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
       # USB camera devices
@@ -83,7 +74,7 @@ services:
 
   mediamtx:
     image: bluenviron/mediamtx:1.11.3
-    container_name: mediamtx-server
+    hostname: mediamtx-server
     environment:
       - MTX_LOGLEVEL=debug
       - MTX_RTSP=no
@@ -96,40 +87,37 @@ services:
       - MTX_WEBRTCTRACKGATHERTIMEOUT=10s
       - MTX_WEBRTCLOCALTCPADDRESS=:8189
     networks:
-    - mraas
+    - industrial-edge-vision
 
   coturn:
     image: coturn/coturn:latest
-    container_name: coturn
     ports:
       - "${COTURN_UDP_PORT}:3478/udp"
     networks:
-      - mraas
+      - industrial-edge-vision
 
   mqtt-broker:
     image: eclipse-mosquitto
-    container_name: mqtt-broker
     networks:
-      - mraas
+      - industrial-edge-vision
     volumes:
-      - ./apps/${SAMPLE_APP}/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ${APP_DIR}/configs/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       
   nginx:
     image: nginx:1.27-alpine
-    container_name: nginx-reverse-proxy
     ports:
-      - "80:80"
-      - "443:443"
+      - "${NGINX_HTTP_PORT}:80"
+      - "${NGINX_HTTPS_PORT}:443"
     volumes:
-      - "./apps/${SAMPLE_APP}/configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
-      - "./apps/${SAMPLE_APP}/configs/nginx/ssl:/etc/nginx/ssl:ro"
+      - "${APP_DIR}/configs/nginx/nginx.conf:/etc/nginx/nginx.conf:ro"
+      - "${APP_DIR}/configs/nginx/ssl:/etc/nginx/ssl:ro"
     networks:
-      - mraas
+      - industrial-edge-vision
     depends_on:
       - dlstreamer-pipeline-server
       - mediamtx
       - prometheus
-      - mraas-minio
+      - minio
       - mqtt-broker
     environment:
       - http_proxy=${http_proxy}
@@ -138,102 +126,38 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
     restart: on-failure:5
 
-  model_registry:
-    image: ${DOCKER_REGISTRY}intel/model-registry:1.0.3
-    container_name: model_registry
-    hostname: model_registry
-    ipc: "none"
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 4096mb
-          cpus: '0.30'
-          pids: 200
-        reservations:
-          memory: 2048mb
-          cpus: '0.15'
-    security_opt:
-      - no-new-privileges
-    healthcheck:
-      test: ["CMD-SHELL", "exit", "0"]
-    environment:
-      AppName: "ModelRegistry"
-      MIN_LOG_LEVEL: ${MR_MIN_LOG_LEVEL}
-      ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
-      MLFLOW_TRACKING_URI: postgresql+psycopg2://${POSTGRES_USER}:${MR_PSQL_PASSWORD}@mraas_postgres:${MR_PSQL_PORT}/${MR_PSQL_DATABASE}
-      MLFLOW_S3_ENDPOINT_URL: ${MR_MLFLOW_S3_ENDPOINT_URL}
-      MINIO_HOSTNAME: ${MR_MINIO_HOSTNAME}
-      MINIO_SERVER_PORT: ${MR_MINIO_SERVER_PORT}
-      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
-      MINIO_BUCKET_NAME: ${MR_MINIO_BUCKET_NAME}
-      SERVER_PORT: ${MR_SERVER_PORT}
-      LSHOST: host.docker.internal
-      SERVER_CERT: /run/secrets/ModelRegistry_Server/public.crt
-      CA_CERT: /run/secrets/ModelRegistry_Server/server-ca.crt
-      SERVER_PRIVATE_KEY: /run/secrets/ModelRegistry_Server/private.key
-      no_proxy: ${MR_MINIO_HOSTNAME}
-      NO_PROXY: ${MR_MINIO_HOSTNAME}
-    volumes:
-      - ./Certificates/ssl/:/run/secrets/ModelRegistry_Server:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - mraas
-  mraas_postgres:
-    image: postgres:13
-    container_name: mraas_postgres
-    hostname: mraas_postgres
-    restart: unless-stopped
-    security_opt:
-      - no-new-privileges
-    environment:
-      AppName: "ModelRegistry"
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${MR_PSQL_PASSWORD}
-      POSTGRES_DB: ${MR_PSQL_DATABASE}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    volumes:
-      - mr_postgres_data:/var/lib/postgresql/data
-    expose:
-      - ${MR_PSQL_PORT}
-    networks:
-      - mraas
-  mraas-minio:
+  minio:
     image: minio/minio:RELEASE.2020-12-12T08-39-07Z
-    container_name: ${MR_MINIO_HOSTNAME}
-    hostname: ${MR_MINIO_HOSTNAME}
+    hostname: ${MINIO_HOSTNAME}
     ipc: "none"
     expose:
-      - ${MR_MINIO_SERVER_PORT}
+      - ${MINIO_SERVER_PORT}
     volumes:
-      - ./Certificates/ssl/:/certs/:rw
+      - ${APP_DIR}/Certificates/ssl/:/certs/:rw
       - "vol_minio_data:/data"
     networks:
-      - mraas
+      - industrial-edge-vision
     restart: unless-stopped
     security_opt:
       - no-new-privileges
     ports:
-      - '8000:8000'
+      - '${MINIO_SERVER_PORT}:8000'
     environment:
       AppName: "ModelRegistry"
-      MINIO_ACCESS_KEY: ${MR_MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MR_MINIO_SECRET_KEY}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
       MINIO_BROWSER_REDIRECT_URL: https://${HOST_IP}/minio/
     command: server --address ":8000" --certs-dir /certs /data
 
   prometheus:
     image: prom/prometheus:latest
-    container_name: prometheus
     environment:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       - NO_PROXY=$no_proxy,otel-collector,localhost,127.0.0.1
     volumes:
-      - ./apps/${SAMPLE_APP}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${APP_DIR}/configs/open_telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     command: >
       --config.file=/etc/prometheus/prometheus.yml
@@ -241,23 +165,22 @@ services:
       --web.route-prefix=/prometheus
       --web.external-url=https://${HOST_IP}/prometheus
     networks:
-      - mraas
+      - industrial-edge-vision
 
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.94.0
-    container_name: otel-collector
     environment:
       HTTP_PROXY: ${http_proxy}
       HTTPS_PROXY: ${https_proxy}
       NO_PROXY: $no_proxy,prometheus,dlstreamer-pipeline-server,localhost,127.0.0.1
     volumes:
-      - ./apps/${SAMPLE_APP}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
+      - ${APP_DIR}/configs/open_telemetry/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml  # OpenTelemetry Collector config
     restart: always
     networks:
-      - mraas
+      - industrial-edge-vision
 
 networks:
-  mraas:
+  industrial-edge-vision:
     driver: bridge
 
 volumes:
@@ -267,8 +190,6 @@ volumes:
       type: tmpfs
       device: tmpfs
   vol_minio_data:
-    driver: local
-  mr_postgres_data:
     driver: local
   prometheus_data:
     driver: local
