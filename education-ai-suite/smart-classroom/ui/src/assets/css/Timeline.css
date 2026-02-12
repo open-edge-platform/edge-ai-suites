@@ -4,7 +4,33 @@
   padding: 16px;
   margin-bottom: 16px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
+}
+
+.timeline-accordion {
+  font-size: 12px;
+}
+
+.timeline-accordion .timeline-header h4 {
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+.timeline-accordion .timeline-row {
+  margin-bottom: 8px;
+}
+
+.timeline-accordion .timeline-speaker-info {
+  width: 80px;
+  font-size: 11px;
+}
+
+.timeline-accordion .timeline-track {
+  height: 20px;
+}
+
+.timeline-accordion .timeline-segment {
+  height: 18px;
+  border-radius: 2px;
 }
 
 .timeline-header {

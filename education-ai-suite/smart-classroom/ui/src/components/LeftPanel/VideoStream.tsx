@@ -147,11 +147,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
 
     return "inactive";
   };
-
-  // useEffect(() => {
-  //   dispatch(setVideoPlaybackMode(isPlaybackMode));
-  // }, [isPlaybackMode, dispatch]);
-
+  
   useEffect(() => {
     if (isPlaybackMode) return;
 

@@ -138,7 +138,7 @@
       "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
       "model3": "Model 3",
       "model4": "Model 4",
-      "classStatistics": "Class Statistics",
+      "classStatistics": "Class Engagement",
       "roomView": "Room View",
       "frontCamera": "Front",
       "backCamera": "Back",
@@ -171,7 +171,11 @@
     "raiseUpCount": "Aggregated Raise Up Count",
     "standReIdData": "Stand Re-ID Data",
     "studentId": "Student ID",
-    "count": "Count"
+    "count": "Count",
+    "videoAnalytics": "Video Analytics",
+    "audioAnalytics": "Audio Analytics",
+    "lastUpdated": "Last updated",
+    "noData": "No data available"
   }
 }
  

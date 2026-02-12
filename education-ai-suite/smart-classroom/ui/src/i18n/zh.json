@@ -138,7 +138,7 @@
     "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
     "model3": "模型3",
     "model4": "模型4",
-    "classStatistics": "课堂统计",
+    "classStatistics": "课堂参与",
     "roomView": "教室视图",
     "frontCamera": "前置摄像头",
     "backCamera": "后置摄像头",
@@ -171,6 +171,10 @@
     "raiseUpCount": "累计举手次数",
     "standReIdData": "站立 ReID 数据",
     "studentId": "学生 ID",
-    "count": "次数"
+    "count": "次数",
+    "videoAnalytics": "视频分析",
+    "audioAnalytics": "音频分析",
+    "lastUpdated": "最后更新",
+    "noData": "暂无数据"
   }
 }
