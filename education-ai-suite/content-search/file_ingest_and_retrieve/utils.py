@@ -39,6 +39,7 @@ def generate_unique_id():
     # return np.int64(uuid.uuid4().int & (1 << 64) - 1)
     return uuid.uuid4().int & 0x7FFFFFFFFFFFFFFF
 
+
 def encode_image_to_base64(image, format="PNG", add_header=False):
     """
     Encode an image to a base64 string.
