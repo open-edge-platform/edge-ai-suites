@@ -11,7 +11,7 @@ import numpy as np
 
 import openvino as ov
 
-from video_ingest_and_retrieve.yolox_utils import preproc, multiclass_nms, demo_postprocess
+from file_ingest_and_retrieve.yolox_utils import preproc, multiclass_nms, demo_postprocess
 
 MODEL_DIR = "./models"
 

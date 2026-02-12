@@ -13,8 +13,8 @@ from PIL import Image
 
 from multimodal_embedding_serving import get_model_handler, EmbeddingModel
 
-from video_ingest_and_retrieve.detector import Detector
-from video_ingest_and_retrieve.utils import generate_unique_id, encode_image_to_base64
+from file_ingest_and_retrieve.detector import Detector
+from file_ingest_and_retrieve.utils import generate_unique_id, encode_image_to_base64
 
 from chromadb_wrapper.chroma_client import ChromaClientWrapper
 

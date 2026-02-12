@@ -18,8 +18,8 @@ import tempfile
 
 from content_search_minio.minio_client import MinioStore
 
-from video_ingest_and_retrieve.indexer import Indexer
-from video_ingest_and_retrieve.retriever import ChromaRetriever
+from file_ingest_and_retrieve.indexer import Indexer
+from file_ingest_and_retrieve.retriever import ChromaRetriever
 
 logger = logging.getLogger("visual_data_service")
 logging.basicConfig(
