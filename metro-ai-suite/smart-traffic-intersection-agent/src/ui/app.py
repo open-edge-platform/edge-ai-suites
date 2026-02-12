@@ -322,18 +322,26 @@ def _device_security_panel_html():
     security_data = {
         "Secure Boot": {"status": "Enabled", "ok": True},
         "Full Disk Encryption": {"status": "Enabled", "ok": True},
-        "Total Memory Encryption": {"status": "Not Enabled", "ok": False},
+        "Total Memory Encryption": {"status": "Enabled", "warn": True, "text_color": "#3b82f6"},
         "Trusted Compute": {"status": "Enabled", "ok": True}
         }
 
     rows_html = ""
     for label, info in security_data.items():
-        icon = "✅" if info["ok"] else "❌"
-        color = "#10b981" if info["ok"] else "#ef4444"
+        if info.get("warn"):
+            icon = '<span style="color:#f59e0b;">☑</span>'
+            color = "#f59e0b"
+        elif info.get("ok"):
+            icon = "✅"
+            color = "#10b981"
+        else:
+            icon = "❌"
+            color = "#ef4444"
+        text_color = info.get("text_color", color)
         rows_html += f"""
         <tr>
           <td style="padding:5px 8px;font-size:12px;color:#555;">{label}</td>
-          <td style="padding:5px 8px;font-size:12px;font-weight:600;color:{color};">{icon} {info["status"]}</td>
+          <td style="padding:5px 8px;font-size:12px;font-weight:600;">{icon} <span style="color:{text_color};">{info["status"]}</span></td>
         </tr>"""
 
     return f"""

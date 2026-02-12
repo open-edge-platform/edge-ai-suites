@@ -51,7 +51,7 @@ class Config:
     
     @classmethod
     def get_app_title(cls) -> str:
-        return cls.get_value_from_env("APP_TITLE", "TRAFFIC MONITORING SYSTEM")
+        return cls.get_value_from_env("APP_TITLE", "Trusted AI for Smart Traffic Intersection Agent")
     
     @classmethod
     def get_app_port(cls) -> int:
