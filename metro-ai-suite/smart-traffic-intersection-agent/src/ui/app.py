@@ -320,17 +320,17 @@ def _device_security_panel_html():
     """Static Device Security State panel — hardcoded for now, configurable via CLI/env later."""
     # TODO: Replace hardcoded values with Config.get_device_security() or CLI input
     security_data = {
-        "Secure Boot": {"status": "Enabled", "ok": True},
-        "Full Disk Encryption": {"status": "Enabled", "ok": True},
+        "Secure Boot": {"status": "", "ok": True},
+        "Full Disk Encryption": {"status": "", "ok": True},
         "Total Memory Encryption": {"status": "Enabled", "warn": True, "text_color": "#3b82f6"},
-        "Trusted Compute": {"status": "Enabled", "ok": True}
+        "Trusted Compute": {"status": "", "ok": True}
         }
 
     rows_html = ""
     for label, info in security_data.items():
         if info.get("warn"):
-            icon = '<span style="color:#f59e0b;">☑</span>'
-            color = "#f59e0b"
+            icon = '<span style="color:#3b82f6;">☑</span>'
+            color = "#3b82f6"
         elif info.get("ok"):
             icon = "✅"
             color = "#10b981"

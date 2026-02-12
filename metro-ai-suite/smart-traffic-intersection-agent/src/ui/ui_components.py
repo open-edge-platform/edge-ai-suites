@@ -85,7 +85,7 @@ class UIComponents:
         return f"""
         <div style="text-align: center; background: {colors['header_bg']}; 
                     padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: {colors['shadow']};">
-            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {Config.get_app_title()} | {monitoring_data.data.intersection_name}</p> 
+            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {Config.get_app_title()}</p> 
         </div>
         """
 
