@@ -1,11 +1,11 @@
-# Get Help
+# Troubleshooting
 
 This page provides comprehensive support and troubleshooting information for the Smart NVR Sample Application. It is divided into the following sections:
 
-- **Common Issues**: General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
-- **Troubleshooting Docker Deployments**: Steps to address problems specific to Docker deployments.
+- [Common Issues](#common-issues): General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
+- [Troubleshooting Docker Deployments](#troubleshooting-docker-deployments): Steps to address problems specific to Docker deployments.
 
-## Troubleshooting Common Issues
+## Common Issues
 
 ### 1. Containers Not Starting
 
@@ -50,7 +50,7 @@ This page provides comprehensive support and troubleshooting information for the
 - Ensure the browser’s date and time are correctly set and in sync with the system time of the machine running the NVR services.
 - Video clips are only available from the time the NVR services started running. If a past time (before service start) is selected, this warning will be shown.
 
-## Troubleshooting Docker Containers
+## Troubleshooting Docker Deployments
 
 ### 1. Containers Failing
 

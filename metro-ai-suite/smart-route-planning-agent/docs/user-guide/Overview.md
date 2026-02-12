@@ -1,16 +1,49 @@
 # Smart Route Planning Agent
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
+AI-powered route optimization using multi-agent communication to analyze traffic intersections and find incident-free paths between source and destination in real-time.
 
-This application uses AI Agent to analyze a route between given source and destination. It communicates with other agents to fetch live analysis reports for traffic intersections found along all feasible routes between the source and destination. Subsequently, the agent finds an optimum route in real-time which is likely to be free from any possible incidents (like congestion, weather, roadblocks, accidents etc.).
+## Table of Contents
 
-<p align="center">
-    <img src="./_images/ITS_architecture.png" alt="Architecture" />
-</p>
+1. [Overview and Features](#overview-and-features)
+2. [How the Application Works](#how-the-application-works)
+3. [Learn More](#learn-more)
 
-## Supporting Resources
+## Overview and Features
 
-- [Get Started Guide](get-started.md)
-- [API Reference](api-reference.md)
-- [System Requirements](system-requirements.md)
+### Use Cases
+
+**Real-time Route Optimization**: Analyze multiple routes between source and destination to find the optimal path based on live traffic conditions.
+
+**Incident Avoidance**: Identify and avoid routes affected by congestion, weather, roadblocks, or accidents.
+
+**Multi-Agent Traffic Analysis**: Communicate with [Smart Traffic Intersection Agent](../../../../smart-traffic-intersection-agent/README.md) to gather live analysis reports for informed routing decisions.
+
+### Key Features
+
+**AI Agent Architecture**: Intelligent agent that coordinates with other agents to fetch and analyze traffic data.
+
+**Real-time Analysis**: Live traffic intersection analysis for dynamic route recommendations.
+
+**Incident Detection**: Identifies potential issues like congestion, weather conditions, roadblocks, and accidents along routes.
+
+## How the Application Works
+
+The agent receives source and destination inputs, finds the shortest route from available routes, queries traffic intersection agents for live reports, and determines the optimal route.
+
+![System Architecture Diagram](./_images/ITS_architecture.png)
+
+### Data Flow
+
+```
+User Input (Source/Destination) → Route Planning Agent
+                                  ├─→ Find Shortest Route (from GPX files)
+                                  ├─→ Query Traffic Intersection Agents
+                                  ├─→ Analyze Route Conditions
+                                  └─→ Return Optimal Route
+```
+
+## Learn More
+
+- [System Requirements](./system-requirements.md)
+- [Get Started](./get-started.md)
+- [Release Notes](./release-notes.md)
