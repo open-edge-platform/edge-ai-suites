@@ -38,6 +38,8 @@ Customize the pipeline according to your needs. For details, see the following D
 
 ## Start the Pipeline
 
+>If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
 Follow this procedure to start the pipeline.
 
 1. In the `pipeline-server-config.json` file, identify the name of the pipeline you want to start.

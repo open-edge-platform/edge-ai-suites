@@ -59,7 +59,7 @@ openvino-dev==2024.6.0
 openvino-telemetry==2025.1.0
 packaging==25.0
 pandas==2.2.3
-pillow==11.0.0
+pillow==12.1.1
 pip==26.0
 protobuf==6.33.5
 psutil==7.0.0

@@ -7,6 +7,9 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
 - `fps_per_pipeline`: Tracks FPS for each active pipeline instance in DL Streamer Pipeline Server
 
 - Open `https://<HOST_IP>/prometheus` in your browser to view the prometheus console and try out the below queries:
+
+   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+
   - `cpu_usage_percentage`
   - `memory_usage_bytes`
   - `fps_per_pipeline{}`
@@ -19,6 +22,8 @@ DL Streamer Pipeline Server supports gathering metrics over Open Telemetry. The 
 Follow this procedure to stop the sample application and end this demonstration.
 
 1. Stop the sample application with the following command.
+
+   >If you're running multiple instances of app, stop the services using `./run.sh down` instead.
 
    ```sh
    docker compose down -v

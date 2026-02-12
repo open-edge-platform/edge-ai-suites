@@ -90,8 +90,6 @@ spec:
         - name: dlstreamer-pipeline-server-input
           mountPath: /home/pipeline-server/config.json
           subPath: config.json
-        - name: model-registry-temp-models
-          mountPath: /home/pipeline-server/mr_models
         - name: pipeline-resources-models
           mountPath: /home/pipeline-server/resources/models
         - name: pipeline-resources-videos
@@ -157,16 +155,7 @@ spec:
           value: mqtt-broker
         - name: MQTT_PORT
           value: "1883"
-      initContainers:
-      - name: wait-for-model-registry
-        image: busybox
-        command: ['sh', '-c', 'wget --spider --quiet --tries=5 --timeout=3 http://model-registry:8111/docs']
-        securityContext:
-          allowPrivilegeEscalation: false
-          readOnlyRootFilesystem: true
-          capabilities:
-            drop:
-              - ALL
+
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
@@ -185,8 +174,6 @@ spec:
       - name: run-udev
         hostPath:
           path: /run/udev
-      - name: model-registry-temp-models
-        emptyDir: {}
       - name: pipeline-resources-models
         emptyDir: {}
       - name: pipeline-resources-videos

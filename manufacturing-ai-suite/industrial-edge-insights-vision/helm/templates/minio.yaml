@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: mraas-minio
+  name: minio
   namespace: {{ .Values.namespace }}
 spec:
   type: NodePort
@@ -12,31 +12,31 @@ spec:
       port: 8000
       nodePort: {{ $.Values.env.S3_STORAGE_PORT }}
   selector:
-    app: mraas-minio
+    app: minio
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: mraas-minio
-  name: deployment-mraas-minio
+    app: minio
+  name: deployment-minio
   namespace: {{ .Values.namespace }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mraas-minio
+      app: minio
   template:
     metadata:
       labels:
-        app: mraas-minio
+        app: minio
     spec:
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
       {{- end }}
       containers:
-        - name: mraas-minio
+        - name: minio
           env:
             - name: AppName
               value: ModelRegistry
@@ -52,7 +52,7 @@ spec:
           volumeMounts:
             - name: minio-temp-data
               mountPath: /data
-      hostname: mraas-minio
+      hostname: minio
       restartPolicy: Always
       volumes:
         - name: minio-temp-data

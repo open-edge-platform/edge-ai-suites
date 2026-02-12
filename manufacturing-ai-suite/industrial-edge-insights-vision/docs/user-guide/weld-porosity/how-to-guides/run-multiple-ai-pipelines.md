@@ -10,7 +10,11 @@ The following demonstrates running two AI pipelines.
 
 > **Note:** We assume that the model and sample video is already available in the application directory under `resources/`.
 
+>If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
 1. Bring up the containers.
+
+    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
 
    ```sh
    docker compose up -d
