@@ -30,4 +30,4 @@ latency for critical data streams.
 ## Getting Started
 
 For detailed instructions on how to set up the environment and run the demonstration, please
-refer to the user guide in the `docs/user-guide` directory. Start with [get-started.md](./docs/user-guide/get-started.md).
+refer to the user guide in the `docs/user-guide` directory. Start with the [Overview](./docs/user-guide/index.md).

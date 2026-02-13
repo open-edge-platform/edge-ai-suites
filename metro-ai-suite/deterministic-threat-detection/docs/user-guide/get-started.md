@@ -4,35 +4,6 @@ This guide provides a streamlined path to setting up and running the Determinist
 Detection demonstration. It covers the essential prerequisites and the main steps to see the
 system in action.
 
-## Use Case
-
-This use case demonstrates how Time-Sensitive Networking (TSN) enables deterministic and
-reliable delivery of AI-processed video and sensor data in a shared Ethernet network carrying
-mixed traffic.
-
-Multiple Ethernet-connected RTSP cameras stream video to edge compute nodes where each frame
-is timestamped using a PTP-synchronized system clock and processed through an AI inference
-pipeline. In parallel, a simulated sensor data producer generates time-stamped telemetry data.
-Both video inference results and sensor data are published over MQTT to a centralized
-aggregation node.
-
-The aggregation node subscribes to all MQTT topics and measures end-to-end latency by comparing
-the frame or sensor generation timestamp with the message reception time. Since all devices
-share a common time reference through IEEE 802.1AS (gPTP), the measured latency accurately
-reflects network and processing delays.
-
-To evaluate the impact of network congestion, best-effort background traffic is intentionally
-injected using iPerf. Without TSN traffic shaping, this background traffic interferes with
-critical video and sensor data, resulting in increased latency and jitter.
-
-The experiment then enables VLAN-based traffic separation and IEEE 802.1Qbv (Time-Aware Shaper)
-on a TSN-capable switch to prioritize critical traffic. With TSN enabled, the system
-demonstrates consistent and deterministic latency for video and sensor data, even in the
-presence of heavy background traffic.
-
-This use case validates how TSN can be used to protect latency-sensitive AI and sensor
-workloads in industrial and edge AI deployments.
-
 ## Hardware Details
 
 - **AXIS RTSP Cameras**: Cameras that support RTSP streaming.
@@ -59,11 +30,13 @@ The experimental setup consists of:
 | Machine 4 | MQTT Aggregator + Visualization |
 | Machine 5 | Traffic Injector (`iperf`) |
 
-All machines are connected to the MOXA switch and synchronized using PTP.
+All machines are connected to a MOXA switch and synchronized using PTP.
 
 ## Steps to Test the Use Case
 
-1. **Configure PTP on all machines**: Synchronize the system clocks of all machines to a common time reference using Precision Time Protocol (PTP). This is essential for accurate latency measurement.
+1. **Configure PTP on all machines**: Synchronize the system clocks of all machines to a
+common time reference using Precision Time Protocol (PTP). This is essential for accurate
+latency measurement.
 
     ```bash
     sudo apt-get update
@@ -75,15 +48,18 @@ All machines are connected to the MOXA switch and synchronized using PTP.
     # Terminal 2: Run phc2sys to synchronize the system clock to the PTP clock
     sudo phc2sys -s enp1s0 -c CLOCK_REALTIME --step_threshold=1 --transportSpecific=1 -w -m
     ```
-    Note: Make sure to replace `enp1s0` with the actual network interface name associated with the `i226` network card.
+> **Note:** Make sure to replace `enp1s0` with the actual network interface name associated
+> with the `i226` network card.
 
-    For detailed instructions on configuring PTP, refer to the [PTP Configuration Guide](./how-to-guides/configure-ptp.md).
+> For detailed instructions on configuring PTP, refer to the [PTP Configuration Guide](./how-to-guides/configure-ptp.md).
 
-2. **Create VLAN on all machines**: Set up Virtual LANs (VLANs) to segregate network traffic, isolating critical data from best-effort traffic.
+2. **Create VLAN on all machines**: Set up Virtual LANs (VLANs) to segregate network traffic,
+isolating critical data from best-effort traffic.
 
-    Configure the VLAN on the MOXA as mentioned in the [MOXA VLAN Configuration Guide](./how-to-guides/configure-vlan-on-moxa-switch.md) to assign vlan id on TSN switch.
+> Configure the VLAN on the MOXA as mentioned in the [MOXA VLAN Configuration Guide](./how-to-guides/configure-vlan-on-moxa-switch.md) to assign VLAN ID on TSN switch.
 
-    On the Arrow Lake machines, create VLAN interfaces corresponding to the VLAN IDs configured on the MOXA switch.
+    On the Arrow Lake machines, create VLAN interfaces corresponding to the VLAN IDs
+    configured on the MOXA switch.
 
     ```bash
     sudo ip link add link enp1s0 name enp1s0.1 type vlan id 1
@@ -102,42 +78,34 @@ All machines are connected to the MOXA switch and synchronized using PTP.
 > **Note:** Make sure to replace `enp1s0` with the actual network interface name associated
 > with the `i226` network card.
 
-    For detailed instructions on creating VLANs on HOST machines, refer to the [HOST VLAN Configuration Guide](./how-to-guides/create-vlan-on-all-machines.md).
+> For detailed instructions on creating VLANs on HOST machines, refer to the [HOST VLAN Configuration Guide](./how-to-guides/create-vlan-on-all-machines.md).
 
 3. **Run RTSP Camera Capture and AI Inference**: Start the video pipeline on Machines 1 and 2. This involves capturing the RTSP stream, timestamping frames using the PTP-synchronized clock, and running AI inference on the video and publish the results over MQTT.
 
-    For detailed instructions on running RTSP camera capture and AI inference, refer to the [RTSP Camera and AI Inference Guide](./how-to-guides/run-rtsp-camera-and-ai-inference.md).
+> For detailed instructions on running RTSP camera capture and AI inference, refer to the [RTSP Camera and AI Inference Guide](./how-to-guides/run-rtsp-camera-and-ai-inference.md).
 
 4. **Run Sensor Data Producer**: On Machine 3, start the Python script that simulates a sensor generating and publishing timestamped data over MQTT.
 
-    For detailed instructions on running the sensor data producer, refer to the [Sensor Data Producer Guide](./how-to-guides/run-sensor-data-producer.md).
+> For detailed instructions on running the sensor data producer, refer to the [Sensor Data Producer Guide](./how-to-guides/run-sensor-data-producer.md).
 
 5. **Run MQTT Aggregator and Visualization**: On Machine 4, launch the application that subscribes to the MQTT topics, calculates end-to-end latency, and displays it on a live dashboard.
 
    <img src="./_assets/mqtt-data-aggregator.png" alt="MQTT Data Aggregator" width="750">
 
-    For detailed instructions on running the MQTT aggregator and visualization, refer to the
-    [MQTT Aggregator and Visualization Guide](./how-to-guides/run-mqtt-aggregator-and-visualization.md).
+> For detailed instructions on running the MQTT aggregator and visualization, refer to the
+[MQTT Aggregator and Visualization Guide](./how-to-guides/run-mqtt-aggregator-and-visualization.md).
 
-6. **Run Traffic Injector**: On Machine 5, use `iperf3` to generate high-volume background traffic to simulate network congestion.
+6. **Run Traffic Injector**: On Machine 5, use iPerf3 to generate high-volume background
+traffic to simulate network congestion.
 
     <img src="./_assets/mqtt-data-aggregator-with-traffic.png" alt="MQTT Data Aggregator With Traffic" width="750">
-    For detailed instructions on running the traffic injector, refer to the [Traffic Injector Guide](./how-to-run-traffic-injector.md).
+
+> For detailed instructions on running the traffic injector, refer to the [Traffic Injector Guide](./how-to-guides/run-traffic-injector.md).
 
 7. **Enable TSN Traffic Shaping**: Configure the Time-Aware Shaper (IEEE 802.1Qbv) on the MOXA switch to prioritize the critical traffic from cameras and sensors, protecting it from the background traffic.
 
    <img src="./_assets/moxa-time-aware-shaper-port-setting.png" alt="MOXA Time Aware Shaper" width="750">
 
-   For detailed instructions on enabling TSN traffic shaping, refer to the [TSN Traffic Shaping Guide](./how-to-guides/enable-tsn-traffic-shaping.md).
+> For detailed instructions on enabling TSN traffic shaping, refer to the [TSN Traffic Shaping Guide](./how-to-guides/enable-tsn-traffic-shaping.md).
 
-8. **Analyze Results and Visualize Latency**: Observe the latency graphs on the MQTT Aggregator dashboard. With TSN enabled, the latency for critical traffic should remain low and deterministic, even with the `iperf` traffic running.
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-get-started
-how-to-guides
-
-:::
-hide_directive-->
+8. **Analyze Results and Visualize Latency**: Observe the latency graphs on the MQTT Aggregator dashboard. With TSN enabled, the latency for critical traffic should remain low and deterministic, even with the iPerf3 traffic running.
