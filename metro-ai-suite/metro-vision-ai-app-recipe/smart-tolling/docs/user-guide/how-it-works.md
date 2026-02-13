@@ -5,9 +5,7 @@ typical system architecture.
 
 ![High-Level System Diagram](./_assets/smart_tolling_architecture.png)
 
-## Diagram Description
-
-### Inputs
+## Inputs
 
 Video recordings are used to simulate a live feed from cameras deployed at a toll.
 The application can be configured to work with live cameras.
@@ -17,7 +15,7 @@ The application can be configured to work with live cameras.
 - **Scene Database** - Pre-configured intersection scene with satellite view of
   tolling area, calibrated cameras and regions of interest.
 
-### Core (Processing)
+## Core (Processing)
 
 - [**Video Analytics**](./how-it-works/perception-layer.md) - Deep Learning Streamer Pipeline Server
   (DL Streamer Pipeline Server) utilizes a pre-trained object detection model
@@ -32,14 +30,14 @@ The application can be configured to work with live cameras.
   [stored in an InfluxDB bucket](./how-it-works/analytics-pipeline.md#storage-influxdb) that enables time series
   analysis through Flux queries.
 
-### Live Feed Output
+## Live Feed Output
 
 - Fused object tracks are available on the MQTT broker and visualized through
   the Scene Management UI.
 - [Aggregated toll analytics](./how-it-works/analytics-pipeline.md) are visualized
   through a Grafana dashboard.
 
-### Workflow
+## Workflow
 
 1. Video loops or RTSP is fed into DL Streamer.
 2. Trained AI models detect vehicles and license plates.
@@ -65,9 +63,9 @@ The application can be configured to work with live cameras.
 :::{toctree}
 :hidden:
 
-./perception-layer
-./optimization
-./analytics-pipeline
+./how-it-works/perception-layer
+./how-it-works/optimization
+./how-it-works/analytics-pipeline
 
 :::
 hide_directive-->
