@@ -61,16 +61,30 @@ By following this guide, you will learn how to:
           cp -r ./models/public/resnet-50-pytorch /output && \
           chown -R $(id -u):$(id -g) /output"
 
-      # Download and convert the Person-Vehicle-Bike Detection model
-      docker run --rm \
-          --user=root \
-          -e http_proxy -e https_proxy -e no_proxy \
-          -v "$MODELS_PATH:/output" \
-          openvino/ubuntu22_dev:2024.6.0 bash -c \
-          "omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models && \
-          omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models && \
-          cp -r ./models/intel/person-vehicle-bike-detection-2004 /output && \
-          chown -R $(id -u):$(id -g) /output"
+      # Download and quantize the yolov11s model
+      docker run --rm --user=root \
+        -e http_proxy -e https_proxy -e no_proxy \
+        -v "$MODELS_PATH:/output" \
+        intel/dlstreamer:2025.1.2-ubuntu24 bash -c "$(cat <<EOF
+
+      mkdir -p src/dlstreamer-pipeline-server/models/public
+
+      export MODELS_PATH=/output
+      chmod +x /home/dlstreamer/dlstreamer/samples/download_public_models.sh
+      if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolo11s/INT8/yolo11s.xml" ]; then
+          for attempt in {1..3}; do
+              echo "Attempt $attempt: Running model download and quantization..."
+              if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolo11s coco128; then
+                  echo "Model download and quantization successful!"
+                  break
+              else
+                  echo "Download attempt $attempt failed. Retrying..."
+                  sleep 2
+              fi
+          done
+      fi
+      EOF
+      )"
       ```
 
       </details>
