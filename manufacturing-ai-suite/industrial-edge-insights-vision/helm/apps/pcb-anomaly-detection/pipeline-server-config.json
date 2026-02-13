@@ -5,13 +5,13 @@
                 "name": "pcb_anomaly_detection_mlops",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/anomalib_pcb_test.avi name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "multifilesrc loop=TRUE location=/home/pipeline-server/resources/videos/anomalib_pcb_test.avi name=source ! decodebin ! videoconvert ! gvadetect name=detection inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 threshold=0.7 ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -23,13 +23,13 @@
                 "name": "pcb_anomaly_detection_mqtt",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 threshold=0.7 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -41,13 +41,13 @@
                 "name": "pcb_anomaly_detection_s3write",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 threshold=0.7 ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -64,13 +64,13 @@
                 "name": "pcb_anomaly_detection_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect name=detection inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 threshold=0.7 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -86,13 +86,13 @@
                 "name": "pcb_anomaly_detection_gpu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect inference-region=full-frame device=GPU pre-process-backend=va-surface-sharing model-instance-id=instgpu0 inference-interval=1 batch-size=8 nireq=2 ie-config=\"GPU_THROUGHPUT_STREAMS=2\" threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -104,13 +104,13 @@
                 "name": "pcb_anomaly_detection_npu",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvaclassify inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! parsebin ! vah264dec ! vapostproc ! video/x-raw(memory:VAMemory) ! gvadetect inference-region=full-frame device=NPU pre-process-backend=va model-instance-id=instnpu0 inference-interval=1 batch-size=1 nireq=4 threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
@@ -122,13 +122,13 @@
                 "name": "pcb_anomaly_detection",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 name=classification ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin ! videoconvert ! gvadetect inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 threshold=0.7 name=detection ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "classification-properties": {
+                        "detection-properties": {
                             "element": {
-                                "name": "classification",
+                                "name": "detection",
                                 "format": "element-properties"
                             }
                         }
