@@ -183,6 +183,7 @@ patch_sklearn()
 6. **GPU Efficiency**: Measure GPU memory usage and utilization
 
 **GPU-Specific Tests**:
+
 - Monitor VRAM consumption during streaming inference
 - Test CPU fallback behavior if GPU unavailable
 - Benchmark GPU vs CPU for single-point inference
@@ -195,6 +196,7 @@ patch_sklearn()
 **Training Data**: 10k-50k samples minimum, 6+ months coverage
 
 **Preprocessing** (remove these points):
+
 - Wind speed < 3 m/s or > 14 m/s (cut-in/cut-out)
 - Power < 50 kW when 3 < wind_speed < 14 (curtailment)
 - NaN/missing values
@@ -228,14 +230,16 @@ Your dataset should contain:
 ### Example Dataset Formats
 
 **Current reference dataset** (`T1.csv`):
-```csv
+
+```text
 timestamp,grid_activepower,wind_speed,Theoretical_Power_Curve,Wind Direction (°)
 01 01 2018 00:00,380.05,5.31,416.33,259.99
 01 01 2018 00:10,453.77,5.67,519.92,268.64
 ```
 
 **Your dataset** - adapt column names:
-```csv
+
+```text
 time,power_output,wind_speed_ms,temperature
 2024-01-01 00:00:00,385.2,5.3,15.2
 2024-01-01 00:10:00,448.1,5.6,15.4
@@ -266,7 +270,7 @@ def preprocess(df):
         'power_output': 'grid_activepower',
         'wind_speed_ms': 'wind_speed'
     })
-    
+
     df = df.dropna()
     return df[
         (df['wind_speed'] >= 3) & (df['wind_speed'] <= 14) &
@@ -300,11 +304,13 @@ error_threshold = 0.15  # Adjust based on your data
 **5. Update simulation data** (optional):
 
 Place your dataset in `simulation-data/`:
+
 ```bash
 cp your_dataset.csv simulation-data/wind-turbine-anomaly-detection.csv
 ```
 
 Update Telegraf config to read from your file:
+
 ```toml
 # telegraf-config/Telegraf.conf
 [[inputs.file]]
@@ -345,6 +351,7 @@ model = train_model(X, y)
 df_combined = df  # Use all turbines together
 model = train_model(df_combined)
 ```
+
 ---
 
 ## Testing Checklist
@@ -374,6 +381,7 @@ Before deploying:
 
 
 **Evaluation Script**:
+
 ```python
 from sklearn.metrics import mean_absolute_error, r2_score
 import time, numpy as np
@@ -383,7 +391,7 @@ def evaluate(model, X_test, y_test):
     y_pred = model.predict(X_test)
     print(f"MAE: {mean_absolute_error(y_test, y_pred):.2f} kW")
     print(f"R²: {r2_score(y_test, y_pred):.4f}")
-    
+
     # Inference speed
     num_iters = 1000
     start = time.perf_counter()
@@ -452,6 +460,7 @@ def evaluate(model, X_test, y_test):
    - Controls feature sampling per split
 
 **Tuning Template**:
+
 ```python
 from sklearn.model_selection import GridSearchCV
 
