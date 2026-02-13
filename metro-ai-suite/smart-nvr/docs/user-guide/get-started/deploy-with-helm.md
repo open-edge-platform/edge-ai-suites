@@ -7,14 +7,17 @@ This section shows how to deploy the Video Search and Summary Sample Application
 Before you begin, ensure that you have the following:
 
 - Kubernetes\* cluster set up and running.
-- The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
+- The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the
+[Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
 - Install `kubectl` on your system. See the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm chart installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
-- **Storage Requirement :** Application requests for **50GiB** of storage in its default configuration. (This should change with choice of models and needs to be properly configured). Please make sure that required storage is available in you cluster.
+- **Storage Requirement:** The application requests for **50GiB** of storage in its default
+configuration. (This should change with choice of models and needs to be properly configured).
+Please make sure that required storage is available in you cluster.
 
 Before setting up Smart NVR, ensure these services are running on their respective devices:
 
-### 1. VSS (Video Search and Summarization) Services
+### 1. Video Search and Summarization (VSS) Services
 
 Deploy these on separate devices:
 
@@ -27,18 +30,20 @@ Deploy these on separate devices:
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 
-In order to setup the end-to-end application, we need to acquire the charts and install it with optimal values and configurations. Subsequent sections will provide step by step details for the same.
+In order to setup the end-to-end application, we need to acquire the chart and install it
+with optimal values and configurations. Subsequent sections will provide step by step details
+for the same.
 
-### 1. Acquire the helm chart
+### 1. Acquire the Helm chart
 
-There are 2 options to get the charts in your workspace:
+There are two options to get the charts in your workspace:
 
 #### Option 1: Get the charts from Docker Hub
 
@@ -50,7 +55,8 @@ Use the following command to pull the Helm chart from Docker Hub:
 helm pull oci://registry-1.docker.io/intel/smart-nvr --version 1.2.3
 ```
 
-Refer to the release notes for details on the latest version number to use for the sample application.
+Refer to the [release notes](../release-notes.md) for details on the latest version number to
+use for the sample application.
 
 ##### Step 2: Extract the `.tgz` File
 
@@ -60,7 +66,8 @@ After pulling the chart, extract the `.tgz` file:
 tar -xvf smart-nvr-1.2.3.tgz
 ```
 
-This will create a directory named `smart-nvr` containing the chart files. Navigate to the extracted directory to access the charts.
+This will create a directory named `smart-nvr` containing the chart files. Navigate to the
+extracted directory to access the charts.
 
 ```bash
 cd smart-nvr
@@ -86,14 +93,16 @@ cd edge-ai-suites/metro-ai-suite/smart-nvr
 
 ### 2. Configure Required Values
 
-The application requires several values to be set by user in order to work. To make it easier, we have included a `user_value_override.yaml` file, which contains only the values that user needs to tweak. Open the file in your favorite editor or use nano.
+The application requires several values to be set by the user in order to work. To make it
+easier, we have included a `user_value_override.yaml` file, which contains only the values
+that user needs to tweak. Open the file in your favorite editor or use nano.
 
 Update or edit the values in YAML file as follows:
 
 | Key | Description | Example Value |
 | --- | ----------- | ------------- |
 | `global.pvcName` | Name for PVC to be used for storage by all components of application | `nvr-resource` |
-| `global.keepPvc` | PVC gets deleted by default once helm is uninstalled. Set this to true to persist PVC (helps avoid delay due to model re-downloads when re-installing chart). | `true` or `false` |
+| `global.keepPvc` | PVC gets deleted by default once Helm is uninstalled. Set this to true to persist PVC (helps avoid delay due to model re-downloads when re-installing chart). | `true` or `false` |
 | `global.proxy.http_proxy` | HTTP proxy if required | `http://proxy-example.com:000` |
 | `global.proxy.https_proxy` | HTTPS proxy if required | `http://proxy-example.com:000` |
 | `frigate.env.FRIGATE_MQTT_USER` | User name for mqtt | `<your-mqtt-username>` |
@@ -116,7 +125,8 @@ helm dependency build
 
 ### 4. Set and Create a Namespace
 
-We will install the helm chart in a new namespace. Create a shell variable to refer a new namespace and create it.
+We will install the Helm chart in a new namespace. Create a shell variable to refer a new
+namespace and create it.
 
 1. Refer a new namespace using shell variable `my_namespace`. Set any desired unique value.
 
@@ -124,13 +134,15 @@ We will install the helm chart in a new namespace. Create a shell variable to re
     my_namespace=foobar
     ```
 
-2. Create the Kubernetes namespace. If it is already created, creation will fail. You can update the namespace in previous step and try again.
+2. Create the Kubernetes namespace. If it is already created, creation will fail. You can
+update the namespace in previous step and try again.
 
     ```bash
     kubectl create namespace $my_namespace
     ```
 
-> **_NOTE :_** All subsequent steps assume that you have `my_namespace` variable set and accessible on your shell with the desired namespace as its value.
+> **_NOTE :_** All subsequent steps assume that you have `my_namespace` variable set and
+accessible on your shell with the desired namespace as its value.
 
 ### 5. Deploy the Helm Chart
 
@@ -150,9 +162,11 @@ kubectl get pods -n $my_namespace
 
 **Before proceeding to access the application we must ensure the following status of output of the above command:**
 
-1. Ensure all pods are in the "Running" state. This is denoted by **Running** state mentioned in the **STATUS** column.
+1. Ensure all pods are in the "Running" state. This is denoted by **Running** state mentioned
+in the **STATUS** column.
 
-2. Ensure all containers in each pod are _Ready_. As all pods are running single container only, this is typically denoted by mentioning **1/1** in the **READY** column.
+2. Ensure all containers in each pod are _Ready_. As all pods are running single container
+only, this is typically denoted by mentioning **1/1** in the **READY** column.
 
 > **Important:**
 >
@@ -168,7 +182,8 @@ kubectl get pods -n $my_namespace
 
 ### Step 7: Accessing the application
 
-Nginx service running as a reverse proxy in one of the pods, helps us to access the application. We need to get Host IP and Port on the node where the nginx service is running.
+Nginx service running as a reverse proxy in one of the pods, helps us to access the application.
+We need to get Host IP and Port on the node where the nginx service is running.
 
 Run the following command to get the host IP of the node and port exposed by Nginx service:
 
@@ -182,7 +197,8 @@ Copy the output of above bash snippet and paste it into your browser to access t
 
 ### Step 8: Update Helm Dependencies
 
-If any changes are made to the sub-charts, always remember to update the Helm dependencies using the following command before re-installing or upgrading your helm installation:
+If any changes are made to the sub-charts, always remember to update the Helm dependencies
+using the following command before re-installing or upgrading your Helm installation:
 
 ```bash
 helm dependency update
@@ -200,8 +216,10 @@ helm uninstall smart-nvr -n $my_namespace
 
 - Ensure that all pods are running and the services are accessible.
 - Access the Video Summary application dashboard and verify that it is functioning as expected.
-- Upload a test video to verify that the ingestion, processing, and summary pipeline works correctly.
-- Check that all components (MinIO, PostgreSQL, RabbitMQ, video ingestion, VLM inference, audio analyzer) are functioning properly.
+- Upload a test video to verify that the ingestion, processing, and summary pipeline works
+correctly.
+- Check that all components (MinIO, PostgreSQL, RabbitMQ, Video Ingestion, VLM inference,
+Audio Analyzer) are functioning properly.
 
 ## Troubleshooting
 
@@ -212,7 +230,7 @@ helm uninstall smart-nvr -n $my_namespace
 - **All containers Ready, all Pods in Running state, application UI is accessible but search or summary is failing.**
 
   - Verify that the VSS Search and Summary services are running properly.
-  - If PVC has been configured to be retained, most common reason for application to fail to work is a stale PVC. This problem most likely occurs when helm charts are re-installed after some updates to helm chart or the application image. To fix this, delete the PVC before re-installing the helm chart by following command:
+  - If PVC has been configured to be retained, most common reason for application to fail to work is a stale PVC. This problem most likely occurs when Helm charts are re-installed after some updates to Helm chart or the application image. To fix this, delete the PVC before re-installing the Helm chart by following command:
 
     ```bash
     kubectl delete pvc nvr-resource -n <your_namespace>

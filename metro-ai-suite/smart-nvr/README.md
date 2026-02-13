@@ -5,23 +5,25 @@ The Smart NVR is a next-generation network video recorder that integrates GenAI-
 ## Documentation
 
 - **Overview**
-  - [Overview](docs/user-guide/index.md): A high-level introduction.
-  - [Overview Architecture](./docs/user-guide/index.md#how-it-works): High level architecture.
+  - [Overview](./docs/user-guide/index.md): A high-level introduction.
+  - [Overview Architecture](./docs/user-guide/index.md#how-it-works): High-level architecture.
 
 - **Getting Started**
-  - [Get Started](docs/user-guide/get-started.md): Step-by-step guide to get started with the sample application.
-  - [System Requirements](docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the sample application.
+  - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to get started with the sample application.
+  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the sample application.
   - [How to Use the Application](./docs/user-guide/how-to-use-application.md): Explore the application's features and verify its functionality.
+  - [Troubleshooting](./docs/user-guide/troubleshooting.md): Support and troubleshooting
+  information for the application.
 
 - **Deployment**
-  - [How to Build from Source](docs/user-guide/get-started/build-from-source.md): Instructions for building from source code.
-  - [How to Build using Helm](docs/user-guide/get-started/deploy-with-helm.md): Instructions for building using helm.
+  - [Build from Source](./docs/user-guide/get-started/build-from-source.md): Instructions for building from source code.
+  - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Instructions for building using helm.
 
 - **Advanced Integrations**
-  - [Intel® SceneScape Integration](docs/user-guide/scenescape-integration.md): Complete guide for integrating with Intel® SceneScape for traffic analytics and vehicle counting.
+  - [Intel® SceneScape Integration](./docs/user-guide/scenescape-integration.md): Complete guide for integrating with Intel® SceneScape for traffic analytics and vehicle counting.
 
 - **API Reference**
-  - [API Reference](docs/user-guide/api-reference.md): Comprehensive reference for the available REST API endpoints.
+  - [API Reference](./docs/user-guide/api-reference.md): Comprehensive reference for the available REST API endpoints.
 
 - **Release Notes**
-  - [Release Notes](docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.
+  - [Release Notes](./docs/user-guide/release-notes.md): Information on the latest updates, improvements, and bug fixes.
