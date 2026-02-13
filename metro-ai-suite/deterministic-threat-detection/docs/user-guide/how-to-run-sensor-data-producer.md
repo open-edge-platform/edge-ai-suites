@@ -1,4 +1,4 @@
-# How to Run the Sensor Data Producer
+# Run the Sensor Data Producer
 
 This guide explains how to run the `sensor_data_producer.py` script to generate and publish simulated sensor data to an MQTT broker.
 

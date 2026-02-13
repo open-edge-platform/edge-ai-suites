@@ -1,4 +1,4 @@
-# How to Enable TSN Traffic Shaping (IEEE 802.1Qbv)
+# Enable TSN Traffic Shaping (IEEE 802.1Qbv)
 
 Time-Sensitive Networking (TSN) traffic shaping, specifically the Time-Aware Shaper defined in IEEE 802.1Qbv, is a critical feature for achieving determinism in industrial networks. It allows you to create protected time slots on the network, ensuring that high-priority, time-critical data is not delayed by lower-priority traffic.
 

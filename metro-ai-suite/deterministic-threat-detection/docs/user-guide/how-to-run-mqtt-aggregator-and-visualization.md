@@ -1,4 +1,4 @@
-# How to Run the MQTT Aggregator and Visualization
+# Run the MQTT Aggregator and Visualization
 
 This guide explains how to run the `mqtt_data_aggregator.py` script. This script subscribes to multiple MQTT topics, calculates the end-to-end latency of the messages, and visualizes the results in a real-time web-based dashboard.
 

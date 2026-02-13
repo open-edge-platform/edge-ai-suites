@@ -1,4 +1,4 @@
-# How to Run the Traffic Injector
+# Run the Traffic Injector
 
 This guide explains how to use `iperf3` to inject best-effort background traffic into the network. This allows you to observe the impact of network congestion on your time-sensitive traffic and validate the effectiveness of TSN traffic shaping.
 

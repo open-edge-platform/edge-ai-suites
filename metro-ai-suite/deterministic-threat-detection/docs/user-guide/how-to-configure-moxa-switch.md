@@ -1,4 +1,4 @@
-# Configuring the MOXA TSN Switch
+# Configure the MOXA TSN Switch
 
 ## Overview
 
