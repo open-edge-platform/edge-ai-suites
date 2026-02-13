@@ -77,7 +77,7 @@ data:
             ]
         }
     }
-    config.npu.json: |
+  config.npu.json: |
     {
         "config": {
             "pipelines": [
