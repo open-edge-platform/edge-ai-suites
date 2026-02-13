@@ -43,5 +43,6 @@ Instead of sending raw video streams, adapters encode "Evidence Crops" as
 
 ## Learn More
 
-- [Analytics Pipeline](./how-it-works.md)
-- [Support and Troubleshooting](./troubleshooting.md)
+- [Optimizations](./optimization.md)
+- [Analytics Pipeline](../how-it-works.md)
+- [Support and Troubleshooting](../troubleshooting.md)
