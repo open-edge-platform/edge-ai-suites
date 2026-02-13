@@ -21,7 +21,6 @@ Select and integrate your own ML models with our time-series analytics infrastru
 - **Framework**: Kapacitor UDF (User Defined Function)
 - **Mode**: Single-point streaming only (live data, point-by-point)
 - **No batch processing**: Each data point processed individually as it arrives
-- **Latency**: < 10ms per prediction
 
 ---
 
@@ -182,7 +181,6 @@ patch_sklearn()
 4. **Hardware Testing**: Profile on target edge device (both CPU and GPU)
 5. **Load Testing**: Simulate 10+ concurrent turbine streams (each processing single points)
 6. **GPU Efficiency**: Measure GPU memory usage and utilization
-7. **Single-Point Latency**: Verify inference time per point meets < 10ms requirement
 
 **GPU-Specific Tests**:
 - Monitor VRAM consumption during streaming inference
@@ -224,6 +222,8 @@ Your dataset should contain:
 - **Optional columns**: `timestamp`, `wind_direction`, `temperature`, blade pitch, rotor speed
 - **Format**: CSV, Parquet, or any pandas-readable format
 - **Size**: 10k-50k samples minimum for training
+
+> **Note**: If you use a dataset different from the reference, you are responsible for training a model with the required feature set and aligning the preprocessing steps accordingly.
 
 ### Example Dataset Formats
 
@@ -485,21 +485,6 @@ best_model = grid_search.best_estimator_
 | Overfitting | Reduce `max_depth`, increase `min_samples_split`, more data |
 | Poor generalization | Multi-turbine training data, feature engineering |
 
-## Hyperparameter Tuning (Random Forest)
-
-```python
-from sklearn.model_selection import GridSearchCV
-
-param_grid = {
-    'n_estimators': [200, 350, 500],
-    'max_depth': [20, 25, 30],
-    'min_samples_split': [2, 5]
-}
-
-GridSearchCV(RandomForestRegressor(), param_grid, cv=5, 
-             scoring='neg_mean_absolute_error').fit(X_train, y_train)
-```
-
 ## Integration Checklist
 
 - [ ] Model saved (.pkl, .onnx, .pt, etc.)
@@ -509,16 +494,16 @@ GridSearchCV(RandomForestRegressor(), param_grid, cv=5,
 - [ ] Prediction interface compatible
 - [ ] Tested on target hardware
 - [ ] Performance validated (latency, accuracy)
-- [ ] Version documented
+- [ ] Model version documented
 
 ---
 
 ## Appendix: References and Resources
 
 ### Documentation
-- [Training README](../../../training/README.md)
-- [Application Config](../../../time-series-analytics-config/config.json)
-- [UDF Implementation](../../../time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
+- [Training README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md)
+- [Application Config](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
+- [UDF Implementation](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
 
 ### Data Sources
 - **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)
@@ -532,7 +517,7 @@ GridSearchCV(RandomForestRegressor(), param_grid, cv=5,
 - **Grafana**: Visualization dashboard
 
 ### Recommended Reading
-- Wind Turbine Power Curve modeling techniques
+- Wind Turbine Power Curve modeling techniques (Eg: https://www.mdpi.com/1996-1073/16/1/180)
 - Edge AI deployment best practices
-- Intel optimization guides for ML inference
+- Intel optimization guides for ML inference: https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html
 - Time series anomaly detection methods
