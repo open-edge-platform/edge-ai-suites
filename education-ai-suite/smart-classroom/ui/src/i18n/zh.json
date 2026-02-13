@@ -161,7 +161,7 @@
     "audioRecordingContinues": "音频录制正常继续",
     "streamingIconAlt": "视频流图标",
     "noStream": "无视频流",
-    "videoFailed":"视频失败",
+    "videoFailed":"视频获取失败",
     "continuingAudioOnly":"继续进行纯音频处理",
     "loadingvideo": "正在加载视频流"
   },
