@@ -259,10 +259,10 @@ var data = stream
 ## References
 
 - [Kapacitor UDF Documentation](https://docs.influxdata.com/kapacitor/v1/guides/anomaly_detection/#writing-a-user-defined-function-udf)
-- [Example UDFs in Repository](../../../apps/)
-  - [Wind Turbine Anomaly Detection](../../../apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
-  - [Weld Anomaly Detection](../../../apps/weld-anomaly-detection/time-series-analytics-config/udfs/weld_anomaly_detector.py)
+- [Example UDFs in Repository](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/)
+  - [Wind Turbine Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
+  - [Weld Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/weld_anomaly_detector.py)
 - [Kapacitor TICKscript Reference](https://docs.influxdata.com/kapacitor/v1/reference/tick/introduction/)
-  - [Wind Turbine Anomaly Detection](../../../apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
-  - [Weld Anomaly Detection](../../../apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+  - [Wind Turbine Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+  - [Weld Anomaly Detection](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 - [Configure Custom UDF Deployment](./how-to-configure-custom-udf.md)
