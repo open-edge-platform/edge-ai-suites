@@ -138,7 +138,7 @@
     "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
     "model3": "模型3",
     "model4": "模型4",
-    "classStatistics": "课堂参与",
+    "classStatistics": "课堂参与度",
     "roomView": "教室视图",
     "frontCamera": "前置摄像头",
     "backCamera": "后置摄像头",
