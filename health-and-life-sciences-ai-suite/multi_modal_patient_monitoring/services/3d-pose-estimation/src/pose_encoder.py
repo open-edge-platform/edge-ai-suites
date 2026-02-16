@@ -179,7 +179,7 @@ class PoseEncoder:
         return encoded_poses
 
     # ✅ MODIFY THIS METHOD
-    def encode_data(self, poses_3d: List, poses_2d: List, frame_number: int = 0) -> Dict[str, Any]:
+    def encode_data(self, poses_3d: List, poses_2d: List, frame_number: int = 0, frame_bytes: bytes | None = None) -> Dict[str, Any]:
         """
         Encode pose data only (no frame data)
 
@@ -200,7 +200,7 @@ class PoseEncoder:
         if len(encoded_3d) > 0 and 'joints_3d' in encoded_3d[0]:
             activity = self.detect_activity(encoded_3d[0]['joints_3d'])
 
-        # Create data packet (no frame data)
+        # Create data packet (optionally includes encoded frame bytes)
         data_packet = {
             "timestamp": int(time.time() * 1000),  # Milliseconds
             "source_id": self.source_id,
@@ -210,5 +210,8 @@ class PoseEncoder:
             "num_persons": len(encoded_3d),
             "activity": activity,  # ✅ ADD: Include activity in data packet
         }
+
+        if frame_bytes is not None:
+            data_packet["frame_bytes"] = frame_bytes
 
         return data_packet

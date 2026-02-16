@@ -187,12 +187,20 @@ class PoseEstimationService:
     
                         # ✅ Stream annotated frame via MJPEG
                         self.mjpeg_streamer.update_frame(annotated_frame)
-    
-                        # ✅ Encode pose data only (no frame data)
+
+                        # ✅ Encode pose data and also attach JPEG-encoded frame bytes
+                        try:
+                            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
+                            ok, buf = cv2.imencode('.jpg', annotated_frame, encode_param)
+                            frame_bytes = buf.tobytes() if ok else None
+                        except Exception:
+                            frame_bytes = None
+
                         data_packet = self.encoder.encode_data(
                             filtered_poses_3d,
                             filtered_poses_2d,
-                            frame_number=self.frame_count
+                            frame_number=self.frame_count,
+                            frame_bytes=frame_bytes,
                         )
     
                         # Publish pose data to aggregator via gRPC

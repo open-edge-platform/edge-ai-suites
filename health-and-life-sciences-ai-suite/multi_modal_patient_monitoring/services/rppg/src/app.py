@@ -64,10 +64,16 @@ class RPPGService:
             resp_lowcut=self.config['postprocessing']['resp_lowcut'],
             resp_highcut=self.config['postprocessing']['resp_highcut']
         )
-        
+
+        # Allow Kubernetes / other environments to override aggregator
+        # connection via environment variables while keeping
+        # docker-compose default (localhost) from config.yaml.
+        aggregator_host = os.getenv("AGGREGATOR_HOST", self.config['aggregator']['host'])
+        aggregator_port = int(os.getenv("AGGREGATOR_PORT", str(self.config['aggregator']['port'])))
+
         self.grpc_client = RPPGGRPCClient(
-            aggregator_host=self.config['aggregator']['host'],
-            aggregator_port=self.config['aggregator']['port'],
+            aggregator_host=aggregator_host,
+            aggregator_port=aggregator_port,
             device_id="rppg-001"
         )
         

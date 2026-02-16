@@ -1,0 +1,68 @@
+
+persistence:
+  size: 20Gi
+
+service:
+  type: ClusterIP
+
+ui:
+  nodePort: 30007
+  image:
+    repository: health-ai-ui
+    tag: latest
+    pullPolicy: Never
+
+aggregator:
+  image:
+    repository: health-ai-aggregator
+    tag: latest
+    pullPolicy: Never
+  nodePort: 30001
+
+aiEcg:
+  image:
+    repository: health-ai-ai-ecg
+    tag: latest
+    pullPolicy: Never
+
+rppg:
+  image:
+    repository: health-ai-rppg
+    tag: latest
+    pullPolicy: Never
+
+pose:
+  image:
+    repository: health-ai-pose
+    tag: latest
+    pullPolicy: Never
+
+metrics:
+  image:
+    repository: health-ai-metrics
+    tag: latest
+    pullPolicy: Never
+
+ddsBridge:
+  image:
+    repository: health-ai-dds-bridge
+    tag: latest
+    pullPolicy: Never
+
+mdpnp:
+  image:
+    repository: health-ai-mdpnp
+    tag: latest
+    pullPolicy: Never
+
+assets:
+  image:
+    repository: health-ai-assets
+    tag: latest
+    pullPolicy: Never
+
+devices:
+  ECG_DEVICE: "GPU"
+  RPPG_DEVICE: "GPU"
+  MDPNP_DEVICE: "CPU"
+  POSE_3D_DEVICE: "GPU"
