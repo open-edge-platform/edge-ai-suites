@@ -511,7 +511,7 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
 
    Output:
 
-   ```test
+   ```text
    No pipelines specified. Stopping all pipeline instances
 
    -------------------------------------------
