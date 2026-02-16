@@ -15,7 +15,7 @@ spec:
       hostPID: true
       containers:
         - name: metrics
-          image: "{{ .Values.metrics.image.repository }}:{{ .Values.metrics.image.tag }}"
+          image: "{{ .Values.metrics.image.repository }}/{{ .Values.metrics.image.name }}:{{ .Values.metrics.image.tag }}"
           imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
           securityContext:
             privileged: true

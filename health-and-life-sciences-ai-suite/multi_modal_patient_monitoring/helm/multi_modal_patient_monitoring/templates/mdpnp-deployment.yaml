@@ -14,5 +14,5 @@ spec:
     spec:
       containers:
         - name: mdpnp
-          image: "{{ .Values.mdpnp.image.repository }}:{{ .Values.mdpnp.image.tag }}"
+          image: "{{ .Values.mdpnp.image.repository }}/{{ .Values.mdpnp.image.name }}:{{ .Values.mdpnp.image.tag }}"
           imagePullPolicy: {{ .Values.mdpnp.image.pullPolicy }}

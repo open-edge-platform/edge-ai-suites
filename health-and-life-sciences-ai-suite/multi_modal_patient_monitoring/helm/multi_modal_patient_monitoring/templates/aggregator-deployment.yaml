@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: aggregator
-          image: "{{ .Values.aggregator.image.repository }}:{{ .Values.aggregator.image.tag }}"
+          image: "{{ .Values.aggregator.image.repository }}/{{ .Values.aggregator.image.name }}:{{ .Values.aggregator.image.tag }}"
           imagePullPolicy: {{ .Values.aggregator.image.pullPolicy }}
           ports:
             - containerPort: 8001

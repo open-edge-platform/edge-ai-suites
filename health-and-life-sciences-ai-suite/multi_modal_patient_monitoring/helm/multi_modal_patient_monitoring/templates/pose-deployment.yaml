@@ -14,7 +14,7 @@ spec:
     spec:
       initContainers:
         - name: copy-assets
-          image: "{{ .Values.assets.image.repository }}:{{ .Values.assets.image.tag }}"
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
           imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
@@ -30,7 +30,7 @@ spec:
 
       containers:
         - name: pose
-          image: "{{ .Values.pose.image.repository }}:{{ .Values.pose.image.tag }}"
+          image: "{{ .Values.pose.image.repository }}/{{ .Values.pose.image.name }}:{{ .Values.pose.image.tag }}"
           imagePullPolicy: {{ .Values.pose.image.pullPolicy }}
           securityContext:
             privileged: true

@@ -14,7 +14,7 @@ spec:
     spec:
       initContainers:
         - name: copy-models
-          image: "{{ .Values.assets.image.repository }}:{{ .Values.assets.image.tag }}"
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
           imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
@@ -25,7 +25,7 @@ spec:
 
       containers:
         - name: ai-ecg
-          image: "{{ .Values.aiEcg.image.repository }}:{{ .Values.aiEcg.image.tag }}"
+          image: "{{ .Values.aiEcg.image.repository }}/{{ .Values.aiEcg.image.name }}:{{ .Values.aiEcg.image.tag }}"
           imagePullPolicy: {{ .Values.aiEcg.image.pullPolicy }}
           securityContext:
             privileged: true

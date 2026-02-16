@@ -18,37 +18,7 @@ Check available images:
 ```bash
 docker images | grep intel/hl-ai
 ```
-## If Docker Images Are Missing
 
-If the required images are **not present locally**, Kubernetes pods will fail with `ImagePullBackOff`.
-
-### Build Images Locally
-
-From the repository root, build each service image:
-
-```bash
-# MDPnP
-docker build -t intel/hl-ai-mdpnp:1.0.0 mdpnp-service/
-
-# DDS Bridge
-docker build -t intel/hl-ai-dds-bridge:1.0.0 dds-bridge/
-
-# Aggregator
-docker build -t intel/hl-ai-aggregator-service:1.0.0 aggregator-service/
-
-# AI ECG
-docker build -t intel/hl-ai-ecg:1.0.0 ai-ecg/backend/
-
-# 3D Pose
-docker build -t intel/hl-ai-3dpose:1.0.0 3d-pose-estimation/src/
-
-# Metrics
-docker build -t intel/hl-ai-metrics-service:1.0.0 metrics-service/
-
-# UI 
-docker build -t intel/hl-ai-ui:1.0.0 ui/
-
-```
 
 ## Install
 
@@ -132,6 +102,13 @@ From here you can access:
 
   - Metrics Dashboard
 
+## On Bare Metal Kubernetes (On-Prem)
+NodePort still works.
+
+User must access:
+```bash
+http://<Node-Internal-IP>:<nodePort>
+``` 
 
 ## Uninstall
 ```bash
