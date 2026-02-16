@@ -1,0 +1,34 @@
+{{- range $name, $svc := .Values.services }}
+{{- if $svc.enabled }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: {{ $svc.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      {{- if $svc.hostNetwork }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ $svc.image }}
+          imagePullPolicy: IfNotPresent
+          {{- if $svc.containerPort }}
+          ports:
+            - containerPort: {{ $svc.containerPort }}
+          {{- end }}
+
+---
+{{- end }}
+{{- end }}

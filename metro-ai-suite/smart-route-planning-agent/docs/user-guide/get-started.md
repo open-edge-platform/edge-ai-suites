@@ -1,91 +1,122 @@
 # Get Started
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
-
-This application uses AI Agent to analyze a route between given source and destination. It communicates with other agents to fetch live analysis reports for traffic intersections found along all feasible routes between the source and destination. Subsequently, the agent finds an optimum route in real-time which is likely to be free from any possible incidents (like congestion, weather, roadblocks, accidents etc.).
-
 ## Prerequisites
 
-Before you begin, ensure the following:
+- **System requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
 
-- **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
-- **Docker Installed**: Install Docker. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
+- **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
 
-This guide assumes basic familiarity with Docker commands and terminal usage. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
+- You are familiar with Docker commands and using the terminal. If you are new to Docker platform, see [Docker Documentation](https://docs.docker.com/) for an introduction.
 
 ## Quick Start with Setup Script
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
+Intel recommends using the unified setup script `setup.sh` that configures, builds, deploys, and manages the Smart Route Planning Agent. 
 
-
-The Smart Route Planning Agent includes a unified setup script (`setup.sh`) that combines both setup and orchestration functionality. It handles environment configuration, building, deployment, and ongoing service management. This is the **recommended approach** for getting started and managing the services.
-
-### 1. Clone the Repository
+1. Clone the repository:
 
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent
 ```
 
-### 2. Run the Complete Setup
+2. Run the complete setup:
 
 The setup script provides several options. For a complete setup (recommended for first-time users):
 
 ```bash
-source setup.sh setup
+source setup.sh --setup
 ```
 
-### 3. Alternative Setup Options
+3. Run alternative setup options
 
-For more granular control, the setup script provides individual commands:
+For a more granular control, run these commands:
 
 ```bash
-# Set environment variables only
-source setup.sh setenv
-
 # Start services only (after setup)
-source setup.sh up
+source setup.sh --run
 
 # Stop services
-source setup.sh down
+source setup.sh --stop
 
 # Restart services
-source setup.sh restart
-
-# Check service status
-source setup.sh status
-
+source setup.sh --restart
 ```
 
-### 4. Verify
 
-Check Smart Route Planning Agent health:
+## Manual Setup for Advanced Users
 
-```bash
-curl -s -X GET http://localhost:8082/health
-```
-
-## Manual Setup (Advanced Users)
-
-For advanced users who need more control over the configuration, you can manually set up the stack using Docker Compose.
+For advanced users who need more control over the configuration, you can set up the stack manually using Docker Compose tool.
 
 ### Manual Environment Configuration
 
-If you prefer to manually configure environment variables instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for complete details. 
+If you prefer to configure environment variables manually instead of using the setup script, see the [Environment Variables Guide](./environment-variables.md) for details. 
 
-### Manual Docker Compose Deployment
+### Manual Docker Compose Tool Deployment
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
+See [Build from Source](./build-from-source.md) for instructions on building and running with the Docker Compose tool.
 
+## Multi-Node Deployment
 
-## Configuration Files
+The Smart Route Planning Agent works in a multi-node setup with one central Route Planning Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
-The Smart Route Planning Agent stack uses several configuration files located in the `config/` directory:
+### Architecture Overview
 
-### Smart Route Planning Agent Configuration
+```
+                    ┌─────────────────────────────┐
+                    │  Smart Route Planning Agent │
+                    │       (Central Node)        │
+                    └──────────────┬──────────────┘
+                                   │
+           ┌───────────────────────┼───────────────────────┐
+           │                       │                       │
+           ▼                       ▼                       ▼
+┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐
+│ Smart Traffic       │ │ Smart Traffic       │ │ Smart Traffic       │
+│ Intersection Agent  │ │ Intersection Agent  │ │ Intersection Agent  │
+│ (Edge Node 1)       │ │ (Edge Node 2)       │ │ (Edge Node N)       │
+└─────────────────────┘ └─────────────────────┘ └─────────────────────┘
+```
 
-| **STATUS** |  Work in Progress |
-|------------| ------------------|
+### Prerequisites
+
+1. Deploy the [Smart Traffic Intersection Agent](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-traffic-intersection-agent/docs/user-guide/get-started.md#quick-start-with-setup-script) on each edge node.
+2. Ensure network connectivity between the central node and edge nodes.
+3. Note the IP address and port of each Smart Traffic Intersection Agent.
+
+### Configure Edge Node Endpoints
+
+Edit `src/data/config.json` to add the IP addresses of your Smart Traffic Intersection Agent edge nodes:
+
+```json
+{
+    "api_endpoint": "/api/v1/traffic/current?images=false",
+    "api_hosts": [
+        {
+            "name": "Intersection-1",
+            "host": "http://<edge-node-1-ip>:8081"
+        },
+        {
+
+            "name": "Intersection-2",
+            "host": "http://<edge-node-2-ip>:8082"
+        },
+        {
+
+            "name": "Intersection-3",
+            "host": "http://<edge-node-3-ip>:8083"
+        }
+    ]
+}
+```
+
+Replace `<edge-node-X-ip>` with the actual IP addresses of your edge nodes.
+
+### Deploy the Route Planning Agent
+
+After configuring the edge node endpoints, deploy the Smart Route Planning Agent on the central node:
+
+```bash
+source setup.sh --setup
+```
+
+The Route Planning Agent will query all configured Smart Traffic Intersection Agents to gather live traffic data for route optimization.

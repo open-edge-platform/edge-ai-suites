@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_pch_pmc_breaker_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL PCH PMC BREAKER</TELEM:description>
+	<TELEM:uniqueid>0x01092D02</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x3000</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPM_Breaker_COUNTER_CONTROL" datatypeIDREF="tgeneric_sample" sampleID="LPM_Breaker_COUNTER_CONTROL">
+			<TELC:description>LPM Breaker Counter Control (RESERVED)</TELC:description>
+			<TELC:sampleSubGroup>CONFIG</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PXPA_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PXPA_PG_BRK_CNTR">
+			<TELC:description>PXPA PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PXPA_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x3008</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPB_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PXPB_PG_BRK_CNTR">
+			<TELC:description>PXPB PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PXPB_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GBE_LAN_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="GBE_LAN_PG_BRK_CNTR">
+			<TELC:description>GBE LAN PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>GBE_LAN_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x3010</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LPSS_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="LPSS_PG_BRK_CNTR">
+			<TELC:description>LPSS PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>LPSS_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="XDCI_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="XDCI_PG_BRK_CNTR">
+			<TELC:description>XDCI PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>XDCI_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x3018</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="CSE_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="CSE_PG_BRK_CNTR">
+			<TELC:description>CSE PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>CSE_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="KVMCC_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="KVMCC_PG_BRK_CNTR">
+			<TELC:description>KVMCC PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>KVMCC_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x3020</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PMT_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PMT_PG_BRK_CNTR">
+			<TELC:description>PMT PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PMT_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="CLINK_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="CLINK_PG_BRK_CNTR">
+			<TELC:description>CLINK PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>CLINK_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x3028</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PTIO_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PTIO_PG_BRK_CNTR">
+			<TELC:description>PTIO PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PTIO_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="USBR0_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="USBR0_PG_BRK_CNTR">
+			<TELC:description>USBR0 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>USBR0_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x3030</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SMT1_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SMT1_PG_BRK_CNTR">
+			<TELC:description>SMT1 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SMT1_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SMS2_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SMS2_PG_BRK_CNTR">
+			<TELC:description>SMS2 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SMS2_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x3038</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SMS1_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SMS1_PG_BRK_CNTR">
+			<TELC:description>SMS1 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SMS1_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="ESE_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="ESE_PG_BRK_CNTR">
+			<TELC:description>ESE PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>ESE_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x3040</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SMT4_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SMT4_PG_BRK_CNTR">
+			<TELC:description>SMT4 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SMT4_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="DMI3_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="DMI3_PG_BRK_CNTR">
+			<TELC:description>DMI3 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>DMI3_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x3048</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="THC0_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="THC0_PG_BRK_CNTR">
+			<TELC:description>THC0 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>THC0_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="THC1_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="THC1_PG_BRK_CNTR">
+			<TELC:description>THC1 PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>THC1_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x3050</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PXPC_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PXPC_PG_BRK_CNTR">
+			<TELC:description>PXPC PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PXPC_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SATA_PG_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SATA_PG_BRK_CNTR">
+			<TELC:description>SATA PG Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SATA_PG_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x3058</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MEMORY_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="MEMORY_RSCREQ_BRK_CNTR">
+			<TELC:description>MEMORY RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>MEMORY_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="MEMORY_NS_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="MEMORY_NS_RSCREQ_BRK_CNTR">
+			<TELC:description>MEMORY_NS RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>MEMORY_NS_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x3060</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PSF1_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PSF1_RSCREQ_BRK_CNTR">
+			<TELC:description>PSF0 RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PSF1_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PSF2_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PSF2_RSCREQ_BRK_CNTR">
+			<TELC:description>PSF4 RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PSF2_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x3068</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PSF3_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PSF3_RSCREQ_BRK_CNTR">
+			<TELC:description>PSF6 RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PSF3_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="REF_PLL_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="REF_PLL_RSCREQ_BRK_CNTR">
+			<TELC:description>REF_PLL RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>REF_PLL_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x3070</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SB_RSCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SB_RSCREQ_BRK_CNTR">
+			<TELC:description>SB RSC_REQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SB_RSCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LPSS_D3_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="LPSS_D3_BRK_CNTR">
+			<TELC:description>LPSS D3 Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>LPSS_D3_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x3078</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="XDCI_D3_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="XDCI_D3_BRK_CNTR">
+			<TELC:description>XDCI D3 Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>XDCI_D3_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="SATA_D3_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SATA_D3_BRK_CNTR">
+			<TELC:description>SATA D3 Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SATA_D3_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x3080</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="AON2_SPL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="AON2_SPL_CSOFF_BRK_CNTR">
+			<TELC:description>AON2_SPL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>AON2_SPL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="USB3_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="USB3_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>USB3_PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>USB3_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x3088</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="MAINDIVIDER_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="MAINDIVIDER_CSOFF_BRK_CNTR">
+			<TELC:description>MAIN DIVIDER CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>MAINDIVIDER_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="REF_PLL_NON_OC_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="REF_PLL_NON_OC_CSOFF_BRK_CNTR">
+			<TELC:description>REF_PLL_NON_OC CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>REF_PLL_NON_OC_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x3090</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="DMI_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="DMI_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>DMI PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>DMI_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PHY_EXT_INJ_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PHY_EXT_INJ_CSOFF_BRK_CNTR">
+			<TELC:description>PHY_EXT_INJ CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PHY_EXT_INJ_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x3098</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="USB2_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="USB2_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>USB2 PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>USB2_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="GBE_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="GBE_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>GbE LAN PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>GBE_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x30a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="SATA_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="SATA_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>SATA PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>SATA_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PCIE0_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PCIE0_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>PCIE0 PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PCIE0_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x30a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PCIE1_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PCIE1_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>PCIE1 PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PCIE1_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FABRIC_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="FABRIC_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>Fabric PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>FABRIC_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x30b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PCIE2_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PCIE2_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>PCIE2 PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PCIE2_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="REF_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="REF_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>REFPLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>REF_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x30b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="REF38P4_PLL_CSOFF_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="REF38P4_PLL_CSOFF_BRK_CNTR">
+			<TELC:description>REF38P4PLL CSOFF Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>REF38P4_PLL_CSOFF_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PNDEMET_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PNDEMET_MISCREQ_BRK_CNTR">
+			<TELC:description>PNDE_MET MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PNDEMET_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x30c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PG5PMA0GVNN_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PG5PMA0GVNN_MISCREQ_BRK_CNTR">
+			<TELC:description>PG5_PMA0_GVNN MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PG5PMA0GVNN_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PLTGREATER_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PLTGREATER_MISCREQ_BRK_CNTR">
+			<TELC:description>PLT_GREATER MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PLTGREATER_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x30c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="ITSSCLKSRC_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="ITSSCLKSRC_MISCREQ_BRK_CNTR">
+			<TELC:description>ITSS_CLK_REQ MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>ITSSCLKSRC_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PG5PMA1GVNN_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PG5PMA1GVNN_MISCREQ_BRK_CNTR">
+			<TELC:description>PG4_PMA1_GVNN MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PG5PMA1GVNN_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x30d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PREWAKE0_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PREWAKE0_MISCREQ_BRK_CNTR">
+			<TELC:description>PREWAKE0 MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PREWAKE0_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="PREWAKE1_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PREWAKE1_MISCREQ_BRK_CNTR">
+			<TELC:description>PREWAKE1 MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PREWAKE1_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x30d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="PG5PMA2GVNN_MISCREQ_BRK_CNTR" datatypeIDREF="tblk_brk_cntr" sampleID="PG5PMA2GVNN_MISCREQ_BRK_CNTR">
+			<TELC:description>PG5_PMA2_GVNN MISCREQ Breaker Counter</TELC:description>
+			<TELC:sampleSubGroup>PG5PMA2GVNN_MISCREQ_BRK_CNTR</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_1" datatypeIDREF="tblk_brk_cntr" sampleID="RESERVED_1">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>RESERVED_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

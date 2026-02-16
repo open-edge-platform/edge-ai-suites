@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 from enum import Enum
 from pathlib import Path
 
@@ -26,15 +29,6 @@ IGNORED_ROUTES: list[str] = [
 ROUTE_STATUS_DIR: Path = Path(__file__).parent / "data" / "csv"
 CONFIG_FILE: Path = Path(__file__).parent / "data" / "config.json"
 
-# Real-time traffic API endpoint
-# Get the API BASE from env var or a default value is picked
-# SCENE_INTELLIGENCE_API_BASE = os.getenv("SI_API_BASE", "http://localhost:8082")
-# SCENE_INTELLIGENCE_ENDPOINTS = {
-#     "traffic_summary": "/api/v1/traffic/directional/summary",
-#     "update_threshold": "/api/v1/config/vlm/threshold"
-# }
-# UPDATE : API Endpoints and Base now come from config file
-
 
 class CongestionLevel(Enum):
     LOW = "Low"
@@ -62,6 +56,11 @@ class WeatherStatus(Enum):
     FIRE = "Roadside Fire"
     FLOOD = "Flash Floods"
 
+    # Add a generic handler here so that any unknown weather status maps to CLEAR
+    @classmethod
+    def _missing_(cls, _):
+        return cls.CLEAR
+
 
 # Weather conditions that trigger alternate route search
 ADVERSE_WEATHER_CONDITIONS = [
@@ -79,8 +78,9 @@ WEATHER_ISSUE_MAP: dict[str, WeatherStatus] = {
 }
 
 INCIDENT_ISSUE_MAP: dict[str, IncidentStatus] = {
- "berkeley-sanbruno.gpx": IncidentStatus.MAINTENANCE,
+    "berkeley-sanbruno.gpx": IncidentStatus.MAINTENANCE,
 }
+
 
 class StaticOptimizerName(Enum):
     """

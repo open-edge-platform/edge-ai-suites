@@ -32,8 +32,6 @@ The Weld Data Simulator uses sets of time synchronized .avi and .csv files from 
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
----
-
 #### 2. **Analytics Modules**
 
 ##### 2.1 **DL Streamer Pipeline Server**
@@ -71,8 +69,6 @@ defect classification model, publishes the frame metadata results over MQTT and 
 | `frame.type`       | The protocol type for streaming video frames.                               | `"webrtc"`                            |
 | `frame.peer-id`    | Unique identifier for the WebRTC peer connection.                           | `"samplestream"`                      |
 
----
-
 ##### 2.2 **Time Series Analytics Microservice**
 
 **Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
@@ -94,8 +90,6 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
----
-
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
@@ -110,7 +104,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-
 ###### **`udfs/`**
 
 Contains the python script to process the incoming data.
@@ -118,7 +111,6 @@ Uses CatBoostClassifier machine learning algorithm from the CatBoost library to 
 detect anomalous weld data points using sensor data.
 
 **Note**: Please note, CatBoost models don't run on Intel GPUs.
-
 
 ###### **`tick_scripts/`**
 
@@ -131,8 +123,6 @@ By default, it is configured to publish the alerts to **MQTT**.
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
 
----
-
 ##### 2.3 **Fusion Analytics**
 
 **Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
@@ -144,8 +134,6 @@ library.
 #### 4. **Data Visualization**
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
-
----
 
 ## Next Steps
 

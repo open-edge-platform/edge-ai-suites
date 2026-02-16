@@ -111,3 +111,21 @@ data:
   config.json: |-
 {{ .Files.Get "dlstreamer-pipeline-server.json" | indent 4 }}
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: seaweedfs-s3-init
+data:
+  s3-init-buckets.sh: |-
+{{ .Files.Get "s3-init-buckets.sh" | indent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: seaweedfs-s3-config-template
+data:
+  seaweedfs_s3_config.json.template: |-
+{{ .Files.Get "seaweedfs_s3_config.json.template" | indent 4 }}
+---

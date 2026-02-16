@@ -48,9 +48,9 @@ void ITSPlanner::configure(
   node_->get_parameter(name_ + ".interpolation_resolution", interpolation_resolution_);
   if (interpolation_resolution_ <= 0.0) {interpolation_resolution_ = 0.05;}
   nav2_util::declare_parameter_if_not_declared(
-    node_, name_ + ".roadmap", rclcpp::ParameterValue("PROBABLISTIC"));
+    node_, name_ + ".roadmap", rclcpp::ParameterValue("PROBABILISTIC"));
   node_->get_parameter(name_ + ".roadmap", roadmap_);
-  if (roadmap_ != "PROBABLISTIC" && roadmap_ != "DETERMINISTIC") {roadmap_ = "PROBABLISTIC";}
+  if (roadmap_ != "PROBABILISTIC" && roadmap_ != "DETERMINISTIC") {roadmap_ = "PROBABILISTIC";}
   nav2_util::declare_parameter_if_not_declared(
     node_, name_ + ".n", rclcpp::ParameterValue(2));
   node_->get_parameter(name_ + ".n", n_);

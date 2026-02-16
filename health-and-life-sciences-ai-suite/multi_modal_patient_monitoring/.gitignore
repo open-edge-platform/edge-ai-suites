@@ -1,0 +1,80 @@
+ Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+*.egg-info/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.bak
+*.backup
+
+# Generated gRPC code (keep for now, regenerate at build time later)
+# Uncomment these when we refactor to shared proto:
+# services/*/proto/*_pb2.py
+# services/*/proto/*_pb2_grpc.py
+# services/*/proto/*_pb2.pyi
+
+# Large data folders and files (auto-downloaded at runtime)
+metrics/
+models/
+videos/
+
+# File-level ignores (in case folders are partially checked in)
+models/*.bin
+models/*.onnx
+models/*.xml
+models/*.pth
+models/*.hdf5
+models/*.h5
+videos/*.mp4
+videos/*.avi
+
+# Allow DDS native RTI libraries to be tracked
+!services/dds-bridge/native/libs/linux/libnddsc.so
+!services/dds-bridge/native/libs/linux/libnddscore.so
+!services/dds-bridge/native/libs/linux/libnddsjava.so
+!services/dds-bridge/native/libs/linux/libnddssecurity.so
+
+# Allow specific model and video files for testing
+!services/rppg-service/models/group1-shard1of1.bin
+!services/rppg-service/models/*.xml
+!services/rppg-service/videos/sample.mp4
+
+# Keep directory structure
+!models/.gitkeep
+!videos/.gitkeep
+!cache/.gitkeep
+!logs/.gitkeep
+
+# Runtime files
+logs/*.log
+cache/*
+*.json
+!services/ui/package.json
+
+# Testing
+.pytest_cache/
+.coverage
+test_*.sh
+verify_*.sh
+check_*.sh
+scripts/test_*.py
+
+# Temporary files
+fix_*.py
+*.tmp
+# env files
+.env
+device.env

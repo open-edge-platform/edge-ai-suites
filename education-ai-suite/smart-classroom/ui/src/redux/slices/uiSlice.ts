@@ -3,7 +3,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
-export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'complete' | 'no-config';
+export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
  
 export interface UIState {
   aiProcessing: boolean;
@@ -39,6 +39,13 @@ export interface UIState {
   justStoppedRecording: boolean;
   videoAnalyticsStopping: boolean;
   hasUploadedVideoFiles: boolean;
+  monitoringActive: boolean;
+  videoPlaybackMode: boolean;
+  uploadedVideoFiles: {
+    front: File | null;
+    back: File | null;
+    board: File | null;
+  };
 }
  
 const initialState: UIState = {
@@ -75,6 +82,13 @@ const initialState: UIState = {
   justStoppedRecording: false,
   videoAnalyticsStopping: false,
   hasUploadedVideoFiles: false,
+  monitoringActive: false,
+  videoPlaybackMode: false,
+  uploadedVideoFiles: {
+    front: null,
+    back: null,
+    board: null,
+  },
 };
  
 const uiSlice = createSlice({
@@ -246,7 +260,7 @@ const uiSlice = createSlice({
  
     stopStream(state) {
       state.activeStream = null;
-      state.videoStatus = 'complete';
+      state.videoStatus = 'completed';
     },
  
     setVideoAnalyticsLoading(state, action: PayloadAction<boolean>) {
@@ -261,7 +275,7 @@ const uiSlice = createSlice({
       if (action.payload) {
         state.videoStatus = 'streaming';
         state.videoAnalyticsLoading = false;
-      } else if (!state.videoAnalyticsLoading) {
+      } else if (!state.videoAnalyticsLoading && state.videoStatus !== 'completed') {
         state.videoStatus = 'ready';
       }
     },
@@ -339,29 +353,48 @@ const uiSlice = createSlice({
         state.videoStatus = 'ready';
       }
     },
-    
+
+    setMonitoringActive: (state, action) => {
+      state.monitoringActive = action.payload;
+    },
+    setUploadedVideoFiles(state, action: PayloadAction<{
+      front?: File | null;
+      back?: File | null;
+      board?: File | null;
+    }>) {
+      if (action.payload.front !== undefined) {
+        state.uploadedVideoFiles.front = action.payload.front;
+      }
+      if (action.payload.back !== undefined) {
+        state.uploadedVideoFiles.back = action.payload.back;
+      }
+      if (action.payload.board !== undefined) {
+        state.uploadedVideoFiles.board = action.payload.board;
+      }
+    },
+
+    setVideoPlaybackMode(state, action: PayloadAction<boolean>) {
+      state.videoPlaybackMode = action.payload;
+    },
+    setPlaybackFromUploads(state) {
+
+    const hasFiles =
+      state.uploadedVideoFiles.front ||
+      state.uploadedVideoFiles.back ||
+      state.uploadedVideoFiles.board;
+    if (hasFiles) {
+      state.videoStatus = "completed";
+      // state.videoPlaybackMode = true;
+    }
+},
+
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
-      const preservedHasUploadedVideoFiles = state.hasUploadedVideoFiles;
-      const preservedCameras = {
-        frontCamera: state.frontCamera,
-        backCamera: state.backCamera,
-        boardCamera: state.boardCamera,
-      };
-      
       Object.assign(state, initialState);
-      
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
-      state.hasUploadedVideoFiles = preservedHasUploadedVideoFiles;
-      state.frontCamera = preservedCameras.frontCamera;
-      state.backCamera = preservedCameras.backCamera;
-      state.boardCamera = preservedCameras.boardCamera;
-      
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
-      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
-      state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
   },
 });
@@ -407,6 +440,10 @@ export const {
   setVideoAnalyticsStopping,
   startTranscription,
   setHasUploadedVideoFiles,
+  setMonitoringActive,
+  setUploadedVideoFiles,
+  setVideoPlaybackMode,
+  setPlaybackFromUploads,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

@@ -43,20 +43,6 @@ designated destination.
 
     Then press play on the Universal Robots UR5e teach pendant
 
-    If Dobby planner plugin is intended to be used, after running the above, in three different terminals, run the followings:
+    .. note::
 
-    .. code-block:: bash
-
-        ros2 launch hrc_perception_ros dobby_launch.py
-
-    To put ground floor run:
-
-    .. code-block:: bash
-
-        python3 src/dobby_planner/applications.robotics.manipulation.perception-ros/scripts/dobby_service_test_floor.py
-
-    Once all the nodes are running and the robot is ready, run the following service to enable the dobby planner:
-
-    .. code-block:: bash
-
-        ros2 service call /ipc/hrc_perception_ros/start_follow_service_service std_srvs/srv/Empty {}
+        The Dobby planner plugin is Intel IP available under NDA only. For customers interested in accessing this motion planning framework, please contact eci.maintainer@intel.com.

@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package pose;
+
+message Joint2D {
+  float x = 1;
+  float y = 2;
+}
+
+message Joint3D {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message PersonPose {
+  int32 person_id = 1;
+  repeated Joint2D joints_2d = 2;
+  repeated Joint3D joints_3d = 3;
+  repeated float confidence = 4;
+}
+
+message PoseFrame {
+  int64 timestamp_ms = 1;
+  string source_id = 2;
+  repeated PersonPose people = 3;
+  bytes frame_data = 4;
+  int32 frame_number = 5;
+}
+
+message Ack {
+  bool ok = 1;
+  string message = 2;
+}
+
+service PoseService {
+  // Unary call - send one frame at a time (more reliable)
+  rpc PublishPose (PoseFrame) returns (Ack);
+  
+  // Streaming call - send multiple frames (kept for future use)
+  rpc StreamPoseData (stream PoseFrame) returns (Ack);
+}

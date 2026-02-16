@@ -24,7 +24,7 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 
 #### Deploy on Kubernetes cluster using Helm Charts
 
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/how-to-guides/how-to-deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-time-series/get-started/deploy-with-helm.html).
 
 ### [1.0.0](https://docs.openedgeplatform.intel.com/2025.1/edge-ai-suites/wind-turbine-anomaly-detection/release_notes/aug-2025.html#v1-0-0)
 

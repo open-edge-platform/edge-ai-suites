@@ -73,6 +73,10 @@ env:
   MTX_WEBRTCICESERVERS2_0_PASSWORD: 
   COTURN_UDP_PORT: 3478
 
+  # SeaweedFS S3 Storage related config
+  S3_STORAGE_USERNAME: 
+  S3_STORAGE_PASSWORD: 
+
   # Fusion Analytics config
   FUSION_MODE: OR
   TOLERANCE_NS: "50e6"
@@ -92,6 +96,7 @@ images:
   weld_data_simulator_image: intel/ia-weld-data-simulator
   dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
   fusion_analytics_image: intel/ia-multimodal-fusion-analytics
+  seaweedfs_image: chrislusf/seaweedfs:4.07
 privileged_access_required: false
 config:
   influx_db_server:
@@ -133,7 +138,14 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-
+  seaweedfs_filer:
+    name: seaweedfs-filer
+  seaweedfs_master:
+    name: seaweedfs-master
+  seaweedfs_volume:
+    name: seaweedfs-volume
+  seaweedfs_s3:
+    name: seaweedfs-s3
   coturn:
     name: coturn
     int:

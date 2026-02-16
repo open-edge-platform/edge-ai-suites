@@ -1,20 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import Modal from './Modal';
 import '../../assets/css/UploadFilesModal.css';
 import folderIcon from '../../assets/images/folder.svg';
 import { 
   startVideoAnalyticsPipeline, 
   uploadAudio, 
-  getClassStatistics, 
   createSession,
   startMonitoring,  
-  stopMonitoring    
+  stopMonitoring,    
+  startPipelineMonitoring
 } from '../../services/api';
-import { useAppDispatch } from '../../redux/hooks';
+import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { 
-  setFrontCamera, 
-  setBackCamera, 
-  setBoardCamera, 
   setUploadedAudioPath, 
   startProcessing, 
   processingFailed, 
@@ -22,7 +19,6 @@ import {
   setSessionId, 
   setActiveStream, 
   startStream, 
-  transcriptionComplete, 
   setFrontCameraStream, 
   setBackCameraStream, 
   setBoardCameraStream, 
@@ -31,13 +27,13 @@ import {
   setProcessingMode,
   setAudioStatus,
   setVideoStatus,
-  startTranscription,
-  setHasUploadedVideoFiles
+  setHasUploadedVideoFiles,
+  setMonitoringActive,
+  setUploadedVideoFiles,
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
-import { setClassStatistics } from '../../redux/slices/fetchClassStatistics';
 import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
 
@@ -55,10 +51,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
-  const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
- 
+  const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
+
   const constructFilePath = (fileName: string): string => {
     const normalizedBaseDirectory = baseDirectory.endsWith("\\") ? baseDirectory : `${baseDirectory}\\`;
     return `${normalizedBaseDirectory}${fileName}`;
@@ -113,10 +109,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       console.log('🎬 Pipelines to send:', pipelines);
       dispatch(startStream());
       dispatch(setVideoAnalyticsLoading(true));
-      dispatch(setVideoStatus('starting'));
+      dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-
+      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {
@@ -142,26 +138,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       if (hasSuccessfulStreams) {
         dispatch(setActiveStream('all'));
         dispatch(setVideoAnalyticsActive(true));
-        dispatch(setVideoStatus('streaming'));
+        dispatch(setVideoStatus('streaming')); // Only set to streaming when actually streaming
       } else {
         dispatch(setVideoStatus('failed'));
       }
 
       dispatch(setVideoAnalyticsLoading(false));
-
-      if (hasSuccessfulStreams) {
-        setTimeout(async () => {
-          try {
-            console.log('📊 Fetching class statistics for session:', sessionId);
-            const classStatistics = await getClassStatistics(sessionId);
-            console.log('✅ Class Statistics:', classStatistics);
-            dispatch(setClassStatistics(classStatistics));
-          } catch (err) {
-            console.error('❌ Failed to fetch class statistics:', err);
-          }
-        }, 10000);
-      }
-
       return hasSuccessfulStreams;
 
     } catch (videoError) {
@@ -170,18 +152,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('failed'));
       return false;
-    }
-  };
-
-  const getProcessingNotification = (hasAudio: boolean, hasVideo: boolean) => {
-    if (hasAudio && hasVideo) {
-      return 'Starting video analytics and transcription...';
-    } else if (hasAudio && !hasVideo) {
-      return 'Starting transcription...';
-    } else if (!hasAudio && hasVideo) {
-      return 'Starting video analytics...';
-    } else {
-      return 'Starting processing...';
     }
   };
 
@@ -213,6 +183,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       return;
     }
 
+    dispatch(setUploadedVideoFiles({
+      front: frontCameraPath,
+      back: rearCameraPath,
+      board: boardCameraPath,
+    }));
+
     setNotification('Starting processing...');
     dispatch(resetFlow());
     dispatch(resetTranscript());
@@ -239,27 +215,20 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       dispatch(setSessionId(sessionId));
       
       try {
-        console.log('📊 Starting monitoring for session:', sessionId);
-        const monitoringResult = await startMonitoring(sessionId);
-        const timer = setTimeout(async () => {
-          try {
-            console.log('⏰ 45 minutes elapsed - stopping monitoring');
-            const stopResult = await stopMonitoring();
-            console.log('✅ Monitoring stopped after 45 minutes:', stopResult.message);
-          } catch (error) {
-            console.error('❌ Failed to stop monitoring after 45 minutes:', error);
-          }
-        }, 45 * 60 * 1000);
-
-        setMonitoringTimer(timer);
-        console.log('⏰ Monitoring timer set for 45 minutes');
+        if (monitoringActive) {
+          await stopMonitoring();
+          dispatch(setMonitoringActive(false));
+          await new Promise(res => setTimeout(res, 5000));
+        }
+        console.log('📊 Starting monitoring for new session:', sessionId);
+        await startMonitoring(sessionId);
+        dispatch(setMonitoringActive(true));
       } catch (monitoringError) {
-        console.error('❌ Failed to start monitoring (non-critical):', monitoringError);
+        console.error('❌ Monitoring restart failed:', monitoringError);
       }
 
       let audioPath = '';
       if (hasAudioFile) {
-        setNotification('Uploading audio...');
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
         audioPath = audioResponse.path;
@@ -299,22 +268,29 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         pipeline.source && pipeline.source.trim() !== ''
       );
 
-      console.log('📹 All pipelines:', allPipelines);
-      console.log('📹 Valid pipelines to send:', validPipelines);
-
       const hasValidVideo = validPipelines.length > 0;
-      console.log('🎯 Has valid video:', hasValidVideo);
-      
       dispatch(setHasUploadedVideoFiles(hasValidVideo));
-      
-      setNotification(getProcessingNotification(hasAudioFile, hasValidVideo));
-    
+
       if (hasValidVideo) {
-        dispatch(setVideoStatus('starting'));
-        console.log('📹 Setting video status to starting - valid files found');
-      } else {
+        dispatch(setUploadedVideoFiles({
+          front: frontCameraPath,
+          back: rearCameraPath,
+          board: boardCameraPath,
+        }));
+
+        dispatch(setHasUploadedVideoFiles(true));
+
+        if (rearCameraPath)
+          dispatch(setActiveStream('back'));
+
+        else if (boardCameraPath)
+          dispatch(setActiveStream('content'));
+
+        else if (frontCameraPath)
+          dispatch(setActiveStream('front'));
+      }
+      else {
         dispatch(setVideoStatus('no-config'));
-        console.log('📹 Setting video status to no-config - no valid files');
       }
 
       let videoAnalyticsStarted = false;
@@ -330,9 +306,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         console.log('📹 No valid video files provided, skipping video analytics');
       }
     
-      // REMOVED: No longer handling transcript stream here
-      // The TranscriptsTab will handle the transcript stream when aiProcessing becomes true
-      
       const finalNotification = getSuccessNotification(hasAudioFile, hasValidVideo, videoAnalyticsStarted);
   
       console.log(finalNotification)
@@ -344,10 +317,9 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         videoAnalyticsStarted,
         finalMessage: finalNotification
       });
-    
+
       setLoading(false);
       onClose();
-
     } catch (err) {
       console.error('❌ Failed during processing:', err);
       setError('Failed during processing. Please try again.');
@@ -357,15 +329,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     }
   };
 
-  React.useEffect(() => {
-    return () => {
-      if (monitoringTimer) {
-        clearTimeout(monitoringTimer);
-      }
-    };
-  }, [monitoringTimer]);
- 
-  return (
+   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="upload-files-modal">
         <h2>{t('uploadFiles.title')}</h2>

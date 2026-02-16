@@ -1,4 +1,4 @@
-# Agent Mode
+# Enable Agent Mode
 
 Agent Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback for binary classification prompts. When enabled, the application provides enhanced visual indicators for "Yes" or "No" responses, making it ideal for automated monitoring and surveillance scenarios.
 
@@ -35,7 +35,6 @@ EVAM_HOST_PORT=8040
 EVAM_PORT=8080
 DASHBOARD_PORT=4173
 WEBRTC_PEER_ID=stream
-METADATA_POLL_SECONDS=0.5
 AGENT_MODE=True   # Enable Agent Mode
 ```
 

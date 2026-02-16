@@ -11,6 +11,6 @@ This Sample Application enables real-time anomaly detection in printed circuit b
 
 ## Supporting Resources
 
-* [Get Started Guide](get-started.md)
-* [API Reference](api-reference.md)
-* [System Requirements](system-requirements.md)
+- [Get Started Guide](./get-started.md)
+- [API Reference](./api-reference.md)
+- [System Requirements](./get-started/system-requirements.md)

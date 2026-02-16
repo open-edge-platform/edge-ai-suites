@@ -371,7 +371,7 @@ class DataAggregatorService:
             "active_analyzed_cameras": len(self.vlm_analyzed_camera_images),
             "has_weather_data": self.vlm_analyzed_weather_data is not None,
             "has_vlm_analysis": self.current_vlm_analysis is not None,
-            "last_analysis_time": self.last_analysis_time.isoformat() if self.last_analysis_time else None,
+            "last_analysis_time": datetime.fromtimestamp(self.last_analysis_time, tz=timezone.utc).isoformat() if self.last_analysis_time else None,
             # "vlm_analyzed_history_count": len(self.traffic_history),
             # "analysis_tasks_running": self.analysis_task is not None and not self.analysis_task.done()
         }
