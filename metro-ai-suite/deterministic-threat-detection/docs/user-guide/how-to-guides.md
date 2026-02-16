@@ -1,6 +1,7 @@
 # How-to Guides
 
-This section collects guides for the Smart Parking sample application.
+Follow the how‑tos to configure the system, enable the required features, and run it
+successfully. The guides collected here present more details on the steps in [Get Started](./get-started.md).
 
 - [Synchronize PTP Time (IEEE 802.1AS)](./how-to-guides/configure-ptp.md)
 - [Configure the MOXA TSN Switch](./how-to-guides/configure-moxa-switch.md)
