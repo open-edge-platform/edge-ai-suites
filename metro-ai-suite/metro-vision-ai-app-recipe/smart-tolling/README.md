@@ -6,36 +6,50 @@ Enabling such use cases across multiple viewpoints helps in understanding the ob
 
 ![Smart Tolling System Architecture](./docs/user-guide/_assets/smart_tolling_architecture.png)
 
-## Use Cases
+## Key Features
 
-- **Vehicle Axle Detection**: Determines vehicle class based on axle and wheel count
-  - Usage: Used for toll classification and revenue calculation.
-- **License Plate Detection**: Identifies vehicles uniquely using license plates
-  - Usage: Used for reading vehicle license plate text from both front and rear views.
-- **Visualization & Analytics**:Provides real-time and historical insights for toll operators.
+**Multi vision**: Scene-based analytics allow insights beyond single sensor views.
 
-## Key Benefits
+- **Vehicle axle detection**:
 
-- **Accuracy**: Multi view accuracy.
-- **Revenue Protection**: Advanced "Lift Axle" detection using Computer Vision allows for accurate tariffing.
-- **Audit Compliance**: Every transaction includes an "Image Evidence" for simplified auditing.
+  Vehicle class is determined based on axle and wheel count. Intended for toll
+  classification, as well as revenue calculation and protection.
+
+- **Lift axle detection**:
+
+  The type of axle is determined based on camera feed. Ensures accurate tariffing,
+  as lift axles may affect toll classification even when raised.
+
+- **License plate detection**:
+
+  The application identifies vehicles uniquely by their license plates, which are
+  read from both front and rear views. The image evidence is included in every
+  transaction for simplified auditing.
+
+**Visualization & analytics**: Provides real-time and historical insights for
+toll operators.
+
+**Modularity**: Architecture based on modular microservices enables composability
+and reconfiguration.
+
+**High-throughput processing**: [Optimized video pipelines](./docs/user-guide/how-it-works/optimization.md#zero-copy-video-pipeline)
+for Intel edge devices.
 
 ## How it Works
 
 The system uses the **Metro Edge Architecture** based on three key principles:
 
-1. **Perception**: Deep Learning Streamer (DLStreamer) processes 3/4 camera feeds.
-2. **Control**: SceneScape Controller aggregates metadata.
-3. **Analytics**: Node-RED transforms events into traffic insights (Traffic Volume, Flow Efficiency, Tariffing).
-
-For more details, refer to [How it Works](./docs/user-guide/how-it-works.md).
+- **Perception**: Deep Learning Streamer (DLStreamer) [processes 3/4 camera feeds](./docs/user-guide/how-it-works/perception-layer.md).
+- **Control**: SceneScape Controller [aggregates metadata](./docs/user-guide/how-it-works.md#analytics-pipeline-downstream).
+- **Analytics**: Node-RED [transforms events into traffic insights](./docs/user-guide/how-it-works/analytics-pipeline.md#node-red-transformation)
+  (Traffic Volume, Flow Efficiency, Tariffing).
 
 ## Learn More
 
-- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware, OS and Software Prerequisites.
-- [Get Started](./docs/user-guide/get-started.md): Installation, Configuration and Launch steps.
-- [Technical Reference](./docs/user-guide/how-it-works/technical-reference.md): Engineering Specs, Zero-Copy Pipeline and API usage.
-- [Troubleshooting](./docs/user-guide/troubleshooting.md): Solutions to common issues.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md)
+- [Get Started](docs/user-guide/get-started.md)
+- [How It Works](./docs/user-guide/how-it-works.md)
+- [Troubleshooting](./docs/user-guide/troubleshooting.md)
 
 ## License
 
