@@ -11,7 +11,6 @@ Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for se
 - **Getting Started**
   - [Get Started](docs/user-guide/get-started.md): Step‑by‑step setup.
   - [System Requirements](docs/user-guide/system-requirements.md): Hardware and software requirements.
-  - [How to Use the Application](docs/user-guide/how-to-use-application.md): Search workflow and tips.
 
 - **Deployment**
   - [Build from Source](docs/user-guide/how-to-build-from-source.md): Build images for the stack.

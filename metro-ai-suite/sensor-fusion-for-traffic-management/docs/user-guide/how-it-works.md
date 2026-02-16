@@ -1,4 +1,3 @@
-
 # How It Works
 
 This reference implementation enables the development of a high-performance, Intel-based® Intelligent Traffic Solution. The end-to-end pipeline of this software reference implementation includes the following major workloads, as shown in the following figure:

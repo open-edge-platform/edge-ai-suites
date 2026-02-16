@@ -20,10 +20,6 @@ This integration improves on the camera-only solutions in performance, accuracy,
 reliability, offering a more robust and comprehensive approach to traffic monitoring and
 management.
 
-
-
-and decision-making, enhancing overall system performance and safety.
-
 This sample features multiple pipelines tailored to specific sensor fusion use cases, combining
 cameras with either radar or lidar:
 
@@ -67,7 +63,7 @@ Get Started <get-started-guide.md>
 How it Works <how-it-works.md>
 Advanced user guide <advanced-user-guide.md>
 APIs.md
-FAQ.md
+troubleshooting.md
 release-notes.md
 :::
 hide_directive-->

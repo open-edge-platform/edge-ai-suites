@@ -47,6 +47,12 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
+    - name: Install Robot Framework with pip (cached)
+      run: pip3 install robotframework selenium PyYAML requests
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3-nose libxml2-utils vlc
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #3.4.0
       with:
@@ -55,17 +61,11 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
     - name: Sanity Test 
       run: | 
-       sudo apt-get update
-       sudo pip install robotframework
-       lspci | grep -i vga
-       sudo apt install -y python3-nose libxml2-utils vlc
+       
        cd edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/tests/robot_files
-       robot test.robot || true  &
-       sleep 480
-       docker logs dlstreamer-pipeline-server >> dlsps_logs.txt &
-       wait
+       robot test.robot || true 
        mkdir -p /tmp/test_results
-       cp -r report.html log.html output.xml dlsps_logs.txt /tmp/test_results/
+       cp -r report.html log.html output.xml /tmp/test_results/
        passed=$(xmllint --xpath "//return/status[@status='PASS']" ./output.xml | wc -l) || true
        failed=$(xmllint --xpath "//return/status[@status='FAIL']" ./output.xml | wc -l) || true
        not_run=$(xmllint --xpath "//return/status[@status='NOT RUN']" ./output.xml | wc -l) || true
@@ -84,11 +84,5 @@ jobs:
     - name: Clean up
       if: always()
       run: |
-        sudo rm -rf edge-ai-libraries-repo
-        if [ -n "$(docker images -aq)" ]; then
-               docker rmi -f $(docker images -aq) || true
-        fi
+        
         sudo rm -rf /tmp/test_results/*
-
-
-

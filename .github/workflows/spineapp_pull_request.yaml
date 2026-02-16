@@ -41,13 +41,7 @@ jobs:
       with:
         name: virus-report
         path: reports/
-    - name: Clean up
-      if: always()
-      run: |
-        rm -rf edge-ai-suites-repo
-        if [ -n "$(docker images -aq)" ]; then
-               docker rmi -f $(docker images -aq) || true
-        fi
+    
   shellcheck:
     runs-on: ubuntu-latest
 
