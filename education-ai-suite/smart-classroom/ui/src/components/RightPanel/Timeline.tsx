@@ -100,10 +100,10 @@ const Timeline: React.FC = () => {
   };
 
   const getSpeakerColor = (speaker: string): string => {
-    if (speaker === teacherSpeaker) return "#54a00d";
+    if (speaker === teacherSpeaker) return "#db972a";
 
     if (teacherSpeaker && speaker !== teacherSpeaker) {
-      const studentColors = ["#2196F3", "#df2ad0", "#1f2ce0", "#f5972b", "#1be025"];
+          const studentColors = ["#1565C0", "#9b62b5", "#D84315", "#F57C00", "#00695C"  ];
       const match = speaker.match(/SPEAKER_(\d+)/i);
       if (match) {
         const speakerNumber = parseInt(match[1], 10);
@@ -111,7 +111,7 @@ const Timeline: React.FC = () => {
       }
     }
     
-    const colors = ["#2196F3", "#FF9800", "#9C27B0", "#f5972b", "#00BCD4"];
+    const colors = ["#1565C0", "#F57C00", "#7B1FA2", "#00695C", "#5D4037"];
     const m = speaker.match(/SPEAKER_(\d+)/i);
     return m ? colors[parseInt(m[1], 10) % colors.length] : "#757575";
   };
@@ -121,31 +121,15 @@ const Timeline: React.FC = () => {
       .toString()
       .padStart(2, "0")}`;
 
-  console.log('Timeline Debug:', {
-    totalSegments: segments.length,
-    timelineSegments: timelineSegments.length,
-    cleanedSegments: cleanedSegments.length,
-    mergedSegments: mergedSegments.length,
-    activeSpeakers: activeSpeakers,
-    teacherSpeaker: teacherSpeaker,
-    maxDuration: maxDuration,
-    detectedLanguage: detectedLanguage,
-    speakerDurations: Object.fromEntries(speakerDurations),
-    sampleSpeakers: segments.slice(0, 5).map(s => s.speaker),
-
-    speakerLabels: activeSpeakers.map(speaker => ({
-      original: speaker,
-      label: getSpeakerLabel(speaker)
-    }))
-  });
-
   if (!activeSpeakers.length || maxDuration <= 0) return null;
 
   return (
     <div className="timeline-container">
       <div className="timeline-header">
-        <h3>{lang === "zh" ? "发言时间轴" : "Speaking Timeline"}</h3>
-        <div>
+        <h4 style={{ margin: '0 0 10px 0', color: '#333', fontSize: '14px' }}>
+          {lang === "zh" ? "发言时间轴" : "Speaking Timeline"}
+        </h4>
+        <div style={{ fontSize: '12px', color: '#666', marginBottom: '10px' }}>
           {lang === "zh" ? "总时长" : "Total Duration"}: {formatTime(maxDuration)}
         </div>
       </div>
@@ -161,7 +145,7 @@ const Timeline: React.FC = () => {
           return (
             <div key={speaker} className="timeline-row">
               <div className="timeline-speaker-info">
-                <div className="speaker-label" style={{ color }}>
+                <div className="speaker-label" style={{ color, fontSize: '12px' }}>
                   <strong>{label}</strong>
                 </div>
               </div>

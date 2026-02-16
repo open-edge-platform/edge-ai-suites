@@ -1,0 +1,308 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: Documentation Check
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    branches:
+      - main
+      - release-*
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  filter:
+    permissions:
+      contents: read          # needed for actions/checkout
+    runs-on: ubuntu-latest
+    outputs:
+      smart-classroom_changed: ${{ steps.filter.outputs.smart-classroom }}
+      multi-modal-patient-monitoring_changed: ${{ steps.filter.outputs.multi-modal-patient-monitoring }}
+      edge-insights-vision_changed: ${{ steps.filter.outputs.edge-insights-vision }}
+      edge-insights-time-series_changed: ${{ steps.filter.outputs.edge-insights-time-series }}
+      hmi-augmented-worker_changed: ${{ steps.filter.outputs.hmi-augmented-worker }}
+      industrial-edge-insights-multimodal_changed: ${{ steps.filter.outputs.industrial-edge-insights-multimodal }}
+      video-processing-for-nvr_changed: ${{ steps.filter.outputs.video-processing-for-nvr }}
+      live-metrics-service_changed: ${{ steps.filter.outputs.live-metrics-service }}
+      live-video-captioning_changed: ${{ steps.filter.outputs.live-video-captioning }}
+      deterministic-threat-detection_changed: ${{ steps.filter.outputs.deterministic-threat-detection }}
+      visual-search-question-and-answering_changed: ${{ steps.filter.outputs.visual-search-question-and-answering }}
+      image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
+      sensor-fusion-for-traffic-management_changed: ${{ steps.filter.outputs.sensor-fusion-for-traffic-management }}
+      smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
+      loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
+      smart-tolling_changed: ${{ steps.filter.outputs.smart-tolling }}
+      smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
+      metro-vision-ai-app-recipe_changed: ${{ steps.filter.outputs.metro-vision-ai-app-recipe }}
+      smart-nvr_changed: ${{ steps.filter.outputs.smart-nvr }}
+      smart-route-planning-agent_changed: ${{ steps.filter.outputs.smart-route-planning-agent }}
+      metro-sdk-manager_changed: ${{ steps.filter.outputs.metro-sdk-manager }}
+      smart-traffic-intersection-agent_changed: ${{ steps.filter.outputs.smart-traffic-intersection-agent }}
+      robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set paths filter
+        id: filter
+        uses: dorny/paths-filter@4512585405083f25c027a35db413c2b3b9006d50
+        with:
+          filters: |
+            smart-classroom:
+              - 'education-ai-suite/smart-classroom/docs/user-guide/**'
+            multi-modal-patient-monitoring:
+              - 'health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/docs/user-guide/**'
+            edge-insights-vision:
+              - 'manufacturing-ai-suite/industrial-edge-insights-vision/docs/user-guide/**'
+            edge-insights-time-series:
+              - 'manufacturing-ai-suite/industrial-edge-insights-time-series/docs/user-guide/**'
+            hmi-augmented-worker:
+              - 'manufacturing-ai-suite/hmi-augmented-worker/docs/user-guide/**'
+            industrial-edge-insights-multimodal:
+              - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/user-guide/**'
+            video-processing-for-nvr:
+              - 'metro-ai-suite/video-processing-for-nvr/docs/user-guide/**'
+            live-metrics-service:
+              - 'metro-ai-suite/live-video-analysis/live-metrics-service/docs/user-guide/**'
+            live-video-captioning:
+              - 'metro-ai-suite/live-video-analysis/live-video-captioning/docs/user-guide/**'
+            deterministic-threat-detection:
+              - 'metro-ai-suite/deterministic-threat-detection/docs/user-guide/**'
+            visual-search-question-and-answering:
+              - 'metro-ai-suite/visual-search-question-and-answering/docs/user-guide/**'
+            image-based-video-search:
+              - 'metro-ai-suite/image-based-video-search/docs/user-guide/**'
+            sensor-fusion-for-traffic-management:
+              - 'metro-ai-suite/sensor-fusion-for-traffic-management/docs/user-guide/**'
+            smart-intersection:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/**'
+            loitering-detection:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/docs/user-guide/**'
+            smart-tolling:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/docs/user-guide/**'
+            smart-parking:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/**'
+            metro-vision-ai-app-recipe:
+              - 'metro-ai-suite/metro-vision-ai-app-recipe/docs/user-guide/**'
+            smart-nvr:
+              - 'metro-ai-suite/smart-nvr/docs/user-guide/**'
+            smart-route-planning-agent:
+              - 'metro-ai-suite/smart-route-planning-agent/docs/user-guide/**'
+            metro-sdk-manager:
+              - 'metro-ai-suite/metro-sdk-manager/docs/user-guide/**'
+            smart-traffic-intersection-agent:
+              - 'metro-ai-suite/smart-traffic-intersection-agent/docs/user-guide/**'
+            robotics-ai-suite:
+              - 'robotics-ai-suite/docs/**'
+
+  build-smart-classroom:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-classroom_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: education-ai-suite/smart-classroom
+
+  build-multi-modal-patient-monitoring:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.multi-modal-patient-monitoring_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: health-and-life-sciences-ai-suite/multi_modal_patient_monitoring
+
+  build-edge-insights-vision:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.edge-insights-vision_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-vision
+
+  build-edge-insights-time-series:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.edge-insights-time-series_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-time-series
+
+  build-hmi-augmented-worker:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.hmi-augmented-worker_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: manufacturing-ai-suite/hmi-augmented-worker
+
+  build-industrial-edge-insights-multimodal:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.industrial-edge-insights-multimodal_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: manufacturing-ai-suite/industrial-edge-insights-multimodal
+
+  build-video-processing-for-nvr:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.video-processing-for-nvr_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/video-processing-for-nvr
+      exclude_patterns: "**/Overview.md"
+
+  build-live-metrics-service:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.live-metrics-service_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/live-video-analysis/live-metrics-service
+
+  build-live-video-captioning:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.live-video-captioning_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/live-video-analysis/live-video-captioning
+
+  build-deterministic-threat-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.deterministic-threat-detection_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/deterministic-threat-detection
+
+  build-visual-search-question-and-answering:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.visual-search-question-and-answering_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/visual-search-question-and-answering
+
+  build-image-based-video-search:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/image-based-video-search
+
+  build-sensor-fusion-for-traffic-management:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.sensor-fusion-for-traffic-management_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/sensor-fusion-for-traffic-management
+
+  build-smart-intersection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection
+
+  build-loitering-detection:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
+
+  build-smart-tolling:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-tolling_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling
+
+  build-smart-parking:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
+
+  build-metro-vision-ai-app-recipe:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.metro-vision-ai-app-recipe_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-vision-ai-app-recipe
+
+  build-smart-nvr:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-nvr_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/smart-nvr
+
+  build-smart-route-planning-agent:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-route-planning-agent_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/smart-route-planning-agent
+
+  build-metro-sdk-manager:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.metro-sdk-manager_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/metro-sdk-manager
+
+  build-smart-traffic-intersection-agent:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.smart-traffic-intersection-agent_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: metro-ai-suite/smart-traffic-intersection-agent
+
+  build-robotics-ai-suite:
+    permissions:
+      contents: read          # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: robotics-ai-suite
+      simple_mode: false

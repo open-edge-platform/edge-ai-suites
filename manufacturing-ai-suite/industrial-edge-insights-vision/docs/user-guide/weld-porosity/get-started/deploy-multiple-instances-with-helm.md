@@ -18,27 +18,27 @@
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-   > **Note:** These steps demonstrate launching two pallet-defect-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
+   > **Note:** These steps demonstrate launching two weld-porosity instances and one pallet-defect-detection instance. Modify the sample apps and instances as needed for your use case.
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
    Example:
 
    ```text
-   pallet-defect-detection:
-     pdd1:
+   weld-porosity:
+     weld1:
        NGINX_HTTP_PORT: 30080
        NGINX_HTTPS_PORT: 30443
        COTURN_PORT: 30478
        S3_STORAGE_PORT: 30800
-     pdd2:
+     weld2:
        NGINX_HTTP_PORT: 30081
        NGINX_HTTPS_PORT: 30444
        COTURN_PORT: 30479
        S3_STORAGE_PORT: 30801
 
-   weld-porosity:
-     weld1:
+   pallet-defect-detection:
+     pdd1:
        NGINX_HTTP_PORT: 30082
        NGINX_HTTPS_PORT: 30445
        COTURN_PORT: 30480
@@ -97,13 +97,13 @@
 2. Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+    # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.
 
-   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+    kubectl cp resources/weld-porosity/videos/welding.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+    kubectl cp resources/weld-porosity/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
 ### Start AI pipelines
@@ -121,76 +121,76 @@
    Output:
 
    ```text
-   -------------------------------------------
-   Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30443
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Getting list of loaded pipelines...
-   Loaded pipelines:
-   [
-   {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
-               "format": "element-properties",
-               "name": "detection"
-           }
-           }
+    -------------------------------------------
+    Status of: weld1 (SAMPLE_APP: weld-porosity)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Getting list of loaded pipelines...
+    Loaded pipelines:
+    [
+    {
+        "description": "DL Streamer Pipeline Server pipeline",
+        "name": "user_defined_pipelines",
+        "parameters": {
+        "properties": {
+            "classification-properties": {
+            "element": {
+                "format": "element-properties",
+                "name": "classification"
+            }
+            }
 
            ...
-   -------------------------------------------
-   Status of: pdd2 (SAMPLE_APP: pallet-defect-detection)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30444
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Getting list of loaded pipelines...
-   Loaded pipelines:
-   [
-   {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
-               "format": "element-properties",
-               "name": "detection"
-           }
-           }
+    -------------------------------------------
+    Status of: weld2 (SAMPLE_APP: weld-porosity)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Getting list of loaded pipelines...
+    Loaded pipelines:
+    [
+    {
+        "description": "DL Streamer Pipeline Server pipeline",
+        "name": "user_defined_pipelines",
+        "parameters": {
+        "properties": {
+            "classification-properties": {
+            "element": {
+                "format": "element-properties",
+                "name": "classification"
+            }
+            }
        ...
 
-   -------------------------------------------
-   Status of: weld1 (SAMPLE_APP: weld-porosity)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 10.223.23.150:30445
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Getting list of loaded pipelines...
-   Loaded pipelines:
-   [
-   {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "classification-properties": {
-           "element": {
-               "format": "element-properties",
-               "name": "classification"
-           }
-           }
+    -------------------------------------------
+    Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
+    Running sample app: pallet-defect-detection
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Getting list of loaded pipelines...
+    Loaded pipelines:
+    [
+    {
+        "description": "DL Streamer Pipeline Server pipeline",
+        "name": "user_defined_pipelines",
+        "parameters": {
+        "properties": {
+            "detection-properties": {
+            "element": {
+                "format": "element-properties",
+                "name": "detection"
+            }
+            }
        ...
    ]
    ```
@@ -204,68 +204,66 @@
    Example Output:
 
    ```text
-   No pipeline specified. Starting the first pipeline.
+    No pipeline specified. Starting the first pipeline.
 
-   ------------------------------------------
-   Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
-   ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/payload.json
-   Payload loaded successfully.
-   Starting first pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection'  Response: "b34dc150062e11f1863a15371702ae06"
+    ------------------------------------------
+    Processing instance: weld1 from SAMPLE_APP: weld-porosity
+    ------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/payload.json
+    Payload loaded successfully.
+    Starting first pipeline: weld_porosity_classification
+    Launching pipeline: weld_porosity_classification
+    Extracting payload for pipeline: weld_porosity_classification
+    Found 1 payload(s) for pipeline: weld_porosity_classification
+    Payload for pipeline 'weld_porosity_classification'. Response: "b93bfeac08be11f1ad7e65ddafc77c95"
 
-   ------------------------------------------
-   Processing instance: pdd2 from SAMPLE_APP: pallet-defect-detection
-   ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/payload.json
-   Payload loaded successfully.
-   Starting first pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection' Response: "b35b2a20062e11f1b059efacc0acb924"
+    ------------------------------------------
+    Processing instance: weld2 from SAMPLE_APP: weld-porosity
+    ------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/payload.json
+    Payload loaded successfully.
+    Starting first pipeline: weld_porosity_classification
+    Launching pipeline: weld_porosity_classification
+    Extracting payload for pipeline: weld_porosity_classification
+    Found 1 payload(s) for pipeline: weld_porosity_classification
+    Payload for pipeline 'weld_porosity_classification'. Response: "b94a431e08be11f1a909473ed1791112"
 
-   ------------------------------------------
-   Processing instance: weld1 from SAMPLE_APP: weld-porosity
-   ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 1<HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/payload.json
-   Payload loaded successfully.
-   Starting first pipeline: weld_porosity_classification
-   Launching pipeline: weld_porosity_classification
-   Extracting payload for pipeline: weld_porosity_classification
-   Found 1 payload(s) for pipeline: weld_porosity_classification
-   Payload for pipeline 'weld_porosity_classification'  Response: "b366127e062e11f19d9a75f141417eac"
+    ------------------------------------------
+    Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
+    ------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
+    Running sample app: pallet-defect-detection
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/payload.json
+    Payload loaded successfully.
+    Starting first pipeline: pallet_defect_detection
+    Launching pipeline: pallet_defect_detection
+    Extracting payload for pipeline: pallet_defect_detection
+    Found 1 payload(s) for pipeline: pallet_defect_detection
+    Payload for pipeline 'pallet_defect_detection'. Response: "b954c96e08be11f186da8998a0e335d7"
    ```
 
 3. Access the WebRTC stream
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & weld1 set to 30445.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance weld1 has nginx port set to 30443, weld2 set to 30444 & pdd1 set to 30445.
 
    ```text
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/weld/             # Weld Porosity
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/worker_safety/    # Worker Safety Gear detection
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
    ```
 
 #### Start pipeline for a particular instance only
@@ -279,27 +277,27 @@
    Example Output:
 
    ```text
-   Instance name set to: pdd1
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Getting list of loaded pipelines...
-   Loaded pipelines:
-   [
-   {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
-               "format": "element-properties",
-               "name": "detection"
-           }
-           }
+    Instance name set to: weld1
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld1
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Getting list of loaded pipelines...
+    Loaded pipelines:
+    [
+    {
+        "description": "DL Streamer Pipeline Server pipeline",
+        "name": "user_defined_pipelines",
+        "parameters": {
+        "properties": {
+            "classification-properties": {
+            "element": {
+                "format": "element-properties",
+                "name": "classification"
+            }
+            }
            ...
    ]
    ```
@@ -307,27 +305,27 @@
 2. Start the pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p <PIPELINE_NAME>
    ```
 
    Output:
 
    ```text
-   Instance name set to: pdd2
-   Starting specified pipeline(s)...
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd2
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/payload.json
-   Payload loaded successfully.
-   Starting pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection'  Response: "f3a34cd5062f11f1ab8defacc0acb924"
+   Instance name set to: weld2
+    Starting specified pipeline(s)...
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld2
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/payload.json
+    Payload loaded successfully.
+    Starting pipeline: weld_porosity_classification_gpu
+    Launching pipeline: weld_porosity_classification_gpu
+    Extracting payload for pipeline: weld_porosity_classification_gpu
+    Found 1 payload(s) for pipeline: weld_porosity_classification_gpu
+    Payload for pipeline 'weld_porosity_classification_gpu'Response: "5e34d76308bf11f180cd473ed1791112"
    ```
 
 3. Access WebRTC stream:
@@ -343,27 +341,37 @@
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_list.sh -i <INSTANCE_NAME>
+   ./sample_list.sh helm -i <INSTANCE_NAME>
    ```
 
    Example Output:
 
    ```text
-   Environment variables loaded from .env
-   Running sample app: pallet-defect-detection
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loaded pipelines:
-   [
-       ...
-       {
-           "description": "DL Streamer Pipeline Server pipeline",
-           "name": "user_defined_pipelines",
-           "version": "pallet_defect_detection"
-       }
-       ...
+    Instance name set to: weld1
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld1
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Getting list of loaded pipelines...
+    Loaded pipelines:
+    [
+    {
+        "description": "DL Streamer Pipeline Server pipeline",
+        "name": "user_defined_pipelines",
+        "parameters": {
+        "properties": {
+            "classification-properties": {
+            "element": {
+                "format": "element-properties",
+                "name": "classification"
+            }
+            }
+           ...
    ]
    ```
+
 
 2. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
 
@@ -374,22 +382,22 @@
    Output:
 
    ```text
-   Instance name set to: pdd1
-   Custom payload file set to: custom_payload_corrected.json
-   Starting specified pipeline(s)...
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Loading payload from custom_payload_corrected.json
-   Payload loaded successfully.
-   Starting pipeline: pallet_defect_detection_gpu
-   Launching pipeline: pallet_defect_detection_gpu
-   Extracting payload for pipeline: pallet_defect_detection_gpu
-   Found 1 payload(s) for pipeline: pallet_defect_detection_gpu
-   Payload for pipeline 'pallet_defect_detection_gpu'. Response: "3bd097ec065b11f1a30d3101230a4967"
+   Instance name set to: weld1
+    Custom payload file set to: custom_payload.json
+    Starting specified pipeline(s)...
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld1
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Loading payload from custom_payload.json
+    Payload loaded successfully.
+    Starting pipeline: weld_porosity_classification
+    Launching pipeline: weld_porosity_classification
+    Extracting payload for pipeline: weld_porosity_classification
+    Found 1 payload(s) for pipeline: weld_porosity_classification
+    Payload for pipeline 'weld_porosity_classification'. Response: "ce19bc0908bf11f1a35265ddafc77c95"
    ```
 
 3. Access WebRTC stream:
@@ -415,74 +423,74 @@
    Output:
 
    ```text
-   No arguments provided. Fetching status for all pipeline instances.
-   Config file found. Fetching status for all instances defined in /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/config.yml
-   Processing instance: pdd1 from sample app: pallet-defect-detection
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   [
-   {
-       "avg_fps": 30.003179236553294,
-       "elapsed_time": 97.189706325531,
-       "id": "b34dc150062e11f1863a15371702ae06",
-       "message": "",
-       "start_time": 1770693307.7875352,
-       "state": "COMPLETED"
-   },
-   {
-       "avg_fps": 30.1419409008953,
-       "elapsed_time": 5.706332683563232,
-       "id": "2b51cf36063111f1b19b15371702ae06",
-       "message": "",
-       "start_time": 1770694367.6247275,
-       "state": "RUNNING"
-   }
-   ]
-   Processing instance: pdd2 from sample app: pallet-defect-detection
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   [
-   {
-       "avg_fps": 30.00630534767508,
-       "elapsed_time": 97.17957949638367,
-       "id": "b35b2a20062e11f1b059efacc0acb924",
-       "message": "",
-       "start_time": 1770693308.1801755,
-       "state": "COMPLETED"
-   },
-   {
-       "avg_fps": 30.075114986748083,
-       "elapsed_time": 5.586012363433838,
-       "id": "2b632863063111f18b4cefacc0acb924",
-       "message": "",
-       "start_time": 1770694367.766532,
-       "state": "RUNNING"
-   }
-   ]
-   Processing instance: weld1 from sample app: weld-porosity
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   [
-   {
-       "avg_fps": 30.004351657011913,
-       "elapsed_time": 22.463412046432495,
-       "id": "b366127e062e11f19d9a75f141417eac",
-       "message": "",
-       "start_time": 1770693307.6337888,
-       "state": "COMPLETED"
-   },
-   {
-       "avg_fps": 30.20726493152364,
-       "elapsed_time": 5.462261199951172,
-       "id": "2b71f4a2063111f1946d75f141417eac",
-       "message": "",
-       "start_time": 1770694367.907302,
-       "state": "RUNNING"
-   }
-   ]
+    No arguments provided. Fetching status for all pipeline instances.
+    Config file found. Fetching status for all instances defined in /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/config.yml
+    Processing instance: weld1 from sample app: weld-porosity
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    [
+    {
+        "avg_fps": 30.00142374484543,
+        "elapsed_time": 22.4656023979187,
+        "id": "b93bfeac08be11f1ad7e65ddafc77c95",
+        "message": "",
+        "start_time": 1770975067.2788885,
+        "state": "COMPLETED"
+    },
+    {
+        "avg_fps": 30.42922851463312,
+        "elapsed_time": 1.8074719905853271,
+        "id": "f76e7ccb08bf11f186f065ddafc77c95",
+        "message": "",
+        "start_time": 1770975600.9002106,
+        "state": "RUNNING"
+    }
+    ]
+    Processing instance: weld2 from sample app: weld-porosity
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    [
+    {
+        "avg_fps": 29.999166506145382,
+        "elapsed_time": 22.46729850769043,
+        "id": "b94a431e08be11f1a909473ed1791112",
+        "message": "",
+        "start_time": 1770975067.406253,
+        "state": "COMPLETED"
+    },
+    {
+        "avg_fps": 30.54844642721685,
+        "elapsed_time": 1.7349472045898438,
+        "id": "f7802bd908bf11f1a94d473ed1791112",
+        "message": "",
+        "start_time": 1770975600.9935298,
+        "state": "RUNNING"
+    }
+    ]
+    Processing instance: pdd1 from sample app: pallet-defect-detection
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
+    Running sample app: pallet-defect-detection
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    [
+    {
+        "avg_fps": 30.001247319522257,
+        "elapsed_time": 97.19596409797668,
+        "id": "b954c96e08be11f186da8998a0e335d7",
+        "message": "",
+        "start_time": 1770975067.9525275,
+        "state": "COMPLETED"
+    },
+    {
+        "avg_fps": 30.215796665327662,
+        "elapsed_time": 1.5223815441131592,
+        "id": "f78ddb9308bf11f189938998a0e335d7",
+        "message": "",
+        "start_time": 1770975601.231348,
+        "state": "RUNNING"
+    }
+    ]
    ```
 
 2. Check status of only a particular instance:
@@ -510,67 +518,67 @@
    Output
 
    ```text
-   No pipelines specified. Stopping all pipeline instances
+    No pipelines specified. Stopping all pipeline instances
 
-   -------------------------------------------
-   Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Instance list fetched successfully. HTTP Status Code: 200
-   Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 88065593063211f1a83815371702ae06
-   Pipeline instance with ID '88065593063211f1a83815371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.02882915265665,
-   "elapsed_time": 8.391932249069214,
-   "id": "88065593063211f1a83815371702ae06",
-   "message": "",
-   "start_time": 1770694952.6537187,
-   "state": "RUNNING"
-   }
+    -------------------------------------------
+    Processing instance: weld1 (SAMPLE_APP: weld-porosity)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Instance list fetched successfully. HTTP Status Code: 200
+    Found 1 running pipeline instances.
+    Stopping pipeline instance with ID: 9838a5fc08c011f1952765ddafc77c95
+    Pipeline instance with ID '9838a5fc08c011f1952765ddafc77c95' stopped successfully. Response: {
+    "avg_fps": 30.039388029430235,
+    "elapsed_time": 6.924229145050049,
+    "id": "9838a5fc08c011f1952765ddafc77c95",
+    "message": "",
+    "start_time": 1770975870.6583247,
+    "state": "RUNNING"
+    }
 
-   -------------------------------------------
-   Processing instance: pdd2 (SAMPLE_APP: pallet-defect-detection)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Instance list fetched successfully. HTTP Status Code: 200
-   Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 881ff32a063211f1b67defacc0acb924
-   Pipeline instance with ID '881ff32a063211f1b67defacc0acb924' stopped successfully. Response: {
-   "avg_fps": 30.069598458700824,
-   "elapsed_time": 8.380553007125854,
-   "id": "881ff32a063211f1b67defacc0acb924",
-   "message": "",
-   "start_time": 1770694952.8342986,
-   "state": "RUNNING"
-   }
+    -------------------------------------------
+    Processing instance: weld2 (SAMPLE_APP: weld-porosity)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Instance list fetched successfully. HTTP Status Code: 200
+    Found 1 running pipeline instances.
+    Stopping pipeline instance with ID: 984bd77408c011f18784473ed1791112
+    Pipeline instance with ID '984bd77408c011f18784473ed1791112' stopped successfully. Response: {
+    "avg_fps": 30.069113014911213,
+    "elapsed_time": 6.9173901081085205,
+    "id": "984bd77408c011f18784473ed1791112",
+    "message": "",
+    "start_time": 1770975870.7897067,
+    "state": "RUNNING"
+    }
 
-   -------------------------------------------
-   Processing instance: weld1 (SAMPLE_APP: weld-porosity)
-   -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
-   Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Instance list fetched successfully. HTTP Status Code: 200
-   Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 88318dd1063211f1bd9675f141417eac
-   Pipeline instance with ID '88318dd1063211f1bd9675f141417eac' stopped successfully. Response: {
-   "avg_fps": 30.144217405495226,
-   "elapsed_time": 8.32663083076477,
-   "id": "88318dd1063211f1bd9675f141417eac",
-   "message": "",
-   "start_time": 1770694953.002784,
-   "state": "RUNNING"
-   }
+    -------------------------------------------
+    Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
+    -------------------------------------------
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
+    Running sample app: pallet-defect-detection
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Instance list fetched successfully. HTTP Status Code: 200
+    Found 1 running pipeline instances.
+    Stopping pipeline instance with ID: 9859e83508c011f197ba8998a0e335d7
+    Pipeline instance with ID '9859e83508c011f197ba8998a0e335d7' stopped successfully. Response: {
+    "avg_fps": 30.087479509211562,
+    "elapsed_time": 6.913166284561157,
+    "id": "9859e83508c011f197ba8998a0e335d7",
+    "message": "",
+    "start_time": 1770975870.8848493,
+    "state": "RUNNING"
+    }
    ```
 
 2. Stop pipelines of given instance:
@@ -582,23 +590,23 @@
    Output:
 
    ```text
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Instance list fetched successfully. HTTP Status Code: 200
-   Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: f49ee13b063211f18ae815371702ae06
-   Pipeline instance with ID 'f49ee13b063211f18ae815371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.113055800460913,
-   "elapsed_time": 9.397908210754395,
-   "id": "f49ee13b063211f18ae815371702ae06",
-   "message": "",
-   "start_time": 1770695134.8435106,
-   "state": "RUNNING"
-   }
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld2
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Instance list fetched successfully. HTTP Status Code: 200
+    Found 1 running pipeline instances.
+    Stopping pipeline instance with ID: d39e02a808c011f1814e473ed1791112
+    Pipeline instance with ID 'd39e02a808c011f1814e473ed1791112' stopped successfully. Response: {
+    "avg_fps": 30.04035470517983,
+    "elapsed_time": 15.945207834243774,
+    "id": "d39e02a808c011f1814e473ed1791112",
+    "message": "",
+    "start_time": 1770975970.288273,
+    "state": "RUNNING"
+    }
    ```
 
 3. Stop pipelines of an instance with a given instance_id:
@@ -610,21 +618,21 @@
    Output:
 
    ```text
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-   Checking status of dlstreamer-pipeline-server...
-   Server reachable. HTTP Status Code: 200
-   Stopping pipeline instance with ID: 4562a97f063311f19f4d15371702ae06
-   Pipeline instance with ID '4562a97f063311f19f4d15371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.059924104470113,
-   "elapsed_time": 15.868299961090088,
-   "id": "4562a97f063311f19f4d15371702ae06",
-   "message": "",
-   "start_time": 1770695270.3738744,
-   "state": "RUNNING"
-   }
+    Found SAMPLE_APP: weld-porosity for INSTANCE_NAME: weld2
+    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld2/.env
+    Running sample app: weld-porosity
+    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+    Checking status of dlstreamer-pipeline-server...
+    Server reachable. HTTP Status Code: 200
+    Stopping pipeline instance with ID: f3ba8df108c011f1bbb7473ed1791112
+    Pipeline instance with ID 'f3ba8df108c011f1bbb7473ed1791112' stopped successfully. Response: {
+    "avg_fps": 30.066449153101424,
+    "elapsed_time": 15.432467937469482,
+    "id": "f3ba8df108c011f1bbb7473ed1791112",
+    "message": "",
+    "start_time": 1770976024.176582,
+    "state": "RUNNING"
+    }
    ```
 
 ## Uninstall Helm Charts
@@ -648,13 +656,13 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+    # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.
 
-   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+    kubectl cp resources/weld-porosity/videos/welding.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+    kubectl cp resources/weld-porosity/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
 4. Install the package `boto3` in your python environment if not installed.
@@ -708,27 +716,27 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    python3 create_bucket_<INSTANCE_NAME>.py
    ```
 
-6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pallet_defect_detection.  Please adjust the source path of models and videos appropriately for other sample applications.
+6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for weld-porosity.  Please adjust the source path of models and videos appropriately for other sample applications.
 
    ```sh
-   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
-       "source": {
-           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-           "type": "uri"
-       },
-       "destination": {
-           "frame": {
-               "type": "webrtc",
-               "peer-id": "pdds3"
-           }
-       },
-       "parameters": {
-           "detection-properties": {
-               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
-               "device": "CPU"
-           }
-       }
-   }'
+    curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
+        "source": {
+            "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
+            "type": "uri"
+        },
+        "destination": {
+            "frame": {
+                "type": "webrtc",
+                "peer-id": "welds3"
+            }
+        },
+        "parameters": {
+            "classification-properties": {
+                "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
+                "device": "CPU"
+            }
+        }
+    }'
    ```
 
 7. Go to MinIO console on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
@@ -740,3 +748,115 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+
+## MLOps using Model Download
+
+1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+
+2. Install the helm chart
+
+   ```sh
+   ./run.sh helm_install
+   ```
+
+3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+
+   ```sh
+    # Below is an example for Weld Porosity Classification. Please adjust the source path of models and videos appropriately for other sample applications.
+
+    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+    kubectl cp resources/weld-porosity/videos/welding.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+    kubectl cp resources/weld-porosity/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline. 
+
+   ```json
+    [
+        {
+            "pipeline": "weld_porosity_classification_mlops",
+            "payload": {
+                "destination": {
+                    "frame": {
+                        "type": "webrtc",
+                        "peer-id": "weld"
+                    }
+                },
+                "parameters": {
+                    "classification-properties": {
+                        "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+   ```
+
+5. Start the pipeline with the above payload. 
+
+   ```sh
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p weld_porosity_classification_mlops
+   ```
+   Note the instance-id.
+
+6. Download and prepare the model. Below is an example for downloading and preparing model for weld-porosity-classification. Please modify MODEL_URL for the other sample applications.
+   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   ```sh
+    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/weld_porosity_classification.zip'
+
+    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
+
+    unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
+   ```
+
+7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
+
+   ```sh
+    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+   >NOTE- If there are multiple sample_apps in config.yml, repeat steps 6 and 7 for each sample app and instance.
+
+
+8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+   ```sh
+   curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
+   ```
+
+9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
+   
+   Below is an example for weld-porosity-classification. Please modify the payload for other sample applications.
+
+   ```json
+    [
+        {
+            "pipeline": "weld_porosity_classification_mlops",
+            "payload": {
+                "destination": {
+                    "frame": {
+                        "type": "webrtc",
+                        "peer-id": "weld"
+                    }
+                },
+                "parameters": {
+                    "classification-properties": {
+                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Classification/model/model.xml",
+                        "device": "CPU"
+                    }
+                }
+            }
+        }
+    ]
+    ```
+
+10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+
+
+## Troubleshooting
+
+- [Troubleshooting Guide](../troubleshooting.md)
