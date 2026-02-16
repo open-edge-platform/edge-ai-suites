@@ -31,17 +31,16 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
     Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
 4. **Configure Environment**:
-   Set the required environment variable:
-     ```bash
-     # Required: Video stream source (RTSP URL or local file path)
-     export RTSP_URL=rtsp://<camera-ip>:<port>/stream
-     ```
    
    **Optional environment variables:**
    ```bash
-   # Use a different VLM model
-   export OVMS_SOURCE_MODEL=<model-repo>
-   export MODEL_NAME=<model-name>
+   # Optional: Pre-configure a video stream (can also add streams via UI)
+   export RTSP_URL=rtsp://<camera-ip>:<port>/stream
+   
+   # Use a different VLM model (default: Phi-3.5-vision-instruct-int4-ov)
+   # Example: Use InternVL2-2B model instead
+   export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
+   export MODEL_NAME=InternVL2-2B
    
    # Change application port (default: 9000)
    export PORT=9001
@@ -49,6 +48,8 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
    # Enable debug logging
    export LOG_LEVEL=DEBUG
    ```
+   
+   **Note:** All environment variables are optional. Streams can be added dynamically through the web UI after startup.
 
 5. **Start the Application**:
    Run the following command from the project root:
