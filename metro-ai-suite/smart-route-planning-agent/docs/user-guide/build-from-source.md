@@ -1,9 +1,9 @@
 # How to Build from Source
 
-This guide provides step-by-step instructions for building Smart Route Planning Agent from source.
+This section shows how to build the Smart Route Planning Agent from source.
 
 ## Building the Images
-To build the Docker image for `Smart Route Planning Agent` application, follow these steps:
+To build the Docker image of the Smart Route Planning Agent:
 
 1. Ensure you are in the project directory:
      ```bash
@@ -16,7 +16,7 @@ To build the Docker image for `Smart Route Planning Agent` application, follow t
      ```
 
 ## Run the Application
-- Run the application using the following command:
+- Run the application:
      ```bash
      docker compose up
      ```
@@ -26,13 +26,13 @@ To build the Docker image for `Smart Route Planning Agent` application, follow t
      docker ps
      ```
 
-- Access the application by opening your web browser and navigate to `http://<host-ip>:7864` to view the dashboard UI.
+- Access the application by opening your web browser and navigate to `http://<host-ip>:7864`, to view the dashboard UI.
 
-- [OPTIONAL] To force a clean rebuild run the following:
+- [OPTIONAL] To force a clean rebuild, run the following:
      ```bash
      docker compose up --build
      ```
 
 
-Notes:
+Note:
 - Ensure your `.env` is configured, especially `HOST_IP`.
