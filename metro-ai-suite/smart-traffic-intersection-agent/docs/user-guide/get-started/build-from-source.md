@@ -13,8 +13,8 @@ This section shows how to build the Smart Traffic Intersection Agent from source
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
-cd edge-ai-libraries/microservices/scene-intelligence
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
 ### 2. Build the Docker Image
@@ -22,7 +22,7 @@ cd edge-ai-libraries/microservices/scene-intelligence
 Build the Traffic Intersection Agent:
 
 ```bash
-docker compose -f docker/compose.yaml build traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml build traffic-intersection-agent
 ```
 
 ### 3. Run the Service
@@ -32,7 +32,7 @@ docker compose -f docker/compose.yaml build traffic-intersection-agent
 source setup.sh --run
 
 # Or manually with Docker Compose
-docker compose -f docker/compose.yaml up traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml up traffic-intersection-agent
 ```
 
 ### 4. Verify the Build
@@ -45,7 +45,7 @@ curl http://localhost:8081/health
 curl http://localhost:7860/
 
 # View logs
-docker compose -f docker/compose.yaml logs traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml logs traffic-intersection-agent
 ```
 
 ### Verify API Endpoints
@@ -64,13 +64,13 @@ After you have edited the code, rebuild:
 
 ```bash
 # Rebuild the image
-docker compose -f docker/compose.yaml build traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml build traffic-intersection-agent
 
 # Restart the service
-docker compose -f docker/compose.yaml up -d traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml up -d traffic-intersection-agent
 
 # View startup logs
-docker compose -f docker/compose.yaml logs traffic-intersection-agent
+docker compose -f docker/agent-compose.yaml logs traffic-intersection-agent
 ```
 
 ## Learn More
