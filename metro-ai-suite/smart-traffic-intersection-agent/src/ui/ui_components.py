@@ -8,8 +8,15 @@ import io
 from PIL import Image
 from typing import Any, Optional, List, Tuple
 
-from models import MonitoringData
-from config import Config
+try:
+    from ui.models import MonitoringData
+except (ModuleNotFoundError, ImportError):
+    from models import MonitoringData
+
+try:
+    from ui.config import Config
+except (ModuleNotFoundError, ImportError):
+    from config import Config
 
 
 class ThemeColors:

@@ -202,12 +202,22 @@ class WeatherService:
                 
                 logger.debug("Forecast API response successful", status_code=forecast_resp.status_code)
 
-                # Step 4: Process the first forecast period (most current hour) and format according to specified structure
-                first_period = forecast_data["properties"]["periods"][0]
-                logger.info("First forecast period data", period=first_period)
+                # Step 4: Find the current hour's forecast period
+                periods = forecast_data["properties"]["periods"]
+                now = datetime.now(timezone.utc)
+                current_period = periods[0]  # Default to first period
+                
+                for period in periods:
+                    start_time = datetime.fromisoformat(period["startTime"].replace('Z', '+00:00'))
+                    end_time = datetime.fromisoformat(period["endTime"].replace('Z', '+00:00'))
+                    if start_time <= now <= end_time:
+                        current_period = period
+                        break
+                
+                logger.info("Current forecast period data", period=current_period)
 
                 # Process weather data into WeatherData object
-                weather_data = self._process_weather_data(first_period)
+                weather_data = self._process_weather_data(current_period)
 
                 logger.debug("Weather data fetched successfully", 
                            conditions=weather_data.detailed_forecast,
