@@ -24,9 +24,9 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 
 ## Validation
 
-- Ensure all required software are installed and configured before proceeding to [Get Started](./get-started.md).
+- Ensure all required software is installed and configured before proceeding to [Get Started](../get-started.md).
 
 ## Learn More
 
-- [Overview](./index.md)
-- [API Reference](./api-reference.md)
+- [Overview](../index.md)
+- [API Reference](../api-reference.md)

@@ -165,3 +165,39 @@ async def metrics_client():
 # Run the client
 asyncio.run(metrics_client())
 ```
+
+## Testing
+
+The project uses **pytest** for unit testing. Tests live in the `tests/` directory.
+
+### Install Test Dependencies
+
+```bash
+uv sync --group test
+```
+
+### Run All Tests
+
+```bash
+uv run pytest
+```
+
+### Run a Specific Test File
+
+```bash
+uv run pytest tests/test_config.py
+```
+
+### Run Tests with Coverage Report
+
+```bash
+uv run pytest --cov=app --cov-report=term-missing
+```
+
+### Generate an HTML Coverage Report
+
+```bash
+uv run pytest --cov=app --cov-report=html
+```
+
+Open `htmlcov/index.html` in a browser to view the detailed coverage report.

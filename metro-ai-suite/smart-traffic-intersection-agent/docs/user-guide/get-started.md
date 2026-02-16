@@ -1,6 +1,8 @@
 # Get Started
 
-The **Smart Traffic Intersection Agent (STIA)** provides analytics that include, but not limited to, real-time intersection, directional traffic density, and VLM-powered traffic. This section shows you how to:
+The **Smart Traffic Intersection Agent (STIA)** provides analytics that include real-time
+intersection, directional traffic density, and VLM-powered traffic, among others. This section
+shows you how to:
 
 - Set up the agent using the automated setup script for quick deployment.
 - Run predefined tasks to explore the agent's functionality.
@@ -10,14 +12,19 @@ The **Smart Traffic Intersection Agent (STIA)** provides analytics that include,
 
 Before you begin, ensure the following:
 
-- **System requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **System requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-- **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for traffic data streaming, or use the included broker.
-- **Docker commands and terminal usage**: You are familiar with Docker commands and using the terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
+- **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for
+traffic data streaming, or use the included broker.
+- **Docker commands and terminal usage**: You are familiar with Docker commands and using the
+terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for
+an introduction.
 
 ## Quick Start with Setup Script
 
-Intel recommends using the automated setup script that handles environment configuration, submodule and dependencies setup, secrets generation, building, and deployment of the Smart Traffic Intersection Agent.
+Intel recommends using the automated setup script that handles environment configuration,
+submodule and dependencies setup, secrets generation, building, and deployment of the Smart
+Traffic Intersection Agent.
 
 ### 1. Clone the Repository
 
@@ -57,9 +64,11 @@ Intersection Agent to simulate multiple intersections on the same development ma
 The easiest way to do this is to clone and set up the application `n times` in n different
 locations on the same machine for `n` required instances.
 
-> **Note:** In production environments, only a single Traffic Intersection Agent instance is deployed on a given node.
+> **Note:** In production environments, only a single Traffic Intersection Agent instance is
+> deployed on a given node.
 
-> **Intel's recommendation:** The number of instances you can run on a single machine depends on available resources. Systems with higher resources can support more instances.
+> **Intel's recommendation:** The number of instances you can run on a single machine depends
+> on available resources. Systems with higher resources can support more instances.
 
 ### Set up Instance #1
 
@@ -131,7 +140,8 @@ The following is a sample value for instance #2 deployment configuration:
 source setup.sh --setup
 ```
 
-> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random
+> ephemeral ports and avoid port conflicts.
 
 Ensure each instance has their `deployment_instance.json` updated with:
 
@@ -142,16 +152,19 @@ optional. If not specified, an ephemeral port is picked automatically.
 
 ### Deploying More Instances
 
-There are functionally no limits on the number of instances that you can spin up to simulate a
-multi-node setup using the provided script. However, the machine on which the multiple
+There are functionally no limits on the number of instances that you can spin up to simulate
+a multi-node setup using the provided script. However, the machine on which the multiple
 deployments are deployed to, will likely start throttling these instances if resource limits
 are reached. Hence, deploy new instances only if you have the required resource bandwidth.
 
-To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in [Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
+To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in
+[Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
 
 ## Advanced Environment Configuration
 
-For advanced users who need more control over the configuration, you can configure the following environment variables before running the setup script to override the default behaviour:
+For advanced users who need more control over the configuration, you can configure the
+following environment variables before running the setup script to override the default
+behaviour:
 
 ```bash
 # Set log level to debug to help in debugging issues, default value is info
@@ -201,3 +214,13 @@ empty values for the `agent_backend_port` and `agent_ui_port` fields:
 Intel recommends to keep these values empty and let the Docker engine use ephemeral ports.
 However, if you need to provide an explicit port, ensure port values for all instances are
 unique. Additionally, ensure no other external services are running on these ports.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/build-from-source
+
+:::
+hide_directive-->
