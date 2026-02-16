@@ -18,7 +18,7 @@ COPY app.py ./app.py
 COPY start.sh /start.sh
 RUN chmod +x /start.sh
 
-EXPOSE 9000
+EXPOSE 9001
 
 # Run the existing metrics collectors (via supervisord in the base image)
 # and the FastAPI app in a single container.

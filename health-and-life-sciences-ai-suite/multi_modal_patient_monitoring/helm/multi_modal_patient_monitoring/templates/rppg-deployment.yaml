@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rppg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rppg
+  template:
+    metadata:
+      labels:
+        app: rppg
+    spec:
+      initContainers:
+        - name: copy-models
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
+          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - cp -r /opt/assets/models/* /models/
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      containers:
+        - name: rppg
+          image: "{{ .Values.rppg.image.repository }}/{{ .Values.rppg.image.name }}:{{ .Values.rppg.image.tag }}"
+          imagePullPolicy: {{ .Values.rppg.image.pullPolicy }}
+          securityContext:
+            privileged: true
+          envFrom:
+            - configMapRef:
+                name: device-config
+          ports:
+            - containerPort: 5004
+            - containerPort: 8084
+          env:
+            - name: AGGREGATOR_HOST
+              value: aggregator
+            - name: AGGREGATOR_PORT
+              value: "50051"
+            # Ensure in-cluster gRPC to aggregator bypasses HTTP proxies
+            - name: NO_PROXY
+              value: "aggregator,localhost,127.0.0.1"
+            - name: no_proxy
+              value: "aggregator,localhost,127.0.0.1"
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: dri
+              mountPath: /dev/dri
+            - name: dev
+              mountPath: /dev
+
+      volumes:
+        - name: models
+          emptyDir: {}
+        - name: dri
+          hostPath:
+            path: /dev/dri
+        - name: dev
+          hostPath:
+            path: /dev
