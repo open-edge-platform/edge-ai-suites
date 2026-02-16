@@ -235,36 +235,36 @@ print_all_service_host_endpoints() {
             *dlstreamer-pipeline-server*)
                 SERVICE_NAME="DLStreamer Pipeline Server"
                 PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}/pipelines"
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}/pipelines"
                 ;;
             *grafana*)
                 SERVICE_NAME="Grafana Dashboard"
                 PORT=$(docker port "$CONTAINER_NAME" 3000 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *node-red*)
                 SERVICE_NAME="Node-RED"
                 PORT=$(docker port "$CONTAINER_NAME" 1880 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME at -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *web*)
                 SERVICE_NAME="Scenescape Web UI"
                 PORT=$(docker port "$CONTAINER_NAME" 443 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME at -> https://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME -> https://$HOST_IP:$PORT${NC}"
                 ;;
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
                 PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
-                echo -e "${CYAN}$BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+                echo -e "${BLUE}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
                 PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
-                echo -e "${CYAN}$UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${BLUE}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *vlm*)
                 SERVICE_NAME="VLM OpenVINO Serving API"
                 PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
-                echo -e "${CYAN}$SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
                 ;;
             *)
                 SERVICE_NAME="Unknown Service"

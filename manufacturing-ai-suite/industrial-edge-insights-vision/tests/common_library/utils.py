@@ -69,8 +69,7 @@ class utils:
                 "MTX_WEBRTCICESERVERS2_0_PASSWORD": "test1234",
                 "MTX_WEBRTCICESERVERS2_0_USERNAME": "test1234", 
                 "MINIO_ACCESS_KEY": "minioadmin", 
-                "MINIO_SECRET_KEY": "minioadmin", 
-                "MR_PSQL_PASSWORD": "test1234"
+                "MINIO_SECRET_KEY": "minioadmin"
             })
             
             # Run setup and start services
@@ -454,7 +453,7 @@ class utils:
             with open("helm/values.yaml", 'r') as file:
                 values_data = yaml.safe_load(file)
             env_updates = {
-                "HOST_IP": hostIP, "MINIO_ACCESS_KEY": "minioadmin", "MINIO_SECRET_KEY": "minioadmin", "POSTGRES_PASSWORD": "test1234", "SAMPLE_APP": sample_app_name
+                "HOST_IP": hostIP, "MINIO_ACCESS_KEY": "minioadmin", "MINIO_SECRET_KEY": "minioadmin", "SAMPLE_APP": sample_app_name
             }
             values_data['env'].update(env_updates)
             if 'webrtcturnserver' not in values_data:

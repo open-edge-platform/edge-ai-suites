@@ -9,4 +9,7 @@
 
 ## Support Contact
 
-For further assistance, please contact the **Metro Vision AI Support Team**.
+If you run into an unexpected problem or need help with the application, you can
+browse existing issues or
+[create a new one](https://github.com/open-edge-platform/edge-ai-suites/issues)
+in the GitHub issue tracker.

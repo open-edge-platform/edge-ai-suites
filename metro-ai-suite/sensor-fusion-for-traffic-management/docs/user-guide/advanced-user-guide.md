@@ -2,8 +2,6 @@
 
 This document introduces an Intel® software reference implementation (SW RI) for Metro AI Suite Sensor Fusion in Traffic Management. It combines camera and lidar data—referred to as ISF "C+L" or AIO "C+L".
 
-The internal project code name is **Garnet Park**.
-
 As shown in Fig.1, the end-to-end pipeline includes the following major blocks (workloads):
 
 -   Loading datasets and converting formats
@@ -20,8 +18,8 @@ All these tasks run on single Intel SoC processor which provides all the require
 <center> Figure 1. E2E SW pipelines of sensor fusion C+L(Camera+Lidar).</center>
 
 For prerequisites and system requirements, see
-[prerequisites.md](./get-started-guide/prerequisites.md) and
-[system-req.md](./get-started-guide/system-req.md).
+[Prerequisites](./get-started-guide/prerequisites.md) and
+[System Requirements](./get-started-guide/system-req.md).
 
 ## Architecture Overview
 
@@ -33,8 +31,10 @@ There are two steps required for running the sensor fusion application:
 - Start AI Inference service, more details can be found at [Service Start ](#service-start)
 - Run the application entry program, more details can be found at [Entry Program](#entry-program)
 
-Besides, you can test each component (without display) following the guides at [2C+1L Unit Tests](#2c+1l-unit-tests), [4C+2L Unit Tests](#4c+2l-unit-tests), [12C+2L Unit Tests](#12c+2l-unit-tests), [8C+4L Unit Tests](#8c+4l-unit-tests), [12C+4L Unit Tests](#12c+4l-unit-tests)
-
+Additionally, you can test each component (without display) following the guides at
+[2C+1L Unit Tests](#2c1l-unit-tests), [4C+2L Unit Tests](#4c2l-unit-tests),
+[12C+2L Unit Tests](#12c2l-unit-tests), [8C+4L Unit Tests](#8c4l-unit-tests),
+[12C+4L Unit Tests](#12c4l-unit-tests).
 
 ### Resources
 - Local File Pipeline for Media pipeline
@@ -240,7 +240,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    ![Display type: media_fusion](_assets/2C1L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/2C1L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -251,7 +251,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
     ```
 
-    ![Display type: media_lidar](_assets/2C1L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/2C1L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -262,7 +262,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
     ```
 
-    ![Display type: media](_assets/2C1L-Display-type-media.png)
+    ![Display type: media](./_assets/2C1L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -273,7 +273,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
     ```
 
-    ![Display type: lidar](_assets/2C1L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/2C1L-Display-type-lidar.png)
 
 #### 2C+1L Unit Tests
 
@@ -331,7 +331,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
     ```
 
-    ![Display type: media_fusion](_assets/4C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/4C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -342,7 +342,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
     ```
 
-    ![Display type: media_lidar](_assets/4C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/4C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -353,7 +353,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
     ```
 
-    ![Display type: media](_assets/4C2L-Display-type-media.png)
+    ![Display type: media](./_assets/4C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -364,7 +364,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
     ```
 
-    ![Display type: lidar](_assets/4C2L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/4C2L-Display-type-lidar.png)
 
 #### 4C+2L Unit Tests
 
@@ -424,7 +424,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
     ```
 
-    ![Display type: media_fusion](_assets/12C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/12C2L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -435,7 +435,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
     ```
 
-    ![Display type: media_lidar](_assets/12C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/12C2L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -446,7 +446,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
     ```
 
-    ![Display type: media](_assets/12C2L-Display-type-media.png)
+    ![Display type: media](./_assets/12C2L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -457,7 +457,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
     ```
 
-    ![Display type: lidar](_assets/12C2L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/12C2L-Display-type-lidar.png)
 
 #### 12C+2L Unit Tests
 
@@ -517,7 +517,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
     ```
 
-    ![Display type: media_fusion](_assets/8C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/8C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -528,7 +528,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
     ```
 
-    ![Display type: media_lidar](_assets/8C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/8C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -539,7 +539,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
     ```
 
-    ![Display type: media](_assets/8C4L-Display-type-media.png)
+    ![Display type: media](./_assets/8C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -550,7 +550,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
     ```
 
-    ![Display type: lidar](_assets/8C4L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/8C4L-Display-type-lidar.png)
 
 #### 8C+4L Unit Tests
 
@@ -608,7 +608,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
     ```
 
-    ![Display type: media_fusion](_assets/12C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/12C4L-Display-type-media-fusion.png)
 
 - `media_lidar` display type
 
@@ -619,7 +619,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
     ```
 
-    ![Display type: media_lidar](_assets/12C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/12C4L-Display-type-media-lidar.png)
 
 - `media` display type
 
@@ -630,7 +630,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
     ```
 
-    ![Display type: media](_assets/12C4L-Display-type-media.png)
+    ![Display type: media](./_assets/12C4L-Display-type-media.png)
 
 - `lidar` display type
 
@@ -641,7 +641,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
     ```
 
-    ![Display type: lidar](_assets/12C4L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/12C4L-Display-type-lidar.png)
 
 #### 12C+4L Unit Tests
 
@@ -1071,7 +1071,7 @@ docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 
 ### Running inside docker
 
-Enter the project directory `/home/tfcc/metro` then following the guides [sec 4. How it works](#4-how-it-works) to run sensor fusion application.
+Follow the guide from [Get Started](./get-started-guide.md) to run sensor fusion application.
 
 ## Code References
 
@@ -1079,5 +1079,3 @@ Some of the code is referenced from the following projects:
 - [IGT GPU Tools](https://gitlab.freedesktop.org/drm/igt-gpu-tools) (MIT License)
 - [Intel DL Streamer](https://github.com/dlstreamer/dlstreamer) (MIT License)
 - [Open Model Zoo](https://github.com/openvinotoolkit/open_model_zoo) (Apache-2.0 License)
-
-
