@@ -10,7 +10,7 @@ Live Video Search depends on **VSS Search** and **Smart NVR** images. Follow the
 ## Build Smart NVR Images
 
 - Smart NVR build guide:
- [How to Build from Source](../../../../smart-nvr/docs/user-guide/how-to-build-from-source.md)
+ [How to Build from Source](../../../../smart-nvr/docs/user-guide/get-started/build-from-source.md)
 
 ## Match Image Tags
 
