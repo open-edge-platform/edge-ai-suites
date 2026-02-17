@@ -22,5 +22,6 @@
   - **Impact**: Improved service reliability and diagnostic capabilities
 
 ### Known Issues
+
 - Helm is not supported
 - This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
