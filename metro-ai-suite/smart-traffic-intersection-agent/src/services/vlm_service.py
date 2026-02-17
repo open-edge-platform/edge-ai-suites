@@ -558,13 +558,13 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                     if isinstance(weather_type, str):
                         weather_type = WeatherType(weather_type)
                     
-                    CRITICAL_WEATHER = {WeatherType.FIRES, WeatherType.STORM, WeatherType.FLOOD}
+                    CRITICAL_WEATHER = {}
                     alert_level = AlertLevel.CRITICAL if weather_type in CRITICAL_WEATHER else AlertLevel.WARNING
                     
                     alert = VLMAlert(
                         alert_type=AlertType.WEATHER_RELATED,
                         level=alert_level,
-                        description=self.weather_service.get_current_weather_description(weather_type),
+                        description=self.weather_service.get_current_weather_description(),
                         weather_related=weather_impact
                     )
                     alerts.append(alert)
