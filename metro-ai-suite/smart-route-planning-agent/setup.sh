@@ -189,9 +189,9 @@ case "$1" in
         echo -e "${GREEN}Images removed.${NC}"
 
         # Remove project networks
-        echo -e "${YELLOW}Removing networks...${NC}"
-        docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
-        echo -e "${GREEN}Networks removed.${NC}"
+        #echo -e "${YELLOW}Removing networks...${NC}"
+        #docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
+        #echo -e "${GREEN}Networks removed.${NC}"
 
         echo -e "${GREEN}Clean up completed successfully. All containers, volumes, images, networks, and related resources have been removed.${NC}"
         ;;
