@@ -3,13 +3,7 @@ FROM python:3.12-slim
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG no_proxy
 
-ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
-    https_proxy=${https_proxy:-$HTTPS_PROXY} \
-    no_proxy=${no_proxy:-$NO_PROXY}
 
 # GPU driver setup
 ARG INSTALL_DRIVER_VERSION="25.31.34666"

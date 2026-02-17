@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mdpnp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mdpnp
+  template:
+    metadata:
+      labels:
+        app: mdpnp
+    spec:
+      containers:
+        - name: mdpnp
+          image: "{{ .Values.mdpnp.image.repository }}/{{ .Values.mdpnp.image.name }}:{{ .Values.mdpnp.image.tag }}"
+          imagePullPolicy: {{ .Values.mdpnp.image.pullPolicy }}

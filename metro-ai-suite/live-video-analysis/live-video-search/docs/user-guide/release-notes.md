@@ -2,8 +2,8 @@
 
 ## Current Release
 
-**Version**: 0.2.0 \
-**Release Date**: 23 Jan 2026  
+**Version**: 1.0.0-rc1 \
+**Release Date**: 17 Feb 2026  
 
 **Features**:
 
