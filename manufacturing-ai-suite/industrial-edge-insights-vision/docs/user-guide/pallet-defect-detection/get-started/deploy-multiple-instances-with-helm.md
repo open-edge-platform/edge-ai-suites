@@ -126,7 +126,7 @@
    -------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
    Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30443
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
@@ -150,7 +150,7 @@
    -------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
    Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30444
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
@@ -174,7 +174,7 @@
    -------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
    Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 10.223.23.150:30445
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
@@ -307,7 +307,7 @@
 2. Start the pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p <PIPELINE_NAME>
    ```
 
    Output:
@@ -343,7 +343,7 @@
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_list.sh -i <INSTANCE_NAME>
+   ./sample_list.sh helm -i <INSTANCE_NAME>
    ```
 
     Example Output:
@@ -375,7 +375,7 @@
 
    ```text
    Instance name set to: pdd1
-   Custom payload file set to: custom_payload_corrected.json
+   Custom payload file set to: custom_payload.json
    Starting specified pipeline(s)...
    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
@@ -383,7 +383,7 @@
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from custom_payload_corrected.json
+   Loading payload from custom_payload.json
    Payload loaded successfully.
    Starting pipeline: pallet_defect_detection_gpu
    Launching pipeline: pallet_defect_detection_gpu
@@ -740,3 +740,127 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+
+## MLOps using Model Download
+
+1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+
+2. Install the helm chart
+
+   ```sh
+   ./run.sh helm_install
+   ```
+
+3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+
+   ```sh
+   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline. 
+   
+   Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
+
+   ```json
+   [
+       {
+           "pipeline": "pallet_defect_detection_mlops",
+           "payload":{
+               "source": {
+                   "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+                   "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                   "type": "webrtc",
+                   "peer-id": "pdd"
+               }
+               },
+               "parameters": {
+                   "detection-properties": {
+                       "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+                       "device": "CPU"
+                   }
+               }
+           }
+       }
+   ]
+   ```
+
+5. Start the pipeline with the above payload. 
+
+   Below is an example for starting an instance for pallet-defect-detection:
+
+   ```sh
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p pallet_defect_detection_mlops
+   ```
+   Note the instance-id.
+
+6. Download and prepare the model. Below is an example for downloading and preparing model for pallet-defect-detection. Please modify MODEL_URL for the other sample applications.
+   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   ```sh
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
+
+   curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
+
+   unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
+   ```
+
+7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
+
+   ```sh
+   
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+   >NOTE- If there are multiple sample_apps in config.yml, repeat steps 6 and 7 for each sample app and instance.
+
+
+8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+   ```sh
+   curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
+   ```
+
+9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
+   
+   Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
+
+   ```json
+   [
+       {
+           "pipeline": "pallet_defect_detection_mlops",
+           "payload":{
+               "source": {
+                   "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
+                   "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                   "type": "webrtc",
+                   "peer-id": "pdd"
+               }
+               },
+               "parameters": {
+                   "detection-properties": {
+                       "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
+                       "device": "CPU"
+                   }
+               }
+           }
+       }
+   ]
+
+10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+
+
+## Troubleshooting
+
+- [Troubleshooting Guide](../troubleshooting.md)

@@ -57,12 +57,6 @@ const WorkloadStatusAccordion = () => {
                       {deviceInfo.configured_device}
                     </span>
                   </p>
-                  <p>
-                    <strong>Details:</strong>{' '}
-                    <span className="value">
-                      {deviceInfo.resolved_detail}
-                    </span>
-                  </p>
                 </>
               ) : (
                 <p className="muted">No device information available</p>

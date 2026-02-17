@@ -7,7 +7,8 @@ import {
   uploadAudio, 
   createSession,
   startMonitoring,  
-  stopMonitoring    
+  stopMonitoring,    
+  startPipelineMonitoring
 } from '../../services/api';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { 
@@ -28,6 +29,7 @@ import {
   setVideoStatus,
   setHasUploadedVideoFiles,
   setMonitoringActive,
+  setUploadedVideoFiles,
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -49,7 +51,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
-  const [monitoringTimer, setMonitoringTimer] = useState<number | null>(null);
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
@@ -108,10 +109,10 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       console.log('🎬 Pipelines to send:', pipelines);
       dispatch(startStream());
       dispatch(setVideoAnalyticsLoading(true));
-      dispatch(setVideoStatus('starting'));
+      dispatch(setVideoStatus('starting')); // This will change from 'processed' to 'starting'
 
       const videoResponse = await startVideoAnalyticsPipeline(pipelines, sessionId);
-
+      startPipelineMonitoring(sessionId);
       let hasSuccessfulStreams = false;
 
       videoResponse.results.forEach((result: any) => {
@@ -137,7 +138,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       if (hasSuccessfulStreams) {
         dispatch(setActiveStream('all'));
         dispatch(setVideoAnalyticsActive(true));
-        dispatch(setVideoStatus('streaming'));
+        dispatch(setVideoStatus('streaming')); // Only set to streaming when actually streaming
       } else {
         dispatch(setVideoStatus('failed'));
       }
@@ -151,18 +152,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       dispatch(setVideoAnalyticsActive(false));
       dispatch(setVideoStatus('failed'));
       return false;
-    }
-  };
-
-  const getProcessingNotification = (hasAudio: boolean, hasVideo: boolean) => {
-    if (hasAudio && hasVideo) {
-      return 'Starting video analytics and transcription...';
-    } else if (hasAudio && !hasVideo) {
-      return 'Starting transcription...';
-    } else if (!hasAudio && hasVideo) {
-      return 'Starting video analytics...';
-    } else {
-      return 'Starting processing...';
     }
   };
 
@@ -193,6 +182,12 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       setError('At least one file (audio or video) is required.');
       return;
     }
+
+    dispatch(setUploadedVideoFiles({
+      front: frontCameraPath,
+      back: rearCameraPath,
+      board: boardCameraPath,
+    }));
 
     setNotification('Starting processing...');
     dispatch(resetFlow());
@@ -234,7 +229,6 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       let audioPath = '';
       if (hasAudioFile) {
-        setNotification('Uploading audio...');
         const audioResponse = await uploadAudio(audioFile);
         dispatch(setUploadedAudioPath(audioResponse.path));
         audioPath = audioResponse.path;
@@ -276,13 +270,27 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       const hasValidVideo = validPipelines.length > 0;
       dispatch(setHasUploadedVideoFiles(hasValidVideo));
-      setNotification(getProcessingNotification(hasAudioFile, hasValidVideo));
-    
+
       if (hasValidVideo) {
-        dispatch(setVideoStatus('starting'));
-      } else {
+        dispatch(setUploadedVideoFiles({
+          front: frontCameraPath,
+          back: rearCameraPath,
+          board: boardCameraPath,
+        }));
+
+        dispatch(setHasUploadedVideoFiles(true));
+
+        if (rearCameraPath)
+          dispatch(setActiveStream('back'));
+
+        else if (boardCameraPath)
+          dispatch(setActiveStream('content'));
+
+        else if (frontCameraPath)
+          dispatch(setActiveStream('front'));
+      }
+      else {
         dispatch(setVideoStatus('no-config'));
-        console.log('📹 Setting video status to no-config - no valid files');
       }
 
       let videoAnalyticsStarted = false;
@@ -309,10 +317,9 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         videoAnalyticsStarted,
         finalMessage: finalNotification
       });
-    
+
       setLoading(false);
       onClose();
-
     } catch (err) {
       console.error('❌ Failed during processing:', err);
       setError('Failed during processing. Please try again.');

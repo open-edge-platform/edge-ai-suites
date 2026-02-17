@@ -1,0 +1,12 @@
+[
+  {
+    "name": "person",
+    "prompt": "Is there a person?",
+    "enabled": true
+  },
+  {
+    "name": "Danger",
+    "prompt": "Is there any danger?",
+    "enabled": true
+  }
+]

@@ -47,10 +47,12 @@ Output can be viewed on MQTT subscriber as shown below.
 
 ```sh
 docker run -it --rm \
-  --network industrial-edge-insights-vision_mraas \
+  --network industrial-edge-insights-vision_industrial-edge-vision \
   --entrypoint mosquitto_sub \
   eclipse-mosquitto:latest \
   -h mqtt-broker -p 1883 -t pallet_defect_detection
 
-# Note: Update --network above if it is different in your execution. Network can be found using: docker network ls
+# Note: 
+# Update --network above if it is different in your execution. Network can be found using: docker network ls
+# Update --network as <INSTANCE_NAME>_industrial-edge-vision for multi-instance setup 
 ```

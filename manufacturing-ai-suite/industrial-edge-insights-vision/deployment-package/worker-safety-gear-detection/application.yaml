@@ -94,3 +94,11 @@ profiles:
         type: string
         secret: true
         mandatory: true
+      - name: gpu.type
+        displayName: "GPU type"
+        type: string
+        default: "gpu.intel.com/i915"
+      - name: gpu.count
+        displayName: "GPU count"
+        type: number
+        default: "1"

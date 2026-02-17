@@ -18,20 +18,20 @@
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-   > **Note**: These steps demonstrate launching two pallet-defect-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
+   > **Note**: These steps demonstrate launching two pcb-anomaly-detection instances and one weld-porosity instance. Modify the sample apps and instances as needed for your use case.
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
    Example:
 
    ```text
-   pallet-defect-detection:
-     pdd1:
+   pcb-anomaly-detection:
+     pcb1:
        NGINX_HTTP_PORT: 30080
        NGINX_HTTPS_PORT: 30443
        COTURN_PORT: 30478
        S3_STORAGE_PORT: 30800
-     pdd2:
+     pcb2:
        NGINX_HTTP_PORT: 30081
        NGINX_HTTPS_PORT: 30444
        COTURN_PORT: 30479
@@ -97,13 +97,13 @@
 2. Copy the resources such as video and model from local directory to the to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+   # Below is an example for PCB Anomaly Detection. Please adjust the source path of models and videos appropriately for other sample applications.
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp  resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
 ### Start AI pipelines
@@ -122,51 +122,51 @@
 
    ```text
    -------------------------------------------
-   Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
+   Status of: pcb1 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30443
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
    Loaded pipelines:
    [
    {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "classification-properties": {
+            "element": {
                "format": "element-properties",
-               "name": "detection"
-           }
-           }
+               "name": "classification"
+            }
+         }
 
            ...
    -------------------------------------------
-   Status of: pdd2 (SAMPLE_APP: pallet-defect-detection)
+   Status of: pcb2 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
-   Using Helm deployment - curl commands will use: 10.223.23.150:30444
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
    Loaded pipelines:
    [
    {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "classification-properties": {
+            "element": {
                "format": "element-properties",
-               "name": "detection"
-           }
-           }
+               "name": "classification"
+            }
+         }
        ...
 
    -------------------------------------------
@@ -174,7 +174,7 @@
    -------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
    Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 10.223.23.150:30445
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
@@ -207,43 +207,43 @@
    No pipeline specified. Starting the first pipeline.
 
    ------------------------------------------
-   Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
+   Processing instance: pcb1 from SAMPLE_APP: pcb-anomaly-detection
    ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/payload.json
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/payload.json
    Payload loaded successfully.
-   Starting first pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection'  Response: "b34dc150062e11f1863a15371702ae06"
+   Starting first pipeline: pcb_anomaly_detection
+   Launching pipeline: pcb_anomaly_detection
+   Extracting payload for pipeline: pcb_anomaly_detection
+   Found 1 payload(s) for pipeline: pcb_anomaly_detection
+   Payload for pipeline 'pcb_anomaly_detection'. Response: "41845fd208b811f19059d9c7fed5fa4f"
 
    ------------------------------------------
-   Processing instance: pdd2 from SAMPLE_APP: pallet-defect-detection
+   Processing instance: pcb2 from SAMPLE_APP: pcb-anomaly-detection
    ------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/payload.json
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/payload.json
    Payload loaded successfully.
-   Starting first pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection' Response: "b35b2a20062e11f1b059efacc0acb924"
+   Starting first pipeline: pcb_anomaly_detection
+   Launching pipeline: pcb_anomaly_detection
+   Extracting payload for pipeline: pcb_anomaly_detection
+   Found 1 payload(s) for pipeline: pcb_anomaly_detection
+   Payload for pipeline 'pcb_anomaly_detection'. Response: "41906efa08b811f1afb3199e28d0e6d7"
 
    ------------------------------------------
    Processing instance: weld1 from SAMPLE_APP: weld-porosity
    ------------------------------------------
    Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/.env
    Running sample app: weld-porosity
-   Using Helm deployment - curl commands will use: 1<HOST_IP>:<NGINX_HTTPS_PORT>
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/weld-porosity/weld1/payload.json
@@ -252,20 +252,18 @@
    Launching pipeline: weld_porosity_classification
    Extracting payload for pipeline: weld_porosity_classification
    Found 1 payload(s) for pipeline: weld_porosity_classification
-   Payload for pipeline 'weld_porosity_classification'  Response: "b366127e062e11f19d9a75f141417eac"
+   Payload for pipeline 'weld_porosity_classification'. Response: "419b34f308b811f1a9cbb162d1d1cb15"
    ```
 
 3. Access the WebRTC stream
 
    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
 
-   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 30443, pdd2 set to 30444 & weld1 set to 30445.
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pcb1 has nginx port set to 30443, pcb2 set to 30444 & weld1 set to 30445.
 
    ```text
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/weld/             # Weld Porosity
-   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/worker_safety/    # Worker Safety Gear detection
    ```
 
 #### Start pipeline for a particular instance only
@@ -279,27 +277,27 @@
     Example Output:
 
    ```text
-   Instance name set to: pdd1
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
-   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Instance name set to: pcb1
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Getting list of loaded pipelines...
    Loaded pipelines:
    [
    {
-       "description": "DL Streamer Pipeline Server pipeline",
-       "name": "user_defined_pipelines",
-       "parameters": {
-       "properties": {
-           "detection-properties": {
-           "element": {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "classification-properties": {
+            "element": {
                "format": "element-properties",
-               "name": "detection"
-           }
-           }
+               "name": "classification"
+            }
+         }
            ...
    ]
    ```
@@ -307,27 +305,27 @@
 2. Start the pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p <PIPELINE_NAME>
    ```
 
    Output:
 
    ```text
-   Instance name set to: pdd2
+   Instance name set to: pcb1
    Starting specified pipeline(s)...
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd2
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/payload.json
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/payload.json
    Payload loaded successfully.
-   Starting pipeline: pallet_defect_detection
-   Launching pipeline: pallet_defect_detection
-   Extracting payload for pipeline: pallet_defect_detection
-   Found 1 payload(s) for pipeline: pallet_defect_detection
-   Payload for pipeline 'pallet_defect_detection'  Response: "f3a34cd5062f11f1ab8defacc0acb924"
+   Starting pipeline: pcb_anomaly_detection
+   Launching pipeline: pcb_anomaly_detection
+   Extracting payload for pipeline: pcb_anomaly_detection
+   Found 1 payload(s) for pipeline: pcb_anomaly_detection
+   Payload for pipeline 'pcb_anomaly_detection'. Response: "f5d6f4a308b811f183a7d9c7fed5fa4f"
    ```
 
 3. Access WebRTC stream:
@@ -343,24 +341,32 @@
 1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
    ```bash
-   ./sample_list.sh -i <INSTANCE_NAME>
+   ./sample_list.sh helm -i <INSTANCE_NAME>
    ```
 
     Example Output:
 
    ```text
-   Environment variables loaded from .env
-   Running sample app: pallet-defect-detection
+   Instance name set to: pcb2
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb2
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
+   Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
    Loaded pipelines:
    [
-       ...
-       {
-           "description": "DL Streamer Pipeline Server pipeline",
-           "name": "user_defined_pipelines",
-           "version": "pallet_defect_detection"
-       }
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "classification-properties": {
+            "element": {
+               "format": "element-properties",
+               "name": "classification"
+            }
        ...
    ]
    ```
@@ -374,22 +380,22 @@
    Output:
 
    ```text
-   Instance name set to: pdd1
-   Custom payload file set to: custom_payload_corrected.json
+   Instance name set to: pcb1
+   Custom payload file set to: custom_payload.json
    Starting specified pipeline(s)...
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Loading payload from custom_payload_corrected.json
+   Loading payload from custom_payload.json
    Payload loaded successfully.
-   Starting pipeline: pallet_defect_detection_gpu
-   Launching pipeline: pallet_defect_detection_gpu
-   Extracting payload for pipeline: pallet_defect_detection_gpu
-   Found 1 payload(s) for pipeline: pallet_defect_detection_gpu
-   Payload for pipeline 'pallet_defect_detection_gpu'. Response: "3bd097ec065b11f1a30d3101230a4967"
+   Starting pipeline: pcb_anomaly_detection_gpu
+   Launching pipeline: pcb_anomaly_detection_gpu
+   Extracting payload for pipeline: pcb_anomaly_detection_gpu
+   Found 1 payload(s) for pipeline: pcb_anomaly_detection_gpu
+   Payload for pipeline 'pcb_anomaly_detection_gpu'. Response: "c0afa09d08b911f19167d9c7fed5fa4f"
    ```
 
 3. Access WebRTC stream:
@@ -417,48 +423,48 @@
    ```text
    No arguments provided. Fetching status for all pipeline instances.
    Config file found. Fetching status for all instances defined in /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/config.yml
-   Processing instance: pdd1 from sample app: pallet-defect-detection
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Processing instance: pcb1 from sample app: pcb-anomaly-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    [
    {
-       "avg_fps": 30.003179236553294,
-       "elapsed_time": 97.189706325531,
-       "id": "b34dc150062e11f1863a15371702ae06",
-       "message": "",
-       "start_time": 1770693307.7875352,
-       "state": "COMPLETED"
+      "avg_fps": 26.471909092423328,
+      "elapsed_time": 104.26146626472473,
+      "id": "6d3285c708bb11f1a7041b0626dce0fd",
+      "message": "",
+      "start_time": 1770973651.1545439,
+      "state": "COMPLETED"
    },
    {
-       "avg_fps": 30.1419409008953,
-       "elapsed_time": 5.706332683563232,
-       "id": "2b51cf36063111f1b19b15371702ae06",
-       "message": "",
-       "start_time": 1770694367.6247275,
-       "state": "RUNNING"
+      "avg_fps": 24.73910453736799,
+      "elapsed_time": 42.604612827301025,
+      "id": "a06b0f0408bb11f1b34a1b0626dce0fd",
+      "message": "",
+      "start_time": 1770973737.2003956,
+      "state": "RUNNING"
    }
    ]
-   Processing instance: pdd2 from sample app: pallet-defect-detection
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
+   Processing instance: pcb2 from sample app: pcb-anomaly-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    [
    {
-       "avg_fps": 30.00630534767508,
-       "elapsed_time": 97.17957949638367,
-       "id": "b35b2a20062e11f1b059efacc0acb924",
-       "message": "",
-       "start_time": 1770693308.1801755,
-       "state": "COMPLETED"
+      "avg_fps": 27.271058988731575,
+      "elapsed_time": 101.20619368553162,
+      "id": "6d3ffca108bb11f18ed0358a457b6922",
+      "message": "",
+      "start_time": 1770973651.33268,
+      "state": "COMPLETED"
    },
    {
-       "avg_fps": 30.075114986748083,
-       "elapsed_time": 5.586012363433838,
-       "id": "2b632863063111f18b4cefacc0acb924",
-       "message": "",
-       "start_time": 1770694367.766532,
-       "state": "RUNNING"
+      "avg_fps": 26.302732903939624,
+      "elapsed_time": 42.54310607910156,
+      "id": "a07dee8e08bb11f1b22c358a457b6922",
+      "message": "",
+      "start_time": 1770973737.297148,
+      "state": "RUNNING"
    }
    ]
    Processing instance: weld1 from sample app: weld-porosity
@@ -467,20 +473,20 @@
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    [
    {
-       "avg_fps": 30.004351657011913,
-       "elapsed_time": 22.463412046432495,
-       "id": "b366127e062e11f19d9a75f141417eac",
-       "message": "",
-       "start_time": 1770693307.6337888,
-       "state": "COMPLETED"
+      "avg_fps": 30.007090623930345,
+      "elapsed_time": 22.461360216140747,
+      "id": "9651bc0708bb11f1ab65fd970995bf83",
+      "message": "",
+      "start_time": 1770973720.580919,
+      "state": "COMPLETED"
    },
    {
-       "avg_fps": 30.20726493152364,
-       "elapsed_time": 5.462261199951172,
-       "id": "2b71f4a2063111f1946d75f141417eac",
-       "message": "",
-       "start_time": 1770694367.907302,
-       "state": "RUNNING"
+      "avg_fps": 30.044665525605428,
+      "elapsed_time": 22.433268785476685,
+      "id": "a0909c7308bb11f1a663fd970995bf83",
+      "message": "",
+      "start_time": 1770973737.3773737,
+      "state": "COMPLETED"
    }
    ]
    ```
@@ -513,42 +519,42 @@
    No pipelines specified. Stopping all pipeline instances
 
    -------------------------------------------
-   Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
+   Processing instance: pcb1 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb1/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Instance list fetched successfully. HTTP Status Code: 200
    Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 88065593063211f1a83815371702ae06
-   Pipeline instance with ID '88065593063211f1a83815371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.02882915265665,
-   "elapsed_time": 8.391932249069214,
-   "id": "88065593063211f1a83815371702ae06",
+   Stopping pipeline instance with ID: 4ad8cb0608bc11f1837a1b0626dce0fd
+   Pipeline instance with ID '4ad8cb0608bc11f1837a1b0626dce0fd' stopped successfully. Response: {
+   "avg_fps": 24.92580082541783,
+   "elapsed_time": 11.393810749053955,
+   "id": "4ad8cb0608bc11f1837a1b0626dce0fd",
    "message": "",
-   "start_time": 1770694952.6537187,
+   "start_time": 1770974022.8910992,
    "state": "RUNNING"
    }
 
    -------------------------------------------
-   Processing instance: pdd2 (SAMPLE_APP: pallet-defect-detection)
+   Processing instance: pcb2 (SAMPLE_APP: pcb-anomaly-detection)
    -------------------------------------------
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd2/.env
-   Running sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Instance list fetched successfully. HTTP Status Code: 200
    Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 881ff32a063211f1b67defacc0acb924
-   Pipeline instance with ID '881ff32a063211f1b67defacc0acb924' stopped successfully. Response: {
-   "avg_fps": 30.069598458700824,
-   "elapsed_time": 8.380553007125854,
-   "id": "881ff32a063211f1b67defacc0acb924",
+   Stopping pipeline instance with ID: 4ae9e06808bc11f18ee0358a457b6922
+   Pipeline instance with ID '4ae9e06808bc11f18ee0358a457b6922' stopped successfully. Response: {
+   "avg_fps": 24.99570324372322,
+   "elapsed_time": 11.361947774887085,
+   "id": "4ae9e06808bc11f18ee0358a457b6922",
    "message": "",
-   "start_time": 1770694952.8342986,
+   "start_time": 1770974023.0342877,
    "state": "RUNNING"
    }
 
@@ -562,13 +568,13 @@
    Server reachable. HTTP Status Code: 200
    Instance list fetched successfully. HTTP Status Code: 200
    Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: 88318dd1063211f1bd9675f141417eac
-   Pipeline instance with ID '88318dd1063211f1bd9675f141417eac' stopped successfully. Response: {
-   "avg_fps": 30.144217405495226,
-   "elapsed_time": 8.32663083076477,
-   "id": "88318dd1063211f1bd9675f141417eac",
+   Stopping pipeline instance with ID: 4af687de08bc11f1a1a0fd970995bf83
+   Pipeline instance with ID '4af687de08bc11f1a1a0fd970995bf83' stopped successfully. Response: {
+   "avg_fps": 30.011190146566342,
+   "elapsed_time": 11.429064750671387,
+   "id": "4af687de08bc11f1a1a0fd970995bf83",
    "message": "",
-   "start_time": 1770694953.002784,
+   "start_time": 1770974023.0493774,
    "state": "RUNNING"
    }
    ```
@@ -582,21 +588,21 @@
    Output:
 
    ```text
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb2
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
    Instance list fetched successfully. HTTP Status Code: 200
    Found 1 running pipeline instances.
-   Stopping pipeline instance with ID: f49ee13b063211f18ae815371702ae06
-   Pipeline instance with ID 'f49ee13b063211f18ae815371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.113055800460913,
-   "elapsed_time": 9.397908210754395,
-   "id": "f49ee13b063211f18ae815371702ae06",
+   Stopping pipeline instance with ID: 7e9e81f608bc11f18cec358a457b6922
+   Pipeline instance with ID '7e9e81f608bc11f18cec358a457b6922' stopped successfully. Response: {
+   "avg_fps": 27.322731725040388,
+   "elapsed_time": 21.41073751449585,
+   "id": "7e9e81f608bc11f18cec358a457b6922",
    "message": "",
-   "start_time": 1770695134.8435106,
+   "start_time": 1770974109.734703,
    "state": "RUNNING"
    }
    ```
@@ -610,21 +616,15 @@
    Output:
 
    ```text
-   Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pallet-defect-detection/pdd1/.env
-   Running sample app: pallet-defect-detection
+   Found SAMPLE_APP: pcb-anomaly-detection for INSTANCE_NAME: pcb2
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm/temp_apps/pcb-anomaly-detection/pcb2/.env
+   Running sample app: pcb-anomaly-detection
    Using Helm deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
    Checking status of dlstreamer-pipeline-server...
    Server reachable. HTTP Status Code: 200
-   Stopping pipeline instance with ID: 4562a97f063311f19f4d15371702ae06
-   Pipeline instance with ID '4562a97f063311f19f4d15371702ae06' stopped successfully. Response: {
-   "avg_fps": 30.059924104470113,
-   "elapsed_time": 15.868299961090088,
-   "id": "4562a97f063311f19f4d15371702ae06",
-   "message": "",
-   "start_time": 1770695270.3738744,
-   "state": "RUNNING"
-   }
+   Stopping pipeline instance with ID: 9ba7321408bc11f180fe1b0626dce0fd
+   ERROR: Failed to stop pipeline instance with ID '9ba7321408bc11f180fe1b0626dce0fd'. HTTP Status Code: 400
+   Response body: "Invalid pipeline, version or instance"
    ```
 
 ## Uninstall Helm Charts
@@ -648,13 +648,13 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
 
    ```sh
-   # Below is an example for Pallet Defect Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+   # Below is an example for PCB Anomaly Detection. Please adjust the source path of models and videos appropriately for other sample applications.
 
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
-   kubectl cp resources/pallet-defect-detection/videos/warehouse.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
 
-   kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   kubectl cp  resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
 4. Install the package `boto3` in your python environment if not installed.
@@ -708,26 +708,26 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    python3 create_bucket_<INSTANCE_NAME>.py
    ```
 
-6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pallet_defect_detection.  Please adjust the source path of models and videos appropriately for other sample applications.
+6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for pcb-anomaly-detection.  Please adjust the source path of models and videos appropriately for other sample applications.
 
    ```sh
-   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
-       "source": {
-           "uri": "file:///home/pipeline-server/resources/videos/warehouse.avi",
-           "type": "uri"
-       },
-       "destination": {
-           "frame": {
+   curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
+      "source": {
+         "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+         "type": "uri"
+      },
+      "destination": {
+         "frame": {
                "type": "webrtc",
-               "peer-id": "pdds3"
-           }
-       },
-       "parameters": {
-           "detection-properties": {
-               "model": "/home/pipeline-server/resources/models/pallet-defect-detection/deployment/Detection/model/model.xml",
+               "peer-id": "anomaly_s3"
+         }
+      },
+      "parameters": {
+         "classification-properties": {
+               "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
                "device": "CPU"
-           }
-       }
+         }
+      }
    }'
    ```
 
@@ -740,3 +740,129 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+
+
+## MLOps using Model Download
+
+1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+
+2. Install the helm chart
+
+   ```sh
+   ./run.sh helm_install
+   ```
+
+3. Copy the resources such as video and model from local directory to the `dlstreamer-pipeline-server` pod to make them available for application while launching pipelines.
+
+   ```sh
+   # Below is an example for PCB Anomaly Detection. Please adjust the source path of models and videos appropriately for other sample applications.
+
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp resources/pcb-anomaly-detection/videos/anomalib_pcb_test.avi $POD_NAME:/home/pipeline-server/resources/videos/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+
+   kubectl cp  resources/pcb-anomaly-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline. 
+   
+   Below is an example for pcb-anomaly-detection. Please modify the payload for other sample applications.
+
+   ```json
+   [
+      {
+         "pipeline": "pcb_anomaly_detection_mlops",
+         "payload":{
+               "source": {
+                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+                  "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                  "type": "webrtc",
+                  "peer-id": "anomaly"
+               }
+               },
+               "parameters": {
+                  "classification-properties": {
+                     "model": "/home/pipeline-server/resources/models/pcb-anomaly-detection/deployment/Anomaly classification/model/model.xml",
+                     "device": "CPU"
+                  }
+               }
+         }
+      }
+   ]
+   ```
+
+5. Start the pipeline with the above payload. 
+
+   Below is an example for starting an instance for pcb-anomaly-detection:
+
+   ```sh
+   ./sample_start.sh helm -i <INSTANCE_NAME> -p pcb_anomaly_detection_mlops
+   ```
+   Note the instance-id.
+
+6. Download and prepare the model. Below is an example for downloading and preparing model for pcb-anomaly-detection. Please modify MODEL_URL for the other sample applications.
+   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   ```sh
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip'
+
+   curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
+
+   unzip "$(basename $MODEL_URL)" -d new-model # downloaded model is now extracted to `new-model` directory.
+   ```
+
+7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
+
+   ```sh
+   
+   POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
+
+   kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
+   ```
+   >NOTE- If there are multiple sample_apps in config.yml, repeat steps 6 and 7 for each sample app and instance.
+
+
+8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+   ```sh
+   curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
+   ```
+
+9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
+   
+   Below is an example for pcb-anomaly-detection. Please modify the payload for other sample applications.
+
+   ```json
+   [
+      {
+         "pipeline": "pcb_anomaly_detection_mlops",
+         "payload":{
+               "source": {
+                  "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
+                  "type": "uri"
+               },
+               "destination": {
+               "frame": {
+                  "type": "webrtc",
+                  "peer-id": "anomaly"
+               }
+               },
+               "parameters": {
+                  "classification-properties": {
+                     "model": "/home/pipeline-server/resources/models/new-model/deployment/Anomaly classification/model/model.xml",
+                     "device": "CPU"
+                  }
+               }
+         }
+      }
+   ]
+   ```
+
+10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+
+
+## Troubleshooting
+
+- [Troubleshooting Guide](../troubleshooting.md)

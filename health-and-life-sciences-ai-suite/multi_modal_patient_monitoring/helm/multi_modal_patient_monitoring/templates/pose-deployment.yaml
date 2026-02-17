@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pose
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pose
+  template:
+    metadata:
+      labels:
+        app: pose
+    spec:
+      initContainers:
+        - name: copy-assets
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
+          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - >-
+              cp -r /opt/assets/models/* /models/;
+              mkdir -p /videos/3d-pose;
+              cp -r /opt/assets/videos/3d-pose/* /videos/3d-pose/
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: videos
+              mountPath: /videos
+
+      containers:
+        - name: pose
+          image: "{{ .Values.pose.image.repository }}/{{ .Values.pose.image.name }}:{{ .Values.pose.image.tag }}"
+          imagePullPolicy: {{ .Values.pose.image.pullPolicy }}
+          securityContext:
+            privileged: true
+          envFrom:
+            - configMapRef:
+                name: device-config
+          ports:
+            - containerPort: 8083
+            - name: video-feed
+              containerPort: 8085
+              hostPort: 8085
+
+          env:
+            - name: AGGREGATOR_ADDRESS
+              value: "aggregator:50051"
+            - name: AGGREGATOR_HOST
+              value: aggregator
+            - name: AGGREGATOR_PORT
+              value: "50051"
+            - name: NO_PROXY
+              value: "aggregator,localhost,127.0.0.1"
+            - name: no_proxy
+              value: "aggregator,localhost,127.0.0.1"
+
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: videos
+              mountPath: /videos
+            - name: dri
+              mountPath: /dev/dri
+            - name: dev
+              mountPath: /dev
+
+      volumes:
+        - name: models
+          emptyDir: {}
+        - name: videos
+          emptyDir: {}
+        - name: dri
+          hostPath:
+            path: /dev/dri
+        - name: dev
+          hostPath:
+            path: /dev

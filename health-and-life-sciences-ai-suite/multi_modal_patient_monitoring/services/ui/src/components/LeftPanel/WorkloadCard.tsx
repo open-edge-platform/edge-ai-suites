@@ -48,9 +48,10 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   frameData,
   people, // ✅ Use people instead of joints
 }) => {
-  // ✅ Add the poseStreamUrl definition here, right after the component props
-  const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
-  const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
+  // 3D pose video stream goes via the aggregator's /video-stream endpoint
+  const apiPort = (import.meta as any).env?.VITE_API_PORT || '8001';
+  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  const poseStreamUrl = `${window.location.protocol}//${host}:${apiPort}/video-stream`;
 
   const statusColors = {
     idle: '#6c757d',
@@ -262,25 +263,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
               </div>
             )}
             
-            {/* ❌ REMOVE THIS ENTIRE SECTION - Activity Badge */}
-            {/* 
-            {latestVitals?.activity && (
-              <div style={{
-                marginTop: '12px',
-                padding: '10px 16px',
-                background: 'linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%)',
-                borderRadius: '8px',
-                fontSize: '13px',
-                color: '#0071c5',
-                fontWeight: '600',
-                textAlign: 'center',
-                border: '1px solid #b3d9ff',
-                boxShadow: '0 2px 4px rgba(0, 113, 197, 0.1)'
-              }}>
-                🏃 Activity: {latestVitals.activity}
-              </div>
-            )}
-            */}
           </div>
 
           {/* 3D Skeleton Visualization - Only when expanded */}
@@ -379,20 +361,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
           )}
         </>
       )}
-
-      {/* Footer */}
-      <div className="workload-footer">
-        <div className="event-count">
-          <span className="label">Events:</span>
-          <span className="value">{eventCount}</span>
-        </div>
-        {lastEventTime && (
-          <div className="last-update">
-            <span className="label">Last:</span>
-            <span className="value">{new Date(lastEventTime).toLocaleTimeString()}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

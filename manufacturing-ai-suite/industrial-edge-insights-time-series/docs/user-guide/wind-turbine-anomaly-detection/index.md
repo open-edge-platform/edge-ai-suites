@@ -121,6 +121,7 @@ For more details on how it is built refer to the [README](https://github.com/ope
 :hidden:
 
 how-to-enable-system-metrics
+how-to-select-model
 
 :::
 hide_directive-->

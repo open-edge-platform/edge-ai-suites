@@ -210,6 +210,16 @@ const servicesSlice = createSlice({
     stopAllWorkloads: (state) => {
       Object.values(state.workloads).forEach((workload) => {
         workload.status = 'idle';
+        workload.eventCount = 0;
+        workload.lastEventTime = null;
+        workload.latestData = {};
+        workload.waveform = undefined;
+        workload.frameData = undefined;
+        workload.joints = undefined;
+        workload.people = undefined;
+        // optional extras used by ai-ecg / mdpnp
+        (workload as any).waveformType = undefined;
+        (workload as any).waveformFrequency = undefined;
       });
       console.log('[Redux] ⏹️ All workloads stopped');
     },

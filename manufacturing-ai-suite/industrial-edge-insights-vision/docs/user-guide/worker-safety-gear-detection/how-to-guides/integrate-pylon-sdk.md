@@ -160,7 +160,7 @@ services:
     .
     network_mode: "host"
     # networks:
-    #   - mraas
+    #   - industrial-edge-vision
 ```
 
 Additionally, add the following entries to the `/etc/hosts` file on the host machine:

@@ -1,0 +1,86 @@
+persistence:
+  size: 20Gi
+
+service:
+  type: ClusterIP
+
+
+ui:
+  nodePort: 30007
+  image:
+    repository: intel
+    name: hl-ai-ui
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+aggregator:
+  nodePort: 30001
+  image:
+    repository: intel
+    name: hl-ai-patient-monitoring-aggregator
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+aiEcg:
+  image:
+    repository: intel
+    name: hl-ai-ecg
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+rppg:
+  image:
+    repository: intel
+    name: hl-ai-rppg
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+pose:
+  image:
+    repository: intel
+    name: hl-ai-3dpose
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+metrics:
+  image:
+    repository: intel
+    name: hl-ai-metrics-collector
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+ddsBridge:
+  image:
+    repository: intel
+    name: hl-ai-dds-bridge
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+mdpnp:
+  image:
+    repository: intel
+    name: hl-ai-mdpnp
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+assets:
+  image:
+    repository: intel
+    name: hl-ai-patient-monitoring-assets
+    tag: "1.0.0"
+    pullPolicy: Never
+
+
+devices:
+  ECG_DEVICE: "GPU"
+  RPPG_DEVICE: "GPU"
+  MDPNP_DEVICE: "CPU"
+  POSE_3D_DEVICE: "GPU"

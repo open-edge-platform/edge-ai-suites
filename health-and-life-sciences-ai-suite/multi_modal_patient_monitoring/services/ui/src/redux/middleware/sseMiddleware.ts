@@ -206,6 +206,15 @@ export const sseMiddleware: Middleware = (store) => {
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }
+          const state: any = store.getState();
+          const isProcessing = state.app?.isProcessing;
+          if (!isProcessing) {
+            console.log('[SSE] ⏸ Ignoring SSE data because app.isProcessing = false', {
+              workloadType,
+              eventType,
+            });
+            return;
+          }
 
           // Dispatch to Redux
           store.dispatch(updateWorkloadData({
@@ -218,7 +227,8 @@ export const sseMiddleware: Middleware = (store) => {
           store.dispatch(addEvent({
             workload: workloadType,
             data: parsedData,
-            timestamp: timestamp
+            timestamp: timestamp,
+            id: ''
           }));
 
         } catch (error) {

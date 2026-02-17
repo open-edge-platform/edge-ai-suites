@@ -1,0 +1,86 @@
+mqtt:
+  enabled: true
+  host: mqtt-broker
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: '{FRIGATE_MQTT_USER}'
+  password: '{FRIGATE_MQTT_PASSWORD}'
+
+logger:
+  default: info
+
+record:
+  enabled: true
+  retain:
+    days: 0.5
+    mode: all
+
+cameras:
+  backyard:
+    ffmpeg:
+      inputs:
+        - path: /videos/backyard.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - record
+    record:
+      enabled: true
+      retain:
+        days: 0.5
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: false
+      use_snapshot: true
+      objects:
+        - person
+        - car
+
+  livingroom:
+    ffmpeg:
+      inputs:
+        - path: /videos/livingroom.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - record
+    record:
+      enabled: true
+      retain:
+        days: 0.5
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: false
+      use_snapshot: true
+      objects:
+        - person
+        - vehicle
+
+
+  garage:
+    ffmpeg:
+      inputs:
+        - path: /videos/garage.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - record
+    record:
+      enabled: true
+      retain:
+        days: 0.5
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+    genai:
+      enabled: false
+      use_snapshot: true
+      objects:
+        - person
+        - vehicle
+version: 0.15-1
