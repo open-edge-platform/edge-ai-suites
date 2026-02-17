@@ -13,6 +13,7 @@ This guide provides instructions for setting up custom UDF deployment package (U
   1. **`udfs/`**:
      - Contains Python scripts for UDFs.
      - If additional Python packages are required, list them in `requirements.txt` using pinned versions.
+     - For detailed instructions on writing UDFs, see the [How to Write a UDF](./write-user-defined-function.md) guide.
 
   2. **`tick_scripts/`**:
      - Contains TICKscripts for data processing, analytics, and alerts.

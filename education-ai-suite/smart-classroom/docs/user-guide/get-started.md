@@ -180,8 +180,8 @@ Request access here:
 Pyannote Speaker Diarization v3.1
 https://huggingface.co/pyannote/speaker-diarization-3.1
 
-(Optional) Pyannote Speaker Diarization v3.0
-https://huggingface.co/pyannote/speaker-diarization-3.0
+Pyannote segmentation v3.0
+https://huggingface.co/pyannote/segmentation-3.0
 
 Click "Request Access" on the model page and wait for approval.
 

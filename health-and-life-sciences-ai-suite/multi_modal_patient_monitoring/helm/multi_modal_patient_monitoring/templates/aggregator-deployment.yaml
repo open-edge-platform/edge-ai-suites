@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: aggregator
+  template:
+    metadata:
+      labels:
+        app: aggregator
+    spec:
+      containers:
+        - name: aggregator
+          image: "{{ .Values.aggregator.image.repository }}/{{ .Values.aggregator.image.name }}:{{ .Values.aggregator.image.tag }}"
+          imagePullPolicy: {{ .Values.aggregator.image.pullPolicy }}
+          ports:
+            - containerPort: 8001
+            - containerPort: 50051
+          env:
+            - name: METRICS_SERVICE_URL
+              value: http://metrics:9000
+            - name: DDS_BRIDGE_CONTROL_URL
+              value: http://dds-bridge:8082
+            - name: POSE_3D_CONTROL_URL
+              value: http://pose:8083
+            - name: RPPG_CONTROL_URL
+              value: http://rppg:8084
+            - name: AI_ECG_URL
+              value: http://ai-ecg:8000/predict_stream_next
+            - name: AGGREGATOR_GRPC
+              value: aggregator:50051
+            # Ensure control-plane HTTP calls to in-cluster services
+            # do not go through the corporate proxy.
+            - name: NO_PROXY
+              value: "aggregator,dds-bridge,rppg,pose,ai-ecg,metrics,mdpnp,localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16"
+            - name: no_proxy
+              value: "aggregator,dds-bridge,rppg,pose,ai-ecg,metrics,mdpnp,localhost,127.0.0.1,10.0.0.0/8,192.168.0.0/16"

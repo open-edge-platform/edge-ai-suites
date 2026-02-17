@@ -113,16 +113,17 @@ class GrpcPosePublisher:
         timestamp_ms = data_packet.get("timestamp", 0)
         source_id = data_packet.get("source_id", self.source_id)
         frame_number = data_packet.get("frame_number", 0)
-        
+
         poses_3d = data_packet.get("poses_3d", [])
         poses_2d = data_packet.get("poses_2d", [])
-        
-        # Create PoseFrame message (no frame_data)
+        frame_bytes = data_packet.get("frame_bytes") or b""
+
+        # Create PoseFrame message (include frame_data when available)
         pose_frame = pose_pb2.PoseFrame(
             timestamp_ms=timestamp_ms,
             source_id=source_id,
-            frame_data=b"",  # Empty frame data - streaming via MJPEG instead
-            frame_number=frame_number
+            frame_data=frame_bytes,
+            frame_number=frame_number,
         )
         
         # Merge 2D and 3D poses by person_id

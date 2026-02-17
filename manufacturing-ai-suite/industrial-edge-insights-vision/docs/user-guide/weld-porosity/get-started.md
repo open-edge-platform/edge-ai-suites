@@ -138,7 +138,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
     > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
 
     >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
-    
+
     ```bash
     https://<HOST_IP>/mediamtx/weld/
     ```
@@ -215,6 +215,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 ## Further Reading
 
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
+- [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
@@ -233,6 +234,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 ./get-started/system-requirements
 ./get-started/environment-variables
 ./get-started/deploy-with-helm
+./get-started/deploy-multiple-instances-with-helm
 ./get-started/deploy-with-edge-orchestrator
 
 :::

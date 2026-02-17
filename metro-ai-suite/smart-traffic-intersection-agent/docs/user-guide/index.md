@@ -43,15 +43,13 @@ The Smart Traffic Intersection stack includes the following containerized servic
 
 - [Get Started Guide](./get-started.md)
 - [API Reference](./api-reference.md)
-- [System Requirements](./system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started
-system-requirements
-build-from-source
 api-reference
 release-notes
 

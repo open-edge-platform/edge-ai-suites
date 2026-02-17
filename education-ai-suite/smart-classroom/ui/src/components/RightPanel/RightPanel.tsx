@@ -1,7 +1,7 @@
 import React from "react";
 import ConfigurationMetricsAccordion from "./ConfigurationMetricsAccordion";
 import ResourceUtilizationAccordion from "./ResourceUtilizationAccordion";
-import ClassStatisticsAccordion from './ClassStatisticsAccordion';
+import ClassStatisticsAccordion from './ClassEngagementAccordion';
 import PreValidatedModelsAccordion from "./PreValidatedModelsAccordion";
 import "../../assets/css/RightPanel.css";
 

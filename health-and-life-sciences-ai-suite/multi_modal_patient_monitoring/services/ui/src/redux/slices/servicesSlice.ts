@@ -132,6 +132,10 @@ const servicesSlice = createSlice({
           state.workloads[workloadId].latestData.CO2_ET = data.CO2_ET;
           console.log(`[Redux] ✓ MDPNP CO2_ET: ${data.CO2_ET}`);
         }
+        if (data.BP_SYS !== undefined) {
+          state.workloads[workloadId].latestData.BP_SYS = data.BP_SYS;
+          console.log(`[Redux] ✓ MDPNP BP_SYS: ${data.BP_SYS}`);
+        }
         if (data.BP_DIA !== undefined) {
           state.workloads[workloadId].latestData.BP_DIA = data.BP_DIA;
           console.log(`[Redux] ✓ MDPNP BP_DIA: ${data.BP_DIA}`);
@@ -206,6 +210,16 @@ const servicesSlice = createSlice({
     stopAllWorkloads: (state) => {
       Object.values(state.workloads).forEach((workload) => {
         workload.status = 'idle';
+        workload.eventCount = 0;
+        workload.lastEventTime = null;
+        workload.latestData = {};
+        workload.waveform = undefined;
+        workload.frameData = undefined;
+        workload.joints = undefined;
+        workload.people = undefined;
+        // optional extras used by ai-ecg / mdpnp
+        (workload as any).waveformType = undefined;
+        (workload as any).waveformFrequency = undefined;
       });
       console.log('[Redux] ⏹️ All workloads stopped');
     },

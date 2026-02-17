@@ -95,7 +95,7 @@ docker logs nvr-event-router -f
 
 ### With Intel® SceneScape Enabled and SceneScape Source Selected
 
-![SceneScape Enabled Interface](_images/Scenescape_enabled.png)
+![SceneScape Enabled Interface](./_assets/Scenescape_enabled.png)
 
 When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
 
@@ -107,16 +107,16 @@ When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and scenescape source
 
 ### With Intel® SceneScape Enabled but Frigate Source Selected
 
-![Frigate Selected Interface](_images/Scenescape_enabled_frigate.png)
+![Frigate Selected Interface](./_assets/Scenescape_enabled_frigate.png)
 
-When Intel® SceneScape is enabled but frigate source is selected:
+When Intel® SceneScape is enabled but Frigate source is selected:
 
-- Currently frigate object detection is disabled in this mode
+- Currently Frigate object detection is disabled in this mode
 - Source dropdown still shows both **"frigate"** and **"scenescape"** options
-- **Count** field is automatically hidden (not applicable for frigate)
-- Standard frigate rule configuration with detection labels
-- Rules table shows "Count" column but displays "-" for frigate rules
-- Full frigate functionality remains available
+- **Count** field is automatically hidden (not applicable for Frigate)
+- Standard Frigate rule configuration with detection labels
+- Rules table shows "Count" column but displays "-" for Frigate rules
+- Full Frigate functionality remains available
 
 ## Auto-Route Events Configuration
 
@@ -219,4 +219,4 @@ For Intel® SceneScape integration issues:
 6. **High Resource Usage**: If load average >10 or containers show >500% CPU, restart high-usage containers
 7. Review logs using debug commands above and contact support with relevant excerpts
 
-For general Smart NVR issues, see the [main documentation](./get-started.md).
+For general Smart NVR issues, see the [Troubleshooting Guide](./troubleshooting.md).

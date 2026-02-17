@@ -33,12 +33,13 @@
     "audioProcessingComplete": "音频处理完成",
     "audioProcessingError": "音频处理错误",
     "videoStreamingStopped": "视频流已停止",
-    "noVideoConfigured": "未配置视频",
+    "noVideoConfigured": "未配置视频", 
     "videoReady": "视频准备就绪",
     "videoAnalyticsFailed": "视频分析失败",
-    "videoProcessingComplete": "视频处理完成",
     "audio": "音频",
-    "video": "视频"
+    "video": "视频",
+    "videoStreamingComplete": "视频处理完成",
+    "playbackMode": "回放模式"
   },
   "tooltips": {
     "checkingAudioDevices": "正在检查音频设备…",
@@ -137,7 +138,7 @@
     "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
     "model3": "模型3",
     "model4": "模型4",
-    "classStatistics": "课堂统计",
+    "classStatistics": "课堂参与度",
     "roomView": "教室视图",
     "frontCamera": "前置摄像头",
     "backCamera": "后置摄像头",
@@ -158,7 +159,11 @@
     "noStreamsAvailable": "尝试视频分析但没有可用视频流",
     "checkCameraConfigurations": "检查摄像头配置或后端视频服务",
     "audioRecordingContinues": "音频录制正常继续",
-    "streamingIconAlt": "视频流图标"
+    "streamingIconAlt": "视频流图标",
+    "noStream": "无视频流",
+    "videoFailed":"视频获取失败",
+    "continuingAudioOnly":"继续进行纯音频处理",
+    "loadingvideo": "正在加载视频流"
   },
   "classStatistics": {
     "studentCount": "学生人数",
@@ -166,6 +171,10 @@
     "raiseUpCount": "累计举手次数",
     "standReIdData": "站立 ReID 数据",
     "studentId": "学生 ID",
-    "count": "次数"
+    "count": "次数",
+    "videoAnalytics": "视频分析",
+    "audioAnalytics": "音频分析",
+    "lastUpdated": "最后更新",
+    "noData": "暂无数据"
   }
 }

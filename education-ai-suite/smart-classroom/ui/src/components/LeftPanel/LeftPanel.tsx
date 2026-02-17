@@ -2,7 +2,6 @@ import { useState } from "react";
 import TranscriptsTab from "../Tabs/TranscriptsTab";
 import AISummaryTab from "../Tabs/AISummaryTab";
 import MindMapTab from "../Tabs/MindMapTab";
-import Timeline from "./Timeline"; // Add this import
 import "../../assets/css/LeftPanel.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setActiveTab } from "../../redux/slices/uiSlice";
@@ -27,9 +26,6 @@ const LeftPanel = () => {
   return (
     <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
       <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
-
-      <Timeline />
-      
       <div className="tabs">
         <button
           className={activeTab === "transcripts" ? "active" : ""}

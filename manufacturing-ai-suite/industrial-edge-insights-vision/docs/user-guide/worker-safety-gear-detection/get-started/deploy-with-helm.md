@@ -406,12 +406,12 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
    ```
 
-7. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
    ```sh
-   curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
+   curl -k --location -X DELETE https://<HOST_IP>:30443/api/pipelines/{instance_id}
    ```
 
-8. Modify the payload in `helm/apps/worker-safety-gear-detection/payload.json` to launch an instance for the mlops pipeline with this new model
+9. Modify the payload in `helm/apps/worker-safety-gear-detection/payload.json` to launch an instance for the mlops pipeline with this new model
 
 
     ```json
@@ -431,7 +431,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
                 },
                 "parameters": {
                     "detection-properties": {
-                        "model": "/home/pipeline-server/resources/models/deployment/Detection/model/model.xml",
+                        "model": "/home/pipeline-server/resources/models/new-model/deployment/Detection/model/model.xml",
                         "device": "CPU"
                     }
                 }
@@ -440,7 +440,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
     ]
     ```
 
-11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](../_assets/webrtc-streaming.png)
 

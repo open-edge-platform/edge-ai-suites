@@ -143,10 +143,8 @@ services:
     ports:
       - '${MINIO_SERVER_PORT}:8000'
     environment:
-      AppName: "ModelRegistry"
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      ENABLE_HTTPS_MODE: ${ENABLE_HTTPS_MODE}
       MINIO_BROWSER_REDIRECT_URL: https://${HOST_IP}/minio/
     command: server --address ":8000" --certs-dir /certs /data
 

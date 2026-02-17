@@ -323,7 +323,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
         }
         
         logger.debug("VLM request built", 
-                   request)
+                   model=request.get("model"),
+                   max_tokens=request.get("max_completion_tokens"),
+                   content_items=len(content))
         
         return request
     
@@ -555,18 +557,10 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                 if weather_data:
                     weather_impact = True
                     
-                    # Handle both WeatherType enum and string (defensive programming)
-                    weather_type = weather_data.weather_type
-                    if isinstance(weather_type, str):
-                        weather_type = WeatherType(weather_type)
-                    
-                    CRITICAL_WEATHER = {WeatherType.FIRES, WeatherType.STORM, WeatherType.FLOOD}
-                    alert_level = AlertLevel.CRITICAL if weather_type in CRITICAL_WEATHER else AlertLevel.WARNING
-                    
                     alert = VLMAlert(
                         alert_type=AlertType.WEATHER_RELATED,
-                        level=alert_level,
-                        description=self.weather_service.get_current_weather_description(weather_type),
+                        level=AlertLevel.INFO,
+                        description=self.weather_service.get_current_weather_description(),
                         weather_related=weather_impact
                     )
                     alerts.append(alert)

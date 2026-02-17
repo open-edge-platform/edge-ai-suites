@@ -1,0 +1,83 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: ${PROJECT_NAME:-live-video-alert}
+services:
+  ovms-init:
+    image: busybox:latest
+    container_name: ovms-init
+    user: "0:0"
+    volumes:
+      - ovms-models:/models
+    command: sh -c "chown -R 5000:5000 /models && chmod -R 755 /models"
+
+  ovms:
+    image: openvino/model_server:2025.4.1
+    container_name: ovms-vlm
+    user: "5000:5000" 
+    restart: unless-stopped
+    depends_on:
+      ovms-init:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    environment:
+      - no_proxy=${no_proxy},localhost
+      - NO_PROXY=${no_proxy},localhost
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - HF_TOKEN=${HF_TOKEN}
+      - OVMS_SOURCE_MODEL=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
+      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
+    volumes:
+      - ovms-models:/models
+    command:
+      - --rest_port
+      - "8000"
+      - --source_model
+      - "${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}"
+      - --model_repository_path
+      - "/models"
+      - --model_name
+      - "${MODEL_NAME:-Phi-3.5-Vision}"
+      - --task
+      - "text_generation"
+      - --pipeline_type
+      - "VLM"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+    network_mode: host
+
+  live-video-alert:
+    image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
+    build: .
+    container_name: live-video-alert
+    restart: unless-stopped
+    ports:
+      - "${PORT:-9000}:${PORT:-9000}"
+    environment:
+      - no_proxy=${no_proxy}
+      - NO_PROXY=${no_proxy}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - RTSP_URL=${RTSP_URL}
+      - VLM_URL=${VLM_URL:-http://localhost:8000/v3}
+      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
+      - PORT=${PORT:-9000}
+    volumes:
+      - ./resources:/app/resources
+    depends_on:
+      ovms:
+        condition: service_healthy
+    network_mode: host
+
+volumes:
+  ovms-models:

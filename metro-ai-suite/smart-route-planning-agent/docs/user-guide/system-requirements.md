@@ -1,20 +1,18 @@
 # System Requirements
 
-This page provides detailed hardware, software, and platform requirements to help you set up and run the Smart Route Planning Agent.
+This section shows the hardware, software, and platform requirements to help you set up and run the Smart Route Planning Agent.
 
-## Supported Platforms
-
-**Operating Systems**
+## Supported Operating Systems
 
 | OS | Version |
 |----|---------|
 | Ubuntu | 22.04 LTS, 24.04 LTS |
 
-**Hardware Platforms**
+## Hardware Requirements
 
 | Platform | Processor |
 |----------|-----------|
-| Intel® Xeon® | 6th Gen Intel® Xeon® Scalable processors (codenamed Granite Rapids) |
+| Intel® Xeon® processor | 6th Gen Intel® Xeon® Scalable processors (codenamed Granite Rapids) |
 
 ## Minimum Requirements
 
@@ -22,11 +20,9 @@ This page provides detailed hardware, software, and platform requirements to hel
 |-----------|-------------|
 | CPU | Intel® Xeon® 6 processor |
 | RAM | 16 GB |
-| Storage | 20 GB available disk space |
+| Storage | 20-GB available disk space |
 
 ## Software Requirements
-
-**Required Software**:
 
 | Software | Version |
 |----------|---------|
@@ -34,8 +30,8 @@ This page provides detailed hardware, software, and platform requirements to hel
 | Docker Compose | 2.20 or later |
 | Python | 3.10 or later |
 
-For Docker installation, see [Get Docker](https://docs.docker.com/get-docker/).
-For Docker Compose installation, see [Install Docker Compose](https://docs.docker.com/compose/install/).
+For Docker engine installation, see [Get Docker](https://docs.docker.com/get-docker/).
+For Docker Compose tool installation, see [Overview of installing Docker Compose](https://docs.docker.com/compose/install/).
 
 ## Validation
 

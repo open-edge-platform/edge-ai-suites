@@ -1,8 +1,6 @@
 # Environment Variables
 
-This guide provides a complete reference for all environment variables used to configure the Smart Route Planning Agent.
-
-## Table of Contents
+This section explains the environment variables used to configure the Smart Route Planning Agent.
 
 1. [Core Configuration](#core-configuration)
 2. [Network Configuration](#network-configuration)
@@ -13,9 +11,9 @@ This guide provides a complete reference for all environment variables used to c
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `HOST_IP` | Auto-detected | Host IP address for the application. Automatically detected from network interface. Falls back to `127.0.0.1` if detection fails. |
+| `HOST_IP` | Auto-detected | Host IP address for the application. Automatically detected from the network interface. Falls back to `127.0.0.1` if detection fails. |
 | `TAG` | `latest` | Docker image tag to use when building and running containers. |
-| `REGISTRY` | (empty) | Docker registry path for pulling/pushing images. |
+| `REGISTRY` | (empty) | Docker registry path for pulling or pushing images. |
 
 ## Network Configuration
 
@@ -39,9 +37,9 @@ This guide provides a complete reference for all environment variables used to c
 | `https_proxy` | (system) | HTTPS proxy URL for outbound connections. |
 | `no_proxy` | (system) | Comma-separated list of hosts to bypass proxy. `HOST_IP` is automatically added. |
 
-## Setting Environment Variables
+## Set Environment Variables
 
-### Using the Setup Script (Recommended)
+### Configure Using the Setup Script (Recommended)
 
 The setup script automatically configures most environment variables. To override defaults, export variables before running the script:
 
@@ -51,7 +49,7 @@ export LOG_LEVEL=DEBUG
 source setup.sh --setup
 ```
 
-### Manual Configuration
+### Configure Manually
 
 For manual deployment, create a `.env` file in the `src/` directory:
 
@@ -64,7 +62,7 @@ TRAFFIC_BUFFER_DURATION=60
 DATA_RETENTION_HOURS=24
 ```
 
-Then run Docker Compose:
+Run the Docker Compose tool:
 
 ```bash
 cd src

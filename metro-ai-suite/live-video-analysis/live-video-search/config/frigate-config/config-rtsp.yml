@@ -1,0 +1,37 @@
+mqtt:
+  enabled: true
+  host: mqtt-broker
+  port: 1883
+  topic_prefix: frigate
+  client_id: frigate
+  user: '{FRIGATE_MQTT_USER}'
+  password: '{FRIGATE_MQTT_PASSWORD}'
+
+logger:
+  default: info
+
+record:
+  enabled: true
+  retain:
+    days: 0.5
+    mode: all
+
+cameras:
+  rtsp-garage:
+    ffmpeg:
+      inputs:
+        - path: rtsp://rtsp-server:8554/rtsp-garage
+          roles:
+            - record
+      output_args:
+        record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
+    record:
+      enabled: true
+      retain:
+        days: 0.5
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+
+version: 0.15-1

@@ -1,0 +1,37 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  rtsp-server:
+    image: bluenviron/mediamtx:latest
+    container_name: rtsp-server
+    restart: unless-stopped
+    networks:
+      - live-video-network
+    environment:
+      no_proxy: ${no_proxy},rtsp-server,localhost
+      NO_PROXY: ${no_proxy},rtsp-server,localhost
+    ports:
+      - "8554:8554"
+
+  rtsp-publisher:
+    image: jrottenberg/ffmpeg:6.1-alpine
+    container_name: rtsp-publisher
+    restart: unless-stopped
+    networks:
+      - live-video-network
+    environment:
+      no_proxy: ${no_proxy},rtsp-server,localhost
+      NO_PROXY: ${no_proxy},rtsp-server,localhost
+    depends_on:
+      - rtsp-server
+    volumes:
+      - ${LIVE_SEARCH_CONFIG_DIR:-./config}/videos:/videos:ro
+    command: >
+      -re -stream_loop -1 -i /videos/garage.mp4
+      -c copy -f rtsp rtsp://rtsp-server:8554/rtsp-garage
+
+networks:
+  live-video-network:
+    external: true
+    name: docker_live-video-network
