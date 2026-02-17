@@ -17,13 +17,17 @@ class ContentSegmentationComponent(PipelineComponent):
                     "You are given a classroom teacher transcript with timestamps.\n\n"
                     "Split the transcript into topic segments.\n"
                     "Each topic must represent one coherent teaching concept.\n\n"
-                    "Return ONLY valid JSON in this format:\n"
+                    "Return ONLY valid JSON in the following exact format:\n"
                     "[{\"topic\": \"\", \"start_time\": 0.0, \"end_time\": 0.0}]\n\n"
                     "Rules:\n"
                     "- Do NOT split mid-sentence\n"
-                    "- Use only timestamps present in transcript\n"
+                    "- Use only timestamps present in the transcript\n"
                     "- Do NOT hallucinate timestamps\n"
-                    "- Do NOT output anything outside JSON"
+                    "- Do NOT explain\n"
+                    "- Do NOT add markdown\n"
+                    "- Do NOT add comments\n"
+                    "- Do NOT output anything outside JSON\n"
+                    "- Ensure the output is valid JSON that can be parsed by json.loads()\n"
                 )
             },
             {
