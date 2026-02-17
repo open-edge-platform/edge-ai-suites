@@ -389,7 +389,7 @@ class utils:
             print(docker_ps_output)
             lines = docker_ps_output.strip().split('\n')[1:]
             running_containers = []
-            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'model-registry', 'otel-collector', 'mediamtx-server', 'mraas_postgres', 'minio', 'industrial-edge-insights-vision_vol_minio_data', 'industrial-edge-insights-vision_mr_postgres_data', 'industrial-edge-insights-vision_vol_pipeline_root']
+            project_containers = ['dlstreamer-pipeline-server', 'prometheus', 'coturn', 'otel-collector', 'mediamtx-server', 'minio', 'industrial-edge-insights-vision_vol_minio_data', 'industrial-edge-insights-vision_vol_pipeline_root']
                 
             for line in lines:
                 if line.strip():
