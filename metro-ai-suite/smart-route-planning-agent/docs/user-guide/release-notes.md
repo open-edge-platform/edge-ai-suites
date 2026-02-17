@@ -2,7 +2,7 @@
 
 ## Current Release: 1.0.0
 
-**Release Date**: 2025-08-19
+**Release Date**: 2026-02-17
 
 ### Features
 
@@ -21,9 +21,6 @@
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services
   - **Impact**: Improved service reliability and diagnostic capabilities
 
-### Technical Specifications
-
-- **Supported Languages**: Python programming version 3.10 or higher
-- **Architecture**: Microservice with Docker containerization
-- **Dependencies**: FastAPI, MQTT client, aiohttp, and structlog
-- **External Integrations**: MQTT brokers, VLM OpenVINO serving, and camera image streams
+### Known Issues
+- Helm is not supported
+- Validation is not done on EMT
