@@ -273,7 +273,7 @@ print_all_service_host_endpoints() {
     done
     echo -e "${MAGENTA}=======================================================${NC}"
     echo -e
-}   
+}
 
 # Build agent Backend/UI image and run its container along with all other services - to run Traffic Intersection Agent End-to-End
 build_and_start_service() {

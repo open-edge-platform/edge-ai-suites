@@ -292,7 +292,7 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                    camera_images_count=len(camera_images))
         
         # Prepare content with text prompt and images
-        content = [
+        content: list[dict[str, Any]] = [
             {
                 "type": "text",
                 "text": prompt
@@ -322,9 +322,7 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
             ]
         }
         
-        logger.debug("VLM request built", 
-                   request)
-        
+        logger.debug("VLM request built", request=request)
         return request
     
     async def _call_vlm_service(self, request_data: Dict[str, Any]) -> Optional[str]:
