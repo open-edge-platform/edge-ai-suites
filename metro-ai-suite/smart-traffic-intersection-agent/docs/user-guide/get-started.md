@@ -67,6 +67,9 @@ For a more granular control, run these commands:
 #  Set environment variables without building image or starting any containers
 source setup.sh --setenv
 
+# Build service images only (without starting containers)
+source setup.sh --build
+
 # Start services without building the image
 source setup.sh --run
 
