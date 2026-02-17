@@ -66,12 +66,12 @@ gRPCPort=50052
 
 Currently we support four display types: media, lidar, media_lidar, media_fusion.
 
-For system requirements, see [system-req.md](./system-req.md).
+Make sure you meet the [system requirements](./system-req.md).
 
 
 ## Install Dependencies and Build Project
 
-* install driver related libs
+- install driver related libs
 
   Update kernel, install GPU driver.
 
@@ -81,7 +81,7 @@ For system requirements, see [system-req.md](./system-req.md).
 
   Note that this step may restart the machine several times. Please rerun this script after each restart until you see the output of `All driver libs installed successfully`.
 
-* install project related libs
+- install project related libs
 
   Install Boost, Spdlog, Thrift, MKL, OpenVINO, GRPC, Level Zero, oneVPL etc.
 

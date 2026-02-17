@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ai-ecg
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ai-ecg
+  template:
+    metadata:
+      labels:
+        app: ai-ecg
+    spec:
+      initContainers:
+        - name: copy-models
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
+          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - cp -r /opt/assets/models/* /models/
+          volumeMounts:
+            - name: models
+              mountPath: /models
+
+      containers:
+        - name: ai-ecg
+          image: "{{ .Values.aiEcg.image.repository }}/{{ .Values.aiEcg.image.name }}:{{ .Values.aiEcg.image.tag }}"
+          imagePullPolicy: {{ .Values.aiEcg.image.pullPolicy }}
+          securityContext:
+            privileged: true
+          envFrom:
+            - configMapRef:
+                name: device-config
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: dri
+              mountPath: /dev/dri
+            - name: dev
+              mountPath: /dev
+
+      volumes:
+        - name: models
+          emptyDir: {}
+        - name: dri
+          hostPath:
+            path: /dev/dri
+        - name: dev
+          hostPath:
+            path: /dev

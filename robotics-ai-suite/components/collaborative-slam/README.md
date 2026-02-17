@@ -27,13 +27,62 @@ Prepare the target system following the [official documentation](https://docs.op
 
 We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) and Ubuntu 24.04 with [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html).
 
+#### Hardware Requirements
+
+Building Collaborative SLAM packages requires significant system resources:
+
+- **Minimum RAM:** 16GB (use `make safe-package` for memory-constrained systems)
+- **Recommended RAM:** 32GB or more (for `make package` with full parallelism)
+- **Disk Space:** ~10GB free space for build artifacts
+- **CPU:** Multi-core processor (4+ cores recommended)
+- **oneAPI:** Intel oneAPI 2025.x (provides `libsycl.so.8`) for SYCL/GPU support
+
+**Important:** Building with SYCL/oneAPI support is memory-intensive. Each parallel compilation job can consume 1-2GB of RAM. On systems with limited memory, use the safe build option to prevent system crashes.
+
 ### Build
 
-To build debian packages, export `ROS_DISTRO` env variable to desired platform and run `make package` command. After build process successfully finishes, built packages will be available in the `<ROS_DISTRO>_cslam_deb_packages/` directory. The following command is an example for `Humble` distribution.
+To build debian packages, export `ROS_DISTRO` env variable to desired platform and run the appropriate build command.
+
+#### oneAPI/SYCL Compatibility
+
+Collaborative SLAM requires Intel oneAPI 2025.x with SYCL 8 (`libsycl.so.8`) for GPU acceleration support. The build system pulls ORB extractor dependencies from Intel ECI/AMR repositories.
+
+**For local development with custom ORB extractor:**
+If you have a locally built ORB extractor with SYCL 8 support, you can use it during the build:
+
+```bash
+#### Safe Build (Recommended for <32GB RAM)
+
+For systems with limited memory (16-24GB), use the safe build option that automatically calculates optimal parallel job count:
+
+```bash
+ROS_DISTRO=jazzy make safe-package
+```
+
+This prevents memory exhaustion and system crashes by limiting parallelism based on available memory (approximately 2GB per parallel job).
+
+**Environment variables:**
+- `LOCAL_ORB_PATH` - Optional path to local ORB extractor packages (for SYCL 8 development)
+- `PARALLEL_JOBS` - Optional override for parallel jobs (default: auto-calculated)
+- `http_proxy`, `https_proxy`, `no_proxy` - Proxy configuration for corporate networks
+
+#### Full Speed Build (For =32GB RAM)
+
+For systems with ample memory, you can use full parallelism:
 
 ```bash
 ROS_DISTRO=humble make package
 ```
+
+Or manually specify parallel jobs:
+
+```bash
+ROS_DISTRO=jazzy PARALLEL_JOBS=8 make safe-package
+```
+
+**Note:** CI/CD systems typically have sufficient resources and should use `make package` after SYCL 8-compatible ORB extractor is published to repositories.
+
+After build process successfully finishes, built packages will be available in the `<ROS_DISTRO>_cslam_deb_packages/` directory.
 
 You can list all built packages:
 
@@ -71,7 +120,15 @@ If Ubuntu 24.04 with Jazzy is used, then run
 source /opt/ros/jazzy/setup.bash
 ```
 
-Finally, install the Debian packages that were built via `make package`:
+**Important:** For systems with oneAPI 2025.x, ensure you have the SYCL 8-compatible ORB extractor installed. If you built packages with `LOCAL_ORB_PATH`, install the local ORB extractor first:
+
+```bash
+# If using local SYCL 8 ORB extractor
+sudo dpkg -i /path/to/orb-extractor/liborb-lze_*.deb
+sudo apt --fix-broken install -y  # Install any missing dependencies
+```
+
+Finally, install the Debian packages that were built via `make package` or `make safe-package`:
 
 ```bash
 sudo apt update
@@ -126,6 +183,7 @@ lint-markdown        Run Markdown linter using super-linter
 lint-python          Run Python linter using super-linter
 lint-yaml            Run YAML linter using super-linter
 package              Build Debian package
+safe-package         Build Debian package with memory-safe parallel job limits (recommended for systems with <32GB RAM)
 source-package       Create source package tarball
 ```
 
@@ -332,6 +390,66 @@ Collaborative SLAM can generate both a 3D Volumetric Map and a 2D Occupancy Grid
 Fast Mapping support. By default, Fast Mapping support is disabled, but setting `enable_fast_mapping` parameter to `true`
 will enable Fast Mapping that will result in the topics `map`(2D) and `fused_map`(3D) maps being published.
 The parameters for configuring Fast Mapping are present in the [tracker.yaml](tracker/config/tracker.yaml).
+
+## Troubleshooting
+
+### SYCL Library Errors
+
+If you encounter errors like:
+
+```bash
+error while loading shared libraries: libsycl.so.7: cannot open shared object file
+error while loading shared libraries: libSyclUtils.so: cannot open shared object file
+```
+
+**Cause:** Version mismatch between installed oneAPI (SYCL 8) and packages built against older oneAPI (SYCL 7).
+
+**Solution:**
+
+1. **Verify oneAPI version:**
+   ```bash
+   ls -l /opt/intel/oneapi/redist/lib/libsycl.so*
+   # Should show libsycl.so.8 for oneAPI 2025.x
+   ```
+
+2. **Check ORB extractor version:**
+   ```bash
+   apt-cache show liborb-lze-dev | grep -E "Version|Depends.*sycl"
+   # Should show version >= 2.3-2 with oneAPI 2025.x dependencies
+   ```
+
+3. **Rebuild packages:** If repositories have outdated versions, rebuild with local SYCL 8 ORB extractor:
+   ```bash
+   export LOCAL_ORB_PATH=/path/to/sycl8-orb-extractor
+   ROS_DISTRO=jazzy make safe-package
+   sudo dpkg -i jazzy_cslam_deb_packages/*.deb
+   ```
+
+4. **Verify dependencies:** Check installed packages link against correct SYCL version:
+   ```bash
+   ldd /opt/ros/jazzy/lib/univloc_tracker/univloc_tracker_ros | grep sycl
+   # Should show: libsycl.so.8 => /opt/intel/oneapi/redist/lib/libsycl.so.8
+   ```
+
+### Memory Exhaustion During Build
+
+If your system freezes or runs out of memory during build:
+
+**Solution:** Use the safe build option that automatically limits parallelism:
+```bash
+ROS_DISTRO=jazzy make safe-package
+```
+
+Or manually specify fewer parallel jobs:
+```bash
+ROS_DISTRO=jazzy PARALLEL_JOBS=4 make safe-package
+```
+
+### Proxy Issues
+
+If builds fail with network errors behind proxy:
+
+**Solution:** Export proxy environment variables before building:
 
 ## Documentation
 

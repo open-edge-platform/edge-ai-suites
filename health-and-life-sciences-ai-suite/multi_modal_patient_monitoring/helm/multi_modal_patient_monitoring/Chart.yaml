@@ -1,0 +1,6 @@
+apiVersion: v2
+name: multi_modal_patient_monitoring
+description: Health AI Suite - Multi Modal Patient Monitoring
+type: application
+version: 0.1.0
+appVersion: "1.0"

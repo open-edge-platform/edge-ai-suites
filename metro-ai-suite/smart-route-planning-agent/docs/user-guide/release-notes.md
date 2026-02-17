@@ -1,13 +1,13 @@
 # Release Notes
 
-## Current Release: 1.0.0
+## Current Release: 1.0.0-rc1
 
-**Release Date**: 2025-08-19
+**Release Date**: 17 Feb 2026
 
 ### Features
 
 - **Real-time Traffic Analysis**: Comprehensive directional traffic density monitoring with MQTT integration
-- **VLM Integration**: Vision Language Model powered traffic scene analysis with sustained traffic detection
+- **VLM Integration**: Vision Language Model (VLM)-powered traffic scene analysis with sustained traffic detection
 - **Sliding Window Analysis**: 15-second sliding window with 3-second sustained threshold for accurate traffic state detection
 - **Camera Image Management**: Intelligent camera image retention and coordination between API and VLM services
 - **RESTful API**: Complete HTTP API for traffic summaries, intersection monitoring, and VLM analysis retrieval
@@ -21,9 +21,7 @@
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services
   - **Impact**: Improved service reliability and diagnostic capabilities
 
-### Technical Specifications
+### Known Issues
 
-- **Supported Languages**: Python 3.10+
-- **Architecture**: Microservice with Docker containerization
-- **Dependencies**: FastAPI, MQTT client, aiohttp, structlog
-- **External Integrations**: MQTT brokers, VLM OpenVINO serving, camera image streams
+- Helm is not supported
+- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.

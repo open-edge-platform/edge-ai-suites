@@ -2,7 +2,10 @@
 
 ## Overview
 
-Smart NVR is a GenAI-powered video analytics application that transforms traditional network video recorders with intelligent event detection and real-time insights at the edge. This guide will walk you through deploying and configuring the application to extract valuable insights from your video data.
+Smart NVR is a GenAI-powered video analytics application that transforms traditional network
+video recorders with intelligent event detection and real-time insights at the edge. This guide
+will walk you through deploying and configuring the application to extract valuable insights
+from your video data.
 
 ## Prerequisites
 
@@ -11,7 +14,8 @@ Smart NVR is a GenAI-powered video analytics application that transforms traditi
 - System must meet [minimum requirements](./get-started/system-requirements.md).
 - 3-4 devices for distributed deployment.
 
-Smart NVR operates in a distributed architecture requiring multiple services across 3-4 devices for optimal performance:
+Smart NVR operates in a distributed architecture requiring multiple services across 3-4
+devices for optimal performance:
 
 | Device | Service | Purpose |
 |--------|---------|---------|
@@ -43,7 +47,7 @@ Deploy these on separate devices:
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the frigate [config file](../../resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](../../resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
 [VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
@@ -96,7 +100,7 @@ source setup.sh start
 
 This launches all required containers:
 
-![Services overview](./_images/containers.png)
+![Services overview](./_assets/containers.png)
 
 ### Step 4: Access the Interface
 
@@ -119,11 +123,11 @@ source setup.sh stop
 
 To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
-#### 1. Ensure VLM Service Availability
+1. Ensure VLM Service Availability
 
 Verify the VLM microservice is running and accessible at the configured endpoint.
 
-#### 2. Set Environment Variable
+2. Set Environment Variable
 
 ```bash
 export NVR_GENAI=true
@@ -131,7 +135,7 @@ export VLM_SERVING_IP=<vlm-serving-device-ip>
 export VLM_SERVING_PORT=<vlm-serving-port>
 ```
 
-#### 3. Run the application
+3. Run the application
 
 Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
@@ -143,9 +147,9 @@ Re-run the application after [configuring](#step-2-configure-environment) the re
 > - SmartNVR uses either Frigate or Scenescape for GenAI capabilities.
 >   GenAI in both cannot be enabled at the same time. If Scenescape is enabled,
 >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
-> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Else, error is thrown.
+> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 
-## Running Tests and Generating Coverage Report
+### Running Tests and Generating Coverage Report
 
 To ensure the functionality of the microservice and measure test coverage, follow these steps:
 
@@ -194,7 +198,8 @@ For traffic analytics capabilities with Intel® SceneScape (vehicle counting, tr
 
 ### Custom Build Configuration
 
-If using custom [build flags](./get-started/build-from-source.md#customizing-the-build), ensure the same environment variables are set before running the setup script.
+If using custom [build flags](./get-started/build-from-source.md#customizing-the-build),
+ensure the same environment variables are set before running the setup script.
 
 ## Next Steps
 

@@ -2,4 +2,7 @@ ov_models
 ov_detection_models
 .env
 .venv/
+.coverage
 shared/
+*__pycache__*
+app/live_video_captioning.egg-info/*

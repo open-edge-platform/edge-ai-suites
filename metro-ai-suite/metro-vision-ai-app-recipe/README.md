@@ -1,15 +1,8 @@
 # Metro Vision AI App Recipe
 
-## Overview
-
 The Metro Vision AI App Recipe suite provides an integrated AI-powered solution for modern urban traffic management and monitoring. This comprehensive platform combines multiple transportation-focused applications built on a unified architecture, enabling cities and organizations to deploy intelligent transportation systems efficiently.
 
-**Available Applications:**
-- **Smart Intersection Management** (includes optional Intel® SceneScape components) - AI-driven traffic flow optimization and intersection monitoring
-- **Loitering Detection** - Real-time detection of loitering behavior in transportation hubs
-- **Smart Parking** - Automated parking space monitoring and management
-
-### Key Features
+The key features are:
 
 - **Real-time Video Analytics**: Process live video streams from traffic cameras with low latency
 - **Edge AI Processing**: Run inference locally to reduce bandwidth and improve response times
@@ -20,20 +13,29 @@ The Metro Vision AI App Recipe suite provides an integrated AI-powered solution 
 - **Flexible Deployment**: Support for various camera types and video sources
 - **No-Code Configuration**: Set up complex rules and workflows through intuitive interfaces
 
+## Sample Applications
+
+|              |             |            |
+|:-------------|:------------|:-----------|
+| [Smart Intersection Management (includes optional Scenescape components)](./smart-intersection/)                                           | AI-driven traffic flow optimization and intersection monitoring.                                 | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html)                                                          |
+| [Loitering Detection](./loitering-detection) | Real-time detection of loitering behavior in transportation hubs                                   | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/index.html)                       |
+| [Smart Parking](./smart-parking)     | Automated parking space monitoring and management.             | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/index.html)                         |
+
+
 ## How It Works
 
 The Metro Vision AI App Recipe architecture is designed to facilitate seamless integration and operation of various components involved in AI-driven video analytics for transportation and safety & security scenarios. The system processes real-time video feeds from traffic cameras, applies deep learning models for object detection and classification, and generates actionable insights for traffic management.
 
 ![Architecture Diagram](docs/user-guide/_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
-### Core Workflow
+The core workflow is:
 
-1. **Video Ingestion**: Live camera feeds or video files are ingested into the DL Streamer Pipeline Server
-2. **AI Processing**: Deep learning models perform real-time inference for vehicle detection, pedestrian tracking, and behavior analysis
-3. **Metadata Extraction**: Rich metadata including object coordinates, classifications, and tracking information is generated
-4. **Event Processing**: Node-RED processes the metadata and triggers appropriate responses based on configured rules
-5. **Data Distribution**: Results are distributed via MQTT to dashboards, alerts, and external systems
-6. **Visualization**: Real-time video streams with overlaid analytics are displayed through WebRTC viewers
+1. **Video Ingestion:** Live camera feeds or video files are ingested into the DL Streamer Pipeline Server
+2. **AI Processing:** Deep learning models perform real-time inference for vehicle detection, pedestrian tracking, and behavior analysis
+3. **Metadata Extraction:** Rich metadata including object coordinates, classifications, and tracking information is generated
+4. **Event Processing:** Node-RED processes the metadata and triggers appropriate responses based on configured rules
+5. **Data Distribution:** Results are distributed via MQTT to dashboards, alerts, and external systems
+6. **Visualization:** Real-time video streams with overlaid analytics are displayed through WebRTC viewers
 
 ### Components
 
@@ -45,7 +47,7 @@ The Metro Vision AI App Recipe architecture is designed to facilitate seamless i
 
 - **WebRTC Stream Viewer:** Provides real-time visualization of processed video streams with AI-generated overlays, including bounding boxes around detected vehicles, pedestrians, and other objects of interest.
 
-- **Grafana Dashboard:** An advanced monitoring and analytics platform that displays real-time traffic metrics, system performance data, historical trends, and customizable alerts for operator.
+- **Grafana Dashboard:** An advanced monitoring and analytics platform that displays real-time traffic metrics, system performance data, historical trends, and customizable alerts for operators.
 
 - **Inputs (Video Sources):** Supports various input types including IP cameras, RTSP streams, and video files, providing flexibility for different deployment scenarios and existing infrastructure integration.
 
@@ -62,7 +64,7 @@ The Metro Vision AI App Recipe architecture is designed to facilitate seamless i
 ### Transportation-Specific Features
 
 - **Vehicle Detection & Classification:** Accurately identifies and classifies different vehicle types
-- **Pedestrian Tracking:** Real-time tracking of pedestrians afor safety monitoring
+- **Pedestrian Tracking:** Real-time tracking of pedestrians for safety monitoring
 - **Incident Detection:** Automatic detection of accidents, stopped vehicles, or unusual traffic patterns
 - **Zone-Based Monitoring:** Configurable regions of interest for specific area monitoring
 - **Multi-Lane Support:** Simultaneous monitoring of multiple traffic lanes and directions
@@ -74,6 +76,7 @@ The system is designed with professionals in mind, offering pre-configured pipel
 Key advantages include edge-based processing that reduces latency for time-critical traffic decisions, support for multiple video sources to cover complex intersections, and integration capabilities with existing traffic management systems through standard protocols and APIs.
 
 **Advanced Capabilities with Optional Components:**
+
 When deployed with the optional Intel® SceneScape components, the system provides enhanced spatial analytics capabilities including precise vehicle trajectory tracking, accurate speed measurement, and advanced zone-based analytics. The InfluxDB integration enables long-term trend analysis, capacity planning, and performance optimization based on historical traffic patterns.
 
 ## Use Cases
@@ -99,7 +102,7 @@ When deployed with the optional Intel® SceneScape components, the system provid
 - Parking violation detection
 - Optimization of parking space utilization
 
-## Get Started
+## Learn more
 
 - [Smart Intersection](./smart-intersection/docs/user-guide/index.md)
 - [Smart Parking](./smart-parking/docs/user-guide/index.md)

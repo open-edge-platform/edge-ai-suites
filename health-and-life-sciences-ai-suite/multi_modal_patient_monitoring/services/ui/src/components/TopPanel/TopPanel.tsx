@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
+// ADD THIS IMPORT:
 import { startAllWorkloads, stopAllWorkloads } from '../../redux/slices/servicesSlice';
 import { api } from '../../services/api';
 import InfoModal from '../InfoModal/InfoModal';
@@ -30,25 +31,24 @@ const TopPanel = () => {
       setIsStarting(true);
       setNotification('🚀 Starting workloads...');
       dispatch(startProcessing());
-      dispatch(startAllWorkloads());
+      dispatch(startAllWorkloads()); // ADD THIS
       
       const response = await api.start('all');
       
       if (response.status === 'ok') {
-        setNotification('✅ Workloads started successfully');
+        setNotification('✅ Workloads started successfully'); // REMOVE auto-stop message
         
         const eventsUrl = api.getEventsUrl(['rppg', 'ai-ecg', 'mdpnp', '3d-pose']);
         dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
-        
         setTimeout(() => setNotification(''), 3000);
-      } else {
+        } else {
         throw new Error('Start failed');
       }
     } catch (error) {
       console.error('[TopPanel] ❌ Start failed:', error);
       setNotification('❌ Error starting workloads');
       dispatch(stopProcessing());
-      dispatch(stopAllWorkloads());
+      dispatch(stopAllWorkloads()); // ADD THIS
       setTimeout(() => setNotification(''), 5000);
     } finally {
       setIsStarting(false);
@@ -64,7 +64,7 @@ const TopPanel = () => {
       setIsStopping(true);
       setNotification('⏹️ Stopping...');
       dispatch(stopProcessing());
-      dispatch(stopAllWorkloads());
+      dispatch(stopAllWorkloads()); 
       
       await api.stop('all');
       dispatch({ type: 'sse/disconnect' });
@@ -145,7 +145,7 @@ const TopPanel = () => {
           onClick={() => setShowInfoModal(true)}
           title="Medical Reference Guide"
         >
-         Guide
+          Guide
         </button>
       </div>
 

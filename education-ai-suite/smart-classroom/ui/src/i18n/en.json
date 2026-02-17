@@ -36,9 +36,10 @@
       "noVideoConfigured": "No video configured",
       "videoReady": "Video ready",
       "videoAnalyticsFailed": "Video analytics failed",
-      "videoProcessingComplete": "Video processing complete",
       "audio": "Audio",
-      "video": "Video"
+      "video": "Video",
+      "videoStreamingComplete": "Video processing completed",
+      "playbackMode": "Playback Mode"
     },
     "tooltips": {
       "checkingAudioDevices": "Checking audio devices...",
@@ -137,7 +138,7 @@
       "gpt-4": "Qwen/Qwen2.5-7B-Instruct",
       "model3": "Model 3",
       "model4": "Model 4",
-      "classStatistics": "Class Statistics",
+      "classStatistics": "Class Engagement",
       "roomView": "Room View",
       "frontCamera": "Front",
       "backCamera": "Back",
@@ -158,7 +159,11 @@
     "noStreamsAvailable": "Video analytics attempted but no streams available",
     "checkCameraConfigurations": "Check camera configurations or backend video service",
     "audioRecordingContinues": "Audio recording continues normally",
-    "streamingIconAlt": "Streaming Icon"
+    "streamingIconAlt": "Streaming Icon",
+    "noStream": "No video streams",
+    "videoFailed":"Video Failed",
+    "continuingAudioOnly":"Continuing with audio-only processing",
+    "loadingvideo": "Loading video stream"
   },
   "classStatistics": {
     "studentCount": "Student Count",
@@ -166,7 +171,11 @@
     "raiseUpCount": "Aggregated Raise Up Count",
     "standReIdData": "Stand Re-ID Data",
     "studentId": "Student ID",
-    "count": "Count"
+    "count": "Count",
+    "videoAnalytics": "Video Analytics",
+    "audioAnalytics": "Audio Analytics",
+    "lastUpdated": "Last updated",
+    "noData": "No data available"
   }
 }
  
