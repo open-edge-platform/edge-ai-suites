@@ -2,7 +2,7 @@
 
 The Metro Vision AI App Recipe suite provides an integrated AI-powered solution for modern urban traffic management and monitoring. This comprehensive platform combines multiple transportation-focused applications built on a unified architecture, enabling cities and organizations to deploy intelligent transportation systems efficiently.
 
-The key features are as follows:
+The key features are:
 
 - **Real-time Video Analytics**: Process live video streams from traffic cameras with low latency
 - **Edge AI Processing**: Run inference locally to reduce bandwidth and improve response times
@@ -28,7 +28,7 @@ The Metro Vision AI App Recipe architecture is designed to facilitate seamless i
 
 ![Architecture Diagram](docs/user-guide/_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
-The core workflow is as follows:
+The core workflow is:
 
 1. **Video Ingestion:** Live camera feeds or video files are ingested into the DL Streamer Pipeline Server
 2. **AI Processing:** Deep learning models perform real-time inference for vehicle detection, pedestrian tracking, and behavior analysis
