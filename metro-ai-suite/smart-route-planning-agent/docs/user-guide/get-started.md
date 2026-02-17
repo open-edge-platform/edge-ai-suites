@@ -32,7 +32,10 @@ source setup.sh --setup
 For a more granular control, run these commands:
 
 ```bash
-# Start services only (after setup)
+# Build service images only (without starting containers)
+source setup.sh --build
+
+# Start services only (after build)
 source setup.sh --run
 
 # Stop services
@@ -40,6 +43,9 @@ source setup.sh --stop
 
 # Restart services
 source setup.sh --restart
+
+# Clean up containers, volumes, images, networks, and all related resources
+source setup.sh --clean
 ```
 
 
