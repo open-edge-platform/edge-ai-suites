@@ -179,9 +179,9 @@ case "$1" in
         echo -e "${GREEN}Containers stopped and removed.${NC}"
 
         # Remove project volumes
-        echo -e "${YELLOW}Removing volumes...${NC}"
-        docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
-        echo -e "${GREEN}Volumes removed.${NC}"
+        #echo -e "${YELLOW}Removing volumes...${NC}"
+        #docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+        #echo -e "${GREEN}Volumes removed.${NC}"
 
         # Remove project-related images
         echo -e "${YELLOW}Removing container images...${NC}"
