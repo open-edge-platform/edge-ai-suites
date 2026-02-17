@@ -1,8 +1,8 @@
 # Release Notes
 
-## Current Release: 1.0.0
+## Current Release: 1.0.0-rc1
 
-**Release Date**: 2026-02-17
+**Release Date**: 17 Feb 2026
 
 ### Features
 
@@ -23,4 +23,4 @@
 
 ### Known Issues
 - Helm is not supported
-- Validation is not done on EMT
+- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
