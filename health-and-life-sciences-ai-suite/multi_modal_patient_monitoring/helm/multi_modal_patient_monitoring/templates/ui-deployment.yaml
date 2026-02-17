@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ui
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+        - name: ui
+          image: "{{ .Values.ui.image.repository }}/{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+          env:
+            # Let the frontend use the browser's hostname and the aggregator NodePort
+            # BASE_URL = http://window.location.hostname:VITE_API_PORT
+            - name: VITE_API_PORT
+              value: "{{ .Values.aggregator.nodePort }}"

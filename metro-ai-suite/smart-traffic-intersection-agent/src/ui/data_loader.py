@@ -8,10 +8,16 @@ import requests
 from typing import Optional
 from datetime import datetime, timezone
 
-from models import (
-    MonitoringData, IntersectionData, RegionCount, 
-    VLMAnalysis, WeatherData, CameraData, TrafficContext
-)
+try:
+    from ui.models import (
+        MonitoringData, IntersectionData, RegionCount,
+        VLMAnalysis, WeatherData, CameraData, TrafficContext
+    )
+except (ModuleNotFoundError, ImportError):
+    from models import (
+        MonitoringData, IntersectionData, RegionCount,
+        VLMAnalysis, WeatherData, CameraData, TrafficContext
+    )
 
 logger = logging.getLogger(__name__)
 

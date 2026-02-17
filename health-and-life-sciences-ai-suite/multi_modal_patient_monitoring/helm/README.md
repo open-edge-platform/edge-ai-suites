@@ -18,39 +18,12 @@ Check available images:
 ```bash
 docker images | grep intel/hl-ai
 ```
-## If Docker Images Are Missing
 
-If the required images are **not present locally**, Kubernetes pods will fail with `ImagePullBackOff`.
-
-### Build Images Locally
-
-From the repository root, build each service image:
-
-```bash
-# MDPnP
-docker build -t intel/hl-ai-mdpnp:1.0.0 mdpnp-service/
-
-# DDS Bridge
-docker build -t intel/hl-ai-dds-bridge:1.0.0 dds-bridge/
-
-# Aggregator
-docker build -t intel/hl-ai-aggregator-service:1.0.0 aggregator-service/
-
-# AI ECG
-docker build -t intel/hl-ai-ecg:1.0.0 ai-ecg/backend/
-
-# 3D Pose
-docker build -t intel/hl-ai-3dpose:1.0.0 3d-pose-estimation/src/
-
-# Metrics
-docker build -t intel/hl-ai-metrics-service:1.0.0 metrics-service/
-
-```
 
 ## Install
 
 ```bash
-cd health-and-life-sciences-ai-suite/helm
+cd health-and-life-sciences-ai-suite/helm/multi_modal_patient_monitoring
 
 helm install health-ai . \
   --namespace health-ai \
@@ -86,6 +59,7 @@ kubectl logs -n health-ai deploy/aggregator
 kubectl logs -n health-ai deploy/ai-ecg
 kubectl logs -n health-ai deploy/pose
 kubectl logs -n health-ai deploy/metrics
+kubectl logs -n health-ai deploy/ui
 ``` 
 
 Healthy services will show:
@@ -95,27 +69,46 @@ Healthy services will show:
 - No crash loops
 
 
-## Access Services (Port Forward)
-AI ECG
+## Access the Frontend UI
+The UI is exposed using a NodePort service.
+
+Get the Minikube IP:
 ```bash
-kubectl port-forward svc/ai-ecg 8000:8000 -n health-ai
-``` 
-http://localhost:8000/docs
-
-Aggregator
+minikube ip
+```
+Get the UI NodePort:
 ```bash
-kubectl port-forward svc/aggregator 8001:50051 -n health-ai
-``` 
-http://localhost:8000/docs
-
-
-Pose
+kubectl get svc ui -n health-ai
+```
+Open your browser and go to:
 ```bash
-kubectl port-forward svc/pose 8002:8001 -n health-ai
+http://<minikube-ip>:<nodeport>
 ``` 
-http://localhost:8002/docs
+Example:
+```bash
+http://192.168.49.2:30007/
+``` 
+This will open the Health AI Suite frontend dashboard.
 
+From here you can access:
 
+  - 3D Pose Estimation
+
+  - ECG Monitoring
+
+  - RPPG Monitoring
+
+  - MdPnP service
+
+  - Metrics Dashboard
+
+## On Bare Metal Kubernetes (On-Prem)
+NodePort still works.
+
+User must access:
+```bash
+http://<Node-Internal-IP>:<nodePort>
+``` 
 
 ## Uninstall
 ```bash

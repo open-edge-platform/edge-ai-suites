@@ -732,9 +732,16 @@ class MetricsHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
-def run_server(host: str = "0.0.0.0", port: int = 9000) -> None:
-    server = HTTPServer((host, port), MetricsHandler)
-    print(f"Metrics HTTP server listening on {host}:{port}, serving /metrics")
+def run_server(host: str = "0.0.0.0", port: int | None = None) -> None:
+    """Run the HTTP metrics server.
+
+    The listen port can be overridden via the METRICS_HTTP_PORT
+    environment variable. If not set, it defaults to 9000 for
+    backwards compatibility.
+    """
+    effective_port = port or int(os.getenv("METRICS_HTTP_PORT", "9000"))
+    server = HTTPServer((host, effective_port), MetricsHandler)
+    print(f"Metrics HTTP server listening on {host}:{effective_port}, serving /metrics")
     server.serve_forever()
 
 

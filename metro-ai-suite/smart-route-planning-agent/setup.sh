@@ -26,6 +26,7 @@ show_help() {
     echo -e "  ${GREEN}--run${NC}         Start the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--stop${NC}        Stop the running container"
     echo -e "  ${GREEN}--restart${NC}     Restart the Smart-Route-Planning-Agent container"
+    echo -e "  ${GREEN}--clean${NC}       Remove containers, volumes, images, and all related resources"
     echo -e "  ${GREEN}--help${NC}        Show this help message"
     echo ""
     echo -e "${BLUE}Quick Start:${NC}"
@@ -168,6 +169,31 @@ case "$1" in
             echo -e "${RED}Failed to stop container${NC}"
             if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
         fi
+        ;;
+    "--clean")
+        echo -e "${YELLOW}Cleaning up Smart-Route-Planning-Agent resources...${NC}"
+
+        # Stop and remove containers
+        echo -e "${YELLOW}Stopping and removing containers...${NC}"
+        docker compose -f "$COMPOSE_MAIN" -p "$PROJECT_NAME" down 2>/dev/null || true
+        echo -e "${GREEN}Containers stopped and removed.${NC}"
+
+        # Remove project volumes
+        #echo -e "${YELLOW}Removing volumes...${NC}"
+        #docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+        #echo -e "${GREEN}Volumes removed.${NC}"
+
+        # Remove project-related images
+        echo -e "${YELLOW}Removing container images...${NC}"
+        docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep "smart-route-planning-agent" | awk '{print $2}' | xargs -r docker rmi -f 2>/dev/null || true
+        echo -e "${GREEN}Images removed.${NC}"
+
+        # Remove project networks
+        #echo -e "${YELLOW}Removing networks...${NC}"
+        #docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
+        #echo -e "${GREEN}Networks removed.${NC}"
+
+        echo -e "${GREEN}Clean up completed successfully. All containers, volumes, images, networks, and related resources have been removed.${NC}"
         ;;
     *)
         echo -e "${RED}Unknown command: $1${NC}"

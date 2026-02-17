@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intel® Agentic NVR</title>
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+    
+    <!-- Navbar -->
+    <header class="bg-slate-100 border-b border-slate-200 py-4 px-6 shadow-sm shrink-0">
+        <div class="flex items-center justify-between">
+            <h1 class="text-lg font-semibold text-slate-700">Agentic Alert NVR Dashboard</h1>
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span class="text-xs font-medium text-slate-500">System Online</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Top Section: Controls & Video -->
+        <div class="h-3/4 flex border-b border-gray-300 relative" id="main-container">
+            <!-- Left Sidebar: Controls & Data -->
+            <aside id="sidebar" class="bg-white border-r border-slate-200 p-5 overflow-y-auto flex flex-col gap-5 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.08)] z-20 rounded-r-2xl" style="width: 20%;">
+                
+                <!-- Stream Management (TOP) -->
+                <div class="border-b border-slate-100 pb-4">
+                    <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Stream Configuration
+                    </h2>
+                    <div class="space-y-2">
+                        <div class="group">
+                            <label class="block text-[9px] font-semibold text-slate-500 mb-1 ml-1 transition-colors group-focus-within:text-blue-600">STREAM NAME</label>
+                            <input type="text" id="inp-stream-id" placeholder="e.g. Lobby Camera" class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md bg-slate-100 focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400">
+                        </div>
+                        <div class="group">
+                             <label class="block text-[9px] font-semibold text-slate-500 mb-1 ml-1 transition-colors group-focus-within:text-blue-600">RTSP URL</label>
+                             <input type="text" id="inp-stream-url" placeholder="rtsp://..." class="w-full text-xs px-2 py-1.5 border border-slate-200 rounded-md bg-slate-100 focus:bg-white focus:ring-1 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400">
+                        </div>
+                        <button onclick="addNewStream()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-semibold py-2 rounded-md shadow-sm transition-all active:scale-[0.98] mt-1 flex items-center justify-center gap-1.5">
+                            <svg class="w-3.5 h-3.5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Add New Stream
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Active Streams List -->
+                <div class="border-b border-slate-100 pb-4">
+                     <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Active Streams
+                     </h2>
+                     <ul id="stream-list" class="space-y-1.5">
+                         <li class="text-[10px] text-slate-400 italic px-1">No streams active.</li>
+                     </ul>
+                </div>
+
+                <!-- Agent Configuration (Dynamic) -->
+                <div class="border-b border-slate-100 pb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg> 
+                             AI AGENT ALERTS
+                        </h2>
+                        <button onclick="saveAgents()" class="text-[9px] bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded shadow-sm font-semibold transition-all active:scale-95 flex items-center gap-1">
+                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Save
+                        </button>
+                    </div>
+                    <p class="text-[9px] text-slate-400 mb-3 px-1 leading-relaxed">Configure up to 4 alerts to monitor streams.</p>
+                    
+                    <!-- Agents Container -->
+                    <div id="agents-container" class="space-y-2">
+                        <!-- Agents will be injected here -->
+                    </div>
+                    
+                    <!-- Add Agent Button -->
+                    <button id="add-agent-btn" onclick="addAgent()" class="group w-full mt-2 p-2 rounded border border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 flex items-center justify-center gap-1.5 text-slate-400 hover:text-blue-600 text-[10px] transition-all active:scale-[0.99] bg-white">
+                        <svg class="w-3 h-3 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        <span class="font-semibold">Create New Alert</span>
+                    </button>
+                </div>
+
+                <!-- System Status / Metrics -->
+                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                    <div class="flex items-center gap-1.5 mb-3">
+                        <div class="relative flex h-1.5 w-1.5">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                        </div>
+                        <h3 class="text-[9px] font-bold text-slate-700 uppercase tracking-widest">System Health</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="text-center p-1.5 bg-slate-50 rounded border border-slate-100">
+                            <span class="block text-lg font-semibold text-slate-700 leading-none mb-0.5" id="stream-count">0</span>
+                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-wide">Streams</span>
+                        </div>
+                        <div class="text-center p-1.5 bg-slate-50 rounded border border-slate-100 flex flex-col justify-center">
+                            <span class="block text-[9px] font-mono text-slate-600 leading-none mb-0.5" id="timestamp">--:--:--</span>
+                            <span class="text-[8px] text-slate-400 font-bold uppercase tracking-wide">Last Sync</span>
+                        </div>
+                    </div>
+                    
+                    <!-- System Metrics Placeholder -->
+                    <div class="pt-1 space-y-2">
+                        <div>
+                            <div class="flex justify-between text-[9px] mb-1">
+                                <span class="text-slate-500 font-semibold">CPU</span>
+                                <span id="cpu-val" class="font-mono text-slate-600 font-medium">--%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                                <div id="cpu-bar" class="bg-blue-500 h-1 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-[9px] mb-1">
+                                <span class="text-slate-500 font-semibold">Mem</span>
+                                <span id="mem-val" class="font-mono text-slate-600 font-medium">--%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1 overflow-hidden">
+                                <div id="mem-bar" class="bg-purple-500 h-1 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+            
+            <!-- Resizer Handle -->
+            <div id="resizer" class="w-1 bg-gray-200 cursor-col-resize hover:bg-blue-400 transition-colors z-10 flex flex-col justify-center items-center">
+                <div class="h-8 w-0.5 bg-gray-400 rounded"></div>
+            </div>
+
+            <!-- Right Side: Video Grid -->
+            <section class="flex-1 bg-gray-100 p-4 overflow-y-auto min-w-0 rounded-l-2xl">
+                <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-min">
+                    <!-- Tiles injected by JS -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom Section: Future Implementation Area -->
+        <div class="flex-1 bg-gray-50 flex items-center justify-center border-t border-gray-200 rounded-t-2xl mx-2 mt-2">
+           <p class="text-gray-400 font-medium">System Metrics & Logs Area </p>
+        </div>
+
+    </main>
+
+    <!-- Application JavaScript -->
+    <script src="/static/js/app.js?v=sse1"></script>
+</body>
+</html>

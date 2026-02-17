@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WORKLOAD_INFO, VITAL_SIGNS_INFO, MEDICAL_UNITS, ECG_CLASSIFICATIONS } from '../../constants';
+import { WORKLOAD_INFO,  MEDICAL_UNITS, ECG_CLASSIFICATIONS } from '../../constants';
 import '../../assets/css/InfoModal.css';
 
 interface InfoModalProps {
@@ -27,12 +27,6 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
             onClick={() => setActiveTab('workloads')}
           >
             Workloads
-          </button>
-          <button 
-            className={`tab ${activeTab === 'vitals' ? 'active' : ''}`}
-            onClick={() => setActiveTab('vitals')}
-          >
-            Vital Signs
           </button>
           <button 
             className={`tab ${activeTab === 'ecg' ? 'active' : ''}`}
@@ -84,39 +78,6 @@ const InfoModal: React.FC<InfoModalProps> = ({ isOpen, onClose }) => {
                           )}
                         </div>
                       ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Vital Signs Tab */}
-          {activeTab === 'vitals' && (
-            <section className="info-section">
-              <div className="info-list">
-                {VITAL_SIGNS_INFO.map((vital) => (
-                  <div key={vital.key} className="info-card vital-card">
-                    <div className="vital-header">
-                      <h3>{vital.fullForm}</h3>
-                      <span className="vital-unit-badge">{vital.unit}</span>
-                    </div>
-                    <p className="vital-description">{vital.description}</p>
-                    
-                    <div className="vital-ranges">
-                      <div className="range-item normal">
-                        <strong>✓ Normal:</strong> {vital.normalRange}
-                      </div>
-                      {vital.criticalLow && (
-                        <div className="range-item critical-low">
-                          <strong>⚠️ Critical Low:</strong> {vital.criticalLow}
-                        </div>
-                      )}
-                      {vital.criticalHigh !== 'N/A' && vital.criticalHigh && (
-                        <div className="range-item critical-high">
-                          <strong>⚠️ Critical High:</strong> {vital.criticalHigh}
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}

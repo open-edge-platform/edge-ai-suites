@@ -1,0 +1,4 @@
+robotframework
+PyYAML 
+requests
+selenium
