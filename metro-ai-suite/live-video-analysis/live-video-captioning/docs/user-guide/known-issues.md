@@ -48,3 +48,7 @@ If the dashboard or APIs are not reachable, check whether the ports are already 
 ## Gemma model not working in GPU
 
 - Gemma model is not working on GPU. Only working on CPU.
+
+## Limited testing on EMT-S and EMT-D
+
+- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
