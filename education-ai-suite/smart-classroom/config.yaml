@@ -360,6 +360,7 @@ audio_util:
   allowed_extensions:
     - .wav
     - .mp3
+    - .m4a
   chunk_size: 52428800   # 1024 * 1024 * 50 = 50MB
 
 pipeline:
