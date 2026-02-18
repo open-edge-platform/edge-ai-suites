@@ -7,8 +7,8 @@ import WorkloadStatusAccordion from './WorkloadStatusAccordian';
 const RightPanel: React.FC = () => {
   return (
     <div className="right-panel">
-      <WorkloadStatusAccordion />
       <ConfigurationMetricsAccordion />
+      <WorkloadStatusAccordion />
       <ResourceUtilizationAccordion />
     </div>
   );
