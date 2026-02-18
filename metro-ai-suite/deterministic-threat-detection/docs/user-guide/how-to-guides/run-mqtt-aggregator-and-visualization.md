@@ -9,12 +9,12 @@ the results in a real-time web-based dashboard.
 The `mqtt_data_aggregator.py` script is a powerful tool for monitoring the performance of your
 TSN setup. It is a Dash application that:
 
--   Connects to multiple MQTT brokers simultaneously.
--   Subscribes to specified topics to receive data from cameras and sensors.
--   Calculates the latency by comparing the message reception time with the PTP timestamp in
-the payload.
--   Plots the latency for each topic on a live graph.
--   Provides a web interface to view the visualization.
+- Connects to multiple MQTT brokers simultaneously.
+- Subscribes to specified topics to receive data from cameras and sensors.
+- Calculates the latency by comparing the message reception time with the PTP timestamp in
+  the payload.
+- Plots the latency for each topic on a live graph.
+- Provides a web interface to view the visualization.
 
 ## Prerequisites
 

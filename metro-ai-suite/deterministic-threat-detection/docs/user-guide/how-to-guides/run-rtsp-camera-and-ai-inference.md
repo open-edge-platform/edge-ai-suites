@@ -19,16 +19,18 @@ cd docker
 Before running the services, you need to configure the environment variables.
 
 ### Update .env file
+
 Set the `MQTT_PORT` in the `.env` file. If you are behind a proxy, configure the proxy
 settings as well.
 
-```
+```text
 MQTT_PORT=1883
 # http_proxy=...
 # https_proxy=...
 ```
 
 ### Copy Configuration Files
+
 Copy the `ptp_frame_timestamp.py` and `config.json` from the `deterministic-threat-detection`
 module to the current docker directory.
 
