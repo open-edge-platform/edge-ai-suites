@@ -1,6 +1,6 @@
 # Get Started
 
-This guide covers the rapid deployment of the Live Video Alert system using Docker.
+This guide covers the rapid deployment of the Live Video Alert Agent system using Docker.
 
 ## Prerequisites
 

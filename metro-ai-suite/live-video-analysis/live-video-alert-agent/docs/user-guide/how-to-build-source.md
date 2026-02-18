@@ -1,6 +1,6 @@
 # How to Build Source
 
-This guide provides step-by-step instructions for building Live Video Alert Sample Application from source.
+This guide provides step-by-step instructions for building Live Video Alert Agent Sample Application from source.
 
 ## Building the Images
 To build the Docker image for `Live Video Alert` application, follow these steps:
