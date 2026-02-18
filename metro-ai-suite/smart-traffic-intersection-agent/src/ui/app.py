@@ -1,52 +1,17 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-#!/usr/bin/env python3
-"""
-RSU Monitoring System - Main Application
-A Gradio-based web interface for monitoring RSU data
-"""
 
-import gradio as gr
 import logging
 import sys
-import time
 
-# Import our modules
+import gradio as gr
+
 from config import Config
-from data_loader import load_monitoring_data
-from ui_components import UIComponents
-from auto_refresh import create_status_indicator_html
+from data_loader import update_components, fetch_intersection_data
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
-
-def update_dashboard(debug_mode=False):
-    """Update all dashboard components with fresh data"""
-    try:
-        # Load fresh data using API only
-        data = load_monitoring_data(api_url=Config.get_api_url())
-        
-        if not data:
-            error_msg = "<div style='color: red; text-align: center; padding: 20px;'>❌ No data available</div>"
-            return error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
-        
-        # Generate UI components
-        header = UIComponents.create_header(data)
-        #camera_images_html = UIComponents.create_camera_grid_html(data)
-        camera_gallery = UIComponents.create_camera_images(data)
-        traffic = UIComponents.create_traffic_summary(data)
-        environmental = UIComponents.create_environmental_panel(data)
-        alerts = UIComponents.create_alerts_panel(data)
-        system_info = UIComponents.create_system_info(data)
-        debug_panel = UIComponents.create_debug_panel(data)
-
-        return header, camera_gallery, traffic, environmental, alerts, system_info, gr.HTML(value=debug_panel, visible=debug_mode)
-
-    except Exception as e:
-        logger.error(f"Error updating dashboard: {e}")
-        error_msg = f"<div style='color: red; text-align: center; padding: 20px;'>❌ Error: {str(e)}</div>"
-        return error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
 
 def create_dashboard_interface():
     """Create the main dashboard interface"""
@@ -154,10 +119,8 @@ def create_dashboard_interface():
         title=Config.get_app_title(),
         theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome()
     ) as interface:
-        
-        # Header component
         header_component = gr.HTML()
-
+        
         # Main content grid
         with gr.Row():
             with gr.Column(scale=2):
@@ -169,43 +132,29 @@ def create_dashboard_interface():
                 height="450px",
                 container=True,
                 object_fit="cover"
-            )
-                
+            )    
             with gr.Column(scale=1):
                 traffic_component = gr.HTML()
-                
             with gr.Column(scale=1):
                 environmental_component = gr.HTML()
-                debug_panel_component = gr.HTML(visible=False)
 
-
-        # Alerts section
         alerts_component = gr.HTML()
-        
-        # System information footer
         system_info_component = gr.HTML()
-
-        # Auto-refresh status indicator
-        gr.HTML(create_status_indicator_html())
         
-        # Refresh function for the interface
-        def refresh_data(debug_mode_checked):
-            """Refresh dashboard data"""
-            return update_dashboard(debug_mode=debug_mode_checked)
-        
-        # Manual refresh button and debug toggle
+        # Invisible Debug panel and debug mode toggle button at the bottom
         with gr.Row(elem_id="footer-actions"):
             with gr.Column(scale=3):
                 pass  
             with gr.Column(scale=1):
-                with gr.Row():                    
-                    refresh_btn = gr.Button("🔄 Refresh Data", variant="primary", elem_id="refresh-data-btn")
                 with gr.Row():
                     debug_mode = gr.Checkbox(label="🐞 Show Debug Info", value=False, container=False, visible=False)
+                with gr.Row():
+                    debug_panel_component = gr.HTML(visible=False)
 
-        # Initial load of data
+        # Running data fetcher and UI updater concurrently, runs in main event loop
+        interface.load(fn=fetch_intersection_data, outputs=[])
         interface.load(
-            fn=refresh_data,
+            fn=update_components,
             inputs=[debug_mode],
             outputs=[
                 header_component,
@@ -217,21 +166,6 @@ def create_dashboard_interface():
                 debug_panel_component
             ]
         )
-        # Set up manual refresh handler
-        refresh_btn.click(
-            fn=refresh_data,
-            inputs=[debug_mode],
-            outputs=[
-                header_component,
-                camera_gallery,
-                traffic_component,
-                environmental_component,
-                alerts_component,
-                system_info_component,
-                debug_panel_component
-            ]
-        )
-
         # Show/hide debug panel
         debug_mode.change(
             fn=lambda x: gr.update(visible=x),
@@ -239,31 +173,11 @@ def create_dashboard_interface():
             outputs=debug_panel_component
         )
 
-        # Auto refresh using Gradio Timer (server side)
-        try:
-            auto_timer = gr.Timer(value=Config.get_refresh_interval())
-            auto_timer.tick(
-                fn=refresh_data,
-                inputs=[debug_mode],
-                outputs=[
-                    header_component,
-                    camera_gallery,
-                    traffic_component,
-                    environmental_component,
-                    alerts_component,
-                    system_info_component,
-                    debug_panel_component
-                ]
-            )
-            logger.info("Gradio Timer auto-refresh enabled (value=%ss)" % Config.get_refresh_interval())
-        except Exception as e:
-            logger.warning(f"Unable to initialize Gradio Timer auto-refresh: {e}")
-    
     return interface
 
 def main():
     """Main application entry point"""
-    logger.info("Starting RSU Monitoring Dashboard...")
+    logger.info("Starting Smart Traffic Intersection Agent Dashboard...")
     logger.info(f"API URL: {Config.get_api_url()}")
     logger.info(f"Refresh interval: {Config.get_refresh_interval()} seconds")
     logger.info(f"Server: {Config.get_app_host()}:{Config.get_app_port()}")
@@ -273,6 +187,8 @@ def main():
         # Create and launch the interface
         interface = create_dashboard_interface()
         
+        # Enable request queuing for scaling
+        interface.queue(default_concurrency_limit=5, max_size=20)
         interface.launch(
             server_name=Config.get_app_host(),
             server_port=Config.get_app_port(),
