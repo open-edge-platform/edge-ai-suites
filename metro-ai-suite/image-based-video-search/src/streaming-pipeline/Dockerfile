@@ -1,7 +1,10 @@
 FROM docker.io/intel/dlstreamer:2025.2.0-ubuntu22
 USER root
 
-RUN apt-get update && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+ && apt-get -y upgrade \
+ && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget \
+ && rm -rf /var/lib/apt/lists/*
 
 USER dlstreamer
 
