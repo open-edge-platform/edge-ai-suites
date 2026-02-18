@@ -40,7 +40,13 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-### 2. Run the Complete Setup
+### 2. Set the required environment variables
+
+```bash
+export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+```
+
+### 3. Run the Complete Setup
 
 The easiest way to set up the service is to use default configurations without making any
 changes. Run the setup script with the `--setup` option to set up the agent quickly with
@@ -117,21 +123,27 @@ cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
 nano src/config/deployment_instance.json
 ```
 
-Update the `latitude` and `longitude` values as required. If not required, use the default
-values without updating this config file. Following is a sample value for the Instance #1
-deployment config:
+Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
 
 ```json
 {
     "name": "intersection_1",
-    "latitude": 37.7049108,
-    "longitude": -121.9096158,
+    "latitude": 37.5879818,
+    "longitude": -122.0534334,
     "agent_backend_port": "8081",
     "agent_ui_port": "7860"
 }
 ```
 
-3. Run the setup for instance #1:
+> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs will be shown when setup finishes.
+
+3. Set the required environment variable.
+
+```bash
+export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+```
+
+4. Run the setup for instance #1:
 
 ```bash
 source setup.sh --setup
@@ -165,7 +177,16 @@ The following is a sample value for instance #2 deployment configuration:
     "agent_ui_port": "7861"
 }
 ```
-3. Run Setup for Instance #2
+
+> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs will be shown when setup finishes.
+
+3. Set the required environment variable.
+
+```bash
+export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+```
+
+4. Run Setup for Instance #2
 
 ```bash
 source setup.sh --setup
@@ -177,7 +198,7 @@ source setup.sh --setup
 Ensure each instance has their `deployment_instance.json` updated with:
 
 - A unique value for `name` field
-- Unique latitude and longitude co-ordinates
+- Unique `latitude` and `longitude` co-ordinates
 - Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts. This is
 optional. If not specified, an ephemeral port is picked automatically.
 
