@@ -118,7 +118,8 @@ services:
       patient-monitoring-aggregator:
         condition: service_started
     environment:
-      - ECG_DEVICE=${ECG_DEVICE}     
+      - ECG_DEVICE=${ECG_DEVICE}  
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so   
     env_file:
       - ./configs/device.env  
     volumes:
@@ -126,6 +127,7 @@ services:
       - ./videos:/videos
     devices:
       - "/dev/dri:/dev/dri"
+      - "/dev/accel/accel0:/dev/accel/accel0" 
     group_add:
       - video
 
@@ -149,7 +151,8 @@ services:
         - DEVICE_CONFIG_PATH=/app/configs/device.yaml
         - DEPLOYMENT_ENV=production
         - POSE_3D_DEVICE=${POSE_3D_DEVICE:-GPU}
-        - CONTROL_PORT=8083       
+        - CONTROL_PORT=8083     
+        - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so  
       env_file:
         - ./configs/device.env
       depends_on:
@@ -162,6 +165,7 @@ services:
         - ./videos:/videos 
       devices:
         - "/dev/dri:/dev/dri"
+        - "/dev/accel/accel0:/dev/accel/accel0" 
       group_add:
         - video
   
@@ -182,7 +186,8 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - RPPG_DEVICE=${RPPG_DEVICE}      
+      - RPPG_DEVICE=${RPPG_DEVICE}  
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so    
     env_file:
       - ./configs/device.env  
     volumes:
