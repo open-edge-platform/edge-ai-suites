@@ -1,4 +1,4 @@
-# Live Video Alert
+# Live Video Alert Agent
 
 **Version: 1.0.0-rc.0**
 

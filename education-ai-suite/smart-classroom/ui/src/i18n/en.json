@@ -176,6 +176,20 @@
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
     "noData": "No data available"
+  },
+  "search": {
+    "preparingContent": "Content Generating...",
+    "contentError": "Content preparation failed",
+    "placeholder": "Search for topics...",
+    "searching": "Searching...",
+    "clearResults": "Clear Results",
+    "submitSearch": "Search",
+    "query":"Query",
+    "resultsFound":"results found",
+    "noResults":"No results found.",
+    "Relevance":"Relevance",
+    "Timestamp":"Timestamp",
+    "expandResults":"Expand Results"
   }
 }
  
