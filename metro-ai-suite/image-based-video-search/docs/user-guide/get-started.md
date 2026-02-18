@@ -71,7 +71,7 @@ By following this guide, you will learn how to:
 
       export MODELS_PATH=/output
       chmod +x /home/dlstreamer/dlstreamer/samples/download_public_models.sh
-      if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolo11s/INT8/yolo11s.xml" ]; then
+      if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolo11s/FP16/yolo11s.xml" ]; then
           for attempt in {1..3}; do
               echo "Attempt $attempt: Running model download and quantization..."
               if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolo11s coco128; then
@@ -99,23 +99,48 @@ By following this guide, you will learn how to:
 
       docker pull openvino/ubuntu22_dev:2024.6.0
       $MODELS_PATH="$PWD\models"
-
+      # Download and convert the ResNet-50 model
       docker run --rm `
-          -e http_proxy -e https_proxy -e no_proxy \
-          -v ${MODELS_PATH}:/output `
-          openvino/ubuntu22_dev:2024.6.0 bash -c `
-          "omz_downloader --name resnet-50-pytorch --output_dir models && `
-          omz_converter --name resnet-50-pytorch --download_dir models --output_dir models && `
-          cp -r ./models/public/resnet-50-pytorch /output"
+          -e http_proxy `
+          -e https_proxy `
+          -e no_proxy `
+          -v "${MODELS_PATH}:/output" `
+          openvino/ubuntu22_dev:2024.6.0 bash -c "
+          omz_downloader --name resnet-50-pytorch --output_dir models &&
+          omz_converter --name resnet-50-pytorch --download_dir models --output_dir models &&
+          cp -r ./models/public/resnet-50-pytorch /output
+          "
+      # Download and quantize the yolov11s model
+      docker pull docker.io/intel/dlstreamer:2025.1.2-ubuntu24
+      docker run --rm --user=root `
+        -e http_proxy `
+        -e https_proxy `
+        -e no_proxy `
+        -v "${MODELS_PATH}:/output" `
+        intel/dlstreamer:2025.1.2-ubuntu24 bash -c @'
+        set -e
 
-      docker run --rm `
-          -e http_proxy -e https_proxy -e no_proxy \
-          -v ${MODELS_PATH}:/output `
-          openvino/ubuntu22_dev:2024.6.0 bash -c `
-          "omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models && `
-          omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models && `
-          cp -r ./models/intel/person-vehicle-bike-detection-2004 /output"
-            ```
+        mkdir -p src/dlstreamer-pipeline-server/models/public
+
+        export MODELS_PATH=/output
+        chmod +x /home/dlstreamer/dlstreamer/samples/download_public_models.sh
+
+        if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolo11s/FP16/yolo11s.xml" ]; then
+          for attempt in 1 2 3; do
+            
+            if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolo11s coco128; then
+              
+              break
+            else
+              
+              sleep 2
+            fi
+          done
+        fi
+        '@
+
+      
+      ```
 
       </details>
 
