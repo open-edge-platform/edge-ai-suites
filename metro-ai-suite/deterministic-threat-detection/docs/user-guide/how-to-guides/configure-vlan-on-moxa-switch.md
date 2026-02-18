@@ -2,7 +2,8 @@
 
 ## Prerequisites
 
-Ensure the MOXA switch is set to its default configuration, as per the [MOXA TSN Switch configuration guide](./configure-moxa-switch.md),
+Ensure the MOXA switch is set to its default configuration, as per the
+[MOXA TSN Switch configuration guide](./configure-moxa-switch.md),
 before proceeding with VLAN configuration.
 
 ## MOXA Switch VLAN Configuration
@@ -15,16 +16,18 @@ handle tagged VLAN traffic for the specific VLAN IDs the connected machine requi
 > and 5.
 
 1. Access the MOXA switch web interface by entering the switch's IP address(`192.168.127.253`)
-in a web browser.
+   in a web browser.
 2. Log in with your credentials.
 3. Navigate to the "`VLAN` > `IEEE 802.1Q`" section in the menu.
 4. Create VLANs with IDs 1, 3, and 5 if they do not already exist.
-![MOXA VLAN Creation](../_assets/moxa-vlan-configuration.png)
+   ![MOXA VLAN Creation](../_assets/moxa-vlan-configuration.png)
 5. Assign the appropriate ports to the VLANs as tagged ports by clicking edit (🖉) on the
-specific port.
-![MOXA VLAN Port Configuration](../_assets/moxa-vlan-port-configuration.png)
+   specific port.
+   ![MOXA VLAN Port Configuration](../_assets/moxa-vlan-port-configuration.png)
 6. Apply the configuration and reboot the switch if necessary.
 7. Verify the VLAN configuration by checking the port settings and ensuring that the correct
-VLANs are assigned.
+   VLANs are assigned.
 
-Refer to the MOXA switch user manual for detailed instructions specific to your switch model.
+Refer to the
+[Moxa Managed Switch TSN-G5000 Series User Manual](https://www.moxa.com/getmedia/a0db0ef9-2741-4bad-91c6-1ec1827aca64/moxa-tsn-g5000-series-web-console-manual-v2.3.pdf)
+for detailed instructions specific to your switch model.
