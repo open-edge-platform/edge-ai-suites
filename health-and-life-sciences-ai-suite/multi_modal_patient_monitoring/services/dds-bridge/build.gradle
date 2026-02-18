@@ -70,3 +70,13 @@ protobuf {
     }
 }
 
+// Avoid failures when the application distribution (distTar/distZip)
+// encounters duplicate JARs (e.g., rtiddsgen2.jar from multiple sources).
+// Explicitly configure the distribution tasks to exclude duplicates.
+tasks.named("distTar") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+tasks.named("distZip") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+

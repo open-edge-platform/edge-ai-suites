@@ -64,12 +64,6 @@ commands from the `multi_modal_patient_monitoring` directory:
 # Initialize MDPnP submodule
 make init-mdpnp
 
-# Build MDPnP services
-make build-mdpnp
-
-# Build DDS bridge
-make build-dds-bridge
-
 # Build and run all containers locally (no registry pulls)
 make run REGISTRY=false
 ```

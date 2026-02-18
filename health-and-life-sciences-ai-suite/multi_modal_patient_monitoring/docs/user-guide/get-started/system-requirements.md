@@ -45,14 +45,6 @@ running the multi‑modal patient monitoring application.
 	- Used primarily for asset preparation scripts and local tooling; application containers
 	include their own Python runtimes (for example, Python 3.12 in the rPPG service image).
 
-- **Java (for MDPnP and DDS‑Bridge):**
-	- Java 17 JDK installed on the host.
-	- `JAVA_HOME` configured, for example:
-
-		```bash
-		export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-		export PATH="$JAVA_HOME/bin:$PATH"
-		```
 
 - **Git and Make:**
 	- `git` for cloning the repository and managing submodules.
@@ -101,9 +93,7 @@ The application bundles several AI workloads, each with its own model(s) and inp
 - **Proxy Support (optional):**
 	- If your environment uses HTTP/HTTPS proxies, configure:
 		- `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY` in the shell before running `make`.
-	- For Java‑based components (MDPnP, DDS‑Bridge), configure Gradle proxies in
-	`~/.gradle/gradle.properties` as described in the top‑level README.
-
+	
 ## Permissions
 
 - Ability to run Docker as a user in the `docker` group or with `sudo`.
