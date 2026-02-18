@@ -8,7 +8,7 @@ APP_PORT = int(os.environ.get("DASHBOARD_PORT", "4173"))
 PEER_ID = os.environ.get("WEBRTC_PEER_ID", "genai_pipeline")
 SIGNALING_URL = os.environ.get("SIGNALING_URL", "http://localhost:8889")
 WEBRTC_BITRATE = int(os.environ.get("WEBRTC_BITRATE", "2048"))
-AGENT_MODE = os.environ.get("AGENT_MODE", "false").lower() in ("true", "1", "yes")
+ALERT_MODE = os.environ.get("ALERT_MODE", "false").lower() in ("true", "1", "yes")
 DEFAULT_RTSP_URL = os.environ.get("DEFAULT_RTSP_URL", "")
 ENABLE_DETECTION_PIPELINE = os.environ.get(
     "ENABLE_DETECTION_PIPELINE", "false"

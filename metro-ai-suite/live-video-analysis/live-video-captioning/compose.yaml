@@ -155,7 +155,7 @@ services:
       - MQTT_TOPIC_PREFIX=live-video-captioning
       - WEBRTC_PEER_ID=${WEBRTC_PEER_ID:-stream}
       - SIGNALING_URL=http://${HOST_IP:-localhost}:${WHIP_SERVER_PORT:-8889}
-      - AGENT_MODE=${AGENT_MODE:-false}
+      - ALERT_MODE=${ALERT_MODE:-false}
       - DEFAULT_RTSP_URL=${DEFAULT_RTSP_URL:-}
       - ENABLE_DETECTION_PIPELINE=${ENABLE_DETECTION_PIPELINE:-false}
       - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}

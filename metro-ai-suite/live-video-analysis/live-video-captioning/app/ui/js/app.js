@@ -395,9 +395,9 @@
     }
 
     function init() {
-        // Set application title based on agent mode
+        // Set application title based on alert mode
         const appTitleEl = document.getElementById('appTitle');
-        if (appTitleEl && cfg.agentMode) {
+        if (appTitleEl && cfg.alertMode) {
             appTitleEl.textContent = 'Live Video Captioning and Alerts';
         }
 
