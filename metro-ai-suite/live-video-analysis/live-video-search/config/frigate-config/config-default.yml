@@ -32,12 +32,6 @@ cameras:
       enabled: true
       retain:
         default: 1
-    genai:
-      enabled: false
-      use_snapshot: true
-      objects:
-        - person
-        - car
 
   livingroom:
     ffmpeg:
@@ -54,12 +48,6 @@ cameras:
       enabled: true
       retain:
         default: 1
-    genai:
-      enabled: false
-      use_snapshot: true
-      objects:
-        - person
-        - vehicle
 
 
   garage:
@@ -77,10 +65,4 @@ cameras:
       enabled: true
       retain:
         default: 1
-    genai:
-      enabled: false
-      use_snapshot: true
-      objects:
-        - person
-        - vehicle
 version: 0.15-1

@@ -122,6 +122,8 @@ export UI_ASSETS_ENDPOINT=${UI_ASSETS_ENDPOINT:-/datastore}
 export SUMMARY_FEATURE=${SUMMARY_FEATURE:-FEATURE_OFF}
 export SEARCH_FEATURE=${SEARCH_FEATURE:-FEATURE_ON}
 export APP_FEATURE_MUX=${APP_FEATURE_MUX:-ATOMIC}
+export CAMERA_CONFIG_FEATURE=${CAMERA_CONFIG_FEATURE:-FEATURE_ON}
+export UI_NVR_API_BASE=${UI_NVR_API_BASE:-/nvr-api}
 export CONFIG_SOCKET_APPEND=${CONFIG_SOCKET_APPEND:-CONFIG_OFF}
 
 # Optional hosts used in proxy bypass lists
@@ -256,7 +258,6 @@ export VSS_SUMMARY_PORT=${VSS_SUMMARY_PORT:-80}
 export VSS_SEARCH_URL=http://${VSS_SEARCH_IP}:${VSS_SEARCH_PORT}
 export VSS_SUMMARY_URL=http://${VSS_SUMMARY_IP}:${VSS_SUMMARY_PORT}
 export FRIGATE_BASE_URL=${FRIGATE_BASE_URL:-http://frigate-vms:5000}
-export NVR_API_BASE_URL=${NVR_API_BASE_URL:-http://nvr-event-router:8000}
 
 
 if [ "$1" = "--start" ] || [ "$1" = "--start-rtsp-test" ] || [ "$1" = "--start-usb-camera" ]; then
@@ -302,4 +303,3 @@ fi
 
 echo -e "\n${GREEN}Setup completed successfully!"
 echo -e "${GREEN}Access the VSS UI at: ${YELLOW}http://${HOST_IP}:${APP_HOST_PORT}${NC}"
-echo -e "${GREEN}Access Smart NVR UI at: ${YELLOW}http://${HOST_IP}:7860${NC}"

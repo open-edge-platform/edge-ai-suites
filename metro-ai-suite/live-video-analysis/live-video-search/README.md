@@ -24,5 +24,5 @@ Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for se
 ## Notes
 
 - Telemetry is **enabled** for this app and shown in the VSS UI when connected.
-- Use Smart NVR UI **Add to Search** to ingest clips into VSS Search.
+- Use VSS UI **Configure Cameras** to enable camera feeds for search ingestion.
 - Use `source setup.sh --start-usb-camera` to run Frigate with a USB camera input.

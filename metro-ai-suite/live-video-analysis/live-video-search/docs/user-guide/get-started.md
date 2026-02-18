@@ -147,7 +147,6 @@ This uses `config/frigate-config/config-rtsp.yml` and publishes `config/videos/g
 Access:
 
 - VSS UI: `http://<host-ip>:12345`
-- Smart NVR UI: `http://<host-ip>:7860`
 
 ## USB Camera (Direct Frigate Input)
 
@@ -179,9 +178,10 @@ This workflow assumes the stack is running and cameras are configured in Frigate
 
 ### Step 1: Add Clips to Search
 
-1. Open Smart NVR UI at `http://<host-ip>:7860`.
-2. Confirm camera streams are live.
-3. Choose a camera and time range, then select **Add to Search**.
+1. Open VSS UI at `http://<host-ip>:12345`.
+2. Click **Configure Cameras** and enable one or more cameras.
+3. Confirm camera streams are live in Frigate (`http://<host-ip>:5000`).
+4. Allow the watcher to ingest clips from enabled cameras.
 
 ### Step 2: Run a Search Query
 
@@ -206,7 +206,7 @@ Search results include clip timestamps, confidence scores, and metadata. Use the
 
 ### Tips
 
-- If results are empty, confirm you added clips from Smart NVR UI.
+- If results are empty, confirm cameras are enabled in **Configure Cameras** and clips have been ingested.
 - Narrow time ranges improve query latency and relevance.
 - If telemetry is not visible, check that `vss-collector` is running.
 
@@ -228,7 +228,7 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
 
 ### No clips in search results
 
-- Confirm you added clips via **Add to Search** in Smart NVR UI.
+- Confirm cameras are enabled in **Configure Cameras** in VSS UI.
 - Verify `VSS_SEARCH_URL` in `setup.sh` points to the internal endpoint.
 
 ### Search results empty after changing model
