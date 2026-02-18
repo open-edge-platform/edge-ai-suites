@@ -1,9 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""API routes for Traffic Intersection Agent."""
 
-from datetime import datetime, timedelta
-from typing import Dict, Any
+from typing import Annotated, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Query, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
@@ -12,10 +10,9 @@ import structlog
 from services.data_aggregator import DataAggregatorService
 from services.weather_service import WeatherService
 
+
 logger = structlog.get_logger(__name__)
-
 router = APIRouter()
-
 
 def get_data_aggregator(request):
     """Dependency to get data aggregator service from app state."""
@@ -82,7 +79,7 @@ def _build_response_dict(traffic_response: Any, weather_data: Any, include_image
 @router.get("/traffic/current", response_model=Dict[str, Any])
 async def get_current_traffic_intelligence(
     request: Request,
-    images: bool = Query(default=True, description="Include camera images in response")
+    images: Annotated[bool, Query(description="Include camera images in response")] = True,
 ) -> Dict[str, Any]:
     """
     Get current traffic intelligence data for the intersection.
@@ -123,7 +120,10 @@ async def get_current_traffic_intelligence(
 
 
 @router.websocket("/traffic/current/ws")
-async def ws_current_traffic_intelligence(websocket: WebSocket, images: bool = False):
+async def ws_current_traffic_intelligence(
+    websocket: WebSocket, 
+    images: Annotated[bool, Query()] = True,
+):
     """
     WebSocket endpoint for real-time traffic intersection data.
 
@@ -133,7 +133,7 @@ async def ws_current_traffic_intelligence(websocket: WebSocket, images: bool = F
     the same data in the same format.
 
     Query Parameters:
-        images: If false, camera_images will be excluded from response (default: false)
+        images: If false, camera_images will be excluded from response (default: true)
     """
     await websocket.accept()
 

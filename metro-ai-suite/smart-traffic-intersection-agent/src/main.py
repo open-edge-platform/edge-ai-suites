@@ -148,7 +148,7 @@ def main():
     app = create_app()
     
     # When running application on host we can override host and port via env variables
-    port = int(os.getenv("AGENT_BACKEND_HOSTPORT", "8081"))
+    port = int(os.getenv("AGENT_BACKEND_HOSTPORT") or 8081)
     host = os.getenv("AGENT_BACKEND_HOST", "0.0.0.0")
     
     logger.info("Starting Traffic Intersection Agent", 
@@ -159,9 +159,11 @@ def main():
         app,
         host=host,
         port=port,
+        ws_max_size=100_000_000,  # Increase WebSocket max size to handle base64 images
         log_level=log_level.lower(),
         access_log=True
     )
+    #TODO: Base64 images are not optimal, consider switching to binary
 
 
 if __name__ == "__main__":
