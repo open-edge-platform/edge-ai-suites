@@ -6,7 +6,7 @@ app:
 monitoring:
   logs_dir: ./monitoring/logs
   interval: 2
-  socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
+  socwatch_path: monitoring/tools/socwatch_windows_v2025.5.1/64/socwatch.exe
   npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
   execution_logs: monitoring/executionlogs
 models:
@@ -220,6 +220,10 @@ models:
   va:
     models_base_path: "models"
     threshold: 0.5 # confidence threshold for YOLO detections
+  
+  embedding:
+    name: "BAAI/bge-large-en-v1.5"
+
 
 mindmap:
   system_prompt:
