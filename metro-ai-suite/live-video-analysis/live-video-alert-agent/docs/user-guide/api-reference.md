@@ -1,6 +1,6 @@
 # API Reference
 
-The Live Video Alert application exposes several REST and SSE endpoints for management and data consumption.
+The Live Video Alert Agent application exposes several REST and SSE endpoints for management and data consumption.
 
 ## Dashboard Endpoints
 
