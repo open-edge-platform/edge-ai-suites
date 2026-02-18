@@ -1,6 +1,6 @@
 # API Reference
 
-The Live Video Alert Agent application exposes several REST and SSE endpoints for management and data consumption.
+The Live Video Alert application exposes several REST and SSE endpoints for management and data consumption.
 
 ## Dashboard Endpoints
 
@@ -118,3 +118,27 @@ Removes an active stream.
 - **Status Codes**:
   - `200`: Stream removed successfully
   - `503`: Service not initialized
+
+## Metrics Endpoints
+
+### `GET /api/metrics/status`
+Returns application-level metrics for monitoring dashboard.
+- **Response**: 
+  ```json
+  {
+    "active_streams": 2,
+    "active_agents": 3,
+    "total_alerts": 15,
+    "metrics_ws_url": "ws://localhost:9090/ws/clients"
+  }
+  ```
+- **Response Fields**:
+  - `active_streams` (integer): Current number of active video streams
+  - `active_agents` (integer): Number of enabled alert agents
+  - `total_alerts` (integer): Total alert count from event manager
+  - `metrics_ws_url` (string): WebSocket URL for real-time hardware metrics
+- **Status Codes**:
+  - `200`: Metrics retrieved successfully
+  - `503`: Service not initialized
+
+**Note:** Hardware metrics (CPU, GPU, RAM usage) are available via WebSocket at the `metrics_ws_url` endpoint provided by the live-metrics-service.

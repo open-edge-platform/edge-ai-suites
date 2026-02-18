@@ -7,3 +7,10 @@
 - RTSP video ingestion with VLM inference (Phi-3.5-Vision, InternVL2-2B)
 - Natural language alert configuration (max 4 alerts per stream)
 - Real-time SSE event broadcasting and interactive dashboard
+- Configurable CPU/GPU inference via TARGET_DEVICE environment variable
+
+## Upgrade Notes
+
+- To switch between CPU and GPU: `export TARGET_DEVICE=GPU && docker compose down && docker compose up -d`
+- To clear model cache: `docker compose down -v && docker compose up -d`
+- Configurable CPU/GPU inference via TARGET_DEVICE environment variable

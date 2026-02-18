@@ -42,6 +42,9 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
    export MODEL_NAME=InternVL2-2B
    
+   # Switch to GPU inference (default: CPU)
+   export TARGET_DEVICE=GPU
+   
    # Change application port (default: 9000)
    export PORT=9001
    

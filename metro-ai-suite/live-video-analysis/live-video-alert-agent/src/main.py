@@ -15,7 +15,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.agent_manager import AgentManager
 from src.config import settings, setup_logging
-
 # Configure logging
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -199,6 +198,19 @@ async def read_root():
         return HTMLResponse(content="<h1>UI Not Found</h1>")
     with open(ui_path, "r") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/api/metrics/status")
+async def get_metrics_status():
+    """Application-level metrics for monitoring."""
+    return {
+        "active_streams": len(manager.streams) if manager else 0,
+        "active_agents": len([a for a in manager.agents_config if a.get('enabled', False)]) if manager else 0,
+        "total_alerts": sum(
+            1 for results in (manager.latest_results.values() if manager else [])
+            for r in results.values() if r.get('answer') == 'YES'
+        ),
+        "metrics_ws_url": settings.METRICS_SERVICE_URL
+    }
 
 if __name__ == "__main__":
     import uvicorn

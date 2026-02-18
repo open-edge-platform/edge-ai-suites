@@ -15,6 +15,9 @@ class Settings:
     # Performance Config
     ANALYSIS_INTERVAL: float = float(os.getenv("ANALYSIS_INTERVAL", 1.0))
     FRAME_BUFFER_SIZE: int = int(os.getenv("FRAME_BUFFER_SIZE", 30))
+    
+    # Metrics Config
+    METRICS_SERVICE_URL: str = os.getenv("METRICS_SERVICE_URL", "ws://localhost:9090")
 
 settings = Settings()
 
