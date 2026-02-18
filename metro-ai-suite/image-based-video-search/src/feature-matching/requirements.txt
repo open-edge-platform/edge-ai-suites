@@ -1,5 +1,5 @@
 marshmallow==3.26.2
-pymilvus==2.5.0
+pymilvus==2.6.9
 Pillow==12.1.1
 httpx==0.28.1
 paho-mqtt==2.1.0
