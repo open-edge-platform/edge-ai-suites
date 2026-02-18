@@ -26,7 +26,7 @@ This guide covers the rapid deployment of the Live Video Alert system using Dock
 3. **Configure Image Registry and Tag**:
      ```bash
      export REGISTRY="intel/"
-     export TAG="1.0.0-rc.0"
+     export TAG="latest"
      ```
     Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 

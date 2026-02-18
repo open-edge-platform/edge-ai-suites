@@ -45,6 +45,7 @@ if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     echo -e "${YELLOW}USAGE: ${GREEN}source setup.sh ${BLUE}[--setenv | --setup | --run | --restart [agent|deps|all] | --stop | --clean | --help]"
     echo -e "${YELLOW}"
     echo -e "  --setenv:                 Set environment variables without building image or starting any containers"
+    echo -e "  --build:                  Build the service images without starting containers"
     echo -e "  --setup:                  Build and run the services"
     echo -e "  --run:                    Start the services without building image (if already built)"
     echo -e "  --restart [service_type]: Restart services"
@@ -63,7 +64,7 @@ elif [ "$#" -gt 2 ]; then
     echo -e "${YELLOW}Use --help for usage information${NC}"
     return 1
 
-elif [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--run" ] && [ "$1" != "--setup" ] && [ "$1" != "--restart" ] && [ "$1" != "--stop" ] && [ "$1" != "--clean" ]; then
+elif [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--run" ] && [ "$1" != "--build" ] && [ "$1" != "--setup" ] && [ "$1" != "--restart" ] && [ "$1" != "--stop" ] && [ "$1" != "--clean" ]; then
     # Default case for unrecognized option
     echo -e "${RED}Unknown option: $1 ${NC}"
     echo -e "${YELLOW}Use --help for usage information${NC}"
@@ -167,7 +168,7 @@ check_and_setup_dependencies() {
 }
 
 # Verify dependencies and setup (skip if stopping/cleaning services or only showing help or setting env vars)
-if [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--clean" ] && [ "$1" != "--stop" ]; then
+if [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--build" ] && [ "$1" != "--clean" ] && [ "$1" != "--stop" ]; then
     check_and_setup_dependencies
     
     if [ $? -ne 0 ]; then
@@ -274,6 +275,25 @@ print_all_service_host_endpoints() {
     echo -e "${MAGENTA}=======================================================${NC}"
     echo -e
 }   
+
+# Build service images without starting containers
+build_service() {
+    echo -e "${BLUE}==> Building Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
+
+    # Build the service images
+    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
+    else
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
+    fi
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}Smart-Traffic-Intersection-Agent images built successfully!${NC}"
+    else
+        echo -e "${RED}Failed to build Smart-Traffic-Intersection-Agent images${NC}"
+        return 1
+    fi
+}
 
 # Build agent Backend/UI image and run its container along with all other services - to run Traffic Intersection Agent End-to-End
 build_and_start_service() {
@@ -403,6 +423,9 @@ fi
 
 # Execute actions based on options provided to setup script
 case $1 in
+    --build)
+        build_service
+        ;;
     --setup)
         build_and_start_service
         ;;
