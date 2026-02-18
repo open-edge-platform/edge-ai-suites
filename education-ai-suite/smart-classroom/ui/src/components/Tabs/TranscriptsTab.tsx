@@ -54,7 +54,6 @@ const TranscriptsTab: React.FC = () => {
   const [segmentDisplayTexts, setSegmentDisplayTexts] = useState<string[]>([]);
   const [groupedSegments, setGroupedSegments] = useState<GroupedSegment[]>([]);
 
-  // ✅ Use Redux state for detectedLanguage, remove local state
   const { segments, currentTypingIndex, teacherSpeaker, detectedLanguage } =
     useAppSelector(s => s.transcript);
   const { 
@@ -112,10 +111,9 @@ const TranscriptsTab: React.FC = () => {
     }, 500);
   };
 
-  // ✅ Fixed language detection effect
   useEffect(() => {
     if (segments.length > 0) {
-      const allText = segments.map(seg => seg.text).join(' ');
+      const allText = segments.map(seg => seg.text).join(" ");
       const detected = detectLanguage(allText);
       if (detected !== detectedLanguage) {
         dispatch(setDetectedLanguage(detected));
@@ -123,6 +121,7 @@ const TranscriptsTab: React.FC = () => {
       }
     }
   }, [segments, detectedLanguage, dispatch]);
+
 
   useEffect(() => {
     if (segments.length === 0) {
@@ -136,7 +135,7 @@ const TranscriptsTab: React.FC = () => {
       for (let i = 0; i < segments.length; i++) {
         const segment = segments[i];
         const speaker = segment.speaker;
-        const existingGroupIndex = newGroups.findIndex(group => 
+        const existingGroupIndex = newGroups.findIndex(group =>
           group.originalSegments.includes(i)
         );
         
@@ -147,16 +146,16 @@ const TranscriptsTab: React.FC = () => {
           group.combinedText = group.originalSegments.map(idx => segments[idx].text).join(" ");
           continue;
         }
+
         const lastGroup = newGroups[newGroups.length - 1];
         if (lastGroup && lastGroup.speaker === speaker) {
-          // Add to existing group
           lastGroup.originalSegments.push(i);
           lastGroup.combinedText = lastGroup.originalSegments.map(idx => segments[idx].text).join(" ");
           lastGroup.isComplete = lastGroup.originalSegments.every(idx => segments[idx].isComplete);
           lastGroup.isCurrentlyTyping = lastGroup.originalSegments.includes(currentTypingIndex);
         } else {
           const newGroup: GroupedSegment = {
-            id: `${speaker}-${Date.now()}-${i}`, 
+            id: `${speaker}-${i}`,
             speaker: speaker,
             combinedText: segment.text,
             originalSegments: [i],
@@ -179,6 +178,7 @@ const TranscriptsTab: React.FC = () => {
     });
   }, [segments.length]);
 
+
   useEffect(() => {
     if (
       currentTypingIndex < 0 ||
@@ -188,48 +188,57 @@ const TranscriptsTab: React.FC = () => {
       return;
     }
 
-    const segment = segments[currentTypingIndex];
+    const idx = currentTypingIndex;
+    const segment = segments[idx];
 
-    const prev = typewriterControllers.current.get(currentTypingIndex);
+    const prev = typewriterControllers.current.get(idx);
     if (prev) prev.abort();
 
     const controller = new AbortController();
-    typewriterControllers.current.set(currentTypingIndex, controller);
+    typewriterControllers.current.set(idx, controller);
 
     const run = async () => {
-      let acc = "";
       try {
-        for await (const part of typewriterStream(
-          segment.text,
-          150,
-          controller.signal
-        )) {
+        let acc = segmentDisplayTexts[idx] || "";
+        if (acc.length > segment.text.length) {
+          acc = segment.text.slice(0, acc.length);
+        }
+
+        const remaining = segment.text.slice(acc.length);
+        if (remaining.length === 0) {
+          if (mountedRef.current) {
+            dispatch(completeSegmentTyping(idx));
+          }
+          return;
+        }
+
+        for await (const part of typewriterStream(remaining, 150, controller.signal)) {
           if (controller.signal.aborted || !mountedRef.current) return;
           acc += part;
           setSegmentDisplayTexts(prev => {
             const copy = [...prev];
-            copy[currentTypingIndex] = acc;
+            copy[idx] = acc;
             return copy;
           });
         }
 
         if (mountedRef.current) {
-          dispatch(completeSegmentTyping(currentTypingIndex));
+          dispatch(completeSegmentTyping(idx));
         }
       } catch {
         if (!controller.signal.aborted && mountedRef.current) {
           setSegmentDisplayTexts(prev => {
             const copy = [...prev];
-            copy[currentTypingIndex] = segment.text;
+            copy[idx] = segment.text;
             return copy;
           });
-          dispatch(completeSegmentTyping(currentTypingIndex));
+          dispatch(completeSegmentTyping(idx));
         }
       }
     };
 
     run();
-  }, [currentTypingIndex, segments, dispatch]);
+  }, [currentTypingIndex]);
 
   useEffect(() => {
     segments.forEach((seg, i) => {
@@ -277,10 +286,8 @@ const TranscriptsTab: React.FC = () => {
               dispatch(startTranscription());
             }
             
-            // ✅ Process chunk data with proper timing
             const chunkData = ev.data;
             if (chunkData.segments && Array.isArray(chunkData.segments)) {
-              // Convert relative timestamps to absolute timestamps
               const processedSegments = chunkData.segments.map((segment: any) => ({
                 ...segment,
                 start: segment.start + (chunkData.start_time || 0),
@@ -308,7 +315,6 @@ const TranscriptsTab: React.FC = () => {
             console.log('📋 Final transcript data received:', ev.data);
             dispatch(setFinalTranscript(ev.data));
             
-            // ✅ Handle timeline data from final event
             if (ev.data.teacher_speaker) {
               console.log('👨‍🏫 Teacher speaker identified:', ev.data.teacher_speaker);
             }
@@ -458,12 +464,17 @@ const TranscriptsTab: React.FC = () => {
     });
   }, [groupedSegments, isGroupVisible, getDisplayText, isGroupTyping, getSpeakerLabel, detectedLanguage]);
 
+  const visibleGroups = useMemo(
+    () => renderedGroups.filter(g => g.visible && (g.displayText?.trim().length ?? 0) > 0),
+    [renderedGroups]
+  );
+
   return (
     <div className="transcripts-tab chat-ui-root">
       <div className="transcript-content chat-ui-content">
-        {renderedGroups.length > 0 && (
+        {visibleGroups.length > 0 && (
           <div className="transcript-list chat-ui-list">
-            {renderedGroups.map((group) => (
+            {visibleGroups.map((group) => (
               <div
                 key={group.id}
                 className={`chat-row ${group.isTeacher ? "teacher-row" : "student-row"}`}
@@ -473,7 +484,7 @@ const TranscriptsTab: React.FC = () => {
                     {group.speakerLabel}
                   </div>
                   <div className="speaker-text">
-                    {group.visible ? group.displayText : ""}
+                    {group.displayText}
                     {group.showCursor && (
                       <span className="typewriter-cursor">|</span>
                     )}

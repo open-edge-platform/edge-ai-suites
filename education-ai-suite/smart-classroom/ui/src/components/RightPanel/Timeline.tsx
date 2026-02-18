@@ -41,7 +41,7 @@ const Timeline: React.FC = () => {
   }, [segments]);
 
   const isValidSpeaker = (speaker: string) =>
-    /^SPEAKER_\d+$/i.test(speaker);
+    /^SPEAKER(_\d+)?$/i.test(speaker);
 
   const cleanedSegments = useMemo(
     () => timelineSegments.filter(s => isValidSpeaker(s.speaker)),
