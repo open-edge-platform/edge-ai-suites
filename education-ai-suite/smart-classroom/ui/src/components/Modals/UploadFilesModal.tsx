@@ -36,7 +36,6 @@ import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
 import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
-
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,8 +69,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         const file = target.files[0];
         const fileName = file.name.toLowerCase();
         let isValidFile = false;
-        if (accept === '.wav,.mp3') {
-          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
+        if (accept === '.wav,.mp3,.m4a') {
+          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3') || fileName.endsWith('.m4a');
         } else if (accept === '.mp4') {
           isValidFile = fileName.endsWith('.mp4');
         } else {
@@ -344,7 +343,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
               placeholder="Enter the base directory"
             />
           </div>
-          <div className="modal-input-group">
+          <div className="modal-input-group modal-title fw-semibold">
             <label>{t('uploadFiles.audioFileLabel')}</label>
             <div className="file-input-wrapper">
               <input
