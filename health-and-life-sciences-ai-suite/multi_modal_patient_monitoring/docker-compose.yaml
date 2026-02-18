@@ -206,3 +206,16 @@ services:
     container_name: ui  
     ports:
       - "3000:3000"
+    depends_on:
+      patient-monitoring-aggregator:
+        condition: service_started
+      mdpnp:
+        condition: service_started
+      dds-bridge:
+        condition: service_started
+      ai-ecg:
+        condition: service_started
+      3dpose-estimation:
+        condition: service_started
+      rppg:
+        condition: service_started    
