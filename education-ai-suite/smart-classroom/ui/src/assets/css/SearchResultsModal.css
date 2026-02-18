@@ -1,0 +1,252 @@
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.search-results-modal {
+  width: 100%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.modal-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* ---------------- HEADER ---------------- */
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #fff;
+}
+
+.modal-header h2 {
+  margin: 0 0 6px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.search-query {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.query-label {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.query-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: #2563eb;
+  background: #eff6ff;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.results-count {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* ---------------- BODY ---------------- */
+
+.modal-body {
+  padding: 16px 20px;
+  width:100%;
+}
+
+.results-list {
+  width:100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------------- RESULT CARD ---------------- */
+
+.result-card {
+  border: 1px solid #f1f5f9;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #fcfcfd;
+  transition: all 0.15s ease;
+}
+
+.result-card.clickable {
+  cursor: pointer;
+}
+
+.result-card:hover {
+  border-color: #3b82f6;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+}
+
+.result-card.selected {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+/* ---------------- RESULT HEADER ---------------- */
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.result-topic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.result-topic h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ---------------- RELEVANCE BADGE ---------------- */
+
+.relevance-score {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(59,130,246,0.12);
+  color: #2563eb;
+}
+
+/* ---------------- TIMESTAMP ---------------- */
+
+.result-timestamp {
+  text-align: right;
+  font-size: 12px;
+}
+
+.time-range {
+  display: block;
+  font-weight: 600;
+  color: #374151;
+}
+
+.duration {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ---------------- CONTENT ---------------- */
+
+.result-content {
+  margin: 8px 0 10px;
+}
+
+.result-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #161718;
+}
+
+/* ---------------- ACTION BUTTON ---------------- */
+
+.result-actions {
+  margin-bottom: 6px;
+}
+
+
+/* ---------------- FOOTER ---------------- */
+
+.result-footer {
+  padding-top: 6px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.score-detail {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* ---------------- MODAL FOOTER ---------------- */
+
+.modal-footer {
+  padding: 12px 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.video-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.close-btn {
+  padding: 6px 14px;
+  background: #374151;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #1f2933;
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+
+@media (max-width: 768px) {
+  .search-results-modal {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .result-header {
+    flex-direction: column;
+  }
+
+  .result-timestamp {
+    text-align: left;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+}

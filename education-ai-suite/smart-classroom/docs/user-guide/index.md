@@ -32,9 +32,8 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
-system-requirements
-how-it-works
 get-started
+how-it-works
 application-flow
 release-notes
 

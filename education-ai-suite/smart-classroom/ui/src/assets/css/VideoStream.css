@@ -173,14 +173,12 @@
   background-color: #0056b3;
 }
  
-/* NEW STREAM LAYOUT STYLES */
 .streams-layout {
   width: 100%;
   height: 100%;
   display: flex;
 }
  
-/* Multi-stream container (when "All" is selected) */
 .multi-stream-container {
   width: 100%;
   height: 100%;
@@ -286,7 +284,7 @@
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
- 
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }

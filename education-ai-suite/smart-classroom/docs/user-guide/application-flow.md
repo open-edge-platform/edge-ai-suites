@@ -14,8 +14,8 @@ Audio → *.mp3 or .wav* \
 Video → *.mp4*
 
 <p>
-  <img src="../user-guide/images/uploadbutton.png" width="45%" />
-  <img src="../user-guide/images/uploadmodal.png" width="45%" />
+  <img src="../user-guide/_assets/uploadbutton.png" width="45%" />
+  <img src="../user-guide/_assets/uploadmodal.png" width="45%" />
 </p>
 
 **After successful upload click Apply&Start Processing**
@@ -27,7 +27,7 @@ Application will start transcription after analyzing the audio and videos will g
 
 *Right Panel shows the monitoring of CPU, GPU, NPU, Memory and Power Utilization*
 
-![Uploaded Files Processing](./images/processing.png)
+![Uploaded Files Processing](./_assets/processing.png)
 
 ## 3) Tabs Switch
 
@@ -35,12 +35,12 @@ User can switch between tabs as shown below
 
 The Room View toggle allows the user to switch between full audio–video mode and audio-only mode. When disabled, the video component is hidden and only the audio panel remains visible.
 
-![Tabs Switch](./images/tabs-switch.png)
+![Tabs Switch](./_assets/tabs-switch.png)
 
 ## 4) Final State
 
 Audio → After transcription and post summary, MindMap gets generated \
 Video → Class Statistics are displayed from video process
 
-![Uploaded Files Processing](./images/audio-done.png)
-![Uploaded Files Processing](./images/video-done.png)
+![Uploaded Files Processing](./_assets/audio-done.png)
+![Uploaded Files Processing](./_assets/video-done.png)
