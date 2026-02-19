@@ -7,7 +7,9 @@ import {
   setFrontCameraStream,
   setBackCameraStream,
   setBoardCameraStream,
-  setActiveStream
+  setActiveStream,
+  setHasUploadedVideoFiles,
+  setVideoPlaybackMode
 } from "../redux/slices/uiSlice";
 
 export function useVideoPipelineMonitor() {
@@ -20,9 +22,7 @@ export function useVideoPipelineMonitor() {
   const retryTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!sessionId) return;
-    if (!videoActive && !videoLoading) return;
-
+    if (!sessionId || !videoActive) return;
     abortRef.current = new AbortController();
 
     const startMonitor = async () => {
@@ -63,12 +63,22 @@ export function useVideoPipelineMonitor() {
     };
 
     const handleStop = (status: "failed" | "completed") => {
+      console.log("🎥 Pipeline stopped with status:", status);
+
       dispatch(setVideoStatus(status));
       dispatch(setVideoAnalyticsActive(false));
-      cleanupStreams();
+
+      if (status === "completed") {
+        dispatch(setVideoPlaybackMode(true));
+        dispatch(setHasUploadedVideoFiles(true));
+        console.log("▶ Switching to playback mode");
+      }
+      if (status === "failed") {
+        cleanupStreams();
+      }
       abortRef.current?.abort();
     };
-
+    
     const cleanupStreams = () => {
       dispatch(setFrontCameraStream(""));
       dispatch(setBackCameraStream(""));
@@ -84,5 +94,5 @@ export function useVideoPipelineMonitor() {
         clearTimeout(retryTimer.current);
       }
     };
-  }, [sessionId, videoActive, videoLoading, dispatch]);
+  }, [sessionId, videoActive]);
 }

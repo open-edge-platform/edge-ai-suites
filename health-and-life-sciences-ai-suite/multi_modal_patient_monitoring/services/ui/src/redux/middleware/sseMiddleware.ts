@@ -49,22 +49,41 @@ export const sseMiddleware: Middleware = (store) => {
           let parsedData: any = {};
 
           if (workloadType === 'rppg') {
-            // rPPG sends: HR, RR, SpO2, waveform
-            parsedData = {
-              HR: payload.HR ?? payload.heart_rate,
-              RR: payload.RR ?? payload.respiratory_rate ?? payload.value,
-              SpO2: payload.SpO2 ?? payload.spo2,
-            };
-            
-            // Extract waveform if present
-            if (payload.waveform && Array.isArray(payload.waveform)) {
-              parsedData.waveform = payload.waveform;
+            // rPPG can send both waveform and numeric vitals
+            if (eventType === 'numeric') {
+              const metric = payload.metric;
+
+              if (metric === 'HEART_RATE_AVG' || metric === 'HEART_RATE') {
+                parsedData.HR = payload.value;
+              } else if (metric === 'RESP_RATE_AVG' || metric === 'RESP_RATE') {
+                parsedData.RR = payload.value;
+              } else if (metric === 'SPO2' || metric === 'SPO2_AVG' || metric === 'OXYGEN_SATURATION') {
+                parsedData.SpO2 = payload.value;
+              }
+
+              console.log('[SSE] ✓ Parsed rPPG numeric:', {
+                metric,
+                value: payload.value,
+                vitals: { HR: parsedData.HR, RR: parsedData.RR, SpO2: parsedData.SpO2 },
+              });
+            } else {
+              // Waveform / aggregated payload
+              parsedData = {
+                HR: payload.HR ?? payload.heart_rate,
+                RR: payload.RR ?? payload.respiratory_rate ?? payload.value,
+                SpO2: payload.SpO2 ?? payload.spo2,
+              };
+              
+              // Extract waveform if present
+              if (payload.waveform && Array.isArray(payload.waveform)) {
+                parsedData.waveform = payload.waveform;
+              }
+              
+              console.log('[SSE] ✓ Parsed rPPG (waveform/aggregate):', {
+                vitals: { HR: parsedData.HR, RR: parsedData.RR, SpO2: parsedData.SpO2 },
+                waveformLength: parsedData.waveform?.length
+              });
             }
-            
-            console.log('[SSE] ✓ Parsed rPPG:', {
-              vitals: { HR: parsedData.HR, RR: parsedData.RR, SpO2: parsedData.SpO2 },
-              waveformLength: parsedData.waveform?.length
-            });
 
           } else if (workloadType === 'ai-ecg') {
             console.log('[SSE] 🔬 AI-ECG raw payload:', JSON.stringify(payload, null, 2));
@@ -115,6 +134,10 @@ export const sseMiddleware: Middleware = (store) => {
                 parsedData.BP_DIA = payload.value;
                 console.log('[SSE] ✓ MDPNP BP_DIA:', payload.value);
               }
+              else if (metric === 'MDC_PRESS_BLD_ART_ABP_SYS') {
+                parsedData.BP_SYS = payload.value;
+                console.log('[SSE] ✓ MDPNP BP_SYS:', payload.value);
+              }
             } 
             else if (eventType === 'waveform') {
               // Extract waveform based on device type
@@ -139,7 +162,7 @@ export const sseMiddleware: Middleware = (store) => {
             }
             
             console.log('[SSE] ✓ Parsed MDPNP:', {
-              vitals: { HR: parsedData.HR, CO2_ET: parsedData.CO2_ET, BP_DIA: parsedData.BP_DIA },
+              vitals: { HR: parsedData.HR, CO2_ET: parsedData.CO2_ET, BP_SYS: parsedData.BP_SYS, BP_DIA: parsedData.BP_DIA },
               waveformType: parsedData.waveformType,
               waveformLength: parsedData.waveform?.length
             });
@@ -183,6 +206,15 @@ export const sseMiddleware: Middleware = (store) => {
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);
           }
+          const state: any = store.getState();
+          const isProcessing = state.app?.isProcessing;
+          if (!isProcessing) {
+            console.log('[SSE] ⏸ Ignoring SSE data because app.isProcessing = false', {
+              workloadType,
+              eventType,
+            });
+            return;
+          }
 
           // Dispatch to Redux
           store.dispatch(updateWorkloadData({
@@ -195,7 +227,8 @@ export const sseMiddleware: Middleware = (store) => {
           store.dispatch(addEvent({
             workload: workloadType,
             data: parsedData,
-            timestamp: timestamp
+            timestamp: timestamp,
+            id: ''
           }));
 
         } catch (error) {

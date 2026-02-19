@@ -136,7 +136,23 @@ export async function getResourceMetrics(): Promise<{
   npu_utilization: Array<[string, number]>;
 }> {
   console.log('[API] Fetching metrics from:', `${BASE_URL}/metrics`);
-  const response = await fetch(`${BASE_URL}/metrics`);
+
+  // Use AbortController to enforce a client-side timeout that's
+  // comfortably higher than the backend proxy timeout, so we don't
+  // abort aggressively while the metrics service is still responding.
+  const controller = new AbortController();
+  const timeoutMs = 15000; // 15s client-side timeout
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  const response = await fetch(`${BASE_URL}/metrics`, {
+    signal: controller.signal,
+  }).catch((err) => {
+    clearTimeout(timeoutId);
+    console.error('[API] Metrics fetch error:', err);
+    throw err;
+  });
+
+  clearTimeout(timeoutId);
   
   if (!response.ok) {
     throw new Error(`Failed to fetch resource metrics: ${response.statusText}`);

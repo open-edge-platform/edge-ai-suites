@@ -186,8 +186,8 @@ services:
       - "/dev:/dev"
       - dlstreamer-pipeline-server-tmp:/tmp
       # - "../mr_models:/home/pipeline-server/mr_models:rw"
-      - "./src/dlstreamer-pipeline-server/models/person-vehicle-bike-detection-2004:/models/person-vehicle-bike-detection-2004"
-      - "./src/dlstreamer-pipeline-server/models/resnet-50-pytorch:/models/resnet50"
+      - "./src/dlstreamer-pipeline-server/models/public:/models/public"
+      - "./src/dlstreamer-pipeline-server/models/resnet-50-pytorch:/models/resnet-50-pytorch"
     group_add:
       # render group ID for ubuntu 20.04 host OS
       - "109"

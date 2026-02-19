@@ -7,14 +7,9 @@ from utils.storage_manager import StorageManager
 from utils.runtime_config_loader import RuntimeConfig
 from components.asr.openai.whisper import Whisper as OA_Whisper
 from components.asr.diarization.pyannote_diarizer import PyannoteDiarizer
+from components.asr.openvino.whisper import Whisper as OV_Whisper
 from components.asr.funasr.paraformer import Paraformer
 import logging
-
-if config.app.use_ov_genai:
-    from components.asr.openvino_genai.whisper import Whisper as OV_Whisper
-else:
-    from components.asr.openvino.whisper import Whisper as OV_Whisper
-    
 logger = logging.getLogger(__name__)
 
 ENABLE_DIARIZATION = config.models.asr.diarization
@@ -57,6 +52,7 @@ class ASRComponent(PipelineComponent):
         self.speaker_text_len = {}   # accumulate across chunks
         self.threads_limit = THREADS_LIMIT
         self.enable_diarization = ENABLE_DIARIZATION
+        self.all_segments = []
         provider, model_name = provider.lower(), model_name.lower()
         model_config_key = (provider, model_name, device)
 
@@ -122,8 +118,14 @@ class ASRComponent(PipelineComponent):
                                 break
 
                         text = sent["text"].strip()
-                        start = float(sent["start"])
-                        end = float(sent["end"])
+
+                        # Global chunk offset from chunker
+                        chunk_offset = float(chunk_data.get("start_time", 0.0))
+
+                        # Convert local Whisper timestamps → global timestamps
+                        start = float(sent["start"]) + chunk_offset
+                        end   = float(sent["end"])   + chunk_offset
+
 
                         ui_segments.append({
                             "speaker": speaker,
@@ -150,6 +152,7 @@ class ASRComponent(PipelineComponent):
                         "end": 0.0
                     }]
 
+                self.all_segments.extend(ui_segments)
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
 
@@ -167,49 +170,49 @@ class ASRComponent(PipelineComponent):
                 teacher_speaker = max(self.speaker_text_len, key=self.speaker_text_len.get)
 
             if teacher_speaker:
-                raw = StorageManager.read_text_file(transcript_path)
 
-                teacher_transcript_lines = []
-                updated_lines = []
+                raw_segments = []
 
-                for line in raw.splitlines():
-                    if ":" not in line:
-                        updated_lines.append(line)
-                        continue
+                teacher_lines_with_time = []
+                full_updated_lines = []
 
-                    spk, text = line.split(":", 1)
+                for seg in self.all_segments:
+                    spk = seg["speaker"]
+                    text = seg["text"].strip()
+                    start = round(seg["start"], 2)
+                    end = round(seg["end"], 2)
 
-                    # Assign teacher
+                    # Identify teacher
                     if spk == teacher_speaker:
-                        new_spk = LABEL_TEACHER
-                        teacher_transcript_lines.append(f"{new_spk}:{text}")
-
-                    # Numbered speakers → students
-                    elif spk.startswith(f"{LABEL_SPEAKER}_"):
-                        new_spk = spk.replace(f"{LABEL_SPEAKER}_", f"{LABEL_STUDENT}_")
-
-                    # Generic unlabeled speaker
-                    elif spk == LABEL_SPEAKER:
-                        new_spk = LABEL_STUDENT
-
+                        speaker_label = LABEL_TEACHER
+                        line = f"[{start} - {end}] {speaker_label}: {text}"
+                        teacher_lines_with_time.append(line)
                     else:
-                        new_spk = spk
+                        # relabel other speakers
+                        if spk.startswith(f"{LABEL_SPEAKER}_"):
+                            speaker_label = spk.replace(f"{LABEL_SPEAKER}_", f"{LABEL_STUDENT}_")
+                        elif spk == LABEL_SPEAKER:
+                            speaker_label = LABEL_STUDENT
+                        else:
+                            speaker_label = spk
 
-                    updated_lines.append(f"{new_spk}:{text}")
+                        line = f"[{start} - {end}] {speaker_label}: {text}"
 
-                # ✅ Save AFTER loop
+                    full_updated_lines.append(line)
+
+                # Save full timestamped transcript
                 StorageManager.save(
                     transcript_path,
-                    "\n".join(updated_lines) + "\n",
+                    "\n".join(full_updated_lines) + "\n",
                     append=False
                 )
 
+                # Save teacher-only timestamped transcript
                 StorageManager.save(
                     os.path.join(project_path, "teacher_transcription.txt"),
-                    "\n".join(teacher_transcript_lines) + "\n",
+                    "\n".join(teacher_lines_with_time) + "\n",
                     append=False
                 )
-
 
             yield {
                 "event": "final",

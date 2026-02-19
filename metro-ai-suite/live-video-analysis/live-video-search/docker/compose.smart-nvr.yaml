@@ -1,0 +1,163 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  frigate:
+    container_name: frigate-vms
+    image: ghcr.io/blakeblackshear/frigate:0.15.1
+    restart: unless-stopped
+    shm_size: "142mb"
+    networks:
+      - live-video-network
+    ports:
+      - "5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 5s
+    volumes:
+      - ${LIVE_SEARCH_CONFIG_DIR:-./config}/frigate-config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - type: tmpfs
+        target: /tmp/cache
+        tmpfs:
+          size: 1000000000
+      - ${LIVE_SEARCH_CONFIG_DIR:-./config}/videos:/videos
+      - frigate_recordings:/media/frigate/recordings
+    depends_on:
+      mqtt-broker:
+        condition: service_healthy
+      video-search:
+        condition: service_started
+    environment:
+      no_proxy: ${no_proxy},frigate,${VSS_SUMMARY_IP},${VLM_SERVING_IP}
+      NO_PROXY: ${no_proxy},frigate,${VSS_SUMMARY_IP},${VLM_SERVING_IP}
+      FRIGATE_MQTT_PASSWORD: ${MQTT_PASSWORD}
+      FRIGATE_MQTT_USER: ${MQTT_USER}
+      OPENAI_BASE_URL: "http://${VLM_SERVING_IP}:${VLM_SERVING_PORT}/v1"
+      OPENAI_API_KEY: "your_openai_api_key"
+
+  nvr-event-router:
+    container_name: nvr-event-router
+    image: ${REGISTRY}nvr-event-router:${TAG}
+    restart: unless-stopped
+    networks:
+      - live-video-network
+    ipc: host
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 5s
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - frigate_recordings:/media/frigate/recordings
+    depends_on:
+      frigate:
+        condition: service_healthy
+      mqtt-broker:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      video-search:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    environment:
+      MODE: "backend"
+      FRIGATE_BASE_URL: ${FRIGATE_BASE_URL}
+      VSS_SEARCH_URL: ${VSS_SEARCH_URL}
+      VSS_SUMMARY_URL: ${VSS_SUMMARY_URL}
+      no_proxy: ${no_proxy},frigate-vms,${PM_HOST},${VLM_SERVING_IP},mqtt-broker,${HOST_IP},localhost,nginx
+      MQTT_BROKER: mqtt-broker
+      MQTT_PORT: 1883
+      SCENESCAPE_MQTT_BROKER: mqtt-broker
+      SCENESCAPE_MQTT_PORT: 1883
+      REDIS_HOST: redis
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      HOST_IP: ${HOST_IP}
+
+  nvr-event-router-ui:
+    container_name: nvr-event-router-ui
+    image: ${REGISTRY}nvr-event-router:${TAG}
+    restart: unless-stopped
+    networks:
+      - live-video-network
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      - nvr-event-router
+    ports:
+      - "7860:7860"
+    environment:
+      MODE: "ui"
+      API_BASE_URL: ${NVR_API_BASE_URL}
+      EVENT_POLL_INTERVAL: "10"
+      no_proxy: ${no_proxy},frigate,nvr-event-router,${PM_HOST},${VLM_SERVING_IP}
+
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0.21
+    container_name: mqtt-broker
+    networks:
+      - live-video-network
+    ports:
+      - "1883:1883"
+    volumes:
+      - ${LIVE_SEARCH_CONFIG_DIR:-./config}/mqtt-config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    environment:
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+    command: >
+      sh -c "
+        touch /mosquitto/config/pwfile &&
+        mosquitto_passwd -c -b /mosquitto/config/pwfile $${MQTT_USER} $${MQTT_PASSWORD} &&
+        chmod 0700 /mosquitto/config/pwfile &&
+        chown mosquitto:mosquitto /mosquitto/config/pwfile &&
+        mosquitto -c /mosquitto/config/mosquitto.conf
+      "
+    healthcheck:
+      test: mosquitto_sub -u $$MQTT_USER -P $$MQTT_PASSWORD -t '$$SYS/#' -C 1 -i healthcheck -W 3
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    networks:
+      - live-video-network
+    volumes:
+      - redis_data:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+networks:
+  live-video-network:
+    driver: bridge
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  frigate_recordings:
+  redis_data:

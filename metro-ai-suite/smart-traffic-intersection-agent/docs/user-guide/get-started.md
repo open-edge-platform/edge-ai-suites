@@ -1,6 +1,8 @@
 # Get Started
 
-The **Smart Traffic Intersection Agent (STIA)** provides analytics that include, but not limited to, real-time intersection, directional traffic density, and VLM-powered traffic. This section shows you how to:
+The **Smart Traffic Intersection Agent (STIA)** provides analytics that include real-time
+intersection, directional traffic density, and VLM-powered traffic, among others. This section
+shows you how to:
 
 - Set up the agent using the automated setup script for quick deployment.
 - Run predefined tasks to explore the agent's functionality.
@@ -10,14 +12,26 @@ The **Smart Traffic Intersection Agent (STIA)** provides analytics that include,
 
 Before you begin, ensure the following:
 
-- **System requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
+- **System requirements**: Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - **Docker platform**: Install Docker platform. For installation instructions, see [Get Docker](https://docs.docker.com/get-docker/).
-- **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for traffic data streaming, or use the included broker.
-- **Docker commands and terminal usage**: You are familiar with Docker commands and using the terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for an introduction.
+- **Message Queuing Telemetry Transport (MQTT) Broker**: Ensure access to an MQTT broker for
+traffic data streaming, or use the included broker.
+- **Docker commands and terminal usage**: You are familiar with Docker commands and using the
+terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for
+an introduction.
+- **Hugging Face token**: Set your token using `export HUGGINGFACE_TOKEN="<your-huggingface-token>"`
+- **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. Following is the recommended default setting.
+  ```bash
+  export REGISTRY="intel"
+  export TAG="latest"
+  ```
+
 
 ## Quick Start with Setup Script
 
-Intel recommends using the automated setup script that handles environment configuration, submodule and dependencies setup, secrets generation, building, and deployment of the Smart Traffic Intersection Agent.
+Intel recommends using the automated setup script that handles environment configuration,
+submodule and dependencies setup, secrets generation, building, and deployment of the Smart
+Traffic Intersection Agent.
 
 ### 1. Clone the Repository
 
@@ -45,7 +59,31 @@ This single command will:
 - Build Docker images
 - Start services in the Smart Traffic Intersection Agent's application stack
 
-### 3. Access Services
+### 3. Run alternative setup options
+
+For a more granular control, run these commands:
+
+```bash
+#  Set environment variables without building image or starting any containers
+source setup.sh --setenv
+
+# Build service images only (without starting containers)
+source setup.sh --build
+
+# Start services without building the image
+source setup.sh --run
+
+# Stop services
+source setup.sh --stop
+
+# Restart services. The variable `service_type` can be set to `agent`, `deps`, and `all`. Run with --help to get details of each type.
+source setup.sh --restart [service_type]
+
+# Clean up containers. Run with --help to get details of the option.
+source setup.sh --clean [option]
+```
+
+### 4. Access Services
 
 When the script completes, it will show the URLs to access the services. Go to these URLs so
 that the respective services can access them in a web browser.
@@ -57,9 +95,11 @@ Intersection Agent to simulate multiple intersections on the same development ma
 The easiest way to do this is to clone and set up the application `n times` in n different
 locations on the same machine for `n` required instances.
 
-> **Note:** In production environments, only a single Traffic Intersection Agent instance is deployed on a given node.
+> **Note:** In production environments, only a single Traffic Intersection Agent instance is
+> deployed on a given node.
 
-> **Intel's recommendation:** The number of instances you can run on a single machine depends on available resources. Systems with higher resources can support more instances.
+> **Intel's recommendation:** The number of instances you can run on a single machine depends
+> on available resources. Systems with higher resources can support more instances.
 
 ### Set up Instance #1
 
@@ -131,7 +171,8 @@ The following is a sample value for instance #2 deployment configuration:
 source setup.sh --setup
 ```
 
-> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random ephemeral ports and avoid port conflicts.
+> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random
+> ephemeral ports and avoid port conflicts.
 
 Ensure each instance has their `deployment_instance.json` updated with:
 
@@ -142,12 +183,13 @@ optional. If not specified, an ephemeral port is picked automatically.
 
 ### Deploying More Instances
 
-There are functionally no limits on the number of instances that you can spin up to simulate a
-multi-node setup using the provided script. However, the machine on which the multiple
+There are functionally no limits on the number of instances that you can spin up to simulate
+a multi-node setup using the provided script. However, the machine on which the multiple
 deployments are deployed to, will likely start throttling these instances if resource limits
 are reached. Hence, deploy new instances only if you have the required resource bandwidth.
 
-To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in [Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
+To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in
+[Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
 
 ## Advanced Environment Configuration
 
@@ -156,6 +198,9 @@ For advanced users who need more control over the configuration, you can configu
 ```bash
 # Set log level to debug to help in debugging issues, default value is info
 export LOG_LEVEL=DEBUG
+
+# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU 
+export VLM_DEVICE=GPU
 
 # Change the VLM Model name. Default value set in script.sh is microsoft/Phi-3.5-vision-instruct.
 export VLM_MODEL_NAME=Qwen/Qwen2.5-VL-3B-Instruct
@@ -170,7 +215,12 @@ export VLM_TOP_P=0.3                    # Default 0.1, range 0-1; another parame
 export HIGH_DENSITY_THRESHOLD=5        # Default value 10
 export MODERATE_DENSITY_THRESHOLD=3    # Default value 5; Make sure this is less than HIGH_DENSITY_THRESHOLD
 export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of traffic feeds in seconds
+
+# To mock the weather data (say in airgapped deployment)
+export WEATHER_MOCK=True
 ```
+### Customizing the video used by sample application
+The video used by this sample application is determined by the configuration in [Smart Intersection application](../../../metro-vision-ai-app-recipe/smart-intersection/). Refer to its documentation for further details.
 
 ## Accessing the Services
 
@@ -201,3 +251,13 @@ empty values for the `agent_backend_port` and `agent_ui_port` fields:
 Intel recommends to keep these values empty and let the Docker engine use ephemeral ports.
 However, if you need to provide an explicit port, ensure port values for all instances are
 unique. Additionally, ensure no other external services are running on these ports.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/build-from-source
+
+:::
+hide_directive-->

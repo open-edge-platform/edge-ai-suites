@@ -35,7 +35,7 @@ By following this guide, you will learn how to:
 3. **Configure Image Registry and Tag**:
      ```bash
         export REGISTRY="intel/"
-        export TAG="1.0.0-rc.0"
+        export TAG="latest"
      ```
     Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
@@ -52,7 +52,7 @@ By following this guide, you will learn how to:
      DASHBOARD_PORT=4173
      WEBRTC_PEER_ID=stream
      WEBRTC_BITRATE=5000
-     AGENT_MODE=False
+     ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=False
      ```
     Notes:
@@ -107,10 +107,47 @@ By following this guide, you will learn how to:
 For alternative ways to setup the application, see:
 - [How to build from Source](./how-to-build-source.md)
 
+## Testing
+
+The project uses **pytest** for unit testing. Tests are located in the `tests/` directory under the `app/` folder.
+
+### Install Test Dependencies
+
+```bash
+cd app
+uv sync --group test
+```
+
+### Run All Tests
+
+```bash
+uv run pytest
+```
+
+### Run a Specific Test File
+
+```bash
+uv run pytest tests/test_routes_runs.py
+```
+
+### Run Tests with Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=term-missing
+```
+
+### Generate an HTML Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=html
+```
+
+Open `htmlcov/index.html` in a browser to view the detailed coverage report.
+
 ## Supporting Resources
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Agent Mode](./agent-mode.md) - Enable alert-style responses for binary detection scenarios
+- [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)

@@ -1,97 +1,99 @@
-# Launching Multiple Instances of Apps
+# Run Multiple Apps
 
--   **Time to Complete:** 30 minutes
--   **Programming Language:**  Python 3
+- **Time to Complete:** 30 minutes
+- **Programming Language:**  Python 3
 
 ## Prerequisites
 
-- [System Requirements](./get-started/system-requirements.md)
+- [System Requirements](../get-started/system-requirements.md)
 
 ## Overview
 
 This tutorial demonstrates how to simultaneously deploy and manage multiple industrial edge AI vision applications using Docker Compose. You'll learn to configure and run multiple instances of the same application or different applications in parallel, with each instance operating its own isolated DLStreamer Pipeline Server and associated services, all accessible through dedicated NGINX proxy configurations.
 
 **What you'll learn:**
+
 - How to configure multiple application instances with unique port assignments
 - How to independently deploy, start, stop, and monitor multiple running applications
 - How to access and view streams from each application instance
 
-
 ## Set up the Applications
-
 
 1. Clone the **edge-ai-suites** repository and navigate to the `industrial-edge-insights-vision` directory:
 
-    ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
-    ```
-
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
+   ```
 
 2. Create a `config.yml` file to define your application instances and their unique port configurations. Add the following sample contents and save.
 
-    Example:
+   Example:
 
-    ```bash
-    pallet-defect-detection:
-      pdd1:
-        NGINX_HTTP_PORT: 8080
-        NGINX_HTTPS_PORT: 8443
-        COTURN_UDP_PORT: 3478
-        MINIO_SERVER_PORT: 8001
-      pdd2:
-        NGINX_HTTP_PORT: 9080
-        NGINX_HTTPS_PORT: 9443
-        COTURN_UDP_PORT: 3479
-        MINIO_SERVER_PORT: 9001
+   ```text
+   worker-safety-gear-detection:
+     wsg1:
+       NGINX_HTTP_PORT: 8080
+       NGINX_HTTPS_PORT: 8443
+       COTURN_UDP_PORT: 3478
+       MINIO_SERVER_PORT: 8001
+     wsg2:
+       NGINX_HTTP_PORT: 9080
+       NGINX_HTTPS_PORT: 9443
+       COTURN_UDP_PORT: 3479
+       MINIO_SERVER_PORT: 9001
 
-    weld-porosity:
-      weld1:
-        NGINX_HTTP_PORT: 10080
-        NGINX_HTTPS_PORT: 10443
-        COTURN_UDP_PORT: 3480
-        MINIO_SERVER_PORT: 10001
-    ```
-    >NOTE: A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
-    
+   pallet-defect-detection:
+     pdd1:
+       NGINX_HTTP_PORT: 10080
+       NGINX_HTTPS_PORT: 10443
+       COTURN_UDP_PORT: 3480
+       MINIO_SERVER_PORT: 10001
+   ```
 
-2. Edit the below mentioned environment variables in all the `.env_<SAMPLE_APP>` files:
+   > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-    ```bash
-    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
+3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in config.yml. 
 
-    MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
-    MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
+   For the example above, modify the envs for worker-safety-gear-detection and pallet-defect-detection i.e. env_worker-safety-gear-detection and .env_pallet-defect-detection
 
-    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
-    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
-    ```
+   ```text
+   HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
 
-6. Install pre-requisites for all the instances:
+   MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
+   MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
 
-    ```bash
-    ./setup.sh
-    ```
+   MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
+   MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
+   ```
 
-    This does the following:
-    - Parses through the config.yml
-    - Downloads resources for each instance
-    - Creates a folder temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file and payload.json
-    - Updates and adds the ports mentioned in config.yml to the respective .env file
-    - Sets executable permissions for scripts
+4. Install pre-requisites for all the instances:
+
+   ```bash
+   ./setup.sh
+   ```
+
+   This does the following:
+
+   - Parses through the config.yml
+   - Downloads resources for each instance
+   - Creates a folder temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file and payload.json
+   - Updates and adds the ports mentioned in config.yml to the respective .env file
+   - Sets executable permissions for scripts
 
 ## Deploy the Applications
 
 ### Deploy all the application instances
 
-7. Deploy all the instances given in config.yml:
+1. Deploy all the instances given in config.yml:
 
    ```bash
    ./run.sh up
    ```
-    It starts all the containers for each instance in `config.yml`
 
-8. Verify all containers are running:
+   It starts all the containers for each instance in `config.yml`
+
+2. Verify all containers are running:
 
    ```bash
    docker ps
@@ -101,428 +103,543 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 ### Start pipeline for all instances
 
-9. Fetch the list of pipelines for all instances:
+1. Fetch the list of pipelines for all instances:
 
-    ```bash
-    ./sample_list.sh
-    ```
+   ```bash
+   ./sample_list.sh
+   ```
 
-    Example Output:
-    ```bash
-    -------------------------------------------
-    Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
-    -------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands ...
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Getting list of loaded pipelines...
-    Loaded pipelines:
-    [
-    {
-        "description": "DL Streamer Pipeline Server pipeline",
-        "name": "user_defined_pipelines",
-        "parameters": {
-        "properties": {
-            "detection-properties": {
+   Example Output:
+
+   ```text
+   -------------------------------------------
+   Status of: wsg1 (SAMPLE_APP: worker-safety-gear-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
+   Loaded pipelines:
+   [
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "detection-properties": {
             "element": {
-                "format": "element-properties",
-                "name": "detection"
+               "format": "element-properties",
+               "name": "detection"
             }
-            }
+         }
             ...
-    ]
-    ```
+   -------------------------------------------
+   Status of: wsg2 (SAMPLE_APP: worker-safety-gear-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
+   Loaded pipelines:
+   [
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "detection-properties": {
+            "element": {
+               "format": "element-properties",
+               "name": "detection"
+            }
+         }
+         ...
+   -------------------------------------------
+   Status of: pdd1 (SAMPLE_APP: pallet-defect-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
+   Loaded pipelines:
+   [
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "detection-properties": {
+            "element": {
+               "format": "element-properties",
+               "name": "detection"
+            }
+         }
+      ]
+   ```
 
-10. Start pipeline for all instances in config.yml:
+2. Start pipeline for all instances in config.yml:
 
-    ```bash
-    ./sample_start.sh
-    ```
+   ```bash
+   ./sample_start.sh
+   ```
 
-    > **IMPORTANT**: Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](./troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
+   > **Important:** Before you run `sample_start.sh` script, make sure that `jq` is installed on your system. See the [troubleshooting guide](../troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package) for more details.
 
-    Output:
-    ```bash
-    No pipeline specified. Starting the first pipeline.
+   Output:
 
-    ------------------------------------------
-    Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
-    ------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loading payload from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/payload.json
-    Payload loaded successfully.
-    Starting first pipeline: pallet_defect_detection
-    Launching pipeline: pallet_defect_detection
-    Extracting payload for pipeline: pallet_defect_detection
-    Found 1 payload(s) for pipeline: pallet_defect_detection
-    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "709afb40ff4e11f0aa82fa869454672b"
+   ```text
+   No pipeline specified. Starting the first pipeline.
 
-    ------------------------------------------
-    Processing instance: pdd2 from SAMPLE_APP: pallet-defect-detection
-    ------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd2/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loading payload from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd2/payload.json
-    Payload loaded successfully.
-    Starting first pipeline: pallet_defect_detection
-    Launching pipeline: pallet_defect_detection
-    Extracting payload for pipeline: pallet_defect_detection
-    Found 1 payload(s) for pipeline: pallet_defect_detection
-    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "70adfd44ff4e11f0aafbda07c19c7336"
+   ------------------------------------------
+   Processing instance: wsg1 from SAMPLE_APP: worker-safety-gear-detection
+   ------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/payload.json
+   Payload loaded successfully.
+   Starting first pipeline: worker_safety_gear_detection
+   Launching pipeline: worker_safety_gear_detection
+   Extracting payload for pipeline: worker_safety_gear_detection
+   Found 1 payload(s) for pipeline: worker_safety_gear_detection
+   Payload for pipeline 'worker_safety_gear_detection'. Response: "c940e6d60b1111f1926d4d2df68af72d"
 
-    ------------------------------------------
-    Processing instance: weld1 from SAMPLE_APP: weld-porosity
-    ------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-    Running sample app: weld-porosity
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loading payload from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/payload.json
-    Payload loaded successfully.
-    Starting first pipeline: weld_porosity_classification
-    Launching pipeline: weld_porosity_classification
-    Extracting payload for pipeline: weld_porosity_classification
-    Found 1 payload(s) for pipeline: weld_porosity_classification
-    Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "70c3093cff4e11f0ad167a01fcf9b4b5"
-    ```
+   ------------------------------------------
+   Processing instance: wsg2 from SAMPLE_APP: worker-safety-gear-detection
+   ------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/payload.json
+   Payload loaded successfully.
+   Starting first pipeline: worker_safety_gear_detection
+   Launching pipeline: worker_safety_gear_detection
+   Extracting payload for pipeline: worker_safety_gear_detection
+   Found 1 payload(s) for pipeline: worker_safety_gear_detection
+   Payload for pipeline 'worker_safety_gear_detection'. Response: "c94c317b0b1111f188c40f57f8f9c534"
 
-11. Access WebRTC stream:
+   ------------------------------------------
+   Processing instance: pdd1 from SAMPLE_APP: pallet-defect-detection
+   ------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/payload.json
+   Payload loaded successfully.
+   Starting first pipeline: pallet_defect_detection
+   Launching pipeline: pallet_defect_detection
+   Extracting payload for pipeline: pallet_defect_detection
+   Found 1 payload(s) for pipeline: pallet_defect_detection
+   Payload for pipeline 'pallet_defect_detection'. Response: "c956aac70b1111f1ae18b9075240129b"
+   ```
 
-    The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP: 
-    >Note that the `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance pdd1 has nginx port set to 8443, pdd2 set to 9443 & weld1 set to 10443.
-    ```
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/anomaly/          # PCB Anomaly Detection
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/weld/             # Weld Porosity
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/worker_safety/    # Worker Safety Gear detection
+3. Access WebRTC stream:
 
-    ```
+   The inference stream can be viewed on WebRTC, in a browser, at the following url depending on the SAMPLE_APP:
+
+   > **Note:** The `NGINX_HTTPS_PORT` is different for each instance of the sample app. For example, for the sample config mentioned previously, the instance wsg1 has nginx port set to 8443, wsg2 set to 9443 & pdd1 set to 10443.
+
+   ```text
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/pdd/              # Pallet Defect Detection
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/worker_safety/    # Worker Safety Gear detection
+   ```
 
 ### Start pipeline for a particular instance only
 
-12. Fetch the list of pipeline for <INSTANCE_NAME>:
+1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
-    ```bash
-    ./sample_list.sh -i <INSTANCE_NAME>
-    ```
+   ```bash
+   ./sample_list.sh -i <INSTANCE_NAME>
+   ```
 
-    Example Output:
-    ```bash
-    Instance name set to: pdd1
-    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Getting list of loaded pipelines...
-    Loaded pipelines:
-    [
-    {
-        "description": "DL Streamer Pipeline Server pipeline",
-        "name": "user_defined_pipelines",
-        "parameters": {
-        "properties": {
-            "detection-properties": {
+   Example Output:
+
+   ```text
+   Instance name set to: wsg1
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
+   Loaded pipelines:
+   [
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "detection-properties": {
             "element": {
-                "format": "element-properties",
-                "name": "detection"
+               "format": "element-properties",
+               "name": "detection"
             }
-            }
-            ...
-    ]
-    ```
+         }
+           ...
+   ]
+   ```
 
-13. Start the pipeline for <INSTANCE_NAME>:
+2. Start the pipeline for <INSTANCE_NAME>:
 
-    ```bash
-    ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
-    ```
+   ```bash
+   ./sample_start.sh -i <INSTANCE_NAME> -p <PIPELINE_NAME>
+   ```
 
-    Output:
-    ```bash
-    Instance name set to: pdd1
-    Starting specified pipeline(s)...
-    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loading payload from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/payload.json
-    Payload loaded successfully.
-    Starting pipeline: pallet_defect_detection
-    Launching pipeline: pallet_defect_detection
-    Extracting payload for pipeline: pallet_defect_detection
-    Found 1 payload(s) for pipeline: pallet_defect_detection
-    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "9851aedcff5211f0aa82fa869454672b"
-    ```
+   Output:
 
-14. Access WebRTC stream:
+   ```text
+   Instance name set to: wsg1
+   Starting specified pipeline(s)...
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Loading payload from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/payload.json
+   Payload loaded successfully.
+   Starting pipeline: worker_safety_gear_detection
+   Launching pipeline: worker_safety_gear_detection
+   Extracting payload for pipeline: worker_safety_gear_detection
+   Found 1 payload(s) for pipeline: worker_safety_gear_detection
+   Payload for pipeline 'worker_safety_gear_detection'. Response: "274ef3ff0b1211f18c184d2df68af72d"
+   ```
 
-    Open a browser and navigate to:
-    ```
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-id of SAMPLE_APP>/
-    ```
+3. Access WebRTC stream:
+
+   Open a browser and navigate to:
+
+   ```text
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-id of SAMPLE_APP>/
+   ```
 
 ### Start pipeline for a particular instance from a custom payload.json
 
-15. Fetch the list of pipeline for <INSTANCE_NAME>:
+1. Fetch the list of pipeline for <INSTANCE_NAME>:
 
-    ```bash
-    ./sample_list.sh -i <INSTANCE_NAME>
-    ```
+   ```bash
+   ./sample_list.sh -i <INSTANCE_NAME>
+   ```
 
-    Example Output:
-    ```bash
-    Environment variables loaded from .env
-    Running sample app: pallet-defect-detection
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loaded pipelines:
-    [
-        ...
-        {
-            "description": "DL Streamer Pipeline Server pipeline",
-            "name": "user_defined_pipelines",
-            "version": "pallet_defect_detection"
-        }
-        ...
-    ]
-    ```
+   Example Output:
 
-13. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
+   ```text
+   Instance name set to: wsg1
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Getting list of loaded pipelines...
+   Loaded pipelines:
+   [
+   {
+      "description": "DL Streamer Pipeline Server pipeline",
+      "name": "user_defined_pipelines",
+      "parameters": {
+         "properties": {
+         "detection-properties": {
+            "element": {
+               "format": "element-properties",
+               "name": "detection"
+            }
+         }
+           ...
+   ]
+   ```
 
-    ```bash
-    ./sample_start.sh -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
-    ```
+2. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
 
-    Output:
-    ```bash
-    Instance name set to: pdd1
-    Custom payload file set to: payload.json
-    Starting specified pipeline(s)...
-    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Loading payload from payload.json
-    Payload loaded successfully.
-    Starting pipeline: pallet_defect_detection_gpu
-    Launching pipeline: pallet_defect_detection_gpu
-    Extracting payload for pipeline: pallet_defect_detection_gpu
-    Found 1 payload(s) for pipeline: pallet_defect_detection_gpu
-    Payload for pipeline 'pallet_defect_detection_gpu' posted successfully. Response: "4f57b996ff5311f0aa82fa869454672b"
-    ```
+   ```bash
+   ./sample_start.sh -i <INSTANCE_NAME> --payload <file> -p <PIPELINE_NAME>
+   ```
 
-14. Access WebRTC stream:
+   Output:
 
-    Open a browser and navigate to:
-    ```
-    https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-id of SAMPLE_APP>/
-    ```
+   ```text
+   Instance name set to: wsg1
+   Custom payload file set to: custom_payload.json
+   Starting specified pipeline(s)...
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Loading payload from custom_payload.json
+   Payload loaded successfully.
+   Starting pipeline: worker_safety_gear_detection_gpu
+   Launching pipeline: worker_safety_gear_detection_gpu
+   Extracting payload for pipeline: worker_safety_gear_detection_gpu
+   Found 1 payload(s) for pipeline: worker_safety_gear_detection_gpu
+   Payload for pipeline 'worker_safety_gear_detection_gpu'. Response: "6b447d8f0b1211f18e6e4d2df68af72d"
+   ```
+
+3. Access WebRTC stream:
+
+   Open a browser and navigate to:
+
+   ```text
+   https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-id of SAMPLE_APP>/
+   ```
+
 ## Monitor Applications
 
 ### Check Pipeline Status
 
+1. Check status of all instances:
 
-15. Check status of all instances:
+   ```bash
+   ./sample_status.sh
+   ```
 
-    ```bash
-    ./sample_status.sh
-    ```
+   Output:
 
-    Output:
-    ```bash
-    No arguments provided. Fetching status for all pipeline instances.
-    Config file found. Fetching status for all instances defined in /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/config.yml
-    Processing instance: pdd1 from sample app: pallet-defect-detection
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    [
-    {
-        "avg_fps": 30.001217220383413,
-        "elapsed_time": 97.19605875015259,
-        "id": "709afb40ff4e11f0aa82fa869454672b",
-        "message": "",
-        "start_time": 1769937281.7057953,
-        "state": "COMPLETED"
-    },
-    ....
-    ]
-    ```
+   ```text
+   No arguments provided. Fetching status for all pipeline instances.
+   Config file found. Fetching status for all instances defined in /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/config.yml
+   Processing instance: wsg1 from sample app: worker-safety-gear-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   [
+   {
+      "avg_fps": 30.001040850463887,
+      "elapsed_time": 65.0644142627716,
+      "id": "c940e6d60b1111f1926d4d2df68af72d",
+      "message": "",
+      "start_time": 1771230644.9230769,
+      "state": "COMPLETED"
+   },
+   {
+      "avg_fps": 30.046657837606574,
+      "elapsed_time": 6.722876071929932,
+      "id": "9dd771a50b1211f193454d2df68af72d",
+      "message": "",
+      "start_time": 1771231001.1606326,
+      "state": "RUNNING"
+   }
+   ]
+   Processing instance: wsg2 from sample app: worker-safety-gear-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   [
+   {
+      "avg_fps": 30.001943547561382,
+      "elapsed_time": 65.06245851516724,
+      "id": "c94c317b0b1111f188c40f57f8f9c534",
+      "message": "",
+      "start_time": 1771230645.3392272,
+      "state": "COMPLETED"
+   },
+   {
+      "avg_fps": 30.135082993671546,
+      "elapsed_time": 6.669965028762817,
+      "id": "9de81f3b0b1211f182be0f57f8f9c534",
+      "message": "",
+      "start_time": 1771231001.2393894,
+      "state": "RUNNING"
+   }
+   ]
+   Processing instance: pdd1 from sample app: pallet-defect-detection
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   [
+   {
+      "avg_fps": 30.00057875018982,
+      "elapsed_time": 97.19813084602356,
+      "id": "c956aac70b1111f1ae18b9075240129b",
+      "message": "",
+      "start_time": 1771230645.5429828,
+      "state": "COMPLETED"
+   },
+   {
+      "avg_fps": 30.11388737798281,
+      "elapsed_time": 6.608245134353638,
+      "id": "9df363430b1211f1b572b9075240129b",
+      "message": "",
+      "start_time": 1771231001.327198,
+      "state": "RUNNING"
+   }
+   ]
+   ```
 
-16. Check status of only a particular instance. You may refer to the config.yml for the instance names
+2. Check status of only a particular instance. You may refer to the config.yml for the instance names
 
-    ```bash
-    ./sample_status.sh -i <INSTANCE_NAME>
-    ```
+   ```bash
+   ./sample_status.sh -i <INSTANCE_NAME>
+   ```
 
-17. Check status of a particular instance_id of an instance
+3. Check status of a particular instance_id of an instance
 
-    ```bash
-    ./sample_status.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
-
+   ```bash
+   ./sample_status.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
+   ```
 
 ### View Container Logs
 
-18. View dlsps logs of an instance.
+View dlsps logs of an instance.
 
-    ```bash
-    docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
-    ```
+```bash
+docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
+```
 
 ## Stop Applications
 
 ### Stop Pipeline Instances
 
-19. Stop all pipelines:
+1. Stop all pipelines:
 
-    ```bash
-    ./sample_stop.sh
-    ```
+   ```bash
+   ./sample_stop.sh
+   ```
 
-    Output:
-    ```bash
-    No pipelines specified. Stopping all pipeline instances
+   Output:
 
-    -------------------------------------------
-    Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
-    -------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Instance list fetched successfully. HTTP Status Code: 200
-    Found 1 running pipeline instances.
-    Stopping pipeline instance with ID: 5401c83aff5611f0aa82fa869454672b
-    Pipeline instance with ID '5401c83aff5611f0aa82fa869454672b' stopped successfully. Response: {
-    "avg_fps": 30.016161405973335,
-    "elapsed_time": 16.457796335220337,
-    "id": "5401c83aff5611f0aa82fa869454672b",
-    "message": "",
-    "start_time": 1769940669.0616643,
-    "state": "RUNNING"
-    }
+   ```text
+   No pipelines specified. Stopping all pipeline instances
 
-    -------------------------------------------
-    Processing instance: pdd2 (SAMPLE_APP: pallet-defect-detection)
-    -------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd2/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Instance list fetched successfully. HTTP Status Code: 200
-    Found 1 running pipeline instances.
-    Stopping pipeline instance with ID: 541d02bcff5611f0aafbda07c19c7336
-    Pipeline instance with ID '541d02bcff5611f0aafbda07c19c7336' stopped successfully. Response: {
-    "avg_fps": 30.02096208342521,
-    "elapsed_time": 16.42185068130493,
-    "id": "541d02bcff5611f0aafbda07c19c7336",
-    "message": "",
-    "start_time": 1769940669.2755027,
-    "state": "RUNNING"
-    }
+   -------------------------------------------
+   Processing instance: wsg1 (SAMPLE_APP: worker-safety-gear-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Instance list fetched successfully. HTTP Status Code: 200
+   Found 1 running pipeline instances.
+   Stopping pipeline instance with ID: 9dd771a50b1211f193454d2df68af72d
+   Pipeline instance with ID '9dd771a50b1211f193454d2df68af72d' stopped successfully. Response: {
+   "avg_fps": 30.014294080812306,
+   "elapsed_time": 62.53686475753784,
+   "id": "9dd771a50b1211f193454d2df68af72d",
+   "message": "",
+   "start_time": 1771231001.1606326,
+   "state": "RUNNING"
+   }
 
-    -------------------------------------------
-    Processing instance: weld1 (SAMPLE_APP: weld-porosity)
-    -------------------------------------------
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/weld-porosity/weld1/.env
-    Running sample app: weld-porosity
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Instance list fetched successfully. HTTP Status Code: 200
-    Found 1 running pipeline instances.
-    Stopping pipeline instance with ID: 543ae1c4ff5611f0ad167a01fcf9b4b5
-    Pipeline instance with ID '543ae1c4ff5611f0ad167a01fcf9b4b5' stopped successfully. Response: {
-    "avg_fps": 30.030312784843783,
-    "elapsed_time": 16.416736602783203,
-    "id": "543ae1c4ff5611f0ad167a01fcf9b4b5",
-    "message": "",
-    "start_time": 1769940669.4774928,
-    "state": "RUNNING"
-    }
-    ```
+   -------------------------------------------
+   Processing instance: wsg2 (SAMPLE_APP: worker-safety-gear-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Instance list fetched successfully. HTTP Status Code: 200
+   Found 1 running pipeline instances.
+   Stopping pipeline instance with ID: 9de81f3b0b1211f182be0f57f8f9c534
+   Pipeline instance with ID '9de81f3b0b1211f182be0f57f8f9c534' stopped successfully. Response: {
+   "avg_fps": 30.007063280321198,
+   "elapsed_time": 62.9851655960083,
+   "id": "9de81f3b0b1211f182be0f57f8f9c534",
+   "message": "",
+   "start_time": 1771231001.2393894,
+   "state": "RUNNING"
+   }
 
-20. Stop pipelines of given instance:
+   -------------------------------------------
+   Processing instance: pdd1 (SAMPLE_APP: pallet-defect-detection)
+   -------------------------------------------
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
+   Running sample app: pallet-defect-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Instance list fetched successfully. HTTP Status Code: 200
+   Found 1 running pipeline instances.
+   Stopping pipeline instance with ID: 9df363430b1211f1b572b9075240129b
+   Pipeline instance with ID '9df363430b1211f1b572b9075240129b' stopped successfully. Response: {
+   "avg_fps": 30.01574070196512,
+   "elapsed_time": 62.96695828437805,
+   "id": "9df363430b1211f1b572b9075240129b",
+   "message": "",
+   "start_time": 1771231001.327198,
+   "state": "RUNNING"
+   }
+   ```
 
-    ```bash
-    ./sample_stop.sh -i <INSTANCE_NAME>
-    ```
+2. Stop pipelines of given instance:
 
-    Output:
-    ```bash
-    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd2
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd2/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Instance list fetched successfully. HTTP Status Code: 200
-    Found 1 running pipeline instances.
-    Stopping pipeline instance with ID: af709322ff5611f0aafbda07c19c7336
-    Pipeline instance with ID 'af709322ff5611f0aafbda07c19c7336' stopped successfully. Response: {
-    "avg_fps": 30.10730708662458,
-    "elapsed_time": 7.938256025314331,
-    "id": "af709322ff5611f0aafbda07c19c7336",
-    "message": "",
-    "start_time": 1769940822.4814367,
-    "state": "RUNNING"
-    }
-    ```
+   ```bash
+   ./sample_stop.sh -i <INSTANCE_NAME>
+   ```
 
-21. Stop pipelines of an instance with given instance_id:
+   Output:
 
-    ```bash
-    ./sample_stop.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
-    ```2
-    Output:
+   ```text
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg1
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg1/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Instance list fetched successfully. HTTP Status Code: 200
+   Found 1 running pipeline instances.
+   Stopping pipeline instance with ID: de8e0ac10b1211f1ae604d2df68af72d
+   Pipeline instance with ID 'de8e0ac10b1211f1ae604d2df68af72d' stopped successfully. Response: {
+   "avg_fps": 30.009450510672455,
+   "elapsed_time": 19.42720890045166,
+   "id": "de8e0ac10b1211f1ae604d2df68af72d",
+   "message": "",
+   "start_time": 1771231109.7255032,
+   "state": "RUNNING"
+   }
+   ```
 
-    ```bash
-    Found SAMPLE_APP: pallet-defect-detection for INSTANCE_NAME: pdd1
-    Environment variables loaded from /home/intel/ird_instance/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/pallet-defect-detection/pdd1/.env
-    Running sample app: pallet-defect-detection
-    Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
-    Checking status of dlstreamer-pipeline-server...
-    Server reachable. HTTP Status Code: 200
-    Stopping pipeline instance with ID: af5741baff5611f0aa82fa869454672b
-    Pipeline instance with ID 'af5741baff5611f0aa82fa869454672b' stopped successfully. Response: {
-    "avg_fps": 30.00011463267954,
-    "elapsed_time": 97.19963002204895,
-    "id": "af5741baff5611f0aa82fa869454672b",
-    "message": "",
-    "start_time": 1769940822.2892969,
-    "state": "COMPLETED"
-    }
-    ```
+3. Stop pipelines of an instance with given instance_id:
+
+   ```bash
+   ./sample_stop.sh -i <INSTANCE_NAME> --id <INSTANCE_ID>
+   ```
+
+   Output:
+
+   ```text
+   Found SAMPLE_APP: worker-safety-gear-detection for INSTANCE_NAME: wsg2
+   Environment variables loaded from /home/intel/IRD/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/temp_apps/worker-safety-gear-detection/wsg2/.env
+   Running sample app: worker-safety-gear-detection
+   Using default deployment - curl commands will use: <HOST_IP>:<NGINX_HTTPS_PORT>
+   Checking status of dlstreamer-pipeline-server...
+   Server reachable. HTTP Status Code: 200
+   Stopping pipeline instance with ID: de9dce1e0b1211f1bd930f57f8f9c534
+   Pipeline instance with ID 'de9dce1e0b1211f1bd930f57f8f9c534' stopped successfully. Response: {
+   "avg_fps": 30.014757930584633,
+   "elapsed_time": 46.27723026275635,
+   "id": "de9dce1e0b1211f1bd930f57f8f9c534",
+   "message": "",
+   "start_time": 1771231109.9834328,
+   "state": "RUNNING"
+   }
+   ```
 
 ### Stop Docker Containers
 
-22. Stop containers of all instances:
+1. Stop containers of all instances:
 
     ```bash
     ./run.sh down
     ```
 
-23. Verify all containers are stopped:
+1. Verify all containers are stopped:
 
     ```bash
     docker ps
     ```
-

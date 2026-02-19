@@ -5,6 +5,10 @@ This page provides comprehensive support and troubleshooting information for the
 - [Common Issues](#common-issues): General troubleshooting steps for resolving issues like container failures, port conflicts, and missing dependencies.
 - [Troubleshooting Docker Deployments](#troubleshooting-docker-deployments): Steps to address problems specific to Docker deployments.
 
+If you encounter any problems with the application not addressed here, check the
+[GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues) board. Feel free
+to file new tickets there (after learning about the guidelines for [Contributing](https://github.com/open-edge-platform/edge-ai-suites/blob/main/CONTRIBUTING.md).
+
 ## Common Issues
 
 ### 1. Containers Not Starting
@@ -26,24 +30,25 @@ This page provides comprehensive support and troubleshooting information for the
 
 ### 3. Description not coming in UI
 
-- Check logs for frigate container
+- Check logs for Frigate container
 - Check if VLM microservice is running and reachable.
-- Verify that `NVR_GENAI=true` is set and frigate config has `genai.enabled: true`
+- Verify that `NVR_GENAI=true` is set and Frigate config has `genai.enabled: true`
 
 ### 4. GenAI Event Descriptions Not Working
 
 - **Issue**: AI-powered event descriptions are not being generated or displayed.
 - **Solution**:
   - Ensure `NVR_GENAI=true` environment variable is set before starting the application
-  - Verify the frigate configuration file has `genai.enabled: true`
+  - Verify the Frigate configuration file has `genai.enabled: true`
   - Check VLM microservice logs for connectivity issues: `docker logs <vlm-container-id>`
-  - Verify the model specified in frigate config matches the one deployed in VLM service
-  - Note: This is an experimental feature with known stability issues
+  - Verify the model specified in Frigate config matches the one deployed in VLM service
+
+> **Note:** This is an experimental feature with known stability issues
 
 ### 5. Object not getting detected
 
-- Check the label in frigate config.yaml for the specific camera.
-- Check the top_score parameter .
+- Check the label in Frigate `config.yaml` for the specific camera.
+- Check the `top_score` parameter .
 
 ### 6. "No video footage available" warning during Summarize/Search Clip
 
@@ -73,9 +78,3 @@ This page provides comprehensive support and troubleshooting information for the
    ./setup.sh stop
    docker volume rm docker_mosquitto_data docker_mosquitto_log docker_redis_data
    ```
-
-<!--
-## Support
-- **Developer Forum**: Join the community forum
-- **Contact Support**: [Support Page](#)
--->

@@ -27,6 +27,7 @@ class RPPGGRPCClient:
     
     def _connect(self):
         """Connect to aggregator."""
+        logger.info(f"Connecting to aggregator at {self.aggregator_address}...")
         self.channel = grpc.insecure_channel(self.aggregator_address)
         self.stub = VitalServiceStub(self.channel)
         grpc.channel_ready_future(self.channel).result(timeout=5)

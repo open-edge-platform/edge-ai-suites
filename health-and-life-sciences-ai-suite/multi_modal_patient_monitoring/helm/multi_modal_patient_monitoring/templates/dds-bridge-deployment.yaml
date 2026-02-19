@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dds-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dds-bridge
+  template:
+    metadata:
+      labels:
+        app: dds-bridge
+    spec:
+      containers:
+        - name: dds-bridge
+          image: "{{ .Values.ddsBridge.image.repository }}/{{ .Values.ddsBridge.image.name }}:{{ .Values.ddsBridge.image.tag }}"
+          imagePullPolicy: {{ .Values.ddsBridge.image.pullPolicy }}
+          ports:
+            - containerPort: 8082
+          env:
+            # gRPC connection to aggregator's VitalService
+            - name: GRPC_HOST
+              value: aggregator
+            - name: GRPC_PORT
+              value: "50051"

@@ -57,7 +57,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```bash
    sudo systemctl start docker
    ```
-   
+
     >If you're running multiple instances of app, start the services using `./run.sh up` instead.
 
    ```bash
@@ -211,6 +211,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 ## Further Reading
 
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
+- [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
@@ -231,6 +232,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 ./get-started/system-requirements
 ./get-started/environment-variables
 ./get-started/deploy-with-helm
+./get-started/deploy-multiple-instances-with-helm
 ./get-started/deploy-with-edge-orchestrator
 
 :::

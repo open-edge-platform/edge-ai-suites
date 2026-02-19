@@ -1,0 +1,326 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  nginx:
+    image: nginx:1.27.5
+    ports:
+      - "${APP_HOST_PORT}:80"
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: ${no_proxy},${MINIO_HOST},vss-ui,${PM_HOST},localhost
+      APP_UI: vss-ui:8080
+      APP_MANAGER: ${PM_HOST}:3000
+      APP_ASSETS: minio-service
+      NGINX_ENVSUBST_TEMPLATE_DIR: /etc/nginx/templates
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx
+    volumes:
+      - ${NGINX_CONFIG}:/etc/nginx/templates/nginx.conf.template
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      vss-ui:
+        condition: service_started
+      pipeline-manager:
+        condition: service_started
+      minio-service:
+        condition: service_started
+    networks:
+      - live-video-network
+
+  vss-ui:
+    image: ${REGISTRY:-}vss-ui:${TAG:-latest}
+    ipc: host
+    ports:
+      - "${UI_HOST_PORT}:8080"
+    environment:
+      no_proxy: ${no_proxy},${HOST_IP},${PM_HOST},minio-service,localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      APP_ENDPOINT_URL: ${UI_PM_ENDPOINT}
+      APP_ASSETS_URL: ${UI_ASSETS_ENDPOINT}
+      APP_SOCKET_APPEND: ${CONFIG_SOCKET_APPEND:-CONFIG_OFF}
+      APP_SUMMARY_FEATURE: ${SUMMARY_FEATURE:-FEATURE_OFF}
+      APP_SEARCH_FEATURE: ${SEARCH_FEATURE:-FEATURE_ON}
+      APP_FEATURE_MUX: ${APP_FEATURE_MUX}
+    depends_on:
+      pipeline-manager:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - live-video-network
+
+  pipeline-manager:
+    image: ${REGISTRY:-}pipeline-manager:${TAG:-latest}
+    ports:
+      - "${PM_HOST_PORT}:3000"
+    ipc: host
+    depends_on:
+      minio-service:
+        condition: service_started
+    environment:
+      no_proxy: ${no_proxy},${EVAM_HOST},${VLM_HOST},${AUDIO_HOST},${RABBITMQ_HOST},${MINIO_HOST},${POSTGRES_HOST},${OVMS_HOST},${VDMS_DATAPREP_HOST},${VS_HOST},localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      MINIO_PROTOCOL: "http:"
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: 80
+      MINIO_BUCKET: ${PM_MINIO_BUCKET}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      DB_HOST: ${POSTGRES_HOST}
+      DB_PORT: ${POSTGRES_HOST_PORT}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      SEARCH_ENDPOINT: ${VS_ENDPOINT}
+      SEARCH_DATAPREP_ENDPOINT: ${VDMS_DATAPREP_ENDPOINT}
+      SUMMARY_FEATURE: ${SUMMARY_FEATURE:-FEATURE_OFF}
+      SEARCH_FEATURE: ${SEARCH_FEATURE:-FEATURE_ON}
+      OTLP_TRACE_URL: ${OTLP_TRACE_URL:-}
+      DATAPREP_TELEMETRY_URL: ${DATAPREP_TELEMETRY_URL:-http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1}
+      TELEMETRY_SIGNAL_DIR: ${TELEMETRY_SIGNAL_DIR:-/app/.collector-signals}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    user: "0:0"
+    volumes:
+      - collector_signals:/app/.collector-signals
+    networks:
+      - live-video-network
+
+  postgres-service:
+    image: postgres:17.4
+    ports:
+      - "${POSTGRES_HOST_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - live-video-network
+
+  minio-service:
+    image: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+    ports:
+      - "${MINIO_API_HOST_PORT}:80"
+      - "${MINIO_CONSOLE_HOST_PORT}:81"
+    environment:
+      no_proxy: ${no_proxy},localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: |
+      server /data 
+      --address ":80"
+      --console-address ":81"
+    healthcheck:
+      test: [ "CMD-SHELL", "echo > /dev/tcp/127.0.0.1/80 && exit 0 || exit 1" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    volumes:
+      - "minio_data:/data"
+    networks:
+      - live-video-network
+
+  video-search:
+    image: ${REGISTRY:-}video-search:${TAG:-latest}
+    # user root to make it equivalent permission to frigate to w/r shared volume
+    user: "0:0"
+    depends_on:
+      vdms-vector-db:
+        condition: service_started
+      minio-service:
+        condition: service_healthy
+      vdms-dataprep:
+        condition: service_started
+      multimodal-embedding-serving:
+        condition: service_healthy
+    ipc: host
+    ports:
+      - "${VS_HOST_PORT}:8000"
+    environment:
+      no_proxy: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},${PM_HOST},localhost
+      no_proxy_env: ${no_proxy},${MULTIMODAL_EMBEDDING_HOST},${VDMS_DATAPREP_HOST},${MINIO_HOST},${VDMS_VDB_HOST},${PM_HOST},localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      VDMS_VDB_HOST: ${VDMS_VDB_HOST}
+      VDMS_VDB_PORT: 55555
+      EMBEDDINGS_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
+      EMBEDDINGS_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      INDEX_NAME: ${VS_INDEX_NAME}
+      VIDEO_UPLOAD_ENDPOINT: ${VDMS_PIPELINE_MANAGER_UPLOAD}
+      AGGREGATION_ENABLED: ${AGGREGATION_ENABLED}
+      AGGREGATION_SEGMENT_DURATION: ${AGGREGATION_SEGMENT_DURATION}
+      AGGREGATION_MIN_GAP: ${AGGREGATION_MIN_GAP}
+      AGGREGATION_MAX_RESULTS: ${AGGREGATION_MAX_RESULTS}
+      AGGREGATION_INITIAL_K: ${AGGREGATION_INITIAL_K}
+      AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS: ${AGGREGATION_CONTEXT_SEEK_OFFSET_SECONDS}
+    restart: unless-stopped
+    networks:
+      - live-video-network
+
+  vdms-vector-db:
+    image: intellabs/vdms:v2.12.0
+    ipc: host
+    environment:
+      - OVERRIDE_db_root_path=/db
+      - OVERRIDE_images_path=/db/images
+      - OVERRIDE_descriptors_path=/db/descriptors
+      - OVERRIDE_blobs_path=/db/blobs
+      - OVERRIDE_pmgd_path=/db/graph
+    ports:
+      - "${VDMS_VDB_HOST_PORT}:55555"
+    volumes:
+      - vdms_db:/db
+    networks:
+      - live-video-network
+
+  vdms-dataprep:
+    image: ${REGISTRY:-}vdms-dataprep:${TAG:-latest}
+    hostname: vdms-dataprep
+    environment:
+      no_proxy: ${no_proxy},${VDMS_VDB_HOST},${MULTIMODAL_EMBEDDING_HOST},${MINIO_HOST},localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      APP_HOST: vdms-dataprep
+      VDMS_VDB_HOST: ${VDMS_VDB_HOST}
+      VDMS_VDB_PORT: 55555
+      MINIO_ENDPOINT: ${MINIO_HOST}:80
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_SECURE: false
+      DEFAULT_BUCKET_NAME: ${DEFAULT_BUCKET_NAME}
+      DB_COLLECTION: ${VS_INDEX_NAME}
+      MULTIMODAL_EMBEDDING_ENDPOINT: ${MULTIMODAL_EMBEDDING_ENDPOINT}
+      MULTIMODAL_EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_PROCESSING_MODE: ${EMBEDDING_PROCESSING_MODE:-sdk}
+      SDK_USE_OPENVINO: ${SDK_USE_OPENVINO:-true}
+      VDMS_DATAPREP_DEVICE: ${VDMS_DATAPREP_DEVICE:-CPU}
+      OV_MODELS_DIR: ${OV_MODELS_DIR:-/app/ov_models}
+      OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-THROUGHPUT}
+      FRAME_INTERVAL: ${FRAME_INTERVAL:-15}
+      ENABLE_OBJECT_DETECTION: ${ENABLE_OBJECT_DETECTION:-true}
+      DETECTION_CONFIDENCE: ${DETECTION_CONFIDENCE:-0.85}
+      ROI_CONSOLIDATION_ENABLED: ${ROI_CONSOLIDATION_ENABLED:-false}
+      ROI_CONSOLIDATION_IOU_THRESHOLD: ${ROI_CONSOLIDATION_IOU_THRESHOLD:-0.2}
+      ROI_CONSOLIDATION_CLASS_AWARE: ${ROI_CONSOLIDATION_CLASS_AWARE:-false}
+      ROI_CONSOLIDATION_CONTEXT_SCALE: ${ROI_CONSOLIDATION_CONTEXT_SCALE:-0.2}
+      FRAMES_TEMP_DIR: ${FRAMES_TEMP_DIR:-/tmp/dataprep}
+      DETECTION_MODEL_DIR: ${YOLOX_MODELS_MOUNT_PATH}
+      LOG_LEVEL: ${VDMS_DATAPREP_LOG_LEVEL:-INFO}
+      ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
+      ALLOW_METHODS: ${ALLOW_METHODS:-*}
+      ALLOW_HEADERS: ${ALLOW_HEADERS:-*}
+    ports:
+      - "${VDMS_DATAPREP_HOST_PORT}:8000"
+    depends_on:
+      vdms-vector-db:
+        condition: service_started
+      multimodal-embedding-serving:
+        condition: service_healthy
+      minio-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/v1/dataprep/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 5s
+    volumes:
+      - "${YOLOX_MODELS_VOLUME_NAME:-vdms-yolox-models}:${YOLOX_MODELS_MOUNT_PATH:-/app/models/yolox}"
+      - data_prep:/tmp/dataprep
+      - ov_models:/home/appuser/.cache/huggingface
+      - ov_models:${OV_MODELS_DIR:-/app/ov_models}
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - ${USER_GROUP_ID:-1000}
+      - ${VIDEO_GROUP_ID:-44}
+      - ${RENDER_GROUP_ID:-1002}
+    networks:
+      - live-video-network
+
+  multimodal-embedding-serving:
+    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
+    container_name: multimodal-embedding-serving
+    ports:
+      - "${EMBEDDING_SERVER_PORT:-9777}:8000"
+    ipc: host
+    environment:
+      no_proxy: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
+      no_proxy_env: ${no_proxy},${MINIO_HOST},${VDMS_DATAPREP_HOST},localhost
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE}
+      EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
+      EMBEDDING_OV_MODELS_DIR: ${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
+      DEFAULT_START_OFFSET_SEC: ${DEFAULT_START_OFFSET_SEC}
+      DEFAULT_CLIP_DURATION: ${DEFAULT_CLIP_DURATION:--1}
+      DEFAULT_NUM_FRAMES: ${DEFAULT_NUM_FRAMES}
+      OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-THROUGHPUT}
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - ${USER_GROUP_ID:-1000}
+      - ${VIDEO_GROUP_ID:-44}
+      - ${RENDER_GROUP_ID:-1002}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 5s
+    networks:
+      - live-video-network
+    volumes:
+      - ov_models:/home/appuser/.cache/huggingface
+      - data_prep:/tmp/dataprep
+      - ov_models:${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
+
+volumes:
+  minio_data:
+    driver: local
+  pg_data:
+    driver: local
+  vdms_db:
+    driver: local
+  ov_models:
+    driver: local
+  data_prep:
+    driver: local
+  vdms-yolox-models:
+    driver: local
+  collector_signals:
+    driver: local
+
+networks:
+  live-video-network:
+    driver: bridge

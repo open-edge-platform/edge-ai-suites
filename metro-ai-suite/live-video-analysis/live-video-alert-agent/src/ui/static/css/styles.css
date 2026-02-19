@@ -1,0 +1,26 @@
+
+/* Base Styles */
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background-color: #f8fafc;
+}
+
+/* Scrollbar styling for sidebar */
+aside::-webkit-scrollbar {
+    width: 4px;
+}
+
+aside::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+aside::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Firefox scrollbar support */
+aside {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
