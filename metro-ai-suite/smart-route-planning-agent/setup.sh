@@ -201,7 +201,7 @@ case "$1" in
         # Remove project-related images only with --all
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing container images...${NC}"
-            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep "smart-route-planning-agent" | awk '{print $2}' | xargs -r docker rmi -f 2>/dev/null || true
+            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}" 2>/dev/null || true
             echo -e "${GREEN}Images removed.${NC}"
         fi
 
