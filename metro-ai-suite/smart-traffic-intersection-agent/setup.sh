@@ -111,7 +111,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
         if [ "$2" = "--all" ]; then
             echo -e "${YELLOW}Removing images for Smart-Traffic-Intersection-Agent ... ${NC}"
-            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -E "smart-traffic-intersection-agent|vlm-openvino-serving" | awk '{print $2}' | xargs -r docker rmi -f 2>/dev/null || true
+            docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep "smart-traffic-intersection-agent" | awk '{print $2}' | xargs -r docker rmi -f 2>/dev/null || true
         fi
         echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
         if [ -d "$RI_DIR" ]; then
