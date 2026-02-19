@@ -135,7 +135,7 @@ Update `name`, `latitude` and `longitude` values as required. Following is a sam
 }
 ```
 
-> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs will be shown when setup finishes.
+> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
 3. Set the required environment variable.
 
@@ -178,7 +178,7 @@ The following is a sample value for instance #2 deployment configuration:
 }
 ```
 
-> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs will be shown when setup finishes.
+> **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
 3. Set the required environment variable.
 
@@ -191,9 +191,6 @@ export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-ins
 ```bash
 source setup.sh --setup
 ```
-
-> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random
-> ephemeral ports and avoid port conflicts.
 
 Ensure each instance has their `deployment_instance.json` updated with:
 
