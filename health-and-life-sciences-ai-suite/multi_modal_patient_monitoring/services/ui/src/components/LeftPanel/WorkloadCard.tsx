@@ -237,7 +237,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}
                 onError={(e) => {
-                  console.error('[WorkloadCard] Failed to load video stream');
+                  // Silent error handling
                 }}
               />
             ) : (

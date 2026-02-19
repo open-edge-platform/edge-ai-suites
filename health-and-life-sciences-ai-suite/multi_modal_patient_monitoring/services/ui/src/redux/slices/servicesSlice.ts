@@ -81,19 +81,6 @@ const servicesSlice = createSlice({
       state.workloads[workloadId].eventCount += 1;
       state.workloads[workloadId].lastEventTime = timestamp;
 
-      // ✅ Throttle 3D Pose logging (show every 30 updates ≈ once per second)
-      const shouldLog = workloadId === '3d-pose' 
-        ? state.workloads[workloadId].eventCount % 30 === 0
-        : true;
-
-      if (shouldLog) {
-        console.log(`[Redux] 📊 Updating ${workloadId}:`, {
-          eventCount: state.workloads[workloadId].eventCount,
-          payloadKeys: Object.keys(data),
-          hasWaveform: !!data.waveform
-        });
-      }
-
       // Parse workload-specific data
       if (workloadId === 'rppg') {
         // rPPG sends: HR, RR, SpO2, waveform
@@ -103,59 +90,48 @@ const servicesSlice = createSlice({
 
         if (data.waveform && Array.isArray(data.waveform)) {
           state.workloads[workloadId].waveform = data.waveform;
-          console.log(`[Redux] ✓ rPPG waveform: ${data.waveform.length} samples`);
         }
 
-        console.log(`[Redux] ✓ rPPG vitals: HR=${state.workloads[workloadId].latestData.HR}, RR=${state.workloads[workloadId].latestData.RR}, SpO2=${state.workloads[workloadId].latestData.SpO2}`);
       } else if (workloadId === 'ai-ecg') {
         // AI-ECG sends: prediction, filename, waveform, waveformFrequency
         if (data.prediction !== undefined) {
           state.workloads[workloadId].latestData.prediction = data.prediction;
-          console.log(`[Redux] ✓ AI-ECG prediction: ${data.prediction}`);
         }
 
         if (data.filename !== undefined) {
           state.workloads[workloadId].latestData.filename = data.filename;
-          console.log(`[Redux] ✓ AI-ECG filename: ${data.filename}`);
         }
 
         if (data.waveform && Array.isArray(data.waveform)) {
           state.workloads[workloadId].waveform = data.waveform;
-          console.log(`[Redux] ✓ AI-ECG waveform: ${data.waveform.length} samples`);
         }
 
         if (data.waveformFrequency !== undefined) {
           state.workloads[workloadId].waveformFrequency = data.waveformFrequency;
-          console.log(`[Redux] ✓ AI-ECG frequency: ${data.waveformFrequency} Hz`);
         }
 
       } else if (workloadId === 'mdpnp') {
         // MDPNP sends: HR, CO2_ET, BP_DIA, waveform with type
         if (data.HR !== undefined) {
           state.workloads[workloadId].latestData.HR = data.HR;
-          console.log(`[Redux] ✓ MDPNP HR: ${data.HR}`);
         }
         if (data.CO2_ET !== undefined) {
           state.workloads[workloadId].latestData.CO2_ET = data.CO2_ET;
-          console.log(`[Redux] ✓ MDPNP CO2_ET: ${data.CO2_ET}`);
         }
         if (data.BP_SYS !== undefined) {
           state.workloads[workloadId].latestData.BP_SYS = data.BP_SYS;
-          console.log(`[Redux] ✓ MDPNP BP_SYS: ${data.BP_SYS}`);
         }
         if (data.BP_DIA !== undefined) {
           state.workloads[workloadId].latestData.BP_DIA = data.BP_DIA;
-          console.log(`[Redux] ✓ MDPNP BP_DIA: ${data.BP_DIA}`);
         }
 
         if (data.waveform && Array.isArray(data.waveform)) {
           state.workloads[workloadId].waveform = data.waveform;
           state.workloads[workloadId].waveformType = data.waveformType || 'unknown';
-          console.log(`[Redux] ✓ MDPNP ${state.workloads[workloadId].waveformType} waveform: ${data.waveform.length} samples`);
         }
 
       } else if (workloadId === '3d-pose') {
-        // ✅ 3D Pose sends: joints array, activity, num_persons
+        // 3D Pose sends: joints array, activity, num_persons
         
         // Store joints array for 3D visualization
         if (data.joints && Array.isArray(data.joints)) {
@@ -181,11 +157,6 @@ const servicesSlice = createSlice({
         if (data.people && Array.isArray(data.people)) {
           state.workloads[workloadId].people = data.people;
         }
-        
-        // Debug: Show first joint if available
-        // if (data.joints && data.joints.length > 0) {
-        //   console.log(`[Redux] 📍 First joint:`, data.joints[0]);
-        // }
       }
     },
 
@@ -197,17 +168,15 @@ const servicesSlice = createSlice({
         lastEventTime: null,
         latestData: {},
         waveform: undefined,
-        joints: undefined,  // ✅ Add this
-        people: undefined,  // ✅ Add this
+        joints: undefined,
+        people: undefined,
       };
-      console.log(`[Redux] 🔄 Reset ${workloadId} data`);
     },
 
     startAllWorkloads: (state) => {
       Object.values(state.workloads).forEach((workload) => {
         workload.status = 'running';
       });
-      console.log('[Redux] ▶️ All workloads started');
     },
 
     stopAllWorkloads: (state) => {
@@ -224,7 +193,6 @@ const servicesSlice = createSlice({
         (workload as any).waveformType = undefined;
         (workload as any).waveformFrequency = undefined;
       });
-      console.log('[Redux] ⏹️ All workloads stopped');
     },
   },
 });
