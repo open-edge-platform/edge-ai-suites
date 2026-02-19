@@ -4,6 +4,7 @@ import { updateWorkloadData, setAggregatorStatus } from '../slices/servicesSlice
 
 export const sseMiddleware: Middleware = (store) => {
   let eventSource: EventSource | null = null;
+  let poseMessageCount = 0; // ✅ Add counter for 3D Pose messages
 
   return (next) => (action) => {
     if (typeof action !== 'object' || action === null || !('type' in action)) {
@@ -38,8 +39,7 @@ export const sseMiddleware: Middleware = (store) => {
       eventSource.onmessage = (event) => {
         try {
           const rawData = JSON.parse(event.data);
-          console.log('[SSE] 📨 Raw message:', rawData);
-
+          
           const workloadType = rawData.workload_type || rawData.workload;
           const eventType = rawData.event_type || 'data';
           const payload = rawData.payload || rawData;
@@ -168,9 +168,21 @@ export const sseMiddleware: Middleware = (store) => {
             });
             
           } else if (workloadType === '3d-pose') {
+            // ✅ Increment counter for every 3D Pose message
+            poseMessageCount++;
+            
             let allPeopleJoints: any[] = [];
             
-            console.log('[SSE] Raw 3D Pose payload:', payload);
+            // ✅ Show logs every 30 frames (approximately once per second at 30 FPS)
+            if (poseMessageCount % 30 === 0) {
+              console.log(`[SSE] 🎯 3D Pose Update (frame ${poseMessageCount}):`, {
+                frameNumber: poseMessageCount,
+                payload: payload,
+                peopleCount: payload.people?.length || 0,
+                activity: payload.activity || 'Unknown',
+                hasFrameData: !!payload.frame_base64
+              });
+            }
             
             if (payload.people && Array.isArray(payload.people) && payload.people.length > 0) {
               // ✅ Extract joints from ALL people, not just the first one
@@ -182,10 +194,13 @@ export const sseMiddleware: Middleware = (store) => {
                 };
               });
               
-              console.log('[SSE] ✓ Extracted joints from all people:', {
-                totalPeople: allPeopleJoints.length,
-                jointsPerPerson: allPeopleJoints.map(p => p.joints_3d.length),
-              });
+              // ✅ Show joint extraction logs every 30 frames
+              if (poseMessageCount % 30 === 0) {
+                console.log('[SSE] ✓ Extracted joints from all people:', {
+                  totalPeople: allPeopleJoints.length,
+                  jointsPerPerson: allPeopleJoints.map(p => p.joints_3d.length),
+                });
+              }
             }
             
             parsedData = {
@@ -198,10 +213,22 @@ export const sseMiddleware: Middleware = (store) => {
             // ✅ Always include frame data immediately (no throttling)
             if (payload.frame_base64) {
               parsedData.frameData = `data:image/jpeg;base64,${payload.frame_base64}`;
-              console.log(`[SSE] 🎬 Frame received for ${workloadType}`);
+              
+              // ✅ Show frame logs every 30 frames
+              if (poseMessageCount % 30 === 0) {
+                console.log(`[SSE] 🎬 Frame received for ${workloadType} (${poseMessageCount} total frames)`);
+              }
             }
 
-            console.log('[SSE] ✓ Dispatching to Redux:', parsedData);
+            // ✅ Show dispatch logs every 30 frames
+            if (poseMessageCount % 30 === 0) {
+              console.log('[SSE] ✓ Dispatching to Redux:', {
+                activity: parsedData.activity,
+                peopleCount: parsedData.people.length,
+                frameNumber: parsedData.frame_number,
+                hasFrameData: !!parsedData.frameData
+              });
+            }
             
           } else {
             console.warn(`[SSE] ⚠️ Unknown workload type: ${workloadType}`);

@@ -241,16 +241,6 @@ init_instance() {
     # Export variables from the instance .env file
     export $(grep -v -E '^\s*#' "$TEMP_APP_DIR/.env" | sed -e 's/#.*$//' -e '/^\s*$/d' | xargs)
     
-    # Run the setup script for this instance 
-    if [[ -f "$SOURCE_APP_DIR/setup.sh" ]]; then
-        echo "Running setup script for $SAMPLE_APP/$INSTANCE_NAME"
-        chmod +x "$SOURCE_APP_DIR/setup.sh"
-        bash "$SOURCE_APP_DIR/setup.sh"
-    else
-        err "No setup.sh found in $SOURCE_APP_DIR directory."
-        return 1
-    fi
-    
     echo "Completed setup for $SAMPLE_APP/$INSTANCE_NAME"
     echo ""
 }
