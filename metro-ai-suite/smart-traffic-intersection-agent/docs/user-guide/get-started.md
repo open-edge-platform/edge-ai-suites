@@ -224,12 +224,6 @@ export LOG_LEVEL=DEBUG
 # Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU 
 export VLM_DEVICE=GPU
 
-<<<<<<< stia/default-model-update
-=======
-# Change the VLM Model name. Default value set in setup.sh is microsoft/Phi-3.5-vision-instruct.
-export VLM_MODEL_NAME=Qwen/Qwen2.5-VL-3B-Instruct
-
->>>>>>> main
 # Other VLM related config, sample values
 export VLM_TIMEOUT_SECONDS=600          # Default 300
 export VLM_MAX_COMPLETION_TOKENS=1000   # Default 1500
