@@ -2,6 +2,7 @@ FROM docker.io/library/python:3.11
 
 USER root
 
+# Pull Debian security fixes (addresses libpng/libpq/linux-libc-dev CVEs when available in node security)
 RUN apt-get update \
  && apt-get -y upgrade \
  && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget \

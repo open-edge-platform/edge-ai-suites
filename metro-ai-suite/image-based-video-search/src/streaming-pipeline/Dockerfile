@@ -1,6 +1,7 @@
 FROM docker.io/intel/dlstreamer:2025.2.0-ubuntu22
 USER root
 
+# Pull Debian security fixes (addresses libpng/libpq/linux-libc-dev CVEs when available in node security)
 RUN apt-get update \
  && apt-get -y upgrade \
  && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget \
