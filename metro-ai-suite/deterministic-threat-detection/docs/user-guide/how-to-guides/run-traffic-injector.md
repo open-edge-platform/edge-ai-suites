@@ -12,8 +12,8 @@ that competes for network resources with the critical video and sensor data stre
 
 The setup involves two machines:
 
--   An **iPerf3 server** that listens for incoming traffic.
--   An **iPerf3 client** that sends data to the server.
+- An **iPerf3 server** that listens for incoming traffic.
+- An **iPerf3 client** that sends data to the server.
 
 ## Prerequisites
 

@@ -25,7 +25,7 @@ interface HighlightTimelineEvent extends CustomEvent {
 }
 
 /* ---------------- TIMELINE HIGHLIGHT COMPONENT ---------------- */
-const { t } = useTranslation();
+
 class TimelineHighlights extends videojs.getComponent("Component") {
   
   private highlights: TimelineHighlight[] = [];
@@ -81,6 +81,7 @@ videojs.registerComponent("TimelineHighlights", TimelineHighlights);
 /* ---------------- MAIN COMPONENT ---------------- */
 
 const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const highlightComponentRef = useRef<TimelineHighlights | null>(null);

@@ -40,6 +40,7 @@ event_loop: asyncio.AbstractEventLoop | None = None
 
 WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
 METRICS_SERVICE_URL = os.getenv("METRICS_SERVICE_URL", "http://localhost:9000")
+METRICS_TIMEOUT_SECONDS = float(os.getenv("METRICS_TIMEOUT_SECONDS", "10"))
 DDS_BRIDGE_CONTROL_URL = os.getenv("DDS_BRIDGE_CONTROL_URL", "http://localhost:8082")
 POSE_3D_CONTROL_URL = os.getenv("POSE_3D_CONTROL_URL", "http://localhost:8083")
 RPPG_CONTROL_URL = os.getenv("RPPG_CONTROL_URL", "http://localhost:8084")
@@ -49,7 +50,7 @@ def _proxy_metrics_get(path: str):
     """Proxy GET request to metrics service."""
     url = f"{METRICS_SERVICE_URL}{path}"
     try:
-        resp = requests.get(url, timeout=5)
+        resp = requests.get(url, timeout=METRICS_TIMEOUT_SECONDS)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"metrics-service unreachable: {exc}")
     

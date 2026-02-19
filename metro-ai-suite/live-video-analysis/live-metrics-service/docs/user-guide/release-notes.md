@@ -4,16 +4,16 @@
 
 **Release Date:** Feb 17, 2026
 
-### Features
+**Features**:
 
 - Decoupled the application to support live metrices service.
-- Fixed bugs and improved codebase. 
+- Fixed bugs and improved codebase.
 
 ## Version 1.0.0-rc.0
 
 **Release Date:** January 30, 2026
 
-### Features
+**Features**:
 
 - WebSocket relay for real-time metrics streaming
 - Single collector connection with policy enforcement
