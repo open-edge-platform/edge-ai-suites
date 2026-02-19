@@ -12,7 +12,7 @@ monitoring:
 models:
   asr:
     provider: openai # openvino, funasr and openai supported
-    name: whisper-base  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     diarization: True
