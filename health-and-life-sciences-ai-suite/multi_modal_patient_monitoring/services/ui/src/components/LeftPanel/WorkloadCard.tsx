@@ -154,17 +154,22 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   };
 
   React.useEffect(() => {
-    if (config.id === '3d-pose') {
-      console.log('[WorkloadCard] 3D Pose Update:', {
-        hasPeople: !!people,
-        peopleCount: people?.length || 0,
-        peopleData: people,
-        isExpanded,
-        status,
-        latestVitals
-      });
-    }
-  }, [people, isExpanded, status, config.id, latestVitals]);
+    // if (config.id === '3d-pose') {
+    //   // ✅ Log every 30 frames (approximately once per second at 30 FPS)
+    //   if (eventCount > 0 && eventCount % 30 === 0) {
+    //     console.log('[WorkloadCard] 🎯 3D Pose Update (every 30 frames):', {
+    //       status,
+    //       eventCount,
+    //       peopleDetected: people?.length || 0,
+    //       isExpanded,
+    //       hasValidPeople: people && people.length > 0 && people[0].joints_3d?.length > 0,
+    //       firstPersonJoints: people?.[0]?.joints_3d?.length || 0,
+    //       timestamp: new Date().toLocaleTimeString(),
+    //       framesSinceStart: eventCount
+    //     });
+    //   }
+    // }
+  }, [people, isExpanded, status, config.id, latestVitals, eventCount]);
 
   return (
     <div
