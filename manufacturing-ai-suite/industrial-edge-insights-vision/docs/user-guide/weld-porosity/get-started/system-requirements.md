@@ -35,6 +35,6 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ## Supporting Resources
 
-- [Overview](./index.md)
-- [Get Started Guide](./get-started.md)
-- [API Reference](./api-reference.md)
+- [Overview](../index.md)
+- [Get Started Guide](../get-started.md)
+- [API Reference](../api-reference.md)
