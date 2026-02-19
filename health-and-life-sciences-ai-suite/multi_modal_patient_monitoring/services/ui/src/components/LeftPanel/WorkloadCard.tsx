@@ -46,12 +46,11 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   onExpand,
   waveform,
   frameData,
-  people, // ✅ Use people instead of joints
+  people,
 }) => {
-  // 3D pose video stream goes via the aggregator's /video-stream endpoint
-  const apiPort = (import.meta as any).env?.VITE_API_PORT || '8001';
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  const poseStreamUrl = `${window.location.protocol}//${host}:${apiPort}/video-stream`;
+  // ✅ REPLACE THIS SECTION - Use direct MJPEG stream
+  const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+  const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
 
   const statusColors = {
     idle: '#6c757d',
@@ -154,17 +153,22 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   };
 
   React.useEffect(() => {
-    if (config.id === '3d-pose') {
-      console.log('[WorkloadCard] 3D Pose Update:', {
-        hasPeople: !!people,
-        peopleCount: people?.length || 0,
-        peopleData: people,
-        isExpanded,
-        status,
-        latestVitals
-      });
-    }
-  }, [people, isExpanded, status, config.id, latestVitals]);
+    // if (config.id === '3d-pose') {
+    //   // ✅ Log every 30 frames (approximately once per second at 30 FPS)
+    //   if (eventCount > 0 && eventCount % 30 === 0) {
+    //     console.log('[WorkloadCard] 🎯 3D Pose Update (every 30 frames):', {
+    //       status,
+    //       eventCount,
+    //       peopleDetected: people?.length || 0,
+    //       isExpanded,
+    //       hasValidPeople: people && people.length > 0 && people[0].joints_3d?.length > 0,
+    //       firstPersonJoints: people?.[0]?.joints_3d?.length || 0,
+    //       timestamp: new Date().toLocaleTimeString(),
+    //       framesSinceStart: eventCount
+    //     });
+    //   }
+    // }
+  }, [people, isExpanded, status, config.id, latestVitals, eventCount]);
 
   return (
     <div
