@@ -185,25 +185,25 @@ class PoseEstimationService:
                         # Filter poses
                         filtered_poses_2d, filtered_poses_3d = self.filter_valid_poses(poses_2d, poses_3d)
     
-                        # ✅ Stream annotated frame via MJPEG
+                        # ✅ KEEP: Stream annotated frame via MJPEG only
                         self.mjpeg_streamer.update_frame(annotated_frame)
 
-                        # ✅ Encode pose data and also attach JPEG-encoded frame bytes
-                        try:
-                            encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
-                            ok, buf = cv2.imencode('.jpg', annotated_frame, encode_param)
-                            frame_bytes = buf.tobytes() if ok else None
-                        except Exception:
-                            frame_bytes = None
+                        # ✅ REMOVE: All frame encoding for gRPC - we only use MJPEG streaming
+                        # try:
+                        #     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
+                        #     ok, buf = cv2.imencode('.jpg', annotated_frame, encode_param)
+                        #     frame_bytes = buf.tobytes() if ok else None
+                        # except Exception:
+                        #     frame_bytes = None
 
+                        # ✅ Encode pose data only (no frame bytes)
                         data_packet = self.encoder.encode_data(
                             filtered_poses_3d,
                             filtered_poses_2d,
-                            frame_number=self.frame_count,
-                            frame_bytes=frame_bytes,
+                            frame_number=self.frame_count
                         )
-    
-                        # Publish pose data to aggregator via gRPC
+
+                        # ✅ Publish pose data only to aggregator
                         success = self.publisher.publish(data_packet)
     
                         # Calculate actual output FPS based on frame timing

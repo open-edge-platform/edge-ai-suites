@@ -46,12 +46,11 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   onExpand,
   waveform,
   frameData,
-  people, // ✅ Use people instead of joints
+  people,
 }) => {
-  // 3D pose video stream goes via the aggregator's /video-stream endpoint
-  const apiPort = (import.meta as any).env?.VITE_API_PORT || '8001';
-  const host = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
-  const poseStreamUrl = `${window.location.protocol}//${host}:${apiPort}/video-stream`;
+  // ✅ REPLACE THIS SECTION - Use direct MJPEG stream
+  const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
+  const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
 
   const statusColors = {
     idle: '#6c757d',
