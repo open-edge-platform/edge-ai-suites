@@ -14,9 +14,7 @@ Edge Orchestrator, part of Intel’s Edge Software, simplifies edge application 
 
 To deploy the **Weld Porosity** Sample Application with the Edge Orchestrator, follow the steps described in this document.
 
-## Deploy with Edge Orchestrator
-
-### Prerequisites
+## Prerequisites
 
 1. Access to the web interface of the Edge Orchestrator with one or more [edge nodes onboarded](https://docs.openedgeplatform.intel.com/edge-manage-docs/dev/user_guide/set_up_edge_infra/edge_node_onboard/index.html) to the Edge Orchestrator.
 

@@ -11,12 +11,7 @@ export interface TranscriptSegment {
 
 type SupportedLanguage = "en" | "zh";
 
-type TranscriptStatus =
-  | "idle"
-  | "streaming"
-  | "finalizing"
-  | "complete"
-  | "error";
+type TranscriptStatus = "idle" | "streaming" | "finalizing" | "complete" | "error";
 
 interface TranscriptState {
   segments: TranscriptSegment[];
@@ -40,8 +35,26 @@ const initialState: TranscriptState = {
   status: "idle",
 };
 
-const normalizeSpeaker = (s?: string | null) =>
-  s?.trim().toUpperCase() || "";
+const normalizeSpeaker = (s?: string | null) => s?.trim().toUpperCase() || "";
+
+
+const shouldMerge = (last?: TranscriptSegment, incoming?: { speaker?: string; start?: number; end?: number }) => {
+  if (!last || !incoming) return false;
+  const inSpeaker = normalizeSpeaker(incoming.speaker);
+  if (normalizeSpeaker(last.speaker) !== inSpeaker) return false;
+
+  const lastEnd = last.end ?? 0;
+  const inStart = incoming.start ?? lastEnd;
+
+  return inStart - lastEnd <= 0.8;
+};
+
+const makeStableId = (speaker: string, start?: number, fallbackIndex?: number) => {
+  const s = normalizeSpeaker(speaker);
+  const t = Math.round((start ?? 0) * 1000);
+  if (t > 0) return `${s}:${t}`;
+  return `${s}:idx:${fallbackIndex ?? 0}`;
+};
 
 export const transcriptSlice = createSlice({
   name: "transcript",
@@ -51,68 +64,77 @@ export const transcriptSlice = createSlice({
       const chunk = action.payload;
 
       if (chunk.segments && Array.isArray(chunk.segments)) {
-        chunk.segments.forEach((segment: any) => {
-          const speaker = normalizeSpeaker(segment.speaker);
+        for (const seg of chunk.segments) {
+          const speaker = normalizeSpeaker(seg.speaker);
+          const start = seg.start ?? 0;
+          const end = seg.end ?? start;
+          const last = state.segments[state.segments.length - 1];
 
-          const newSegment: TranscriptSegment = {
-            id: `${speaker}-${Date.now()}-${Math.random()}`,
-            speaker,
-            text: segment.text,
-            start: segment.start ?? 0,
-            end: segment.end ?? 0,
-            isComplete: false,
-          };
+          if (shouldMerge(last, { speaker, start, end })) {
+            if (seg.text && seg.text.trim().length > 0) {
+              last.text = (last.text + " " + seg.text).replace(/\s+/g, " ").trim();
+            }
+            last.end = Math.max(last.end ?? 0, end);
+            last.isComplete = false;
+            state.currentTypingIndex = state.segments.length - 1;
+          } else {
+            if (last && !last.isComplete) {
+              last.isComplete = true;
+            }
 
-          state.segments.push(newSegment);
-        });
-
-        if (state.segments.length > 0 && state.currentTypingIndex < 0) {
-          state.currentTypingIndex = 0;
+            const newSeg: TranscriptSegment = {
+              id: makeStableId(speaker, start, state.segments.length),
+              speaker,
+              text: (seg.text ?? "").trim(),
+              start,
+              end,
+              isComplete: false,
+            };
+            state.segments.push(newSeg);
+            state.currentTypingIndex = state.segments.length - 1;
+          }
         }
 
         if (chunk.end_time) {
-          state.totalDuration = Math.max(
-            state.totalDuration || 0,
-            chunk.end_time
-          );
+          state.totalDuration = Math.max(state.totalDuration || 0, chunk.end_time);
         }
       }
 
       else if (chunk.text) {
+        const text = String(chunk.text ?? "");
         const speaker = normalizeSpeaker(
           chunk.speaker || state.segments[state.segments.length - 1]?.speaker || "SPEAKER_00"
         );
 
         if (state.segments.length === 0) {
           const newSegment: TranscriptSegment = {
-            id: `segment-${Date.now()}`,
+            id: makeStableId(speaker, chunk.start, 0),
             speaker,
-            text: chunk.text,
+            text,
             start: chunk.start,
-            end: chunk.end,
+            end: chunk.end ?? chunk.start,
             isComplete: false,
           };
           state.segments.push(newSegment);
           state.currentTypingIndex = 0;
         } else {
-          const lastSegment = state.segments[state.segments.length - 1];
-
-          if (
-            normalizeSpeaker(lastSegment.speaker) === speaker &&
-            !lastSegment.isComplete
-          ) {
-            lastSegment.text += chunk.text;
-            if (chunk.end) lastSegment.end = chunk.end;
+          const last = state.segments[state.segments.length - 1];
+          if (normalizeSpeaker(last.speaker) === speaker && !last.isComplete) {
+            last.text = (last.text + text).replace(/\s+/g, " ").trim();
+            if (chunk.end) last.end = Math.max(last.end ?? 0, chunk.end);
+            state.currentTypingIndex = state.segments.length - 1;
           } else {
+            if (!last.isComplete) last.isComplete = true;
             const newSegment: TranscriptSegment = {
-              id: `segment-${Date.now()}-${Math.random()}`,
+              id: makeStableId(speaker, chunk.start, state.segments.length),
               speaker,
-              text: chunk.text,
+              text,
               start: chunk.start,
-              end: chunk.end,
+              end: chunk.end ?? chunk.start,
               isComplete: false,
             };
             state.segments.push(newSegment);
+            state.currentTypingIndex = state.segments.length - 1;
           }
         }
       }
@@ -122,36 +144,25 @@ export const transcriptSlice = createSlice({
       const finalData = action.payload;
 
       if (finalData.teacher_speaker) {
-        state.teacherSpeaker = normalizeSpeaker(
-          finalData.teacher_speaker
-        );
+        state.teacherSpeaker = normalizeSpeaker(finalData.teacher_speaker);
       }
 
       if (finalData.speaker_text_stats) {
         const normalizedStats: { [speaker: string]: number } = {};
-        Object.entries(finalData.speaker_text_stats).forEach(
-          ([speaker, value]) => {
-            normalizedStats[normalizeSpeaker(speaker)] = value as number;
-          }
-        );
+        Object.entries(finalData.speaker_text_stats).forEach(([speaker, value]) => {
+          normalizedStats[normalizeSpeaker(speaker)] = value as number;
+        });
         state.speakerStats = normalizedStats;
       }
 
       if (state.segments.length > 0) {
         const maxEnd = Math.max(
-          ...state.segments
-            .map(s => s.end || 0)
-            .filter(e => e > 0)
+          ...state.segments.map(s => s.end || 0).filter(e => e > 0)
         );
-
         if (maxEnd > 0) {
-          state.totalDuration = Math.max(
-            state.totalDuration || 0,
-            maxEnd
-          );
+          state.totalDuration = Math.max(state.totalDuration || 0, maxEnd);
         }
       }
-
 
       state.segments.forEach(segment => {
         segment.isComplete = true;
@@ -171,22 +182,15 @@ export const transcriptSlice = createSlice({
       if (idx >= 0 && idx < state.segments.length) {
         state.segments[idx].isComplete = true;
         const next = idx + 1;
-        state.currentTypingIndex =
-          next < state.segments.length ? next : -1;
+        state.currentTypingIndex = next < state.segments.length ? next : -1;
       }
     },
 
     setTotalDuration: (state, action: PayloadAction<number>) => {
-      state.totalDuration = Math.max(
-        state.totalDuration || 0,
-        action.payload
-      );
+      state.totalDuration = Math.max(state.totalDuration || 0, action.payload);
     },
 
-    updateSpeakerStats: (
-      state,
-      action: PayloadAction<{ [speaker: string]: number }>
-    ) => {
+    updateSpeakerStats: (state, action: PayloadAction<{ [speaker: string]: number }>) => {
       const normalizedStats: { [speaker: string]: number } = {};
       Object.entries(action.payload).forEach(([speaker, value]) => {
         normalizedStats[normalizeSpeaker(speaker)] = value;
@@ -194,10 +198,7 @@ export const transcriptSlice = createSlice({
       state.speakerStats = normalizedStats;
     },
 
-    setDetectedLanguage: (
-      state,
-      action: PayloadAction<SupportedLanguage>
-    ) => {
+    setDetectedLanguage: (state, action: PayloadAction<SupportedLanguage>) => {
       state.detectedLanguage = action.payload;
     },
 

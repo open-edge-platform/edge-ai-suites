@@ -156,11 +156,15 @@ components:
       title: WeatherData
       description: Current weather conditions for traffic analysis
       required:
+        - name
         - temperature
         - temperature_unit
         - detailed_forecast
-        - weather_type
+        - fetched_at
       properties:
+        name:
+          type: string
+          description: Current weather period name (e.g., "This Afternoon")
         temperature:
           type: integer
           description: Temperature value
@@ -173,34 +177,59 @@ components:
         detailed_forecast:
           type: string
           description: Detailed weather description
-        weather_type:
+        fetched_at:
           type: string
-          description: Type of weather condition
-        short_forecast:
-          type: string
-          description: Short weather condition (e.g., Clear, Rainy)
-          nullable: true
+          format: date-time
+          description: When weather data was retrieved
+        is_precipitation:
+          type: boolean
+          description: Whether precipitation is occurring
+        is_mock:
+          type: boolean
+          description: Whether this is mock weather data
         wind_speed:
           type: string
           description: Wind speed with units (e.g., "5 mph")
-          nullable: true
         wind_direction:
           type: string
           description: Wind direction (e.g., N, NE, S)
-          nullable: true
+        short_forecast:
+          type: string
+          description: Short weather condition (e.g., Clear, Rainy)
+        wind_info:
+          type: string
+          description: Combined wind speed and direction (e.g., "3mph/W")
         precipitation_prob:
           type: number
           format: float
           description: Precipitation probability (0-100)
+        dewpoint:
+          type: number
+          format: float
           nullable: true
+          description: Dewpoint in Celsius
         relative_humidity:
           type: number
           format: float
-          description: Relative humidity percentage (0-100)
           nullable: true
-        is_precipitation:
+          description: Relative humidity percentage (0-100)
+        is_daytime:
           type: boolean
-          description: Whether precipitation is occurring
+          nullable: true
+          description: Whether it is daytime
+        start_time:
+          type: string
+          nullable: true
+          description: Start time of the forecast period
+        end_time:
+          type: string
+          nullable: true
+          description: End time of the forecast period
+        is_cached:
+          type: boolean
+          description: Whether this data was served from cache
+        weather_type:
+          "$ref": "#/components/schemas/WeatherType"
     VLMAnalysis:
       type: object
       title: VLMAnalysis
@@ -238,22 +267,34 @@ components:
         - weather_related
       properties:
         alert_type:
-          type: string
-          description: Type of alert
+          "$ref": "#/components/schemas/AlertType"
         level:
-          type: string
-          enum:
-            - low
-            - medium
-            - high
-            - critical
-          description: Alert severity level
+          "$ref": "#/components/schemas/AlertLevel"
         description:
           type: string
           description: Alert description
         weather_related:
           type: boolean
           description: Whether the alert is weather-related
+    AlertLevel:
+      type: string
+      enum:
+        - info
+        - warning
+        - critical
+      title: AlertLevel
+      description: Alert severity levels
+    AlertType:
+      type: string
+      enum:
+        - congestion
+        - weather_related
+        - road_condition
+        - accident
+        - maintenance
+        - normal
+      title: AlertType
+      description: Types of traffic alerts
     CameraImageData:
       type: object
       title: CameraImageData
@@ -318,6 +359,6 @@ components:
     WeatherType:
       type: string
       enum:
-      - clear
+        - clear
       title: WeatherType
-      description: Weather condition
+      description: Type of weather condition

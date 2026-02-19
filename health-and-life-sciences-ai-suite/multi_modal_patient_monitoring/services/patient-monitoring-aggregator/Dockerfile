@@ -3,16 +3,8 @@ FROM python:3.12-slim
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG no_proxy
 
-ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
-    https_proxy=${https_proxy:-$HTTPS_PROXY} \
-    no_proxy=${no_proxy:-$NO_PROXY} \
-    HTTP_PROXY=${HTTP_PROXY:-$http_proxy} \
-    HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy} \
-    NO_PROXY=${NO_PROXY:-$no_proxy}
+
 # Set working directory inside the container
 WORKDIR /app
 
@@ -36,4 +28,4 @@ COPY proto ./proto
 EXPOSE 50051
 
 # Start the aggregator gRPC server as a module so top-level stubs are importable
-CMD ["python", "-m", "aggregator.server"]
+CMD ["uvicorn", "aggregator.server:app", "--host", "0.0.0.0", "--port", "8001"]

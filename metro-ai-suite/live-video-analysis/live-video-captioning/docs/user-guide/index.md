@@ -10,7 +10,7 @@ The key features are as follows:
 
 **Modular Architecture**: Containerized services with clearly separated backend, frontend, and pipeline configuration.
 
-**Agent Mode**: Optional alert styling for binary classification prompts (“Yes”/“No”).
+**Alert Mode**: Optional alert styling for binary classification prompts (“Yes”/“No”).
 
 **Object-Detection-Model Support**: Optionally integrate YOLO-based detection models into the pipeline to enable object detection and frame filtering.
 
@@ -37,7 +37,7 @@ get-started
 system-requirements
 how-to-build-from-source
 how-it-works
-agent-mode
+alert-mode
 object-detection-pipeline
 api-reference
 release-notes

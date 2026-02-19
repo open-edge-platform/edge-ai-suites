@@ -81,11 +81,18 @@ const servicesSlice = createSlice({
       state.workloads[workloadId].eventCount += 1;
       state.workloads[workloadId].lastEventTime = timestamp;
 
-      console.log(`[Redux] 📊 Updating ${workloadId}:`, {
-        eventCount: state.workloads[workloadId].eventCount,
-        payloadKeys: Object.keys(data),
-        hasWaveform: !!data.waveform
-      });
+      // ✅ Throttle 3D Pose logging (show every 30 updates ≈ once per second)
+      const shouldLog = workloadId === '3d-pose' 
+        ? state.workloads[workloadId].eventCount % 30 === 0
+        : true;
+
+      if (shouldLog) {
+        console.log(`[Redux] 📊 Updating ${workloadId}:`, {
+          eventCount: state.workloads[workloadId].eventCount,
+          payloadKeys: Object.keys(data),
+          hasWaveform: !!data.waveform
+        });
+      }
 
       // Parse workload-specific data
       if (workloadId === 'rppg') {
@@ -153,19 +160,16 @@ const servicesSlice = createSlice({
         // Store joints array for 3D visualization
         if (data.joints && Array.isArray(data.joints)) {
           state.workloads[workloadId].joints = data.joints;
-          console.log(`[Redux] ✓ 3D Pose joints array: ${data.joints.length} joints stored`);
         }
         
         // Store activity for display
         if (data.activity !== undefined) {
           state.workloads[workloadId].latestData.activity = data.activity;
-          console.log(`[Redux] ✓ 3D Pose activity: ${data.activity}`);
         }
         
         // Store number of persons detected
         if (data.num_persons !== undefined) {
           state.workloads[workloadId].latestData.num_persons = data.num_persons;
-          console.log(`[Redux] ✓ 3D Pose persons detected: ${data.num_persons}`);
         }
         
         // Store frame number
@@ -176,13 +180,12 @@ const servicesSlice = createSlice({
         // Store all people data
         if (data.people && Array.isArray(data.people)) {
           state.workloads[workloadId].people = data.people;
-          console.log(`[Redux] ✓ 3D Pose people array: ${data.people.length} people stored`);
         }
         
         // Debug: Show first joint if available
-        if (data.joints && data.joints.length > 0) {
-          console.log(`[Redux] 📍 First joint:`, data.joints[0]);
-        }
+        // if (data.joints && data.joints.length > 0) {
+        //   console.log(`[Redux] 📍 First joint:`, data.joints[0]);
+        // }
       }
     },
 
@@ -210,6 +213,16 @@ const servicesSlice = createSlice({
     stopAllWorkloads: (state) => {
       Object.values(state.workloads).forEach((workload) => {
         workload.status = 'idle';
+        workload.eventCount = 0;
+        workload.lastEventTime = null;
+        workload.latestData = {};
+        workload.waveform = undefined;
+        workload.frameData = undefined;
+        workload.joints = undefined;
+        workload.people = undefined;
+        // optional extras used by ai-ecg / mdpnp
+        (workload as any).waveformType = undefined;
+        (workload as any).waveformFrequency = undefined;
       });
       console.log('[Redux] ⏹️ All workloads stopped');
     },

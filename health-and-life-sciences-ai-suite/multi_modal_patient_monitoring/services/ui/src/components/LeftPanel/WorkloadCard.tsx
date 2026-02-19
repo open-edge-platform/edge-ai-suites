@@ -46,9 +46,9 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   onExpand,
   waveform,
   frameData,
-  people, // ✅ Use people instead of joints
+  people,
 }) => {
-  // ✅ Add the poseStreamUrl definition here, right after the component props
+  // ✅ REPLACE THIS SECTION - Use direct MJPEG stream
   const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
   const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
 
@@ -153,17 +153,22 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   };
 
   React.useEffect(() => {
-    if (config.id === '3d-pose') {
-      console.log('[WorkloadCard] 3D Pose Update:', {
-        hasPeople: !!people,
-        peopleCount: people?.length || 0,
-        peopleData: people,
-        isExpanded,
-        status,
-        latestVitals
-      });
-    }
-  }, [people, isExpanded, status, config.id, latestVitals]);
+    // if (config.id === '3d-pose') {
+    //   // ✅ Log every 30 frames (approximately once per second at 30 FPS)
+    //   if (eventCount > 0 && eventCount % 30 === 0) {
+    //     console.log('[WorkloadCard] 🎯 3D Pose Update (every 30 frames):', {
+    //       status,
+    //       eventCount,
+    //       peopleDetected: people?.length || 0,
+    //       isExpanded,
+    //       hasValidPeople: people && people.length > 0 && people[0].joints_3d?.length > 0,
+    //       firstPersonJoints: people?.[0]?.joints_3d?.length || 0,
+    //       timestamp: new Date().toLocaleTimeString(),
+    //       framesSinceStart: eventCount
+    //     });
+    //   }
+    // }
+  }, [people, isExpanded, status, config.id, latestVitals, eventCount]);
 
   return (
     <div
@@ -262,25 +267,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
               </div>
             )}
             
-            {/* ❌ REMOVE THIS ENTIRE SECTION - Activity Badge */}
-            {/* 
-            {latestVitals?.activity && (
-              <div style={{
-                marginTop: '12px',
-                padding: '10px 16px',
-                background: 'linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%)',
-                borderRadius: '8px',
-                fontSize: '13px',
-                color: '#0071c5',
-                fontWeight: '600',
-                textAlign: 'center',
-                border: '1px solid #b3d9ff',
-                boxShadow: '0 2px 4px rgba(0, 113, 197, 0.1)'
-              }}>
-                🏃 Activity: {latestVitals.activity}
-              </div>
-            )}
-            */}
           </div>
 
           {/* 3D Skeleton Visualization - Only when expanded */}
@@ -379,20 +365,6 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
           )}
         </>
       )}
-
-      {/* Footer */}
-      <div className="workload-footer">
-        <div className="event-count">
-          <span className="label">Events:</span>
-          <span className="value">{eventCount}</span>
-        </div>
-        {lastEventTime && (
-          <div className="last-update">
-            <span className="label">Last:</span>
-            <span className="value">{new Date(lastEventTime).toLocaleTimeString()}</span>
-          </div>
-        )}
-      </div>
     </div>
   );
 };

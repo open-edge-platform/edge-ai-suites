@@ -21,11 +21,16 @@ else
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: help clean clean-colcon clean-debian license-check lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json package source-package
+.PHONY: help clean clean-colcon clean-debian license-check lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json package safe-package source-package
 
 license-check:
 	@# Help: Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
 	docker run --rm --volume ${ROOT_DIR}:/data fsfe/reuse:5.0.2 lint
+
+safe-package:
+	@# Help: Build Debian package with memory-safe parallel job limits (recommended for systems with <32GB RAM)
+	@echo "Building with memory-safe limits to prevent system crashes..."
+	@bash scripts/safe-build.sh $(ROS_DISTRO) $(PARALLEL_JOBS)
 
 package:
 	@# Help: Build Debian package
@@ -46,7 +51,8 @@ package:
 			curl https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
 				gpg --yes --dearmor --output /usr/share/keyrings/oneapi-archive-keyring.gpg && \
 			echo \"deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" > /etc/apt/sources.list.d/oneAPI.list && \
-			apt update && apt install -y quilt equivs devscripts && \
+			apt update && \
+			apt install -y quilt equivs devscripts && \
 			scripts/uni-build.sh $(ROS_DISTRO) && cp -r /tmp/$(ROS_DISTRO)_cslam_deb_packages/ /src/$(ROS_DISTRO)_cslam_deb_packages"
 
 lint:
@@ -113,7 +119,7 @@ clean-colcon:
 clean-debian:
 	@# Help: Clean up Debian packaging artifacts
 	rm -rf debian
-	rm -f *.deb *.build *.changes *.dsc *.tar.gz *.buildinfo
+	rm -f *.deb *.ddeb *.build *.changes *.dsc *.tar.gz *.buildinfo
 
 clean: clean-debian clean-colcon
 	@# Help: Clean up all build artifacts
