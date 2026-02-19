@@ -15,11 +15,11 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_
 const AGGREGATOR_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
 // const METRICS_URL = import.meta.env.VITE_METRICS_BASE_URL || `http://${API_HOST}:${METRICS_PORT}`;
 
-console.log('[API] Aggregator URL:', AGGREGATOR_URL);
+// console.log('[API] Aggregator URL:', AGGREGATOR_URL);
 // console.log('[API] Metrics URL:', METRICS_URL);
 
-console.log('[API] BASE_URL configured as:', BASE_URL);
-console.log('[API] Environment variables:', import.meta.env);
+// console.log('[API] BASE_URL configured as:', BASE_URL);
+// console.log('[API] Environment variables:', import.meta.env);
 const HEALTH_TIMEOUT_MS = 10000;
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -76,8 +76,8 @@ export async function startWorkloads(target: WorkloadType = 'all'): Promise<Star
         mode: 'cors', // ADD THIS
       });
       
-      console.log('[API] Response status:', res.status); // ADD THIS
-      console.log('[API] Response ok:', res.ok); // ADD THIS
+      // console.log('[API] Response status:', res.status); // ADD THIS
+      // console.log('[API] Response ok:', res.ok); // ADD THIS
       
       if (!res.ok) {
         const errorText = await res.text();
@@ -113,7 +113,7 @@ export async function getPlatformInfo(): Promise<{
   Storage?: string;
   OS?: string;
 }> {
-  console.log('[API] Fetching platform info from:', `${BASE_URL}/platform-info`);
+  // console.log('[API] Fetching platform info from:', `${BASE_URL}/platform-info`);
   const response = await fetch(`${BASE_URL}/platform-info`);
   
   if (!response.ok) {
@@ -121,7 +121,7 @@ export async function getPlatformInfo(): Promise<{
   }
   
   const data = await response.json();
-  console.log('[API] Platform info response:', data);
+  // console.log('[API] Platform info response:', data);
   return data;
 }
 
@@ -135,7 +135,7 @@ export async function getResourceMetrics(): Promise<{
   power: Array<[string, ...number[]]>;
   npu_utilization: Array<[string, number]>;
 }> {
-  console.log('[API] Fetching metrics from:', `${BASE_URL}/metrics`);
+  // console.log('[API] Fetching metrics from:', `${BASE_URL}/metrics`);
 
   // Use AbortController to enforce a client-side timeout that's
   // comfortably higher than the backend proxy timeout, so we don't
@@ -159,7 +159,7 @@ export async function getResourceMetrics(): Promise<{
   }
   
   const data = await response.json();
-  console.log('[API] Metrics response:', data);
+  // console.log('[API] Metrics response:', data);
   return data;
 }
 
