@@ -127,6 +127,12 @@ fi
 # Dependencies: Setup Smart Intersection RI before running the agent Backend/UI
 # ============================================================================
 
+# Check if VLM Model name is set or not
+if [ -z "$VLM_MODEL_NAME" ]; then
+    echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for some possible VLM model names.${NC}"
+    return 1
+fi
+
 export SAMPLE_APP="smart-intersection"
 SUBMODULE="deps/metro-vision"
 SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
@@ -206,7 +212,7 @@ export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/de
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
 
 # VLM Service Configuration
-export VLM_MODEL_NAME=${VLM_MODEL_NAME:-microsoft/Phi-3.5-vision-instruct}
+export VLM_MODEL_NAME=${VLM_MODEL_NAME}
 
 # VLM OpenVINO Configuration
 export VLM_DEVICE=${VLM_DEVICE:-CPU}
@@ -263,11 +269,11 @@ print_all_service_host_endpoints() {
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
                 PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
-                echo -e "${BLUE}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+                echo -e "${CYAN}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
                 PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
-                echo -e "${BLUE}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *vlm*)
                 SERVICE_NAME="VLM OpenVINO Serving API"
