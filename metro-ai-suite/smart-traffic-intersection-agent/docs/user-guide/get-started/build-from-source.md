@@ -22,6 +22,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+> **IMPORTANT:** See this [disclaimer](../get-started.md#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
 
 ### 3. Build the Docker Image
 

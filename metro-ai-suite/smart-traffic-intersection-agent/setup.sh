@@ -122,7 +122,7 @@ fi
 
 # Check if VLM Model name is set or not
 if [ -z "$VLM_MODEL_NAME" ]; then
-    echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for recommended VLM model names.${NC}"
+    echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for some possible VLM model names.${NC}"
     return 1
 fi
 

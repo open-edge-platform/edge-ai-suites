@@ -45,6 +45,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+> **IMPORTANT:** See this [Disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Run the Complete Setup
 
@@ -142,6 +143,7 @@ Update `name`, `latitude` and `longitude` values as required. Following is a sam
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+> **IMPORTANT:** See this [Disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4. Run the setup for instance #1:
 
@@ -185,6 +187,7 @@ The following is a sample value for instance #2 deployment configuration:
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+> **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
 
 4. Run Setup for Instance #2
 
@@ -208,6 +211,10 @@ are reached. Hence, deploy new instances only if you have the required resource 
 
 To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in
 [Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
+
+### Disclaimer for Using Third-Party AI Models
+
+Compliance with all license obligations and responsible use for a third-party AI Model is the user’s responsibility.
 
 ## Advanced Environment Configuration
 
