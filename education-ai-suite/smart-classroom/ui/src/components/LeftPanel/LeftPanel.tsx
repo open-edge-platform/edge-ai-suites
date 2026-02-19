@@ -4,10 +4,9 @@ import AISummaryTab from "../Tabs/AISummaryTab";
 import MindMapTab from "../Tabs/MindMapTab";
 import SearchBox from "../common/SearchBox";
 import SearchResultsPreview from "../common/SearchResultPreview";
-import SearchResultsModal from "../Modals/SearchResultsModal";
 import "../../assets/css/LeftPanel.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setActiveTab, setShowSearchResults, setActiveStream, type SearchResult } from "../../redux/slices/uiSlice";
+import { setActiveTab, setActiveStream, type SearchResult } from "../../redux/slices/uiSlice";
 import { useTranslation } from 'react-i18next';
 import VideoStream from "./VideoStream";
 import { useContentSegmentation } from "../../redux/useContentSegmentation";
@@ -24,7 +23,6 @@ const LeftPanel = () => {
   const contentSegmentationStatus = useAppSelector((s) => s.ui.contentSegmentationStatus);
   const searchLoading = useAppSelector((s) => s.ui.searchLoading);
   const searchResults = useAppSelector((s) => s.ui.searchResults);
-  const showSearchResults = useAppSelector((s) => s.ui.showSearchResults);
   const uploadedVideoFiles = useAppSelector((s) => s.ui.uploadedVideoFiles);
   
   const { t } = useTranslation();
@@ -57,7 +55,6 @@ const LeftPanel = () => {
     });
   }, [searchResults]);
 
-
   const getSearchPlaceholder = () => {
     if (contentSegmentationStatus === 'loading') {
       return t('search.preparingContent', 'Content Generating...');
@@ -74,8 +71,8 @@ const LeftPanel = () => {
     <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
       <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
     
-              <div className="search-container">
-                <div
+      <div className="search-container">
+        <div
           className="search-wrapper"
           title={
             contentSegmentationStatus !== "complete"
@@ -83,47 +80,46 @@ const LeftPanel = () => {
               : ""
           }
         >
-        <SearchBox
-          onSearch={handleSearch}
-          placeholder={getSearchPlaceholder()}
-          className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
-        />
-
-        {contentSegmentationStatus === "loading" && (
-          <div className="search-status loading">
-            <span className="spinner"></span>
-            {t('search.preparingContent', 'Content Generating...')}
-          </div>
-        )}
-
-        {contentSegmentationStatus === "error" && (
-          <div className="search-status error">
-            {t('search.contentError', 'Content preparation failed. Search unavailable.')}
-          </div>
-        )}
-
-        {searchLoading && (
-          <div className="search-status loading">
-            <span className="spinner"></span>
-            {t('search.searching', 'Searching...')}
-          </div>
-        )}
-
-        {searchError && (
-          <div className="search-status error">
-            {searchError}
-          </div>
-        )}
-
-        {showResultsPreview && (
-          <SearchResultsPreview
-            results={searchResults}
-            query={searchQuery}
+          <SearchBox
+            onSearch={handleSearch}
+            placeholder={getSearchPlaceholder()}
+            className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
           />
-        )}
-      </div>
 
-      
+          {contentSegmentationStatus === "loading" && (
+            <div className="search-status loading">
+              <span className="spinner"></span>
+              {t('search.preparingContent', 'Content Generating...')}
+            </div>
+          )}
+
+          {contentSegmentationStatus === "error" && (
+            <div className="search-status error">
+              {t('search.contentError', 'Content preparation failed. Search unavailable.')}
+            </div>
+          )}
+
+          {searchLoading && (
+            <div className="search-status loading">
+              <span className="spinner"></span>
+              {t('search.searching', 'Searching...')}
+            </div>
+          )}
+
+          {searchError && (
+            <div className="search-status error">
+              {searchError}
+            </div>
+          )}
+
+          {showResultsPreview && (
+            <SearchResultsPreview
+              results={searchResults}
+              query={searchQuery}
+            />
+          )}
+        </div>
+      </div>
       
       <div className="tabs">
         <button
@@ -151,20 +147,12 @@ const LeftPanel = () => {
           {mindmapEnabled && mindmapLoading && <span className="tab-spinner" aria-label="loading" />}
         </button>
       </div>
+      
       <div className="tab-content">
         {activeTab === "transcripts" && <TranscriptsTab />}
         {activeTab === "summary" && <AISummaryTab />}
         {activeTab === "mindmap" && <MindMapTab />}
       </div>
-
-      {showSearchResults && (
-        <SearchResultsModal
-          isOpen={showSearchResults}
-          onClose={() => dispatch(setShowSearchResults(false))}
-          results={searchResults}
-          query={searchQuery}
-        />
-      )}</div>
     </div>
   );
 };

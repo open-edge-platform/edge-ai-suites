@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import '../../assets/css/SearchResultsPreview.css';
 import { useTranslation } from 'react-i18next';
-import { useAppDispatch } from '../../redux/hooks';
-import { setShowSearchResults } from '../../redux/slices/uiSlice';
+import { useAppSelector } from '../../redux/hooks';
 import { type SearchResult } from '../../redux/useSearchContent';
 
 interface SearchResultsPreviewProps {
@@ -15,10 +14,23 @@ const SearchResultsPreview: React.FC<SearchResultsPreviewProps> = ({
   query
 }) => {
   const { t } = useTranslation();
-  const dispatch = useAppDispatch();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const uploadedVideoFiles = useAppSelector((s) => s.ui.uploadedVideoFiles);
+  
+  const hasBackCamera = Boolean(uploadedVideoFiles.back);
 
-  const handleExpandClick = () => {
-    dispatch(setShowSearchResults(true));
+  const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  };
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleResultClick = (result: SearchResult) => {
+    console.log('Selected result:', result);
   };
 
   if (results.length === 0) {
@@ -34,26 +46,63 @@ const SearchResultsPreview: React.FC<SearchResultsPreviewProps> = ({
   }
 
   return (
-    <div className="search-results-preview compact">
-      <div className="preview-header">
+    <div className="search-results-preview">
+      <div className="preview-header" onClick={handleToggleExpand}>
         <span className="results-count">
           {results.length} {t('search.resultsFound', 'results found')} for "{query}"
         </span>
 
         <button 
-          className="expand-btn"
-          onClick={handleExpandClick}
-          title={t('search.expandResults', 'Expand all results')}
+          className={`dropdown-btn ${isExpanded ? 'expanded' : ''}`}
+          title={isExpanded ? t('search.collapseResults', 'Collapse results') : t('search.expandResults', 'Show results')}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <polyline points="15,3 21,3 21,9"></polyline>
-            <polyline points="9,21 3,21 3,15"></polyline>
-            <line x1="21" y1="3" x2="14" y2="10"></line>
-            <line x1="3" y1="21" x2="10" y2="14"></line>
+            <polyline points={isExpanded ? "18,15 12,9 6,15" : "6,9 12,15 18,9"}></polyline>
           </svg>
-          {t('search.expandAll', 'Expand All')}
         </button>
       </div>
+
+      {isExpanded && (
+        <div className="results-dropdown">
+          <div className="results-list">
+            {results.map((result, index) => (
+              <div
+                key={index}
+                className={`result-card ${hasBackCamera ? 'clickable' : ''}`}
+                onClick={() => handleResultClick(result)}
+              >
+                <div className="result-header">
+                  <div className="result-topic">
+                    <h4>{result.topic}</h4>
+                    <span className="relevance-score">
+                      {(result.score * 100).toFixed(0)}%
+                    </span>
+                  </div>
+
+                  <div className="result-timestamp">
+                    <span className="time-range">
+                      {formatTime(result.start_time)} – {formatTime(result.end_time)}
+                    </span>
+                    <span className="duration">
+                      {Math.round(result.end_time - result.start_time)}s
+                    </span>
+                  </div>
+                </div>
+
+                <div className="result-content">
+                  <p className="result-text">{result.text}</p>
+                </div>
+
+                <div className="result-footer">
+                  <span className="score-detail">
+                    {t('search.Relevance', 'Relevance')}: {(result.score * 100).toFixed(1)}%
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

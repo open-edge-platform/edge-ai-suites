@@ -3,7 +3,7 @@ import videojs from "video.js";
 import Hls from "hls.js";
 import "video.js/dist/video-js.css";
 import { useTranslation } from 'react-i18next';
-
+import "../../assets/css/HLSPlayer.css";
 interface Props {
   streamUrl?: string;
   videoFile?: File;
@@ -316,18 +316,7 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
   /* ---------- RENDER ---------- */
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        background: "black",
-        transform: "scale(0.8)",
-        transformOrigin: "center",
-      }}
-    >
-      {/* Show info about what's being loaded */}
+    <div ref={containerRef} className="hls-player-container">
       {mode === "stream" && !streamUrl && (
         <div style={{ 
           color: "white", 
