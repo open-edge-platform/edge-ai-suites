@@ -53,8 +53,9 @@ if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     echo -e "                              • deps          - Restart dependencies (Services required by Smart Intersection RI)"
     echo -e "                              • all           - Restart all services including Backend/UI and dependencies (default if no argument is provided)"
     echo -e "  --stop:                   Stop the services"
-    echo -e "  --clean [option]:         Clean up containers, volumes, and logs"
+    echo -e "  --clean [option]:         Clean up containers, volumes, and networks"
     echo -e "                              • --keep-models - Remove all application volume data except VLM models"
+    echo -e "                              • --all         - Remove containers, volumes, networks, and images"
     echo -e "  --help:                   Show this help message${NC}"
     echo -e "-----------------------------------------------------------------"
     return 0
@@ -70,9 +71,9 @@ elif [ "$1" != "--help" ] && [ "$1" != "--setenv" ] && [ "$1" != "--run" ] && [ 
     echo -e "${YELLOW}Use --help for usage information${NC}"
     return 1
 
-elif [ "$1" = "--clean" ] && [ "$#" -eq 2 ] && [ "$2" != "--keep-models" ]; then
+elif [ "$1" = "--clean" ] && [ "$#" -eq 2 ] && [ "$2" != "--keep-models" ] && [ "$2" != "--all" ]; then
     echo -e "${RED}ERROR: Invalid option for --clean: $2${NC}"
-    echo -e "${YELLOW}Valid options: --keep-models${NC}"
+    echo -e "${YELLOW}Valid options: --keep-models, --all${NC}"
     echo -e "${YELLOW}Use --help for usage information${NC}"
     return 1
 
@@ -102,9 +103,15 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         echo -e "${YELLOW}Removing volumes for Smart-Traffic-Intersection-Agent ... ${NC}"
         if [ "$2" = "--keep-models" ]; then
             echo -e "${CYAN}Keeping VLM model cache volume (ov-models)...${NC}"
-            docker volume ls | grep $PROJECT_NAME | grep -v "ov-models" | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
+            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | grep -v "ov-models" | xargs -r docker volume rm 2>/dev/null || true
         else
-            docker volume ls | grep $PROJECT_NAME | awk '{ print $2 }' | xargs docker volume rm 2>/dev/null || true
+            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+        fi
+        echo -e "${YELLOW}Removing networks for Smart-Traffic-Intersection-Agent ... ${NC}"
+        docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
+        if [ "$2" = "--all" ]; then
+            echo -e "${YELLOW}Removing images for Smart-Traffic-Intersection-Agent ... ${NC}"
+            docker rmi -f "${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-latest}" 2>/dev/null || true
         fi
         echo -e "${YELLOW}Removing secrets for Smart Intersection RI ... ${NC}"
         if [ -d "$RI_DIR" ]; then
@@ -119,6 +126,12 @@ fi
 # ============================================================================
 # Dependencies: Setup Smart Intersection RI before running the agent Backend/UI
 # ============================================================================
+
+# Check if VLM Model name is set or not
+if [ -z "$VLM_MODEL_NAME" ]; then
+    echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for some possible VLM model names.${NC}"
+    return 1
+fi
 
 export SAMPLE_APP="smart-intersection"
 SUBMODULE="deps/metro-vision"
@@ -199,7 +212,7 @@ export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/de
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
 
 # VLM Service Configuration
-export VLM_MODEL_NAME=${VLM_MODEL_NAME:-microsoft/Phi-3.5-vision-instruct}
+export VLM_MODEL_NAME=${VLM_MODEL_NAME}
 
 # VLM OpenVINO Configuration
 export VLM_DEVICE=${VLM_DEVICE:-CPU}
@@ -256,11 +269,11 @@ print_all_service_host_endpoints() {
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
                 PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
-                echo -e "${BLUE}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+                echo -e "${CYAN}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
                 PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
-                echo -e "${BLUE}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
+                echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *vlm*)
                 SERVICE_NAME="VLM OpenVINO Serving API"

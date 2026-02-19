@@ -1,4 +1,4 @@
-# Live Video Search Architecture
+# How It Works
 
 This document describes the end‑to‑end architecture of Live Video Search and how Smart NVR and VSS Search integrate.
 
