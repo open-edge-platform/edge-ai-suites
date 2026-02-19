@@ -11,18 +11,8 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-patient-monitoring-assets:1.0.0
     container_name: patient-monitoring-assets
-    environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
     volumes:
       - ./models:/models
       - ./videos:/videos
@@ -35,21 +25,12 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-patient-monitoring-aggregator:1.0.0
     container_name: patient-monitoring-aggregator
     environment:
       - WORKLOAD_TYPE=mdpnp
       - GRPC_PORT=50051
-      - HTTP_PORT=8000
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
+      - HTTP_PORT=8000    
     network_mode: "host"
     
   metrics-collector:
@@ -60,21 +41,12 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-metrics-collector:1.0.0
     container_name: metrics-collector
     privileged: true
     pid: host
     network_mode: "host"
     environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
       - NPU_LOG=/tmp/results/npu_usage.csv
       - METRICS_DIR=/tmp/results
       - DEVICE_ENV_PATH=/configs/device.env
@@ -100,19 +72,9 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-mdpnp:1.0.0
     container_name: mdpnp
     network_mode: "host"
-    environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
     depends_on:
         patient-monitoring-assets:
           condition: service_completed_successfully
@@ -147,9 +109,6 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-ecg:1.0.0
     container_name: ai-ecg
     network_mode: "host"
@@ -159,7 +118,8 @@ services:
       patient-monitoring-aggregator:
         condition: service_started
     environment:
-      - ECG_DEVICE=${ECG_DEVICE}     
+      - ECG_DEVICE=${ECG_DEVICE}  
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so   
     env_file:
       - ./configs/device.env  
     volumes:
@@ -167,9 +127,9 @@ services:
       - ./videos:/videos
     devices:
       - "/dev/dri:/dev/dri"
+      - "/dev/accel/accel0:/dev/accel/accel0" 
     group_add:
       - video
-
 
   3dpose-estimation:
       build:
@@ -179,9 +139,6 @@ services:
           HTTP_PROXY: ${HTTP_PROXY}
           HTTPS_PROXY: ${HTTPS_PROXY}
           NO_PROXY: ${NO_PROXY}
-          http_proxy: ${HTTP_PROXY}
-          https_proxy: ${HTTPS_PROXY}
-          no_proxy: ${NO_PROXY}
           INSTALL_DRIVER_VERSION: "25.31.34666"
       image: intel/hl-ai-3dpose:1.0.0
       container_name: 3dpose-estimation
@@ -194,13 +151,8 @@ services:
         - DEVICE_CONFIG_PATH=/app/configs/device.yaml
         - DEPLOYMENT_ENV=production
         - POSE_3D_DEVICE=${POSE_3D_DEVICE:-GPU}
-        - CONTROL_PORT=8083
-        - HTTP_PROXY=${HTTP_PROXY}
-        - HTTPS_PROXY=${HTTPS_PROXY}
-        - NO_PROXY=${NO_PROXY}
-        - http_proxy=${HTTP_PROXY}
-        - https_proxy=${HTTPS_PROXY}
-        - no_proxy=${NO_PROXY}
+        - CONTROL_PORT=8083     
+        - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so  
       env_file:
         - ./configs/device.env
       depends_on:
@@ -213,6 +165,7 @@ services:
         - ./videos:/videos 
       devices:
         - "/dev/dri:/dev/dri"
+        - "/dev/accel/accel0:/dev/accel/accel0" 
       group_add:
         - video
   
@@ -224,9 +177,6 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-rppg:1.0.0
     container_name: rppg
     network_mode: "host"
@@ -236,7 +186,8 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - RPPG_DEVICE=${RPPG_DEVICE}      
+      - RPPG_DEVICE=${RPPG_DEVICE}  
+      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so    
     env_file:
       - ./configs/device.env  
     volumes:
@@ -256,17 +207,20 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-        http_proxy: ${HTTP_PROXY}
-        https_proxy: ${HTTPS_PROXY}
-        no_proxy: ${NO_PROXY}
     image: intel/hl-ai-ui:1.0.0
-    container_name: ui
-    environment:
-      - HTTP_PROXY=${HTTP_PROXY}
-      - HTTPS_PROXY=${HTTPS_PROXY}
-      - NO_PROXY=${NO_PROXY}
-      - http_proxy=${HTTP_PROXY}
-      - https_proxy=${HTTPS_PROXY}
-      - no_proxy=${NO_PROXY}
+    container_name: ui  
     ports:
       - "3000:3000"
+    depends_on:
+      patient-monitoring-aggregator:
+        condition: service_started
+      mdpnp:
+        condition: service_started
+      dds-bridge:
+        condition: service_started
+      ai-ecg:
+        condition: service_started
+      3dpose-estimation:
+        condition: service_started
+      rppg:
+        condition: service_started    

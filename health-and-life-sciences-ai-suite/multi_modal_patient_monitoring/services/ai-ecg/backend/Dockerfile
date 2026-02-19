@@ -4,16 +4,6 @@ FROM python:3.12-slim
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
-ARG http_proxy
-ARG https_proxy
-ARG no_proxy
-
-ENV http_proxy=${http_proxy:-$HTTP_PROXY} \
-    https_proxy=${https_proxy:-$HTTPS_PROXY} \
-    no_proxy=${no_proxy:-$NO_PROXY} \
-    HTTP_PROXY=${HTTP_PROXY:-$http_proxy} \
-    HTTPS_PROXY=${HTTPS_PROXY:-$https_proxy} \
-    NO_PROXY=${NO_PROXY:-$no_proxy}
 
 WORKDIR /app
 
@@ -48,10 +38,12 @@ COPY scripts/install_ubuntu_gpu_drivers.sh /tmp/install_gpu_drivers.sh
 RUN chmod +x /tmp/install_gpu_drivers.sh
 RUN /tmp/install_gpu_drivers.sh
 
-RUN apt-get clean && \
-    rm -rf /tmp/install_gpu_drivers.sh && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /tmp/*
+# Intel NPU user-space drivers (linux-npu-driver + Level Zero)
+COPY ./scripts/install_ubuntu_npu_drivers.sh /tmp/install_npu_drivers.sh
+RUN chmod +x /tmp/install_npu_drivers.sh
+RUN /tmp/install_npu_drivers.sh
+
+RUN apt-get clean && rm -rf /tmp/install_gpu_drivers.sh /tmp/install_npu_drivers.sh && rm -rf /var/lib/apt/lists/* && rm -rf /tmp/* && rm -rf /root/.cachetmp/*
 
 # ----------------------------------------------------------------------------
 # Copy application code

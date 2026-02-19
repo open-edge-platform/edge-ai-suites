@@ -38,7 +38,7 @@ services:
       - metrics_network
 
   collector:
-    image: docker.io/intel/vippet-collector:2025.2.0
+    image: docker.io/intel/vippet-collector:2026.0.0-20260217-weekly
     container_name: collector
     ports:
       - "${PROMETHEUS_PORT:-9273}:9273"

@@ -1,10 +1,10 @@
-# Enable Agent Mode
+# Enable Alert Mode
 
-Agent Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback for binary classification prompts. When enabled, the application provides enhanced visual indicators for "Yes" or "No" responses, making it ideal for automated monitoring and surveillance scenarios.
+Alert Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback for binary classification prompts. When enabled, the application provides enhanced visual indicators for "Yes" or "No" responses, making it ideal for automated monitoring and surveillance scenarios.
 
 ## Overview
 
-In Agent Mode, the application:
+In Alert Mode, the application:
 
 - Changes the default prompt to: **"Is there an accident in the stream? Just Answer with a Yes or No"**
 - Applies distinct visual styling to "Yes" and "No" responses in the caption display
@@ -18,11 +18,11 @@ This mode is particularly useful for:
 - **Safety Compliance**: Verify safety protocols are being followed
 - **Anomaly Detection**: Identify unusual events in video feeds
 
-## Enabling Agent Mode
+## Enabling Alert Mode
 
 ### Option 1: Environment Variable in `.env` File
 
-Add or modify the `AGENT_MODE` variable in your `.env` file:
+Add or modify the `ALERT_MODE` variable in your `.env` file:
 
 ```bash
 # .env file
@@ -35,12 +35,12 @@ EVAM_HOST_PORT=8040
 EVAM_PORT=8080
 DASHBOARD_PORT=4173
 WEBRTC_PEER_ID=stream
-AGENT_MODE=True   # Enable Agent Mode
+ALERT_MODE=True   # Enable Alert Mode
 ```
 
 ## Visual Indicators
 
-When Agent Mode is enabled:
+When Alert Mode is enabled:
 
 | Response | Visual Style |
 |----------|--------------|
@@ -49,7 +49,7 @@ When Agent Mode is enabled:
 
 ## Custom Prompts
 
-While Agent Mode sets a default accident detection prompt, you can customize the prompt in the dashboard UI to suit your specific use case. The key requirement is that your prompt should elicit a "Yes" or "No" response for proper alert styling.
+While Alert Mode sets a default accident detection prompt, you can customize the prompt in the dashboard UI to suit your specific use case. The key requirement is that your prompt should elicit a "Yes" or "No" response for proper alert styling.
 
 Example prompts for different scenarios:
 
@@ -60,9 +60,9 @@ Example prompts for different scenarios:
 
 ## Troubleshooting
 
-### Agent Mode Not Activating
+### Alert Mode Not Activating
 
-1. Verify the `AGENT_MODE` environment variable is set correctly in your `.env` file
+1. Verify the `ALERT_MODE` environment variable is set correctly in your `.env` file
 2. Ensure Docker Compose picks up the environment variable:
    ```bash
    docker compose down

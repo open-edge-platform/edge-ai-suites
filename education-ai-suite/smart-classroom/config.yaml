@@ -220,6 +220,10 @@ models:
   va:
     models_base_path: "models"
     threshold: 0.5 # confidence threshold for YOLO detections
+  
+  embedding:
+    name: "BAAI/bge-large-en-v1.5"
+
 
 mindmap:
   system_prompt:
@@ -360,6 +364,7 @@ audio_util:
   allowed_extensions:
     - .wav
     - .mp3
+    - .m4a
   chunk_size: 52428800   # 1024 * 1024 * 50 = 50MB
 
 pipeline:

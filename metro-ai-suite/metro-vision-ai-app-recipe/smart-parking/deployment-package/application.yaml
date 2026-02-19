@@ -72,3 +72,11 @@ profiles:
         displayName: "No proxy"
         type: string
         default: "localhost,127.0.0.1"
+      - name: gpu.type
+        displayName: "GPU type"
+        type: string
+        default: "gpu.intel.com/i915"
+      - name: gpu.count
+        displayName: "GPU count"
+        type: number
+        default: "1"
