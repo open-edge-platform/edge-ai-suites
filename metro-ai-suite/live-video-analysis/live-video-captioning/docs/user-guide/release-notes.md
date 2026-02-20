@@ -1,6 +1,6 @@
 # Release Notes
 
-## 1.0.0.rc1
+## 1.0.0-rc1
 ### Relase Date: 17 Feb 2026
 
 - Decoupled the application to support live metrices service.
