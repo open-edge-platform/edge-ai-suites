@@ -52,7 +52,7 @@ By following this guide, you will learn how to:
      DASHBOARD_PORT=4173
      WEBRTC_PEER_ID=stream
      WEBRTC_BITRATE=5000
-     AGENT_MODE=False
+     ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=False
      ```
     Notes:
@@ -147,7 +147,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 ## Supporting Resources
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Agent Mode](./agent-mode.md) - Enable alert-style responses for binary detection scenarios
+- [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)

@@ -1,58 +1,69 @@
 ## Initial Application: Multi-Modal Patient Monitoring
 
-The Multi-Modal Patient Monitoring application demonstrates how multiple AI workloads can run **simultaneously on a single platform**, enabling consolidated patient monitoring.
+The Multi-Modal Patient Monitoring application is designed for medical AI
+developers and systems engineers at medical OEMs/ODMs (for example, GE
+Healthcare, Philips, Mindray) who are evaluating Intel Core Ultra
+platforms for AI‑enabled patient monitoring. It demonstrates that
+multiple AI workloads can run **concurrently on a single Intel‑powered
+edge device** without a discrete GPU.
+
+The application provides a GUI‑based experience that runs and visualizes
+four key patient monitoring workloads side‑by‑side:
+
+- MDPnP OpenICE device integration (vital signs and device data)
+- 3D pose estimation (OpenVINO webcam demo)
+- AI‑ECG analysis
+- Remote PPG (rPPG) for contactless vital sign estimation
+
+Outputs from these workloads are consolidated into a 2×2 layout, showing
+each stream in its own quadrant while sharing a single Intel Core Ultra
+CPU + iGPU + NPU platform. This helps validate BOM reduction and
+deployment simplification by consolidating multi‑modal AI on one edge
+system.
+
+The solution is intended to:
+
+- Showcase multi‑modal AI capabilities of Intel Core Ultra
+- Run on Ubuntu 24.04 with containerized workloads
+- Be startable with a **single command** from a clean system
+	(end‑to‑end setup and launch targeted in ≤ 30 minutes)
+
+Secure provisioning (for example, Polaris Peak integration) is not part
+of the initial implementation, but the architecture is intended to be
+extensible for future security integrations.
 
 ---
 
-## Prerequisites
-```
-• MDPnP and DDS-Bridge components require Java 17.
 
-• Ensure Java is installed and JAVA_HOME is set correctly.
-  Example:
-    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-    export PATH=$JAVA_HOME/bin:$PATH
-
-• If you are behind a corporate proxy, configure Gradle:
-    mkdir -p ~/.gradle
-    nano ~/.gradle/gradle.properties
-
-  Add proxy details in gradle.properties:
-    systemProp.http.proxyHost=<PROXY_HOST>
-    systemProp.http.proxyPort=<PROXY_PORT>
-    systemProp.https.proxyHost=<PROXY_HOST>
-    systemProp.https.proxyPort=<PROXY_PORT>
-```
----
-
-## 🐳 Run Health-AI-Suite Using Pre-Built Images
+## 🐳 Run Multi-Modal Patient Monitoring app Using Pre-Built Images
 
 ```
 make run
 ```
 ---
-## 🚀 Run Health-AI-Suite (Local Build)
+## 🚀 Run Multi-Modal Patient Monitoring app (Local Build)
 ```
 # Initialize MDPnP submodules and dependencies
+
 make init-mdpnp
-
-# Build MDPnP services locally
-make build-mdpnp
-
-# Build DDS bridge locally
-make build-dds-bridge
 
 # Run the full Health-AI-Suite using locally built images
 # Set REGISTRY=false to avoid pulling images from a remote registry
+
 make run REGISTRY=false
 
+```
+---
+## 🛑 Stop and Clean Up
+```
 # Stop and clean up all running containers
+
 make down
 ```
 ---
+## 📘 Documentation
+For detailed information about system requirements, architecture, and how the application works, see the 
 
-## Disclaimer
+👉  [Full Documentation](multi_modal_patient_monitoring/docs/user-guide/index.md)
 
-This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
-
-sazIUkohj                                                                                           azsPOi
+---

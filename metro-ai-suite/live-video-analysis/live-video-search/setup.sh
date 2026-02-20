@@ -75,7 +75,7 @@ if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
     echo -e "  --start-rtsp-test: Start app plus RTSP test stream (looped sample video)"
     echo -e "  --start-usb-camera: Start app with USB camera input (/dev/video0)"
     echo -e "  --down:       Bring down all docker containers for the application"
-    echo -e "  --clean-data: Bring down containers and remove docker volumes"
+    echo -e "  --clean-data: Bring down containers and remove docker volumes and networks"
     echo -e "  --help:       Show this help message"
     echo -e "  config:       Optional argument to print the resolved compose config"
     echo -e "-----------------------------------------------------------------"
@@ -94,8 +94,9 @@ elif [ "$1" = "--down" ]; then
     return $?
 elif [ "$1" = "--clean-data" ]; then
     stop_containers || return 1
-    echo -e "${YELLOW}Removing Docker volumes created by the application... ${NC}"
+    echo -e "${YELLOW}Removing Docker volumes and networks created by the application... ${NC}"
     docker volume rm docker_minio_data docker_pg_data docker_vdms_db docker_data_prep docker_mosquitto_data docker_mosquitto_log docker_redis_data docker_frigate_recordings docker_collector_signals data-prep minikube 2>/dev/null || true
+    docker network rm docker_live-video-network live-video-network 2>/dev/null || true
     echo -e "${GREEN}Clean operation completed successfully! ${NC}"
     return 0
 fi
@@ -122,6 +123,8 @@ export UI_ASSETS_ENDPOINT=${UI_ASSETS_ENDPOINT:-/datastore}
 export SUMMARY_FEATURE=${SUMMARY_FEATURE:-FEATURE_OFF}
 export SEARCH_FEATURE=${SEARCH_FEATURE:-FEATURE_ON}
 export APP_FEATURE_MUX=${APP_FEATURE_MUX:-ATOMIC}
+export CAMERA_CONFIG_FEATURE=${CAMERA_CONFIG_FEATURE:-FEATURE_ON}
+export UI_NVR_API_BASE=${UI_NVR_API_BASE:-/nvr-api}
 export CONFIG_SOCKET_APPEND=${CONFIG_SOCKET_APPEND:-CONFIG_OFF}
 
 # Optional hosts used in proxy bypass lists
@@ -256,7 +259,6 @@ export VSS_SUMMARY_PORT=${VSS_SUMMARY_PORT:-80}
 export VSS_SEARCH_URL=http://${VSS_SEARCH_IP}:${VSS_SEARCH_PORT}
 export VSS_SUMMARY_URL=http://${VSS_SUMMARY_IP}:${VSS_SUMMARY_PORT}
 export FRIGATE_BASE_URL=${FRIGATE_BASE_URL:-http://frigate-vms:5000}
-export NVR_API_BASE_URL=${NVR_API_BASE_URL:-http://nvr-event-router:8000}
 
 
 if [ "$1" = "--start" ] || [ "$1" = "--start-rtsp-test" ] || [ "$1" = "--start-usb-camera" ]; then
@@ -265,9 +267,6 @@ if [ "$1" = "--start" ] || [ "$1" = "--start-rtsp-test" ] || [ "$1" = "--start-u
         cp "${CONFIG_DIR}/frigate-config/config-default.yml" "${CONFIG_DIR}/frigate-config/config.yml"
     elif [ "$1" = "--start-rtsp-test" ]; then
         cp "${CONFIG_DIR}/frigate-config/config-rtsp.yml" "${CONFIG_DIR}/frigate-config/config.yml"
-        if ! docker network inspect live-video-network >/dev/null 2>&1; then
-            docker network create live-video-network
-        fi
     elif [ "$1" = "--start-usb-camera" ]; then
         cp "${CONFIG_DIR}/frigate-config/config-usb.yml" "${CONFIG_DIR}/frigate-config/config.yml"
     fi
@@ -302,4 +301,3 @@ fi
 
 echo -e "\n${GREEN}Setup completed successfully!"
 echo -e "${GREEN}Access the VSS UI at: ${YELLOW}http://${HOST_IP}:${APP_HOST_PORT}${NC}"
-echo -e "${GREEN}Access Smart NVR UI at: ${YELLOW}http://${HOST_IP}:7860${NC}"

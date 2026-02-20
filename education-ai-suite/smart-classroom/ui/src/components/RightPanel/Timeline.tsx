@@ -41,7 +41,7 @@ const Timeline: React.FC = () => {
   }, [segments]);
 
   const isValidSpeaker = (speaker: string) =>
-    /^SPEAKER_\d+$/i.test(speaker);
+    /^SPEAKER(_\d+)?$/i.test(speaker);
 
   const cleanedSegments = useMemo(
     () => timelineSegments.filter(s => isValidSpeaker(s.speaker)),
@@ -165,6 +165,7 @@ const Timeline: React.FC = () => {
                         left: `${left}%`,
                         width: `${width}%`,
                         backgroundColor: color,
+                        height: '13px',
                       }}
                       title={`${label}: ${formatTime(seg.start)} - ${formatTime(seg.end)}\n${seg.text.substring(0, 100)}...`}
                     />

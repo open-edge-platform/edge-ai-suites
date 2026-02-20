@@ -4,14 +4,14 @@
 from typing import Optional
 from urllib.parse import urlparse
 from pydantic import BaseModel, Field, field_validator
-from ..config import AGENT_MODE
+from ..config import ALERT_MODE
 import re
 import ipaddress
 
 # Default prompts based on mode
 DEFAULT_PROMPT = (
     "Is there an accident in the stream? Just Answer with a Yes or No"
-    if AGENT_MODE
+    if ALERT_MODE
     else "Describe what you see in one sentence."
 )
 

@@ -33,5 +33,4 @@ services:
 
 networks:
   live-video-network:
-    external: true
-    name: docker_live-video-network
+    driver: bridge
