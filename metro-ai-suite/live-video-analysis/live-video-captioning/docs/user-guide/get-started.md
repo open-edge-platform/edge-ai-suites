@@ -155,3 +155,13 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+get-started/build-from-source.md
+
+:::
+hide_directive-->
