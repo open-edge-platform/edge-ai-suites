@@ -38,6 +38,6 @@ api-reference
 known-issues
 release-notes
 
-Source Code < https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/docs/user-guide>
+Source Code <https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/docs/user-guide>
 :::
 hide_directive-->
