@@ -20,7 +20,6 @@ from utils.rtsp_recorder import (
 )
 from utils.runtime_config_loader import RuntimeConfig
 
-
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
 
@@ -28,6 +27,11 @@ class PipelineName(Enum):
     BACK = "back"  # Pipeline 2
     CONTENT = "content"  # Pipeline 3
 
+CAMERA_PRIORITY = [
+    PipelineName.BACK.value,
+    PipelineName.BOARD.value,
+    PipelineName.FRONT.value,
+]
 
 @dataclass
 class PipelineOptions:
@@ -630,16 +634,26 @@ class VideoAnalyticsPipelineService:
             if not success:
                 return False
 
+            selected_pipeline = None
+
+            if input_type == "rtsp":
+                for pipeline in CAMERA_PRIORITY:
+                    if pipeline in available_pipelines:   # <-- adjust if needed
+                        selected_pipeline = pipeline
+                        break
+
+
+
             # ---- START RTSP RECORDING ----
-            if input_type == "rtsp" and pipeline_name == PipelineName.BACK.value:
-                recorder_name = f"{pipeline_name}_recorder"
+            if selected_pipeline:
+                recorder_name = f"{selected_pipeline}_recorder"
 
                 project_config = RuntimeConfig.get_section("Project")
                 output_video_path = os.path.join(
                     project_config.get("location"),
                     project_config.get("name"),
                     self.x_session_id,
-                    f"{pipeline_name}.mp4"
+                    f"{selected_pipeline}.mp4"
                 )
 
                 start_rtsp_recording(
@@ -688,8 +702,7 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
-        if input_type == "rtsp" and pipeline_name == PipelineName.BACK.value:
-            stop_rtsp_recording(f"{pipeline_name}_recorder")
+        stop_rtsp_recording(f"{pipeline_name}_recorder")
 
         process = self.pipelines[pipeline_name]
 
