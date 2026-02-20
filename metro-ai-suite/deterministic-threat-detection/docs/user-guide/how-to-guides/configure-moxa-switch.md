@@ -11,12 +11,14 @@ In this sample application, the TSN-G5000 switch serves as the central network f
 To configure the switch, you will need to access its web-based management interface.
 
 > **Note:**
-> On reset, the MOXA TSN switch will have the default IP address `192.168.127.253`. Make sure your computer is in the same subnet to access the web interface. The default username is `admin` and the default password is `moxa`.
+> On reset, the MOXA TSN switch will have the default IP address `192.168.127.253`.
+> Make sure your computer is in the same subnet to access the web interface.
+> The default username is `admin` and the default password is `moxa`.
 
 ![MOXA Web UI](../_assets/moxa-webui.png)
 
 ## Further Reading
 
-For more detailed information, refer to the official user manual:
+For more detailed information, refer to the official
+[Moxa Managed Switch TSN-G5000 Series User Manual](https://www.moxa.com/getmedia/a0db0ef9-2741-4bad-91c6-1ec1827aca64/moxa-tsn-g5000-series-web-console-manual-v2.3.pdf).
 
-- [Moxa Managed Switch TSN-G5000 Series User Manual](https://www.moxa.com/getmedia/a0db0ef9-2741-4bad-91c6-1ec1827aca64/moxa-tsn-g5000-series-web-console-manual-v2.3.pdf)

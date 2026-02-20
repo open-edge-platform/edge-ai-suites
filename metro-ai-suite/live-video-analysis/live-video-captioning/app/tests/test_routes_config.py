@@ -33,7 +33,7 @@ class TestRuntimeConfig:
             "signalingUrl",
             "defaultPeerId",
             "mqttTopicPrefix",
-            "agentMode",
+            "alertMode",
             "defaultPrompt",
             "defaultRtspUrl",
             "enableDetectionPipeline",
@@ -41,9 +41,9 @@ class TestRuntimeConfig:
         }
         assert expected_keys.issubset(payload.keys())
 
-    def test_agent_mode_is_boolean(self, client):
-        """agentMode value is a boolean."""
+    def test_alert_mode_is_boolean(self, client):
+        """alertMode value is a boolean."""
         resp = client.get("/runtime-config.js")
         json_str = resp.text.removeprefix("window.RUNTIME_CONFIG = ").removesuffix(";")
         payload = json.loads(json_str)
-        assert isinstance(payload["agentMode"], bool)
+        assert isinstance(payload["alertMode"], bool)

@@ -28,6 +28,18 @@ export type SessionMode = 'record' | 'upload';
 export type StartSessionRequest = { projectName: string; projectLocation: string; microphone: string; mode: SessionMode };
 export type StartSessionResponse = { sessionId: string };
 
+export interface SearchRequest {
+  session_id: string;
+  query: string;
+  top_k?: number;
+}
+
+export interface SearchResult {
+  session_id: string;
+  query: string;
+  results: any[];
+}
+
 const env = (import.meta as any).env ?? {};
 const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const HEALTH_TIMEOUT_MS = 5000;
@@ -101,7 +113,6 @@ export async function safeApiCall<T>(apiCall: () => Promise<T>): Promise<T> {
   try {
     return await apiCall();
   } catch (error) {
-    // Check if it's a network error or backend unavailable
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Backend server is unavailable. Please ensure the backend is running.');
     }
@@ -705,5 +716,47 @@ export async function stopMonitoring(): Promise<{ status: string; message: strin
       throw new Error(`Failed to stop monitoring: ${res.status} - ${errorText}`);
     }
     return await res.json();
+  });
+}
+
+export async function generateContentSegmentation(sessionId: string): Promise<{ session_id: string }> {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/content-segmentation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ session_id: sessionId }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Content segmentation failed: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  });
+}
+
+export async function searchContent(sessionId: string, query: string, topK: number = 5): Promise<SearchResult> {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/search-content`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        query: query,
+        top_k: topK
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Search failed: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
   });
 }

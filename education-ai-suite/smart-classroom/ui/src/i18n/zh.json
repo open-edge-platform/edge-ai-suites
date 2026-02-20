@@ -176,5 +176,20 @@
     "audioAnalytics": "音频分析",
     "lastUpdated": "最后更新",
     "noData": "暂无数据"
+  },
+  "search": {
+    "preparingContent": "正在生成内容...",
+    "contentError": "内容准备失败",
+    "placeholder": "搜索话题...",
+    "searching": "正在搜索...",
+    "clearResults": "清除结果",
+    "submitSearch": "搜索",
+    "resultsTitle": "搜索结果",
+    "query": "查询",
+    "resultsFound": "结果找到",
+    "noResults": "未找到结果",
+    "Relevance": "相关性",
+    "Timestamp": "时间戳",
+    "expandResults": "展开结果"
   }
 }

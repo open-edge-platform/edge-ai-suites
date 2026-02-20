@@ -4,6 +4,15 @@ export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
 export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
+
+export interface SearchResult {
+  score: number;
+  session_id: string;
+  topic: string;
+  start_time: number;
+  end_time: number;
+  text: string;
+}
  
 export interface UIState {
   aiProcessing: boolean;
@@ -46,6 +55,18 @@ export interface UIState {
     back: File | null;
     board: File | null;
   };
+  searchQuery: string;
+  searchResults: SearchResult[];
+  showSearchResults: boolean; 
+  contentSegmentationStatus: 'idle' | 'loading' | 'complete' | 'error';
+  contentSegmentationEnabled: boolean;
+  searchLoading: boolean;
+  searchError: string | null;
+  timelineHighlight: {
+    startTime: number;
+    endTime: number;
+    topic: string;
+  } | null;
 }
  
 const initialState: UIState = {
@@ -89,6 +110,14 @@ const initialState: UIState = {
     back: null,
     board: null,
   },
+  searchQuery: '',
+  searchResults: [],
+  showSearchResults: false, 
+  contentSegmentationStatus: 'idle',
+  contentSegmentationEnabled: false,
+  searchLoading: false,
+  searchError: null,
+  timelineHighlight: null, 
 };
  
 const uiSlice = createSlice({
@@ -111,6 +140,14 @@ const uiSlice = createSlice({
       state.shouldStartMindmap = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.searchLoading = false;
+      state.searchError = null;
+      state.searchQuery = '';
+      state.searchResults = [];
+      state.showSearchResults = false;
+      state.timelineHighlight = null;
     },
  
     processingFailed(state) {
@@ -125,6 +162,10 @@ const uiSlice = createSlice({
       state.videoStatus = 'failed';
       state.isRecording = false;
       state.videoAnalyticsStopping = false;
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.searchLoading = false;
+      state.searchError = null;
     },
  
     transcriptionComplete(state) {
@@ -357,6 +398,7 @@ const uiSlice = createSlice({
     setMonitoringActive: (state, action) => {
       state.monitoringActive = action.payload;
     },
+    
     setUploadedVideoFiles(state, action: PayloadAction<{
       front?: File | null;
       back?: File | null;
@@ -376,17 +418,75 @@ const uiSlice = createSlice({
     setVideoPlaybackMode(state, action: PayloadAction<boolean>) {
       state.videoPlaybackMode = action.payload;
     },
+    
     setPlaybackFromUploads(state) {
+      const hasFiles =
+        state.uploadedVideoFiles.front ||
+        state.uploadedVideoFiles.back ||
+        state.uploadedVideoFiles.board;
+      if (hasFiles) {
+        state.videoStatus = "completed";
+      }
+    },
 
-    const hasFiles =
-      state.uploadedVideoFiles.front ||
-      state.uploadedVideoFiles.back ||
-      state.uploadedVideoFiles.board;
-    if (hasFiles) {
-      state.videoStatus = "completed";
-      // state.videoPlaybackMode = true;
-    }
-},
+    setContentSegmentationStatus(state, action: PayloadAction<'idle' | 'loading' | 'complete' | 'error' >) {
+      state.contentSegmentationStatus = action.payload;
+    },
+
+    setContentSegmentationEnabled(state, action: PayloadAction<boolean>) {
+      state.contentSegmentationEnabled = action.payload;
+    },
+
+    startContentSegmentation(state) {
+      state.contentSegmentationStatus = 'loading';
+      state.contentSegmentationEnabled = false;
+    },
+
+    contentSegmentationSuccess(state) {
+      state.contentSegmentationStatus = 'complete';
+      state.contentSegmentationEnabled = true;
+    },
+
+    contentSegmentationFailed(state) {
+      state.contentSegmentationStatus = 'error';
+      state.contentSegmentationEnabled = false;
+    },
+
+    setSearchLoading(state, action: PayloadAction<boolean>) {
+      state.searchLoading = action.payload;
+    },
+
+    setSearchError(state, action: PayloadAction<string | null>) {
+      state.searchError = action.payload;
+    },
+    
+    setSearchQuery(state, action: PayloadAction<string>) {
+      state.searchQuery = action.payload;
+    },
+
+    setSearchResults(state, action: PayloadAction<SearchResult[]>) {
+      state.searchResults = action.payload;
+      state.showSearchResults = action.payload.length > 0;
+    },
+
+    setShowSearchResults(state, action: PayloadAction<boolean>) {
+      state.showSearchResults = action.payload;
+    },
+
+    setTimelineHighlight(state, action: PayloadAction<{
+      startTime: number;
+      endTime: number;
+      topic: string;
+    } | null>) {
+      state.timelineHighlight = action.payload;
+    },
+
+    clearSearchResults(state) {
+      state.searchResults = [];
+      state.showSearchResults = false;
+      state.timelineHighlight = null;
+      state.searchQuery = '';
+    },
 
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
@@ -395,6 +495,10 @@ const uiSlice = createSlice({
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.searchLoading = false;
+      state.searchError = null;
     },
   },
 });
@@ -444,6 +548,18 @@ export const {
   setUploadedVideoFiles,
   setVideoPlaybackMode,
   setPlaybackFromUploads,
+  setContentSegmentationStatus,
+  setContentSegmentationEnabled,
+  startContentSegmentation,
+  contentSegmentationSuccess,
+  contentSegmentationFailed,
+  setSearchLoading,
+  setSearchError,
+  setSearchQuery,
+  setSearchResults,
+  clearSearchResults,
+  setShowSearchResults,
+  setTimelineHighlight,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

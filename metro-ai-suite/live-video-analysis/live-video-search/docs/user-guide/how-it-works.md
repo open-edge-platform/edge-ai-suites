@@ -1,4 +1,4 @@
-# Live Video Search Architecture
+# How It Works
 
 This document describes the end‑to‑end architecture of Live Video Search and how NVR Event Router and VSS Search integrate.
 

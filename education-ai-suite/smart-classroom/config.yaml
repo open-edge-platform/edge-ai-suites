@@ -6,7 +6,7 @@ app:
 monitoring:
   logs_dir: ./monitoring/logs
   interval: 2
-  socwatch_path: monitoring/tools/socwatch_windows_v2025.5.1/64/socwatch.exe
+  socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
   npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
   execution_logs: monitoring/executionlogs
 models:
@@ -364,6 +364,7 @@ audio_util:
   allowed_extensions:
     - .wav
     - .mp3
+    - .m4a
   chunk_size: 52428800   # 1024 * 1024 * 50 = 50MB
 
 pipeline:

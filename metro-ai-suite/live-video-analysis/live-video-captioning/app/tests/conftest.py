@@ -28,7 +28,7 @@ def _patch_config(monkeypatch, tmp_path):
     monkeypatch.setenv("WEBRTC_PEER_ID", "test-peer")
     monkeypatch.setenv("SIGNALING_URL", "http://test-signaling:8889")
     monkeypatch.setenv("WEBRTC_BITRATE", "2048")
-    monkeypatch.setenv("AGENT_MODE", "false")
+    monkeypatch.setenv("ALERT_MODE", "false")
     monkeypatch.setenv("DEFAULT_RTSP_URL", "")
     monkeypatch.setenv("ENABLE_DETECTION_PIPELINE", "false")
     monkeypatch.setenv("METRICS_SERVICE_PORT", "9090")
