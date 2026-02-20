@@ -44,10 +44,10 @@ init() {
         fi
     else
         if [[ "$DEPLOYMENT_TYPE" == "helm" ]]; then
-            CURL_HOST_IP="${HOST_IP}:30443"
+            CURL_HOST_IP="${HOST_IP}:$NGINX_HTTPS_PORT"
             echo "Using Helm deployment - curl commands will use: $CURL_HOST_IP"
         else
-            CURL_HOST_IP="$HOST_IP"
+            CURL_HOST_IP="${HOST_IP}:$NGINX_HTTPS_PORT"
             echo "Using default deployment - curl commands will use: $CURL_HOST_IP"
         fi
     fi

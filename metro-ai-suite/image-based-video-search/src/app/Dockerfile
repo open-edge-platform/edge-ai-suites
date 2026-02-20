@@ -2,6 +2,13 @@ FROM docker.io/library/node:25
 
 USER root
 
+# Pull Debian security fixes (addresses libpng/libpq/linux-libc-dev CVEs when available in node security)
+RUN apt-get update \
+  && apt-get -y upgrade \
+  && apt-get -y autoremove \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
 # Set the working directory inside the container
 WORKDIR /usr/src/app
 

@@ -4,6 +4,7 @@
 - [April 2025](./release-notes/april-2025.md)
 - [August 2025](./release-notes/august-2025.md)
 - [December 2025](./release-notes/december-2025.md)
+- [March 2026](./release-notes/march-2026.md)
 
 <!--hide_directive
 :::{toctree}

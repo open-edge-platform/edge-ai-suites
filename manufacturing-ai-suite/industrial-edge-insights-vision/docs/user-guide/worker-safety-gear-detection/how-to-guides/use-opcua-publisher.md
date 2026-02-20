@@ -34,7 +34,9 @@ Follow this procedure to test the DL Streamer Pipeline Server OPC UA publishing 
 
 6. Start the pipeline using the following cURL command. Update the `HOST_IP` and ensure the correct path to the model is provided as shown below. This example starts an AI pipeline.
 
-   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+   >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
 
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_opcua -X POST -H 'Content-Type: application/json' -d '{

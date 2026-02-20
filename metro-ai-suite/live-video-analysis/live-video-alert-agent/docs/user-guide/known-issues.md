@@ -2,13 +2,13 @@
 
 ## Limited testing on EMT-S and EMT-D
 
-- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
+- This release includes only limited testing on EMT‑S and EMT‑D. Some behaviors may not yet be fully validated across all scenarios.
  
 ## RTSP stream not connecting
  
 Symptoms:
 - Stream shows "No streams active" or fails to add via UI.
-- Video feed shows black screen or connection timeout.
+- Video feed shows a black screen or connection timeout.
  
 Checks:
 - Verify RTSP URL is reachable and credentials are correct.
@@ -18,12 +18,12 @@ Checks:
 ## SSE events not updating
  
 Symptoms:
-- Dashboard shows stale data or "Last Sync" timestamp doesn't update.
+- Dashboard shows stale data, or the "Last Sync" timestamp doesn't update.
 - Alert results don't appear in real-time.
  
 Checks:
 - Check browser console (F12) for connection errors.
-- Verify OVMS is running: `docker logs ovms-vlm | grep "Started REST"`.
+- Verify that OVMS is running: `docker logs ovms-vlm | grep "Started REST"`.
 - Test endpoint: `curl -N http://localhost:9000/events`.
 - Ensure port 9000 isn't blocked by firewall.
  
@@ -43,7 +43,7 @@ Symptoms:
  
 Checks:
 - Verify model loaded: `docker logs ovms-vlm | grep "AVAILABLE"`.
-- Simplify prompts to clear yes/no questions.
+- Simplify prompts to ask clear yes/no questions.
 - Reduce concurrent alerts (max 4).
  
 ## Performance/throughput lower than expected
@@ -55,12 +55,12 @@ Checks:
 ## Model download fails
  
 Symptoms:
-- OVMS container exits or fails to start.
+- The OVMS container exits or fails to start.
 - Logs show Hugging Face download errors.
  
 Checks:
 - Check internet connectivity and proxy settings (`http_proxy`, `https_proxy`).
-- Set `HF_TOKEN` environment variable for gated models.
+- Set the `HF_TOKEN` environment variable for gated models.
 - Ensure 2-4GB disk space available.
 - Verify: `docker ps -a | grep ovms-init` shows "Exited (0)".
  

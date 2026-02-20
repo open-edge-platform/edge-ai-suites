@@ -137,7 +137,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```
 
    > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
-   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 4. Get the status of running pipeline instance(s):
 

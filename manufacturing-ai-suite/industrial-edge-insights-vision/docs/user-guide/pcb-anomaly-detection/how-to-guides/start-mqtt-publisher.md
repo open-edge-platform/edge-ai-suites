@@ -13,7 +13,8 @@ The below CURL command publishes metadata to the MQTT broker and sends frames ov
 Assuming broker is running in the same host over port `1883`, replace the `<HOST_IP>` field with your system IP address.
 WebRTC Stream will be accessible at `https://<HOST_IP>/mediamtx/mqttstream/`.
 
->If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ```sh
 curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_mqtt -X POST -H 'Content-Type: application/json' -d '{
