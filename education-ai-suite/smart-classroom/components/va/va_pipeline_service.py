@@ -33,6 +33,8 @@ CAMERA_PRIORITY = [
     PipelineName.FRONT.value,
 ]
 
+selected_pipeline = None
+
 @dataclass
 class PipelineOptions:
     """Minimal configuration options for pipelines"""
@@ -634,8 +636,6 @@ class VideoAnalyticsPipelineService:
             if not success:
                 return False
 
-            selected_pipeline = None
-
             if input_type == "rtsp":
                 for pipeline in CAMERA_PRIORITY:
                     if pipeline in available_pipelines:   # <-- adjust if needed
@@ -702,7 +702,8 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
-        stop_rtsp_recording(f"{pipeline_name}_recorder")
+        if  selected_pipeline:
+            stop_rtsp_recording(f"{selected_pipeline}_recorder")
 
         process = self.pipelines[pipeline_name]
 
