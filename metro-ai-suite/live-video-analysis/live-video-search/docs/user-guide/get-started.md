@@ -201,7 +201,7 @@ This workflow assumes the stack is running and cameras are configured in Frigate
 
 Search results include clip timestamps, confidence scores, and metadata. Use the playback controls to jump to the exact event.
 
-![Live Video Search - Review Results](_assets/Live-video-search-gif.gif)
+![Live Video Search - Review Results](_assets/Live-video-search.gif)
 
 ### Tips
 
@@ -215,7 +215,7 @@ Search results include clip timestamps, confidence scores, and metadata. Use the
 # Stop all containers
 source setup.sh --down
 
-# Remove volumes and live recordings
+# Remove volumes, live recordings, and app networks
 source setup.sh --clean-data
 ```
 
@@ -250,6 +250,18 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
 
 - Check Frigate logs for camera connection errors.
 - Confirm RTSP sources are reachable and credentials are valid.
+
+### Docker network label mismatch on startup
+
+If startup fails with an error like `network docker_live-video-network was found but has incorrect label`, clean up stale networks and restart:
+
+- `source setup.sh --clean-data`
+- `docker network rm docker_live-video-network live-video-network || true`
+- `source setup.sh --start`
+
+For RTSP test mode, start again with:
+
+- `source setup.sh --start-rtsp-test`
 
 ## References
 
