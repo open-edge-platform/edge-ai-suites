@@ -76,13 +76,6 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
     }>;
   } | null>(null);
 
-  console.log('[Pose3DVisualizer] Received people:', {
-    count: people?.length || 0,
-    hasData: !!people && people.length > 0,
-    peopleData: people,
-    isExpanded
-  });
-
   useEffect(() => {
     if (!mountRef.current) return;
 
@@ -209,15 +202,11 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
     });
 
     if (!people || people.length === 0) {
-      console.log('[Pose3DVisualizer] No people detected');
       return;
     }
 
-    console.log('[Pose3DVisualizer] Updating', people.length, 'people');
-
     people.forEach((person, personIdx) => {
       if (personIdx >= peopleObjects.length) {
-        console.warn('[Pose3DVisualizer] Too many people, only showing first 5');
         return;
       }
 
@@ -225,8 +214,6 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
       const joints = person.joints_3d;
 
       if (!joints || joints.length === 0) return;
-
-      console.log(`[Pose3DVisualizer] Person ${personIdx}: ${joints.length} joints`);
 
       // Update joint positions
       joints.forEach((joint, i) => {

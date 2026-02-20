@@ -83,25 +83,6 @@ services:
       MQTT_PASSWORD: ${MQTT_PASSWORD}
       HOST_IP: ${HOST_IP}
 
-  nvr-event-router-ui:
-    container_name: nvr-event-router-ui
-    image: ${REGISTRY}nvr-event-router:${TAG}
-    restart: unless-stopped
-    networks:
-      - live-video-network
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    depends_on:
-      - nvr-event-router
-    ports:
-      - "7860:7860"
-    environment:
-      MODE: "ui"
-      API_BASE_URL: ${NVR_API_BASE_URL}
-      EVENT_POLL_INTERVAL: "10"
-      no_proxy: ${no_proxy},frigate,nvr-event-router,${PM_HOST},${VLM_SERVING_IP}
-
   mqtt-broker:
     image: eclipse-mosquitto:2.0.21
     container_name: mqtt-broker

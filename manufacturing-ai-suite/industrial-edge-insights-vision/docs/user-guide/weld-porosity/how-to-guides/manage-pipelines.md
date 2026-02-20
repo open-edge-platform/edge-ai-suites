@@ -39,6 +39,9 @@ Customize the pipeline according to your needs. For details, see the following D
 
 ## Start the Pipeline
 
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>If you're running a single instance and using an NGINX_HTTPS_PORT other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
 Follow this procedure to start the pipeline.
 
 1. In the `pipeline-server-config.json` file, identify the name of the pipeline you want to start.
@@ -59,8 +62,6 @@ Follow this procedure to start the pipeline.
 2. You use a Client URL (cURL) command to start the pipeline.
 
    In this example, a pipeline included in this sample application is `weld_porosity_classification`. Start this pipeline with the following cURL command.
-
-    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/weld_porosity_classification -X POST -H 'Content-Type: application/json' -d '{
@@ -105,3 +106,16 @@ curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 > The instance ID is shown in the Terminal when the
 > [pipeline was started](#start-the-pipeline) or when
 >[pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
+
+## Additional Usage
+### Frame Batching
+You can process multiple streams together when batching is enabled and the same model instance (that is, the same model-instance-id) is used across pipeline instances.
+
+To enable this, configure the pipeline’s inference element to support batching and assign a shared model instance ID. For example:
+```sh
+... ! gvadetect model=/path/to/model.xml model-instance-id=inst0 batch-size=4 ! ...
+```
+
+In this configuration, if 4 instances (or any multiple of 4) of the pipeline are launched (for example, using the curl commands described in the previous section), their frames will be grouped into batches of four and processed in a single inference call.
+
+For more details about batching in DLStreamer, refer [this documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).

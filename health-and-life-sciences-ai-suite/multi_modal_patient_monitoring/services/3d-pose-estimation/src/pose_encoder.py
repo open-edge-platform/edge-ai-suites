@@ -178,10 +178,10 @@ class PoseEncoder:
 
         return encoded_poses
 
-    # ✅ MODIFY THIS METHOD
-    def encode_data(self, poses_3d: List, poses_2d: List, frame_number: int = 0, frame_bytes: bytes | None = None) -> Dict[str, Any]:
+    # ✅ MODIFY: Remove frame_bytes parameter since we don't send frames
+    def encode_data(self, poses_3d: List, poses_2d: List, frame_number: int = 0) -> Dict[str, Any]:
         """
-        Encode pose data only (no frame data)
+        Encode pose data only for aggregator (no frame data - using MJPEG streaming instead)
 
         Args:
             poses_3d: List of 3D poses
@@ -189,29 +189,27 @@ class PoseEncoder:
             frame_number: Frame sequence number
 
         Returns:
-            Data packet dictionary with pose data only
+            Data packet dictionary with pose data only (no frame bytes)
         """
         # Encode poses
         encoded_3d = self.encode_poses_3d(poses_3d)
         encoded_2d = self.encode_poses_2d(poses_2d)
 
-        # ✅ ADD: Detect activity from first person's pose
+        # Detect activity from first person's pose
         activity = "Unknown"
         if len(encoded_3d) > 0 and 'joints_3d' in encoded_3d[0]:
             activity = self.detect_activity(encoded_3d[0]['joints_3d'])
 
-        # Create data packet (optionally includes encoded frame bytes)
+        # ✅ Data packet with pose data only - frames via MJPEG at localhost:8085
         data_packet = {
-            "timestamp": int(time.time() * 1000),  # Milliseconds
+            "timestamp": int(time.time() * 1000),
             "source_id": self.source_id,
             "frame_number": frame_number,
             "poses_3d": encoded_3d,
             "poses_2d": encoded_2d,
             "num_persons": len(encoded_3d),
-            "activity": activity,  # ✅ ADD: Include activity in data packet
+            "activity": activity,
+            # ✅ NO frame_bytes - using MJPEG streaming instead
         }
-
-        if frame_bytes is not None:
-            data_packet["frame_bytes"] = frame_bytes
 
         return data_packet
