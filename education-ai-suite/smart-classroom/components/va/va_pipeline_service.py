@@ -13,6 +13,12 @@ import atexit
 import json
 import threading
 from utils.config_loader import config
+from utils.rtsp_recorder import (
+    start_rtsp_recording,
+    stop_rtsp_recording,
+    is_rtsp_recording_running,
+)
+from utils.runtime_config_loader import RuntimeConfig
 
 
 class PipelineName(Enum):
@@ -624,6 +630,24 @@ class VideoAnalyticsPipelineService:
             if not success:
                 return False
 
+            # ---- START RTSP RECORDING ----
+            if input_type == "rtsp" and pipeline_name == PipelineName.BACK.value:
+                recorder_name = f"{pipeline_name}_recorder"
+
+                project_config = RuntimeConfig.get_section("Project")
+                output_video_path = os.path.join(
+                    project_config.get("location"),
+                    project_config.get("name"),
+                    self.x_session_id,
+                    f"{pipeline_name}.mp4"
+                )
+
+                start_rtsp_recording(
+                    name=recorder_name,
+                    rtsp_url=source,
+                    output_file=output_video_path,
+                )
+
             # Start monitoring thread
             stop_flag = threading.Event()
             self.monitor_stop_flags[pipeline_name] = stop_flag
@@ -663,6 +687,9 @@ class VideoAnalyticsPipelineService:
         if pipeline_name not in self.pipelines:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
+
+        if input_type == "rtsp" and pipeline_name == PipelineName.BACK.value:
+            stop_rtsp_recording(f"{pipeline_name}_recorder")
 
         process = self.pipelines[pipeline_name]
 

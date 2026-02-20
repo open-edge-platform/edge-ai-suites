@@ -271,6 +271,7 @@ def start_video_analytics_pipeline(
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
+                va_services[x_session_id].x_session_id = x_session_id
 
             service = va_services[x_session_id]
 
