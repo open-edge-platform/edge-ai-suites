@@ -1,15 +1,9 @@
-# Overview
+# Live Video Alert Agent
 
-Deploy AI-powered alerting for live video streams with OpenVINO Vision Language Models. Process RTSP streams, generate real-time alerts based on natural language prompts, and monitor them on a dashboard.
+Deploy AI-powered video alerting using OpenVINO Vision Language Models. You process RTSP streams, generate real-time alerts from natural language prompts, and monitor them on a unified dashboard.
 
-## Table of Contents
 
-1. [Overview and Features](#overview-and-features)
-2. [How the Application Works](#how-the-application-works)
-
-## Overview and Features
-
-### Use Cases
+## Use Cases
 
 **Real-time Video Analytics**: Monitor security cameras, industrial equipment, or public spaces with AI-powered scene understanding and automatic alerting.
 
@@ -17,7 +11,7 @@ Deploy AI-powered alerting for live video streams with OpenVINO Vision Language 
 
 **Custom Alerts**: Use natural language to define what constitutes an alert without retraining a model.
 
-### Key Features
+## Key Features
 
 **Dynamic Alert Prompts**: Define and modify "Alerts" (prompts) in real-time through the UI without redeploying.
 
@@ -27,16 +21,17 @@ Deploy AI-powered alerting for live video streams with OpenVINO Vision Language 
 
 **Intel® Hardware Optimized**: Designed for high-performance inference on Intel® CPUs and GPUs via OpenVINO.
 
-## How the Application Works
 
-The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
+<!--hide_directive
+:::{toctree}
+:hidden:
 
-### Data Flow
+get-started
+system-requirement
+how-it-works
+how-to-build-source
+known-issues
+release-notes
 
-```
-RTSP Source → StreamManager (OpenCV/Circular Buffer)
-            ↓
-       AgentManager (Orchestrator) ↔ VLM Service (OpenAI-compatible API)
-            ↓
-       EventManager (SSE Pub/Sub) → Dashboard UI
-```
+:::
+hide_directive-->

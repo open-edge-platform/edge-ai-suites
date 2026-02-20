@@ -17,7 +17,14 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-### 2. Build the Docker Image
+### 2. Set the required environment variables
+
+```bash
+export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+```
+> **IMPORTANT:** See this [disclaimer](../get-started.md#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
+
+### 3. Build the Docker Image
 
 Build the Traffic Intersection Agent:
 
@@ -25,7 +32,7 @@ Build the Traffic Intersection Agent:
 docker compose -f docker/agent-compose.yaml build traffic-agent
 ```
 
-### 3. Run the Service
+### 4. Run the Service
 
 ```bash
 # Using setup script (recommended)

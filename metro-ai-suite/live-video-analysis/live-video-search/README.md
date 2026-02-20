@@ -2,6 +2,8 @@
 
 **Live Video Search** is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics.
 
+![Live Video Search - Review Results](docs/user-guide/_assets/Live-video-search.gif)
+
 ## Get Started
 
 To see the system requirements and other installations, see the following guides:
@@ -17,14 +19,11 @@ The diagram shows how video moves from cameras to searchable results and live mo
 graph TD
   A[Camera Streams] -->|RTSP/Video Feeds| B[Frigate NVR]
   B -->|Event Clips + Metadata| C[NVR Event Router]
-  C -->|Add to Search| H[Pipeline Manager]
+  C -->|Watched camera ingestion| H[Pipeline Manager]
   H --> E[VSS Search‑MS]
   E --> F[VDMS DataPrep]
   F --> G[VDMS VectorDB]
-  H --> I[VSS UI]
-
-  C --> J[Smart NVR UI]
-
+  H --> I[VSS UI Configure Cameras and Search]
   K[Telemetry Collector] --> H
 ```
 
@@ -39,5 +38,5 @@ graph TD
 ## Notes
 
 - Telemetry is **enabled** for this app and shown in the VSS UI when connected.
-- Use Smart NVR UI **Add to Search** to ingest clips into VSS Search.
+- Use VSS UI **Configure Cameras** to enable camera feeds for search ingestion.
 - Use `source setup.sh --start-usb-camera` to run Frigate with a USB camera input.

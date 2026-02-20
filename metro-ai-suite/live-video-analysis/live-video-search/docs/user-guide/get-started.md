@@ -146,7 +146,6 @@ This uses `config/frigate-config/config-rtsp.yml` and publishes `config/videos/g
 Access:
 
 - VSS UI: `http://<host-ip>:12345`
-- Smart NVR UI: `http://<host-ip>:7860`
 
 ## USB Camera (Direct Frigate Input)
 
@@ -178,9 +177,10 @@ This workflow assumes the stack is running and cameras are configured in Frigate
 
 ### Step 1: Add Clips to Search
 
-1. Open Smart NVR UI at `http://<host-ip>:7860`.
-2. Confirm camera streams are live.
-3. Choose a camera and time range, then select **Add to Search**.
+1. Open VSS UI at `http://<host-ip>:12345`.
+2. Click **Configure Cameras** and enable one or more cameras.
+3. Confirm camera streams are live in Frigate (`http://<host-ip>:5000`).
+4. Allow the watcher to ingest clips from enabled cameras.
 
 ### Step 2: Run a Search Query
 
@@ -201,11 +201,11 @@ This workflow assumes the stack is running and cameras are configured in Frigate
 
 Search results include clip timestamps, confidence scores, and metadata. Use the playback controls to jump to the exact event.
 
-![Live Video Search - Review Results](_assets/Live-video-search-gif.gif)
+![Live Video Search - Review Results](_assets/Live-video-search.gif)
 
 ### Tips
 
-- If results are empty, confirm you added clips from Smart NVR UI.
+- If results are empty, confirm cameras are enabled in **Configure Cameras** and clips have been ingested.
 - Narrow time ranges improve query latency and relevance.
 - If telemetry is not visible, check that `vss-collector` is running.
 
@@ -215,7 +215,7 @@ Search results include clip timestamps, confidence scores, and metadata. Use the
 # Stop all containers
 source setup.sh --down
 
-# Remove volumes and live recordings
+# Remove volumes, live recordings, and app networks
 source setup.sh --clean-data
 ```
 
@@ -227,7 +227,7 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
 
 ### No clips in search results
 
-- Confirm you added clips via **Add to Search** in Smart NVR UI.
+- Confirm cameras are enabled in **Configure Cameras** in VSS UI.
 - Verify `VSS_SEARCH_URL` in `setup.sh` points to the internal endpoint.
 
 ### Search results empty after changing model
@@ -250,6 +250,18 @@ Telemetry is enabled for Live Video Search and shows live system metrics in the 
 
 - Check Frigate logs for camera connection errors.
 - Confirm RTSP sources are reachable and credentials are valid.
+
+### Docker network label mismatch on startup
+
+If startup fails with an error like `network docker_live-video-network was found but has incorrect label`, clean up stale networks and restart:
+
+- `source setup.sh --clean-data`
+- `docker network rm docker_live-video-network live-video-network || true`
+- `source setup.sh --start`
+
+For RTSP test mode, start again with:
+
+- `source setup.sh --start-rtsp-test`
 
 ## References
 

@@ -162,6 +162,7 @@
 
    > **Note:** This would start the pipeline. You can view the inference stream on WebRTC by
    > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/anomaly/` for PCB Anomaly Detection.
+   > If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
 5. Get status of pipeline instance(s) running.
 
@@ -304,6 +305,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
+>Note: If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ```sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -326,7 +328,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    }'
    ```
 
-7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored. 
+>Note: If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
@@ -414,6 +417,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:30443/api/pipelines/{instance_id}
    ```
@@ -446,7 +451,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ]
    ```
 
-10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline. 
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
