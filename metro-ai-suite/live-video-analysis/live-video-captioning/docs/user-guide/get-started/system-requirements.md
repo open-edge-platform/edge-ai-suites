@@ -36,11 +36,13 @@ Default ports (configurable via `.env`):
 
 ## Model Requirements
 
-Models directory must be present under `ov_models/` and include OpenVINO IR artifacts (for example):
+Models directory must be present under `ov_models/` and include OpenVINO IR artifacts (for
+example):
 
 - `openvino_language_model.xml`
 - `openvino_vision_embeddings_model.xml`
 
 ## Validation
 
-Proceed to [Get Started](./get-started.md) once Docker is installed and at least one model is available in `ov_models/`.
+Proceed to [Get Started](../get-started.md) once Docker is installed and at least one model is
+available in `ov_models/`.

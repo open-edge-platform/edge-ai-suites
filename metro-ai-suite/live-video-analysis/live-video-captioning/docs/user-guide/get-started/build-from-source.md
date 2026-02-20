@@ -1,4 +1,4 @@
-# How to Build Source
+# Build from Source
 
 This guide provides step-by-step instructions for building Live Captioning Sample Application from source.
 
@@ -33,6 +33,9 @@ To build the Docker image for `Live Captioning` application, follow these steps:
      docker compose up --build
      ```
 
+> **Notes:**
+> Ensure your `.env` is configured, especially `HOST_IP`.
 
-Notes:
-- Ensure your `.env` is configured, especially `HOST_IP`.
+## Next Steps
+
+Proceed to [Run the Application](../get-started.md#run-the-application).
