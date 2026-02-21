@@ -27,12 +27,6 @@ class PipelineName(Enum):
     BACK = "back"  # Pipeline 2
     CONTENT = "content"  # Pipeline 3
 
-CAMERA_PRIORITY = [
-    PipelineName.BACK.value,
-    PipelineName.BOARD.value,
-    PipelineName.FRONT.value,
-]
-
 selected_pipeline = None
 
 @dataclass
@@ -43,6 +37,7 @@ class PipelineOptions:
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
     threshold: float = 0.5  # Detection threshold for YOLO
+    record: bool = False
 
 
 class VideoAnalyticsPipelineService:
@@ -636,24 +631,16 @@ class VideoAnalyticsPipelineService:
             if not success:
                 return False
 
-            if input_type == "rtsp":
-                for pipeline in CAMERA_PRIORITY:
-                    if pipeline in available_pipelines:   # <-- adjust if needed
-                        selected_pipeline = pipeline
-                        break
-
-
-
             # ---- START RTSP RECORDING ----
-            if selected_pipeline:
-                recorder_name = f"{selected_pipeline}_recorder"
+            if options.record:
+                recorder_name = f"{pipeline_name}_recorder"
 
                 project_config = RuntimeConfig.get_section("Project")
                 output_video_path = os.path.join(
                     project_config.get("location"),
                     project_config.get("name"),
                     self.x_session_id,
-                    f"{selected_pipeline}.mp4"
+                    f"{pipeline_name}.mp4"
                 )
 
                 start_rtsp_recording(
@@ -702,9 +689,7 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
-        if  selected_pipeline:
-            stop_rtsp_recording(f"{selected_pipeline}_recorder")
-
+        stop_rtsp_recording(f"{pipeline_name}_recorder")
         process = self.pipelines[pipeline_name]
 
         if process.poll() is not None:
