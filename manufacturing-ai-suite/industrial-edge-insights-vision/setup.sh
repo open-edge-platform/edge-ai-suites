@@ -271,9 +271,71 @@ get_env_value() {
 update_env_file() {
     # check if the .env file exists, if not create it
     # and update it with values from the arg listed in VARS_TO_EXPORT
+    # Extract nginx ports from values.yaml and update the .env file accordingly
     if [[ ! -f "$ENV_PATH/.env" ]]; then
         touch "$ENV_PATH/.env"
     fi
+
+    nginx_https_port=$(awk '
+        BEGIN { in_config=0; in_nginx=0; in_ext=0 }
+        /^[^[:space:]]/ {
+            in_config = ($1 == "config:")
+            in_nginx=0
+            in_ext=0
+        }
+        in_config && /^  nginx:/ { in_nginx=1; in_ext=0; next }
+        in_config && in_nginx && /^  [a-zA-Z_][a-zA-Z0-9_-]*:/ && $1 != "nginx:" { in_nginx=0; in_ext=0 }
+        in_config && in_nginx && /^    ext:/ { in_ext=1; next }
+        in_config && in_nginx && /^    [a-zA-Z_][a-zA-Z0-9_-]*:/ && $1 != "ext:" { in_ext=0 }
+        in_config && in_nginx && in_ext && /^      https_port:/ {
+            val=$2
+            gsub(/"/, "", val)
+            print val
+            exit
+        }
+    ' "$YAML_FILE")
+
+    if [[ -n "$nginx_https_port" ]]; then
+        if grep -q "^NGINX_HTTPS_PORT=" "$ENV_PATH/.env"; then
+            sed -i "s/^NGINX_HTTPS_PORT=.*/NGINX_HTTPS_PORT=$nginx_https_port/" "$ENV_PATH/.env"
+        else
+            echo "NGINX_HTTPS_PORT=$nginx_https_port" >> "$ENV_PATH/.env"
+        fi
+        echo "Updated NGINX_HTTPS_PORT in .env file"
+    else
+        echo "Variable NGINX_HTTPS_PORT not found in YAML (config.nginx.ext.https_port)"
+    fi
+
+    nginx_http_port=$(awk '
+        BEGIN { in_config=0; in_nginx=0; in_ext=0 }
+        /^[^[:space:]]/ {
+            in_config = ($1 == "config:")
+            in_nginx=0
+            in_ext=0
+        }
+        in_config && /^  nginx:/ { in_nginx=1; in_ext=0; next }
+        in_config && in_nginx && /^  [a-zA-Z_][a-zA-Z0-9_-]*:/ && $1 != "nginx:" { in_nginx=0; in_ext=0 }
+        in_config && in_nginx && /^    ext:/ { in_ext=1; next }
+        in_config && in_nginx && /^    [a-zA-Z_][a-zA-Z0-9_-]*:/ && $1 != "ext:" { in_ext=0 }
+        in_config && in_nginx && in_ext && /^      http_port:/ {
+            val=$2
+            gsub(/"/, "", val)
+            print val
+            exit
+        }
+    ' "$YAML_FILE")
+
+    if [[ -n "$nginx_http_port" ]]; then
+        if grep -q "^NGINX_HTTP_PORT=" "$ENV_PATH/.env"; then
+            sed -i "s/^NGINX_HTTP_PORT=.*/NGINX_HTTP_PORT=$nginx_http_port/" "$ENV_PATH/.env"
+        else
+            echo "NGINX_HTTP_PORT=$nginx_http_port" >> "$ENV_PATH/.env"
+        fi
+        echo "Updated NGINX_HTTP_PORT in .env file"
+    else
+        echo "Variable NGINX_HTTP_PORT not found in YAML (config.nginx.ext.http_port)"
+    fi
+
     # loop through the variables to export
     for var in "${VARS_TO_EXPORT[@]}"; do
         value=$(get_env_value "$var")
@@ -366,10 +428,11 @@ init_instance_helm() {
     # Set ENV_PATH to helm/temp_apps/SAMPLE_APP/INSTANCE_NAME
     ENV_PATH="$TEMP_APP_DIR"
     YAML_FILE="$TEMP_APP_DIR/values.yaml"
-    # load environment variables from helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml
-    # load environment variables from helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml if it exists inside SCRIPT_DIR/helm/temp_apps/SAMPLE_APP/INSTANCE_NAME/values.yaml
-    # set ENV_PATH to SCRIPT_DIR
-    # Update environment variables in the instance values.yaml file
+    
+    # Update values.yaml with instance-specific ENV_VARS from config.yml
+    update_values_yaml_from_config "$ENV_VARS" "$TEMP_APP_DIR/values.yaml" "$INSTANCE_NAME"
+    
+    # Extract and export environment variables from the updated values.yaml
     for var in "${VARS_TO_EXPORT[@]}"; do
         value=$(get_env_value "$var")
         if [[ -n "$value" ]]; then
@@ -380,25 +443,6 @@ init_instance_helm() {
             echo "Variable $var not found in YAML"
         fi
     done
-    # Extract NGINX_HTTPS_PORT from config.yml ENV_VARS and add to .env file
-
-    IFS=',' read -ra VARS <<< "$ENV_VARS"
-    for var in "${VARS[@]}"; do
-        key=$(echo "$var" | cut -d'=' -f1)
-        value=$(echo "$var" | cut -d'=' -f2-)
-        if [[ "$key" == "NGINX_HTTPS_PORT" ]]; then
-            if grep -q "^NGINX_HTTPS_PORT=" "$TEMP_APP_DIR/.env"; then
-                sed -i "s|^NGINX_HTTPS_PORT=.*|NGINX_HTTPS_PORT=$value|" "$TEMP_APP_DIR/.env"
-                echo "Updated NGINX_HTTPS_PORT in .env"
-            else
-                echo "NGINX_HTTPS_PORT=$value" >> "$TEMP_APP_DIR/.env"
-                echo "Added NGINX_HTTPS_PORT to .env"
-            fi
-            break
-        fi
-    done
-    #call update_values_yaml_from_config to update values.yaml with ENV_VARS
-    update_values_yaml_from_config "$ENV_VARS" "$TEMP_APP_DIR/values.yaml" "$INSTANCE_NAME"
 
     # Copy Chart_<sample_app>.yaml as Chart.yaml to the folder /helm/temp_apps/SAMPLE_APP/INSTANCE_NAME
     CHART_SRC_FILE="$SCRIPT_DIR/helm/Chart-${SAMPLE_APP}.yaml"
