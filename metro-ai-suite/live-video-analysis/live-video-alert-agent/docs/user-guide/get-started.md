@@ -31,25 +31,25 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
     Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
 4. **Configure Environment**:
-   
+
    **Optional environment variables:**
    ```bash
    # Optional: Pre-configure a video stream (can also add streams via UI)
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
-   
+
    # Use a different VLM model (default: Phi-3.5-vision-instruct-int4-ov)
    # Example: Use InternVL2-2B model instead
    export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
    export MODEL_NAME=InternVL2-2B
-   
+
    # Change application port (default: 9000)
    export PORT=9001
-   
+
    # Enable debug logging
    export LOG_LEVEL=DEBUG
    ```
-   
-   **Note:** All environment variables are optional. Streams can be added dynamically through the web UI after startup.
+
+> **Note:** All environment variables are optional. Streams can be added dynamically through the web UI after startup.
 
 5. **Start the Application**:
    Run the following command from the project root:
@@ -57,8 +57,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
      ```bash
      docker compose up -d
      ```
-   
-   **Note:** 
+
+   **Note:**
    - First run downloads the VLM model (~2GB, 5-10 minutes)
    - An init container runs briefly to set up volume permissions.
    - Subsequent runs start instantly
@@ -68,7 +68,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
      ```bash
      docker ps
      ```
-   
+
    View application logs:
      ```bash
      docker logs agentic-nvr

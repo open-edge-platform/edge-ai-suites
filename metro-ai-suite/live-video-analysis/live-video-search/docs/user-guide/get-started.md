@@ -1,6 +1,5 @@
 # Get Started
 
-
 Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. It ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and lets users select cameras, time ranges, and free‑text queries to retrieve ranked, playable clips with confidence scores while surfacing live system metrics. This guide starts the **Live Video Search** stack (Smart NVR + VSS Search) using Docker Compose.
 
 ## Prerequisites
@@ -201,7 +200,7 @@ This workflow assumes the stack is running and cameras are configured in Frigate
 
 Search results include clip timestamps, confidence scores, and metadata. Use the playback controls to jump to the exact event.
 
-![Live Video Search - Review Results](_assets/Live-video-search.gif)
+![Live Video Search - Review Results](./_assets/Live-video-search.gif)
 
 ### Tips
 

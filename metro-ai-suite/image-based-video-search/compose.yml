@@ -142,6 +142,8 @@ services:
     entrypoint: ["./run.sh"]
       # - '8554:8554'
     environment:
+      - NO_PROXY=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
+      - no_proxy=${no_proxy},ibvs-mediamtx,rtsp-server,localhost,127.0.0.1,10.244.0.0/16,172.18.0.0/16
       - ENABLE_RTSP=true
       - RTSP_PORT=8554
       - ENABLE_WEBRTC=true
@@ -166,12 +168,6 @@ services:
       - REST_SERVER_PORT=8080
       - MQTT_HOST=ibvs-broker
       - MQTT_PORT=1883
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
-      - NO_PROXY=
-      - http_proxy=
-      - https_proxy=
-      - no_proxy=
       # NPU related environment variables
       - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so
     volumes:
