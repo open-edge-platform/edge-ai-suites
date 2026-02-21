@@ -27,8 +27,6 @@ class PipelineName(Enum):
     BACK = "back"  # Pipeline 2
     CONTENT = "content"  # Pipeline 3
 
-selected_pipeline = None
-
 @dataclass
 class PipelineOptions:
     """Minimal configuration options for pipelines"""
