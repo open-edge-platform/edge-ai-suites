@@ -56,7 +56,7 @@ Live Video Search combines two existing stacks:
   - [System Requirements](./system-requirements.md): Hardware and software prerequisites.
 
 - **How It Works**
-  - [Architecture](./overview-architecture-live-video-search.md): End‑to‑end architecture and data flow.
+  - [Architecture](./how-it-works.md): End‑to‑end architecture and data flow.
 
 - **Deployment**
   - [Build from Source](./how-to-build-from-source.md): Build the required images.
@@ -74,10 +74,10 @@ Live Video Search combines two existing stacks:
 
 get-started
 system-requirements
-how-it-works
 how-to-build-from-source
+how-it-works
 api-reference
 release-notes
-troubleshooting
+
 :::
 hide_directive-->

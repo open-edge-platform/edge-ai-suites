@@ -2,7 +2,6 @@
 
 Deploy AI-powered video alerting using OpenVINO Vision Language Models. You process RTSP streams, generate real-time alerts from natural language prompts, and monitor them on a unified dashboard.
 
-
 ## Use Cases
 
 **Real-time Video Analytics**: Monitor security cameras, industrial equipment, or public spaces with AI-powered scene understanding and automatic alerting.
@@ -21,15 +20,15 @@ Deploy AI-powered video alerting using OpenVINO Vision Language Models. You proc
 
 **Intel® Hardware Optimized**: Designed for high-performance inference on Intel® CPUs and GPUs via OpenVINO.
 
-
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started
-system-requirement
-how-it-works
+system-requirements
 how-to-build-source
+how-it-works
+api-reference
 known-issues
 release-notes
 
