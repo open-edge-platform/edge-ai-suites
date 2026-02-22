@@ -13,7 +13,7 @@ RUN apt-get update \
 WORKDIR /usr/src/app
 
 # Upgrade npm to latest package version
-RUN npm install -g npm@11.7.0
+RUN npm install -g npm@latest
 
 # Copy package.json and package-lock.json to the working directory
 COPY package*.json ./
