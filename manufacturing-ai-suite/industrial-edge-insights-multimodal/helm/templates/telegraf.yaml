@@ -27,7 +27,7 @@ spec:
       {{- end }}
       containers:
       - name: ia-telegraf
-        image: telegraf:1.34.3
+        image: telegraf:1.37.2
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command: ["/bin/sh"]
         args: ["/entrypoint.sh"]
