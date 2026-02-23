@@ -271,6 +271,7 @@ def start_video_analytics_pipeline(
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
+                va_services[x_session_id].x_session_id = x_session_id
 
             service = va_services[x_session_id]
 
@@ -285,11 +286,18 @@ def start_video_analytics_pipeline(
                 output_dir=output_dir,
                 output_rtsp=config.va_pipeline.output_rtsp_url,
                 threshold=config.models.va.threshold,
+                record=False,
             )
+
+            names = [r.pipeline_name for r in requests]
+            record_pipeline = "back" if "back" in names else "content" if "content" in names else "front" if "front" in names else None
 
             # Launch each pipeline
             for request in requests:
                 try:
+
+                    options.record = (request.pipeline_name == record_pipeline)
+
                     # Check if pipeline is already running
                     if service.is_pipeline_running(request.pipeline_name):
                         results.append({
@@ -418,7 +426,7 @@ def stop_video_analytics_pipeline(
                         "pipeline_name": request.pipeline_name,
                         "session_id": x_session_id,
                         "error": str(e)
-                    })
+                    })                                   
 
             return JSONResponse(content={"results": results}, status_code=200)
 

@@ -89,7 +89,7 @@ Agent and multiple Smart Traffic Intersection Agent edge nodes.
 └─────────────────────┘ └─────────────────────┘ └─────────────────────┘
 ```
 
-### Prerequisites
+### Multi-Node Deployment Prerequisites
 
 1. Deploy the [Smart Traffic Intersection Agent](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-traffic-intersection-agent/docs/user-guide/get-started.md#quick-start-with-setup-script) on each edge node.
 2. Ensure network connectivity between the central node and edge nodes.

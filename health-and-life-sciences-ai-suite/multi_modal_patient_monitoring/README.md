@@ -44,15 +44,26 @@ make run
 ## 🚀 Run Multi-Modal Patient Monitoring app (Local Build)
 ```
 # Initialize MDPnP submodules and dependencies
+
 make init-mdpnp
 
 # Run the full Health-AI-Suite using locally built images
 # Set REGISTRY=false to avoid pulling images from a remote registry
+
 make run REGISTRY=false
 
+```
+---
+## 🛑 Stop and Clean Up
+```
 # Stop and clean up all running containers
+
 make down
 ```
 ---
+## 📘 Documentation
+For detailed information about system requirements, architecture, and how the application works, see the 
 
+👉  [Full Documentation](docs/user-guide/index.md)
 
+---

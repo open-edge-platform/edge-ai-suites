@@ -2,7 +2,7 @@
 export const constants = {
   PROJECT_NAME: 'Health AI Suite',
   TITLE: 'Health & Life Sciences AI Suite',
-  COPYRIGHT: '© 2024 Intel Corporation. All rights reserved.',
+  COPYRIGHT: '© 2026 Intel Corporation. All rights reserved.',
   VERSION: 'v1.0.0',
 };
 

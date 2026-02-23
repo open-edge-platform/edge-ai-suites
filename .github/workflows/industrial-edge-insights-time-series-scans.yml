@@ -199,7 +199,20 @@ jobs:
           {{ end }}
           {{ end }}
           EOF
-      
+
+      - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
+        uses: actions/checkout@v4
+        with:
+          repository: open-edge-platform/edge-ai-libraries
+          ref: main
+          path: edge-ai-libraries
+          persist-credentials: false
+      - name: Building Time Series Analytics microservices
+        run: |
+          cd ./edge-ai-libraries/microservices/time-series-analytics/docker
+          docker compose down -v 
+          docker compose build
+
       - name: Trivy Image Scan
         continue-on-error: true
         run: |

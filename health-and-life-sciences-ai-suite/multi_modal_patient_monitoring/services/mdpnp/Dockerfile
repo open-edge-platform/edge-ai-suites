@@ -1,54 +1,72 @@
 ############################
-# Stage 1: Build MDPnP
+# Stage 1: Builder
 ############################
-FROM gradle:7.6-jdk17 AS builder
-
-USER root
+FROM eclipse-temurin:17-jdk AS builder
 
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
+ARG NO_PROXY
 
-# Install C toolchain so rtiddsgen can find the C preprocessor (cpp)
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends cpp build-essential \
-    && rm -rf /var/lib/apt/lists/*
+# Install required native tools (rtiddsgen requires cpp)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        cpp \
+        build-essential && \
+    rm -rf /var/lib/apt/lists/*
 
-# Configure Gradle proxy
-RUN mkdir -p /home/gradle/.gradle && \
-    echo "systemProp.http.proxyHost=$(echo $HTTP_PROXY | sed -e 's|http://||' -e 's|:.*||')" >> /home/gradle/.gradle/gradle.properties && \
-    echo "systemProp.http.proxyPort=$(echo $HTTP_PROXY | sed -e 's|.*:||')" >> /home/gradle/.gradle/gradle.properties && \
-    echo "systemProp.https.proxyHost=$(echo $HTTPS_PROXY | sed -e 's|http://||' -e 's|:.*||')" >> /home/gradle/.gradle/gradle.properties && \
-    echo "systemProp.https.proxyPort=$(echo $HTTPS_PROXY | sed -e 's|.*:||')" >> /home/gradle/.gradle/gradle.properties
+# Configure Gradle proxy (only if provided)
+RUN mkdir -p /root/.gradle && \
+    if [ -n "$HTTP_PROXY" ]; then \
+      echo "systemProp.http.proxyHost=$(echo $HTTP_PROXY | sed -e 's|http://||' -e 's|:.*||')" >> /root/.gradle/gradle.properties && \
+      echo "systemProp.http.proxyPort=$(echo $HTTP_PROXY | sed -e 's|.*:||')" >> /root/.gradle/gradle.properties ; \
+    fi && \
+    if [ -n "$HTTPS_PROXY" ]; then \
+      echo "systemProp.https.proxyHost=$(echo $HTTPS_PROXY | sed -e 's|http://||' -e 's|:.*||')" >> /root/.gradle/gradle.properties && \
+      echo "systemProp.https.proxyPort=$(echo $HTTPS_PROXY | sed -e 's|.*:||')" >> /root/.gradle/gradle.properties ; \
+    fi
 
-WORKDIR /build
 
-COPY mdpnp /build/mdpnp
+WORKDIR /workspace
 
-RUN chown -R gradle:gradle /build
+# Copy Gradle wrapper first (better layer caching)
+COPY mdpnp/gradlew mdpnp/settings.gradle* mdpnp/build.gradle* mdpnp/gradle.properties ./mdpnp/
+COPY mdpnp/gradle ./mdpnp/gradle
 
-USER gradle
+WORKDIR /workspace/mdpnp
+RUN chmod +x gradlew
 
-WORKDIR /build/mdpnp
+# Download dependencies first (cache-friendly)
+RUN ./gradlew --no-daemon dependencies || true
 
-RUN gradle --no-daemon --info :interop-lab:demo-apps:makeFlatRuntime
+# Now copy full source
+COPY mdpnp /workspace/mdpnp
+
+# Build flat runtime
+RUN ./gradlew --no-daemon --info :interop-lab:demo-apps:makeFlatRuntime
+
 
 ############################
-# Stage 2: Runtime Image
+# Stage 2: Runtime
 ############################
 FROM eclipse-temurin:17-jre
 
+# Create non-root user
+RUN useradd -m mdpnpuser
+
 WORKDIR /opt/mdpnp
 
-# Copy only generated flat runtime from builder stage
-COPY --from=builder /build/mdpnp/interop-lab/demo-apps/flat /opt/mdpnp/flat
+# Copy built flat runtime
+COPY --from=builder /workspace/mdpnp/interop-lab/demo-apps/flat ./flat
 
-# Runtime environment variables
 ENV LD_LIBRARY_PATH=/opt/mdpnp/flat
 ENV RTI_LICENSE_FILE=/opt/mdpnp/flat/OpenICE_license.dat
 
 # Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+# Switch to non-root
+USER mdpnpuser
 
 WORKDIR /opt/mdpnp/flat
 

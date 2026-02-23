@@ -2,13 +2,9 @@
 
 Video Processing Platform (VPP) software development kit (SDK)
 
-## 
-
 ## Overview
 
-Video Processing Platform (VPP) software development kit (SDK) provides the developer with an ARM ecosystem-friendly video processing acceleration API to implement their video-centric workloads, such as Network Video Recorder (NVR), Video Conference Terminal, Video Matrix, etc. on the Linux platform. 
-
-## 
+Video Processing Platform (VPP) software development kit (SDK) provides the developer with an ARM ecosystem-friendly video processing acceleration API to implement their video-centric workloads, such as Network Video Recorder (NVR), Video Conference Terminal, Video Matrix, etc. on the Linux platform.
 
 ## How It Works
 

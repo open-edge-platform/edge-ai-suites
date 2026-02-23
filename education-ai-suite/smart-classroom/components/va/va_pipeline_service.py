@@ -13,7 +13,12 @@ import atexit
 import json
 import threading
 from utils.config_loader import config
-
+from utils.rtsp_recorder import (
+    start_rtsp_recording,
+    stop_rtsp_recording,
+    is_rtsp_recording_running,
+)
+from utils.runtime_config_loader import RuntimeConfig
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -21,7 +26,6 @@ class PipelineName(Enum):
     FRONT = "front"  # Pipeline 1
     BACK = "back"  # Pipeline 2
     CONTENT = "content"  # Pipeline 3
-
 
 @dataclass
 class PipelineOptions:
@@ -31,6 +35,7 @@ class PipelineOptions:
     output_dir: str = "outputs"  # Directory for metadata output files
     output_rtsp: str = "rtsp://127.0.0.1:8554"  # RTSP output URL
     threshold: float = 0.5  # Detection threshold for YOLO
+    record: bool = False
 
 
 class VideoAnalyticsPipelineService:
@@ -624,6 +629,24 @@ class VideoAnalyticsPipelineService:
             if not success:
                 return False
 
+            # ---- START RTSP RECORDING ----
+            if options.record:
+                recorder_name = f"{pipeline_name}_recorder"
+
+                project_config = RuntimeConfig.get_section("Project")
+                output_video_path = os.path.join(
+                    project_config.get("location"),
+                    project_config.get("name"),
+                    self.x_session_id,
+                    f"{pipeline_name}.mp4"
+                )
+
+                start_rtsp_recording(
+                    name=recorder_name,
+                    rtsp_url=source,
+                    output_file=output_video_path,
+                )
+
             # Start monitoring thread
             stop_flag = threading.Event()
             self.monitor_stop_flags[pipeline_name] = stop_flag
@@ -664,6 +687,7 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Pipeline '{pipeline_name}' is not registered")
             return False
 
+        stop_rtsp_recording(f"{pipeline_name}_recorder")
         process = self.pipelines[pipeline_name]
 
         if process.poll() is not None:
