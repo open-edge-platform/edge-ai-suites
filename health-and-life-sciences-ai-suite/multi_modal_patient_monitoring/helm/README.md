@@ -25,20 +25,20 @@ docker images | grep intel/hl-ai
 ```bash
 cd health-and-life-sciences-ai-suite/helm/multi_modal_patient_monitoring
 
-helm install health-ai . \
-  --namespace health-ai \
+helm install multi-modal-patient-monitoring . \
+  --namespace multi-modal-patient-monitoring \
   --create-namespace
 ```
 
 ## Upgrade (after changes)
 ```bash
-helm upgrade health-ai . -n health-ai
+helm upgrade multi-modal-patient-monitoring . -n multi-modal-patient-monitoring
 ``` 
 
 ## Verify Deployment
 Pods
 ```bash
-kubectl get pods -n health-ai
+kubectl get pods -n multi-modal-patient-monitoring
 ``` 
 
 All pods should be:
@@ -48,18 +48,18 @@ READY: 1/1
 ``` 
 ## Services
 ```bash
-kubectl get svc -n health-ai
+kubectl get svc -n multi-modal-patient-monitoring
 ``` 
 
 ## Check Logs (recommended)
 ```bash
-kubectl logs -n health-ai deploy/mdpnp
-kubectl logs -n health-ai deploy/dds-bridge
-kubectl logs -n health-ai deploy/aggregator
-kubectl logs -n health-ai deploy/ai-ecg
-kubectl logs -n health-ai deploy/pose
-kubectl logs -n health-ai deploy/metrics
-kubectl logs -n health-ai deploy/ui
+kubectl logs -n multi-modal-patient-monitoringi deploy/mdpnp
+kubectl logs -n multi-modal-patient-monitoring deploy/dds-bridge
+kubectl logs -n multi-modal-patient-monitoring deploy/aggregator
+kubectl logs -n multi-modal-patient-monitoring deploy/ai-ecg
+kubectl logs -n multi-modal-patient-monitoring deploy/pose
+kubectl logs -n multi-modal-patient-monitoring deploy/metrics
+kubectl logs -n multi-modal-patient-monitoring deploy/ui
 ``` 
 
 Healthy services will show:
@@ -73,22 +73,28 @@ Healthy services will show:
 Check Ingress resource:
 
 ```bash
-kubectl get ingress -n health-ai
+kubectl get ingress -n multi-modal-patient-monitoring
 ```
 This will show the hostname or IP and the path for the UI.
 
 Example output:
 ```bash
 NAME       HOSTS               PATHS   ADDRESS         PORTS
-health-ai  health-ai.local       /       192.168.49.2   80
+multi-modal-patient-monitoring  multi-modal-patient-monitoring.local       /       xx.xx.xx.xx   80
 ```
+
+Add an entry on your Linux host (replace <IP> with the one you found):
+```bash
+echo "<IP> multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
+```
+
 Open your browser and go to:
 ```bash
 http://<host-or-ip>/
 ``` 
 Example:
 ```bash
-http://health-ai.local/
+http://multi-modal-patient-monitoring.local/
 ``` 
 If using Minikube, you may need to enable the ingress addon:
 ```bash
@@ -111,5 +117,5 @@ From here you can access:
 
 ## Uninstall
 ```bash
-helm uninstall health-ai -n health-ai
+helm uninstall multi-modal-patient-monitoring -n multi-modal-patient-monitoring
 ``` 

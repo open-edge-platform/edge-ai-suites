@@ -19,7 +19,7 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
 
   hosts:
-    - host: health-ai.local
+    - host: multi-modal-patient-monitoring.local
       paths:
         - path: /video-stream(/|$)(.*)
           pathType: ImplementationSpecific
@@ -43,64 +43,64 @@ ui:
   image:
     repository: intel
     name: hl-ai-ui
-    tag: "latest"
+    tag: "helmm"
     pullPolicy: Never
 
 aggregator:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-aggregator
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 aiEcg:
   image:
     repository: intel
     name: hl-ai-ecg
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 rppg:
   image:
     repository: intel
     name: hl-ai-rppg
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 pose:
   image:
     repository: intel
     name: hl-ai-3dpose
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 metrics:
   image:
     repository: intel
     name: hl-ai-metrics-collector
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 ddsBridge:
   image:
     repository: intel
     name: hl-ai-dds-bridge
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 mdpnp:
   image:
     repository: intel
     name: hl-ai-mdpnp
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 assets:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-assets
-    tag: "1.0.0"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 devices:
   ECG_DEVICE: "GPU"

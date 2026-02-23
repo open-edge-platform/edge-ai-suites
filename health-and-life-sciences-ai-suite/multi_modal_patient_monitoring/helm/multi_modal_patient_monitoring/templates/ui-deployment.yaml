@@ -28,4 +28,8 @@ spec:
           env:
             # Use ingress path instead of NodePort
             - name: VITE_API_BASE_URL
-              value: ""
+              value: "/api"
+
+            # Pose MJPEG stream exposed via ingress
+            - name: VITE_POSE_STREAM_URL
+              value: "/video_feed"

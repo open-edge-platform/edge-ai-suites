@@ -10,7 +10,7 @@ export default defineConfig({
     strictPort: true,
 
     allowedHosts: [
-      'health-ai.local',
+      'multi-modal-patient-monitoring.local',
       'localhost',
       '127.0.0.1'
     ]

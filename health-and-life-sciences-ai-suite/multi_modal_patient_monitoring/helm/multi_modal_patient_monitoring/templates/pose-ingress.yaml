@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: health-ai-pose-ingress
+  name: multi-modal-patient-monitoring-pose-ingress
   namespace: {{ .Release.Namespace }}
   annotations:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
@@ -14,7 +14,7 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    - host: health-ai.local
+    - host: multi-modal-patient-monitoring.local
       http:
         paths:
           - path: /video_feed
