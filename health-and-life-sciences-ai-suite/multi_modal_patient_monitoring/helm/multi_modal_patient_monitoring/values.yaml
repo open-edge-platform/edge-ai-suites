@@ -43,8 +43,8 @@ ui:
   image:
     repository: intel
     name: hl-ai-ui
-    tag: "helmm"
-    pullPolicy: Never
+    tag: "2026.0-rc1"
+    pullPolicy: IfNotPresent
 
 aggregator:
   image:
