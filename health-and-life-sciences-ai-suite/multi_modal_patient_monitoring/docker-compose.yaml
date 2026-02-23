@@ -57,10 +57,9 @@ services:
       - /sys/devices:/sys/devices
       - /dev/dri:/dev/dri:rw
       - /sys/class/drm:/sys/class/drm:ro
-      - /sys/kernel/debug:/sys/kernel/debug:ro
-    devices:
-      - "/run:/run"
-      - "/proc:/proc:ro"
+      - /sys/kernel/debug:/sys/kernel/debug:ro    
+      - /run:/run
+      - /proc:/proc:ro
 
   mdpnp:
     build:
