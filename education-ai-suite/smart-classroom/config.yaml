@@ -11,7 +11,7 @@ monitoring:
   execution_logs: monitoring/executionlogs
 models:
   asr:
-    provider: openvino # openvino, funasr and openai supported
+    provider: openai # openvino, funasr and openai supported
     name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
