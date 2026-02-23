@@ -70,23 +70,29 @@ Healthy services will show:
 
 
 ## Access the Frontend UI
-The UI is exposed using a NodePort service.
+Check Ingress resource:
 
-Get the Minikube IP:
 ```bash
-minikube ip
+kubectl get ingress -n health-ai
 ```
-Get the UI NodePort:
+This will show the hostname or IP and the path for the UI.
+
+Example output:
 ```bash
-kubectl get svc ui -n health-ai
+NAME       HOSTS               PATHS   ADDRESS         PORTS
+health-ai  health-ai.local       /       192.168.49.2   80
 ```
 Open your browser and go to:
 ```bash
-http://<minikube-ip>:<nodeport>
+http://<host-or-ip>/
 ``` 
 Example:
 ```bash
-http://192.168.49.2:30007/
+http://health-ai.local/
+``` 
+If using Minikube, you may need to enable the ingress addon:
+```bash
+minikube addons enable ingress
 ``` 
 This will open the Health AI Suite frontend dashboard.
 
@@ -102,13 +108,6 @@ From here you can access:
 
   - Metrics Dashboard
 
-## On Bare Metal Kubernetes (On-Prem)
-NodePort still works.
-
-User must access:
-```bash
-http://<Node-Internal-IP>:<nodePort>
-``` 
 
 ## Uninstall
 ```bash
