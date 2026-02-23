@@ -14,8 +14,18 @@ ensure your environment meets the recommended hardware and software prerequisite
 
 If you have not already cloned the repository that contains this workload, do so now:
 
+
 ```bash
-git clone <your-hl-ai-suite-repo-url>
+git clone --no-checkout https://github.com/open-edge-platform/edge-ai-suites.git
+
+cd edge-ai-suites
+
+git sparse-checkout init --cone
+
+git sparse-checkout set health-and-life-sciences-ai-suite
+
+git checkout main
+
 cd edge-ai-suites/health-and-life-sciences-ai-suite/multi_modal_patient_monitoring
 ```
 
