@@ -29,7 +29,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BalluffDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc1
 
 USER root
 
@@ -117,7 +117,7 @@ It covers environment setup, configuration updates, and validation steps to ensu
 ```bash
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision
-cp .env_worker_safety_gear_detection .env
+cp .env_worker-safety-gear-detection .env
 ```
 
 ---
@@ -174,7 +174,7 @@ services:
     .
     network_mode: "host"
     # networks:
-    #   - mraas
+    #   - industrial-edge-vision
 ```
 
 Additionally, add the following entries to the `/etc/hosts` file on the host machine:
@@ -183,7 +183,7 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       dlstreamer-pipeline-server
 127.0.0.1       prometheus
 127.0.0.1       mediamtx-server
-127.0.0.1       mraas-minio
+127.0.0.1       minio
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
 127.0.0.1       model_registry
@@ -194,6 +194,8 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 ### Step 6: Launch the Containers
 
 Start all required services using Docker Compose:
+
+>If you're running multiple instances of app, start the services using `./run.sh up` instead.
 
 ```bash
 docker compose up -d
@@ -246,6 +248,9 @@ https://<HOST_IP>/mediamtx/wsgd/
 ```
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
+
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
 ## Troubleshooting
 

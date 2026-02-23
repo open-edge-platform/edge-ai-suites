@@ -41,10 +41,14 @@ For compose based deployment, the entire resources directory is volume mounted a
 
    ```sh
    volumes:
-   - ./apps/${SAMPLE_APP}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
+   - ${APP_DIR}/configs/pipeline-server-config.json:/home/pipeline-server/config.json
    ```
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
+
+   >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
 
    ```sh
    curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{
@@ -94,6 +98,9 @@ You can bring your own model and run this sample application the same way as how
 
     > **NOTE** It is assumed that the sample app is already deployed in the cluster
 
+    > For multi-instance app deployment, use the instance name in the name space i.e. `-n <INSTANCE_NAME>` instead of `-n app`. `<INSTANCE_NAME>` is present in config.yml for multi instance app deployment.
+    
+
    ```sh
    # Below is an example for Worker Safety gear detection. Please adjust the source path of models and videos appropriately for other sample applications.
    POD_NAME=$(kubectl get pods -n apps -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
@@ -121,6 +128,10 @@ You can bring your own model and run this sample application the same way as how
    ```
 
 5. Provide the model path and video file path in the REST/curl command for starting an inferencing workload. Example:
+
+   >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+
 
    ```sh
    curl http://<HOST_IP>:30107/pipelines/user_defined_pipelines/worker_safety_gear_detection -X POST -H 'Content-Type: application/json' -d '{

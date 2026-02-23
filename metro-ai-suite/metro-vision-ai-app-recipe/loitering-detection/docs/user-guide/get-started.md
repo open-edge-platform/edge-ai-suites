@@ -131,13 +131,13 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 Choose one of the following methods to deploy the Loitering Detection Sample Application:
 
-- [Deploy Using Helm](./get-started/how-to-deploy-with-helm.md): Use Helm to deploy the
+- [Deploy Using Helm](./get-started/deploy-with-helm.md): Use Helm to deploy the
 application to a Kubernetes cluster for scalable and production-ready deployments.
-- [Deploy with Edge Orchestrator](./get-started/how-to-deploy-with-edge-orchestrator.md): Use
+- [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md): Use
 a simplified edge application deployment process.
 
 ## Next Steps
-- [How to Customize the Application](./how-to-customize-application.md)
+- [Customize the Application](./how-to-guides/customize-application.md)
 
 ## Troubleshooting
 
@@ -189,8 +189,8 @@ a simplified edge application deployment process.
 :hidden:
 
 get-started/system-requirements.md
-get-started/how-to-deploy-with-helm.md
-get-started/how-to-deploy-with-edge-orchestrator.md
+get-started/deploy-with-helm.md
+get-started/deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->

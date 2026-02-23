@@ -153,7 +153,7 @@ instead of `localhost` for external access:
 
 Choose one of the following methods to deploy the Smart Intersection Sample Application:
 
-- **[Deploy Using Helm](./how-to-deploy-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
+- **[Deploy Using Helm](./get-started/deploy-with-helm.md)**: Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
 
 ## Resources
 
@@ -165,7 +165,8 @@ Choose one of the following methods to deploy the Smart Intersection Sample Appl
 :::{toctree}
 :hidden:
 
-get-started/system-requirements
+get-started/system-requirements.md
+get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

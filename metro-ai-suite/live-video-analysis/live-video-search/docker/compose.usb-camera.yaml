@@ -1,0 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+services:
+  frigate:
+    devices:
+      - ${USB_CAMERA_DEVICE:-/dev/video0}:/dev/video0

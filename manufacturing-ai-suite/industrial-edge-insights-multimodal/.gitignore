@@ -5,5 +5,5 @@ helm/*.yaml
 helm/*.conf
 helm/*.sh
 helm/*.csv
-
+helm/*.template
 .venv/

@@ -20,7 +20,7 @@ services:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
       # VLM Model configuration
-      VLM_MODEL_NAME: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      VLM_MODEL_NAME: ${VLM_MODEL_NAME}
       VLM_COMPRESSION_WEIGHT_FORMAT: ${VLM_COMPRESSION_WEIGHT_FORMAT:-int4}
       VLM_DEVICE: ${VLM_DEVICE:-CPU}
       VLM_SEED: ${VLM_SEED:-42}
@@ -87,7 +87,7 @@ services:
       WEATHER_MOCK: ${WEATHER_MOCK:-false}
       
       # VLM configuration (overrides src/config/traffic_agent.json)
-      VLM_MODEL_NAME: ${VLM_MODEL_NAME:-Qwen/Qwen2.5-VL-3B-Instruct}
+      VLM_MODEL_NAME: ${VLM_MODEL_NAME}
       VLM_TIMEOUT_SECONDS: ${VLM_TIMEOUT_SECONDS:-}
       VLM_MAX_COMPLETION_TOKENS: ${VLM_MAX_COMPLETION_TOKENS:-}
       VLM_TEMPERATURE: ${VLM_TEMPERATURE:-}

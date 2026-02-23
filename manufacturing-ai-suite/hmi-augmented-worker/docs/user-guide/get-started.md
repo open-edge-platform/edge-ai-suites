@@ -125,7 +125,8 @@ To use the application effectively, make sure that all the steps mentioned in th
 :::{toctree}
 :hidden:
 
-get-started/system-requirements
+./get-started/system-requirements
+./get-started/build-from-source
 
 :::
 hide_directive-->

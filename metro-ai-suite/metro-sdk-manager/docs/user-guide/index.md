@@ -22,5 +22,7 @@ Built with developer productivity in mind, it handles cross-platform builds, mai
 Metro Vision AI SDK <metro-vision-ai-sdk/get-started>
 Metro Gen AI SDK <metro-gen-ai-sdk/get-started>
 Visual AI Demo Kit <visual-ai-demo-kit/get-started.md>
+release-notes
+
 :::
 hide_directive-->

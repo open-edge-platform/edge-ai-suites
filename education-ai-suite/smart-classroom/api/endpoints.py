@@ -21,6 +21,7 @@ from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from utils.session_manager import generate_session_id
+from dto.search_dto import SearchRequest
 import logging
 logger = logging.getLogger(__name__)
 
@@ -270,6 +271,7 @@ def start_video_analytics_pipeline(
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
+                va_services[x_session_id].x_session_id = x_session_id
 
             service = va_services[x_session_id]
 
@@ -284,11 +286,18 @@ def start_video_analytics_pipeline(
                 output_dir=output_dir,
                 output_rtsp=config.va_pipeline.output_rtsp_url,
                 threshold=config.models.va.threshold,
+                record=False,
             )
+
+            names = [r.pipeline_name for r in requests]
+            record_pipeline = "back" if "back" in names else "content" if "content" in names else "front" if "front" in names else None
 
             # Launch each pipeline
             for request in requests:
                 try:
+
+                    options.record = (request.pipeline_name == record_pipeline)
+
                     # Check if pipeline is already running
                     if service.is_pipeline_running(request.pipeline_name):
                         results.append({
@@ -417,7 +426,7 @@ def stop_video_analytics_pipeline(
                         "pipeline_name": request.pipeline_name,
                         "session_id": x_session_id,
                         "error": str(e)
-                    })
+                    })                                   
 
             return JSONResponse(content={"results": results}, status_code=200)
 
@@ -514,6 +523,58 @@ async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
 
     return StreamingResponse(stream_statistics(), media_type="application/json")
 
+@router.post("/content-segmentation")
+def content_segmentation(request: SummaryRequest):
+    """
+    Generate content-wise segmentation from teacher transcription.
+    Expects transcription.txt to exist for the session.
+    """
+
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+
+    pipeline = Pipeline(request.session_id)
+
+    try:
+        contents_json = pipeline.run_content_segmentation()
+        logger.info("content segmentation generated successfully.")
+        JSONResponse(content={"session_id": request.session_id})
+
+    except HTTPException as http_exc:
+        raise http_exc
+
+    except Exception as e:
+        logger.exception(f"Error during content segmentation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"content segmentation failed: {e}"
+        )
+
+@router.post("/search-content")
+def search_content(request: SearchRequest):
+
+    pipeline = Pipeline(request.session_id)
+
+    try:
+        results = pipeline.search_content(
+            query=request.query,
+            top_k=request.top_k
+        )
+
+        return {
+            "session_id": request.session_id,
+            "query": request.query,
+            "results": results
+        }
+
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Search failed: {e}"
+        )
 
 def register_routes(app: FastAPI):
     app.include_router(router)

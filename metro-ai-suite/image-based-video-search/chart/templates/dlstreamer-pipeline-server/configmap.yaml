@@ -37,7 +37,7 @@ data:
                     "name": "filter-pipeline",
                     "source": "gstreamer",
                     "queue_maxsize": 50,
-                    "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/home/pipeline-server/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=CPU ! queue ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml inference-region=1 name=classification model-instance-id=infer1 device=CPU ! queue ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                    "pipeline": "{auto_source} name=source ! decodebin3 !  gvadetect model=/models/public/yolo11s/FP16/yolo11s.xml  batch_size=1 inference-interval=1 nireq=2 threshold=0.7 model-instance-id=instcpu0 name=detection device=CPU ! queue ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml inference-region=1 name=classification model-instance-id=infer1 device=CPU ! queue ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
                     "auto_start": false,
                     "mqtt_publisher": {
                         "publish_frame": true,
@@ -61,7 +61,7 @@ data:
                     "name": "filter-pipeline",
                     "source": "gstreamer",
                     "queue_maxsize": 50,
-                    "pipeline": "{auto_source} ! decodebin3 ! gvadetect model=/models/person-vehicle-bike-detection-2004/FP32/person-vehicle-bike-detection-2004.xml model-proc=/home/pipeline-server/person-vehicle-bike-detection-2004.json inference-interval=3 threshold=0.4 model-instance-id=detect1 device=GPU ! queue ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml inference-region=1 device=GPU model-instance-id=classify1 ! queue ! vapostproc ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                    "pipeline": "{auto_source} name=source ! decodebin3 !  gvadetect model=/models/public/yolo11s/FP16/yolo11s.xml batch_size=1 inference-interval=1 inference-region=0 nireq=2 threshold=0.7 model-instance-id=instgpu0 name=detection device=GPU ! queue ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml inference-region=1 device=GPU model-instance-id=classify1 ! queue ! vapostproc ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
                     "auto_start": false,
                     "mqtt_publisher": {
                         "publish_frame": true,
@@ -73,6 +73,30 @@ data:
                     "source": "image_ingestor",
                     "queue_maxsize": 50,
                     "pipeline": "appsrc name=source  ! decodebin3 ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=GPU ! gvametaconvert add-tensor-data=true ! appsink name=destination"
+                }
+            ]
+        }
+    }
+  config.npu.json: |
+    {
+        "config": {
+            "pipelines": [
+                {
+                    "name": "filter-pipeline",
+                    "source": "gstreamer",
+                    "queue_maxsize": 50,
+                    "pipeline": "{auto_source} ! decodebin3 ! gvadetect model=/models/public/yolo11s/FP16/yolo11s.xml  batch_size=1 inference-interval=1 nireq=2 threshold=0.7 model-instance-id=instnpu0 name=detection device=NPU ! queue ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml inference-region=1 device=NPU model-instance-id=infer1 ! queue ! vapostproc ! videoconvertscale ! gvametaconvert add-tensor-data=true name=metaconvert ! jpegenc ! appsink name=destination",
+                    "auto_start": false,
+                    "mqtt_publisher": {
+                        "publish_frame": true,
+                        "topic": "edge_video_analytics_results"
+                    }
+                },
+                {
+                    "name": "search_image",
+                    "source": "image_ingestor",
+                    "queue_maxsize": 50,
+                    "pipeline": "appsrc name=source  ! decodebin3 ! gvainference model=/models/resnet-50-pytorch/FP32/resnet-50-pytorch.xml model-instance-id=infer2 device=NPU ! gvametaconvert add-tensor-data=true ! appsink name=destination"
                 }
             ]
         }

@@ -5,3 +5,5 @@ resources/
 *.mp4
 *.h264
 apps/*/configs/nginx/ssl/
+
+temp_apps/*

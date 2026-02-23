@@ -1,0 +1,123 @@
+/* src/assets/css/LeftPanel.css */
+.left-panel-content {
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.workload-grid {
+  display: grid;
+  gap: 16px;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+/* Default: 2x2 grid when nothing is expanded */
+.workload-grid:not(.has-expanded) {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  grid-auto-flow: row;
+}
+
+/* When one card is expanded: Vertical layout */
+.workload-grid.has-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: auto;
+}
+
+/* Expanded card takes most vertical space */
+.workload-grid.has-expanded > .workload-card.expanded {
+  flex: 1 1 auto;
+  min-height: 450px; /* Taller card */
+  max-height: 65vh; /* Max 65% of viewport height */
+}
+
+/* Container for other 3 cards below expanded card */
+.collapsed-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.collapsed-cards-row .workload-card {
+  min-height: 150px;
+  max-height: 200px;
+}
+
+/* Video frame display styles for 3D Pose */
+.video-frame {
+  margin-top: 12px;
+  padding: 8px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.video-frame h4 {
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  color: #6A6D75;
+  font-weight: 500;
+  text-align: center;
+}
+
+.video-frame img {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  transition: max-height 0.3s ease;
+  object-fit: contain;
+  display: block;
+}
+
+/* Responsive sizing based on card expansion */
+.workload-card:not(.expanded) .video-frame img {
+  max-height: 120px;
+}
+
+.workload-card.expanded .video-frame img {
+  max-height: 300px;
+}
+
+/* Hide empty/invalid images */
+.video-frame img[src=""],
+.video-frame img:not([src]) {
+  display: none;
+}
+
+/* Responsive: mobile view */
+@media (max-width: 900px) {
+  .workload-grid:not(.has-expanded) {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+
+  .collapsed-cards-row {
+    grid-template-columns: 1fr;
+  }
+
+  .collapsed-cards-row .workload-card {
+    min-height: 160px;
+  }
+
+  .workload-grid.has-expanded > .workload-card.expanded {
+    min-height: 350px;
+    max-height: none;
+  }
+
+  /* Mobile video frame sizing */
+  .workload-card:not(.expanded) .video-frame img {
+    max-height: 100px;
+  }
+
+  .workload-card.expanded .video-frame img {
+    max-height: 250px;
+  }
+}

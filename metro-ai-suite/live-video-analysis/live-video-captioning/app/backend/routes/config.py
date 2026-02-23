@@ -4,7 +4,7 @@
 import json
 from fastapi import APIRouter, Response
 from ..config import (
-    AGENT_MODE,
+    ALERT_MODE,
     DEFAULT_RTSP_URL,
     PEER_ID,
     SIGNALING_URL,
@@ -24,7 +24,7 @@ async def runtime_config() -> Response:
         "signalingUrl": SIGNALING_URL,
         "defaultPeerId": PEER_ID,
         "mqttTopicPrefix": MQTT_TOPIC_PREFIX,
-        "agentMode": AGENT_MODE,
+        "alertMode": ALERT_MODE,
         "defaultPrompt": DEFAULT_PROMPT,
         "defaultRtspUrl": DEFAULT_RTSP_URL,
         "enableDetectionPipeline": ENABLE_DETECTION_PIPELINE,

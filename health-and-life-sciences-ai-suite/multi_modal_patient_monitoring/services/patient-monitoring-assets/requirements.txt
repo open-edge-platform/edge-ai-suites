@@ -1,0 +1,22 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+tqdm
+requests
+
+# TensorFlow (needed to load Keras HDF5 rPPG model for conversion)
+tensorflow-cpu==2.16.1
+
+# PyTorch (required for OMZ PyTorch→ONNX conversion)
+torch==2.8.0
+
+# Conversion deps
+onnx>=1.14.0
+onnxscript
+protobuf<5.0.0
+PyYAML
+
+# OpenVINO (model conversion)
+# Use the runtime package; dev tools are not needed for these scripts
+openvino>=2024.6.0,<2025.0
+
+

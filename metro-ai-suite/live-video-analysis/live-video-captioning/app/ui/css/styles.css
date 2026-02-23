@@ -380,7 +380,7 @@ iframe {
     padding: 20px;
 }
 
-/* Agent Mode Alert Styling */
+/* Alert Mode Alert Styling */
 .card.alert-active {
     border-color: #ff4444;
     box-shadow: 0 0 30px rgba(255, 68, 68, 0.4), var(--shadow);

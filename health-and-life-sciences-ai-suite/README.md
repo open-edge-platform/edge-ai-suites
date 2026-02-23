@@ -12,7 +12,6 @@ This suite organizes workflows tailored for healthcare and life sciences, with i
 
 The Multi-Modal Patient Monitoring application demonstrates how multiple AI workloads can run **simultaneously on a single platform**, enabling consolidated patient monitoring.
 
----
 
 ## Disclaimer
 

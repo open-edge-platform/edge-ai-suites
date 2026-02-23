@@ -30,6 +30,31 @@ lspci -v | grep -A10 VGA
 ```
 
 Second, you need to follow [specific instructions](https://dgpu-docs.intel.com/installation-guides/index.html) to install necessary software packages based on the GPU type. For example, as for the above integrated Intel GPU, it belongs to the Intel Gen12/DG1 GPU. The final step is to configure the permissions for your user account, the related commands are also listed in the above link.
+
+### oneAPI Version Compatibility
+
+Collaborative SLAM requires Intel oneAPI Base Toolkit for SYCL runtime support. The application must be built against the same oneAPI version installed on your system.
+
+**Recommended:** Intel oneAPI 2025.x or later (provides `libsycl.so.8`)
+
+To check your installed oneAPI version:
+
+```bash
+ls -l /opt/intel/oneapi/redist/lib/libsycl.so*
+# For oneAPI 2024.x: libsycl.so.7.x.x
+# For oneAPI 2025.x: libsycl.so.8.x.x
+```
+
+**Important:** If you install pre-built packages that were compiled against a different oneAPI version than your system has, you will encounter runtime errors like:
+```bash
+error while loading shared libraries: libsycl.so.7: cannot open shared object file
+```
+
+To resolve this, **rebuild the packages** from source against your installed oneAPI version using:
+```bash
+make package ROS_DISTRO=jazzy  # or humble
+```
+
 After successfully installing all the packages, you are able to use `sycl-ls` (comes with oneAPI package) to verify that LevelZero is ready and exposed. You should see the line below in the output.
 
 ```bash
@@ -65,7 +90,14 @@ a docker. In case of EI for AMR docker, run:
 ## Build
 
 To get Collaborative SLAM with C-for-Metal GPU support, make sure that Prerequisites are done.
-If so, then simply run:
+
+**Important:** Building with GPU/SYCL support is extremely memory-intensive. See the [Build section in README](../README.md#build) for memory requirements. For systems with 16-24GB RAM, use:
+
+```sh
+ROS_DISTRO=jazzy make safe-package
+```
+
+For development builds with colcon:
 
 ```sh
 colcon build --cmake-args -DUSE_GPU_CM=1 -DCM_GPU_INSTALL_DIR=/path/to/orb_extractor/install/dir
