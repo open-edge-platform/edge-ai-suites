@@ -58,34 +58,34 @@ class TestConfigDefaults:
         assert cfg.WEBRTC_BITRATE == 5000
 
 
-class TestAgentModeFlag:
-    """AGENT_MODE boolean parsing from environment."""
+class TestAlertModeFlag:
+    """ALERT_MODE boolean parsing from environment."""
 
-    def test_agent_mode_false_by_default(self, monkeypatch):
-        """AGENT_MODE is False when not set."""
-        monkeypatch.delenv("AGENT_MODE", raising=False)
+    def test_alert_mode_false_by_default(self, monkeypatch):
+        """ALERT_MODE is False when not set."""
+        monkeypatch.delenv("ALERT_MODE", raising=False)
         import backend.config as cfg
 
         importlib.reload(cfg)
-        assert cfg.AGENT_MODE is False
+        assert cfg.ALERT_MODE is False
 
-    def test_agent_mode_true_values(self, monkeypatch):
-        """AGENT_MODE parses 'true', '1', and 'yes' as True."""
+    def test_alert_mode_true_values(self, monkeypatch):
+        """ALERT_MODE parses 'true', '1', and 'yes' as True."""
         import backend.config as cfg
 
         for val in ("true", "True", "TRUE", "1", "yes", "Yes"):
-            monkeypatch.setenv("AGENT_MODE", val)
+            monkeypatch.setenv("ALERT_MODE", val)
             importlib.reload(cfg)
-            assert cfg.AGENT_MODE is True, f"Expected True for AGENT_MODE={val}"
+            assert cfg.ALERT_MODE is True, f"Expected True for ALERT_MODE={val}"
 
-    def test_agent_mode_false_values(self, monkeypatch):
-        """AGENT_MODE parses other strings as False."""
+    def test_alert_mode_false_values(self, monkeypatch):
+        """ALERT_MODE parses other strings as False."""
         import backend.config as cfg
 
         for val in ("false", "0", "no", "random"):
-            monkeypatch.setenv("AGENT_MODE", val)
+            monkeypatch.setenv("ALERT_MODE", val)
             importlib.reload(cfg)
-            assert cfg.AGENT_MODE is False, f"Expected False for AGENT_MODE={val}"
+            assert cfg.ALERT_MODE is False, f"Expected False for ALERT_MODE={val}"
 
 
 class TestDetectionPipelineFlag:

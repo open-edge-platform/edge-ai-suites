@@ -2,7 +2,7 @@
 
 This page summarizes the recommended environment for running Live Video Alert.
 
-### Operating Systems
+## Operating Systems
 
 - Ubuntu 24.04.1 LTS
 

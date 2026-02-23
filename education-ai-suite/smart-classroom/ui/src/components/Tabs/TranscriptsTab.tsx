@@ -288,11 +288,16 @@ const TranscriptsTab: React.FC = () => {
             
             const chunkData = ev.data;
             if (chunkData.segments && Array.isArray(chunkData.segments)) {
-              const processedSegments = chunkData.segments.map((segment: any) => ({
-                ...segment,
-                start: segment.start + (chunkData.start_time || 0),
-                end: segment.end + (chunkData.start_time || 0)
-              }));
+              const processedSegments = chunkData.segments.map((segment: any) => {
+                const offset = chunkData.start_time || 0;
+                const useOffset = segment.start < offset;
+
+                return {
+                  ...segment,
+                  start: useOffset ? segment.start + offset : segment.start,
+                  end: useOffset ? segment.end + offset : segment.end,
+                };
+              });
               
               dispatch(appendTranscriptChunk({
                 ...chunkData,

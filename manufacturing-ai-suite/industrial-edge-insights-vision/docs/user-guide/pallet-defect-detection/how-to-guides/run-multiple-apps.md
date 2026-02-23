@@ -53,7 +53,9 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-3. Edit the environment variables below in all the `.env_<SAMPLE_APP>` files:
+3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in config.yml. 
+
+   For the example above, modify the envs for pallet-defect-detection and weld-porosity i.e. env_pallet-defect-detection and .env_weld-porosity
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.

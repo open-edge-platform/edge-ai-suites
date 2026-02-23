@@ -1,7 +1,6 @@
 # How to use GPU for inference
 
 ## Docker deployment
-### Prerequisites
 
 Follow steps 1 and 2 mentioned in [Get Started](./get-started.md#set-up-and-first-use) guide
 if not already done.
@@ -24,7 +23,7 @@ After the above changes to docker compose file, follow from step 3 as mentioned 
 [Get Started](./get-started.md#set-up-and-first-use) guide.
 
 ## Helm deployment
-### Prerequisites
+
 Follow step 1 mentioned in this [document](./get-started/deploy-with-helm.md#steps-to-deploy) if not already done.
 
 ### Update values.yaml

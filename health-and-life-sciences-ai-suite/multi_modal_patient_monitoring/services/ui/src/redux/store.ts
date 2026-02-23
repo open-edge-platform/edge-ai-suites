@@ -14,8 +14,12 @@ export const store = configureStore({
     metrics: metricsReducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().concat(sseMiddleware), // ← Should be here
+    getDefaultMiddleware({
+      serializableCheck: false,
+      immutableCheck: false, // optional but recommended for large streaming data
+    }).concat(sseMiddleware),
 });
+
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
