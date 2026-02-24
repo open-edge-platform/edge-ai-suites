@@ -18,8 +18,9 @@ spec:
           imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - >-
-              cp -r /opt/assets/models/* /models/;
+            - >
+              mkdir -p /models/3d-pose;
+              cp -r /opt/assets/models/3d-pose/* /models/3d-pose/;
               mkdir -p /videos/3d-pose;
               cp -r /opt/assets/videos/3d-pose/* /videos/3d-pose/
           volumeMounts:
@@ -32,6 +33,15 @@ spec:
         - name: pose
           image: "{{ .Values.pose.image.repository }}/{{ .Values.pose.image.name }}:{{ .Values.pose.image.tag }}"
           imagePullPolicy: {{ .Values.pose.image.pullPolicy }}
+          command: ["python3"]
+          args:
+            - "/app/app.py"
+            - "--model"
+            - "/models/3d-pose/human-pose-estimation-3d-0001.xml"
+            - "--video"
+            - "/videos/3d-pose/face-demographics-walking.mp4"
+            - "--aggregator"
+            - "aggregator:50051" 
           securityContext:
             privileged: true
           envFrom:
@@ -41,7 +51,6 @@ spec:
             - containerPort: 8083
             - name: video-feed
               containerPort: 8085
-              hostPort: 8085
 
           env:
             - name: AGGREGATOR_ADDRESS
