@@ -107,13 +107,29 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
 
     cleanup();
 
+    console.log('🎬 HLSPlayer initializing:', { streamUrl, videoFile, mode });
+
     if (mode === "playback") {
-      initVideoJS();
+      // Handle both File objects and HTTP URLs for playback
+      if (videoFile) {
+        console.log('🎬 Initializing playback with File object');
+        initVideoJS();
+      } else if (streamUrl) {
+        console.log('🎬 Initializing playback with URL:', streamUrl);
+        initPlaybackFromURL();
+      } else {
+        console.warn('🎬 Playback mode but no videoFile or streamUrl provided');
+      }
     } else if (mode === "stream") {
+      console.log('🎬 Stream mode - checking URL type');
       if (isWebpage) {
+        console.log('🎬 Initializing iframe for webpage');
         initIframe();
       } else if (isHLSStream) {
+        console.log('🎬 Initializing native HLS for stream:', streamUrl);
         initNativeHLS();
+      } else {
+        console.warn('🎬 Stream mode but URL is not webpage or HLS:', streamUrl);
       }
     }
 
@@ -161,6 +177,37 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
 
     const url = URL.createObjectURL(videoFile);
     playerRef.current.src({ src: url, type: videoFile.type });
+
+    playerRef.current.ready(() => {
+      setupHighlightComponent();
+      setupPlayerEvents();
+      playerRef.current.play().catch(console.error);
+    });
+  };
+
+  /* ---------- PLAYBACK FROM HTTP URL (for recorded videos from backend) ---------- */
+
+  const initPlaybackFromURL = () => {
+    if (!containerRef.current || !streamUrl) return;
+
+    console.log("Initializing playback from URL:", streamUrl);
+
+    const videoEl = document.createElement("video-js");
+    videoEl.className = "video-js vjs-default-skin";
+    videoEl.style.width = "100%";
+    videoEl.style.height = "100%";
+
+    containerRef.current.appendChild(videoEl);
+
+    playerRef.current = videojs(videoEl, {
+      controls: true,
+      responsive: true,
+      fluid: true,
+      playbackRates: [0.5, 1, 1.25, 1.5, 2],
+    });
+
+    // Use the stream URL directly for HTTP video playback
+    playerRef.current.src({ src: streamUrl, type: "video/mp4" });
 
     playerRef.current.ready(() => {
       setupHighlightComponent();

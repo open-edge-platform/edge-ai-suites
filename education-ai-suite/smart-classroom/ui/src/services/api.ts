@@ -449,6 +449,32 @@ export const stopVideoAnalytics = async (
 
 export const startVideoAnalyticsPipeline = startVideoAnalytics;
 
+export const checkRecordedVideos = async (sessionId: string): Promise<any> => {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/check-recorded-videos`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-ID': sessionId,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `Failed to check recorded videos: ${response.status}`);
+    }
+
+    return response.json();
+  });
+};
+
+export const getRecordedVideoUrl = (sessionId: string, videoType: string): string => {
+  if (!sessionId || !videoType) {
+    throw new Error('Session ID and video type are required');
+  }
+  return `${BASE_URL}/recorded-video/${videoType}?session_id=${sessionId}`;
+};
+
 export async function getClassStatistics(
   sessionId: string,
   onData: (data: {

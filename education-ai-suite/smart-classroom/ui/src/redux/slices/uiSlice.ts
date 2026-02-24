@@ -55,6 +55,7 @@ export interface UIState {
     back: File | null;
     board: File | null;
   };
+  recordedVideoType: 'back' | 'board' | 'front' | null;
   searchQuery: string;
   searchResults: SearchResult[];
   showSearchResults: boolean; 
@@ -110,6 +111,7 @@ const initialState: UIState = {
     back: null,
     board: null,
   },
+  recordedVideoType: null,
   searchQuery: '',
   searchResults: [],
   showSearchResults: false, 
@@ -326,15 +328,11 @@ const uiSlice = createSlice({
     },
 
     loadCameraSettingsFromStorage(state) {
-      const frontCamera = localStorage.getItem('frontCamera');
-      const backCamera = localStorage.getItem('backCamera');
-      const boardCamera = localStorage.getItem('boardCamera');
-      
-      if (frontCamera) state.frontCamera = frontCamera;
-      if (backCamera) state.backCamera = backCamera;
-      if (boardCamera) state.boardCamera = boardCamera;
-      
-      const hasVideoConfig = Boolean(frontCamera?.trim() || backCamera?.trim() || boardCamera?.trim());
+      const hasVideoConfig = Boolean(
+        state.frontCamera?.trim() ||
+        state.backCamera?.trim() ||
+        state.boardCamera?.trim()
+      );
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
 
@@ -417,6 +415,10 @@ const uiSlice = createSlice({
 
     setVideoPlaybackMode(state, action: PayloadAction<boolean>) {
       state.videoPlaybackMode = action.payload;
+    },
+    
+    setRecordedVideoType(state, action: PayloadAction<'back' | 'board' | 'front' | null>) {
+      state.recordedVideoType = action.payload;
     },
     
     setPlaybackFromUploads(state) {
@@ -547,6 +549,7 @@ export const {
   setMonitoringActive,
   setUploadedVideoFiles,
   setVideoPlaybackMode,
+  setRecordedVideoType,
   setPlaybackFromUploads,
   setContentSegmentationStatus,
   setContentSegmentationEnabled,

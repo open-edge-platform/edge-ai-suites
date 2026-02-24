@@ -1,7 +1,7 @@
 import asyncio
 from typing import Optional
 from fastapi import Header, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi import APIRouter, FastAPI, File, HTTPException, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
@@ -575,6 +575,137 @@ def search_content(request: SearchRequest):
             status_code=500,
             detail=f"Search failed: {e}"
         )
+
+@router.get("/check-recorded-videos")
+def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
+    """
+    Check which video files were saved for a session after RTSP recording.
+    Returns the priority-ordered available video (back > board > front).
+
+    """
+    if not x_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required header: x-session-id"
+        )
+    
+    try:
+        project_config = RuntimeConfig.get_section("Project")
+        base_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            x_session_id
+        )
+        
+        if not os.path.exists(base_path):
+            logger.warn(f"Session path does not exist: {base_path}")
+            return JSONResponse(
+                content={
+                    "session_id": x_session_id,
+                    "back": None,
+                    "board": None,
+                    "front": None,
+                    "selected_video": None,
+                    "message": "No session path found"
+                },
+                status_code=200
+            )
+        
+        # Check which videos exist
+        videos = {
+            "back": None,
+            "board": None, 
+            "front": None,
+        }
+        
+        back_path = os.path.join(base_path, "back.mp4")
+        content_path = os.path.join(base_path, "content.mp4") 
+        front_path = os.path.join(base_path, "front.mp4")
+        
+        if os.path.exists(back_path):
+            videos["back"] = back_path
+        if os.path.exists(content_path):
+            videos["board"] = content_path  
+        if os.path.exists(front_path):
+            videos["front"] = front_path
+        
+        # Select highest priority video (back > board > front)
+        selected_video = None
+        if videos["back"]:
+            selected_video = "back"
+        elif videos["board"]:
+            selected_video = "board"
+        elif videos["front"]:
+            selected_video = "front"
+        
+        return JSONResponse(
+            content={
+                "session_id": x_session_id,
+                "back": videos["back"],
+                "board": videos["board"],
+                "front": videos["front"],
+                "selected_video": selected_video,
+                "selected_path": videos[selected_video] if selected_video else None
+            },
+            status_code=200
+        )
+        
+    except Exception as e:
+        logger.error(f"Error checking recorded videos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/recorded-video/{videoType}")
+def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None), session_id: Optional[str] = None):
+    """
+    Stream a recorded video file (back.mp4, board.mp4, or front.mp4).
+
+    """
+    # Accept session ID from either header or query parameter
+    actual_session_id = x_session_id or session_id
+    if not actual_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required session ID: x-session-id header or ?session_id query parameter"
+        )
+    
+    if videoType not in ['back', 'board', 'front']:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid videoType: {videoType}. Must be 'back', 'board', or 'front'"
+        )
+    
+    try:
+        backend_video_type = "content" if videoType == "board" else videoType
+        
+        project_config = RuntimeConfig.get_section("Project")
+        video_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            actual_session_id,
+            f"{backend_video_type}.mp4"
+        )
+        
+        if not os.path.exists(video_path):
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Video file not found: {videoType}.mp4"
+            )
+        
+        logger.info(f"Serving video file: {video_path} for session {actual_session_id}")
+        
+        file_response = FileResponse(
+            path=video_path,
+            media_type="video/mp4",
+            filename=f"{videoType}.mp4"
+        )
+        file_response.headers["Accept-Ranges"] = "bytes"
+        file_response.headers["Access-Control-Allow-Origin"] = "*"
+        file_response.headers["Cache-Control"] = "no-cache"
+        
+        return file_response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving recorded video: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 def register_routes(app: FastAPI):
     app.include_router(router)
