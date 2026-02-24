@@ -1,0 +1,9 @@
+{
+  "minio": {
+    "server": "127.0.0.1:9000",
+    "root_user": "minioadmin",
+    "root_password": "minioadmin",
+    "bucket": "content-search",
+    "secure": false
+  }
+}

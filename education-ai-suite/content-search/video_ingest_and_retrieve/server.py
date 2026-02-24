@@ -14,8 +14,9 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing import Optional, Dict, Union
 
-from minio import Minio
 import tempfile
+
+from content_search_minio.minio_client import MinioStore
 
 from video_ingest_and_retrieve.indexer import Indexer
 from video_ingest_and_retrieve.retriever import ChromaRetriever
@@ -50,22 +51,14 @@ class IngestMinioFileRequest(BaseModel):
 
 app = FastAPI()
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "127.0.0.1:9000")
-MINIO_ACCESS_KEY = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-MINIO_SECRET_KEY = os.getenv("MINIO_SECRET_KEY", "minioadmin")
-
 VISUAL_DATA_DB_COLLECTION_NAME = os.getenv("VISUAL_DATA_DB_COLLECTION_NAME", "visual_data")
 
 indexer = Indexer(collection_name=VISUAL_DATA_DB_COLLECTION_NAME)
 
 retriever = ChromaRetriever(collection_name=VISUAL_DATA_DB_COLLECTION_NAME)
 
-minio_client = Minio(
-    MINIO_ENDPOINT,
-    access_key=MINIO_ACCESS_KEY,
-    secret_key=MINIO_SECRET_KEY,
-    secure=False
-)
+# Initialize MinIO from minio config.json (content_search_minio/config.json).
+minio_store = MinioStore.from_config()
 
 
 @app.get("/v1/dataprep/health")
@@ -124,23 +117,23 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
         frame_extract_interval = request.frame_extract_interval
         do_detect_and_crop = request.do_detect_and_crop
 
-        if not minio_client.bucket_exists(bucket_name):
+        if not minio_store.client.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
 
-        objects = minio_client.list_objects(bucket_name, prefix=folder_path, recursive=True)
+        store = MinioStore(minio_store.client, bucket_name)
 
         proc_files = []
         metas = []
         with tempfile.TemporaryDirectory() as temp_dir:
-            for obj in objects:
-                if not obj.object_name.lower().endswith(('.jpg', '.png', '.jpeg', '.mp4')):
-                    logger.debug(f"Unsupported file type: {obj.object_name}, skipped.")
+            for object_name in store.list_object_names(prefix=folder_path, recursive=True):
+                if not object_name.lower().endswith((".jpg", ".png", ".jpeg", ".mp4")):
+                    logger.debug(f"Unsupported file type: {object_name}, skipped.")
                     continue
 
-                local_file_path = os.path.join(temp_dir, os.path.basename(obj.object_name))
-                minio_client.fget_object(bucket_name, obj.object_name, local_file_path)
+                local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
+                store.get_file(object_name, local_file_path)
                 
-                meta = {"file_path": f"minio://{bucket_name}/{obj.object_name}"}
+                meta = {"file_path": f"minio://{bucket_name}/{object_name}"}
                 proc_files.append(local_file_path)
                 metas.append(meta)
 
@@ -168,12 +161,14 @@ async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
         frame_extract_interval = request.frame_extract_interval
         do_detect_and_crop = request.do_detect_and_crop
 
-        if not minio_client.bucket_exists(bucket_name):
+        if not minio_store.client.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
+
+        store = MinioStore(minio_store.client, bucket_name)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
-            minio_client.fget_object(bucket_name, file_path, local_file_path)
+            store.get_file(file_path, local_file_path)
 
             meta["file_path"] = f"minio://{bucket_name}/{file_path}"
             res = indexer.add_embedding([local_file_path], [meta], frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
