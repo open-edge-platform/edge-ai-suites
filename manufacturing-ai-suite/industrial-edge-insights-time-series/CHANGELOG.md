@@ -19,10 +19,6 @@ All notable changes to this project are documented in this file.
 - Fixed failing code blocks in IEI Time Series documentation. ([#1749])
 - Fixed formatting issues in Wind Turbine Anomaly documentation. ([#1750])
 
-## [2025.2] - December 2025
-
-// ...existing code...
-
 [#1557]: https://github.com/open-edge-platform/edge-ai-suites/commit/e63b15a2cd239b2790e9a8f65701d707ba52c59f
 [#1563]: https://github.com/open-edge-platform/edge-ai-suites/commit/baa60034349183af336b2b59a74ad23201f97886
 [#1565]: https://github.com/open-edge-platform/edge-ai-suites/commit/d87d601baa7f0e3a700bacb0697914ef74e85716
