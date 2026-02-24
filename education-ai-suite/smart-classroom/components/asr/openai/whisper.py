@@ -77,8 +77,6 @@ class Whisper(BaseASR):
             # Repetition control
             beam_size=5,
             best_of=1,
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=3,
 
             # Hallucination guard
             compression_ratio_threshold=2.4,

@@ -37,6 +37,7 @@ class Summarizer(BaseSummarizer):
     def generate(self, prompt: str, stream: bool = True):
         max_new_tokens = config.models.summarizer.max_new_tokens
         inputs = self.tokenizer(prompt, return_tensors="pt")
+
         if stream:
             class CountingTextIteratorStreamer(TextIteratorStreamer):
                     def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
@@ -72,13 +73,12 @@ class Summarizer(BaseSummarizer):
             
             return streamer
         else:
-            with audio_pipeline_lock:
-                generation_kwargs = {
-                    "input_ids": inputs.input_ids,
-                    "max_new_tokens": max_new_tokens,
-                    "temperature": self.temperature,
-                    "do_sample": True,
-                    "top_p": 0.9,
-                    "pad_token_id": self.tokenizer.eos_token_id,
-                }
-                return self.model.generate(**generation_kwargs)
+            generation_kwargs = {
+                        "input_ids": inputs.input_ids,
+                        "max_new_tokens": max_new_tokens,
+                        "temperature": self.temperature,
+                        "do_sample": True,
+                        "top_p": 0.9,
+                        "pad_token_id": self.tokenizer.eos_token_id
+                    }
+            return self.model.generate(**generation_kwargs)
