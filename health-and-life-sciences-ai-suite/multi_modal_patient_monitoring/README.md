@@ -64,6 +64,6 @@ make down
 ## 📘 Documentation
 For detailed information about system requirements, architecture, and how the application works, see the 
 
-👉  [Full Documentation](multi_modal_patient_monitoring/docs/user-guide/index.md)
+👉  [Full Documentation](docs/user-guide/index.md)
 
 ---
