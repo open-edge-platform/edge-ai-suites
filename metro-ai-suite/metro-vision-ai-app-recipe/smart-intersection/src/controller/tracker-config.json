@@ -1,7 +1,10 @@
 {
     "max_unreliable_frames": 10,
+    "max_unreliable_time_s": 0.333,
     "non_measurement_frames_dynamic": 8,
+    "non_measurement_time_dynamic_s": 0.267,
     "non_measurement_frames_static": 16,
+    "non_measurement_time_static_s": 0.533,
     "baseline_frame_rate": 30,
     "time_chunking_enabled": false,
     "time_chunking_interval_milliseconds": 50
