@@ -21,6 +21,13 @@ spec:
       labels:
         app: ia-weld-data-simulator
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
@@ -30,8 +37,11 @@ spec:
         image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.weld_data_simulator_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
+          runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+          runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
           capabilities:
             drop:
               - ALL
