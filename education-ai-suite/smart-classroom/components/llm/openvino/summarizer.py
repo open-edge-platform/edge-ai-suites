@@ -60,11 +60,19 @@ class Summarizer(BaseSummarizer):
                     generation_kwargs = {
                         "input_ids": inputs.input_ids,
                         "max_new_tokens": max_new_tokens,
-                        "temperature": self.temperature,
+
+                        # 🔑 sampling safety
                         "do_sample": True,
+                        "temperature": max(self.temperature, 0.1),  # never <= 0
                         "top_p": 0.9,
+                        "top_k": 50,                                # ⭐ REQUIRED
+
+                        # tokens
+                        "pad_token_id": self.tokenizer.eos_token_id,
+                        "eos_token_id": self.tokenizer.eos_token_id,
+
+                        # streaming
                         "streamer": streamer,
-                        "pad_token_id": self.tokenizer.eos_token_id
                     }
                     self.model.generate(**generation_kwargs)
             
@@ -73,12 +81,19 @@ class Summarizer(BaseSummarizer):
             
             return streamer
         else:
-            generation_kwargs = {
-                        "input_ids": inputs.input_ids,
-                        "max_new_tokens": max_new_tokens,
-                        "temperature": self.temperature,
-                        "do_sample": True,
-                        "top_p": 0.9,
-                        "pad_token_id": self.tokenizer.eos_token_id
-                    }
+            with audio_pipeline_lock:
+                generation_kwargs = {
+                    "input_ids": inputs.input_ids,
+                    "max_new_tokens": max_new_tokens,
+
+                    # 🔑 sampling safety
+                    "do_sample": True,
+                    "temperature": max(self.temperature, 0.1),  # never <= 0
+                    "top_p": 0.9,
+                    "top_k": 50,                                # ⭐ REQUIRED
+
+                    # tokens
+                    "pad_token_id": self.tokenizer.eos_token_id,
+                    "eos_token_id": self.tokenizer.eos_token_id,
+                }
             return self.model.generate(**generation_kwargs)
