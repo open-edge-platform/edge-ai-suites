@@ -7,7 +7,7 @@ networks:
 
 services:
   route-planner-agent:
-    image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}
+    image: ${REGISTRY:-}smart-route-planning-agent:${TAG:-1.0.0-rc1}
     build:
       context: .
       dockerfile: Dockerfile

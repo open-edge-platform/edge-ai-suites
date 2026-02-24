@@ -52,7 +52,7 @@ services:
     build:
       context: ${APP_DIR:-..}/src
       dockerfile: Dockerfile
-    image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-latest}
+    image: ${REGISTRY:-}smart-traffic-intersection-agent:${TAG:-1.0.0-rc1}
     ports:
       - "${AGENT_BACKEND_PORT:-}:8081"
       - "${AGENT_UI_PORT:-}:7860"
