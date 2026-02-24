@@ -63,6 +63,7 @@ export interface UIState {
   contentSegmentationEnabled: boolean;
   searchLoading: boolean;
   searchError: string | null;
+  contentSegmentationError: string | null;
   timelineHighlight: {
     startTime: number;
     endTime: number;
@@ -119,9 +120,10 @@ const initialState: UIState = {
   contentSegmentationEnabled: false,
   searchLoading: false,
   searchError: null,
-  timelineHighlight: null, 
+  contentSegmentationError: null,
+  timelineHighlight: null,
 };
- 
+
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
@@ -144,6 +146,7 @@ const uiSlice = createSlice({
       state.videoAnalyticsActive = false;
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
       state.searchLoading = false;
       state.searchError = null;
       state.searchQuery = '';
@@ -166,6 +169,7 @@ const uiSlice = createSlice({
       state.videoAnalyticsStopping = false;
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
       state.searchLoading = false;
       state.searchError = null;
     },
@@ -449,9 +453,10 @@ const uiSlice = createSlice({
       state.contentSegmentationEnabled = true;
     },
 
-    contentSegmentationFailed(state) {
+    contentSegmentationFailed(state, action: PayloadAction<string | undefined>) {
       state.contentSegmentationStatus = 'error';
       state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = action.payload || 'Content preparation failed. Please try again.';
     },
 
     setSearchLoading(state, action: PayloadAction<boolean>) {
@@ -499,6 +504,7 @@ const uiSlice = createSlice({
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
       state.searchLoading = false;
       state.searchError = null;
     },

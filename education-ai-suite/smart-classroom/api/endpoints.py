@@ -6,6 +6,7 @@ from fastapi import APIRouter, FastAPI, File, HTTPException, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
+from dto.video_metadata_dto import VideoDurationRequest
 from pipeline import Pipeline
 import json, os
 import subprocess, re
@@ -22,6 +23,7 @@ from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from utils.session_manager import generate_session_id
 from dto.search_dto import SearchRequest
+from utils.session_state_manager import SessionState
 import logging
 logger = logging.getLogger(__name__)
 
@@ -523,6 +525,126 @@ async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
 
     return StreamingResponse(stream_statistics(), media_type="application/json")
 
+@router.post("/mark-video-usage")
+def mark_video_usage(
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Mark that a video is being used in the current session.
+
+    """
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
+    try:
+        with SessionState._lock:
+            if session_id not in SessionState._sessions:
+                SessionState._sessions[session_id] = {}
+            SessionState._sessions[session_id]['has_video'] = True
+        
+        logger.info(f"Session {session_id}: Video usage marked")
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": "Video usage marked for session"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error marking video usage: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error marking video usage: {e}"
+        )
+
+@router.post("/store-video-duration")
+def store_video_duration(
+    request: VideoDurationRequest,
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Store video duration 
+
+    """
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
+    try:
+        duration = request.duration
+        
+        if not duration or duration <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid duration: duration must be greater than 0"
+            )
+        
+        # Store the video duration in session state
+        SessionState.set_video_duration(session_id, duration)
+        
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": f"Video duration stored: {duration:.2f}s"}
+        )
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error storing video duration: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error storing video duration: {e}"
+        )
+
+@router.post("/store-audio-duration")
+def store_audio_duration(
+    request: VideoDurationRequest,
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Store audio duration 
+
+    """
+    
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
+    try:
+        duration = request.duration
+        
+        if not duration or duration <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid duration: duration must be greater than 0"
+            )
+        
+        SessionState.set_audio_duration(session_id, duration)
+
+        with SessionState._lock:
+            if session_id not in SessionState._sessions:
+                SessionState._sessions[session_id] = {}
+            SessionState._sessions[session_id]['has_audio'] = True
+
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": f"Audio duration stored: {duration:.2f}s"}
+        )
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error storing audio duration: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error storing audio duration: {e}"
+        )
+
 @router.post("/content-segmentation")
 def content_segmentation(request: SummaryRequest):
     """
@@ -534,17 +656,22 @@ def content_segmentation(request: SummaryRequest):
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
 
     pipeline = Pipeline(request.session_id)
+    
+    # Log session state before validation
+    session_state = SessionState.get_session_state(request.session_id)
+    logger.info(f"📋 Content-segmentation request for session: {request.session_id}")
+    logger.info(f"   Session state: {session_state}")
 
     try:
         contents_json = pipeline.run_content_segmentation()
-        logger.info("content segmentation generated successfully.")
-        JSONResponse(content={"session_id": request.session_id})
+        logger.info("✅ content segmentation generated successfully.")
+        return JSONResponse(content={"session_id": request.session_id})
 
     except HTTPException as http_exc:
         raise http_exc
 
     except Exception as e:
-        logger.exception(f"Error during content segmentation: {e}")
+        logger.exception(f"❌ Error during content segmentation: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"content segmentation failed: {e}"
