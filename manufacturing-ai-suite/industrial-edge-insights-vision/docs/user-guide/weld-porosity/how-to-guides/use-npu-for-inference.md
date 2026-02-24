@@ -52,29 +52,26 @@ DL Streamer inference elements also provides property such as `device=NPU` and `
 
 > Note - This sample application already provides a default `docker-compose.yml` file that includes the necessary NPU access to the containers.
 
-The pipeline `weld_porosity_classification_npu` in pipeline-server-config contains NPU specific elements and uses NPU backend for inferencing. We will now start the pipeline with a curl request(ensure the application is up and running).
->Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+The pipeline `weld_porosity_classification_npu` in `pipeline-server-config.json` contains NPU specific elements and uses NPU backend for inferencing. Follow the steps below to run the pipeline.
 
->If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-```sh
-curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/weld_porosity_classification_npu -X POST -H 'Content-Type: application/json' -d '{
-    "source": {
-        "uri": "file:///home/pipeline-server/resources/videos/welding.avi",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "file",
-            "path": "/tmp/results.jsonl",
-            "format": "json-lines"
-        }
-    },
-    "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/weld-porosity/deployment/Classification/model/model.xml"
-        }
-    }
-}'
-```
+### Steps
 
-We should see the metadata results in `/tmp/results.jsonl` file.
+1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#set-up-the-application) to setup the application and then bring the services up
+
+    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
+
+    ```sh
+    docker compose up -d
+    ```
+2. Start the pipeline.
+    ```sh
+    ./sample_start.sh -p weld_porosity_classification_npu
+    ```
+
+    This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
+
+    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+
+    ```bash
+    https://<HOST_IP>/mediamtx/weld/
+    ```
