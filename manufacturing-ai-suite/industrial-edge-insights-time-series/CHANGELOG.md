@@ -2,6 +2,33 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.0] - Mar 2026
+
+### Added
+- Added a new guide for writing UDFs with architecture, implementation steps, and examples. ([#1565])
+- Added wind turbine model selection and integration guidelines documentation. ([#1680])
+
+### Changed
+- Updated image tags/versioning to `2026.0-weekly` and aligned deployment/documentation examples. ([#1616])
+- Updated third-party service image versions used by time-series (Telegraf, Grafana, Eclipse Mosquitto). ([#1857])
+- Reorganized IEI Time Series how-to guides for better navigation. ([#1674])
+- Updated IEI Time documentation toctree structure. ([#1563])
+- Updated IEI MM/Time shared documentation link blocks. ([#1557])
+
+### Fixed
+- Fixed failing code blocks in IEI Time Series documentation. ([#1749])
+- Fixed formatting issues in Wind Turbine Anomaly documentation. ([#1750])
+
+[#1557]: https://github.com/open-edge-platform/edge-ai-suites/commit/e63b15a2cd239b2790e9a8f65701d707ba52c59f
+[#1563]: https://github.com/open-edge-platform/edge-ai-suites/commit/baa60034349183af336b2b59a74ad23201f97886
+[#1565]: https://github.com/open-edge-platform/edge-ai-suites/commit/d87d601baa7f0e3a700bacb0697914ef74e85716
+[#1616]: https://github.com/open-edge-platform/edge-ai-suites/commit/de0e80fe4207c460992fad6b9c83bd0bad77e101
+[#1674]: https://github.com/open-edge-platform/edge-ai-suites/commit/9263a3ec62d2a74388d7dc98a3ea17d3e9dacba1
+[#1680]: https://github.com/open-edge-platform/edge-ai-suites/commit/0645cae4adf850bab4a298c1eb5b5274570ec699
+[#1749]: https://github.com/open-edge-platform/edge-ai-suites/commit/f94a2229d41d24d70605c35584c8dd965ce4175a
+[#1750]: https://github.com/open-edge-platform/edge-ai-suites/commit/cdd1c24f176afe325738430442529ecb02602f9d
+[#1857]: https://github.com/open-edge-platform/edge-ai-suites/commit/063dc25fbfad836e9f8aa72ff7db797edf5e7cc9
+
 ## [2025.2] - December 2025
 
 ### Added

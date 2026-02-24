@@ -2,6 +2,48 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.0] - March 2026
+
+### Added
+- Added SeaweedFS S3 storage support for DL Streamer image/frame outputs. ([#1576])
+- Added Helm charts for multimodal deployment. ([#1494])
+- Added Helm templates for SeaweedFS components (master, volume, filer, s3). ([#1669])
+- Added S3 image storage access documentation and credential setup guidance. ([#1643], [#1662])
+- Added persistence of DL pipeline vision metadata to InfluxDB in fusion analytics. ([#1547])
+
+### Changed
+- Updated image versions for third-party services: Telegraf, Grafana, Eclipse Mosquitto, MediaMTX, Coturn, and SeaweedFS. ([#1857])
+- Updated multimodal architecture/configuration to include S3 frame storage flow. ([#1720])
+- Embedded `simulation-data` into weld-data-simulator image; removed external volume/WORK_DIR PV-PVC dependency. ([#1582])
+- Updated system requirements to CPU-only validated configuration. ([#1632])
+
+### Security
+- Hardened SeaweedFS container runtime: read-only root filesystem, non-root execution, seccomp profile, and no privilege escalation. ([#1691])
+
+### Documentation
+- Reorganized IEI Multimodal how-to guides and docs navigation/toctree. ([#1687], [#1562])
+- Updated IEI MM/Time link blocks and product-name alignment content. ([#1557], [#1492])
+- Updated Deploy-with-Helm documentation and related guidance. ([#1518], [#1538])
+- Fixed duplicated heading and TOC build issues. ([#1789], [#1655])
+
+---
+
+[#1857]: https://github.com/open-edge-platform/edge-ai-suites/pull/1857
+[#1789]: https://github.com/open-edge-platform/edge-ai-suites/pull/1789
+[#1720]: https://github.com/open-edge-platform/edge-ai-suites/pull/1720
+[#1691]: https://github.com/open-edge-platform/edge-ai-suites/pull/1691
+[#1687]: https://github.com/open-edge-platform/edge-ai-suites/pull/1687
+[#1669]: https://github.com/open-edge-platform/edge-ai-suites/pull/1669
+[#1662]: https://github.com/open-edge-platform/edge-ai-suites/pull/1662
+[#1655]: https://github.com/open-edge-platform/edge-ai-suites/pull/1655
+[#1643]: https://github.com/open-edge-platform/edge-ai-suites/pull/1643
+[#1632]: https://github.com/open-edge-platform/edge-ai-suites/pull/1632
+[#1582]: https://github.com/open-edge-platform/edge-ai-suites/pull/1582
+[#1576]: https://github.com/open-edge-platform/edge-ai-suites/pull/1576
+[#1562]: https://github.com/open-edge-platform/edge-ai-suites/pull/1562
+[#1557]: https://github.com/open-edge-platform/edge-ai-suites/pull/1557
+[#1547]: https://github.com/open-edge-platform/edge-ai-suites/pull/1547
+
 ## [2025.2] - December 2025
 
 ### Added
