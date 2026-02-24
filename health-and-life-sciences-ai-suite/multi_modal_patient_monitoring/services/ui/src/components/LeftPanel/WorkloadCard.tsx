@@ -48,9 +48,10 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
   frameData,
   people,
 }) => {
-  // ✅ REPLACE THIS SECTION - Use direct MJPEG stream
+  // Pose MJPEG stream URL: overridable via env for Helm, defaults to 8085 for docker-compose
   const hostIp = (import.meta as any).env?.VITE_HOST_IP || (typeof window !== 'undefined' ? window.location.hostname : 'localhost');
-  const poseStreamUrl = `${window.location.protocol}//${hostIp}:8085/video_feed`;
+  const poseStreamUrl = (import.meta as any).env?.VITE_POSE_STREAM_URL
+    || `${typeof window !== 'undefined' ? window.location.protocol : 'http:'}//${hostIp}:8085/video_feed`;
 
   const statusColors = {
     idle: '#6c757d',
