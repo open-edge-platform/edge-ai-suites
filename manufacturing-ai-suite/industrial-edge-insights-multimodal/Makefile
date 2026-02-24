@@ -5,6 +5,7 @@
 #
 
 INCLUDE ?= default_INCLUDE
+HELM_REGISTRY = oci://registry-1.docker.io/intel
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
@@ -30,12 +31,12 @@ SHA_ALGO="sha384"
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build;
+	$(DOCKER_COMPOSE) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull;
 
 .PHONY: validate_host_ip
 validate_host_ip:
@@ -189,7 +190,7 @@ push_images: build
 .PHONY: gen_helm_charts
 gen_helm_charts:
 	@echo "Generating Helm packages"
-	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "2026.0.0-$(WEEKLY_BUILD_DATE)-weekly"; else echo "2026.0.0"; fi))
+	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
 	@cp -f configs/grafana/* helm/
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
@@ -208,16 +209,29 @@ gen_helm_charts:
 	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
 	@echo "Helm packages generated with version: ${version}"
 
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts
+	@mkdir -p helm-packages
+	@rm -f helm-packages/*.tgz
+	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
+	echo "Helm chart packaged successfully: $$pkg_file"; \
+	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
+	cd ..
+
 # Help
 .PHONY: help
 help:
 	@echo "Makefile commands:"
-	@echo "  make build    - Build Docker containers"
-	@echo "  make build_copyleft_sources - Build Docker containers including copyleft licensed sources"
-	@echo "  make up    - Start Docker containers"
-	@echo "  make down     - Stop Docker containers"
-	@echo "  make restart  - Restart Docker containers"
-	@echo "  make clean    - Remove all stopped containers and unused images"
-	@echo "  make push_images     - Push the images to docker registry"
+	@echo "  make build                        - Build Docker containers"
+	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
+	@echo "  make up                           - Start Docker containers"
+	@echo "  make down                         - Stop Docker containers"
+	@echo "  make clean                        - Remove all stopped containers and unused images"
+	@echo "  make push_images                  - Push the images to docker registry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
-	@echo "  make help     - Display this help message"
+	@echo "  make push_helm_charts             - Package and Push Helm charts to docker registry"
+	@echo "  make help                         - Display this help message"
