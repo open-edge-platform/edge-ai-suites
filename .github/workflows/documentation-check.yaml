@@ -4,7 +4,7 @@
 
 name: Documentation Check
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   pull_request:
     branches:
       - main
@@ -16,7 +16,7 @@ permissions: {}
 jobs:
   filter:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     runs-on: ubuntu-latest
     outputs:
       smart-classroom_changed: ${{ steps.filter.outputs.smart-classroom }}
@@ -43,7 +43,7 @@ jobs:
       smart-traffic-intersection-agent_changed: ${{ steps.filter.outputs.smart-traffic-intersection-agent }}
       robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
       - name: Set paths filter
@@ -100,7 +100,7 @@ jobs:
 
   build-smart-classroom:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-classroom_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -109,7 +109,7 @@ jobs:
 
   build-multi-modal-patient-monitoring:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.multi-modal-patient-monitoring_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -118,7 +118,7 @@ jobs:
 
   build-edge-insights-vision:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.edge-insights-vision_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -127,7 +127,7 @@ jobs:
 
   build-edge-insights-time-series:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.edge-insights-time-series_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -136,7 +136,7 @@ jobs:
 
   build-hmi-augmented-worker:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.hmi-augmented-worker_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -145,7 +145,7 @@ jobs:
 
   build-industrial-edge-insights-multimodal:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.industrial-edge-insights-multimodal_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -154,7 +154,7 @@ jobs:
 
   build-video-processing-for-nvr:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.video-processing-for-nvr_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -164,7 +164,7 @@ jobs:
 
   build-live-metrics-service:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.live-metrics-service_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -173,7 +173,7 @@ jobs:
 
   build-live-video-captioning:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.live-video-captioning_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -182,7 +182,7 @@ jobs:
 
   build-deterministic-threat-detection:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.deterministic-threat-detection_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -191,7 +191,7 @@ jobs:
 
   build-visual-search-question-and-answering:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.visual-search-question-and-answering_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -200,7 +200,7 @@ jobs:
 
   build-image-based-video-search:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.image-based-video-search_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -209,7 +209,7 @@ jobs:
 
   build-sensor-fusion-for-traffic-management:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.sensor-fusion-for-traffic-management_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -218,7 +218,7 @@ jobs:
 
   build-smart-intersection:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-intersection_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -227,7 +227,7 @@ jobs:
 
   build-loitering-detection:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.loitering-detection_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -236,7 +236,7 @@ jobs:
 
   build-smart-tolling:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-tolling_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -245,7 +245,7 @@ jobs:
 
   build-smart-parking:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-parking_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -254,7 +254,7 @@ jobs:
 
   build-metro-vision-ai-app-recipe:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.metro-vision-ai-app-recipe_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -263,7 +263,7 @@ jobs:
 
   build-smart-nvr:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-nvr_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -272,7 +272,7 @@ jobs:
 
   build-smart-route-planning-agent:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-route-planning-agent_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -281,7 +281,7 @@ jobs:
 
   build-metro-sdk-manager:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.metro-sdk-manager_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -290,7 +290,7 @@ jobs:
 
   build-smart-traffic-intersection-agent:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.smart-traffic-intersection-agent_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
@@ -299,7 +299,7 @@ jobs:
 
   build-robotics-ai-suite:
     permissions:
-      contents: read          # needed for actions/checkout
+      contents: read # needed for actions/checkout
     needs: filter
     if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
     uses: ./.github/workflows/docs-reusable-workflow.yaml
