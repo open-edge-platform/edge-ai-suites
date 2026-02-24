@@ -25,7 +25,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
         path: edge-ai-suites-repo
@@ -37,7 +37,7 @@ jobs:
         docker run --rm -v ${{ github.workspace }}:/src clamav/clamav clamscan -r  /src/edge-ai-suites-repo/metro-ai-suite/metro-vision-ai-app-recipe/ > ./reports/clamav-report.txt || true
         echo "Please find full report in clamav-report.txt" >> $GITHUB_STEP_SUMMARY 
     - name: Upload Scan Reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
       with:
         name: virus-report
         path: reports/
@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Check out edge-ai-suites repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
           path: edge-ai-suites-repo
@@ -71,7 +71,7 @@ jobs:
           cp shellcheck_report.txt ${{ github.workspace }}
 
       - name: Upload ShellCheck report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
         with:
           name: shellcheck-report
           path: shellcheck_report.txt  
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false  
       - name: Install Trivy from Aqua Security APT repo
@@ -143,7 +143,7 @@ jobs:
           trivy config . --format table -s HIGH,CRITICAL -o trivy-helm.txt
           
       - name: Upload Scan artifact to Github
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
         with:
           name: Trivy Report - Config scan for Helm
           path: metro-ai-suite/metro-vision-ai-app-recipe/trivy-helm.txt

@@ -63,7 +63,7 @@ class ASRComponent(PipelineComponent):
 
         if ASRComponent._model is None or ASRComponent._config != model_config_key:
             if provider == "openai" and "whisper" in model_name:
-                ASRComponent._model = OA_Whisper(model_name, device, None)
+                ASRComponent._model = OA_Whisper(model_name, device.lower(), None)
             elif provider == "openvino" and "whisper" in model_name:
                 ASRComponent._model = OV_Whisper(model_name, device, None, self.threads_limit)
             elif provider == "funasr" and "paraformer" in model_name:
