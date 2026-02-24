@@ -57,7 +57,7 @@ The pipeline `pcb_anomaly_detection_npu` in pipeline-server-config contains NPU 
 
 >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 ```sh
-curl http://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_npu -X POST -H 'Content-Type: application/json' -d '{
+curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/pcb_anomaly_detection_npu -X POST -H 'Content-Type: application/json' -d '{
     "source": {
         "uri": "file:///home/pipeline-server/resources/videos/anomalib_pcb_test.avi",
         "type": "uri"
