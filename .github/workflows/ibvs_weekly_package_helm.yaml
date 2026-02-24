@@ -26,11 +26,11 @@ jobs:
         path: edge-ai-suites-repo
         persist-credentials: false
     - name: Install Helm
-      uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 #v4.2.0
+      uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4 #v4.3.1
       with:
         version: v3.15.2  
     - name: Log in to GitHub Container Registry
-      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #3.4.0
+      uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 #3.7.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
