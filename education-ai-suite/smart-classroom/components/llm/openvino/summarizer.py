@@ -63,9 +63,9 @@ class Summarizer(BaseSummarizer):
 
                         # 🔑 sampling safety
                         "do_sample": True,
-                        "temperature": max(self.temperature, 0.1),  # never <= 0
+                        "temperature": max(self.temperature, 0.1), 
                         "top_p": 0.9,
-                        "top_k": 50,                                # ⭐ REQUIRED
+                        "top_k": 50,  
 
                         # tokens
                         "pad_token_id": self.tokenizer.eos_token_id,
@@ -88,9 +88,9 @@ class Summarizer(BaseSummarizer):
 
                     # 🔑 sampling safety
                     "do_sample": True,
-                    "temperature": max(self.temperature, 0.1),  # never <= 0
+                    "temperature": max(self.temperature, 0.1), 
                     "top_p": 0.9,
-                    "top_k": 50,                                # ⭐ REQUIRED
+                    "top_k": 50,     
 
                     # tokens
                     "pad_token_id": self.tokenizer.eos_token_id,
