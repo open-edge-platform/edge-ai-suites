@@ -46,6 +46,7 @@ data/control flows.
 get-started.md
 how-it-works.md
 run-multi-modal-app.md
+release-notes.md
 
 :::
 hide_directive-->
