@@ -1,7 +1,7 @@
 app:
   name: Smart Classroom
   cleanup_on_exit: true
-  use_ov_genai: True # True or False, applicable for provider: openvino
+  use_ov_genai: False # True or False, applicable for provider: openvino
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -12,7 +12,7 @@ monitoring:
 models:
   asr:
     provider: openai # openvino, funasr and openai supported
-    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    name: whisper-tiny  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     diarization: True
@@ -227,6 +227,7 @@ models:
   
   embedding:
     name: "BAAI/bge-large-en-v1.5"
+    min_score: 0.65
 
 
 mindmap:

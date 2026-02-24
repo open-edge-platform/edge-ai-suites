@@ -1,6 +1,7 @@
 from components.base_component import PipelineComponent
 import openvino_genai as ov_genai
 import logging
+from utils.config_loader import config
 
 logger = logging.getLogger(__name__)
 
@@ -46,10 +47,7 @@ class ContentSegmentationComponent(PipelineComponent):
                 add_generation_prompt=True
             )
 
-            streamer = self.model.generate(prompt)
-
-            full_output = "".join(token for token in streamer)
-
+            full_output = self.model.generate(prompt, False)
             logger.info("Topic segmentation completed.")
             return full_output
 
