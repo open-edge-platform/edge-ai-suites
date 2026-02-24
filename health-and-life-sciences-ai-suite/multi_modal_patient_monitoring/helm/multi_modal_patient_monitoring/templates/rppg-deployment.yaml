@@ -18,10 +18,16 @@ spec:
           imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - cp -r /opt/assets/models/* /models/
+            - >
+              mkdir -p /models/rppg;
+              cp -r /opt/assets/models/rppg/* /models/rppg/;
+              mkdir -p /videos/rppg;
+              cp -r /opt/assets/videos/rppg/* /videos/rppg/
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: videos
+              mountPath: /videos
 
       containers:
         - name: rppg
@@ -48,6 +54,8 @@ spec:
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: videos
+              mountPath: /videos
             - name: dri
               mountPath: /dev/dri
             - name: dev
@@ -55,6 +63,8 @@ spec:
 
       volumes:
         - name: models
+          emptyDir: {}
+        - name: videos
           emptyDir: {}
         - name: dri
           hostPath:

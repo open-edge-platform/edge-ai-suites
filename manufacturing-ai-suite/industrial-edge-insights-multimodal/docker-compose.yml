@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.34.3
+    image: telegraf:1.37.2
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -133,7 +133,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.0.0-ubuntu
+    image: grafana/grafana-oss:12.3.3-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -179,7 +179,7 @@ services:
     container_name: ia-mqtt-broker
     hostname: ia-mqtt-broker
     read_only: true
-    image: eclipse-mosquitto:2.0.21
+    image: eclipse-mosquitto:2.0.22
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -387,7 +387,7 @@ services:
     - "/dev:/dev"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.11.3
+    image: bluenviron/mediamtx:1.16.2
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -402,10 +402,14 @@ services:
       - NO_PROXY=mediamtx,coturn,${no_proxy},${HOST_IP}
       - no_proxy=mediamtx,coturn,${no_proxy},${HOST_IP}
       # Path settings for cam1
-      - MTX_PATHS_CAM1_PUBLISHUSER=publisher
-      - MTX_PATHS_CAM1_PUBLISHPASS=pubpass
-      - MTX_PATHS_CAM1_READUSER=viewer
-      - MTX_PATHS_CAM1_READPASS=viewpass
+      - MTX_AUTHINTERNALUSERS_PUBLISHER_USER=publisher
+      - MTX_AUTHINTERNALUSERS_PUBLISHER_PASS=pubpass
+      - MTX_AUTHINTERNALUSERS_PUBLISHER_PERMISSIONS_0=publish
+      - MTX_AUTHINTERNALUSERS_PUBLISHER_PATHS_0=cam1
+      - MTX_AUTHINTERNALUSERS_VIEWER_USER=viewer
+      - MTX_AUTHINTERNALUSERS_VIEWER_PASS=viewpass
+      - MTX_AUTHINTERNALUSERS_VIEWER_PERMISSIONS_0=read
+      - MTX_AUTHINTERNALUSERS_VIEWER_PATHS_0=cam1
       - MTX_WEBRTCTRACKGATHERTIMEOUT=20s
       - MTX_WEBRTC=yes
       - MTX_WEBRTCICESERVERS2_0_URL=turn:${HOST_IP}:${COTURN_UDP_PORT}
@@ -516,7 +520,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.7.0
+    image: coturn/coturn:4.8.0
     container_name: coturn
     read_only: true
     security_opt:
