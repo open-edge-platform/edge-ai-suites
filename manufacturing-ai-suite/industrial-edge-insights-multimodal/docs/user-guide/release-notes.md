@@ -7,7 +7,7 @@
 ```{toctree}
 :maxdepth: 5
 :hidden:
-release-notes/mar-2025
+release-notes/mar-2026
 release-notes/dec-2025
 ```
 hide_directive-->
