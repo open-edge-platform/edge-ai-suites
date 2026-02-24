@@ -33,8 +33,6 @@
        MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
        http_proxy: <http proxy> # proxy details if behind proxy
        https_proxy: <https proxy>
-       POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-       MR_URL: https://<HOST_IP>:30443/registry/ # Model reigstry URL
        SAMPLE_APP: pallet-defect-detection # application directory
    webrtcturnserver:
        username: <username>  # WebRTC credentials e.g. intel1234
