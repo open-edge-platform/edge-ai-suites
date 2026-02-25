@@ -11,8 +11,7 @@ hide_directive-->
 
 # Multi-Modal Patient Monitoring
 
-The Multi-Modal Patient Monitoring application is a reference workload that demonstrates how
-multiple AI pipelines can run simultaneously on a single Intel® platform, providing
+The Multi-Modal Patient Monitoring application is a reference workload that demonstrates how multiple AI pipelines can run simultaneously on a single Intel® platform, providing
 consolidated monitoring for a virtual patient.
 
 It combines several AI services:
@@ -28,8 +27,7 @@ all AI workloads.
 the host.
 - **UI:** Web-based dashboard for visualizing waveforms, numeric vitals, and system status.
 
-Together, these components illustrate how vision- and signal-based AI workloads can be
-orchestrated, monitored, and visualized in a clinical-style scenario.
+Together, these components illustrate how vision- and signal-based AI workloads can be orchestrated, monitored, and visualized in a clinical-style scenario.
 
 ## Supporting Resources
 
@@ -47,6 +45,7 @@ data/control flows.
 
 get-started.md
 how-it-works.md
+run-multi-modal-app.md
 
 :::
 hide_directive-->
