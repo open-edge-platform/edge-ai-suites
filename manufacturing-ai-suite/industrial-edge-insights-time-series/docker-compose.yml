@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.34.3
+    image: telegraf:1.37.2
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -137,7 +137,7 @@ services:
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
-    image: grafana/grafana-oss:12.0.0-ubuntu
+    image: grafana/grafana-oss:12.3.3-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -181,7 +181,7 @@ services:
     container_name: ia-mqtt-broker
     hostname: ia-mqtt-broker
     read_only: true
-    image: eclipse-mosquitto:2.0.21
+    image: eclipse-mosquitto:2.0.22
     restart: unless-stopped
     depends_on:
       - ia-influxdb

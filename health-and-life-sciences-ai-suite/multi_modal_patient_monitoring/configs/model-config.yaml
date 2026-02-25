@@ -1,0 +1,32 @@
+ai-ecg:
+  models:
+    - name: ecg_8960_ir10_fp16
+      type: ai-ecg
+      hub: hls
+      target_dir: /models/ai-ecg
+      ir_file: ecg_8960_ir10_fp16.xml
+      video_dir: /videos/ai-ecg
+    - name: ecg_17920_ir10_fp16
+      type: ai-ecg
+      hub: hls
+      target_dir: /models/ai-ecg
+      ir_file: ecg_17920_ir10_fp16.xml
+      video_dir: /videos/ai-ecg
+
+rppg:
+  models:
+    - name: mtts_can.hdf5
+      type: rppg
+      hub: hls
+      target_dir: /models/rppg
+      model_file: mtts_can.hdf5
+      video_dir: /videos/rppg
+
+pose-3d:
+  models:
+    - name: human-pose-estimation-3d-0001
+      type: 3d-pose
+      hub: hls
+      target_dir: /models/3d-pose
+      ir_file: human-pose-estimation-3d-0001.xml
+      video_dir: /videos/3d-pose

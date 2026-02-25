@@ -2,6 +2,7 @@ import json
 import faiss
 from sentence_transformers import SentenceTransformer
 from pathlib import Path
+from utils.config_loader import config
 
 MODEL_NAME = "BAAI/bge-large-en-v1.5"
 
@@ -33,6 +34,9 @@ class FaissContentSearcher:
         results = []
         for score, idx in zip(scores[0], ids[0]):
             if idx == -1:
+                continue
+
+            if score < config.models.embedding.min_score:
                 continue
 
             results.append({

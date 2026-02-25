@@ -12,6 +12,10 @@ With this feature, during runtime, you can download a new model using the micros
 
 
 ### Steps
+
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+>If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
 1. Set up the sample application to start a pipeline. A pipeline named `pallet_defect_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the pallet defect detection sample app.
 
    > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the `model-instance-id`.
@@ -87,7 +91,7 @@ With this feature, during runtime, you can download a new model using the micros
    ```
    Note the instance-id of the pipeline launched.
 
-8. Verify the pipeline is running. You can View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+8. Verify the pipeline is running. You can View the WebRTC streaming on `http://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
@@ -130,7 +134,7 @@ With this feature, during runtime, you can download a new model using the micros
     ]
     ```
 
-11. View the WebRTC streaming on `http://<HOST_IP>:<mediamtx-port>/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `http://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
 
 ## Additional resources

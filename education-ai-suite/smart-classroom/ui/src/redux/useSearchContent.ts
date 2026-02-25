@@ -44,7 +44,7 @@ export const useSearchContent = () => {
 
     try {
       console.log('🔍 Searching content:', query);
-      const results = await searchContent(sessionId, query, 10);
+      const results = await searchContent(sessionId, query, 5);
       
       console.log('✅ Search results:', results);
       

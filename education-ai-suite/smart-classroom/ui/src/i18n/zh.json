@@ -190,6 +190,10 @@
     "noResults": "未找到结果",
     "Relevance": "相关性",
     "Timestamp": "时间戳",
-    "expandResults": "展开结果"
+    "expandResults": "展开结果",
+    "durationError": "持续时间不匹配 - 检查您的文件",
+    "durationMismatch": "⚠️ 音频和视频时长不匹配。请确保两个文件的长度相似。",
+    "durationExtractionFailed": "⚠️ 无法提取音频或视频时长。请检查您的文件并重试。",
+    "contentPreparationFailed": "内容准备失败。请重试。"
   }
 }

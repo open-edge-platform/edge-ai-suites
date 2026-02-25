@@ -17,4 +17,3 @@ The Multi-Modal Patient Monitoring application demonstrates how multiple AI work
 
 This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
 
-sazIUkohj                                                                                           azsPOi 

@@ -9,7 +9,7 @@ services:
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${MINIO_HOST},vss-ui,${PM_HOST},localhost
+      no_proxy: ${no_proxy},${MINIO_HOST},vss-ui,${PM_HOST},nvr-event-router,localhost
       APP_UI: vss-ui:8080
       APP_MANAGER: ${PM_HOST}:3000
       APP_ASSETS: minio-service
@@ -30,6 +30,8 @@ services:
         condition: service_started
       minio-service:
         condition: service_started
+      nvr-event-router:
+        condition: service_started
     networks:
       - live-video-network
 
@@ -48,6 +50,8 @@ services:
       APP_SUMMARY_FEATURE: ${SUMMARY_FEATURE:-FEATURE_OFF}
       APP_SEARCH_FEATURE: ${SEARCH_FEATURE:-FEATURE_ON}
       APP_FEATURE_MUX: ${APP_FEATURE_MUX}
+      APP_CAMERA_CONFIG_FEATURE: ${CAMERA_CONFIG_FEATURE:-FEATURE_ON}
+      APP_NVR_API_BASE: ${UI_NVR_API_BASE:-/nvr-api}
     depends_on:
       pipeline-manager:
         condition: service_started

@@ -3,19 +3,19 @@ kind: Service
 metadata:
   name: aggregator
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: aggregator
   ports:
     - name: http
       port: 8001
       targetPort: 8001
-      nodePort: {{ .Values.aggregator.nodePort }}
       protocol: TCP
     - name: grpc
       port: 50051
       targetPort: 50051
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -30,6 +30,7 @@ spec:
       port: 8000
       targetPort: 8000
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -44,6 +45,7 @@ spec:
       port: 8084
       targetPort: 8084
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -58,6 +60,11 @@ spec:
       port: 8083
       targetPort: 8083
       protocol: TCP
+    - name: video
+      port: 8085
+      targetPort: 8085
+      protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -72,6 +79,7 @@ spec:
       port: 9000
       targetPort: 9000
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -86,6 +94,7 @@ spec:
       port: 8082
       targetPort: 8082
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
@@ -100,18 +109,18 @@ spec:
       port: 8080
       targetPort: 8080
       protocol: TCP
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: ui
 spec:
-  type: NodePort
+  type: ClusterIP
   selector:
     app: ui
   ports:
     - name: http
       port: 80
       targetPort: 3000
-      nodePort: {{ .Values.ui.nodePort }}
       protocol: TCP

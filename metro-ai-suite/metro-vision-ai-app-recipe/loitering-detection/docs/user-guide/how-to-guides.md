@@ -13,6 +13,7 @@ This section collects guides for the Loitering Detection sample application.
 
 ./how-to-guides/customize-application
 ./how-to-guides/use-gpu-for-inference
+./how-to-guides/use-npu-for-inference
 ./how-to-guides/view-telemetry-data
 ./how-to-guides/benchmark
 

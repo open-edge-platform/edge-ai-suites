@@ -189,7 +189,11 @@
     "noResults":"No results found.",
     "Relevance":"Relevance",
     "Timestamp":"Timestamp",
-    "expandResults":"Expand Results"
+    "expandResults":"Expand Results",
+    "durationError":"Duration Mismatch - check your files",
+    "durationMismatch":"⚠️ Audio and video durations don't match. Please ensure both files have similar lengths.",
+    "durationExtractionFailed":"⚠️ Unable to extract audio or video duration. Please check your files and try again.",
+    "contentPreparationFailed":"Content preparation failed. Please try again."
   }
 }
  
