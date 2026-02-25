@@ -597,6 +597,9 @@ let metricsWs = null;
 let metricsReconnectTimer = null;
 let cpuChart, gpuChart, memChart;
 
+// Track GPU engine metrics for aggregation
+const gpuEngineUsages = [];
+
 const MAX_DATA_POINTS = 60;
 
 function createChart(canvasId, label, color) {
@@ -720,6 +723,9 @@ function updateMetricsStatus(connected) {
 }
 
 function processMetrics(metrics) {
+    // Reset GPU engine tracking
+    gpuEngineUsages.length = 0;
+    
     metrics.forEach(metric => {
         switch (metric.name) {
             case 'cpu':
@@ -737,21 +743,17 @@ function processMetrics(metrics) {
                     if (sidebarCpuBar) sidebarCpuBar.style.width = cpuUsage + '%';
                 }
                 break;
+            case 'gpu_engine_usage':
+                // Collect all GPU engine usages
+                const engineUsage = metric.fields?.usage;
+                if (engineUsage != null) {
+                    gpuEngineUsages.push(parseFloat(engineUsage));
+                }
+                break;
             case 'nvidia_smi':
             case 'gpu':
-            case 'gpu_engine_usage':
-            case 'gpu_engine_usage_usage':
-                let gpuUsage = null;
-                if (metric.name === 'gpu_engine_usage' || metric.name === 'gpu_engine_usage_usage') {
-                    // Intel GPU: compute engine only
-                    if (metric.tags?.engine === 'compute' || metric.tags?.type === 'compute') {
-                        gpuUsage = metric.fields?.usage || 0;
-                    } else {
-                        break;  // Skip non-compute engines
-                    }
-                } else {
-                    gpuUsage = metric.fields?.utilization_gpu || metric.fields?.usage_percent || 0;
-                }
+                // NVIDIA GPU or generic GPU metrics
+                const gpuUsage = metric.fields?.utilization_gpu || metric.fields?.usage_percent || 0;
                 if (gpuUsage != null) {
                     const gpuVal = document.getElementById('metrics-gpu-val');
                     if (gpuVal) gpuVal.textContent = parseFloat(gpuUsage).toFixed(1) + '%';
@@ -773,6 +775,14 @@ function processMetrics(metrics) {
                 break;
         }
     });
+    
+    // Calculate overall GPU usage from maximum engine utilization
+    if (gpuEngineUsages.length > 0) {
+        const maxGpuUsage = Math.max(...gpuEngineUsages);
+        const gpuVal = document.getElementById('metrics-gpu-val');
+        if (gpuVal) gpuVal.textContent = maxGpuUsage.toFixed(1) + '%';
+        pushStatSample(gpuChart, maxGpuUsage);
+    }
 }
 
 // Initialize metrics system when page loads

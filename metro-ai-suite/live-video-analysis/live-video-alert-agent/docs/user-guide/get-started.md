@@ -38,9 +38,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
    # Use a different VLM model (default: Phi-3.5-vision-instruct-int4-ov)
-   # Example: Use InternVL2-2B model instead
-   export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-   export MODEL_NAME=InternVL2-2B
+   export OVMS_SOURCE_MODEL=<supported_model_name> (eg OpenVINO/InternVL2-2B-int4-ov)
+   export MODEL_NAME=<model_name> (eg InternVL2-2B)
    
    # Switch to GPU inference (default: CPU)
    export TARGET_DEVICE=GPU

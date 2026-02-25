@@ -128,17 +128,14 @@ Returns application-level metrics for monitoring dashboard.
   {
     "active_streams": 2,
     "active_agents": 3,
-    "total_alerts": 15,
-    "metrics_ws_url": "ws://localhost:9090/ws/clients"
+    "total_alerts": 15
   }
   ```
 - **Response Fields**:
   - `active_streams` (integer): Current number of active video streams
   - `active_agents` (integer): Number of enabled alert agents
-  - `total_alerts` (integer): Total alert count from event manager
-  - `metrics_ws_url` (string): WebSocket URL for real-time hardware metrics
+  - `total_alerts` (integer): Total alert count from latest analysis results
 - **Status Codes**:
   - `200`: Metrics retrieved successfully
   - `503`: Service not initialized
 
-**Note:** Hardware metrics (CPU, GPU, RAM usage) are available via WebSocket at the `metrics_ws_url` endpoint provided by the live-metrics-service.
