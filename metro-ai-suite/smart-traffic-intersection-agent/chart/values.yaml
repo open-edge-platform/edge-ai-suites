@@ -17,8 +17,8 @@ global:
 trafficAgent:
   name: traffic-agent
   image:
-    repository: smart-traffic-intersection-agent
-    tag: "latest"
+    repository: intel/smart-traffic-intersection-agent
+    tag: "1.1.0"
     pullPolicy: IfNotPresent
   replicas: 1
   service:
@@ -94,7 +94,7 @@ vlmServing:
     logLevel: "info"
     openvinoLogLevel: "1"
     accessLogFile: "/dev/null"
-    ovConfig: ""
+    ovConfig: '{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}'
   huggingfaceToken: ""
   # GPU settings - enable if VLM_DEVICE is GPU
   gpu:
@@ -108,11 +108,11 @@ vlmServing:
     failureThreshold: 180
   resources:
     limits:
-      cpu: "4"
-      memory: "16Gi"
+      cpu: "32"
+      memory: "32Gi"
     requests:
-      cpu: "2"
-      memory: "8Gi"
+      cpu: "16"
+      memory: "16Gi"
   # Volume for model cache
   persistence:
     enabled: true
@@ -127,8 +127,8 @@ tls:
   caCert: ""
   # If caCertSecretName is set, use an existing secret instead of creating one
   # e.g. smart-intersection-broker-rootcert (from SceneScape RI)
-  caCertSecretName: ""
+  caCertSecretName: "smart-intersection-broker-rootcert"
   # Key name inside the external secret (required when caCertSecretName is set)
   # The key will be mapped to the expected filename "scenescape-ca.pem"
   # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
-  caCertKey: ""
+  caCertKey: "root-cert"
