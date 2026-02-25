@@ -1,5 +1,11 @@
 # Release Notes
 
+## v1.4.0
+
+### Updates
+- Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
+- Optimized latency for GPU and NPU workloads.
+
 ## v1.3.0
 
 ### Updates
