@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import videojs from "video.js";
-import Hls from "hls.js";
 import "video.js/dist/video-js.css";
 import { useTranslation } from 'react-i18next';
 import "../../assets/css/HLSPlayer.css";
@@ -91,30 +90,30 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
 
   // Determine if streamUrl is a webpage or HLS stream
   const isWebpage = streamUrl && !streamUrl.endsWith('.m3u8');
-  const isHLSStream = streamUrl && streamUrl.endsWith('.m3u8');
 
-  console.log("Stream Analysis:", { 
+  console.log("HLSPlayer initializing:", { 
     streamUrl, 
     isWebpage, 
-    isHLSStream, 
     mode 
   });
 
   /* ---------- PLAYER INITIALIZATION ---------- */
 
   useEffect(() => {
-    if (!containerRef.current) return;
-
+    if (mode !== "playback") return;
+    
     cleanup();
 
-    if (mode === "playback") {
+    console.log('🎬 HLSPlayer initializing playback:', { streamUrl, videoFile });
+
+    if (videoFile) {
+      console.log('🎬 Initializing playback with File object');
       initVideoJS();
-    } else if (mode === "stream") {
-      if (isWebpage) {
-        initIframe();
-      } else if (isHLSStream) {
-        initNativeHLS();
-      }
+    } else if (streamUrl) {
+      console.log('🎬 Initializing playback with URL:', streamUrl);
+      initPlaybackFromURL();
+    } else {
+      console.warn('🎬 Playback mode but no videoFile or streamUrl provided');
     }
 
     return cleanup;
@@ -169,93 +168,40 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
     });
   };
 
+  /* ---------- PLAYBACK FROM HTTP URL (for recorded videos from backend) ---------- */
+
+  const initPlaybackFromURL = () => {
+    if (!containerRef.current || !streamUrl) return;
+
+    console.log("Initializing playback from URL:", streamUrl);
+
+    const videoEl = document.createElement("video-js");
+    videoEl.className = "video-js vjs-default-skin";
+    videoEl.style.width = "100%";
+    videoEl.style.height = "100%";
+
+    containerRef.current.appendChild(videoEl);
+
+    playerRef.current = videojs(videoEl, {
+      controls: true,
+      responsive: true,
+      fluid: true,
+      playbackRates: [0.5, 1, 1.25, 1.5, 2],
+    });
+
+    // Use the stream URL directly for HTTP video playback
+    playerRef.current.src({ src: streamUrl, type: "video/mp4" });
+
+    playerRef.current.ready(() => {
+      setupHighlightComponent();
+      setupPlayerEvents();
+      playerRef.current.play().catch(console.error);
+    });
+  };
+
   /* ---------- IFRAME STREAMING (for webpage URLs) ---------- */
 
-  const initIframe = () => {
-    if (!containerRef.current || !streamUrl) return;
-
-    console.log("Initializing iframe for webpage:", streamUrl);
-
-    const iframe = document.createElement("iframe");
-    iframe.src = streamUrl;
-    iframe.scrolling = "no";
-    iframe.style.width = "100%";
-    iframe.style.height = "100%";
-    iframe.style.border = "none";
-
-    containerRef.current.appendChild(iframe);
-  };
-
   /* ---------- NATIVE HLS STREAMING (for .m3u8 URLs) ---------- */
-
-  const initNativeHLS = () => {
-    if (!containerRef.current || !streamUrl) return;
-
-    console.log("Initializing native HLS for stream:", streamUrl);
-
-    const video = document.createElement("video");
-    video.controls = true;
-    video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.style.background = "black";
-
-    // Add source element (like your original code)
-    const source = document.createElement("source");
-    source.src = streamUrl;
-    source.type = "application/vnd.apple.mpegurl";
-    video.appendChild(source);
-
-    containerRef.current.appendChild(video);
-
-    // Add event listeners for debugging
-    video.addEventListener("loadedmetadata", () => {
-      console.log("HLS metadata loaded");
-    });
-
-    video.addEventListener("canplay", () => {
-      console.log("HLS can play");
-      video.play().catch(console.error);
-    });
-
-    video.addEventListener("error", (e) => {
-      console.error("HLS video error:", e);
-      console.error("Video error details:", video.error);
-    });
-
-    // If native HLS fails, try HLS.js as fallback
-    video.addEventListener("error", () => {
-      if (Hls.isSupported()) {
-        console.log("Native HLS failed, trying HLS.js");
-        initHLSJSFallback(video);
-      }
-    });
-  };
-
-  /* ---------- HLS.JS FALLBACK ---------- */
-
-  const initHLSJSFallback = (video: HTMLVideoElement) => {
-    if (!streamUrl) return;
-
-    const hls = new Hls({
-      lowLatencyMode: false,
-      debug: true,
-    });
-
-    hls.on(Hls.Events.ERROR, (event, data) => {
-      console.error("HLS.js Error:", data);
-    });
-
-    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-      console.log("HLS.js manifest parsed");
-      video.play().catch(console.error);
-    });
-
-    hls.loadSource(streamUrl);
-    hls.attachMedia(video);
-  };
 
   /* ---------- TIMELINE HIGHLIGHTS (only for Video.js playback) ---------- */
 
@@ -314,20 +260,47 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
   }, [mode]);
 
   /* ---------- RENDER ---------- */
+  
+  if (mode === "stream") {
+    return (
+      <div className="hls-player-container">
+        {isWebpage && streamUrl ? (
+          <iframe
+            src={streamUrl}
+            scrolling="no"
+            width="100%"
+            height="100%"
+            style={{ border: 'none' }}
+            title="Stream Content"
+          />
+        ) : streamUrl ? (
+          <video 
+            controls 
+            width="100%" 
+            height="100%" 
+            style={{ backgroundColor: 'black' }}
+            autoPlay
+          >
+            <source src={streamUrl} type="application/vnd.apple.mpegurl" />
+            {t("notifications.videoNotSupported")}
+          </video>
+        ) : (
+          <div style={{ 
+            color: "white", 
+            textAlign: "center", 
+            padding: "20px" 
+          }}>
+            {t("notifications.noVideoConfigured")}
+          </div>
+        )}
+      </div>
+    );
+  }
 
+  // Playback mode: Video.js player with highlights
   return (
     <div ref={containerRef} className="hls-player-container">
-      {mode === "stream" && !streamUrl && (
-        <div style={{ 
-          color: "white", 
-          textAlign: "center", 
-          padding: "20px" 
-        }}>
-          {t("notifications.noVideoConfigured")}
-        </div>
-      )}
-      
-      {mode === "playback" && !videoFile && (
+      {!videoFile && !streamUrl && (
         <div style={{ 
           color: "white", 
           textAlign: "center", 
