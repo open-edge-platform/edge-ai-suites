@@ -131,4 +131,9 @@ spec:
         - name: ca-cert
           secret:
             secretName: {{ include "stia.caCertSecretName" . }}
+            {{- if and .Values.tls.caCertSecretName .Values.tls.caCertKey }}
+            items:
+              - key: {{ .Values.tls.caCertKey }}
+                path: scenescape-ca.pem
+            {{- end }}
         {{- end }}
