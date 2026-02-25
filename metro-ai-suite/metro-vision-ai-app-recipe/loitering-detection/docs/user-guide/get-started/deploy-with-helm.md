@@ -79,6 +79,7 @@ cd ..
         username: # example: username: myuser
         password: # example: password: mypassword
     ```
+    > **Note:** To make use of GPU / NPU set the property `privileged_access_required` to `true` in the above `values.yaml` file.
 
 ### Step 3: Deploy the application and Run multiple AI pipelines
 
@@ -191,6 +192,8 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_trac
     }
 }'
 ```
+
+> **Note:** To run the pipeline on GPU replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:

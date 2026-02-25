@@ -26,15 +26,18 @@ Before You Begin, ensure the following:
 > **Note:** The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/metro-ai-suite/image-based-video-search/chart`
 
 - Download helm chart with the following command
-
-    `helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.2.0-rc1`
+    ```bash
+    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.2.0-rc1
+    ```
 - unzip the package using the following command
-
-    `tar -xvf image-based-video-search-1.2.0-rc1.tgz`
+    ```bash
+    tar -xvf image-based-video-search-1.2.0-rc1.tgz
+    ```
 - Get into the helm directory
-
-    `cd image-based-video-search`
-
+    ```bash
+    cd image-based-video-search
+    ```
+    
 ## Steps to Deploy
 
 1. **Clone the repo**:
