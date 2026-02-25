@@ -25,6 +25,9 @@ const LeftPanel = () => {
   const searchLoading = useAppSelector((s) => s.ui.searchLoading);
   const searchResults = useAppSelector((s) => s.ui.searchResults);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
+  const uploadedVideoFiles = useAppSelector((s) => s.ui.uploadedVideoFiles);
+  const activeStream = useAppSelector((s) => s.ui.activeStream);
+  const videoPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
   
   const { t } = useTranslation();
   const { performSearch, searchError } = useSearchContent();
@@ -42,8 +45,33 @@ const LeftPanel = () => {
     performSearch(query);
   };
 
+  // Determine highest priority video: back > content > front
+  const getPriorityVideoType = () => {
+    if (uploadedVideoFiles.back) return 'back';
+    if (uploadedVideoFiles.board) return 'content';
+    if (uploadedVideoFiles.front) return 'front';
+    return null;
+  };
+
   useEffect(() => {
     if (!searchResults.length) return;
+
+    // Only highlight in playback mode (timestamps are for recorded content)
+    if (!videoPlaybackMode) {
+      console.log('[LeftPanel] Not in playback mode, skipping highlights');
+      return;
+    }
+
+    // ALWAYS highlight only the highest priority video available
+    // back > content > front. Never highlight other cameras.
+    const targetCamera = getPriorityVideoType();
+
+    if (!targetCamera) {
+      console.warn('[LeftPanel] No video files available for highlighting');
+      return;
+    }
+
+    console.log(`[LeftPanel] Highlighting priority camera: ${targetCamera}`);
 
     searchResults.forEach(r => {
       window.dispatchEvent(
@@ -51,12 +79,13 @@ const LeftPanel = () => {
           detail: {
             startTime: r.start_time,
             endTime: r.end_time,
-            topic: r.topic
+            topic: r.topic,
+            targetCamera // Include target camera so HLSPlayer can filter
           }
         })
       );
     });
-  }, [searchResults]);
+  }, [searchResults, videoPlaybackMode, uploadedVideoFiles]);
 
   const getSearchPlaceholder = () => {
     if (contentSegmentationStatus === 'loading') {
