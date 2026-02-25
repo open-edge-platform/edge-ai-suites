@@ -6,7 +6,7 @@ This section provides step‑by‑step instructions for setting up dependencies,
 
 This command initializes and updates the MDPnP (Medical Device Plug‑and‑Play) submodules required by the Health‑AI‑Suite.
 
-```
+```bash
 
 make init-mdpnp
 
@@ -18,7 +18,7 @@ make init-mdpnp
 
 This command builds and launches the complete Health‑AI‑Suite stack using locally built Docker images.
 
-```
+```bash
 
 # Set REGISTRY=false to avoid pulling images from a remote registry
 
@@ -29,7 +29,7 @@ make run REGISTRY=false
 **Step 3: Stop and Clean Up**
 This command stops and removes all containers started by the Health‑AI‑Suite.
 
-```
+```bash
 # Stop and clean up all running containers
 
 make down
