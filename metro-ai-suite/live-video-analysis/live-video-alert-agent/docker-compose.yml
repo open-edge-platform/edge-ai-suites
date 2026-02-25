@@ -12,7 +12,7 @@ services:
     command: sh -c "chown -R 5000:5000 /models && chmod -R 755 /models"
 
   ovms:
-    image: openvino/model_server:latest-gpu
+    image: openvino/model_server:2026.0-gpu
     container_name: ovms-vlm
     restart: unless-stopped
     depends_on:
@@ -92,7 +92,7 @@ services:
     network_mode: host
 
   live-metrics-service:
-    image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
+    image: ${REGISTRY:-}live-metrics-service:1.0.0.rc.1
     build:
       context: ../live-metrics-service
       dockerfile: Dockerfile
