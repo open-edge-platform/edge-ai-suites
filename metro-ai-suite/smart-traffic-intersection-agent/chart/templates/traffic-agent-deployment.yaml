@@ -72,6 +72,8 @@ spec:
               value: {{ .Values.vlmServing.env.modelName | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
               value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
+            - name: VLM_TIMEOUT_SECONDS
+              value: {{ .Values.trafficAgent.env.vlmTimeoutSeconds | quote }}
             # Traffic analysis configuration
             - name: HIGH_DENSITY_THRESHOLD
               value: {{ .Values.trafficAgent.traffic.highDensityThreshold | quote }}

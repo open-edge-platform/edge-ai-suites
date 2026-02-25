@@ -41,7 +41,7 @@ data:
       "vlm": {
         "base_url": "http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}",
         "model": {{ .Values.vlmServing.env.modelName | quote }},
-        "timeout_seconds": 300,
+        "timeout_seconds": {{ .Values.trafficAgent.env.vlmTimeoutSeconds | int }},
         "max_completion_tokens": {{ .Values.vlmServing.env.maxCompletionTokens | int }},
         "temperature": 0.1,
         "top_p": 0.1
