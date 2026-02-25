@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from typing import List, Optional, Dict, Any
@@ -10,6 +11,7 @@ from unstructured.partition.docx import register_picture_partitioner
 
 from file_ingest_and_retrieve.utils import DocxParagraphPicturePartitioner, ensure_directory, is_supported_file
 
+logger = logging.getLogger(__name__)
 
 class DocumentParser:
     """

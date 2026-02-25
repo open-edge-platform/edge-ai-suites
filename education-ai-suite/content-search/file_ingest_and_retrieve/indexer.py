@@ -1,6 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 import os
 import copy
 import json
@@ -21,6 +22,7 @@ from file_ingest_and_retrieve.utils import generate_unique_id, encode_image_to_b
 
 from chromadb_wrapper.chroma_client import ChromaClientWrapper
 
+logger = logging.getLogger(__name__)
 
 DEVICE = os.getenv("DEVICE", "CPU")
 EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "CLIP/clip-vit-b-16")
@@ -45,8 +47,6 @@ class Indexer:
             model_id_or_path="BAAI/bge-small-en-v1.5",
             device=DEVICE,
         )
-        # TODO: remove print for debug
-        print("Document embedding model (BGE) initialized successfully.")
 
         self.detector = Detector(device=DEVICE)
 
@@ -56,7 +56,7 @@ class Indexer:
             extract_images=False,  # Don't extract images for now
             use_hi_res_strategy=False  # Use fast strategy for better performance
         )
-        print("Document parser initialized successfully.")
+        logger.info("Document parser initialized successfully.")
 
         self.id_map = {}
         self.document_id_map = {}
@@ -67,12 +67,12 @@ class Indexer:
         self.document_collection_name = f"{collection_name}_documents"
 
         if self.client.load_collection(collection_name=self.collection_name):
-            print(f"Collection '{self.collection_name}' already exist.")
+            logger.info(f"Collection '{self.collection_name}' already exist.")
             self.db_inited = True
             self._recover_id_map(self.collection_name, self.id_map)
         
         if self.client.load_collection(collection_name=self.document_collection_name):
-            print(f"Document collection '{self.document_collection_name}' already exist.")
+            logger.info(f"Document collection '{self.document_collection_name}' already exist.")
             self.document_db_inited = True
             self._recover_id_map(self.document_collection_name, self.document_id_map)
 
@@ -100,7 +100,7 @@ class Indexer:
     def _recover_id_map(self, collection_name, id_map_dict):
         res = self.client.query_all(collection_name, output_fields=["id", "meta"])
         if not res:
-            print(f"No data found in collection '{collection_name}'.")
+            logger.info(f"No data found in collection '{collection_name}'.")
             return
         for item in res:
             if "file_path" in item["meta"]:
@@ -157,7 +157,7 @@ class Indexer:
             res = self.client.delete(collection_name=self.document_collection_name, ids=ids)
             del self.document_id_map[file_path]
         else:
-            print(f"File {file_path} not found in db.")
+            logger.info(f"File {file_path} not found in db.")
         
         return res, ids
     
@@ -275,7 +275,6 @@ class Indexer:
         try:
             # Parse the document into chunks and process
             nodes = self.document_parser.parse_file(document_path)
-            
             for idx, node in enumerate(nodes):
                 meta_data = copy.deepcopy(meta)
                 meta_data["chunk_index"] = idx
@@ -296,10 +295,10 @@ class Indexer:
                 entities.append(node_data)
                 self._update_id_map(self.document_id_map, meta_data["file_path"], node_data["id"])
             
-            print(f"Processed document {document_path}: {len(nodes)} chunks")
+            logger.info(f"Processed document {document_path}: {len(nodes)} chunks")
             
         except Exception as e:
-            print(f"Error processing document {document_path}: {e}")
+            logger.error(f"Error processing document {document_path}: {e}")
             raise
         
         return entities
@@ -315,9 +314,9 @@ class Indexer:
         doc_extensions = ('.txt', '.pdf', '.docx', '.doc', '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md', '.rst')
         
         for file, meta in zip(files, metas):
-            # print("processing file: ", file)
+            # logger.info("processing file: ", file)
             if meta["file_path"] in self.id_map or meta["file_path"] in self.document_id_map:
-                print(f"File {file} already processed, skipping.")
+                logger.info(f"File {file} already processed, skipping.")
                 continue
             
             file_lower = file.lower()
@@ -329,16 +328,17 @@ class Indexer:
                 entities.extend(self.process_image(file, meta, do_detect_and_crop))
             elif file_lower.endswith(doc_extensions):
                 if not self.document_parser:
-                    print(f"Document parser not available. Skipping document: {file}")
+                    logger.info(f"Document parser not available. Skipping document: {file}")
                     continue
                 meta["type"] = "document"
                 try:
+                    logger.info(f"Processing document: {file}")
                     entities.extend(self.process_document(file, meta))
                 except Exception as e:
-                    print(f"Error processing document {file}: {e}")
+                    logger.error(f"Error processing document {file}: {e}")
                     continue
             else:
-                print(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
+                logger.info(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
 
         visual_entities = [e for e in entities if e.get("meta", {}).get("type") in ["video", "image"]]
         document_entities = [e for e in entities if e.get("meta", {}).get("type") == "document"]

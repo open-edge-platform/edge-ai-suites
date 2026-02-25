@@ -30,6 +30,16 @@ logging.basicConfig(
 console_handler = logging.StreamHandler()
 logger.addHandler(console_handler)
 
+# Suppress noisy third-party loggers
+for _noisy in [
+    "unstructured", "unstructured_inference", "detectron2",
+    "transformers", "urllib3", "httpx", "httpcore",
+    "opentelemetry", "PIL", "chromadb", "llama_index",
+    "multimodal_embedding_serving", "sentence_transformers",
+    "huggingface_hub", "filelock",
+]:
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
+
 class RetrievalRequest(BaseModel):
     query: Optional[str] = None
     image_base64: Optional[str] = None
@@ -174,7 +184,7 @@ async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
         with tempfile.TemporaryDirectory() as temp_dir:
             local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
             store.get_file(file_path, local_file_path)
-
+            logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
             meta["file_path"] = f"minio://{bucket_name}/{file_path}"
             res = indexer.add_embedding([local_file_path], [meta], frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
 

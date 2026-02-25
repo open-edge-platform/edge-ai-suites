@@ -3,6 +3,7 @@
 ### Prepare Python virtual environment
 
 ```cmd
+cd file_ingest_and_retrieve
 python -m venv venv_py310
 ```
 
@@ -26,7 +27,7 @@ pip install git+https://github.com/apple/ml-mobileclip.git@c16bfe5a4feb424762d6b
 
 pip install salesforce-lavis==1.0.2
 ```
-
+TODO: why this is needed, broken the dependencies
 ### Install System Dependencies
 
 #### A. Install Tesseract OCR (for image text extraction)
@@ -87,9 +88,10 @@ The `unstructured` library will automatically detect and use LibreOffice if avai
 
 ```powershell
 $env:https_proxy="<your_https_proxy>"
-$env:http_proxy="your_http_proxy"
+$env:http_proxy="<your_http_proxy>"
 $env:no_proxy="localhost,192.0.0.1,0.0.0.0,127.0.0.1"   
 $env:no_proxy_env="localhost,192.0.0.1,0.0.0.0,127.0.0.1"
+cd ..
 uvicorn file_ingest_and_retrieve.server:app --host 0.0.0.0 --port 9990
 ```
 
