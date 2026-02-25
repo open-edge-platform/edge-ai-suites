@@ -54,6 +54,9 @@ class Indexer:
             model_id_or_path=DOC_EMBEDDING_MODEL_NAME,
             device=DEVICE,
         )
+
+        self.detector = Detector(device=DEVICE)
+
         self.document_parser = DocumentParser(
             chunk_size=250,
             chunk_overlap=50,
@@ -61,8 +64,19 @@ class Indexer:
             use_hi_res_strategy=False  # Use fast strategy for better performance
         )
         logger.info("Document parser initialized successfully.")
+
+        self.id_map = {}
         self.document_id_map = {}
         self.document_db_inited = False
+        self.client = ChromaClientWrapper()
+        self.collection_name = collection_name
+        self.document_collection_name = f"{collection_name}_documents"
+
+        if self.client.load_collection(collection_name=self.collection_name):
+            logger.info(f"Collection '{self.collection_name}' already exist.")
+            self.db_inited = True
+            self._recover_id_map(self.collection_name, self.id_map)
+        
         if self.client.load_collection(collection_name=self.document_collection_name):
             logger.info(f"Document collection '{self.document_collection_name}' already exist.")
             self.document_db_inited = True
@@ -307,7 +321,7 @@ class Indexer:
         
         for file, meta in zip(files, metas):
             # logger.info("processing file: ", file)
-            if meta["file_path"] in self.visual_id_map or meta["file_path"] in self.document_id_map:
+            if meta["file_path"] in self.id_map or meta["file_path"] in self.document_id_map:
                 logger.info(f"File {file} already processed, skipping.")
                 continue
             
@@ -330,7 +344,7 @@ class Indexer:
                     logger.error(f"Error processing document {file}: {e}")
                     continue
             else:
-                logger.warning(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
+                logger.info(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
 
         visual_entities = [e for e in entities if e.get("meta", {}).get("type") in ["video", "image"]]
         document_entities = [e for e in entities if e.get("meta", {}).get("type") == "document"]
