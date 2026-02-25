@@ -37,6 +37,7 @@ trafficAgent:
     logLevel: "INFO"
     refreshInterval: "15"
     weatherMock: "false"
+    vlmTimeoutSeconds: "600"
   # MQTT configuration (connects to SceneScape broker)
   # For Helm/K8s: use the K8s service DNS of the SceneScape broker, e.g.:
   #   smart-intersection-broker (same namespace)
@@ -108,10 +109,10 @@ vlmServing:
   resources:
     limits:
       cpu: "4"
-      memory: "8Gi"
+      memory: "16Gi"
     requests:
       cpu: "2"
-      memory: "4Gi"
+      memory: "8Gi"
   # Volume for model cache
   persistence:
     enabled: true
