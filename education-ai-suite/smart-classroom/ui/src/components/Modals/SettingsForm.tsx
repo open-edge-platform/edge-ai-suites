@@ -37,9 +37,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         if (settings) {
           setProjectLocation(settings.projectLocation || 'storage/');
           if (settings.projectName) setProjectName(settings.projectName);
-          setFrontCameraLocal(settings.frontCamera || localStorage.getItem('frontCamera') || '');
-          setBackCameraLocal(settings.backCamera || localStorage.getItem('backCamera') || '');
-          setBoardCameraLocal(settings.boardCamera || localStorage.getItem('boardCamera') || '');
+          setFrontCameraLocal(settings.frontCamera || '');
+          setBackCameraLocal(settings.backCamera || '');
+          setBoardCameraLocal(settings.boardCamera || '');
         
           if (settings.microphone && devices.includes(settings.microphone)) {
             setSelectedMicrophone(settings.microphone);
@@ -49,9 +49,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
             setSelectedMicrophone('');
           }
         } else {
-          setFrontCameraLocal(localStorage.getItem('frontCamera') || '');
-          setBackCameraLocal(localStorage.getItem('backCamera') || '');
-          setBoardCameraLocal(localStorage.getItem('boardCamera') || '');
+          setFrontCameraLocal('');
+          setBackCameraLocal('');
+          setBoardCameraLocal('');
           
           if (devices.length > 0) {
             console.log('No saved settings, using first device:', devices[0]);
@@ -65,9 +65,9 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         console.error('Failed to load settings or devices:', error);
         setAvailableDevices([]);
         setSelectedMicrophone('');
-        setFrontCameraLocal(localStorage.getItem('frontCamera') || '');
-        setBackCameraLocal(localStorage.getItem('backCamera') || '');
-        setBoardCameraLocal(localStorage.getItem('boardCamera') || '');
+        setFrontCameraLocal('');
+        setBackCameraLocal('');
+        setBoardCameraLocal('');
       }
     };
 
@@ -98,10 +98,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
         backCamera,
         boardCamera
       });
-      localStorage.setItem('frontCamera', frontCamera);
-      localStorage.setItem('backCamera', backCamera);
-      localStorage.setItem('boardCamera', boardCamera);
-
       dispatch(setFrontCamera(frontCamera));
       dispatch(setBackCamera(backCamera));
       dispatch(setBoardCamera(boardCamera));
@@ -116,10 +112,6 @@ const SettingsForm: React.FC<SettingsFormProps> = ({ onClose, projectName, setPr
     } catch (error) {
       console.error('Failed to save settings:', error);
 
-      localStorage.setItem('frontCamera', frontCamera);
-      localStorage.setItem('backCamera', backCamera);
-      localStorage.setItem('boardCamera', boardCamera);
-      
       dispatch(setFrontCamera(frontCamera));
       dispatch(setBackCamera(backCamera));
       dispatch(setBoardCamera(boardCamera));

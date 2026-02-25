@@ -10,10 +10,6 @@ using a Intel® RealSense™ camera image as the input.
 
 Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
-### Install OpenVINO™ package
-
-Follow the [Install Openvino](../../../../gsg_robot/install-openvino.md) instructions to install OpenVINO™.
-
 ### Install Python packages (optional)
 
 Following Python packages are necessary to automatically download and convert the model to IR files.

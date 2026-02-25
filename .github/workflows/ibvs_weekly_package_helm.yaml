@@ -21,12 +21,12 @@ jobs:
       fail-fast: false
     steps:
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         path: edge-ai-suites-repo
         persist-credentials: false
     - name: Install Helm
-      uses: azure/setup-helm@v4
+      uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 #v4.2.0
       with:
         version: v3.15.2  
     - name: Log in to GitHub Container Registry
@@ -37,22 +37,28 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Package Helm Chart
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
         cd edge-ai-suites-repo/metro-ai-suite/image-based-video-search/chart
-        helm package . --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+        helm package . --version "$HELM_CHART_TAG" --app-version "$HELM_CHART_TAG"
     - name: Push to GHCR
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
-        CHART_PACKAGE=$(ls edge-ai-suites-repo/metro-ai-suite/image-based-video-search/chart/*-${{ inputs.helm-chart-tag }}.tgz)
+        CHART_PACKAGE=$(ls edge-ai-suites-repo/metro-ai-suite/image-based-video-search/chart/*-"$HELM_CHART_TAG".tgz)
         helm push $CHART_PACKAGE oci://ghcr.io/${{ github.repository }}/metro-ai-suites/
         
     - name: Update Github Summary
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
         echo "### ✅ Image Based Video Search helm chart published to github container registry" >> $GITHUB_STEP_SUMMARY
           echo "- Registry: \`oci://ghcr.io/${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Version: \`${{ inputs.helm-chart-tag }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Version: \`$HELM_CHART_TAG\`" >> $GITHUB_STEP_SUMMARY
           echo "### Helm Pull Commands" >> $GITHUB_STEP_SUMMARY
           echo '```bash' >> $GITHUB_STEP_SUMMARY
-          echo "helm pull oci://ghcr.io/${{ github.repository }}/metro-ai-suites/image-based-video-search --version ${{ inputs.helm-chart-tag }}" >> $GITHUB_STEP_SUMMARY 
+          echo "helm pull oci://ghcr.io/${{ github.repository }}/metro-ai-suites/image-based-video-search --version $HELM_CHART_TAG" >> $GITHUB_STEP_SUMMARY 
           echo '```' >> $GITHUB_STEP_SUMMARY
     - name: Clean up
       if: always()

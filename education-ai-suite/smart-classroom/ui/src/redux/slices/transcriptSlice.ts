@@ -35,7 +35,18 @@ const initialState: TranscriptState = {
   status: "idle",
 };
 
-const normalizeSpeaker = (s?: string | null) => s?.trim().toUpperCase() || "";
+const normalizeSpeaker = (s?: string | null) => {
+  const raw = s?.trim() || "";
+  if (!raw) return "";
+
+  // Map Chinese speaker labels like "说话人_00" -> "SPEAKER_00"
+  if (raw.startsWith("说话人")) {
+    const mapped = raw.replace(/^说话人/i, "SPEAKER");
+    return mapped.toUpperCase();
+  }
+
+  return raw.toUpperCase();
+};
 
 
 const shouldMerge = (last?: TranscriptSegment, incoming?: { speaker?: string; start?: number; end?: number }) => {

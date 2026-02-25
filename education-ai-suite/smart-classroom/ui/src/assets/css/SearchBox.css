@@ -108,6 +108,11 @@
   background: var(--error-color-light, rgba(220, 38, 38, 0.1));
 }
 
+.search-status.warning {
+  color: var(--warning-color, #b45309);
+  background: var(--warning-color-light, #fef3c7);
+}
+
 .spinner {
   width: 12px;
   height: 12px;

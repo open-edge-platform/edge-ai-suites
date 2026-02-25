@@ -71,7 +71,7 @@ spec:
         - name: videos-volume
           mountPath: /tmp/videos
       - name: model-downloader
-        image: intel/dlstreamer:2025.1.2-ubuntu24
+        image: intel/dlstreamer:2026.0.0-ubuntu24-rc1
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

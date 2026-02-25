@@ -23,7 +23,8 @@ const Timeline: React.FC = () => {
   const { segments, teacherSpeaker, totalDuration, detectedLanguage } =
     useAppSelector(s => s.transcript);
 
-  const lang = detectedLanguage || "en";
+  const hasChineseText = segments.some(s => /[\u4e00-\u9fff]/.test(s.text || ""));
+  const lang = detectedLanguage || (hasChineseText ? "zh" : "en");
   const labels = SPEAKER_LABELS[lang] ?? SPEAKER_LABELS.en;
 
   const timelineSegments = useMemo<TimelineSegment[]>(() => {
@@ -41,7 +42,7 @@ const Timeline: React.FC = () => {
   }, [segments]);
 
   const isValidSpeaker = (speaker: string) =>
-    /^SPEAKER(_\d+)?$/i.test(speaker);
+    /^(SPEAKER|说话人)(_[0-9]+)?$/i.test(speaker);
 
   const cleanedSegments = useMemo(
     () => timelineSegments.filter(s => isValidSpeaker(s.speaker)),
@@ -93,7 +94,20 @@ const Timeline: React.FC = () => {
       const match = speaker.match(/SPEAKER_(\d+)/i);
       if (match) {
         const speakerNumber = match[1];
-        return `${labels.student}_${speakerNumber}`;
+        const baseLabel = lang === "zh" ? "说话人" : labels.student;
+        return `${baseLabel}_${speakerNumber}`;
+      }
+      if (lang === "zh" && speaker.toUpperCase() === "SPEAKER") {
+        return "说话人";
+      }
+    }
+    if (lang === "zh") {
+      const match = speaker.match(/SPEAKER_(\d+)/i);
+      if (match) {
+        return `说话人_${match[1]}`;
+      }
+      if (speaker.toUpperCase() === "SPEAKER") {
+        return "说话人";
       }
     }
     return speaker;

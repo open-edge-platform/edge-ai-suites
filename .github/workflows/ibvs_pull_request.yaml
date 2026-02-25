@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
         path: edge-ai-suites-repo
@@ -34,7 +34,7 @@ jobs:
         docker compose up -d
         docker ps 
     - name: Checkout docker/docker-bench-security (master)
-      uses: actions/checkout@v4
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         repository: docker/docker-bench-security
         ref: master
@@ -59,7 +59,7 @@ jobs:
         --label docker_bench_security \
         docker-bench-security > dbs_scan_ibvs_app.txt
     - name: Upload DBS Scan artifact to Github
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
       with:
         name: DBS_Scan_Results
         path: docker-bench-security/dbs_scan_*
@@ -146,7 +146,7 @@ jobs:
         trivy fs -s HIGH,CRITICAL --ignore-unfixed . | tee trivy-fs-full-report-ignore-unfixed.txt
         mv trivy-fs* ${{ github.workspace }}/reports/Trivy
     - name: Upload Trivy Scan Reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
       with:
         name: Trivy-report
         path: reports/Trivy/
@@ -157,7 +157,7 @@ jobs:
       fail-fast: false
     steps:
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         persist-credentials: false
         path: edge-ai-suites-repo
@@ -177,7 +177,7 @@ jobs:
         docker run --rm -v "${{ github.workspace }}:/src" ghcr.io/pycqa/bandit/bandit -r /src/edge-ai-suites-repo/metro-ai-suite/image-based-video-search/ -f txt -o /src/reports/bandit-report.txt || true >> $GITHUB_STEP_SUMMARY
         echo "Please find full report in bandit-report.txt" >> $GITHUB_STEP_SUMMARY 
     - name: Upload Scan Reports
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
       with:
         name: virus-bandit-report
         path: reports/

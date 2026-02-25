@@ -14,7 +14,7 @@ The following is an example of the PCB anomaly detection pipeline, which is incl
         "name": "pcb_anomaly_detection",
         "source": "gstreamer",
         "queue_maxsize": 50,
-        "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
+        "pipeline": "{auto_source} name=source ! decodebin ! gvaclassify name=classification inference-region=full-frame pre-process-config=reverse_input_channels=yes device=CPU pre-process-backend=opencv model-instance-id=inst0 ! queue ! gvawatermark ! gvafpscounter ! appsink name=destination",
         "parameters": {
             "type": "object",
             "properties": {
