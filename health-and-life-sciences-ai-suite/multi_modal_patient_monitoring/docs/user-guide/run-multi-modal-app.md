@@ -2,7 +2,7 @@
 
 This section provides step‑by‑step instructions for setting up dependencies, running the Health‑AI‑Suite using local Docker images, and stopping the application stack.
 
-**Step1: Initialize MDPnP submodules and dependencies**
+**Step 1: Initialize MDPnP submodules and dependencies**
 
 This command initializes and updates the MDPnP (Medical Device Plug‑and‑Play) submodules required by the Health‑AI‑Suite.
 
@@ -26,7 +26,7 @@ make run REGISTRY=false
 
 ```
 
-**Step3: Stop and Clean Up**
+**Step 3: Stop and Clean Up**
 This command stops and removes all containers started by the Health‑AI‑Suite.
 
 ```
@@ -36,5 +36,5 @@ make down
 ```
 
 
-For detailed information about system requirements, architecture, and how the application works, see the  [Full Documentation](docs/user-guide/index.md)
+For detailed information about system requirements, architecture, and how the application works, see the [Full Documentation](./index.md)
 
