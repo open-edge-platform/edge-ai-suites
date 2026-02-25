@@ -14,6 +14,7 @@ services:
     image: intel/hl-ai-patient-monitoring-assets:${TAG:-1.0.1}
     container_name: patient-monitoring-assets
     volumes:
+      - ./configs/model-config.yaml:/app/configs/model-config.yaml:ro
       - ./models:/models
       - ./videos:/videos
   
