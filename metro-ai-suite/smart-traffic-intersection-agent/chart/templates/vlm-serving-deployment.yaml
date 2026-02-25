@@ -31,7 +31,7 @@ spec:
               protocol: TCP
           env:
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }}"
             - name: http_proxy
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy

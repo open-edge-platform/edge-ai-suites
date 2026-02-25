@@ -49,9 +49,9 @@ spec:
             - name: HTTPS_PROXY
               value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
             - name: NO_PROXY
-              value: "{{ .Values.global.proxy.noProxy }},.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
             # MQTT configuration
             - name: MQTT_HOST
               value: {{ .Values.trafficAgent.mqtt.host | quote }}

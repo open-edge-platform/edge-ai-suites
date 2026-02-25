@@ -22,9 +22,11 @@ trafficAgent:
     pullPolicy: IfNotPresent
   replicas: 1
   service:
-    type: ClusterIP
+    type: NodePort
     backendPort: 8081
+    backendNodePort: 30881
     uiPort: 7860
+    uiNodePort: 30860
   # Intersection identification
   intersection:
     name: "intersection_1"
@@ -74,8 +76,9 @@ vlmServing:
     pullPolicy: IfNotPresent
   replicas: 1
   service:
-    type: ClusterIP
+    type: NodePort
     port: 8000
+    nodePort: 30800
   env:
     modelName: "Qwen/Qwen2.5-VL-3B-Instruct"
     compressionWeightFormat: "int4"
