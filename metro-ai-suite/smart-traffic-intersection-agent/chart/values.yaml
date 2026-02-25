@@ -126,4 +126,9 @@ tls:
   # CA certificate for MQTT broker TLS
   caCert: ""
   # If caCertSecretName is set, use an existing secret instead of creating one
+  # e.g. smart-intersection-broker-rootcert (from SceneScape RI)
   caCertSecretName: ""
+  # Key name inside the external secret (required when caCertSecretName is set)
+  # The key will be mapped to the expected filename "scenescape-ca.pem"
+  # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
+  caCertKey: ""
