@@ -25,7 +25,7 @@ RTSP Source → dlstreamer-pipeline-server
 
 ## Learn More
 
-- [System Requirements](./system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)

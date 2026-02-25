@@ -37,36 +37,63 @@ class Summarizer(BaseSummarizer):
     def generate(self, prompt: str, stream: bool = True):
         max_new_tokens = config.models.summarizer.max_new_tokens
         inputs = self.tokenizer(prompt, return_tensors="pt")
-        class CountingTextIteratorStreamer(TextIteratorStreamer):
-                def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
-                    super().__init__(tokenizer, skip_special_tokens=skip_special_tokens, skip_prompt=skip_prompt)
-                    self.total_tokens = 0
 
-                def put(self, value):
-                    if value is not None:
-                        self.total_tokens += 1
-                    super().put(value)
+        if stream:
+            class CountingTextIteratorStreamer(TextIteratorStreamer):
+                    def __init__(self, tokenizer, skip_special_tokens=True, skip_prompt=True):
+                        super().__init__(tokenizer, skip_special_tokens=skip_special_tokens, skip_prompt=skip_prompt)
+                        self.total_tokens = 0
 
-        streamer = CountingTextIteratorStreamer(
-            self.tokenizer, 
-            skip_special_tokens=True, 
-            skip_prompt=True
-        )
+                    def put(self, value):
+                        if value is not None:
+                            self.total_tokens += 1
+                        super().put(value)
+
+            streamer = CountingTextIteratorStreamer(
+                self.tokenizer, 
+                skip_special_tokens=True, 
+                skip_prompt=True
+            )
+                
+            def run_generation():
+                with audio_pipeline_lock:
+                    generation_kwargs = {
+                        "input_ids": inputs.input_ids,
+                        "max_new_tokens": max_new_tokens,
+
+                        # 🔑 sampling safety
+                        "do_sample": True,
+                        "temperature": max(self.temperature, 0.1), 
+                        "top_p": 0.9,
+                        "top_k": 50,  
+
+                        # tokens
+                        "pad_token_id": self.tokenizer.eos_token_id,
+                        "eos_token_id": self.tokenizer.eos_token_id,
+
+                        # streaming
+                        "streamer": streamer,
+                    }
+                    self.model.generate(**generation_kwargs)
             
-        def run_generation():
+            thread = threading.Thread(target=run_generation, daemon=True)
+            thread.start()
+            
+            return streamer
+        else:
             with audio_pipeline_lock:
                 generation_kwargs = {
                     "input_ids": inputs.input_ids,
                     "max_new_tokens": max_new_tokens,
-                    "temperature": self.temperature,
+
+                    # 🔑 sampling safety
                     "do_sample": True,
+                    "temperature": max(self.temperature, 0.1), 
                     "top_p": 0.9,
-                    "streamer": streamer,
-                    "pad_token_id": self.tokenizer.eos_token_id
+                    "top_k": 50,     
+
+                    # tokens
+                    "pad_token_id": self.tokenizer.eos_token_id,
+                    "eos_token_id": self.tokenizer.eos_token_id,
                 }
-                self.model.generate(**generation_kwargs)
-        
-        thread = threading.Thread(target=run_generation, daemon=True)
-        thread.start()
-        
-        return streamer
+            return self.model.generate(**generation_kwargs)

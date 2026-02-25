@@ -28,7 +28,7 @@ To build the Docker image for `Live Video Alert` application, follow these steps
 
 - Access the application by opening your web browser and navigate to `http://localhost:9000` to view the dashboard UI.
 
-- [OPTIONAL] To force a clean rebuild run the following:
+- (OPTIONAL) To force a clean rebuild run the following:
      ```bash
      docker compose up --build
      ```

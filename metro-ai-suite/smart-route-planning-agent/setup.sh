@@ -26,7 +26,8 @@ show_help() {
     echo -e "  ${GREEN}--run${NC}         Start the Smart-Route-Planning-Agent container"
     echo -e "  ${GREEN}--stop${NC}        Stop the running container"
     echo -e "  ${GREEN}--restart${NC}     Restart the Smart-Route-Planning-Agent container"
-    echo -e "  ${GREEN}--clean${NC}       Remove containers, volumes, images, and all related resources"
+    echo -e "  ${GREEN}--clean${NC}       Remove containers, volumes, and networks"
+    echo -e "                    • ${GREEN}--all${NC}  Remove containers, volumes, networks, and images"
     echo -e "  ${GREEN}--help${NC}        Show this help message"
     echo ""
     echo -e "${BLUE}Quick Start:${NC}"
@@ -56,10 +57,19 @@ if [ "$#" -eq 0 ] || [ "$1" = "--help" ]; then
 fi
 
 # Check for valid arguments
-if [ "$#" -gt 1 ]; then
+if [ "$#" -gt 2 ]; then
     echo -e "${RED}ERROR: Too many arguments provided.${NC}"
     echo -e "${YELLOW}Use '--help' for usage information${NC}"
     if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
+fi
+
+if [ "$#" -eq 2 ]; then
+    if [ "$1" != "--clean" ] || [ "$2" != "--all" ]; then
+        echo -e "${RED}ERROR: Invalid arguments: $1 $2${NC}"
+        echo -e "${YELLOW}Only '--clean --all' accepts a second argument.${NC}"
+        echo -e "${YELLOW}Use '--help' for usage information${NC}"
+        if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then exit 1; else return 1; fi
+    fi
 fi
 
 
@@ -179,21 +189,23 @@ case "$1" in
         echo -e "${GREEN}Containers stopped and removed.${NC}"
 
         # Remove project volumes
-        #echo -e "${YELLOW}Removing volumes...${NC}"
-        #docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
-        #echo -e "${GREEN}Volumes removed.${NC}"
-
-        # Remove project-related images
-        echo -e "${YELLOW}Removing container images...${NC}"
-        docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep "smart-route-planning-agent" | awk '{print $2}' | xargs -r docker rmi -f 2>/dev/null || true
-        echo -e "${GREEN}Images removed.${NC}"
+        echo -e "${YELLOW}Removing volumes...${NC}"
+        docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+        echo -e "${GREEN}Volumes removed.${NC}"
 
         # Remove project networks
-        #echo -e "${YELLOW}Removing networks...${NC}"
-        #docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
-        #echo -e "${GREEN}Networks removed.${NC}"
+        echo -e "${YELLOW}Removing networks...${NC}"
+        docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
+        echo -e "${GREEN}Networks removed.${NC}"
 
-        echo -e "${GREEN}Clean up completed successfully. All containers, volumes, images, networks, and related resources have been removed.${NC}"
+        # Remove project-related images only with --all
+        if [ "$2" = "--all" ]; then
+            echo -e "${YELLOW}Removing container images...${NC}"
+            docker rmi -f "${REGISTRY:-}smart-route-planning-agent:${TAG:-latest}" 2>/dev/null || true
+            echo -e "${GREEN}Images removed.${NC}"
+        fi
+
+        echo -e "${GREEN}Clean up completed successfully.${NC}"
         ;;
     *)
         echo -e "${RED}Unknown command: $1${NC}"

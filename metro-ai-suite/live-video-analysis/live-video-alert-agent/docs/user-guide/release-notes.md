@@ -8,3 +8,4 @@
 - Natural language alert configuration (max 4 alerts per stream)
 - Real-time SSE event broadcasting and interactive dashboard
 - Configurable CPU/GPU inference via TARGET_DEVICE environment variable
+- Helm support is not available in this version.

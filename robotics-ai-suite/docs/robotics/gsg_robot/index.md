@@ -300,33 +300,9 @@ The following steps will install the OpenVINO™ packages:
    on the integrated GPU device of Intel® processors. To enable this feature, install
    the Intel® Graphics Compute Runtime with the following command:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
-
    ```bash
    sudo apt install -y libze1 libze-intel-gpu1
    ```
-
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
-
-   Download and install Intel® Graphics Compute Runtime and Level Zero packages:
-
-   ```bash
-   cd "${HOME}"
-   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-core-2_2.10.8+18926_amd64.deb
-   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-opencl-2_2.10.8+18926_amd64.deb
-   wget https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb
-   sudo apt install -y libze-intel-gpu1
-   sudo apt install -y ./intel-igc-core-2_2.10.8+18926_amd64.deb
-   sudo apt install -y ./intel-igc-opencl-2_2.10.8+18926_amd64.deb
-   sudo apt install -y ./level-zero_1.22.4+u22.04_amd64.deb
-   ```
-
-   :::
-   ::::
 
 3. Install the ``debconf-utilities``:
 
@@ -514,7 +490,11 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    :::{tab-item} **Humble**
    :sync: humble
 
+   Intel oneAPI requires GCC >= 12, so upgrade GCC as well.
+
    ```bash
+   sudo apt install gcc-12 g++-12
+   sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
    sudo apt install ros-humble-robotics-sdk
    ```
 

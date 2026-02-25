@@ -80,4 +80,4 @@ Example prompts for different scenarios:
 
 - [Get Started](./get-started.md) - Basic setup and configuration
 - [API Reference](./api-reference.md) - REST API documentation
-- [System Requirements](./system-requirements.md) - Hardware and software requirements
+- [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements

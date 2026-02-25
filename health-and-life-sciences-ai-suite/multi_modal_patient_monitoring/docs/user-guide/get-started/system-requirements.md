@@ -1,7 +1,6 @@
 # System Requirements
 
-This section summarizes the recommended hardware, software, and network requirements for
-running the multi‑modal patient monitoring application.
+This section lists the hardware, software, and network requirements for running the application.
 
 ## Host Operating System
 
@@ -105,6 +104,4 @@ groups such as `video` or via explicit `devices` configuration in Docker Compose
 - Modern web browser (Chrome, Edge, or Firefox) to access the UI dashboard.
 - JavaScript enabled.
 
-These requirements are intended for development and evaluation environments. For any
-production‑like deployment, you should also consider additional factors such as security
-hardening, monitoring, backup, and resource isolation.
+These requirements are intended for development and evaluation environments. For any production‑like deployment, you should also consider additional factors such as security hardening, monitoring, backup, and resource isolation.
