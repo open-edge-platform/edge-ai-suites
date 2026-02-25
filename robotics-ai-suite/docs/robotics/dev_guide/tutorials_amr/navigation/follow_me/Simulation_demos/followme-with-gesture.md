@@ -45,6 +45,18 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo
 <!--hide_directive:::
 ::::hide_directive-->
 
+### Activate Python Virtual Environment
+
+```bash
+sudo apt install pipx
+pipx install virtualenv
+pipx ensurepath
+source ~/.bashrc
+virtualenv venv_followme
+cd venv_followme
+source bin/activate
+```
+
 ### Install Python Modules
 
 This application uses
@@ -52,12 +64,26 @@ This application uses
 for hand gesture recognition. Install the following modules as a prerequisite
 for the framework:
 
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
 ```bash
-pip3 install mediapipe
-pip3 install numpy==1.24.3
+pip3 install --upgrade pip
+pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements_jazzy.txt
 ```
 
-(followme-gesture-lidar)=
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+pip3 install --upgrade pip
+pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
+```
+
+<!--hide_directive:::
+::::hide_directive-->
 
 ## Run Demo with 2D Lidar
 
