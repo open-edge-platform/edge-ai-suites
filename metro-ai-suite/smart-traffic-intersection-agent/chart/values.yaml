@@ -97,7 +97,7 @@ vlmServing:
     initialDelaySeconds: 10
     periodSeconds: 10
     timeoutSeconds: 10
-    failureThreshold: 60
+    failureThreshold: 180
   resources:
     limits:
       cpu: "4"
