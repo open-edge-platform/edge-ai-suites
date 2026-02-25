@@ -36,7 +36,7 @@ for _noisy in [
     "transformers", "urllib3", "httpx", "httpcore",
     "opentelemetry", "PIL", "chromadb", "llama_index",
     "multimodal_embedding_serving", "sentence_transformers",
-    "huggingface_hub", "filelock",
+    "huggingface_hub", "filelock", "optimum", "transformers"
 ]:
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 
