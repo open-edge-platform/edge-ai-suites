@@ -38,7 +38,7 @@ Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, `vajpegdec`
 > **Note:** This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary NPU access to the containers.
 
-The pipeline `object_tracking_npu` in [pipeline-server-config](../../../src/dlstreamer-pipeline-server/config.json)
+The pipeline `object_tracking_npu` in DLStreamer Pipeline Server's `config.json` 
 contains NPU specific elements and uses NPU backend for inferencing. We can start the pipeline
 as follows:
 
