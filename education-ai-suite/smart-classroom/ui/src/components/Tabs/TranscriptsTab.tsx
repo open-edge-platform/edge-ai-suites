@@ -69,10 +69,20 @@ const TranscriptsTab: React.FC = () => {
   };
 
   const getSpeakerLabel = useCallback((speaker: string): string => {
-    const currentLanguage = detectedLanguage || "en";
+    const hasChineseText = segments.some(s => /[\u4e00-\u9fff]/.test(s.text || ""));
+    const currentLanguage = detectedLanguage || (hasChineseText ? "zh" : "en");
     const labels = SPEAKER_LABELS[currentLanguage] || SPEAKER_LABELS.en;
     
     if (!teacherSpeaker) {
+      if (currentLanguage === "zh") {
+        const match = speaker.match(/speaker_(\d+)/i);
+        if (match) {
+          return `说话人_${match[1]}`;
+        }
+        if (speaker.toLowerCase() === "speaker") {
+          return "说话人";
+        }
+      }
       return speaker.toUpperCase(); 
     }
     
@@ -84,15 +94,16 @@ const TranscriptsTab: React.FC = () => {
       const speakerMatch = speaker.match(/speaker_(\d+)/i);
       if (speakerMatch) {
         const speakerNumber = speakerMatch[1];
-        return `${labels.student.toUpperCase()}_${speakerNumber}`;
+        const baseLabel = currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
+        return `${baseLabel}_${speakerNumber}`;
       }
     
       if (speaker.toLowerCase() === 'speaker') {
-        return labels.student.toUpperCase();
+        return currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
       }
       return speaker;
     }
-  }, [detectedLanguage, teacherSpeaker]);
+  }, [detectedLanguage, teacherSpeaker, segments]);
 
   const finalizeTranscript = () => {
     if (finishedRef.current || !mountedRef.current) return;
@@ -454,7 +465,8 @@ const TranscriptsTab: React.FC = () => {
       const showCursor = isGroupTyping(group);
       
       const speakerLabel = getSpeakerLabel(group.speaker);
-      const currentLanguage = detectedLanguage || "en";
+      const hasChineseText = segments.some(s => /[\u4e00-\u9fff]/.test(s.text || ""));
+      const currentLanguage = detectedLanguage || (hasChineseText ? "zh" : "en");
       const teacherLabel = SPEAKER_LABELS[currentLanguage].teacher;
       const isTeacher = speakerLabel === teacherLabel;
 

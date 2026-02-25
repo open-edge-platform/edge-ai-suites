@@ -88,16 +88,6 @@ const SearchResultsPreview: React.FC<SearchResultsPreviewProps> = ({
                     </span>
                   </div>
                 </div>
-
-                <div className="result-content">
-                  <p className="result-text">{result.text}</p>
-                </div>
-
-                <div className="result-footer">
-                  <span className="score-detail">
-                    {t('search.Relevance', 'Relevance')}: {(result.score * 100).toFixed(1)}%
-                  </span>
-                </div>
               </div>
             ))}
           </div>

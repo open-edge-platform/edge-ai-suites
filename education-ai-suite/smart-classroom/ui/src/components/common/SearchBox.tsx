@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/SearchBox.css";
 
@@ -6,15 +6,22 @@ interface SearchBoxProps {
   onSearch: (query: string) => void;
   placeholder?: string;
   className?: string;
+  sessionId?: string | null;
 }
 
 const SearchBox: React.FC<SearchBoxProps> = ({ 
   onSearch, 
   placeholder,
-  className = "" 
+  className = "",
+  sessionId
 }) => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Clear search query when session changes
+  useEffect(() => {
+    setSearchQuery("");
+  }, [sessionId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
