@@ -73,7 +73,14 @@ class Whisper(BaseASR):
             condition_on_previous_text=False,
             no_speech_threshold=self.NO_SPEECH_THRESHOLD,
             logprob_threshold=self.LOGPROB_THRESHOLD,
+
+            # Repetition control
+            beam_size=5,
+            best_of=1,
+
+            # Hallucination guard
             compression_ratio_threshold=2.4,
+
             verbose=False,
         )
 

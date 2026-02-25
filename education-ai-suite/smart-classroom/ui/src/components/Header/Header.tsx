@@ -33,6 +33,7 @@ import {
   setUploadedVideoFiles,
   setHasUploadedVideoFiles,
   setVideoPlaybackMode,
+  setRecordedVideoType,
 } from '../../redux/slices/uiSlice';
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
@@ -46,7 +47,8 @@ import {
   createSession,
   startMonitoring,  
   stopMonitoring,
-  startPipelineMonitoring,    
+  startPipelineMonitoring,
+  checkRecordedVideos,
 } from '../../services/api';
 import Toast from '../common/Toast';
 import UploadFilesModal from '../Modals/UploadFilesModal';
@@ -395,10 +397,16 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
         let successfulPipelines: any[] = [];
         let failedPipelines: { name: any; error: any; }[] = [];
         
+        console.log('📹 Video analytics response:', videoResult);
+        
         videoResult.results.forEach((result: any) => {
+          console.log(`📹 Processing result for ${result.pipeline_name}:`, result);
+          
           if (result.status === 'success' && result.hls_stream) {
             hasSuccessfulStreams = true;
             successfulPipelines.push(result.pipeline_name);
+            console.log(`✅ ${result.pipeline_name} stream URL:`, result.hls_stream);
+            
             switch (result.pipeline_name) {
               case 'front':
                 dispatch(setFrontCameraStream(result.hls_stream));
@@ -566,14 +574,44 @@ const HeaderBar: React.FC<HeaderBarProps> = ({ projectName }) => {
             const videoResult = await stopVideoAnalytics(videoRequests, sessionId);
             console.log('🛑 Video analytics stopped:', videoResult);
 
+            // Check for recorded videos and trigger playback mode if available
+            let hasRecordedVideo = false;
+            try {
+              console.log('📹 Checking recorded videos for sessionId:', sessionId);
+              const recordedVideos = await checkRecordedVideos(sessionId);
+              console.log('📹 Recorded videos check:', recordedVideos);
+              
+              if (recordedVideos.selected_video) {
+                hasRecordedVideo = true;
+                console.log(`📹 Found recorded video: ${recordedVideos.selected_video}`);
+                console.log('📹 Dispatching setRecordedVideoType:', recordedVideos.selected_video);
+                console.log('📹 Current sessionId in dispatch:', sessionId);
+                dispatch(setVideoPlaybackMode(true));
+                dispatch(setHasUploadedVideoFiles(true));
+                dispatch(setRecordedVideoType(recordedVideos.selected_video));
+                console.log('🎬 Playback mode enabled for recorded video');
+              } else {
+                console.log('📹 No recorded videos found');
+                dispatch(setVideoPlaybackMode(false));
+                dispatch(setHasUploadedVideoFiles(false));
+                dispatch(setRecordedVideoType(null));
+              }
+            } catch (recordCheckError) {
+              console.warn('Failed to check recorded videos (non-critical):', recordCheckError);
+              dispatch(setVideoPlaybackMode(false));
+              dispatch(setHasUploadedVideoFiles(false));
+              dispatch(setRecordedVideoType(null));
+            }
+
             dispatch(setFrontCameraStream(''));
             dispatch(setBackCameraStream(''));
             dispatch(setBoardCameraStream(''));
-            dispatch(setActiveStream(null));
+            // Only reset activeStream if NOT in playback mode (so VideoStream's useEffect can set it properly)
+            if (!hasRecordedVideo) {
+              dispatch(setActiveStream(null));
+            }
             dispatch(setVideoAnalyticsActive(false));
             dispatch(setVideoStatus('completed'));
-            dispatch(setVideoPlaybackMode(false));
-            dispatch(setHasUploadedVideoFiles(false));
             dispatch(setUploadedVideoFiles({
               front: null,
               back: null,

@@ -10,7 +10,6 @@ This chapter details information specifically for system integrators.
 .. toctree::
    :maxdepth: 1
 
-   esdq
    benchmark_profiling/index
    performance
    security

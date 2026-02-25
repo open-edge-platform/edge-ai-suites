@@ -21,13 +21,16 @@ const LeftPanel = () => {
   const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const searchQuery = useAppSelector((s) => s.ui.searchQuery);
   const contentSegmentationStatus = useAppSelector((s) => s.ui.contentSegmentationStatus);
+  const contentSegmentationError = useAppSelector((s) => s.ui.contentSegmentationError);
   const searchLoading = useAppSelector((s) => s.ui.searchLoading);
   const searchResults = useAppSelector((s) => s.ui.searchResults);
-  const uploadedVideoFiles = useAppSelector((s) => s.ui.uploadedVideoFiles);
+  const sessionId = useAppSelector((s) => s.ui.sessionId);
   
   const { t } = useTranslation();
-  const { shouldShowSearchBox } = useContentSegmentation();
   const { performSearch, searchError } = useSearchContent();
+
+  // CRITICAL: This hook handles auto-triggering content-segmentation with duration validation
+  useContentSegmentation();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -60,6 +63,9 @@ const LeftPanel = () => {
       return t('search.preparingContent', 'Content Generating...');
     }
     if (contentSegmentationStatus === 'error') {
+      if (contentSegmentationError?.includes('duration')) {
+        return t('search.durationError', 'Duration mismatch - check your files');
+      }
       return t('search.contentError', 'Content preparation failed');
     }
     return t('search.placeholder', 'Search for topics...');
@@ -84,6 +90,7 @@ const LeftPanel = () => {
             onSearch={handleSearch}
             placeholder={getSearchPlaceholder()}
             className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
+            sessionId={sessionId}
           />
 
           {contentSegmentationStatus === "loading" && (
@@ -94,8 +101,8 @@ const LeftPanel = () => {
           )}
 
           {contentSegmentationStatus === "error" && (
-            <div className="search-status error">
-              {t('search.contentError', 'Content preparation failed. Search unavailable.')}
+            <div className={`search-status ${contentSegmentationError?.includes('duration') ? 'warning' : 'error'}`}>
+              {contentSegmentationError || t('search.contentError', 'Content preparation failed. Search unavailable.')}
             </div>
           )}
 

@@ -6,6 +6,7 @@ import { useAppSelector, useAppDispatch } from "../../redux/hooks";
 import { setActiveStream, setVideoPlaybackMode } from "../../redux/slices/uiSlice";
 import HLSPlayer from "../common/HLSPlayer";
 import { useTranslation } from "react-i18next";
+import { getRecordedVideoUrl } from "../../services/api";
 
 interface VideoStreamProps {
   isFullScreen: boolean;
@@ -31,6 +32,8 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     uploadedAudioPath,
     aiProcessing,
     uploadedVideoFiles,
+    sessionId,
+    recordedVideoType,
   } = useAppSelector((s) => s.ui);
   const audioStatus = useAppSelector((s) => s.ui.audioStatus);
   const mindmapState = useAppSelector((s) => s.mindmap);
@@ -98,7 +101,8 @@ const VideoStream: React.FC<VideoStreamProps> = ({
     videoStatus === "completed" &&
     (uploadedVideoFiles.front ||
      uploadedVideoFiles.back ||
-     uploadedVideoFiles.board)
+     uploadedVideoFiles.board ||
+     recordedVideoType)
   );
 
   const getAvailableVideoFiles = () => {
@@ -149,13 +153,36 @@ const VideoStream: React.FC<VideoStreamProps> = ({
   };
   
   useEffect(() => {
+    console.log('🎬 VideoStream state:', {
+      isPlaybackMode,
+      recordedVideoType,
+      videoStatus,
+      videoAnalyticsActive,
+      activeStream,
+      streamStatus: getStreamStatus()
+    });
+  }, [isPlaybackMode, recordedVideoType, videoStatus, videoAnalyticsActive, activeStream]);
+
+  useEffect(() => {
     if (isPlaybackMode) return;
 
     const available = getAvailableStreams();
+    
+    console.log('🎥 Checking streams:', {
+      videoAnalyticsActive,
+      available,
+      frontCameraStream,
+      backCameraStream,
+      boardCameraStream,
+      hasValidStreams: hasValidStreams(),
+    });
 
     if (videoAnalyticsActive && available.length) {
-      dispatch(setActiveStream(available.length > 1 ? "all" : available[0]));
+      const streamToSet = available.length > 1 ? "all" : available[0];
+      console.log('🎥 Setting activeStream to:', streamToSet);
+      dispatch(setActiveStream(streamToSet));
     } else {
+      console.log('🎥 No valid streams, setting activeStream to null');
       dispatch(setActiveStream(null));
     }
   }, [
@@ -171,6 +198,14 @@ const VideoStream: React.FC<VideoStreamProps> = ({
   useEffect(() => {
     if (!isPlaybackMode) return;
 
+    // If it's a recorded video, set active stream to the recorded video type
+    if (recordedVideoType) {
+      const activeStreamValue = recordedVideoType === 'board' ? 'content' : recordedVideoType;
+      dispatch(setActiveStream(activeStreamValue as 'front' | 'back' | 'content'));
+      return;
+    }
+
+    // Otherwise, handle uploaded video files
     const availableFiles = getAvailableVideoFiles();
     if (availableFiles.length > 0) {
       const priority = availableFiles.find(f => f.type === "back") ||
@@ -179,7 +214,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
       
       dispatch(setActiveStream(priority.type));
     }
-  }, [isPlaybackMode, uploadedVideoFiles, dispatch]);
+  }, [isPlaybackMode, uploadedVideoFiles, recordedVideoType, dispatch]);
 
   const handleStreamClick = (pipeline: "front" | "back" | "content" | "all") => {
     if (isPlaybackMode) {
@@ -218,7 +253,16 @@ const VideoStream: React.FC<VideoStreamProps> = ({
 
         {isRoomView && (
           <div className="stream-controls">
-            {(isPlaybackMode
+            {(isPlaybackMode && recordedVideoType
+              ? [{ 
+                  pipeline: recordedVideoType === 'board' ? 'content' : recordedVideoType, 
+                  label: {
+                    back: t("accordion.backCamera"),
+                    board: t("accordion.boardCamera"),
+                    front: t("accordion.frontCamera"),
+                  }[recordedVideoType] as string 
+                }]
+              : isPlaybackMode && !recordedVideoType
               ? getAvailableVideoFiles().map(({ type, label }) => ({
                   pipeline: type,
                   label,
@@ -295,7 +339,65 @@ const VideoStream: React.FC<VideoStreamProps> = ({
 
           {streamStatus === "playback" && (
             <div className="streams-layout">
-              {activeStream === "all" ? (
+              {recordedVideoType ? (
+                // Playback for recorded RTSP videos - simple MP4 playback
+                (() => {
+                  if (!sessionId) {
+                    console.error('🎬 ERROR: sessionId is missing!', { sessionId, recordedVideoType });
+                    return (
+                      <div className="stream-placeholder">
+                        <p>Error: Session ID not found. Cannot play recorded video.</p>
+                      </div>
+                    );
+                  }
+                  
+                  const videoUrl = getRecordedVideoUrl(sessionId, recordedVideoType);
+                  
+                  console.log('🎬 Rendering recorded video playback:', {
+                    recordedVideoType,
+                    sessionId,
+                    videoUrl,
+                    isPlaybackMode,
+                    streamStatus
+                  });
+                  
+                  const videoLabel = {
+                    back: t("accordion.backCamera"),
+                    board: t("accordion.boardCamera"),
+                    front: t("accordion.frontCamera"),
+                  }[recordedVideoType];
+                  
+                  return (
+                    <div className="single-stream">
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' }}>
+                        <video
+                          key={videoUrl}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          controls
+                          autoPlay
+                          onLoadStart={() => console.log('🎬 Video loadStart:', videoUrl)}
+                          onCanPlay={() => console.log('🎬 Video canPlay')}
+                          onError={(e) => {
+                            console.error('🎬 Video error:', {
+                              error: e.currentTarget.error,
+                              errorMessage: e.currentTarget.error?.message,
+                              networkState: e.currentTarget.networkState,
+                              readyState: e.currentTarget.readyState,
+                              src: videoUrl
+                            });
+                          }}
+                          onLoadedMetadata={() => console.log('🎬 Video loadedMetadata')}
+                        >
+                          <source src={videoUrl} type="video/mp4" />
+                          {t("videoStream.browserNotSupported")}
+                        </video>
+                      </div>
+                      <div className="stream-overlay-label">{videoLabel}</div>
+                    </div>
+                  );
+                })()
+              ) : activeStream === "all" && !recordedVideoType ? (
+                // Multi-view for uploaded files
                 <div className="multi-stream-container">
                   {getAvailableVideoFiles().map(({ type, file, label }) => (
                     <div key={type} className="main-stream">
@@ -305,6 +407,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                   ))}
                 </div>
               ) : (
+                // Single view for uploaded files
                 (() => {
                   let file: File | null = null;
 

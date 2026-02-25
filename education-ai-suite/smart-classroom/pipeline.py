@@ -16,7 +16,8 @@ from utils.topic_faiss_indexer import TopicFaissIndexer
 from pathlib import Path
 import json
 from utils.faiss_content_search import FaissContentSearcher
-
+from utils.media_validation_service import MediaValidationService
+from utils.session_state_manager import SessionState
 import time
 logger = logging.getLogger(__name__)
 
@@ -194,6 +195,19 @@ class Pipeline:
 
         transcription_path = os.path.join(session_dir, "transcription.txt")
 
+        session_state = SessionState.get_session_state(self.session_id)
+        # VALIDATION: Check media duration match before processing
+        is_valid, error_msg = MediaValidationService.validate_duration_match(self.session_id)
+        
+        if not is_valid:
+            SessionState.clear_session(self.session_id)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg
+            )
+
+        logger.info(f"✅ Validation passed - proceeding with content segmentation")
+
         try:
             transcript_text = StorageManager.read_text_file(transcription_path)
 
@@ -256,6 +270,9 @@ class Pipeline:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error during topic segmentation: {e}"
             )
+        finally:
+            # Clean up session state after processing
+            SessionState.clear_session(self.session_id)
 
 
     def search_content(self, query: str, top_k: int = 5):
