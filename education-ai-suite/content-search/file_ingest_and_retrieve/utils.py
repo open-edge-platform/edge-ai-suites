@@ -104,7 +104,7 @@ class DocxParagraphPicturePartitioner:
 
         imgs = paragraph._element.xpath(".//pic:pic")
         if imgs:
-            img_output_dir = opts.metadata_filename or "extracted_images"
+            img_output_dir = "extracted_images"
             os.makedirs(img_output_dir, exist_ok=True)
 
             for img in imgs:

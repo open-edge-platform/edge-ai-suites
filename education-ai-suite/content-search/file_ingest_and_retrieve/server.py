@@ -36,7 +36,7 @@ for _noisy in [
     "transformers", "urllib3", "httpx", "httpcore",
     "opentelemetry", "PIL", "chromadb", "llama_index",
     "multimodal_embedding_serving", "sentence_transformers",
-    "huggingface_hub", "filelock",
+    "huggingface_hub", "filelock", "optimum", "transformers"
 ]:
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 
@@ -90,7 +90,11 @@ def info():
     """
     try:
         status_info = {
-            "model_name": indexer.model_name,
+            "visual_collection_name": indexer.visual_collection_name,
+            "document_collection_name": indexer.document_collection_name,
+            "visual_db_inited": indexer.visual_db_inited,
+            "document_db_inited": indexer.document_db_inited,
+            "minio_connected": minio_store.client is not None,
         }
         return JSONResponse(content=status_info, status_code=200)
     except Exception as e:
@@ -142,7 +146,7 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
         with tempfile.TemporaryDirectory() as temp_dir:
             for object_name in store.list_object_names(prefix=folder_path, recursive=True):
                 if not object_name.lower().endswith(supported_extensions):
-                    logger.debug(f"Unsupported file type: {object_name}, skipped.")
+                    logger.warning(f"Unsupported file type: {object_name}, skipped.")
                     continue
 
                 local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
@@ -319,6 +323,7 @@ async def retrieval(request: RetrievalRequest):
 
         # Process query or image_base64
         if request.query:
+            # Search in both visual and document collections and merge results, return 2*top_k results
             results = retriever.search(query=request.query, filters=request.filter, top_k=request.max_num_results)
         else:
             try:

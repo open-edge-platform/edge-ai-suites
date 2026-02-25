@@ -4,10 +4,6 @@
 import logging
 import os
 import copy
-import json
-import sys
-import numpy as np
-from pathlib import Path
 
 from moviepy.editor import VideoFileClip
 from PIL import Image
@@ -25,8 +21,8 @@ from chromadb_wrapper.chroma_client import ChromaClientWrapper
 logger = logging.getLogger(__name__)
 
 DEVICE = os.getenv("DEVICE", "CPU")
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "CLIP/clip-vit-b-16")
-
+VISUAL_EMBEDDING_MODEL_NAME = os.getenv("VISUAL_EMBEDDING_MODEL_NAME", "CLIP/clip-vit-b-16")
+DOC_EMBEDDING_MODEL_NAME = os.getenv("DOC_EMBEDDING_MODEL_NAME", "BAAI/bge-small-en-v1.5")
 
 def create_chroma_data(embedding, meta=None):
     data = {}
@@ -37,19 +33,27 @@ def create_chroma_data(embedding, meta=None):
 
 class Indexer:
     def __init__(self, collection_name="default"):
-        self.model_name = EMBEDDING_MODEL_NAME
-        
-        handler = get_model_handler(self.model_name)
-        handler.load_model()
-        self.embedding_model = EmbeddingModel(handler)
+        self.client = ChromaClientWrapper()
 
+        # Visual
+        self.visual_collection_name = collection_name
+        handler = get_model_handler(VISUAL_EMBEDDING_MODEL_NAME)
+        handler.load_model()
+        self.visual_embedding_model = EmbeddingModel(handler)
+        self.detector = Detector(device=DEVICE)
+        self.visual_id_map = {}
+        self.visual_db_inited = False
+        if self.client.load_collection(collection_name=self.visual_collection_name):
+            logger.info(f"Collection '{self.visual_collection_name}' already exist.")
+            self.visual_db_inited = True
+            self._recover_id_map(self.visual_collection_name, self.visual_id_map)
+
+        # Document
+        self.document_collection_name = f"{collection_name}_documents"
         self.document_embedding_model = OpenVINOEmbedding(
-            model_id_or_path="BAAI/bge-small-en-v1.5",
+            model_id_or_path=DOC_EMBEDDING_MODEL_NAME,
             device=DEVICE,
         )
-
-        self.detector = Detector(device=DEVICE)
-
         self.document_parser = DocumentParser(
             chunk_size=250,
             chunk_overlap=50,
@@ -57,20 +61,8 @@ class Indexer:
             use_hi_res_strategy=False  # Use fast strategy for better performance
         )
         logger.info("Document parser initialized successfully.")
-
-        self.id_map = {}
         self.document_id_map = {}
-        self.db_inited = False
         self.document_db_inited = False
-        self.client = ChromaClientWrapper()
-        self.collection_name = collection_name
-        self.document_collection_name = f"{collection_name}_documents"
-
-        if self.client.load_collection(collection_name=self.collection_name):
-            logger.info(f"Collection '{self.collection_name}' already exist.")
-            self.db_inited = True
-            self._recover_id_map(self.collection_name, self.id_map)
-        
         if self.client.load_collection(collection_name=self.document_collection_name):
             logger.info(f"Document collection '{self.document_collection_name}' already exist.")
             self.document_db_inited = True
@@ -81,10 +73,10 @@ class Indexer:
         self.client.create_collection(collection_name=collection_name)
         self._recover_id_map(collection_name, id_map_dict)
 
-    def init_db_client(self, dim):
+    def init_visual_db_client(self, dim):
         """Initialize visual data collection."""
-        self._init_collection(self.collection_name, self.id_map)
-        self.db_inited = True
+        self._init_collection(self.visual_collection_name, self.visual_id_map)
+        self.visual_db_inited = True
     
     def init_document_db_client(self, dim):
         """Initialize document collection."""
@@ -111,7 +103,7 @@ class Indexer:
 
     def count_files(self):
         files = set()
-        for key, value in self.id_map.items():
+        for key, value in self.visual_id_map.items():
             if key not in files:  
                 files.add(key)
         for key, value in self.document_id_map.items():
@@ -123,9 +115,9 @@ class Indexer:
         ids = []
         collection = None
         
-        if file_path in self.id_map:
-            ids = self.id_map[file_path]
-            collection = self.collection_name
+        if file_path in self.visual_id_map:
+            ids = self.visual_id_map[file_path]
+            collection = self.visual_collection_name
         elif file_path in self.document_id_map:
             ids = self.document_id_map[file_path]
             collection = self.document_collection_name
@@ -147,10 +139,10 @@ class Indexer:
         res = None
         
         # Check visual collection
-        if file_path in self.id_map:
-            ids = self.id_map[file_path]
-            res = self.client.delete(collection_name=self.collection_name, ids=ids)
-            del self.id_map[file_path]
+        if file_path in self.visual_id_map:
+            ids = self.visual_id_map[file_path]
+            res = self.client.delete(collection_name=self.visual_collection_name, ids=ids)
+            del self.visual_id_map[file_path]
         # Check document collection
         elif file_path in self.document_id_map:
             ids = self.document_id_map[file_path]
@@ -166,12 +158,12 @@ class Indexer:
         res_visual = None
         res_document = None
         
-        if self.id_map:
+        if self.visual_id_map:
             visual_ids = []
-            for key, value in self.id_map.items():
+            for key, value in self.visual_id_map.items():
                 visual_ids.extend(value)
-            res_visual = self.client.delete(collection_name=self.collection_name, ids=visual_ids)
-            self.id_map.clear()
+            res_visual = self.client.delete(collection_name=self.visual_collection_name, ids=visual_ids)
+            self.visual_id_map.clear()
             all_ids.extend(visual_ids)
         
         if self.document_id_map:
@@ -188,7 +180,7 @@ class Indexer:
         return {"visual": res_visual, "document": res_document}, all_ids
     
     def get_image_embedding(self, image):
-        embedding_tensor = self.embedding_model.handler.encode_image(image)
+        embedding_tensor = self.visual_embedding_model.handler.encode_image(image)
         # Convert tensor to a list of floats for ChromaDB
         embedding_list = embedding_tensor.cpu().numpy().tolist()
         # The result is a batch of one, so we extract the single embedding list
@@ -219,18 +211,18 @@ class Indexer:
                     crops = self.detector.get_cropped_images(image)
                     for crop in crops:
                         embedding = self.get_image_embedding(crop)
-                        if not self.db_inited:
-                            self.init_db_client(len(embedding))
+                        if not self.visual_db_inited:
+                            self.init_visual_db_client(len(embedding))
                         node = create_chroma_data(embedding, meta_data)
                         entities.append(node)
-                        self._update_id_map(self.id_map, meta_data["file_path"], node["id"])
+                        self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
 
                 embedding = self.get_image_embedding(image)
-                if not self.db_inited:
-                    self.init_db_client(len(embedding))
+                if not self.visual_db_inited:
+                    self.init_visual_db_client(len(embedding))
                 node = create_chroma_data(embedding, meta_data)
                 entities.append(node)
-                self._update_id_map(self.id_map, meta_data["file_path"], node["id"])
+                self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
             frame_counter += 1
             
         return entities
@@ -243,18 +235,18 @@ class Indexer:
             crops = self.detector.get_cropped_images(image)
             for crop in crops:
                 embedding = self.get_image_embedding(crop)
-                if not self.db_inited:
-                    self.init_db_client(len(embedding))
+                if not self.visual_db_inited:
+                    self.init_visual_db_client(len(embedding))
                 node = create_chroma_data(embedding, meta_data)
                 entities.append(node)
-                self._update_id_map(self.id_map, meta_data["file_path"], node["id"])
+                self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
         
         embedding = self.get_image_embedding(image)
-        if not self.db_inited:
-            self.init_db_client(len(embedding))
+        if not self.visual_db_inited:
+            self.init_visual_db_client(len(embedding))
         node = create_chroma_data(embedding, meta_data)
         entities.append(node)
-        self._update_id_map(self.id_map, meta_data["file_path"], node["id"])
+        self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
         return entities
 
     def process_document(self, document_path, meta):
@@ -315,7 +307,7 @@ class Indexer:
         
         for file, meta in zip(files, metas):
             # logger.info("processing file: ", file)
-            if meta["file_path"] in self.id_map or meta["file_path"] in self.document_id_map:
+            if meta["file_path"] in self.visual_id_map or meta["file_path"] in self.document_id_map:
                 logger.info(f"File {file} already processed, skipping.")
                 continue
             
@@ -338,7 +330,7 @@ class Indexer:
                     logger.error(f"Error processing document {file}: {e}")
                     continue
             else:
-                logger.info(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
+                logger.warning(f"Unsupported file type: {file}. Supported types are: jpg, png, jpeg, mp4, txt, pdf, docx, doc, pptx, ppt, xlsx, xls, html, htm, xml, md, rst")
 
         visual_entities = [e for e in entities if e.get("meta", {}).get("type") in ["video", "image"]]
         document_entities = [e for e in entities if e.get("meta", {}).get("type") == "document"]
@@ -346,7 +338,7 @@ class Indexer:
         res = {}
         if visual_entities:
             res["visual"] = self.client.insert(
-                collection_name=self.collection_name,
+                collection_name=self.visual_collection_name,
                 data=visual_entities,
             )
         if document_entities:
