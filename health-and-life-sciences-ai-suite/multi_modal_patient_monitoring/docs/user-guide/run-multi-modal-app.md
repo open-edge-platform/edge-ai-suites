@@ -35,6 +35,6 @@ This command stops and removes all containers started by the Health‑AI‑Suite
 make down
 ```
 
+## Learn More
 
 For detailed information about system requirements, architecture, and how the application works, see the [Full Documentation](./index.md)
-

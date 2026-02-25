@@ -14,7 +14,6 @@ ensure your environment meets the recommended hardware and software prerequisite
 
 If you have not already cloned the repository that contains this workload, do so now:
 
-
 ```bash
 git clone --no-checkout https://github.com/open-edge-platform/edge-ai-suites.git
 
@@ -44,7 +43,7 @@ To configure these:
 1. Open `configs/device.env` in a text editor.
 2. Locate the entries for `ECG_DEVICE`, `RPPG_DEVICE`, `MDPNP_DEVICE`, and `POSE_3D_DEVICE`.
 3. Set each to the appropriate device string supported on your system (typically `CPU` or
-`GPU`, and `NPU` where available and supported).
+   `GPU`, and `NPU` where available and supported).
 
 When you run `make run` or `make run REGISTRY=false`, the compose file reads
 `configs/device.env` and passes these values into the corresponding services so that each
@@ -102,9 +101,9 @@ The rPPG service provides a simple HTTP control API (hosted by an internal FastA
 start and stop streaming:
 
 - **Start streaming:**
-	- Send a request to the `/start` endpoint on the rPPG control port (default 8084).
+  - Send a request to the `/start` endpoint on the rPPG control port (default 8084).
 - **Stop streaming:**
-	- Send a request to the `/stop` endpoint on the same port.
+  - Send a request to the `/stop` endpoint on the same port.
 
 Exact URLs and endpoints may differ slightly depending on how the control API is exposed in
 your environment; refer to the rPPG service documentation for details.
@@ -116,14 +115,14 @@ the `metrics` directory on the host, and may also expose summarized metrics via 
 
 - Inspect raw logs under the `metrics` directory mounted in the compose file.
 - Combine these metrics with the rPPG output and UI dashboards to evaluate accelerator
-utilization and end‑to‑end performance.
+  utilization and end‑to‑end performance.
 
 ## Next Steps
 
 - Learn more about [How It Works](./how-it-works.md) for a high-level architectural overview.
 - Experiment with different `RPPG_DEVICE` values to compare CPU, GPU, and NPU behavior.
 - Replace the sample video or models with your own assets by updating the `models` and `videos`
-volumes and configuration.
+  volumes and configuration.
 
 <!--hide_directive
 :::{toctree}

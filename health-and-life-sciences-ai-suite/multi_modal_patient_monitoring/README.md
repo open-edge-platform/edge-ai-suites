@@ -15,8 +15,7 @@ The solution is intended to:
 
 - Showcase multi‑modal AI capabilities of Intel Core Ultra
 - Run on Ubuntu 24.04 with containerized workloads
-- Be startable with a **single command** from a clean system
-	(end‑to‑end setup and launch targeted in ≤ 30 minutes)
+- Be startable with a **single command** from a clean system (end‑to‑end setup and launch targeted in ≤ 30 minutes)
 
 Secure provisioning (for example, Polaris Peak integration) is not part of the initial implementation, but the architecture is intended to be extensible for future security integrations.
 
@@ -36,7 +35,6 @@ At a high level, the system is composed of several microservices that work toget
 
 ## Learn More
 
-For detailed information about system requirements, architecture, and how the application works, see the 
+For detailed information about system requirements, architecture, and how the application works, see the
 
--  [Full Documentation](./docs/user-guide/index.md)
-
+- [Full Documentation](./docs/user-guide/index.md)
