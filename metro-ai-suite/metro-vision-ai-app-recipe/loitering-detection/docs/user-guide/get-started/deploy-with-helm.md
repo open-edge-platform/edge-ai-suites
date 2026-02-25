@@ -193,7 +193,7 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_trac
 }'
 ```
 
-> **Note:** To make use of GPU pipeline replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to make use of NPU pipeline replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change .
+> **Note:** To run the pipeline on GPU pipeline replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU pipeline replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change .
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
