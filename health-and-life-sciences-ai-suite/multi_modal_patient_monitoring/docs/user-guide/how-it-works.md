@@ -1,7 +1,6 @@
 # How It Works
 
-This section describes the overall architecture of the Multi‑modal Patient Monitoring
-application and explains the functions of each service.
+This section describes the overall architecture of the Multi‑modal Patient Monitoring application and explains the functions of each service.
 
 ## High‑level Architecture
 
@@ -51,8 +50,7 @@ is reachable by all AI producer services over the host network.
 
 ### RPPG Service
 
-The rPPG service performs remote photoplethysmography on patient video streams to estimate
-heart rate (HR) and respiratory rate (RR):
+The rPPG service performs remote photoplethysmography on patient video streams to estimate heart rate (HR) and respiratory rate (RR):
 
 - **Video ingestion:** Reads frames from the shared `videos` volume (for example, `sample.mp4`)
 using `VideoHandler`, with optional looping and frame‑rate adaptation.
@@ -65,8 +63,7 @@ derives numeric HR and RR estimates using `SignalPostprocessor`.
 - **Streaming to aggregator:** Packages results into waveform and numeric vitals and streams
 them to the patient‑monitoring‑aggregator via the `RPPGGRPCClient`.
 
-The rPPG service also exposes a small HTTP control API to start/stop streaming, allowing
-dynamic control during demos or testing.
+The rPPG service also exposes a small HTTP control API to start/stop streaming, allowing dynamic control during demos or testing.
 
 ### Metrics Collector Service
 
@@ -90,11 +87,9 @@ The **ui** service provides a web‑based dashboard for clinicians or developers
 - Connects to the patient‑monitoring‑aggregator to retrieve current and historical vitals.
 - Visualizes waveforms (e.g., pulse and respiration) and numeric vitals (e.g., HR, RR) in real
 time.
-- May also integrate system‑level metrics from the metrics‑collector to show hardware
-utilization alongside clinical signals.
+- May also integrate system‑level metrics from the metrics‑collector to show hardware utilization alongside clinical signals.
 
-The UI is typically exposed on a configurable HTTP port (for example, 3000) and accessed via
-a standard web browser.
+The UI is typically exposed on a configurable HTTP port (for example, 3000) and accessed via a standard web browser.
 
 ## Data and Control Flows
 
@@ -111,5 +106,4 @@ utilization and other system metrics.
 5. **Visualization** – the UI queries the aggregator (and optionally metrics endpoints) to
 present vitals and system status to end‑users.
 
-This modular architecture allows each component to be developed, deployed, and scaled
-independently while sharing common assets and infrastructure.
+This modular architecture allows each component to be developed, deployed, and scaled independently while sharing common assets and infrastructure.
