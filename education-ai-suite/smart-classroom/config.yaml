@@ -26,10 +26,10 @@ models:
 
   summarizer:
     provider: openvino # ipex or openvino
-    name: Qwen/Qwen2-7B-Instruct # Qwen/Qwen2-7B-Instruct or Qwen/Qwen2.5-7B-Instruct
+    name: Qwen/Qwen2.5-7B-Instruct # Qwen/Qwen2-7B-Instruct or Qwen/Qwen2.5-7B-Instruct
     device: GPU # GPU or CPU
     weight_format: int8 # supports fp16, int4, int8 (Recommended)
-    max_new_tokens: 1024
+    max_new_tokens: 5120
     temperature: 0.3 # 0.5 default
     use_cache: True
     models_base_path: "models"
@@ -48,7 +48,7 @@ models:
           Instructions:
           - Provide a full dialog summary.
           - Preserve the flow of discussion.
-          - Include both teacher explanations and student questions.
+          - Include both teacher explanations and questions.
           - Ignore filler or repetition.
 
           Output valid Markdown using exactly these sections:
@@ -56,7 +56,7 @@ models:
           ## Teacher Summary
           - ...
 
-          ## Student Questions
+          ## Questions
           - ...
 
           ## Key Takeaways
@@ -85,7 +85,7 @@ models:
           ## Teacher Summary
           - ...
 
-          ## Student Questions
+          ## Questions
           - None
 
           ## Key Takeaways
@@ -115,7 +115,7 @@ models:
           ## Teacher Summary
           - ...
 
-          ## Student Questions
+          ## Questions
           - ...
 
           ## Key Takeaways
@@ -147,7 +147,7 @@ models:
           ## 教师总结
           - ...
 
-          ## 学生提问
+          ## 问题
           - ...
 
           ## 关键要点
@@ -175,7 +175,7 @@ models:
           ## 教师总结
           - ...
 
-          ## 学生提问
+          ## 问题
           - None
 
           ## 关键要点
@@ -205,7 +205,7 @@ models:
           ## 教师总结
           - ...
 
-          ## 学生提问
+          ## 问题
           - ...
 
           ## 关键要点
@@ -227,6 +227,7 @@ models:
   
   embedding:
     name: "BAAI/bge-large-en-v1.5"
+    min_score: 0.65
 
 
 mindmap:
