@@ -38,4 +38,3 @@ make down
 
 For detailed information about system requirements, architecture, and how the application works, see the  [Full Documentation](docs/user-guide/index.md)
 
----
