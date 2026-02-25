@@ -74,6 +74,8 @@ cd ..
         password: # example: password: mypassword
     ```
 
+    > **Note:** To make use of GPU / NPU set the property `privileged_access_required` to `true` in the above `values.yaml` file.
+
 ## Step 3: Deploy the application and Run multiple AI pipelines
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
@@ -182,6 +184,8 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X
     }
 }'
 ```
+
+> **Note:** To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
