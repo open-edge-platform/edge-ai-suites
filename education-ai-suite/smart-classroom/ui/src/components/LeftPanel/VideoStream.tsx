@@ -401,7 +401,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                 <div className="multi-stream-container">
                   {getAvailableVideoFiles().map(({ type, file, label }) => (
                     <div key={type} className="main-stream">
-                      <HLSPlayer videoFile={file} mode="playback" />
+                      <HLSPlayer videoFile={file} mode="playback" camera={type} />
                       <div className="stream-overlay-label">{label}</div>
                     </div>
                   ))}
@@ -428,7 +428,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
 
                   return (
                     <div className="single-stream">
-                      <HLSPlayer videoFile={file} mode="playback" />
+                      <HLSPlayer videoFile={file} mode="playback" camera={activeStream as "front" | "back" | "content"} />
                       <div className="stream-overlay-label">
                         {streamTypes.find(s => s.pipeline === activeStream)?.label || activeStream}
                       </div>
@@ -445,7 +445,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                 <div className="multi-stream-container">
                   {isValidStream(streams.front) && (
                     <div className="main-stream">
-                      <HLSPlayer streamUrl={streams.front!} mode="stream" />
+                      <HLSPlayer streamUrl={streams.front!} mode="stream" camera="front" />
                       <div className="stream-overlay-label">{t("accordion.frontCamera")}</div>
                     </div>
                   )}
@@ -453,14 +453,14 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                   <div className="side-streams-container">
                     {isValidStream(streams.back) && (
                       <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.back!} mode="stream" />
+                        <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
                         <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
                       </div>
                     )}
 
                     {isValidStream(streams.content) && (
                       <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.content!} mode="stream" />
+                        <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
                         <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
                       </div>
                     )}
@@ -472,7 +472,7 @@ const VideoStream: React.FC<VideoStreamProps> = ({
                 activeStream &&
                 isValidStream(streams[activeStream]) && (
                   <div className="single-stream">
-                    <HLSPlayer streamUrl={streams[activeStream]!} mode="stream" />
+                    <HLSPlayer streamUrl={streams[activeStream]!} mode="stream" camera={activeStream as "front" | "back" | "content"} />
                     <div className="stream-overlay-label">
                       {activeStream.toUpperCase()}
                     </div>

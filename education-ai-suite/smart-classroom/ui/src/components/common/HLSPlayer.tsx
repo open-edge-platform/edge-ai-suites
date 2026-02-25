@@ -7,6 +7,7 @@ interface Props {
   streamUrl?: string;
   videoFile?: File;
   mode: "stream" | "playback";
+  camera?: "front" | "back" | "content"; // Identifies which camera this player represents
 }
 
 interface TimelineHighlight {
@@ -20,7 +21,7 @@ interface SeekVideoEvent extends CustomEvent {
 }
 
 interface HighlightTimelineEvent extends CustomEvent {
-  detail: TimelineHighlight;
+  detail: TimelineHighlight & { targetCamera?: 'back' | 'content' | 'front' | null };
 }
 
 /* ---------------- TIMELINE HIGHLIGHT COMPONENT ---------------- */
@@ -54,7 +55,10 @@ class TimelineHighlights extends videojs.getComponent("Component") {
 
     highlights.forEach((h) => {
       const left = (h.startTime / duration) * 100;
-      const width = ((h.endTime - h.startTime) / duration) * 100;
+      let width = ((h.endTime - h.startTime) / duration) * 100;
+      
+      // Clamp width to not exceed 100% - prevents overflow beyond video frame
+      width = Math.min(width, 100 - left);
 
       const marker = videojs.dom.createEl("div", {
         title: h.topic,
@@ -79,7 +83,7 @@ videojs.registerComponent("TimelineHighlights", TimelineHighlights);
 
 /* ---------------- MAIN COMPONENT ---------------- */
 
-const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
+const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode, camera }) => {
   const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
@@ -247,6 +251,16 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
 
     const highlightHandler = (e: Event) => {
       const ev = e as HighlightTimelineEvent;
+      
+      // Filter: only add highlight if targetCamera matches this player's camera
+      // If no targetCamera specified, accept all (backwards compatibility)
+      // If no camera specified for this player, accept all (streaming mode)
+      if (ev.detail.targetCamera && camera && ev.detail.targetCamera !== camera) {
+        console.log(`[HLSPlayer] Ignoring highlight for ${ev.detail.targetCamera}, this is ${camera}`);
+        return;
+      }
+
+      console.log(`[HLSPlayer-${camera || 'unknown'}] Adding highlight: ${ev.detail.topic}`);
       setHighlights((p) => [...p, ev.detail]);
     };
 
@@ -257,10 +271,10 @@ const HLSPlayer: React.FC<Props> = ({ streamUrl, videoFile, mode }) => {
       window.removeEventListener("seekVideoToTimestamp", seekHandler);
       window.removeEventListener("highlightTimeline", highlightHandler);
     };
-  }, [mode]);
+  }, [mode, camera]);
 
   /* ---------- RENDER ---------- */
-  
+
   if (mode === "stream") {
     return (
       <div className="hls-player-container">
