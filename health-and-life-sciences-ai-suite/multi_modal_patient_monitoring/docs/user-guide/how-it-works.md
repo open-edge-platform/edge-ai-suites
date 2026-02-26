@@ -78,7 +78,7 @@ observability of AI workloads:
   can expose summarized metrics via its own API.
 
 These metrics are useful for validating that AI workloads are correctly utilizing Intel
-accelerators and for performance benchmarking.
+accelerators, and for performance benchmarking.
 
 ### UI Service
 

@@ -50,7 +50,7 @@ This section lists the hardware, software, and network requirements for running 
 
 ## AI Models and Workloads
 
-The application bundles several AI workloads, each with its own model(s) and inputs/outputs:
+The application bundles several AI workloads, each with its own model and inputs or outputs:
 
 - **RPPG (Remote Photoplethysmography) Workload:**
   - **Model:** MTTS‑CAN (Multi‑Task Temporal Shift Convolutional Attention Network)
