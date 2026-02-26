@@ -7,7 +7,7 @@ GPU, or NPU.
 Before you begin, review the [System Requirements](./get-started/system-requirements.md) to
 ensure your environment meets the recommended hardware and software prerequisites.
 
-## Clone the Repository
+## 1. Clone the Repository
 
 > **Note:** Make sure you are in the `multi_modal_patient_monitoring` directory before running
 > the commands in this guide.
@@ -28,7 +28,7 @@ git checkout main
 cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring
 ```
 
-## Configure Hardware Target
+## 2. Configure Hardware Target
 
 Each AI workload uses a device environment variable to select its OpenVINO target device.
 These are defined in `configs/device.env`:
@@ -50,7 +50,9 @@ When you run `make run` or `make run REGISTRY=false`, the compose file reads
 inference engine compiles its OpenVINO model on the requested device, with automatic fallback
 to CPU when necessary.
 
-## Run Using Pre‑Built Images (Registry Mode)
+## 3. Run the Sample
+
+### Run Using Pre‑Built Images (Registry Mode)
 
 If you want to use pre‑built images from a container registry, run:
 
@@ -64,7 +66,7 @@ This will:
 - Start all services defined in `docker-compose.yaml` in detached mode.
 - Print the URL of the UI (for example, `http://<HOST_IP>:3000`).
 
-## Run Using Locally Built Images
+### Run Using Locally Built Images
 
 If you prefer to build the images locally instead of pulling from a registry, run the following
 commands from the `multi_modal_patient_monitoring` directory:
@@ -80,13 +82,13 @@ make run REGISTRY=false
 The Makefile wraps the underlying `docker compose` commands and ensures that all dependent
 components (MDPnP, DDS bridge, AI services, and UI) are started with the correct configuration.
 
-To tear everything down when you are done:
+To stop and remove all containers when you are done:
 
 ```bash
 make down
 ```
 
-## Access the UI
+## 4. Access the UI
 
 By default, the UI service exposes port 3000 on the host:
 
@@ -95,7 +97,7 @@ By default, the UI service exposes port 3000 on the host:
 From there you can observe heart rate and respiratory rate estimates, along with waveforms
 produced by the rPPG service and aggregated by the patient‑monitoring‑aggregator.
 
-## Control RPPG Streaming
+## 5. Control RPPG Streaming
 
 The rPPG service provides a simple HTTP control API (hosted by an internal FastAPI server) to
 start and stop streaming:
@@ -108,7 +110,7 @@ start and stop streaming:
 Exact URLs and endpoints may differ slightly depending on how the control API is exposed in
 your environment; refer to the rPPG service documentation for details.
 
-## View Hardware Metrics
+## 6. View Hardware Metrics
 
 The metrics-collector service writes telemetry (GPU, NPU, CPU, power, and other metrics) into
 the `metrics` directory on the host, and may also expose summarized metrics via its own API:
