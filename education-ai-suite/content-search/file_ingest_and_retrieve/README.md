@@ -19,7 +19,19 @@ pip install git+https://github.com/apple/ml-mobileclip.git@c16bfe5a4feb424762d6b
 
 pip install salesforce-lavis==1.0.2
 ```
-TODO: why this is needed, broken the dependencies
+
+```cmd
+pip install -r requirements.txt
+```
+
+> **Note:** You may see pip dependency conflict warnings after this step. These are expected and safe to ignore — `salesforce-lavis` declares outdated version constraints, but the versions installed by `requirements.txt` are the correct ones and the service will work correctly.
+
+Refer to [this guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/wheel-installation.md) to obtain the multimodal-embedding package wheel `multimodal_embedding_serving-0.1.1-py3-none-any.whl`. Please use verified commit `77b812f`.
+
+```cmd
+pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
+```
+
 ### Install System Dependencies
 
 #### Tesseract OCR for image text extraction
