@@ -37,15 +37,12 @@ pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
 #### Tesseract OCR for image text extraction
 
 1. Download the latest installer `tesseract-ocr-w64-setup-v5.x.x.exe` (64-bit) from [UB-Mannheim Tesseract](https://github.com/UB-Mannheim/tesseract/wiki)
-
 2. Run the installer, default installation path: `C:\Program Files\Tesseract-OCR`
-
 3. Add to PATH:
    ```powershell
    # Open PowerShell as Administrator:
    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\Tesseract-OCR", "Machine")
    ```
-
 4. Verify installation:
    ```powershell
    # Restart PowerShell:
@@ -55,18 +52,12 @@ pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
 #### Poppler for PDF processing
 
 1. Download Poppler for Windows from [oschwartz10612/poppler-windows](https://github.com/oschwartz10612/poppler-windows/releases/)
-
-2. Extract to a permanent location:
-   ```text
-   C:\Program Files\poppler
-   ```
-
+2. Extract to "C:\Program Files\poppler"
 3. Add to PATH:
    ```powershell
    # Open PowerShell as Administrator:
    [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\poppler\Library\bin", "Machine")
    ```
-
 4. Verify installation:
    ```powershell
    # Restart PowerShell:
@@ -76,10 +67,17 @@ pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
 #### LibreOffice (Optional - legacy .doc/.ppt/.xls support)
 
 1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine)
-3. Installation path is typically: `C:\Program Files\LibreOffice`
-
-The `unstructured` library will automatically detect and use LibreOffice if available.
+2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
+3. Add to PATH:
+   ```powershell
+   # Open PowerShell as Administrator:
+   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
+   ```
+4. Verify installation:
+   ```python
+   import shutil
+   shutil.which("soffice") is not None
+   ```
 
 ## Start service
 
