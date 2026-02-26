@@ -1,3 +1,14 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/deterministic-threat-detection">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/deterministic-threat-detection/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Deterministic Threat Detection
 
 Welcome to the documentation for the Deterministic Threat Detection project. This guide provides all the information you need to understand, set up, and run this Time-Sensitive Networking (TSN) sample application.
