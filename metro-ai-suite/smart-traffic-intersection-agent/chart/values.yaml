@@ -7,9 +7,9 @@
 
 global:
   proxy:
-    noProxy: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
-    httpProxy: "http://proxy-pilot.intel.com:911"
-    httpsProxy: "http://proxy-pilot.intel.com:912"
+    noProxy: ""
+    httpProxy: ""
+    httpsProxy: ""
 
 
 
@@ -21,7 +21,7 @@ trafficAgent:
   name: traffic-agent
   image:
     repository: intel/smart-traffic-intersection-agent
-    tag: "1.1.0"
+    tag: "1.0.1"
     pullPolicy: IfNotPresent
   replicas: 1
   service:
