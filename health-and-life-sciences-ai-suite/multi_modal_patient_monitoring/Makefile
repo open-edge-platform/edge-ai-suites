@@ -32,10 +32,10 @@ run:
 	@if [ "$(REGISTRY)" = "true" ]; then \
 		echo "##############Using registry mode - fetching all images..."; \
 		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
-		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up -d; \
+		./run_compose.sh -d; \
 	else \
 		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
-		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up --build -d; \
+		./run_compose.sh --build -d; \
 	fi
 	@echo "==============================================="
 	@echo "Multi-modal patient monitoring application is starting up."
