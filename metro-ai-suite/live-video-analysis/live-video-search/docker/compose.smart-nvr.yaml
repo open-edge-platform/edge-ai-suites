@@ -42,7 +42,7 @@ services:
 
   nvr-event-router:
     container_name: nvr-event-router
-    image: ${REGISTRY}nvr-event-router:${TAG}
+    image: ${REGISTRY}nvr-event-router:${SMART_NVR_STACK_TAG:-${TAG:-latest}}
     restart: unless-stopped
     networks:
       - live-video-network
