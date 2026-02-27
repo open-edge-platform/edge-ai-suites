@@ -10,9 +10,9 @@ This tutorial will guide you through profiling and monitoring performance of Met
 - Administrative privileges for performance monitoring
 - Internet connection for downloading model and video files
 
-## Step 1: Install Performance Monitoring Tools and Docker
+## Step 1: Install Performance Monitoring Tools
 
-Install the required command-line performance monitoring tools and Docker:
+Install the required command-line performance monitoring tools:
 
 ```bash
 # Update system packages
@@ -21,20 +21,9 @@ sudo apt update
 # Install performance monitoring tools
 sudo apt install -y htop intel-gpu-tools
 
-# Install Docker (if not already installed)
-sudo apt install -y docker.io
-
-# Add user to docker group (requires logout/login)
-sudo usermod -aG docker $USER
-
-# Start Docker service
-sudo systemctl start docker
-sudo systemctl enable docker
-
 # Verify installations
 htop --version
 intel_gpu_top --help
-docker --version
 ```
 
 ## Step 2: Verify System Hardware
@@ -104,6 +93,13 @@ while true; do
     docker run --rm \
         --device /dev/dri:/dev/dri \
         -v "$CURRENT_DIR:/workspace" \
+        -v $HOME/.Xauthority:/root/.Xauthority:rw \
+        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+        --env DISPLAY=$DISPLAY \
+        --env http_proxy=$http_proxy \
+        --env https_proxy=$https_proxy \
+        --env no_proxy=$no_proxy \
+        --user root \
         -w /workspace \
         intel/dlstreamer:2025.1.2-ubuntu24  \
         gst-launch-1.0 \
@@ -177,7 +173,7 @@ When you're done profiling, stop the background pipeline:
 
 ```bash
 # Stop the background DL Streamer pipeline
-pkill -9 -f metro_vision_pipeline.sh
+sudo pkill -9 -f metro_vision_pipeline.sh
 ```
 
 ## Next Steps: Visual Pipeline and Platform Evaluation Tool (Vippet)
