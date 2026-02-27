@@ -1,6 +1,15 @@
 # Release Notes
 
-## Current Release: 1.0.0-rc1
+
+## Current Release: 1.0.0-rc2
+
+**Release Date**: 27 Feb 2026
+
+### Features
+
+- Bumped up versions of some dependencies and updated lock file to fix security vulnerabities
+
+## Previous Release: 1.0.0-rc1
 
 **Release Date**: 17 Feb 2026
 
