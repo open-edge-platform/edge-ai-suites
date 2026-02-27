@@ -27,7 +27,7 @@ nvidia-nvtx-cu11==11.8.86
 opencv-python==4.11.0.86
 packaging==25.0
 pandas==2.3.0
-pillow==11.0.0
+pillow==12.1.1
 pip==26.0
 psutil==7.0.0
 py-cpuinfo==9.0.0

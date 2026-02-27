@@ -1,3 +1,9 @@
+ros-jazzy-univloc-server (2.3-2) UNRELEASED; urgency=low
+
+  * Update to build using oneAPI 2025
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 13 Feb 2025 19:10:0 +0200
+
 ros-jazzy-univloc-server (2.3-1) UNRELEASED; urgency=low
 
   * Initial release

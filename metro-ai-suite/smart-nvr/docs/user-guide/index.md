@@ -13,8 +13,8 @@ hide_directive-->
 
 The sample application showcases the use of GenAI-powered vision analytics to
 transform a traditional NVR into a Smart NVR, unlocking advanced insights and
-automation at the edge. It is designed to help developers understand the architecture, setup, and
-customization of the sample application.
+automation at the edge. It is designed to help developers understand the architecture, setup,
+and customization of the sample application.
 
 ## Overview
 
@@ -40,39 +40,44 @@ The **Smart NVR** leverages GenAI-enabled vision analytics pipelines to convert 
 
 This section provides a high-level architecture view of the Smart NVR application and how it integrates with different video analytics pipelines.
 
-![High-Level System Diagram](./_images/smartnvr-architecture.png)
+![High-Level System Diagram](./_assets/smartnvr-architecture.png)
 
 ### Key Components
 
-The diagram shows the key components of the Smart NVR application. The description below provides a high-level description of the components and how these components come together to support the features.
+The diagram shows the key components of the Smart NVR application. The description below
+provides a high-level description of the components and how these components come together to
+support the features.
 
 - **Frigate NVR**:
   - Frigate NVR is used as reference NVR as a proxy for any NVR that can be converted to Smart NVR. Refer to [Frigate](https://frigate.video/) documentation for details on Frigate.
   - Frigate is responsible for accepting live video input from different _Cameras_ and store the same in _Video store_. Frigate supports [APIs](https://docs.frigate.video/integrations/api/frigate-http-api) that can be used to get access to the videos stored in the Video store.
-  - **[Experimental] GenAI Integration**: When enabled (`NVR_GENAI=true`), Frigate can leverage the OEP VLM Microservice to generate AI-powered event descriptions for enhanced video analytics.
+  - **\[Experimental] GenAI Integration**: When enabled (`NVR_GENAI=true`), Frigate can leverage the OEP VLM Microservice to generate AI-powered event descriptions for enhanced video analytics.
 
 - **NVR Event Router**:
 
   NVR Event Router is the glue layer between the (Frigate) NVR and the video analytics pipeline. This component serves two primary objectives.
-    - It helps track the events raised by the NVR and connect the events of interest to the Video analytics pipeline like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) application. The events of interest are determined by the query raised by the user. Video associated with the event can be further processed by the video analytics pipelines.
-    - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application are two example pipelines. The latter is not integrated yet as part of Smart NVR offering.
+  - It helps track the events raised by the NVR and connect the events of interest to the Video analytics pipeline like [Video Search and Summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) application. The events of interest are determined by the query raised by the user. Video associated with the event can be further processed by the video analytics pipelines.
+  - It provides mechanism to configure the applications available under video analytics category as appropriate to the target use cases. [Video Search and Summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image-based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application are two example pipelines. The latter is not integrated yet as part of Smart NVR offering.
 
 - **Reference UI**
 
-  A Gradio based UI helps exercise all the capabilities of the NVR Event Router. The capabilities supported in the UI can be directly mapped to the feature set of the sample application.
+  A Gradio based UI helps exercise all the capabilities of the NVR Event Router. The
+  capabilities supported in the UI can be directly mapped to the feature set of the sample
+  application.
 
 ### Key Features
 
 - **Feature 1**: Architecture based on modular microservices enables composability and reconfiguration.
-- **Feature 2**: Connects to available video analytics pipeline applications like [Video search and summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application.
+- **Feature 2**: Connects to available video analytics pipeline applications like [Video Search and Summary](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization) sample application and [Image-based Video Search](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search) sample application.
 - **Feature 3**: Independent Gradio based UI allows extending the capability of Smart NVR sample application independent of the integrated video analytics sample applications.
-- **Feature 4**: **[Experimental] AI-Powered Event Descriptions**: Optional integration with OEP VLM Microservice to generate intelligent, context-aware descriptions of detected events using vision-language models.
+- **Feature 4**: **\[Experimental] AI-Powered Event Descriptions**: Optional integration with OEP VLM Microservice to generate intelligent, context-aware descriptions of detected events using vision-language models.
 
 ## Learn More
 
-- [System Requirements](./system-requirements.md): Check the hardware and software requirements for deploying the application.
 - [Get Started](./get-started.md): Follow step-by-step instructions to set up the application.
-- [How to build from source](./how-to-build-from-source.md): How to build and deploy the application using Docker Compose.
+- [System Requirements](./get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
+- [Build from source](./get-started/build-from-source.md): How to build and deploy the application using Docker Compose.
+- [Deploy with Helm](./get-started/deploy-with-helm.md): How to deploy the application with Helm.
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
 - [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
@@ -80,15 +85,12 @@ The diagram shows the key components of the Smart NVR application. The descripti
 :::{toctree}
 :hidden:
 
-system-requirements
 get-started
-how-to-build-from-source
 how-to-use-application
-deploy-with-helm
 scenescape-integration
 api-reference
-release-notes
 troubleshooting
+release-notes
 
 :::
 hide_directive-->

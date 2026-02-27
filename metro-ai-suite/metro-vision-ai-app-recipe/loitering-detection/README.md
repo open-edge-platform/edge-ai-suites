@@ -36,6 +36,7 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 ## Learn More
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
-- [How to Deploy with Helm](./docs/user-guide/get-started/how-to-deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
-- [How to Deploy with Edge Orchestrator](./docs/user-guide/get-started/how-to-deploy-with-edge-orchestrator.md): How to deploy the application with Edge Orchestrator.
+- [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
+- [Deploy with Edge Orchestrator](./docs/user-guide/get-started/deploy-with-edge-orchestrator.md): How to deploy the application with Edge Orchestrator.
+- [Customize the Application](./docs/user-guide/how-to-guides/customize-application.md)
 - [Support and Troubleshooting](./docs/user-guide/troubleshooting.md): Find solutions to common issues and troubleshooting steps.

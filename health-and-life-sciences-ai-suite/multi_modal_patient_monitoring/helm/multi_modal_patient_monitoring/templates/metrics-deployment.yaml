@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics
+  template:
+    metadata:
+      labels:
+        app: metrics
+    spec:
+      hostPID: true
+      containers:
+        - name: metrics
+          image: "{{ .Values.metrics.image.repository }}/{{ .Values.metrics.image.name }}:{{ .Values.metrics.image.tag }}"
+          imagePullPolicy: {{ .Values.metrics.image.pullPolicy }}
+          securityContext:
+            privileged: true
+          env:
+            - name: METRICS_HTTP_PORT
+              value: "9000"
+
+            - name: NPU_LOG
+              value: "/tmp/results/npu_usage.csv"
+
+            - name: METRICS_DIR
+              value: "/tmp/results"
+
+            - name: DEVICE_ENV_PATH
+              value: /configs/device.env
+          ports:
+            - containerPort: 9000
+          volumeMounts:
+            - name: assets
+              mountPath: /tmp/results
+            - name: device-config
+              mountPath: /configs
+              readOnly: true
+            - name: dri
+              mountPath: /dev/dri
+            - name: dev
+              mountPath: /dev
+            - name: sys
+              mountPath: /sys
+            - name: sys-devices
+              mountPath: /sys/devices
+            - name: sys-drm
+              mountPath: /sys/class/drm
+            - name: sys-debug
+              mountPath: /sys/kernel/debug
+            - name: run
+              mountPath: /run
+            - name: proc
+              mountPath: /proc
+            - name: x11
+              mountPath: /tmp/.X11-unix
+      volumes:
+        - name: assets
+          persistentVolumeClaim:
+            claimName: health-ai-assets-pvc
+        - name: device-config
+          configMap:
+            name: device-config
+        - name: dri
+          hostPath:
+            path: /dev/dri
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: sys-devices
+          hostPath:
+            path: /sys/devices
+        - name: sys-drm
+          hostPath:
+            path: /sys/class/drm
+        - name: sys-debug
+          hostPath:
+            path: /sys/kernel/debug
+        - name: run
+          hostPath:
+            path: /run
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: x11
+          hostPath:
+            path: /tmp/.X11-unix

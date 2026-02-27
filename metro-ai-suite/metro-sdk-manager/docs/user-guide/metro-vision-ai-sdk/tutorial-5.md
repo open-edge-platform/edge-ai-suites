@@ -124,7 +124,7 @@ export DEVICE=GPU
 chmod +x metro_vision_pipeline.sh
 
 # Start the pipeline in background
-./metro_vision_pipeline.sh &
+sudo ./metro_vision_pipeline.sh &
 PIPELINE_PID=$!
 
 echo "Metro Vision AI pipeline started with PID: $PIPELINE_PID"

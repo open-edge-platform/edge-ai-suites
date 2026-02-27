@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: device-config
+data:
+  device.env: |-
+    # Default inference devices
+    # Valid values: CPU | GPU | NPU | AUTO
+
+    ECG_DEVICE={{ .Values.devices.ECG_DEVICE | quote }}
+    RPPG_DEVICE={{ .Values.devices.RPPG_DEVICE | quote }}
+    MDPNP_DEVICE={{ .Values.devices.MDPNP_DEVICE | quote }}
+    POSE_3D_DEVICE={{ .Values.devices.POSE_3D_DEVICE | quote }}
+  ECG_DEVICE: {{ .Values.devices.ECG_DEVICE | quote }}
+  RPPG_DEVICE: {{ .Values.devices.RPPG_DEVICE | quote }}
+  MDPNP_DEVICE: {{ .Values.devices.MDPNP_DEVICE | quote }}
+  POSE_3D_DEVICE: {{ .Values.devices.POSE_3D_DEVICE | quote }}

@@ -60,6 +60,10 @@ curl http://localhost:9090/api/metrics/status
 
 ## Limitations
 
+### Limited testing on EMT-S and EMT-D
+
+- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
+
 ### Single Collector Restriction
 
 - Only one collector can connect at a time

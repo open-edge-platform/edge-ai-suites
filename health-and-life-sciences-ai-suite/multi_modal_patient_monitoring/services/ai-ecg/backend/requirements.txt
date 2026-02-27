@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+numpy
+scipy
+openvino
+python-multipart

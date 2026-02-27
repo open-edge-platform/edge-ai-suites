@@ -1,3 +1,6 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import json
 from pathlib import Path
 from typing import Optional
@@ -9,7 +12,7 @@ from schema import GeoCoordinates, RouteCondition
 logger = get_logger(__name__)
 
 
-def get_all_available_route_files() -> list[Path]:
+def get_all_available_route_files() -> list[str]:
     """
     Get a list of all available GPX route files in the GPX_DIR.
 

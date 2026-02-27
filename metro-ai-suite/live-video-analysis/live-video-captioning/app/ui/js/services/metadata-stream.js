@@ -49,8 +49,8 @@ const MetadataStreamService = (function() {
                 const captionText = typeof data === 'object' && data.result ? data.result : (typeof data === 'string' ? data : JSON.stringify(data));
                 ui.caption.textContent = captionText;
 
-                // Agent Mode: Check for "Yes" or "No" in caption and apply alert styling
-                if (cfg && cfg.agentMode) {
+                // Alert Mode: Check for "Yes" or "No" in caption and apply alert styling
+                if (cfg && cfg.alertMode) {
                     const runCard = ui.wrap;
                     const captionPanel = ui.captionPanel;
                     const lowerCaption = captionText ? captionText.toLowerCase() : '';

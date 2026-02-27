@@ -5,10 +5,18 @@
 
 version: 2
 updates:
+  # Update actions on a monthly interval
   - package-ecosystem: "github-actions"
-    directory: "metro-ai-suite/interactive-digital-avatar" # Location of package manifests
+    directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions-dependency:
+        applies-to: version-updates
+        patterns:
+          - "*"
   - package-ecosystem: "pip"
     directory: "metro-ai-suite/interactive-digital-avatar"
     schedule:

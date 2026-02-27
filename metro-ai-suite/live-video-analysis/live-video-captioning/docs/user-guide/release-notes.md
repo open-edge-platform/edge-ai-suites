@@ -1,5 +1,12 @@
 # Release Notes
 
+## 1.0.0-rc.1
+### Relase Date: 17 Feb 2026
+
+- Decoupled the application to support live metrices service.
+- Fixed bugs and improved user interface.
+- Helm support is not available in this version.
+
 ## 2026.1.3
 ### Relase Date: 16 Jan 2026
 

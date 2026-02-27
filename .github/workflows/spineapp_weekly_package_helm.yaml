@@ -21,12 +21,12 @@ jobs:
       fail-fast: false
     steps:
     - name: Check out edge-ai-suites repository
-      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #4.2.2
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         path: edge-ai-suites-repo
         persist-credentials: false
     - name: Install Helm
-      uses: azure/setup-helm@v4
+      uses: azure/setup-helm@fe7b79cd5ee1e45176fcad797de68ecaf3ca4814 #v4.2.0
       with:
         version: v3.15.2  
     - name: Log in to GitHub Container Registry
@@ -37,47 +37,53 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Package Helm Chart
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
         cd edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision
         # Packaging PCB
         cp helm/Chart-pcb-anomaly-detection.yaml helm/Chart.yaml
         cp helm/values_pcb_anomaly_detection.yaml helm/values.yaml
-        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+        helm package helm --version "$HELM_CHART_TAG" --app-version "$HELM_CHART_TAG"
 
         # Packaging Weld Porosity
         cp helm/Chart-weld-porosity.yaml helm/Chart.yaml
         cp helm/values_weld_porosity_classification.yaml helm/values.yaml
-        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+        helm package helm --version "$HELM_CHART_TAG" --app-version "$HELM_CHART_TAG"
 
         # Packaging PDD
         cp helm/Chart-pallet-defect-detection.yaml helm/Chart.yaml
         cp helm/values_pallet_defect_detection.yaml helm/values.yaml
-        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+        helm package helm --version "$HELM_CHART_TAG" --app-version "$HELM_CHART_TAG"
 
         # Packaging Worker Safty
         cp helm/Chart-worker-safety-gear-detection.yaml helm/Chart.yaml
         cp helm/values_worker_safety_gear_detection.yaml helm/values.yaml
-        helm package helm --version ${{ inputs.helm-chart-tag }} --app-version ${{ inputs.helm-chart-tag }}
+        helm package helm --version "$HELM_CHART_TAG" --app-version "$HELM_CHART_TAG"
     - name: Push to GHCR
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
         
-        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-${{ inputs.helm-chart-tag }}.tgz; do
+        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-"$HELM_CHART_TAG".tgz; do
             helm push "$CHART_PACKAGE" oci://ghcr.io/${{ github.repository }}/manufacturing-ai-suite-vision-helm-chart
 
         done
         
     - name: Update Github Summary
+      env:
+        HELM_CHART_TAG: ${{ inputs.helm-chart-tag }}
       run: |
         echo "### ✅ manufacturing-ai-suite-vision-helm-chart published to github container registry" >> $GITHUB_STEP_SUMMARY
         echo "- Registry: \`oci://ghcr.io/${{ github.repository }}\`" >> $GITHUB_STEP_SUMMARY
-        echo "- Version: \`${{ inputs.helm-chart-tag }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Version: \`$HELM_CHART_TAG\`" >> $GITHUB_STEP_SUMMARY
         echo "### Helm Pull Commands" >> $GITHUB_STEP_SUMMARY
-        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-${{ inputs.helm-chart-tag }}.tgz; do
+        for CHART_PACKAGE in edge-ai-suites-repo/manufacturing-ai-suite/industrial-edge-insights-vision/*-"$HELM_CHART_TAG".tgz; do
             # Extract the chart name from the .tgz file
-            CHART_NAME=$(basename "$CHART_PACKAGE" -${{ inputs.helm-chart-tag }}.tgz)
+            CHART_NAME=$(basename "$CHART_PACKAGE" -"$HELM_CHART_TAG".tgz)
             # Append the pull command to GitHub summary
             echo '```bash' >> $GITHUB_STEP_SUMMARY
-            echo " \`helm pull oci://ghcr.io/${{ github.repository }}/manufacturing-ai-suite-vision-helm-chart/$CHART_NAME --version ${{ inputs.helm-chart-tag }}\`" >> $GITHUB_STEP_SUMMARY
+            echo " \`helm pull oci://ghcr.io/${{ github.repository }}/manufacturing-ai-suite-vision-helm-chart/$CHART_NAME --version $HELM_CHART_TAG\`" >> $GITHUB_STEP_SUMMARY
             echo '```' >> $GITHUB_STEP_SUMMARY
         done
         

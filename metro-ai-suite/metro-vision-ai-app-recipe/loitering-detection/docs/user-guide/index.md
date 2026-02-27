@@ -47,19 +47,25 @@ The architecture is designed to facilitate seamless integration and operation of
 - **Inputs (Video Files and Cameras):** Provide raw video streams or files as input data for processing in the pipeline.
 - **Nginx:** High-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
 
-The DL Streamer Pipeline Server is a core component, designed to handle video analytics at the edge. It leverages pre-trained deep learning models to perform tasks such as object detection, classification, and tracking in real-time. The DL Streamer Pipeline Server is highly configurable, allowing users to adjust parameters like detection thresholds and object types to suit specific use cases. This flexibility ensures that users can deploy AI-driven video analytics solutions quickly and efficiently, without the need for extensive coding or deep learning expertise.
+The DL Streamer Pipeline Server is a core component, designed to handle video analytics at the
+edge. It leverages pre-trained deep learning models to perform tasks such as object detection,
+classification, and tracking in real-time. The DL Streamer Pipeline Server is highly
+configurable, allowing users to adjust parameters like detection thresholds and object types
+to suit specific use cases. This flexibility ensures that users can deploy AI-driven video
+analytics solutions quickly and efficiently, without the need for extensive coding or deep
+learning expertise.
 
-It integrates various components such as MQTT, Node-RED, and Grafana to provide a robust and flexible solution for real-time video inference pipelines. The tool is built to be user-friendly, allowing customization without the need for extensive coding knowledge. Validate your ideas by developing an end-to-end solution faster.
+It integrates various components such as MQTT, Node-RED, and Grafana to provide a robust and
+flexible solution for real-time video inference pipelines. The tool is built to be
+user-friendly, allowing customization without the need for extensive coding knowledge.
+Validate your ideas by developing an end-to-end solution faster.
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started.md
-how-to-customize-application.md
-how-to-benchmark.md
-how-to-view-telemetry-data.md
-how-to-use-gpu-for-inference.md
+how-to-guides.md
 troubleshooting.md
 release-notes.md
 

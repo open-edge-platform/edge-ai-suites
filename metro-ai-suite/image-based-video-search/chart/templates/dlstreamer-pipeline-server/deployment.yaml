@@ -53,16 +53,50 @@ spec:
               omz_downloader --name resnet-50-pytorch --output_dir models &&
               omz_converter --name resnet-50-pytorch --download_dir models --output_dir models &&
               cp -r ./models/public/resnet-50-pytorch /output
-            ) &&
-            test -d /output/person-vehicle-bike-detection-2004 || (
-              rm -fr /output/person-vehicle-bike-detection-2004 &&
-              omz_downloader --name person-vehicle-bike-detection-2004 --output_dir models &&
-              omz_converter --name person-vehicle-bike-detection-2004 --download_dir models --output_dir models &&
-              cp -r ./models/intel/person-vehicle-bike-detection-2004 /output
-            )
+            ) 
         volumeMounts:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /output
+      - name: model-downloader
+        image: intel/dlstreamer:2025.1.2-ubuntu24
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+        env:
+        - name: http_proxy
+          value: {{ $.Values.httpProxy }}
+        - name: https_proxy
+          value: {{ $.Values.httpsProxy }}
+        - name: no_proxy
+          value: "{{ $.Values.noProxy }}"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          mkdir -p /output
+          cd /tmp/repo/
+          git clone --depth 1 --filter=blob:none --sparse \
+            {{- if eq $.Values.dlstreamerpipelineserver.modelDownloader.gitSource.type "tag" }}
+            --branch {{ $.Values.dlstreamerpipelineserver.modelDownloader.gitSource.ref }} \
+            {{- else }}
+            --branch {{ $.Values.dlstreamerpipelineserver.modelDownloader.gitSource.ref }} \
+            {{- end }}
+            https://github.com/open-edge-platform/edge-ai-suites.git
+
+          cd edge-ai-suites
+          git sparse-checkout set \
+            metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models
+          cp -r metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/models/* /output/
+          cd /home/dlstreamer/dlstreamer/samples
+          rm -rf /tmp/repo/edge-ai-suites
+          export MODELS_PATH=/output
+          ./download_public_models.sh yolo11s coco128
+        volumeMounts:
+        - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
+          mountPath: /output
+        - name: repo-volume
+          mountPath: /tmp/repo
       containers:
       - envFrom:
         - configMapRef:
@@ -134,6 +168,8 @@ spec:
       - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
         emptyDir:
           sizeLimit: 10Gi
+      - name: repo-volume
+        emptyDir: {}
       - name: dev-gpu
         hostPath:
           path: /dev/dri

@@ -33,7 +33,7 @@ TEST(ITSPlannerTest, testDynamicParameter)
 
   auto results = rec_param->set_parameters_atomically(
     {rclcpp::Parameter("test.interpolation_resolution", 0.05),
-      rclcpp::Parameter("test.roadmap", "PROBABLISTIC"),
+      rclcpp::Parameter("test.roadmap", "PROBABILISTIC"),
       rclcpp::Parameter("test.n", 2),
       rclcpp::Parameter("test.w", 32),
       rclcpp::Parameter("test.h", 32),
@@ -49,7 +49,7 @@ TEST(ITSPlannerTest, testDynamicParameter)
     results);
 
   EXPECT_EQ(node->get_parameter("test.interpolation_resolution").as_double(), 0.05);
-  EXPECT_EQ(node->get_parameter("test.roadmap").as_string(), "PROBABLISTIC");
+  EXPECT_EQ(node->get_parameter("test.roadmap").as_string(), "PROBABILISTIC");
   EXPECT_EQ(node->get_parameter("test.n").as_int(), 2);
   EXPECT_EQ(node->get_parameter("test.w").as_int(), 32);
   EXPECT_EQ(node->get_parameter("test.h").as_int(), 32);

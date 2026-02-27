@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import TranscriptsTab from "../Tabs/TranscriptsTab";
 import AISummaryTab from "../Tabs/AISummaryTab";
 import MindMapTab from "../Tabs/MindMapTab";
-import Timeline from "./Timeline"; // Add this import
+import SearchBox from "../common/SearchBox";
+import SearchResultsPreview from "../common/SearchResultPreview";
 import "../../assets/css/LeftPanel.css";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setActiveTab } from "../../redux/slices/uiSlice";
+import { setActiveTab, setActiveStream, type SearchResult } from "../../redux/slices/uiSlice";
 import { useTranslation } from 'react-i18next';
 import VideoStream from "./VideoStream";
+import { useContentSegmentation } from "../../redux/useContentSegmentation";
+import { useSearchContent } from "../../redux/useSearchContent";
 
 const LeftPanel = () => {
   const dispatch = useAppDispatch();
@@ -16,7 +19,21 @@ const LeftPanel = () => {
   const summaryLoading = useAppSelector((s) => s.ui.summaryLoading);
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
+  const searchQuery = useAppSelector((s) => s.ui.searchQuery);
+  const contentSegmentationStatus = useAppSelector((s) => s.ui.contentSegmentationStatus);
+  const contentSegmentationError = useAppSelector((s) => s.ui.contentSegmentationError);
+  const searchLoading = useAppSelector((s) => s.ui.searchLoading);
+  const searchResults = useAppSelector((s) => s.ui.searchResults);
+  const sessionId = useAppSelector((s) => s.ui.sessionId);
+  const uploadedVideoFiles = useAppSelector((s) => s.ui.uploadedVideoFiles);
+  const activeStream = useAppSelector((s) => s.ui.activeStream);
+  const videoPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
+  
   const { t } = useTranslation();
+  const { performSearch, searchError } = useSearchContent();
+
+  // CRITICAL: This hook handles auto-triggering content-segmentation with duration validation
+  useContentSegmentation();
 
   const [isFullScreen, setIsFullScreen] = useState(false);
 
@@ -24,11 +41,121 @@ const LeftPanel = () => {
     setIsFullScreen(!isFullScreen);
   };
 
+  const handleSearch = (query: string) => {
+    performSearch(query);
+  };
+
+  // Determine highest priority video: back > content > front
+  const getPriorityVideoType = () => {
+    if (uploadedVideoFiles.back) return 'back';
+    if (uploadedVideoFiles.board) return 'content';
+    if (uploadedVideoFiles.front) return 'front';
+    return null;
+  };
+
+  useEffect(() => {
+    if (!searchResults.length) return;
+
+    // Only highlight in playback mode (timestamps are for recorded content)
+    if (!videoPlaybackMode) {
+      console.log('[LeftPanel] Not in playback mode, skipping highlights');
+      return;
+    }
+
+    // ALWAYS highlight only the highest priority video available
+    // back > content > front. Never highlight other cameras.
+    const targetCamera = getPriorityVideoType();
+
+    if (!targetCamera) {
+      console.warn('[LeftPanel] No video files available for highlighting');
+      return;
+    }
+
+    console.log(`[LeftPanel] Highlighting priority camera: ${targetCamera}`);
+
+    searchResults.forEach(r => {
+      window.dispatchEvent(
+        new CustomEvent("highlightTimeline", {
+          detail: {
+            startTime: r.start_time,
+            endTime: r.end_time,
+            topic: r.topic,
+            targetCamera // Include target camera so HLSPlayer can filter
+          }
+        })
+      );
+    });
+  }, [searchResults, videoPlaybackMode, uploadedVideoFiles]);
+
+  const getSearchPlaceholder = () => {
+    if (contentSegmentationStatus === 'loading') {
+      return t('search.preparingContent', 'Content Generating...');
+    }
+    if (contentSegmentationStatus === 'error') {
+      if (contentSegmentationError?.includes('duration')) {
+        return t('search.durationError', 'Duration mismatch - check your files');
+      }
+      return t('search.contentError', 'Content preparation failed');
+    }
+    return t('search.placeholder', 'Search for topics...');
+  };
+
+  const showResultsPreview = searchQuery && searchResults.length >= 0 && !searchLoading;
+
   return (
     <div className={`left-panel-container ${isFullScreen ? "fullscreen" : ""}`}>
       <VideoStream isFullScreen={isFullScreen} onToggleFullScreen={handleToggleFullScreen} />
+    
+      <div className="search-container">
+        <div
+          className="search-wrapper"
+          title={
+            contentSegmentationStatus !== "complete"
+              ? "Enabled only after content segmentation"
+              : ""
+          }
+        >
+          <SearchBox
+            onSearch={handleSearch}
+            placeholder={getSearchPlaceholder()}
+            className={contentSegmentationStatus !== "complete" ? "search-disabled" : ""}
+            sessionId={sessionId}
+          />
 
-      <Timeline />
+          {contentSegmentationStatus === "loading" && (
+            <div className="search-status loading">
+              <span className="spinner"></span>
+              {t('search.preparingContent', 'Content Generating...')}
+            </div>
+          )}
+
+          {contentSegmentationStatus === "error" && (
+            <div className={`search-status ${contentSegmentationError?.includes('duration') ? 'warning' : 'error'}`}>
+              {contentSegmentationError || t('search.contentError', 'Content preparation failed. Search unavailable.')}
+            </div>
+          )}
+
+          {searchLoading && (
+            <div className="search-status loading">
+              <span className="spinner"></span>
+              {t('search.searching', 'Searching...')}
+            </div>
+          )}
+
+          {searchError && (
+            <div className="search-status error">
+              {searchError}
+            </div>
+          )}
+
+          {showResultsPreview && (
+            <SearchResultsPreview
+              results={searchResults}
+              query={searchQuery}
+            />
+          )}
+        </div>
+      </div>
       
       <div className="tabs">
         <button
@@ -56,6 +183,7 @@ const LeftPanel = () => {
           {mindmapEnabled && mindmapLoading && <span className="tab-spinner" aria-label="loading" />}
         </button>
       </div>
+      
       <div className="tab-content">
         {activeTab === "transcripts" && <TranscriptsTab />}
         {activeTab === "summary" && <AISummaryTab />}
