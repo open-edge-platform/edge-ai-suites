@@ -7,9 +7,11 @@
 
 global:
   proxy:
-    httpProxy: ""
-    httpsProxy: ""
-    noProxy: ""
+    noProxy: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
+    httpProxy: "http://proxy-pilot.intel.com:911"
+    httpsProxy: "http://proxy-pilot.intel.com:912"
+
+
 
 
 # =============================================================================
@@ -38,7 +40,7 @@ trafficAgent:
     logLevel: "INFO"
     refreshInterval: "15"
     weatherMock: "false"
-    vlmTimeoutSeconds: "600"
+    vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
   # For Helm/K8s: use the K8s service DNS of the SceneScape broker, e.g.:
   #   smart-intersection-broker (same namespace)
@@ -86,7 +88,7 @@ vlmServing:
     port: 8000
     nodePort: 30800
   env:
-    modelName: "Qwen/Qwen2.5-VL-3B-Instruct"
+    modelName: "microsoft/Phi-3.5-vision-instruct"
     compressionWeightFormat: "int4"
     device: "CPU"
     seed: "42"
@@ -95,13 +97,32 @@ vlmServing:
     logLevel: "info"
     openvinoLogLevel: "1"
     accessLogFile: "/dev/null"
-    ovConfig: '{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}'
+    # OpenVINO config – device-specific (INFERENCE_NUM_THREADS is CPU-only)
+    # CACHE_DIR enables GPU model caching to avoid costly recompilation on restarts
+    ovConfigCpu: '{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}'
+    ovConfigGpu: '{"PERFORMANCE_HINT": "LATENCY", "CACHE_DIR": "/app/ov-model/gpu-cache"}'
   huggingfaceToken: ""
-  # GPU settings - enable if VLM_DEVICE is GPU
+  # GPU settings - set enabled=true to run VLM inference on Intel GPU
+  # When enabled, VLM_DEVICE is automatically set to "GPU" and workers forced to 1
   gpu:
-    enabled: false
+    enabled: true
+    # Intel GPU resource exposed by the device plugin
+    # Use "gpu.intel.com/i915" for integrated / Arc A-series
+    # Use "gpu.intel.com/xe" for Data Center GPU Flex / Max (Xe)
     resourceName: "gpu.intel.com/i915"
     resourceLimit: 1
+    # GIDs of the "render" group to add to supplementalGroups (needed for /dev/dri access).
+    # All common distro values are included by default so the chart works across environments:
+    #   44 (some minimal/Alpine), 109 (Ubuntu/Debian), 992 (Fedora/RHEL/SUSE)
+    # Override or extend via --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
+    # To find the correct GID on a node: getent group render
+    renderGroupIds:
+      - 44
+      - 109
+      - 992
+  # Optional: pin VLM pod to nodes with GPUs
+  nodeSelector: {}
+  #   e.g.  intel.feature.node.kubernetes.io/gpu: "true"
   healthcheck:
     initialDelaySeconds: 10
     periodSeconds: 10
@@ -119,6 +140,9 @@ vlmServing:
     enabled: true
     size: 20Gi
     storageClass: ""
+    # Keep the PVC (and downloaded model) when the chart is uninstalled.
+    # Set to true to avoid re-downloading the model on every install cycle.
+    keepOnUninstall: true
 
 # =============================================================================
 # TLS / Secrets Configuration

@@ -10,6 +10,10 @@ metadata:
   labels:
     {{- include "stia.labels" . | nindent 4 }}
     app.kubernetes.io/component: vlm-serving
+  {{- if .Values.vlmServing.persistence.keepOnUninstall }}
+  annotations:
+    "helm.sh/resource-policy": keep
+  {{- end }}
 spec:
   accessModes:
     - ReadWriteOnce
