@@ -1,7 +1,18 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-alert-agent">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-alert-agent/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Live Video Alert Agent
 
-Deploy AI-powered video alerting using OpenVINO Vision Language Models. You process RTSP streams, generate real-time alerts from natural language prompts, and monitor them on a unified dashboard.
-
+Deploy AI-powered video alerting using OpenVINO Vision Language Models to process RTSP streams,
+generate real-time alerts from natural language prompts, and monitor them on a unified dashboard.
 
 ## Use Cases
 
@@ -21,15 +32,15 @@ Deploy AI-powered video alerting using OpenVINO Vision Language Models. You proc
 
 **Intel® Hardware Optimized**: Designed for high-performance inference on Intel® CPUs and GPUs via OpenVINO.
 
-
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started
-system-requirement
-how-it-works
+system-requirements
 how-to-build-source
+how-it-works
+api-reference
 known-issues
 release-notes
 

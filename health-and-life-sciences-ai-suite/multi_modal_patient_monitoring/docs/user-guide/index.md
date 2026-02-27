@@ -18,14 +18,15 @@ consolidated monitoring for a virtual patient.
 It combines several AI services:
 
 - **rPPG (Remote Photoplethysmography):** Contactless heart and respiratory rate estimation
-from facial video.
+  from facial video.
 - **3D-Pose Estimation:** 3D human pose detection from video.
 - **AI-ECG:** ECG rhythm classification from simulated ECG waveforms.
-- **MDPNP:** Getting metrics of three simulated devices such as ECG, BP and CO2
+- **MDPNP (Medical Device Plug-and-Play):** Getting metrics of three simulated devices such
+  as ECG, BP and CO2
 - **Patient Monitoring Aggregator:** Central service that collects and aggregates vitals from
-all AI workloads.
+  all AI workloads.
 - **Metrics Collector:** Gathers hardware and system telemetry (CPU, GPU, NPU, power) from
-the host.
+  the host.
 - **UI:** Web-based dashboard for visualizing waveforms, numeric vitals, and system status.
 
 Together, these components illustrate how vision- and signal-based AI workloads can be
@@ -34,12 +35,13 @@ orchestrated, monitored, and visualized in a clinical-style scenario.
 ## Supporting Resources
 
 - [Get Started](./get-started.md) – Step-by-step instructions to build and run the application
-using `make` and Docker.
+  using `make` and Docker.
 - [System Requirements](./get-started/system-requirements.md) – Hardware, software, and network requirements, plus an overview of the AI models used by each workload.
 - [How It Works](./how-it-works.md) – High-level architecture, service responsibilities, and
-data/control flows.
+  data/control flows.
 
-> This application is provided for development and evaluation purposes only and is *not* intended for clinical or diagnostic use.
+> **Disclaimer:** This application is provided for development and evaluation purposes only and is _not_
+intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}
@@ -47,6 +49,7 @@ data/control flows.
 
 get-started.md
 how-it-works.md
+release-notes.md
 
 :::
 hide_directive-->

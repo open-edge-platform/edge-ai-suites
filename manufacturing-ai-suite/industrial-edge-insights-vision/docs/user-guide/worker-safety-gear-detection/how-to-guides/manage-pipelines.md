@@ -108,3 +108,16 @@ curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 > The instance ID is shown in the Terminal when the
 > [pipeline was started](#start-the-pipeline) or when
 >[pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
+
+## Additional Usage
+### Frame Batching
+You can process multiple streams together when batching is enabled and the same model instance (that is, the same model-instance-id) is used across pipeline instances.
+
+To enable this, configure the pipeline’s inference element to support batching and assign a shared model instance ID. For example:
+```sh
+... ! gvadetect model=/path/to/model.xml model-instance-id=inst0 batch-size=4 ! ...
+```
+
+In this configuration, if 4 instances (or any multiple of 4) of the pipeline are launched (for example, using the curl commands described in the previous section), their frames will be grouped into batches of four and processed in a single inference call.
+
+For more details about batching in DLStreamer, refer [this documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).

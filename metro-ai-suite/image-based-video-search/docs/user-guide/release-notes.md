@@ -7,6 +7,12 @@
 Details about the changes, improvements, and known issues in this release of the
 application.
 
+## Version 1.2.0
+
+- Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
+- Changed model from person-vehicle-bike-detection-2004 to yolov11s model.
+- Support IBVS for NPU device
+
 ## Version 1.1.0
 
 - Added Nginx reverse proxy server, updated npm packages and python packages

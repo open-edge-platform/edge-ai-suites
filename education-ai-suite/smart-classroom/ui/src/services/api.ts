@@ -195,6 +195,78 @@ return res.json();
 });
 }
 
+export async function storeAudioDuration(sessionId: string, audioFile: File): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    console.log(`🔊 Extracting audio duration from ${audioFile.name}...`);
+    const duration = await getAudioDuration(audioFile);
+    
+    if (!duration) {
+      throw new Error('Could not extract audio duration from file');
+    }
+
+    console.log(`📤 Sending audio duration to backend: ${duration.toFixed(2)}s`);
+    const response = await fetch(`${BASE_URL}/store-audio-duration`, {
+      method: 'POST',
+      headers: {
+        'X-Session-ID': sessionId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ duration }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Audio metadata upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Audio duration stored at backend:', result);
+    return result;
+  });
+}
+
+/**
+ * Extract audio duration using HTML5 Audio API
+ * This is more reliable than ffprobe and works in the browser
+ */
+export function getAudioDuration(file: File): Promise<number | null> {
+  return new Promise((resolve) => {
+    try {
+      const audio = document.createElement('audio');
+      const url = URL.createObjectURL(file);
+      
+      // Set a timeout in case metadata never loads
+      const timeout = setTimeout(() => {
+        URL.revokeObjectURL(url);
+        console.warn('Audio duration extraction timed out');
+        resolve(null);
+      }, 10000); // 10 second timeout
+
+      audio.addEventListener('loadedmetadata', () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(url);
+        const duration = audio.duration;
+        console.log(`✅ Extracted audio duration: ${duration.toFixed(2)}s`);
+        resolve(isFinite(duration) ? duration : null);
+      }, { once: true });
+
+      audio.addEventListener('error', () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(url);
+        console.warn('Error loading audio metadata');
+        resolve(null);
+      }, { once: true });
+
+      // Trigger metadata loading
+      audio.src = url;
+      audio.load();
+    } catch (error) {
+      console.error('Error extracting audio duration:', error);
+      resolve(null);
+    }
+  });
+}
+
 export async function* streamTranscript(
   audioPath: string,
   sessionId: string,
@@ -448,6 +520,32 @@ export const stopVideoAnalytics = async (
 };
 
 export const startVideoAnalyticsPipeline = startVideoAnalytics;
+
+export const checkRecordedVideos = async (sessionId: string): Promise<any> => {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/check-recorded-videos`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Session-ID': sessionId,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || `Failed to check recorded videos: ${response.status}`);
+    }
+
+    return response.json();
+  });
+};
+
+export const getRecordedVideoUrl = (sessionId: string, videoType: string): string => {
+  if (!sessionId || !videoType) {
+    throw new Error('Session ID and video type are required');
+  }
+  return `${BASE_URL}/recorded-video/${videoType}?session_id=${sessionId}`;
+};
 
 export async function getClassStatistics(
   sessionId: string,
@@ -732,6 +830,99 @@ export async function generateContentSegmentation(sessionId: string): Promise<{ 
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Content segmentation failed: ${response.status} - ${errorText}`);
+    }
+
+    return await response.json();
+  });
+}
+
+export async function uploadVideoMetadata(sessionId: string, videoFile: File): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    console.log(`📹 Extracting video duration from ${videoFile.name}...`);
+    // Extract duration from video file using HTML5 Video API
+    const duration = await getVideoDuration(videoFile);
+    
+    if (!duration) {
+      throw new Error('Could not extract video duration from file');
+    }
+
+    console.log(`📤 Sending video duration to backend: ${duration.toFixed(2)}s`);
+    // Send duration to backend
+    const response = await fetch(`${BASE_URL}/store-video-duration`, {
+      method: 'POST',
+      headers: {
+        'X-Session-ID': sessionId,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ duration }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Video metadata upload failed: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Video duration stored at backend:', result);
+    return result;
+  });
+}
+
+/**
+ * Extract video duration using HTML5 Video API
+ * This is more reliable than ffprobe and works in the browser
+ */
+export function getVideoDuration(file: File): Promise<number | null> {
+  return new Promise((resolve) => {
+    try {
+      const video = document.createElement('video');
+      const url = URL.createObjectURL(file);
+      
+      // Set a timeout in case metadata never loads
+      const timeout = setTimeout(() => {
+        URL.revokeObjectURL(url);
+        console.warn('Video duration extraction timed out');
+        resolve(null);
+      }, 10000); // 10 second timeout
+
+      video.addEventListener('loadedmetadata', () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(url);
+        const duration = video.duration;
+        console.log(`✅ Extracted video duration: ${duration.toFixed(2)}s`);
+        resolve(isFinite(duration) ? duration : null);
+      }, { once: true });
+
+      video.addEventListener('error', () => {
+        clearTimeout(timeout);
+        URL.revokeObjectURL(url);
+        console.warn('Error loading video metadata');
+        resolve(null);
+      }, { once: true });
+
+      // Trigger metadata loading
+      video.src = url;
+      video.load();
+    } catch (error) {
+      console.error('Error extracting video duration:', error);
+      resolve(null);
+    }
+  });
+}
+
+export async function markVideoUsage(sessionId: string): Promise<{ status: string; message: string }> {
+  return safeApiCall(async () => {
+    const response = await fetch(`${BASE_URL}/mark-video-usage`, {
+      method: 'POST',
+      headers: {
+        'X-Session-ID': sessionId,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to mark video usage: ${response.status} - ${errorText}`);
     }
 
     return await response.json();

@@ -11,9 +11,10 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-patient-monitoring-assets:1.0.0
+    image: intel/hl-ai-patient-monitoring-assets:${TAG:-1.0.1}
     container_name: patient-monitoring-assets
     volumes:
+      - ./configs/model-config.yaml:/app/configs/model-config.yaml:ro
       - ./models:/models
       - ./videos:/videos
   
@@ -25,7 +26,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-patient-monitoring-aggregator:1.0.0
+    image: intel/hl-ai-patient-monitoring-aggregator:${TAG:-1.0.1}
     container_name: patient-monitoring-aggregator
     environment:
       - WORKLOAD_TYPE=mdpnp
@@ -41,7 +42,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-metrics-collector:1.0.0
+    image: intel/hl-ai-metrics-collector:${TAG:-1.0.1}
     container_name: metrics-collector
     privileged: true
     pid: host
@@ -57,12 +58,9 @@ services:
       - /sys/devices:/sys/devices
       - /dev/dri:/dev/dri:rw
       - /sys/class/drm:/sys/class/drm:ro
-      - /sys/kernel/debug:/sys/kernel/debug:ro
-    devices:
-      - "/sys:/sys"
-      - "/dev:/dev"
-      - "/run:/run"
-      - "/proc:/proc"
+      - /sys/kernel/debug:/sys/kernel/debug:ro    
+      - /run:/run
+      - /proc:/proc:ro
 
   mdpnp:
     build:
@@ -72,7 +70,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-mdpnp:1.0.0
+    image: intel/hl-ai-mdpnp:${TAG:-1.0.1}
     container_name: mdpnp
     network_mode: "host"
     depends_on:
@@ -85,7 +83,11 @@ services:
     build:
       context: ./services/dds-bridge
       dockerfile: Dockerfile
-    image: intel/hl-ai-dds-bridge:1.0.0
+      args:
+        HTTP_PROXY: ${HTTP_PROXY}
+        HTTPS_PROXY: ${HTTPS_PROXY}
+        NO_PROXY: ${NO_PROXY}
+    image: intel/hl-ai-dds-bridge:${TAG:-1.0.1}
     container_name: dds-bridge
     environment:
       - GRPC_HOST=localhost
@@ -109,7 +111,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-ecg:1.0.0
+    image: intel/hl-ai-ecg:${TAG:-1.0.1}
     container_name: ai-ecg
     network_mode: "host"
     depends_on:
@@ -140,7 +142,7 @@ services:
           HTTPS_PROXY: ${HTTPS_PROXY}
           NO_PROXY: ${NO_PROXY}
           INSTALL_DRIVER_VERSION: "25.31.34666"
-      image: intel/hl-ai-3dpose:1.0.0
+      image: intel/hl-ai-3dpose:${TAG:-1.0.1}
       container_name: 3dpose-estimation
       network_mode: "host"
       environment:
@@ -177,7 +179,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-rppg:1.0.0
+    image: intel/hl-ai-rppg:${TAG:-1.0.1}
     container_name: rppg
     network_mode: "host"
     depends_on:
@@ -207,7 +209,7 @@ services:
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
-    image: intel/hl-ai-ui:1.0.0
+    image: intel/hl-ai-ui:${TAG:-1.0.1}
     container_name: ui  
     ports:
       - "3000:3000"

@@ -1,10 +1,10 @@
-## How It Works
+# How It Works
 
 The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
 
-### Data Flow
+## Data Flow
 
-```
+```text
 RTSP Source → StreamManager (OpenCV/Circular Buffer)
             ↓
        AgentManager (Orchestrator) ↔ VLM Service (OpenAI-compatible API)

@@ -9,14 +9,15 @@ By following this guide, you will learn how to:
 
 ## Prerequisites
 
-- Verify that your system meets the minimum requirements. See [System Requirements](./system-requirements.md) for details.
+- Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed). Please refer to this [guide](https://github.com/open-edge-platform/scenescape/tree/main/tools/streamer) to create simulated RTSP test feed stram using exisiting video files.
 - OpenVINO-compatible VLM in `ov_models/`. User may use the [script](../../download_models.sh) provided to prepare the model.
-- OpenVINO-compatible Object Detection Models in `ov_detection_models/`. Only required when user wish to enable object detection in the pipeline. Please refer to this [guide](./object-detection-pipeline.md) to enable object detection in the pipeline.
+- OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
+when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.
 
-## Running the application
+## Run the application
 
 1. **Clone the repository**:
      ```bash
@@ -25,7 +26,8 @@ By following this guide, you will learn how to:
      # Alternatively, clone a specific release branch
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b <release-tag>
      ```
-    Note: Adjust the repo link appropriately in case of forked repo.
+
+> **Note:** Adjust the repo link appropriately in case of forked repo.
 
 2. **Navigate to the Directory**:
      ```bash
@@ -37,7 +39,7 @@ By following this guide, you will learn how to:
         export REGISTRY="intel/"
         export TAG="latest"
      ```
-    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
+    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
 
 4. **Configure Environment**:
     Create a `.env` file in the repository root:
@@ -95,7 +97,7 @@ By following this guide, you will learn how to:
     4. Customize the prompt and maximum tokens as needed.
     5. Click **Start** to begin captioning.
 
-    > **Note**: If running in a proxy network, ensure that your RTSP stream URLs or IPs are added to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
+    > **Note:** If running in a proxy network, ensure that your RTSP stream URLs or IPs are added to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
 8. **Stop the Services**:
     Stop the sample application services using below:
@@ -105,11 +107,13 @@ By following this guide, you will learn how to:
 
 ## Advanced Setup Options
 For alternative ways to setup the application, see:
-- [How to build from Source](./how-to-build-source.md)
+
+- [Build from Source](./get-started/build-from-source.md)
 
 ## Testing
 
-The project uses **pytest** for unit testing. Tests are located in the `tests/` directory under the `app/` folder.
+The project uses **pytest** for unit testing. Tests are located in the `tests/` directory
+under the `app/` folder.
 
 ### Install Test Dependencies
 
@@ -151,3 +155,13 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+get-started/build-from-source.md
+
+:::
+hide_directive-->

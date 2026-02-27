@@ -173,20 +173,14 @@ async def device_config():
 
 @app.get("/streaming-status")
 async def stream_window_state():
-    """Return current streaming window state for UI (lock + remaining time)."""
-    now = time.time()
-    lock_until = getattr(app.state, "streaming_lock_until", None)
+    """Return current streaming window state for UI.
 
-    if lock_until is None or now >= lock_until:
-        return {
-            "locked": False,
-            "remaining_seconds": 0,
-        }
-
-    remaining = int(lock_until - now)
+    Auto-stop has been disabled at the backend layer, so this
+    endpoint always reports unlocked (no remaining time).
+    """
     return {
-        "locked": True,
-        "remaining_seconds": max(0, remaining),
+        "locked": False,
+        "remaining_seconds": 0,
     }
 
 @app.post("/start")
@@ -240,19 +234,6 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
             results["rppg"] = "already running"
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
-
-    window_seconds = 660.0
-    now = time.time()
-    app.state.streaming_lock_until = now + window_seconds
-
-    # Cancel any previous auto-stop task before creating a new one
-    existing_task = getattr(app.state, "auto_stop_task", None)
-    if existing_task is not None:
-        existing_task.cancel()
-
-    app.state.auto_stop_task = asyncio.create_task(
-        _auto_stop_after(window_seconds, targets)
-    )
 
     return {
         "status": "ok",
@@ -326,30 +307,8 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
     """Wrapper API for UI to stop streaming from backend workloads."""
     targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
 
-    # Manual stop clears any scheduled auto-stop and lock.
-    existing_task = getattr(app.state, "auto_stop_task", None)
-    if existing_task is not None:
-        existing_task.cancel()
-        app.state.auto_stop_task = None
-    app.state.streaming_lock_until = None
-
     results = await _stop_workloads_internal(targets)
     return {"status": "ok", "results": results}
-
-
-async def _auto_stop_after(delay_seconds: float, targets: set[str]) -> None:
-    """Background task that waits for the window then stops workloads."""
-    try:
-        await asyncio.sleep(delay_seconds)
-        print(f"[AutoStop] Stopping workloads after {delay_seconds} seconds: {targets}")
-        await _stop_workloads_internal(targets)
-    except asyncio.CancelledError:
-        print("[AutoStop] Cancelled before completion")
-        raise
-    finally:
-        # Clear lock and task reference when done.
-        app.state.streaming_lock_until = None
-        app.state.auto_stop_task = None
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
@@ -537,8 +496,6 @@ async def on_startup():
     print(f"✓ Event loop initialized: {event_loop}")
     
     app.state.ai_ecg_task = None
-    app.state.auto_stop_task = None
-    app.state.streaming_lock_until = None
 
     await asyncio.sleep(0.5)
     
