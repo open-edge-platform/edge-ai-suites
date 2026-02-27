@@ -1,7 +1,7 @@
 apiVersion: v2
 name: smart-nvr
 description: A Helm chart for Smart NVR 
-version: 1.2.3
+version: 1.2.4
 dependencies:
   - name: frigate
     version: 1.2.3
