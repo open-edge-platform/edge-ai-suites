@@ -67,6 +67,8 @@ cat > metro_vision_pipeline.sh << 'EOF'
 CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
+DEVICE=GPU
+
 
 echo "Starting Metro Vision AI Pipeline with Docker DLStreamer..."
 echo "Model: $MODEL_PATH"
@@ -116,7 +118,6 @@ while true; do
 done
 EOF
 
-export DEVICE=GPU
 chmod +x metro_vision_pipeline.sh
 
 # Start the pipeline in background
