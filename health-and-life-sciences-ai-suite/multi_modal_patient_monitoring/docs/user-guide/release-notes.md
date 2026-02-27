@@ -1,4 +1,4 @@
-# Release Notes - Multi-modal Patient Monitoring
+# Release Notes
 
 ## Version 1.0.0
 
@@ -10,7 +10,7 @@ This is the initial release of the application, therefore, it is considered a pr
 
 The initial feature set of the application is now available:
 
-- monitoring heart and respiratory rates
+- Heart and respiratory rate monitoring
 - Integration with medical devices
 - Pose estimation with joint tracking
 - ECG analysis with 12-lead classification
