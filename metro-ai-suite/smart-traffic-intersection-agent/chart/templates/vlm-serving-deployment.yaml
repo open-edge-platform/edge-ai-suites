@@ -21,6 +21,15 @@ spec:
         {{- include "stia.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: vlm-serving
     spec:
+      {{- if .Values.vlmServing.gpu.enabled }}
+      securityContext:
+        supplementalGroups:
+          {{- toYaml .Values.vlmServing.gpu.renderGroupIds | nindent 10 }}
+      {{- end }}
+      {{- with .Values.vlmServing.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.vlmServing.name }}
           image: "{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}"
@@ -40,12 +49,14 @@ spec:
               value: {{ .Values.vlmServing.env.modelName | quote }}
             - name: VLM_COMPRESSION_WEIGHT_FORMAT
               value: {{ .Values.vlmServing.env.compressionWeightFormat | quote }}
+            # Auto-derive device from gpu.enabled; override with vlmServing.env.device when GPU is off
             - name: VLM_DEVICE
-              value: {{ .Values.vlmServing.env.device | quote }}
+              value: {{ if .Values.vlmServing.gpu.enabled }}"GPU"{{ else }}{{ .Values.vlmServing.env.device | quote }}{{ end }}
             - name: VLM_SEED
               value: {{ .Values.vlmServing.env.seed | quote }}
+            # Force single worker when GPU is enabled (GPU inference is not multi-process safe)
             - name: WORKERS
-              value: {{ .Values.vlmServing.env.workers | quote }}
+              value: {{ if .Values.vlmServing.gpu.enabled }}"1"{{ else }}{{ .Values.vlmServing.env.workers | quote }}{{ end }}
             - name: VLM_MAX_COMPLETION_TOKENS
               value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
             - name: VLM_LOG_LEVEL
@@ -54,9 +65,16 @@ spec:
               value: {{ .Values.vlmServing.env.openvinoLogLevel | quote }}
             - name: VLM_ACCESS_LOG_FILE
               value: {{ .Values.vlmServing.env.accessLogFile | quote }}
-            {{- if .Values.vlmServing.env.ovConfig }}
+            {{- if .Values.vlmServing.gpu.enabled }}
+            {{- if .Values.vlmServing.env.ovConfigGpu }}
             - name: OV_CONFIG
-              value: {{ .Values.vlmServing.env.ovConfig | quote }}
+              value: {{ .Values.vlmServing.env.ovConfigGpu | quote }}
+            {{- end }}
+            {{- else }}
+            {{- if .Values.vlmServing.env.ovConfigCpu }}
+            - name: OV_CONFIG
+              value: {{ .Values.vlmServing.env.ovConfigCpu | quote }}
+            {{- end }}
             {{- end }}
             {{- if .Values.vlmServing.huggingfaceToken }}
             - name: HUGGINGFACE_TOKEN
