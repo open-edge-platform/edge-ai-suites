@@ -99,7 +99,7 @@ TEST_TARGETS := $(addprefix test-,$(TEST_COMPONENTS))
         clean-all clean-all-keep-models \
         shellcheck pylint ruff \
         trivy-scan trivy-scan-fs trivy-scan-image trivy-scan-config \
-        clamav-scan bandit-scan gitleaks-scan codeql-scan \
+        clamav-scan bandit-scan-new bandit-scan gitleaks-scan codeql-scan \
         $(TEST_TARGETS) \
         get-service-name get-component-names get-image-tags get-context-dirs \
         get-python-version get-scan-matrix-json
@@ -402,6 +402,28 @@ clamav-scan:
 		--exclude-dir=.venv \
 		> security-results/clamav-$(SERVICE_NAME)-$$(date +%Y%m%d-%H%M%S).txt 2>&1 || true
 	@echo "✅ ClamAV scan complete: security-results/clamav-*"
+
+bandit-scan-new:
+	@echo "🔐 Running Bandit Security Scan..."
+	@mkdir -p security-results
+	@python3 -m venv bandit-venv && \
+	source bandit-venv/bin/activate && \
+	pip install --upgrade pip && \
+	pip install bandit[toml] && \
+	CONFIG_OPT=""; \
+	if [ -f "pyproject.toml" ]; then CONFIG_OPT="-c pyproject.toml"; fi; \
+	echo "📝 Generating TXT Report (matches CI)..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f txt -o security-results/bandit-report-$(SERVICE_NAME).txt || true && \
+	echo "📊 Generating JSON Report..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f json -o security-results/bandit-report-$(SERVICE_NAME).json || true && \
+	echo "🌐 Generating HTML Report..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f html -o security-results/bandit-report-$(SERVICE_NAME).html || true && \
+	deactivate && \
+	rm -rf bandit-venv
+	@echo "✅ Bandit scan complete. Check security-results/ for txt, json, and html reports."
 
 bandit-scan:
 	@echo "🔐 Running Bandit Security Scan..."
