@@ -40,7 +40,8 @@ orchestrated, monitored, and visualized in a clinical-style scenario.
 - [How It Works](./how-it-works.md) – High-level architecture, service responsibilities, and
   data/control flows.
 
-> This application is provided for development and evaluation purposes only and is _not_ intended for clinical or diagnostic use.
+> **Disclaimer:** This application is provided for development and evaluation purposes only and is _not_
+intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}
