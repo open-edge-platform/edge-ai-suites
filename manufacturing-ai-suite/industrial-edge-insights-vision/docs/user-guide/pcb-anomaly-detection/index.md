@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection">
      GitHub project
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/pcb-anomaly-detection/README.md">
      Readme
   </a>
 </div>
@@ -24,7 +24,7 @@ anomalies before they can impact operations.
 ## How It Works
 
 This sample application consists of the following microservices:
-DL Streamer Pipeline Server, MediaMTX server,Coturn server, 
+DL Streamer Pipeline Server, MediaMTX server,Coturn server,
 Open Telemetry Collector, Prometheus and Minio.
 
 You start the PCB anomaly detection pipeline with a REST request using Client URL (cURL).
@@ -35,19 +35,19 @@ facilitate NAT traversal and ensure that the webrtc stream is accessible on a no
 browser client and helps in cases where firewall is enabled. DL Streamer Pipeline Server
 also sends the images to S3 compliant storage. The Open Telemetry Data exported by
 DL Streamer Pipeline Server to Open Telemetry Collector is scraped by Prometheus and can
-be seen on Prometheus UI. Any desired AI model from supported 
-OpenVINO public models and Geti trained models can be downloaded with the help of Model Download 
-Microservice and can be made available to DL Streamer Pipeline Server for inference in the 
+be seen on Prometheus UI. Any desired AI model from supported
+OpenVINO public models and Geti trained models can be downloaded with the help of Model Download
+Microservice and can be made available to DL Streamer Pipeline Server for inference in the
 sample application.
 
 ![architecture and high-level representation of the flow of data through the architecture](./_assets/industrial-edge-insights-vision-architecture.drawio.svg)
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion
   and deep learning inferencing functions.
-- [Model Download ](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)
+- [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.0.0/microservices/model-download)
   is a microservice to download AI models so that they may be used by DLStreamer Pipeline Server.
 
 It also consists of the below Third-party microservices:

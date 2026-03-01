@@ -2,7 +2,7 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection">
      GitHub project
   </a>
   </div>
@@ -54,7 +54,7 @@ This data is ingested into **Telegraf** through the **OPC-UA** protocol using th
 
 **Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package
 (TICK Scripts, UDFs, Models) from the sample apps. The UDF deployment package for the Wind
-Turbine Anomaly Detection sample app is available in [this folder](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config).
+Turbine Anomaly Detection sample app is available in [this folder](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config).
 
 Directory details is as below:
 
@@ -114,7 +114,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 The `windturbine_anomaly_detector.pkl` is a model built using the Random Forest Regressor
 algorithm from the Scikit-learn library.
-For more details on how it is built refer to the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md).
+For more details on how it is built refer to the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md).
 
 <!--hide_directive
 :::{toctree}

@@ -510,9 +510,9 @@ best_model = grid_search.best_estimator_
 ## Appendix: References and Resources
 
 ### Documentation
-- [Training README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md)
-- [Application Config](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
-- [UDF Implementation](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
+- [Training README](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md)
+- [Application Config](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
+- [UDF Implementation](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
 
 ### Data Sources
 - **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)

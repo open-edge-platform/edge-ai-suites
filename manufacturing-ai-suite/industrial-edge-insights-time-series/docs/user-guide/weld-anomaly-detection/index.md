@@ -2,7 +2,7 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection">
      GitHub project
   </a>
   </div>

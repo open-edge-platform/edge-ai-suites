@@ -16,7 +16,7 @@ and `Weld Anomaly Detection` sample apps
 <!--hide_directive:sync: tab1hide_directive-->
 
 [wind-turbine-anomaly-detection/time-series-analytics-config/config.json](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
 
 ```json
   "alerts": {
@@ -33,7 +33,7 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 <!--hide_directive:sync: tab2hide_directive-->
 
 [weld-anomaly-detection/time-series-analytics-config/config.json](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/config.json)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/config.json)
 
 ```json
   "alerts": {
@@ -60,7 +60,7 @@ sample apps. The TICK script has the following configuration done by default.
 
 
 [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
 
 ```bash
 data0
@@ -79,7 +79,7 @@ data0
 
 
 [weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 
 ```bash
 data0
@@ -116,7 +116,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   <!--hide_directive:sync: tab1hide_directive-->
 
   [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+  https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
@@ -126,7 +126,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   <!--hide_directive:sync: tab2hide_directive-->
 
   [weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+  https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
@@ -160,7 +160,7 @@ already added, replace this in place of MQTT alert section in the TICK script.
 <!--hide_directive:sync: tab1hide_directive-->
 
 [wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick)
 
 ```bash
 data0
@@ -187,7 +187,7 @@ Make the following REST API call to the Time Series Analytics microservice. Note
 <!--hide_directive:sync: tab1hide_directive-->
 
 [wind-turbine-anomaly-detection/time-series-analytics-config/config.json](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
+https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
 
 ```sh
 curl -k -X 'POST' \
@@ -330,7 +330,7 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
    <!--hide_directive:sync: tab1hide_directive-->
 
    [wind-turbine-anomaly-detection/time-series-analytics-config/config.json](
-   https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
+   https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json)
 
    ```sh
    curl -k -X 'POST' \

@@ -90,9 +90,9 @@ With this feature, during runtime, you can download a new model using the micros
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
-    ### Downloading model with Model Download 
+    ### Downloading model with Model Download
 
-    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/Overview.md) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md).
+    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/model-download/docs/user-guide/index.md) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/model-download/docs/user-guide/get-started.md).
 
     For our demonstration, we will assume the weld porosity model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/tmp-models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
 
@@ -102,7 +102,7 @@ With this feature, during runtime, you can download a new model using the micros
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
 10. Start a new pipeline with this new model. Before that modify the payload.json to use this new model in `apps/weld-porosity/payload.json`. Notice the model path in the payload has changed to the new model.
-    
+
    ```json
    [
        {
@@ -129,10 +129,10 @@ With this feature, during runtime, you can download a new model using the micros
 
 ## Additional resources
 ### Setting up Model Download
-To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#quick-start)
+To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/model-download/docs/user-guide/get-started.md#quick-start)
 
 ### Downloading models from Geti Server
-To learn how to download models from a running Geti server, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#sample-usage-with-curl-command)
+To learn how to download models from a running Geti server, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/model-download/docs/user-guide/get-started.md#sample-usage-with-curl-command)
 
 
-> **Note:**: The downloaded model(s) must be accessible to the DLStreamer pipeline server container. If not, please add it to volumes section of dltreamer-pipeline-server in compose file, and restart the DLSPS service.
+> **Note:**: The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If not, please add it to volumes section of dltreamer-pipeline-server in compose file, and restart the DLSPS service.

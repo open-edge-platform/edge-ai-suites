@@ -61,7 +61,7 @@ pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download
 
 Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
-For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
+For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
 
 ## Step 2: Configuration
 
