@@ -813,7 +813,7 @@ jobs:
           output: results-timeseries
 
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9a3d3444828e57bfd88b7d7c95db7be0 #v4.8.0
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.3.0
         with:
           python-version: '3.x'
 
@@ -893,7 +893,7 @@ jobs:
           output: results-multimodal
 
       - name: Set up Python
-        uses: actions/setup-python@0b93645e9a3d3444828e57bfd88b7d7c95db7be0 #v4.8.0
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.3.0
         with:
           python-version: '3.x'
 
