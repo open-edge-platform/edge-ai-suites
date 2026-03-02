@@ -1,3 +1,14 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-traffic-intersection-agent">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-traffic-intersection-agent/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Smart Traffic Intersection Agent
 
 The Smart Traffic Intersection Agent is a comprehensive traffic analysis service that provides
@@ -25,9 +36,9 @@ The Smart Traffic Intersection stack includes the following containerized servic
 
 - **MQTT Broker** (Eclipse Mosquitto message broker) - Message broker for traffic data
 - **DL Streamer Pipeline Server** - Video analytics and AI inference
-- **SceneScape Database** - Configuration and metadata storage
-- **SceneScape Web Server** - Management interface
-- **SceneScape Controller** - Orchestration service
+- **Intel® SceneScape Database** - Configuration and metadata storage
+- **Intel® SceneScape Web Server** - Management interface
+- **Intel® SceneScape Controller** - Orchestration service
 - **VLM OpenVINO Serving** - Vision Language Model inference
 - **Traffic Intelligence** - Real-time traffic analysis with dual interface (API and UI)
 

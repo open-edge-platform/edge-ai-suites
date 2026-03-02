@@ -47,10 +47,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.17.0
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.18.0-rc1
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.17.0.tgz
+tar -xvf smart-intersection-1.18.0-rc1.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart
@@ -74,7 +74,9 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-### Step 2: Configure External IP and Proxy Settings
+> **Note:** To run the pipeline on GPU set the property `gpuWorkload` to `true` in the above `values.yaml` file. Similarly, to run the pipeline on NPU set the property `npuWorkload` to `true` in the above `values.yaml` file.
+
+### Step 3: Configure External IP and Proxy Settings
 
 #### Configure External IP (Required)
 

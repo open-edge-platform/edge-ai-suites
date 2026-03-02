@@ -6,34 +6,6 @@ A reusable, containerized microservice for system metrics collection and real-ti
 
 The Metrics Service provides a decoupled solution for collecting, relaying, and visualizing system metrics in real-time. It acts as a WebSocket relay between metrics collectors (like Telegraf) and dashboard clients, enabling live visualization of CPU, memory, GPU, and other system metrics.
 
-## Quick Start
-
-### 1. Configure Environment Variables
-
-Copy the example environment file and customize as needed:
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` to configure:
-- `METRICS_PORT` - Service port (default: 9090)
-- `LOG_LEVEL` - Logging verbosity (default: INFO)
-- `CORS_ORIGINS` - CORS allowed origins (default: *)
-
-```bash
-export REGISTRY="intel/"
-export TAG="latest"
-docker compose up
-```
-
-### 2. Verify the Service
-
-```bash
-curl http://localhost:9090/health
-# Response: {"status": "healthy"}
-```
-
 ## Documentation
 
 Comprehensive documentation is available in the [user-guide](docs/user-guide/) directory:

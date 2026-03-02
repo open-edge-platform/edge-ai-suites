@@ -44,6 +44,7 @@ This guide is designed to help developers understand the architecture, setup, an
 get-started
 how-it-works
 how-to-use-gpu-for-inference
+how-to-use-npu-for-inference
 application-security-enablement
 troubleshooting
 release-notes

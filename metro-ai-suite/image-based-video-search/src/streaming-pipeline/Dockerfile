@@ -1,7 +1,21 @@
-FROM docker.io/intel/dlstreamer:2025.2.0-ubuntu22
+FROM docker.io/intel/dlstreamer:2026.0.0-ubuntu24-rc1
 USER root
 
-RUN apt-get update && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget && rm -rf /var/lib/apt/lists/*
+# Pull Debian security fixes (addresses libpng/libpq/linux-libc-dev CVEs when available in node security)
+RUN apt-get update \
+ && apt-get -y upgrade \
+ && apt-get install --yes --no-install-recommends gstreamer1.0-plugins-ugly wget \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    python3-venv
+
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --no-cache-dir opencv-python-headless
 
 USER dlstreamer
 

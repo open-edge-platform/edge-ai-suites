@@ -4,6 +4,13 @@
 
 .PHONY: init-mdpnp build-mdpnp build-dds-bridge run down download-rppg-assets
 
+HTTP_PROXY := $(or $(HTTP_PROXY),$(http_proxy))
+HTTPS_PROXY := $(or $(HTTPS_PROXY),$(https_proxy))
+NO_PROXY := $(or $(NO_PROXY),$(no_proxy))
+export HTTP_PROXY
+export HTTPS_PROXY
+export NO_PROXY
+
 MDPNP_PATH := services/mdpnp/mdpnp
 DDS_BRIDGE_PATH := services/dds-bridge
 DOCKER_COMPOSE := docker-compose.yaml
@@ -13,6 +20,8 @@ REGISTRY ?= true
 HOST_IP ?= $(shell hostname -I | awk '{print $$1}')
 export HOST_IP
 
+TAG ?= 2026.0-rc1
+export TAG
 
 init-mdpnp:
 	@echo "Initializing mdpnp submodule..."
@@ -30,10 +39,10 @@ run:
 	@if [ "$(REGISTRY)" = "true" ]; then \
 		echo "##############Using registry mode - fetching all images..."; \
 		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
-		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up -d; \
+		./run_compose.sh -d; \
 	else \
 		echo "Using HOST_IP=$(HOST_IP) for UI backend"; \
-		docker compose -f $(DOCKER_COMPOSE) --env-file configs/device.env up --build -d; \
+		./run_compose.sh --build -d; \
 	fi
 	@echo "==============================================="
 	@echo "Multi-modal patient monitoring application is starting up."

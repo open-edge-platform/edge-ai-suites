@@ -1,11 +1,6 @@
-FROM intel/retail-benchmark:3.3.1
+FROM intel/retail-benchmark:3.3.2
 
 ARG HTTP_PROXY
-
-# Optional: Set APT proxy if provided at build time
-RUN if [ -n "$HTTP_PROXY" ]; then \
-	echo "Acquire::http::Proxy \"$HTTP_PROXY\";" > /etc/apt/apt.conf; \
-	fi
 
 WORKDIR /app
 

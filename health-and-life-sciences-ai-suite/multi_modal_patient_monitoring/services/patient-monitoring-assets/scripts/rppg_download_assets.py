@@ -19,6 +19,7 @@ from tqdm import tqdm
 import logging
 import argparse
 
+import yaml
 import tensorflow as tf
 from tensorflow import keras
 import openvino as ov
@@ -28,6 +29,47 @@ logging.basicConfig(
     format='%(levelname)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+CONFIG_PATH = Path("/app/configs/model-config.yaml")
+
+
+def _load_rppg_model_config() -> tuple[str, str]:
+    """Load rPPG model name and target_dir from config.
+
+    This function expects /app/configs/model-config.yaml to exist and to
+    define rppg.models[0] with at least name and target_dir. If these
+    are missing or the file is not readable, the script will raise and
+    fail fast instead of using hardcoded defaults.
+    """
+    if not CONFIG_PATH.exists():
+        raise FileNotFoundError(
+            f"rPPG config not found at {CONFIG_PATH}. Ensure model-config.yaml is mounted."
+        )
+
+    try:
+        with CONFIG_PATH.open("r") as f:
+            cfg = yaml.safe_load(f) or {}
+    except Exception as e:
+        raise RuntimeError(f"Failed to parse rPPG config {CONFIG_PATH}: {e}") from e
+
+    rppg_cfg = cfg.get("rppg", {})
+    models = rppg_cfg.get("models", [])
+    if not models:
+        raise ValueError(
+            "model-config.yaml has no rppg.models entries; please define at least one."
+        )
+
+    first = models[0] or {}
+    name = first.get("name")
+    target_dir = first.get("target_dir")
+
+    if not name or not target_dir:
+        raise ValueError(
+            "rppg.models[0] must define name and target_dir in model-config.yaml."
+        )
+
+    return str(name), str(target_dir)
 
 
 @keras.utils.register_keras_serializable(package="Custom")
@@ -90,9 +132,15 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
 
 
 def download_model() -> None:
-    """Download MTTS-CAN model weights."""
+    """Download MTTS-CAN model weights.
+
+    The destination filename under /models/rppg is taken from
+    model-config.yaml (rppg.models[0].name), falling back to
+    "mtts_can.hdf5" if not configured.
+    """
     MODEL_URL = "https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5"
-    model_path = Path("/models") / "rppg" / "mtts_can.hdf5"
+    model_filename, target_dir = _load_rppg_model_config()
+    model_path = Path(target_dir) / model_filename
 
     if model_path.exists():
         logger.info(f"Model already exists: {model_path}")
@@ -120,9 +168,10 @@ def convert_model_to_openvino() -> None:
     Produces /models/rppg/mtts_can.xml and .bin, which will be used by the
     rPPG service running on GPU.
     """
-
-    h5_path = Path("/models") / "rppg" / "mtts_can.hdf5"
-    xml_path = Path("/models") / "rppg" / "mtts_can.xml"
+    model_filename, target_dir = _load_rppg_model_config()
+    h5_path = Path(target_dir) / model_filename
+    # Keep the IR filename stable; config controls input HDF5 name.
+    xml_path = Path(target_dir) / "mtts_can.xml"
 
     if not h5_path.exists():
         logger.error(f"Cannot convert to OpenVINO IR; HDF5 model missing: {h5_path}")

@@ -94,5 +94,5 @@ triton==3.3.1
 typing_extensions==4.12.2
 tzdata==2025.2
 urllib3==2.6.3
-Werkzeug==3.1.5
+Werkzeug==3.1.6
 wrapt==1.17.2
