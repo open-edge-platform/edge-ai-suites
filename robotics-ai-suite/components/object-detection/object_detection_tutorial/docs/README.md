@@ -18,7 +18,7 @@ inference engine should be used.
 ## Source Code
 
 The source code of this component can be found here:
-[Object-Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/object-detection)
+[Object-Detection](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/object-detection)
 
 ## Prerequisites
 

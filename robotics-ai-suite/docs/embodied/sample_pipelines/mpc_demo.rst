@@ -7,7 +7,7 @@ Model Predictive Control Demo
 #############################
 
 Model predictive control (MPC) is an advanced method of process control that is used to control a process while satisfying a set of constraints. Model predictive controllers rely on dynamic models of the process, most often linear empirical models obtained by system identification. The main advantage of MPC is the fact that it allows the current timeslot to be optimized, while keeping future timeslots in account. Also MPC has the ability to anticipate future events and can take control actions accordingly. These features can benefit current model-based robotics control in Perception-Action frequency gap, unsmoothness of generated trajectories, and potential collision.
- 
+
 Here, we adopted an open-source MPC project named Optimal Control for Switched Systems (OCS2) and built a complete pipeline consisting of AI reference model(ACT), MPC(OCS2), and simulation(MUJOCO). The picture below shows the ROS node/topic graph of this demo with three modules: ACT AI model module (marked as red), OCS2 MPC optimization module (marked as green), and Mujoco simulation module (marked as blue).
 
 .. image:: assets/images/mpc-ros-graph.jpg
@@ -27,8 +27,8 @@ Please refer to the `official ROS2 Humble installation <https://docs.ros.org/en/
 ACT Setup
 =========
 
-First, please follow the ACT installation guide in :doc:`./imitation_learning_act` except ``Install ACT package``. Here, we need to install ACT source code by downloading `act-sample <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/act-sample>`_,  and initialize submodules and apply patches:
-   
+First, please follow the ACT installation guide in :doc:`./imitation_learning_act` except ``Install ACT package``. Here, we need to install ACT source code by downloading `act-sample <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/pipelines/act-sample>`_,  and initialize submodules and apply patches:
+
    .. code-block:: bash
 
       $ cd act-sample
@@ -72,7 +72,7 @@ Install OCS2
         python3-pip \
         python3-wstool \
         wget
-      
+
       # install ros2 library
       $ sudo apt-get install -y \
         ros-humble-pinocchio \
@@ -89,7 +89,7 @@ Install OCS2
 
 3. Download ocs2 and ocs2_robotic_assets
 
-Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
+Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/pipelines/mpc-demo/ocs2>`_ and `ocs2_robotic_assets <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/pipelines/mpc-demo/ocs2_robotic_assets>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
 
    .. code-block:: bash
 
@@ -105,7 +105,7 @@ Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/r
 4. Build ocs2 and ocs2_robotic_assets:
 
    .. code-block:: bash
-        
+
         cd ~/ocs2_ws
         # rosdep
         $ rosdep update --rosdistro humble
@@ -113,7 +113,7 @@ Download `ocs2 <https://github.com/open-edge-platform/edge-ai-suites/tree/main/r
 
         # build
         $ source /opt/ros/humble/setup.bash
-        $ colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release 
+        $ colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 
 MUJOCO Setup
@@ -132,10 +132,10 @@ Here, we adopted and modified the open-source Mujoco Plugin project `MujocoRosUt
 
 2. Download MujocoRosUtils:
 
-Download `mujoco_ros_utils <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/mpc-demo/mujoco_ros_utils>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
+Download `mujoco_ros_utils <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/pipelines/mpc-demo/mujoco_ros_utils>`_ with ``git clone --recursive``. Then, initialize submodules and apply patches:
 
    .. code-block:: bash
-      
+
       $ cd ~/ocs2_ws/src/mujoco_ros_utils
       $ ./install_mujoco_ros_utils_patches.sh patches/mujoco_ros_utils.scc
 
@@ -161,15 +161,15 @@ Run pipeline
         $ ./simulate [path to your MujocoRosUtils]/xml/bimanual_viperx_transfer_cube_dual_arm.xml
 
    .. note::
-      
+
       If running successfully, the mujoco UI will display two opposing ALOHA robotic arms. Collision in this stage is acceptable.
-   
+
    .. note::
 
       If mujoco fails with unknown plugin, please check ``ldd`` and add lib path manually:
-   
+
       .. code-block:: bash
-         
+
          # ldd check
          $ ldd ~/.mujoco/mujoco-2.3.7/bin/mujoco_plugin/libMujocoRosUtils*.so
          # add path
@@ -194,14 +194,14 @@ If launching successfully, the OCS2 terminal will print out information indicati
    :width: 85%
    :align: center
 
-1. Open new terminal and run Act 
-   
+1. Open new terminal and run Act
+
    .. note::
 
       You need to download our pre-trained ACT weights for `transferring cube task <https://eci.intel.com/embodied-sdk-docs/_downloads/sim_transfer_cube_scripted.zip>`_ and set the argument ``--ckpt_dir`` to the path of the pre-trained weights.
 
    .. code-block:: bash
-      
+
       # env
       $ source /opt/ros/humble/setup.bash
       $ source ~/ocs2_ws/install/setup.bash

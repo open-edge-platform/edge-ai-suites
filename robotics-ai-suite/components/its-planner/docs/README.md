@@ -45,12 +45,12 @@ and a follow path.
     path. The generated smooth path is in the form of a ROS 2 navigation
     message type (`nav_msgs::msg`).
 
-For customization options, see [ITS Path Planner Plugin Customization](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-customization.html)
+For customization options, see [ITS Path Planner Plugin Customization](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html#its-path-planner-plugin-customization)
 
 ## Source Code
 
 The source code of this component can be found here:
-[ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/its-planner)
+[ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/its-planner)
 
 ## Getting Started
 
@@ -81,7 +81,7 @@ Run the following script to set environment variables:
 > ``` bash
 > source /opt/ros/$ROS_DISTRO/setup.bash        # ROS_DISTRO=humble or jazzy
 > export TURTLEBOT3_MODEL=waffle
-> 
+>
 > # Set Gazebo model path (variable name differs between distributions)
 > if [ "$ROS_DISTRO" = "jazzy" ]; then
 >     export GZ_SIM_RESOURCE_PATH=$GZ_SIM_RESOURCE_PATH:/opt/ros/$ROS_DISTRO/share/turtlebot3_gazebo/models

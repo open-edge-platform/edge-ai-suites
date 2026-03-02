@@ -62,7 +62,7 @@ ros2 launch adbscan_ros2 play_demo_realsense_launch.py
 Expected result: ROS 2 rviz2 starts, and you will see how ADBSCAN interprets
 Intel® RealSense™ camera data coming from the ROS 2 bag (click on the video to play):
 
-<https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/adbscan_demo_RS.mp4>
+<https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/robotics-ai-suite/docs/robotics/videos/adbscan_demo_RS.mp4>
 
 ## ADBSCAN ROS2 Node Output description
 
