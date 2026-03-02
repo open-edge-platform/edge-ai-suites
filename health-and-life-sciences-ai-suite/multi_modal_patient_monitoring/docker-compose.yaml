@@ -65,7 +65,7 @@ services:
       - /sys/class/drm:/sys/class/drm:ro
       - /sys/kernel/debug:/sys/kernel/debug:ro    
       - /run:/run
-      - /proc:/proc:ro
+      - /proc:/proc
 
   mdpnp:
     build:
