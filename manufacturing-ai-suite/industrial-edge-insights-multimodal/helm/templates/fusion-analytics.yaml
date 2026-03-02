@@ -25,6 +25,13 @@ spec:
       imagePullSecrets:
       - name: registryauth
       {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: fusion-analytics
         image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.fusion_analytics_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
@@ -34,6 +41,7 @@ spec:
           runAsGroup: {{ .Values.env.TIMESERIES_UID }}
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+          runAsNonRoot: true
           capabilities:
             drop:
               - ALL

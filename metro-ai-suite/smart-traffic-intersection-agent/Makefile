@@ -99,7 +99,7 @@ TEST_TARGETS := $(addprefix test-,$(TEST_COMPONENTS))
         clean-all clean-all-keep-models \
         shellcheck pylint ruff \
         trivy-scan trivy-scan-fs trivy-scan-image trivy-scan-config \
-        clamav-scan bandit-scan gitleaks-scan codeql-scan \
+        clamav-scan bandit-scan-new bandit-scan gitleaks-scan codeql-scan codeql-scan-new \
         $(TEST_TARGETS) \
         get-service-name get-component-names get-image-tags get-context-dirs \
         get-python-version get-scan-matrix-json
@@ -403,6 +403,28 @@ clamav-scan:
 		> security-results/clamav-$(SERVICE_NAME)-$$(date +%Y%m%d-%H%M%S).txt 2>&1 || true
 	@echo "✅ ClamAV scan complete: security-results/clamav-*"
 
+bandit-scan-new:
+	@echo "🔐 Running Bandit Security Scan..."
+	@mkdir -p security-results
+	@python3 -m venv bandit-venv && \
+	source bandit-venv/bin/activate && \
+	pip install --upgrade pip && \
+	pip install bandit[toml] && \
+	CONFIG_OPT=""; \
+	if [ -f "pyproject.toml" ]; then CONFIG_OPT="-c pyproject.toml"; fi; \
+	echo "📝 Generating TXT Report (matches CI)..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f txt -o security-results/bandit-report-$(SERVICE_NAME).txt || true && \
+	echo "📊 Generating JSON Report..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f json -o security-results/bandit-report-$(SERVICE_NAME).json || true && \
+	echo "🌐 Generating HTML Report..." && \
+	bandit $$CONFIG_OPT --severity-level low --confidence-level low -r src/ tests/ \
+		-f html -o security-results/bandit-report-$(SERVICE_NAME).html || true && \
+	deactivate && \
+	rm -rf bandit-venv
+	@echo "✅ Bandit scan complete. Check security-results/ for txt, json, and html reports."
+
 bandit-scan:
 	@echo "🔐 Running Bandit Security Scan..."
 	@mkdir -p security-results
@@ -427,6 +449,54 @@ gitleaks-scan:
 	@gitleaks dir . -v \
 		-r security-results/gitleaks-$(SERVICE_NAME)-$$(date +%Y%m%d-%H%M%S).json || true
 	@echo "✅ Gitleaks scan complete: security-results/gitleaks-*"
+
+codeql-scan-new:
+	@echo "🛡️  Running CodeQL Security Analysis..."
+	@if ! command -v codeql >/dev/null 2>&1; then \
+		echo "❌ CodeQL CLI is not installed. Install: https://github.com/github/codeql-cli-binaries/releases"; \
+		exit 1; \
+	fi
+
+	@mkdir -p security-results
+
+	@echo "→ Creating CodeQL database for Python..."
+	@codeql database create security-results/codeql-db-python-$(SERVICE_NAME) \
+		--language=python \
+		--source-root=. \
+		--build-mode=none \
+		--overwrite 2>&1 | tail -5
+
+	@echo "→ Updating CodeQL Python Query Packs..."
+	@codeql pack download codeql/python-queries
+
+	@echo "→ Running CodeQL analysis (SARIF)..."
+	@codeql database analyze security-results/codeql-db-python-$(SERVICE_NAME) \
+		codeql/python-queries \
+		--format=sarif-latest \
+		--output=security-results/codeql-python-$(SERVICE_NAME).sarif || true
+
+	@echo "→ Running CodeQL analysis (CSV)..."
+	@codeql database analyze security-results/codeql-db-python-$(SERVICE_NAME) \
+		codeql/python-queries \
+		--format=csv \
+		--output=security-results/codeql-python-$(SERVICE_NAME).csv || true
+
+	@echo "→ Converting CSV to JSON..."
+	@if [ -f security-results/codeql-python-$(SERVICE_NAME).csv ]; then \
+		python3 -c "import csv,json; h=['name','description','severity','message','path','start_line','start_col','end_line','end_col']; rows=[dict(zip(h,r)) for r in csv.reader(open('security-results/codeql-python-$(SERVICE_NAME).csv')) if r]; json.dump(rows,open('security-results/codeql-python-$(SERVICE_NAME).json','w'),indent=2); print('  Converted '+str(len(rows))+' finding(s) to JSON')"; \
+	else \
+		echo "  ⚠️ No CSV findings to convert."; \
+	fi
+
+	@echo "→ Converting SARIF to HTML..."
+	@if [ -f security-results/codeql-python-$(SERVICE_NAME).sarif ]; then \
+		python3 -c "import json,html; s=json.load(open('security-results/codeql-python-$(SERVICE_NAME).sarif')); fs=[{'id':r.get('ruleId',''),'sev':r.get('level','warning'),'msg':r.get('message',{}).get('text',''),'path':r.get('locations',[{}])[0].get('physicalLocation',{}).get('artifactLocation',{}).get('uri',''),'line':r.get('locations',[{}])[0].get('physicalLocation',{}).get('region',{}).get('startLine',0)} for run in s.get('runs',[]) for r in run.get('results',[])]; rows=''.join(['<tr><td>%d</td><td>%s</td><td>%s</td><td>%s</td><td>%s:%s</td></tr>'%(i+1,html.escape(f['sev']),html.escape(f['id']),html.escape(f['msg'][:200]),html.escape(f['path']),f['line']) for i,f in enumerate(fs)]); open('security-results/codeql-python-$(SERVICE_NAME).html','w').write('<!DOCTYPE html><html><head><meta charset=utf-8><title>CodeQL Report - $(SERVICE_NAME)</title><style>body{font-family:Arial,sans-serif;margin:20px}table{border-collapse:collapse;width:100%%}th,td{border:1px solid #ddd;padding:8px;text-align:left}th{background:#4472C4;color:white}tr:nth-child(even){background:#f2f2f2}</style></head><body><h1>CodeQL Security Report: $(SERVICE_NAME)</h1><p><strong>Total findings:</strong> %d</p><table><tr><th>#</th><th>Severity</th><th>Rule</th><th>Message</th><th>Location</th></tr>%s</table></body></html>'%(len(fs),rows)); print('  Generated HTML report with %d finding(s)'%len(fs))"; \
+	else \
+		echo "  ⚠️ No SARIF file to convert."; \
+	fi
+
+	@echo "✅ Python analysis complete."
+	@echo "✅ CodeQL scan complete: security-results/codeql-*"
 
 codeql-scan:
 	@echo "🛡️  Running CodeQL Security Analysis..."

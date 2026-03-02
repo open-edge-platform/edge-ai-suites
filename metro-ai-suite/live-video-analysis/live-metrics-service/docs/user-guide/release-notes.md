@@ -19,7 +19,6 @@
 - Single collector connection with policy enforcement
 - Multi-client broadcast support with unlimited connections
 - Health monitoring endpoints (`/health`, `/api/health`)
-- Metrics status endpoint (`/api/metrics/status`)
 - Configurable CORS support
 - Docker container with non-root user
 - Environment-based configuration
