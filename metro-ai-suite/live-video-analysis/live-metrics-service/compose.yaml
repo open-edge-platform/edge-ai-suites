@@ -23,7 +23,6 @@ services:
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
       # Optional: Configure target service polling
       - TARGET_SERVICE_URL=${TARGET_SERVICE_URL:-}
-      - METRICS_ENDPOINT=${METRICS_ENDPOINT:-/api/metrics/status}
       - POLL_INTERVAL_SECONDS=${POLL_INTERVAL_SECONDS:-2}
     ports:
       - "${METRICS_PORT:-9090}:9090"

@@ -23,7 +23,7 @@
                 "name": "worker_safety_gear_detection_mqtt",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark displ-cfg=font-scale=1.0,draw-txt-bg=false ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -64,7 +64,7 @@
                 "name": "worker_safety_gear_detection_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark displ-cfg=font-scale=1.0,draw-txt-bg=false ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {

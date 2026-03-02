@@ -40,6 +40,30 @@ Before running the application, you need to set several environment variables:
     export TAG=latest
     ```
 
+    In most cases, `TAG=latest` works out of the box. Set a specific tag only when you need to pin to a particular release/version.
+
+    **Override tags per stack (recommended for mixed release cycles):**
+
+    Live Video Search combines two stacks that can be released on different cadences:
+    - **VSS Search stack** (`compose.search.yaml`)
+    - **Smart NVR stack** (`compose.smart-nvr.yaml`)
+
+    Use stack-specific tag overrides when you need different image versions for each stack:
+
+     ```bash
+     export TAG=1.0.0
+     export VSS_STACK_TAG=1.3.2
+     export SMART_NVR_STACK_TAG=1.2.4
+     ```
+
+    Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
+
+    Note: `setup.sh` includes a release mapping for `TAG=1.0.0` and automatically sets:
+    - `VSS_STACK_TAG=1.3.2`
+    - `SMART_NVR_STACK_TAG=1.2.4`
+
+    You can still explicitly export `VSS_STACK_TAG` and `SMART_NVR_STACK_TAG` to override those defaults.
+
 2. **Set required credentials for some services**:
    Following variables **MUST** be set on your current shell before running the setup script:
 
