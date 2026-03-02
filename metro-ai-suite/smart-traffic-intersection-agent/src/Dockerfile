@@ -22,7 +22,7 @@ COPY . .
 RUN uv sync && uv pip install -r ui/requirements.txt
 
 # Copy license file
-COPY ../third_party_programs.txt /licenses/third_party_programs.txt
+COPY third_party_programs.txt /licenses/third_party_programs.txt
 
 # Create non-root user and adjust permissions
 RUN useradd -m -u 1000 traffic && \
