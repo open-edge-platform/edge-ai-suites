@@ -8,8 +8,7 @@ openvino>=2024.6.0,<2025.0
 
 # gRPC runtime (protos are pre-generated)
 grpcio==1.78.0
-grpcio-tools==1.71.2
-protobuf==5.29.6
+protobuf==6.33.5
 
 # Configuration & Utilities
 pyyaml>=6.0.0
