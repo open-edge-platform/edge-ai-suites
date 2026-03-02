@@ -147,7 +147,7 @@ edge application deployment process.
 
 ## Supporting Resources
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive
 :::{toctree}

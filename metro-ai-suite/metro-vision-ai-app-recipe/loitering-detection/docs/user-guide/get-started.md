@@ -182,7 +182,7 @@ a simplified edge application deployment process.
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 <!--hide_directive
 :::{toctree}

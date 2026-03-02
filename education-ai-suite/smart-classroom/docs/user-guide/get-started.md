@@ -14,7 +14,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 
 Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
-For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
+For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
 
 **Run your shell with admin privileges before starting the application**
 
@@ -57,7 +57,7 @@ asr:
   temperature: 0.0
 
 summarizer:
-  provider: openvino          
+  provider: openvino
   name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
   device: GPU                 # Options: GPU or CPU
   weight_format: int8         # Supported: fp16, fp32, int4, int8
@@ -81,7 +81,7 @@ asr:
 Activate the environment before running the application:
 
 ```bash
-smartclassroom\Scripts\activate  
+smartclassroom\Scripts\activate
 ```
 
 Run the backend:

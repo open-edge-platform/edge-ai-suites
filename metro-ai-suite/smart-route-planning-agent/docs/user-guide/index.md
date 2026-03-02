@@ -23,7 +23,7 @@ find the optimal path based on live traffic conditions.
 **Incident Avoidance**: Identify and avoid routes potentially affected by congestion, weather,
 roadblocks, or accidents.
 
-**Multi-Agent Traffic Analysis**: Communicates with [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/index.html)
+**Multi-Agent Traffic Analysis**: Communicates with [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-traffic-intersection-agent/index.html)
 to gather live analysis reports for informed routing decisions.
 
 ## How It Works
