@@ -7,7 +7,7 @@
       "timer": "Timer"
     },
     "footer": {
-      "copyright": "© 2025 Smart Classroom Sample App"
+      "copyright": "© 2025-{{year}} Smart Classroom Sample App"
     },
     "notifications": {
       "start": "Upload the files or Start recording to begin a new session",

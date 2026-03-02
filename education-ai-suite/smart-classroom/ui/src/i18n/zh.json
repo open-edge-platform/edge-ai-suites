@@ -7,7 +7,7 @@
     "timer": "计时器"
   },
   "footer": {
-    "copyright": "© 2025 智能教室示例应用"
+    "copyright": "© 2025-{{year}} 智能教室示例应用"
   },
   "notifications": {
     "start": "上传文件或开始录音以开始新会话",
