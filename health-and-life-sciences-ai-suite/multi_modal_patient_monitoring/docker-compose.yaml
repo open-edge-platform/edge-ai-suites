@@ -13,6 +13,11 @@ services:
         NO_PROXY: ${NO_PROXY}
     image: intel/hl-ai-patient-monitoring-assets:${TAG:-1.0.1}
     container_name: patient-monitoring-assets
+    environment:
+      - MODEL_CONFIG_PATH=/app/configs/model-config.yaml
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     volumes:
       - ./configs/model-config.yaml:/app/configs/model-config.yaml:ro
       - ./models:/models
@@ -121,7 +126,6 @@ services:
         condition: service_started
     environment:
       - ECG_DEVICE=${ECG_DEVICE}  
-      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so   
     env_file:
       - ./configs/device.env  
     volumes:
@@ -129,7 +133,6 @@ services:
       - ./videos:/videos
     devices:
       - "/dev/dri:/dev/dri"
-      - "/dev/accel/accel0:/dev/accel/accel0" 
     group_add:
       - video
 
@@ -154,7 +157,6 @@ services:
         - DEPLOYMENT_ENV=production
         - POSE_3D_DEVICE=${POSE_3D_DEVICE:-GPU}
         - CONTROL_PORT=8083     
-        - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so  
       env_file:
         - ./configs/device.env
       depends_on:
@@ -167,7 +169,6 @@ services:
         - ./videos:/videos 
       devices:
         - "/dev/dri:/dev/dri"
-        - "/dev/accel/accel0:/dev/accel/accel0" 
       group_add:
         - video
   
@@ -189,7 +190,6 @@ services:
           condition: service_started  
     environment:
       - RPPG_DEVICE=${RPPG_DEVICE}  
-      - ZE_ENABLE_ALT_DRIVERS=libze_intel_npu.so    
     env_file:
       - ./configs/device.env  
     volumes:
@@ -197,7 +197,6 @@ services:
       - ./videos:/videos
     devices:
       - "/dev/dri:/dev/dri" 
-      - "/dev/accel/accel0:/dev/accel/accel0" 
     group_add:
       - video      
    
