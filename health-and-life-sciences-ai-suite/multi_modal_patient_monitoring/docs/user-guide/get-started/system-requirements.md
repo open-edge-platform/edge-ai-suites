@@ -23,9 +23,10 @@ This section lists the hardware, software, and network requirements for running 
 
 - **Graphics / Accelerators:**
   - Required: Intel CPU.
-  - Optional (recommended for full experience):
+  - Optional (recommended for full experience,):
     - Intel integrated GPU supported by Intel® Graphics Compute Runtime.
-    - Intel NPU supported by the linux‑npu‑driver stack.
+    - Intel NPU supported by the linux‑npu‑driver stack (see [Release Notes](../release-notes.md) for a known issue).
+
   - The host must expose GPU and NPU devices to Docker, for example:
     - `/dev/dri` (GPU)
     - `/dev/accel/accel0` (NPU)

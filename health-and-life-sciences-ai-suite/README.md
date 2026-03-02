@@ -1,6 +1,6 @@
 # Health and Life Sciences AI Suite (Preview)
 
-The **Health and Life Sciences AI Suite** is a preview collection of healthcare-focused AI applications, libraries, and benchmarking tools to help developers build intelligent patient monitoring solutions faster.
+The **Health and Life Sciences AI Suite** is a collection of healthcare-focused AI applications, libraries, and benchmarking tools to help developers build intelligent patient monitoring solutions faster.
 
 The suite provides **multi-modal AI pipelines** accelerated with the **OpenVINO™ toolkit**, enabling high-performance deployment on **Intel® Core™ Ultra platforms** using **CPU, integrated GPU (iGPU), and NPU**.
 
