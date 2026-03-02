@@ -23,25 +23,24 @@ class SummarizerComponent(PipelineComponent):
         provider = provider.lower()
         cfg = (provider, model_name, device)
 
-        # Reload only if config changed
-        if SummarizerComponent._model is None or SummarizerComponent._config != cfg:
-            if provider == "openvino":
-                SummarizerComponent._model = OvSummarizer(
-                    model_name=model_name,
-                    device=device,
-                    temperature=temperature,
-                    revision=None
-                )
-            elif provider == "ipex":
-                SummarizerComponent._model = IpexSummarizer(
-                    model_name=model_name,
-                    device=device.lower(),
-                    temperature=temperature
-                )
-            else:
-                raise ValueError(f"Unsupported summarizer provider: {provider}")
 
-            SummarizerComponent._config = cfg
+        if provider == "openvino":
+            SummarizerComponent._model = OvSummarizer(
+                model_name=model_name,
+                device=device,
+                temperature=temperature,
+                revision=None
+            )
+        elif provider == "ipex":
+            SummarizerComponent._model = IpexSummarizer(
+                model_name=model_name,
+                device=device.lower(),
+                temperature=temperature
+            )
+        else:
+            raise ValueError(f"Unsupported summarizer provider: {provider}")
+
+        SummarizerComponent._config = cfg
 
         self.summarizer = SummarizerComponent._model
         self.model_name = model_name

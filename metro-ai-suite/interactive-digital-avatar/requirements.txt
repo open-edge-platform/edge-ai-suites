@@ -13,7 +13,7 @@ openvino-genai==2024.3.0
 paddlepaddle==2.6.1
 paddlespeech==1.5.0
 typeguard==2.13.3
-nltk==3.9
+nltk==3.9.3
 
 # funasr
 funasr==1.1.4
