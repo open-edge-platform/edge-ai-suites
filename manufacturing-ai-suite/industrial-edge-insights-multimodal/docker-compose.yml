@@ -44,7 +44,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.11.8
+    image: influxdb:1.12.2
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped

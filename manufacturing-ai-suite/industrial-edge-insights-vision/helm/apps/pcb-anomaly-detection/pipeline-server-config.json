@@ -23,7 +23,7 @@
                 "name": "pcb_anomaly_detection_mqtt",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify name=classification inference-region=full-frame pre-process-config=reverse_input_channels=yes device=CPU model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify name=classification inference-region=full-frame pre-process-config=reverse_input_channels=yes device=CPU model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark displ-cfg=font-scale=1.0,draw-txt-bg=false ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -64,7 +64,7 @@
                 "name": "pcb_anomaly_detection_opcua",
                 "source": "gstreamer",
                 "queue_maxsize": 50,
-                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify name=classification inference-region=full-frame pre-process-config=reverse_input_channels=yes device=CPU model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "pipeline": "{auto_source} name=source ! decodebin3 ! gvaclassify name=classification inference-region=full-frame pre-process-config=reverse_input_channels=yes device=CPU model-instance-id=inst0 ! queue ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark displ-cfg=font-scale=1.0,draw-txt-bg=false ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
                 "parameters": {
                     "type": "object",
                     "properties": {
