@@ -13,6 +13,11 @@ services:
         NO_PROXY: ${NO_PROXY}
     image: intel/hl-ai-patient-monitoring-assets:${TAG:-1.0.1}
     container_name: patient-monitoring-assets
+    environment:
+      - MODEL_CONFIG_PATH=/app/configs/model-config.yaml
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     volumes:
       - ./configs/model-config.yaml:/app/configs/model-config.yaml:ro
       - ./models:/models
