@@ -90,8 +90,11 @@ spec:
             - sh
             - -c
             - |
-              touch {{ .Values.auth.passwordFilePath }} && \
-              mosquitto_passwd -c -b {{ .Values.auth.passwordFilePath }} $${MQTT_USER} $${MQTT_PASSWORD} && \
+              if [ ! -f {{ .Values.auth.passwordFilePath }} ]; then
+                mosquitto_passwd -c -b {{ .Values.auth.passwordFilePath }} $${MQTT_USER} $${MQTT_PASSWORD}
+              else
+                mosquitto_passwd -b {{ .Values.auth.passwordFilePath }} $${MQTT_USER} $${MQTT_PASSWORD}
+              fi && \
               chmod 0700 {{ .Values.auth.passwordFilePath }} && \
               chown {{ $runUser }}:{{ $runGroup }} {{ .Values.auth.passwordFilePath }} && \
               mosquitto -c /mosquitto/config/mosquitto.conf

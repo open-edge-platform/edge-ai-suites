@@ -1,8 +1,19 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-captioning">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Live Video Captioning
 
 **Live Video Captioning** deploys AI-powered captioning for live video streams with Deep Learning Streamer (DL Streamer) and OpenVINO™ Vision Language Models. You can process RTSP streams, generate real-time captions, and monitor performance metrics on a dashboard.
 
-The key features are as follows:
+The key features are:
 
 **Multi-Model Support**: Switch between VLMs (InternVL2, Gemma-3, etc.) with automatic model discovery from `ov_models/`.
 
@@ -38,6 +49,5 @@ api-reference
 known-issues
 release-notes
 
-Source Code <https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/docs/user-guide>
 :::
 hide_directive-->

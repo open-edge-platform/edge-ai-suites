@@ -91,7 +91,7 @@ docker compose ps
 
 ## Accessing the Application
 
-- **Web UI (Scenescape Configuration):** `https://localhost`
+- **Web UI (Intel® SceneScape Configuration):** `https://localhost`
 - **Grafana (Dashboard):** `http://localhost:3000` (Default Login: `admin`/`admin`)
 
 ### User Interface

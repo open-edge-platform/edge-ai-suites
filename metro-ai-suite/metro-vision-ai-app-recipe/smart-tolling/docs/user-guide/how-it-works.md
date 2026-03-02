@@ -42,9 +42,9 @@ The application can be configured to work with live cameras.
 1. Video loops or RTSP is fed into DL Streamer.
 2. Trained AI models detect vehicles and license plates.
 3. Metadata is published to MQTT.
-4. SceneScape maps detections to scene regions to get exact location of objects on the scene.
+4. Intel® SceneScape maps detections to scene regions to get exact location of objects on the scene.
 5. Exit events are generated when vehicles leave the region.
-6. Node-RED processes only finalized exit events by subscribing to SceneScape topics.
+6. Node-RED processes only finalized exit events by subscribing to Intel® SceneScape topics.
 7. Data is written to InfluxDB for system to access for consistent information.
 8. Grafana visualizes real time and historical data enabling access to metrics
    and vehicle details.
