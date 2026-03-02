@@ -49,7 +49,7 @@ intended for clinical or diagnostic use.
 
 get-started.md
 how-it-works.md
-release-notes.md
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->
