@@ -21,8 +21,8 @@ trafficAgent:
   name: traffic-agent
   image:
     repository: intel/smart-traffic-intersection-agent
-    tag: "1.0.1"
-    pullPolicy: IfNotPresent
+    tag: "latest"
+    pullPolicy: Always
   replicas: 1
   service:
     type: NodePort
