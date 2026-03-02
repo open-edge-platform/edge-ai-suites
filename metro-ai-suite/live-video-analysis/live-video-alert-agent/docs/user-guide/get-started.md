@@ -16,7 +16,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 2. **Navigate to the Directory**:
      ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert
+     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
      ```
 
 3. **Configure Image Registry and Tag**:
@@ -67,7 +67,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    View application logs:
      ```bash
-     docker logs agentic-nvr
+     docker logs live-video-alert-agent
      ```
 
 6. **Access the Dashboard**:
@@ -113,7 +113,7 @@ docker compose down
 docker compose restart
 
 # Restart only the application (VLM service keeps running)
-docker compose restart agentic-nvr
+docker compose restart live-video-alert-agent
 ```
 
 ### Viewing Logs
@@ -126,7 +126,7 @@ docker compose logs -f
 docker logs -f ovms-vlm
 
 # Application logs
-docker logs -f agentic-nvr
+docker logs -f live-video-alert-agent
 ```
 
 ### Clearing Model Cache
