@@ -17,6 +17,8 @@ To see the system requirements and other installations, see the following guides
 
 The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
 
+![System Architecture](./docs/user-guide/_assets/Architecture.png)
+
 ```
 RTSP Source → StreamManager (OpenCV/Circular Buffer)
             ↓
