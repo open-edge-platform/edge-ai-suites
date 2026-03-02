@@ -10,9 +10,15 @@ To install dependencies, do the following:
 
 Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
 
+### B. Install DL Streamer
+
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+
+For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
+
 **Run your shell with admin privileges before starting the application**
 
-### B. Clone Repository
+### C. Clone Repository
 
 ```bash
   git clone --no-checkout https://github.com/open-edge-platform/edge-ai-suites.git
@@ -23,7 +29,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
   cd education-ai-suite
 ```
 
-### C. Install Python dependencies
+### D. Install Python dependencies
 
 It’s recommended to create a **dedicated Python virtual environment** for the base dependencies.
 
@@ -37,32 +43,6 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
-### D. \[Optional] Create Python Venv for Ipex Based Summarizer
-
-If you plan to use IPEX, create a separate virtual environment.
-
-```bash
-python -m venv smartclassroom_ipex
-smartclassroom_ipex\Scripts\activate
-# Use Python 3.12.x before running pip.
-python.exe -m pip install --upgrade pip
-cd smart-classroom
-pip install --upgrade -r requirements.txt
-pip install --pre --upgrade ipex-llm[xpu_2.6] --extra-index-url https://download.pytorch.org/whl/xpu
-```
-
-> **Note:**
->
-> - `smartclassroom_ipex` should only be used with FunAsr and Ipex related models
->   (Specified in 2nd section). Don't configure Openvino related models in `smartclassroom_ipex`
-> - Use `smartclassroom` if you don’t need IPEX. Use `smartclassroom_ipex` if you want IPEX summarization.
-
-### E. Install DL Streamer
-
-Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
-
-For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
-
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -71,13 +51,13 @@ By default, the project uses Whisper for transcription and OpenVINO-based Qwen m
 
 ```bash
 asr:
-  provider: openvino            # Supported: openvino, openai, funasr
-  name: whisper-tiny          # Options: whisper-tiny, whisper-small, paraformer-zh etc.
+  provider: openai            # Supported: openvino, openai, funasr
+  name: whisper-small          # Options: whisper-tiny, whisper-small, paraformer-zh etc.
   device: CPU                 # Whisper currently supports only CPU
   temperature: 0.0
 
 summarizer:
-  provider: openvino          # Options: openvino or ipex
+  provider: openvino          
   name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
   device: GPU                 # Options: GPU or CPU
   weight_format: int8         # Supported: fp16, fp32, int4, int8
@@ -94,38 +74,14 @@ asr:
   name: paraformer-zh
 ```
 
-### B. IPEX-based Summarization
-
-To use IPEX for summarization, ensure:
-
-- IPEX-LLM is installed.
-- The environment for IPEX is activated.
-- The configuration (`smart-classroom/config.yaml`) is updated as shown below:
-
-```bash
-asr:
-  provider: funasr
-  name: paraformer-zh
-summarizer:
-  provider: ipex
-```
-
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
 ## Step 3: Run the Application
 
-Run the setup script.
-Open a PowerShell prompt as and administrator, run the following script and follow instructions:
-
-```sh
-cd C:\\dlstreamer_dlls
-.\setup_dls_env.ps1
-```
-
 Activate the environment before running the application:
 
 ```bash
-smartclassroom\Scripts\activate  # or smartclassroom_ipex
+smartclassroom\Scripts\activate  
 ```
 
 Run the backend:
@@ -133,18 +89,6 @@ Run the backend:
 ```bash
 python main.py
 ```
-
-Bring Up the Frontend:
-
-```bash
-cd ui
-npm install
-npm run dev -- --host 0.0.0.0 --port 5173
-```
-
-> **Note:** Open a second (new) Command Prompt/ terminal window for the frontend.
-> The backend terminal stays busy serving requests.
-
 You should see backend logs similar to this:
 
 ```text
@@ -157,6 +101,17 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
 
 This means your pipeline server has started successfully and is ready to accept requests.
+
+Bring Up the Frontend:
+
+> **Note:** Open a second (new) Command Prompt/ terminal window for the frontend.
+> The backend terminal stays busy serving requests.
+
+```bash
+cd C:\path\to\edge-ai-suites\education-ai-suite\smart-classroom\ui
+npm install
+npm run dev -- --host 0.0.0.0 --port 5173
+```
 
 ## Step 4: Access the UI
 
