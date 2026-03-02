@@ -1,6 +1,15 @@
 # Release Notes
 
-## Current Release: 1.0.0-rc1
+## Current Release: 1.0.1
+
+**Release Date**: 27 Feb 2026
+
+### Features
+
+- Fixed security vulnerabities in code
+- Update base image to python:3.13-slim
+
+## Previous Releases: 1.0.0
 
 **Release Date**: 17 Feb 2026
 

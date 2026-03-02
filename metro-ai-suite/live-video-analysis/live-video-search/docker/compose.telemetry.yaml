@@ -3,7 +3,7 @@
 
 services:
   vss-collector:
-    image: docker.io/intel/vippet-collector:2025.2.0
+    image: docker.io/intel/vippet-collector:2026.0.0-20260217-weekly
     container_name: vss-collector
     ports:
       - '9273:9273'
