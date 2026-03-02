@@ -227,7 +227,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `trafficAgent.image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `trafficAgent.image.tag` | Image tag | `1.1.0` |
+| `trafficAgent.image.tag` | Image tag | `latest` |
 | `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
 | `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
