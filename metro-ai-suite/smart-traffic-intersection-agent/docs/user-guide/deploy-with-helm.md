@@ -91,7 +91,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](../../../metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
 ### Step 5: Configure GPU Support (Optional)
 
@@ -154,7 +154,31 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=stia -n <yo
 
 ### Step 8: Access the Application
 
-#### Using Port-Forward (ClusterIP — default)
+#### Using NodePort (default)
+
+The chart deploys services as `NodePort` by default. Retrieve the allocated ports and a node IP:
+
+```bash
+# Get the NodePort values
+kubectl get svc stia-traffic-agent -n <your-namespace>
+
+# Get the node IP
+kubectl get nodes -o wide
+# Use the INTERNAL-IP of any node
+```
+
+Then open your browser at:
+
+```
+http://<node-ip>:<backend-node-port>   # Backend API (default NodePort: 30881)
+http://<node-ip>:<ui-node-port>         # Gradio UI   (default NodePort: 30860)
+```
+
+> **Note:** If you are behind a corporate proxy, make sure the node IPs are included in your `no_proxy` / browser proxy exceptions.
+
+#### Using Port-Forward (ClusterIP)
+
+If you changed the service type to `ClusterIP` in `values.yaml`:
 
 ```bash
 # Traffic Agent Backend API
@@ -168,23 +192,6 @@ Then open your browser at:
 
 - **Backend API:** `http://127.0.0.1:8081/docs`
 - **Gradio UI:** `http://127.0.0.1:7860`
-
-#### Using NodePort
-
-If you changed the service type to `NodePort` in `values.yaml`:
-
-```bash
-# Get the NodePort values
-kubectl get svc stia-traffic-agent -n <your-namespace>
-
-# Get the node IP
-kubectl get nodes -o wide
-# Use the INTERNAL-IP of any node
-
-# Access via browser
-http://<node-ip>:<backend-node-port>
-http://<node-ip>:<ui-node-port>
-```
 
 ### Step 9: Uninstall the Helm Chart
 
@@ -219,18 +226,21 @@ helm uninstall stia -n <your-namespace>
 
 | Key | Description | Default |
 | --- | ----------- | ------- |
-| `trafficAgent.image.repository` | Traffic agent container image repository | `smart-traffic-intersection-agent` |
-| `trafficAgent.image.tag` | Image tag | `latest` |
-| `trafficAgent.service.type` | Kubernetes service type (`ClusterIP` or `NodePort`) | `ClusterIP` |
+| `trafficAgent.image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
+| `trafficAgent.image.tag` | Image tag | `1.1.0` |
+| `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
+| `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
 | `trafficAgent.service.uiPort` | Gradio UI port | `7860` |
+| `trafficAgent.service.uiNodePort` | NodePort for Gradio UI (only used when type is `NodePort`) | `30860` |
 | `trafficAgent.intersection.name` | Unique intersection identifier | `intersection_1` |
 | `trafficAgent.intersection.latitude` | Intersection latitude | `37.51358` |
 | `trafficAgent.intersection.longitude` | Intersection longitude | `-122.25591` |
 | `trafficAgent.env.logLevel` | Application log level | `INFO` |
 | `trafficAgent.env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `trafficAgent.env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
-| `trafficAgent.mqtt.host` | MQTT broker hostname (SceneScape) | `broker.scenescape.intel.com` |
+| `trafficAgent.env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `600` |
+| `trafficAgent.mqtt.host` | MQTT broker hostname (SceneScape K8s service name) | `smart-intersection-broker` |
 | `trafficAgent.mqtt.port` | MQTT broker port | `1883` |
 | `trafficAgent.traffic.highDensityThreshold` | Object count for high-density classification | `10` |
 | `trafficAgent.traffic.moderateDensityThreshold` | Object count for moderate-density classification | `""` |
@@ -245,14 +255,20 @@ helm uninstall stia -n <your-namespace>
 | --- | ----------- | ------- |
 | `vlmServing.image.repository` | VLM serving container image repository | `intel/vlm-openvino-serving` |
 | `vlmServing.image.tag` | Image tag | `1.3.2` |
+| `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `vlmServing.service.port` | VLM HTTP API port | `8000` |
-| `vlmServing.env.modelName` | Hugging Face model identifier | `Qwen/Qwen2.5-VL-3B-Instruct` |
+| `vlmServing.service.nodePort` | NodePort for VLM API (only used when type is `NodePort`) | `30800` |
+| `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
 | `vlmServing.env.compressionWeightFormat` | Model weight format (`int4`, `int8`, `fp16`) | `int4` |
 | `vlmServing.env.device` | OpenVINO inference device when GPU is disabled (`CPU` or `GPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
 | `vlmServing.env.maxCompletionTokens` | Max tokens per completion | `1500` |
 | `vlmServing.env.workers` | Number of serving workers. Forced to `1` when GPU is enabled. | `1` |
+| `vlmServing.env.logLevel` | VLM serving log level | `info` |
+| `vlmServing.env.openvinoLogLevel` | OpenVINO runtime log level | `1` |
+| `vlmServing.env.accessLogFile` | Access log file path (`/dev/null` to suppress) | `/dev/null` |
+| `vlmServing.env.seed` | Random seed for reproducible inference | `42` |
 | `vlmServing.env.ovConfigCpu` | OpenVINO config JSON for CPU mode (supports `INFERENCE_NUM_THREADS`) | `{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}` |
-| `vlmServing.env.ovConfigGpu` | OpenVINO config JSON for GPU mode (CPU-only options must be excluded) | `{"PERFORMANCE_HINT": "LATENCY"}` |
+| `vlmServing.env.ovConfigGpu` | OpenVINO config JSON for GPU mode (includes GPU model cache) | `{"PERFORMANCE_HINT": "LATENCY", "CACHE_DIR": "/app/ov-model/gpu-cache"}` |
 | `vlmServing.huggingfaceToken` | Hugging Face API token (stored as a Secret) | `""` |
 | `vlmServing.gpu.enabled` | Enable Intel GPU for VLM inference. Auto-sets `VLM_DEVICE=GPU` and `WORKERS=1`. | `true` |
 | `vlmServing.gpu.resourceName` | Kubernetes GPU resource name exposed by the Intel device plugin (`gpu.intel.com/i915` or `gpu.intel.com/xe`) | `gpu.intel.com/i915` |
@@ -269,7 +285,8 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `tls.caCert` | PEM-encoded CA certificate for the MQTT broker (base64-encoded in the Secret) | `""` |
-| `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`) | `""` |
+| `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`) | `smart-intersection-broker-rootcert` |
+| `tls.caCertKey` | Key name inside the external secret (required when `caCertSecretName` is set) | `root-cert` |
 
 ---
 
@@ -289,7 +306,7 @@ trafficAgent:
     latitude: "37.7749"
     longitude: "-122.4194"
   mqtt:
-    host: "broker.scenescape.intel.com"
+    host: "smart-intersection-broker"
 
 tls:
   caCert: |
