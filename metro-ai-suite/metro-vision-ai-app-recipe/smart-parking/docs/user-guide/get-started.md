@@ -125,10 +125,6 @@ By following this guide, you will learn how to:
 
 ### **DL Streamer Pipeline Server** ###
 - **REST API**: `https://localhost/api/pipelines/status`
-  - **Check Pipeline Status**:
-    ```bash
-    curl -k https://localhost/api/pipelines/status
-    ```
 - **WebRTC**: `https://localhost/mediamtx/object_detection_1/`
 
 

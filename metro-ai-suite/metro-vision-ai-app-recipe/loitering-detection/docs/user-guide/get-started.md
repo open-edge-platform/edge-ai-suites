@@ -114,10 +114,6 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 ### **DL Streamer Pipeline Server** ###
 - **REST API**: `https://localhost/api/pipelines/status`
-  - **Check Pipeline Status**:
-    ```bash
-    curl -k https://localhost/api/pipelines/status
-    ```
 - **WebRTC**: `https://localhost/mediamtx/object_tracking_1/`
 
 ## **Stop the Application**:
