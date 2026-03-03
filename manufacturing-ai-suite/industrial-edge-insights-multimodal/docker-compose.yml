@@ -80,6 +80,7 @@ services:
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
     image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    cpuset: "0-11"
     restart: unless-stopped
     depends_on:
       - ia-influxdb
