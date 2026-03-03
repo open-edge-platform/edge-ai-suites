@@ -14,13 +14,13 @@ using an LLM. The picture below shows the architecture of the demo:
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
 
 ## Prerequisites
 
 > [!IMPORTANT]
 > Please make sure you have all the prerequisites and installation in
-> [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html)
+> [Installation & Setup](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html)
 > and also ensure you have the following list-table prerequisites:
 
   -----------------------------------------------------------------------
@@ -223,7 +223,7 @@ environment to run LLM demo.
 Follow the OpenVINO documentation below to export and save `SAM` model:
 
 - SAM:
-  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/segment-anything>
+  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/segment-anything>
 
 Modify the loading PATH of models to the exported model path, the
 default path is:
@@ -240,7 +240,7 @@ Follow the OpenVINO documentation below to export and save
 `CLIP (ViT-B)` model:
 
 - CLIP:
-  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/clip-zero-shot-image-classification>
+  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/clip-zero-shot-image-classification>
 
 Modify the loading PATH of models to the exported model path, the
 default path is:
@@ -286,10 +286,10 @@ Ultra IPC.
   Item     Explanation                      LINK
   -------- -------------------------------- -----------------------------------------------------
   Camera   Intel® RealSense™ Depth Camera   <https://www.intelrealsense.com/depth-camera-d435/>
-           D435                             
+           D435
 
   USB Mic  Audio input device of FunASR,    UGREEN CM564
-           16k sampling rate                
+           16k sampling rate
   -----------------------------------------------------------------------------------------------
 
 ### Launch LLM Robotic Demo
