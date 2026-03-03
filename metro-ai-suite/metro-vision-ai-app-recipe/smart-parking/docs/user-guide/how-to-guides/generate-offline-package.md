@@ -158,11 +158,7 @@ To stop the pipelines without waiting for video streams to finish replay:
 - **URL**: `https://127.0.0.1/nodered/`
 
 ### DL Streamer Pipeline Server
-- **REST API**: https://127.0.0.1/api/pipelines](https://127.0.0.1/api/pipelines)
-- **Check Pipeline Status**:
-  ```bash
-  curl -k https://127.0.0.1/api/pipelines
-  ```
+- **REST API**: `https://127.0.0.1/api/pipelines/status`
 - **WebRTC**: `https://127.0.0.1/mediamtx/object_detection_1/`
 
 ## Stop the Application
