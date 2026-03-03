@@ -67,7 +67,7 @@ services:
     network_mode: host
 
   live-video-alert-agent:
-    image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
+    image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
     build: .
     container_name: live-video-alert-agent
     restart: unless-stopped
