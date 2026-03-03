@@ -39,7 +39,7 @@ class WeatherReportController(RouteStatusInterface):
         # Match for large areas around ~500x500 Sq.Mtr.
         return 0.005
 
-    def fetch_route_status(self) -> Optional[WeatherData]:
+    async def fetch_route_status(self) -> Optional[WeatherData]:
         """
         Fetch the weather report for the location from data/csv/weather_report.csv based on latitude and longitude.
         """
