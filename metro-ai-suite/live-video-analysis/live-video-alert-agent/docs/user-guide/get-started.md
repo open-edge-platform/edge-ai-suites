@@ -11,10 +11,9 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 1. **Clone the repository**:
      ```bash
-     # Clone the latest on mainline
+     # Clone the release branch
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b release-2026.0.0
      ```
-    Note: Adjust the repo link appropriately in case of forked repo.
 
 2. **Navigate to the Directory**:
      ```bash
