@@ -90,13 +90,12 @@ class LiveTrafficController(RouteStatusInterface):
     async def _plug_to_websocket(self, url: str) -> Optional[LiveTrafficData]:
         logger.debug(f"Connecting to WebSocket: {url}")
 
-        # NOTE: Because of several limitations - This is not being run as a persistent connection and has to be re-established every time we want to fetch live traffic data.
-        # This is because:
-        #   1) There are multiple websocket connections to handle and keeping a persistent connection for each will make the agent architecture complex.
-        #   2) Specifically due to previous design and multiple layers of abstraction, yielding data from multiple connections and then merging
-        #      and using it in the agent in real-time is a complex task and would require significant changes in the current architecture of the agent.
-        # This is still not polling the API in the traditional sense, as we are still using WebSockets to fetch data in real-time, an outer loop handles
-        # the re-connection logic and fetches data at regular intervals w/o blocking.
+        # TODO: Implement fully persistent connection supporting receiving push notifications from the API.
+        # NOTE: Because of several limitations - This is not being run as a persistent connection and has to be re-established
+        # every time we want to fetch live traffic data. This is because, due to legacy design and multiple layers of abstraction,
+        # yielding data from multiple connections and then merging it (as the current design expects) would require significant changes
+        # in the current architecture of the agent. This is still not polling the API in the traditional sense, as we are still using WebSockets
+        # to fetch data in real-time, an outer loop handles the re-connection logic and fetches data at regular intervals w/o blocking.
 
         try:
             async with websockets.connect(url) as websocket:
