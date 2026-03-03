@@ -32,25 +32,25 @@ async def fetch_intersection_data(api_url: str = Config.get_api_url()) -> None:
         None. Puts MonitoringData objects into the UI update queue.
     """
     try:
+        logger.info(f"Connecting to WebSocket API at {api_url}")
         async for websocket in websocket_connect(api_url, max_size=100_000_000): 
-            try:
-                async for message in websocket:
-                    raw_data: dict = json.loads(message)
-                    traffic_data: Optional[MonitoringData] = await parse_api_response(raw_data)
-                    # Put data into the queue for the UI to consume
-                    await ui_update_queue.put(traffic_data)
-            except WebsocketsConnectionClosed as e:
-                logger.warning(f"WebSocket connection closed by server: {str(e)}")
-                await asyncio.sleep(3)
-            except WebSocketException as e:
-                logger.error(f"WebSocket error: {str(e)}")
-                await asyncio.sleep(3)
-        
+            async for message in websocket:
+                raw_data: dict = json.loads(message)
+                traffic_data: Optional[MonitoringData] = await parse_api_response(raw_data)
+                # Put data into the queue for the UI to consume
+                await ui_update_queue.put(traffic_data)
+    except WebsocketsConnectionClosed as e:
+        logger.warning(f"WebSocket connection closed by server: {str(e)}")
+        await asyncio.sleep(3)
+    except WebSocketException as e:
+        logger.error(f"WebSocket error: {str(e)}")
+        await asyncio.sleep(3)
     except json.JSONDecodeError as e:
         logger.error("Received invalid JSON data from WebSocket")
         raise e
     except Exception as e:
         logger.error(f"Error Connecting to WebSocket: {str(e)}.")
+        await asyncio.sleep(3)
 
 async def update_components(debug_mode=False):
     """
