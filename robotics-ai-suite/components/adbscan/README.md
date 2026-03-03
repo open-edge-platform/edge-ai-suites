@@ -33,7 +33,7 @@ All ROS2 packages support the following platforms:
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 ### Build
 
@@ -176,7 +176,7 @@ The `Follow_me_RS_2D` directory contains the following ROS2 packages in the `src
 
 - **text_to_speech_pkg** - Text-to-speech conversion package that provides audio feedback to users by converting text messages into spoken audio output.
 
-- **turtlebot3_simulations** - Gazebo simulation environment for testing and demonstrating the follow-me applications with both 2D LIDAR and RealSense camera configurations. **NOTE:** ``turtlebot3_simulations`` is only supported for ROS Humble. 
+- **turtlebot3_simulations** - Gazebo simulation environment for testing and demonstrating the follow-me applications with both 2D LIDAR and RealSense camera configurations. **NOTE:** ``turtlebot3_simulations`` is only supported for ROS Humble.
 
 Find additional instructions for this package: [Follow_me_RS_2D package instructions](Follow_me_RS_2D/Readme.md).
 
