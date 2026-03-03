@@ -12,15 +12,24 @@ services:
     command: sh -c "chown -R 5000:5000 /models && chmod -R 755 /models"
 
   ovms:
-    image: openvino/model_server:2025.4.1
+    image: openvino/model_server:2026.0-gpu
     container_name: ovms-vlm
-    user: "5000:5000" 
     restart: unless-stopped
     depends_on:
       ovms-init:
         condition: service_completed_successfully
     ports:
       - "8000:8000"
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:  # render group for Ubuntu 20.04/22.04/24.04
+      - "109"
+      - "110"
+      - "992"
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+      - 'c 209:* rmw'
+      - 'a 189:* rwm'
     environment:
       - no_proxy=${no_proxy},localhost
       - NO_PROXY=${no_proxy},localhost
@@ -31,6 +40,7 @@ services:
       - HF_TOKEN=${HF_TOKEN}
       - OVMS_SOURCE_MODEL=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
       - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
+      - TARGET_DEVICE=${TARGET_DEVICE:-CPU}
     volumes:
       - ovms-models:/models
     command:
@@ -46,6 +56,8 @@ services:
       - "text_generation"
       - --pipeline_type
       - "VLM"
+      - --target_device
+      - "${TARGET_DEVICE:-CPU}"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
       interval: 10s
@@ -55,7 +67,7 @@ services:
     network_mode: host
 
   live-video-alert-agent:
-    image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
+    image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
     build: .
     container_name: live-video-alert-agent
     restart: unless-stopped
@@ -76,6 +88,54 @@ services:
       - ./resources:/temp/resources
     depends_on:
       ovms:
+        condition: service_healthy
+    network_mode: host
+
+  live-metrics-service:
+    image: ${REGISTRY:-}live-metrics-service:1.0.0.rc.1
+    build:
+      context: ../live-metrics-service
+      dockerfile: Dockerfile
+    container_name: live-metrics-service
+    restart: unless-stopped
+    environment:
+      - no_proxy=localhost,127.0.0.1,collector,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,collector,${no_proxy}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - METRICS_PORT=${METRICS_PORT:-9090}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    network_mode: host
+
+  collector:
+    image: docker.io/intel/vippet-collector:2025.2.0
+    container_name: collector
+    privileged: true
+    devices:
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - "/run:/run"
+      - "/proc:/proc"
+    pid: host
+    volumes:
+      - "../live-metrics-service/telegraf.conf:/etc/telegraf/telegraf.conf:ro"
+    restart: on-failure:5
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=localhost,127.0.0.1,${no_proxy}
+      - WEBSOCKET_URL=ws://localhost:${METRICS_PORT:-9090}/ws/collector
+    depends_on:
+      live-metrics-service:
         condition: service_healthy
     network_mode: host
 

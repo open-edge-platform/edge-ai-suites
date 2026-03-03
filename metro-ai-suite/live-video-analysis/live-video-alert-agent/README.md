@@ -1,6 +1,10 @@
 # Live Video Alert Agent
 
+**Version: 1.0.0-rc.1**
+
 Deploy AI-powered alerting for live video streams with OpenVINO Vision Language Models. Process RTSP streams, generate real-time alerts based on natural language prompts, and monitor them on a dashboard.
+
+![Dashboard Overview](./docs/user-guide/_assets/Landing-page.png)
 
 ## Get Started
 
@@ -12,6 +16,8 @@ To see the system requirements and other installations, see the following guides
 ## How It Works
 
 The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
+
+![System Architecture](./docs/user-guide/_assets/Architecture.png)
 
 ```
 RTSP Source → StreamManager (OpenCV/Circular Buffer)
