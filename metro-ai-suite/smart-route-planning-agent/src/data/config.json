@@ -1,14 +1,14 @@
 {
-    "api_endpoint": "/api/v1/traffic/current?images=false",
+    "api_endpoint": "/api/v1/traffic/current/ws?images=false",
     "api_hosts": [
         {
-            "host": "http://localhost:8081"
+            "host": "ws://localhost:8081"
         },
         {
-            "host": "http://localhost:8082"
+            "host": "ws://localhost:8082"
         },
         {
-            "host": "http://localhost:8083"
+            "host": "ws://localhost:8083"
         }
     ]
 }
