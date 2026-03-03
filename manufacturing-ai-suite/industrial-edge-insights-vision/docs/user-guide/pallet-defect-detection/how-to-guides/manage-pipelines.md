@@ -33,8 +33,8 @@ The following is an example of the pallet defect detection pipeline, which is in
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
 
-- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-launch-configurable-pipelines.html)
-- [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-autostart-pipelines.html)
+- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/launch-configurable-pipelines.html)
+- [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/autostart-pipelines.html)
 
 ## Start the Pipeline
 >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
