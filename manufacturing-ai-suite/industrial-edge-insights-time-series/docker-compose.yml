@@ -81,6 +81,7 @@ services:
     container_name: ia-time-series-analytics-microservice
     hostname: ia-time-series-analytics-microservice
     image: ${DOCKER_REGISTRY}${TIME_SERIES_ANALYTICS_IMAGE}:${IMAGE_SUFFIX:-latest}${WEEKLY_BUILD_DATE:+-${WEEKLY_BUILD_DATE}}${WEEKLY_BUILD_DATE:+-weekly}
+    cpuset: "0-11"
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -131,6 +132,7 @@ services:
     - "110"
     # render group ID for ubuntu 24.04 host OS
     - "992"
+    - "993"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
