@@ -21,7 +21,6 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --chown=appuser:appuser src/ ./src/
-COPY --chown=appuser:appuser resources/ ./resources/
 
 USER appuser
 EXPOSE 9000
