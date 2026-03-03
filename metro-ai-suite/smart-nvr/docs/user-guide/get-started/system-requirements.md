@@ -9,7 +9,7 @@ The base requirements for Smart NVR is dependent on the respective video analyti
 - Frigate NVR: Refer to Frigate documentation, specifically the section that maps to
   [OpenVINO](https://docs.frigate.video/frigate/hardware#openvino).
 - Video Search and Summary: Refer to the
-  [system requirements](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/system-requirements.md)
+  [system requirements](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started/system-requirements.md)
   page of the sample application.
 
 ## Compatibility Notes

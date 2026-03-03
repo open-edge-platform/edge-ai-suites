@@ -176,13 +176,32 @@ class ASRComponent(PipelineComponent):
                     transcribed_text = "\n".join(transcribed_lines) + "\n"
 
                 else:
-                    transcribed_text = transcription["text"]
-                    ui_segments = [{
-                        "speaker": None,
-                        "text": transcribed_text,
-                        "start": 0.0,
-                        "end": 0.0
-                    }]
+                    ui_segments = []
+
+                    if transcription.get("segments"):
+                        for sent in transcription["segments"]:
+                            text = sent["text"].strip()
+                            if not text:
+                                continue
+
+                            start = float(sent["start"]) + float(chunk_data.get("start_time", 0.0))
+                            end = float(sent["end"]) + float(chunk_data.get("start_time", 0.0))
+
+                            segment = {
+                                "speaker": LABEL_TEACHER,  # implicit teacher
+                                "text": text,
+                                "start": start,
+                                "end": end
+                            }
+
+                            ui_segments.append(segment)
+                            self.all_segments.append(segment)
+
+                            self.speaker_text_len[LABEL_TEACHER] = (
+                                self.speaker_text_len.get(LABEL_TEACHER, 0) + len(text)
+                            )
+
+                    transcribed_text = "\n".join([s["text"] for s in ui_segments]) + "\n"
 
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
