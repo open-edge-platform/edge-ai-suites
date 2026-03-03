@@ -45,7 +45,6 @@ get-started
 how-it-works
 how-to-use-gpu-for-inference
 how-to-use-npu-for-inference
-application-security-enablement
 troubleshooting
 release-notes
 
