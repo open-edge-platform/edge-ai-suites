@@ -169,7 +169,7 @@ provided during the installation of the `ros-humble-openvino-node`. In case you
 missed out on installing these models you may run into problem when
 executing these tutorials.
 
-Follow the instructions on [Get Started Guide](../../gsg_robot/index.md),
+Follow the instructions on [Install OpenVINO™ Packages](../../gsg_robot/index.md#4-install-openvino-packages),
 to troubleshoot potential issues with the OpenVINO™ installation.
 
 ## GPU device is not detected with Linux Kernel 6.7.5 or later
