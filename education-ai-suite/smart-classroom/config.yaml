@@ -259,6 +259,7 @@ mindmap:
       10. Ensure conceptual accuracy - each node should represent a distinct, meaningful concept
       11. Do NOT include any markdown formatting, code fences, or explanatory text
       12. Output only the raw JSON structure
+      13. Always return a valid JSON structure.
  
       Example of GOOD specificity:
       {
@@ -321,12 +322,13 @@ mindmap:
       10. 确保概念准确性 - 每个节点应代表一个独特、有意义的概念
       11. 不要包含任何markdown格式、代码块或解释性文本
       12. 只输出原始JSON结构
+      13. 始终返回有效的JSON结构。
  
       良好特异性示例：
       {
         "meta": {
-          "name": "physics_lecture",
-          "author": "ai_assistant",
+          "name": "物理课程",
+          "author": "人工智能助手",
           "version": "1.0"
         },
         "format": "node_tree", 
@@ -335,21 +337,21 @@ mindmap:
           "topic": "量子力学与波动理论",
           "children": [
             {
-              "id": "wave_particle_duality",
+              "id": "波粒二象性",
               "topic": "波粒二象性",
               "children": [
-                {"id": "photon_behavior", "topic": "光子同时表现出波动和粒子特性"},
-                {"id": "double_slit", "topic": "双缝实验证明干涉现象"},
-                {"id": "measurement_effect", "topic": "测量导致波函数坍缩"}
+                {"id": "光子特性", "topic": "光子同时表现出波动和粒子特性"},
+                {"id": "双缝实验", "topic": "双缝实验证明干涉现象"},
+                {"id": "测量效应", "topic": "测量导致波函数坍缩"}
               ]
             },
             {
-              "id": "uncertainty_principle",
+              "id": "不确定性原理",
               "topic": "海森堡不确定性原理",
               "children": [
-                {"id": "position_momentum", "topic": "无法同时精确知道位置和动量"},
-                {"id": "mathematical_formulation", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
-                {"id": "quantum_limitations", "topic": "量子测量的基本限制"}
+                {"id": "位置动量", "topic": "无法同时精确知道位置和动量"},
+                {"id": "数学表达式", "topic": "Δx·Δp ≥ ℏ/2 数学关系"},
+                {"id": "量子限制", "topic": "量子测量的基本限制"}
               ]
             }
           ]
