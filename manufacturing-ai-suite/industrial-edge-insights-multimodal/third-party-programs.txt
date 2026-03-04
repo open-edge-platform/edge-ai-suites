@@ -56,7 +56,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 configs/time-series-analytics-microservice/udfs/requirements.txt
 ================================================================
 License-Identifier: Apache License 2.0
-catboost==1.2.8
+catboost==1.2.10
 tzdata==2025.2
 ----------------------------------------------------------------------
 
