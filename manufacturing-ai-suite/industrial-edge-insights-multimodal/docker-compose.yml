@@ -431,8 +431,8 @@ services:
     volumes:
       - seaweed_master_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
 
   seaweedfs-volume:
@@ -448,8 +448,8 @@ services:
     volumes:
       - seaweed_volume_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
       - seaweedfs-master
@@ -468,8 +468,8 @@ services:
       - seaweed_filer_data:/data
       - "vol_temp_seaweed_filer:/tmp"
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
       - seaweedfs-master
@@ -492,8 +492,8 @@ services:
     networks:
       - timeseries_network
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       # Comma-separated list of default buckets to create
       - DEFAULT_S3_BUCKETS=dlstreamer-pipeline-results
       # S3 credentials from .env file
