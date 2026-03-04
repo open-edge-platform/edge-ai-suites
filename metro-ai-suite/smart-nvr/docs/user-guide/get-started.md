@@ -17,12 +17,12 @@ from your video data.
 Smart NVR operates in a distributed architecture requiring multiple services across 3-4
 devices for optimal performance:
 
-| Device | Service | Purpose |
-|--------|---------|---------|
-| Device 1 | VSS Search | Video search functionality |
-| Device 2 | VSS Summary | Video summarization |
-| Device 3 | VLM Microservice | AI-powered event descriptions (optional) |
-| Device 3/4 | Smart NVR App | Main application interface |
+| Device     | Service          | Purpose                                  |
+| ---------- | ---------------- | ---------------------------------------- |
+| Device 1   | VSS Search       | Video search functionality               |
+| Device 2   | VSS Summary      | Video summarization                      |
+| Device 3   | VLM Microservice | AI-powered event descriptions (optional) |
+| Device 3/4 | Smart NVR App    | Main application interface               |
 
 ### Software Dependencies
 
@@ -69,7 +69,7 @@ Set up the required environment variables:
 ```bash
 # Docker Registry Details
 export REGISTRY_URL="intel"
-export TAG="1.2.3"
+export TAG="latest"
 
 # VSS Service Endpoints
 export http_proxy=<http-proxy>
@@ -144,8 +144,8 @@ Re-run the application after [configuring](#step-2-configure-environment) the re
 > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
 > - Requires VLM microservice to be running.
 > - Disabled by default for system stability.
-> - SmartNVR uses either Frigate or Scenescape for GenAI capabilities.
->   GenAI in both cannot be enabled at the same time. If Scenescape is enabled,
+> - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
+>   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
 >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
 > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 

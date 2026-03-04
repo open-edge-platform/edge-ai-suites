@@ -11,11 +11,9 @@
 </div>
 hide_directive-->
 
-
 **Live Video Search** is a Metro AI Suite sample that adapts the VSS pipeline for semantic search on live Frigate streams. The application ingests live camera streams, indexes video segments with embeddings and timestamped camera metadata, and enables you to select cameras, time ranges, and free-text queries. You can retrieve ranked, playable clips with confidence scores and view live system metrics.
 
-
-## What It Enables
+## Key Features
 
 - **Live semantic search** over active camera streams.
 - **Time‑range filtering** from either the UI or query parsing (for example, “person seen in last 5 minutes”).
@@ -37,7 +35,7 @@ Live Video Search combines two existing stacks:
   - VSS UI for semantic queries and clip playback.
   - See VSS docs: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/index.md)
 
-## When to Use
+## Use Cases
 
 - **Operations teams** who need to locate recent events across multiple cameras quickly.
 - **Edge deployments** where bandwidth or latency constraints prevent cloud‑first analytics.

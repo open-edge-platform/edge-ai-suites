@@ -10,6 +10,5 @@ ROS 2-based Autonomous Mobile Robot APT packages.
 
    realsense-ros2-sample-application
    pointcloud-groundfloor-segmentation
-   one-api/index
    orb-extractor/index
    openvino/index

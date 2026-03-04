@@ -91,7 +91,7 @@ http://localhost:8101
 - [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
 - [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md)
+- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
   \- Vector database integration and document processing workflows
 - [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
   \- Embedding generation service architecture and API documentation

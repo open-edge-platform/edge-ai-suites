@@ -1,3 +1,14 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Smart Tolling Application
 
 The **Metro Smart Tolling Application** is a high-precision Edge AI solution
@@ -44,8 +55,8 @@ for Intel edge devices.
 
 The system uses the **Metro Edge Architecture** based on three key layers:
 
-- **Perception**: Deep Learning Streamer (DLStreamer) [processes 3/4 camera feeds](./how-it-works/perception-layer.md).
-- **Control**: SceneScape Controller [aggregates metadata](./how-it-works/analytics-pipeline.md).
+- **Perception**: Deep Learning Streamer (DL Streamer) [processes 3/4 camera feeds](./how-it-works/perception-layer.md).
+- **Control**: Intel® SceneScape Controller [aggregates metadata](./how-it-works/analytics-pipeline.md).
 - **Analytics**: Node-RED [transforms events into traffic insights](./how-it-works/analytics-pipeline.md#node-red-transformation)
   (Traffic Volume, Flow Efficiency, Tariffing).
 

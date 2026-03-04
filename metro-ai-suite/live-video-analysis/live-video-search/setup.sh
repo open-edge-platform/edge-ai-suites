@@ -105,6 +105,20 @@ export APP_HOST_PORT=${APP_HOST_PORT:-12345}
 export HOST_IP=$(get_host_ip)
 export TAG=${TAG:-latest}
 
+# Stack-specific image tags (override-able via env vars)
+export VSS_STACK_TAG=${VSS_STACK_TAG:-$TAG}
+export SMART_NVR_STACK_TAG=${SMART_NVR_STACK_TAG:-$TAG}
+
+# Release-specific tag mapping for Live Video Search 1.0.0
+if [ "$TAG" = "1.0.0" ]; then
+    if [ -z "$VSS_STACK_TAG" ] || [ "$VSS_STACK_TAG" = "$TAG" ]; then
+        export VSS_STACK_TAG="1.3.2"
+    fi
+    if [ -z "$SMART_NVR_STACK_TAG" ] || [ "$SMART_NVR_STACK_TAG" = "$TAG" ]; then
+        export SMART_NVR_STACK_TAG="1.2.4"
+    fi
+fi
+
 [[ -n "$REGISTRY_URL" ]] && REGISTRY_URL="${REGISTRY_URL%/}/"
 [[ -n "$PROJECT_NAME" ]] && PROJECT_NAME="${PROJECT_NAME%/}/"
 export REGISTRY="${REGISTRY_URL}${PROJECT_NAME}"

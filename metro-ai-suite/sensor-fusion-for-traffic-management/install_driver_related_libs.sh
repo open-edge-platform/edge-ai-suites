@@ -151,7 +151,7 @@ _install_npu_driver()
 _install_xpu_smi()
 {
   pushd ${THIRD_PARTY_BUILD_DIR}
-  wget https://github.com/intel/xpumanager/releases/download/v1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb
+  wget https://github.com/intel/xpumanager/releases/download/V1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb
 
   # Install all packages as root
   sudo dpkg -i xpu-smi_*.deb

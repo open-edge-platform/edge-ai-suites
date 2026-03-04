@@ -7,8 +7,8 @@ scipy>=1.11.0
 openvino>=2024.6.0,<2025.0
 
 # gRPC runtime (protos are pre-generated)
-grpcio>=1.60.0
-protobuf>=4.25.0,<5.0.0
+grpcio==1.78.0
+protobuf==6.33.5
 
 # Configuration & Utilities
 pyyaml>=6.0.0
