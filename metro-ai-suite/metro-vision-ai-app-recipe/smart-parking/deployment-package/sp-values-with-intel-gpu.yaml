@@ -10,6 +10,15 @@ env:
 webrtcturnserver:
   username: # example: username: myuser
   password: # example: password: mypassword
+config:
+  nginx:
+    ext:
+      http_port: 30080
+      https_port: 30443
+  coturn:
+    ext:
+      coturn_tcp_port: 30486
+      coturn_udp_port: 30486
 gpu:
   enabled: true
   type: # example: type: "gpu.intel.com/i915, gpu.intel.com/xe"
