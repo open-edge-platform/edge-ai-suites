@@ -2,15 +2,11 @@
 
 AI and machine vision enable real-time detection of welding defects, ensuring immediate corrective action before issues escalate. By leveraging the right camera and computing hardware, a trained AI model continuously monitors the weld, halting the process the moment a defect is detected. Deep learning AI processes video data at frame rates far beyond human capability, delivering unmatched precision and reliability.
 
-## Deploy using Docker Compose
+## Deployment
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html).
-
-## Deploy using Kubernetes Charts
-
----
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started/deploy-with-helm.html).
+The app may be deployed in several ways. For details on what they are and how to proceed, refer to the
+[Get Started guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html).
 
 ## Supported versions
 
