@@ -12,7 +12,7 @@ Before running inference on an NPU, ensure that:
 - The host system includes a supported NPU device
 - The required NPU drivers are installed and properly configured
 
-For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
+For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
 
  For containerized application, following additional changes are required.
 

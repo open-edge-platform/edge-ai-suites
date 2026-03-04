@@ -93,7 +93,7 @@ privileged_access_required: true
 ## Inferencing on NPU
 
 To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to
-[the instructions](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
+[the instructions](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
 
 ## Unable to parse JSON payload due to missing `jq` package
 

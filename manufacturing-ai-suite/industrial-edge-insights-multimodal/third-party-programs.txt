@@ -18,17 +18,17 @@ Docker images pulled from docker hub:
 ====================================
 
 License-Identifier: MIT
-- telegraf:1.34.3
-- influxdb:1.11.8
-- bluenviron/mediamtx:1.11.3    
+- telegraf:1.37.2
+- influxdb:1.12.2
+- bluenviron/mediamtx:1.16.2  
 ----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
-- grafana/grafana-oss:12.0.0-ubuntu
+- grafana/grafana-oss:12.3.3-ubuntu
 ----------------------------------------------------------------------
- 
+
 License-Identifier: EPL-2.0/EPL-1.0
-- eclipse-mosquitto:2.0.21
+- eclipse-mosquitto:2.0.22
 ----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
@@ -36,11 +36,12 @@ License-Identifier: 2-clause BSD-like
 ----------------------------------------------------------------------
 
 License-Identifier: Apache 2.0
-- intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+- intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
+- chrislusf/seaweedfs:4.13
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
-- coturn/coturn:4.7.0
+- coturn/coturn:4.8.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
@@ -48,7 +49,7 @@ License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or
 ia-time-series-analytics-microservice:
 ======================================
 
-Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/third-party-programs.txt)
+Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/time-series-analytics/third-party-programs.txt)
 
 ----------------------------------------------------------------------
 
@@ -188,4 +189,5 @@ Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multim
 License-Identifier: Apache License 2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 * Other names and brands may be claimed as the property of others.

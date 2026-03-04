@@ -14,7 +14,7 @@ camera pointcloud.
 Watch the video for a demonstration of the iRobot Create 3 navigating
 in a testing playground:
 
-<https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/irobot-create3-demo-wandering-rviz.mp4>
+<https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/robotics-ai-suite/docs/robotics/videos/irobot-create3-demo-wandering-rviz.mp4>
 
 ## Getting Started
 

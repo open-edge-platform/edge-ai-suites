@@ -193,7 +193,7 @@ class Pipeline:
             self.session_id
         )
 
-        transcription_path = os.path.join(session_dir, "transcription.txt")
+        transcription_path = os.path.join(session_dir, "content_segmentation_transcription.txt")
 
         session_state = SessionState.get_session_state(self.session_id)
         # VALIDATION: Check media duration match before processing

@@ -78,29 +78,10 @@ Detailed health with service status.
 {
   "status": "healthy",
   "collector_connected": true,
-  "clients_connected": 3,
-  "poller_active": false,
-  "poller_target": null
+  "clients_connected": 0
 }
 ```
 
-### `GET /api/metrics/status`
-
-Full metrics collection status.
-
-**Response:**
-
-```json
-{
-  "collector_connected": true,
-  "clients_connected": 3,
-  "poller": {
-    "active": false,
-    "target": null,
-    "last_metrics": null
-  }
-}
-```
 
 ### `GET /`
 
@@ -117,35 +98,7 @@ Service information and available endpoints.
     "websocket_collector": "/ws/collector",
     "websocket_clients": "/ws/clients",
     "health": "/health",
-    "health_detailed": "/api/health",
-    "metrics_status": "/api/metrics/status"
+    "health_detailed": "/api/health"
   }
 }
-```
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `METRICS_PORT` | `9090` | Port to run the service on |
-| `LOG_LEVEL` | `INFO` | Logging level: `DEBUG`, `INFO`, `WARNING`, `ERROR` |
-| `CORS_ORIGINS` | `*` | Comma-separated list of allowed CORS origins |
-| `TARGET_SERVICE_URL` | `` | Optional: URL of service to poll for metrics |
-| `METRICS_ENDPOINT` | `/api/metrics/status` | Endpoint path on target service for polling |
-| `POLL_INTERVAL_SECONDS` | `2` | Polling interval in seconds |
-
-### Example Configuration
-
-```bash
-# Production settings
-export METRICS_PORT=9090
-export LOG_LEVEL=WARNING
-export CORS_ORIGINS=https://dashboard.example.com,https://admin.example.com
-
-# With optional polling enabled
-export TARGET_SERVICE_URL=http://my-app:8080
-export METRICS_ENDPOINT=/api/metrics
-export POLL_INTERVAL_SECONDS=2
 ```

@@ -19,7 +19,7 @@ Packages
          * - `Linux firmware <https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html>`__
            - linux-firmware
            - Linux firmware with Ultra iGPU firmware
-         * - `EtherCAT Master Stack <https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/edge-control-libraries/fieldbus/ethercat-masterstack>`__
+         * - `EtherCAT Master Stack <https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.0.0/libraries/edge-control-libraries/fieldbus/ethercat-masterstack>`__
            - | ighethercat
              | ighethercat-dpdk
              | ighethercat-dkms

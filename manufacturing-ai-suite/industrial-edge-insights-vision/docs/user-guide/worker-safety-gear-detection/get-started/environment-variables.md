@@ -9,5 +9,5 @@ This reference application's configuration has the following environment variabl
 
 In addition to the ones above, the application also uses environment variables of following Microservice:
 
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/environment-variables.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/get-started/environment-variables.html)
 

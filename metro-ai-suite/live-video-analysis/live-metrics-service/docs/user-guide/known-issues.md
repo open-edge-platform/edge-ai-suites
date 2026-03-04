@@ -17,9 +17,8 @@
 **Symptom:** Client connects but receives no data.
 
 **Solutions:**
-1. Verify collector is connected: `curl http://localhost:9090/api/metrics/status`
-2. Check if Telegraf is actually sending data
-3. Ensure client is connected to `/ws/clients` (not `/ws/collector`)
+1. Check if Telegraf is actually sending data
+2. Ensure client is connected to `/ws/clients` (not `/ws/collector`)
 
 ### High Memory Usage
 
@@ -53,9 +52,6 @@ curl http://localhost:9090/health
 
 # Detailed status
 curl http://localhost:9090/api/health
-
-# Metrics status
-curl http://localhost:9090/api/metrics/status
 ```
 
 ## Limitations

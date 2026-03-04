@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/visual-search-question-and-answering">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/visual-search-question-and-answering">
      GitHub project
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/visual-search-question-and-answering/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/visual-search-question-and-answering/README.md">
      Readme
   </a>
 </div>
@@ -84,7 +84,7 @@ The retriever microservice consists of a local multi-modal embedding model
 ### Model Serving
 
 Check the
-[model serving doc](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices)
+[model serving doc](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.0.0/microservices)
 for more details.
 
 ### Web UI

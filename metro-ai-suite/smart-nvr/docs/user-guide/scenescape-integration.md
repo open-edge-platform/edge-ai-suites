@@ -97,7 +97,7 @@ docker logs nvr-event-router -f
 
 ![SceneScape Enabled Interface](./_assets/Scenescape_enabled.png)
 
-When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and scenescape source is selected:
+When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and **"scenescape"** source is selected:
 
 - Source dropdown shows both **"frigate"** and **"scenescape"** options
 - **Count** field becomes visible and editable

@@ -1,4 +1,5 @@
 # Overview
+
 The industrial edge insights for vision is a template for users to create sample applications intended for industrial use cases on the edge.
 Users can refer to one of many samples built from the template as a reference.
 
@@ -9,25 +10,26 @@ Both compose based as well as helm based deployments are supported by this appli
 ## Description
 
 ### Architecture
+
 It consists of the following microservices:
+
 - DL Streamer Pipeline Server
-- Model Download*
+- Model Download\*
 - MediaMTX server, Coturn server
 - Open Telemetry Collector
 - Prometheus
 - Postgres
 - Minio.
 
-
 <div style="text-align: center;">
     <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>
 </div>
 
-**Although not part of the application configuration files such as docker compose or helm templates, Model Download microservice helps downloading OpenVINO and Geti trained models that is used by DLStreamer Pipeline Server to demonstrate MLOps flow.*
+\*_Although not part of the application configuration files such as docker compose or helm templates, Model Download microservice helps downloading OpenVINO and Geti trained models that is used by DLStreamer Pipeline Server to demonstrate MLOps flow._
+
 ### Directory structure
 
 Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.
-
 
 <br>
 
@@ -62,38 +64,37 @@ Following directory structure consisting of generic deployment code as well as p
     sample_stop.sh
     benchmark_start.sh
 
- - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
+- **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
+  - _configs/_:
+    associated container configurations such as DLStreamer Pipeline Server configuration, etc.
+  - _setup.sh_:
+    pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
+  - _payload.json_:
+    A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the _configs/pipeline-server-config.json_ provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
 
-    - *configs/*:
-            associated container configurations such as DLStreamer Pipeline Server configuration, etc.
-    - *setup.sh*:
-            pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
-    - *payload.json*:
-            A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
+- **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
- - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
+- **resources**: This directory and its subdirs are created only after installation is done by running `setup.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `setup.sh` script to download artifacts as per their usecase requirements.
 
- - **resources**: This directory and its subdirs are created only after installation is done by running `setup.sh` for that application. It contains artificacts such as models, videos etc. Users can modify their application's `setup.sh` script to download artifacts as per their usecase requirements.
+- **.env_app_name**: Environment file containing application specific variables. Before starting the application, Users should rename it to `.env` for compose file to source it automatically.
 
- - **.env_app_name**: Environment file containing application specific variables. Before starting the application, Users should rename it to `.env` for compose file to source it automatically.
+- **docker-compose.yml**: A generic, parameterized compose file that can launch a particular sample application defined in the environment variable `SAMPLE_APP`.
 
- - **docker-compose.yml**: A generic, parameterized compose file that can launch a particular sample application defined in the environment variable `SAMPLE_APP`.
+### Script description
 
- ### Script description
-
- | Shell Command         | Description                              | Parameters                    |
-|-----------------------|----------------------------------------|-------------------------------|
-| `./setup.sh`     | Runs pre-requisites and app specific installer                   | *(none)*                      |
-| `./sample_start.sh`    | Runs all or specific pipeline from the config.json. <br> Optionally, run copies of payload (default 1)| `--all` (default) <br> `--pipeline` or `-p` <br> `--payload-copies` or `-n` |
-| `./sample_stop.sh`     | Stops all/specific instance by id      | `--all` (default) <br> `--id` or `-i` |
-| `./sample_list.sh`     | List loaded pipelines                   | *(none)*                      |
-| `./sample_status.sh –i 89ab898e090a90b0c897d3ea7` | Get pipeline status of all/specific instance | `--all` (default) <br> `--id` or `-i`    |
+| Shell Command                                     | Description                                                                                            | Parameters                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| `./setup.sh`                                      | Runs pre-requisites and app specific installer                                                         | _(none)_                                                                    |
+| `./sample_start.sh`                               | Runs all or specific pipeline from the config.json. <br> Optionally, run copies of payload (default 1) | `--all` (default) <br> `--pipeline` or `-p` <br> `--payload-copies` or `-n` |
+| `./sample_stop.sh`                                | Stops all/specific instance by id                                                                      | `--all` (default) <br> `--id` or `-i`                                       |
+| `./sample_list.sh`                                | List loaded pipelines                                                                                  | _(none)_                                                                    |
+| `./sample_status.sh –i 89ab898e090a90b0c897d3ea7` | Get pipeline status of all/specific instance                                                           | `--all` (default) <br> `--id` or `-i`                                       |
 
 The shell scripts starting with `sample_*.sh` eases interaction with DLStreamer Pipeline Server REST APIs.
 
 ## Prerequisites
 
-Please ensure that you have the correct version of the DL Streamer Pipeline Server image as specified in the [compose](./docker-compose.yml) and [helm](./helm/templates/dlstreamer-pipeline-server.yaml) deployment files. Instructions to build DL Streamer Pipeline Server can be found [here](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/dlstreamer-pipeline-server#build-from-source)
+Please ensure that you have the correct version of the DL Streamer Pipeline Server image as specified in the [compose](./docker-compose.yml) and [helm](./helm/templates/dlstreamer-pipeline-server.yaml) deployment files. Instructions to build DL Streamer Pipeline Server can be found [here](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.0.0/microservices/dlstreamer-pipeline-server#build-from-source)
 
 ## Getting Started
 
@@ -109,11 +110,10 @@ General instructions for docker based deployment is as follows.
 6. Run `sample_stop.sh` to abort any running pipeline(s).
 7. Bring the services down by `docker compose down`.
 
-
 Using the template above, several industrial recipies have been provided for users to deploy using docker compose.
 Click on the applications below to get started.
 
-* [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
-* [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
-* [Weld Porosity Classfication](./docs/user-guide/weld-porosity/get-started.md)
-* [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)
+- [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
+- [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
+- [Weld Porosity Classfication](./docs/user-guide/weld-porosity/get-started.md)
+- [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)

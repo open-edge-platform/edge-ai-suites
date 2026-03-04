@@ -33,8 +33,8 @@ The following is an example of the PCB anomaly detection pipeline, which is incl
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
 
-- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/how-to-launch-configurable-pipelines.html)
-- [Autostart pipelines](https://docs.openedgeplatform.intel.com/edge-ai-libraries/dlstreamer-pipeline-server/main/user-guide/how-to-autostart-pipelines.html)
+- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/launch-configurable-pipelines.html)
+- [Autostart pipelines](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/autostart-pipelines.html)
 
 ## Start the Pipeline
 
@@ -120,4 +120,4 @@ To enable this, configure the pipeline’s inference element to support batching
 
 In this configuration, if 4 instances (or any multiple of 4) of the pipeline are launched (for example, using the curl commands described in the previous section), their frames will be grouped into batches of four and processed in a single inference call.
 
-For more details about batching in DLStreamer, refer [this documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).
+For more details about batching in DLStreamer, refer [this documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).

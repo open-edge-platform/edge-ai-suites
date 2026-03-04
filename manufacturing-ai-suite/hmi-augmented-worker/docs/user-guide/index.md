@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/hmi-augmented-worker">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/manufacturing-ai-suite/hmi-augmented-worker">
      GitHub project
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/hmi-augmented-worker/README.md">
      Readme
   </a>
 </div>
@@ -21,7 +21,7 @@ by a Type-2 hypervisor such as
 [Edge Microvisor Toolkit](https://github.com/open-edge-platform/edge-microvisor-toolkit).
 The Retrieval-Augmented Generation (RAG) pipeline and supporting AI services are deployed
 natively on a host system, which is the Edge Microvisor Toolkit in this implementation.
-[Chat Question-and-Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
+[Chat Question-and-Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.0.0/sample-applications/chat-question-and-answer-core)
 provides the RAG capability.
 This separation ensures robust isolation between the HMI and AI components, enabling
 independent scaling, maintenance, and updates. The setup leverages the strengths of both
@@ -70,7 +70,7 @@ Developed as a single, monolithic application
 with the complete RAG pipeline integrated into one microservice, it is designed for minimal memory usage.
 
 The `ChatQnA Core` application should be setup on the host system. For further details,
-visit [Chat Question-and-Answer Core Sample Application Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
+visit [Chat Question-and-Answer Core Sample Application Overview](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/chat-question-and-answer-core/index.html).
 The application is used as is, without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.

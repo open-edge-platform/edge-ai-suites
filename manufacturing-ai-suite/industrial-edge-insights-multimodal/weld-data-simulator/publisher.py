@@ -269,14 +269,16 @@ def check_and_load_simulation_files(target_fps):
         return
 
     continuous_ingestion = os.getenv("CONTINUOUS_SIMULATOR_INGESTION", "true").lower() == "true"
-    
+    first_iteration = True
     while True:
-        for i, filename in enumerate(available_files, 1):
-            logger.info(f"  {i}. {filename}")
-            stream_video_and_csv(filename, target_fps=target_fps)
+        if first_iteration:
+            for i, filename in enumerate(available_files, 1):
+                logger.info(f"  {i}. {filename}")
+                stream_video_and_csv(filename, target_fps=target_fps)
         if not continuous_ingestion:
-            logger.info("Continuous ingestion disabled. Exiting...")
-            break
+            logger.info("Continuous ingestion disabled. Sleeping...")
+            first_iteration = False
+            time.sleep(5)  # Short delay before exiting to ensure all data is published
     
     
 

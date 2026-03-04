@@ -42,10 +42,10 @@ ALERT_MODE=True   # Enable Alert Mode
 
 When Alert Mode is enabled:
 
-| Response | Visual Style |
-|----------|--------------|
-| **Yes** | Red/Alert highlighting indicating a positive detection |
-| **No** | Green/Normal highlighting indicating no detection |
+| Response | Visual Style                                           |
+| -------- | ------------------------------------------------------ |
+| **Yes**  | Red/Alert highlighting indicating a positive detection |
+| **No**   | Green/Normal highlighting indicating no detection      |
 
 ## Custom Prompts
 
@@ -64,10 +64,12 @@ Example prompts for different scenarios:
 
 1. Verify the `ALERT_MODE` environment variable is set correctly in your `.env` file
 2. Ensure Docker Compose picks up the environment variable:
+
    ```bash
    docker compose down
    docker compose up
    ```
+
 3. Check the application title - it should display "Live Video Captioning and Alerts"
 
 ### Alert Styling Not Appearing

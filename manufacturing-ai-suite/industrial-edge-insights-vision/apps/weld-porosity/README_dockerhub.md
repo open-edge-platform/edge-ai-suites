@@ -5,12 +5,12 @@ AI and machine vision enable real-time detection of welding defects, ensuring im
 ## Deploy using Docker Compose
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started.html).
 
 ## Deploy using Kubernetes Charts
 
 ---
-For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/how-to-guides/deploy-with-helm.html).
+For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/weld-porosity/get-started/deploy-with-helm.html).
 
 ## Supported versions
 

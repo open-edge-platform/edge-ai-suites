@@ -176,18 +176,35 @@ class ASRComponent(PipelineComponent):
                     transcribed_text = "\n".join(transcribed_lines) + "\n"
 
                 else:
-                    transcribed_text = transcription["text"]
-                    ui_segments = [{
-                        "speaker": None,
-                        "text": transcribed_text,
-                        "start": 0.0,
-                        "end": 0.0
-                    }]
+                    ui_segments = []
+
+                    if transcription.get("segments"):
+                        for sent in transcription["segments"]:
+                            text = sent["text"].strip()
+                            if not text:
+                                continue
+
+                            start = float(sent["start"]) + float(chunk_data.get("start_time", 0.0))
+                            end = float(sent["end"]) + float(chunk_data.get("start_time", 0.0))
+
+                            segment = {
+                                "speaker": LABEL_TEACHER,  # implicit teacher
+                                "text": text,
+                                "start": start,
+                                "end": end
+                            }
+
+                            ui_segments.append(segment)
+                            self.all_segments.append(segment)
+
+                            self.speaker_text_len[LABEL_TEACHER] = (
+                                self.speaker_text_len.get(LABEL_TEACHER, 0) + len(text)
+                            )
+
+                    transcribed_text = "\n".join([s["text"] for s in ui_segments]) + "\n"
 
                 if os.path.exists(chunk_path) and DELETE_CHUNK_AFTER_USE:
                     os.remove(chunk_path)
-
-                StorageManager.save_async(transcript_path, transcribed_text, append=True)
 
                 yield {
                     **chunk_data,
@@ -208,8 +225,9 @@ class ASRComponent(PipelineComponent):
                 teacher_speaker = max(self.speaker_text_len, key=self.speaker_text_len.get)
 
             if teacher_speaker:
-                teacher_lines_with_time = []
+                teacher_lines = []
                 full_updated_lines = []
+                full_timestamped_lines = []
 
                 for seg in self.all_segments:
                     spk = seg["speaker"]
@@ -219,8 +237,8 @@ class ASRComponent(PipelineComponent):
 
                     if spk == teacher_speaker:
                         speaker_label = LABEL_TEACHER
-                        teacher_lines_with_time.append(
-                            f"[{start} - {end}] {speaker_label}: {text}"
+                        teacher_lines.append(
+                            f"{text}"
                         )
                     else:
                         if spk.startswith(f"{LABEL_SPEAKER}_"):
@@ -233,7 +251,11 @@ class ASRComponent(PipelineComponent):
                             speaker_label = spk
 
                     full_updated_lines.append(
-                        f"[{start} - {end}] {speaker_label}: {text}"
+                        f"{speaker_label}: {text}"
+                    )
+
+                    full_timestamped_lines.append(
+                        f"[{start} - {end}]: {text}"
                     )
 
                 StorageManager.save(
@@ -243,8 +265,14 @@ class ASRComponent(PipelineComponent):
                 )
 
                 StorageManager.save(
+                    os.path.join(project_path, "content_segmentation_transcription.txt"),
+                    "\n".join(full_timestamped_lines) + "\n",
+                    append=False
+                )
+
+                StorageManager.save(
                     os.path.join(project_path, "teacher_transcription.txt"),
-                    "\n".join(teacher_lines_with_time) + "\n",
+                    "\n".join(teacher_lines) + "\n",
                     append=False
                 )
 

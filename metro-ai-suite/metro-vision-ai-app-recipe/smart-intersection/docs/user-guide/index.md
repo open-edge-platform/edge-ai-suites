@@ -2,13 +2,13 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection">
      GitHub project
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/README.md">
      Readme
   </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md">
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started.md">
      Installation guide
   </a>
 </div>
@@ -34,8 +34,8 @@ This guide is designed to help developers understand the architecture, setup, an
 
 ## Learn More
 
-- [Intel® SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [Intel® SceneScape](https://docs.openedgeplatform.intel.com/2026.0/scenescape/index.html): Intel Scene-based AI software framework.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive
 :::{toctree}

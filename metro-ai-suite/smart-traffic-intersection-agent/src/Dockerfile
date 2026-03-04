@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Set working directory
 WORKDIR /app
@@ -20,6 +20,9 @@ COPY . .
 
 # Create virtual environment and install dependencies using uv
 RUN uv sync && uv pip install -r ui/requirements.txt
+
+# Copy license file
+COPY third_party_programs.txt /licenses/third_party_programs.txt
 
 # Create non-root user and adjust permissions
 RUN useradd -m -u 1000 traffic && \

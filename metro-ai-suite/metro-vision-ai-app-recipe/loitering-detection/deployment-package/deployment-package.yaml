@@ -8,11 +8,11 @@ $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 name: "ld"
 displayName: "ld"
 description: "Loitering Detection Deployment Package"
-version: "1.3.0"
+version: "1.4.0-rc1"
 
 applications:
   - name: ld-app
-    version: 1.3.0
+    version: 1.4.0-rc1
 
 defaultNamespaces:
   ld-app: ld
@@ -28,3 +28,8 @@ deploymentProfiles:
     applicationProfiles:
       - application: "ld-app"
         profile: "with-intel-gpu"
+  - name: "with-intel-npu"
+    description: "Uses NPU profile with privileged access enabled"
+    applicationProfiles:
+      - application: "ld-app"
+        profile: "with-intel-npu"

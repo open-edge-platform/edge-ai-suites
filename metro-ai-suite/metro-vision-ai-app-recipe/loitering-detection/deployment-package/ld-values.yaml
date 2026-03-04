@@ -10,3 +10,12 @@ env:
 webrtcturnserver:
   username: # example: username: myuser
   password: # example: password: mypassword
+config:
+  nginx:
+    ext:
+      http_port: 30080
+      https_port: 30443
+  coturn:
+    ext:
+      coturn_tcp_port: 30386
+      coturn_udp_port: 30386

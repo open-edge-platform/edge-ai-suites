@@ -2,7 +2,7 @@
 
 ## Release EAS-2025.2.2
 
-### New
+**New**
 
 - Video Pipeline Integration:
   - Real-time video processing for classroom monitoring.
@@ -16,10 +16,10 @@
 
 This is the first release of Intel® Education AI Suite EAS-2025.2.
 
-### New  
+**New**
 
 In this release, the **Smart Classroom** application is added. It is an extensible framework for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI.
 
 ### Documentation and Source Code
 
-- <https://github.com/open-edge-platform/edge-ai-suites/tree/main/education-ai-suite>
+- <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/education-ai-suite>

@@ -25,4 +25,4 @@ The Autonomous Mobile Robot provides several tutorials showing the Wandering App
 Source Code
 -----------
 
-The source code of this component can be found here: `Wandering <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/wandering>`_
+The source code of this component can be found here: `Wandering <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/wandering>`_
