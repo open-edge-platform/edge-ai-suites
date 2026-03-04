@@ -29,10 +29,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.3.0`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.3.0.tgz`
+        `tar -xvf weld-porosity-sample-application-1.4.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`

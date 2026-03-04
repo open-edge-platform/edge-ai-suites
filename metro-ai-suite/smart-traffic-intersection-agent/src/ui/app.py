@@ -278,7 +278,6 @@ def main():
             server_port=Config.get_app_port(),
             share=False,
             show_error=True,
-            show_api=False,
             quiet=False
         )
         

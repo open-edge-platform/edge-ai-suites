@@ -45,10 +45,10 @@ Optional: Pull the Helm chart and replace the existing `helm-chart` folder with 
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.3.0
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.4.0-rc1
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.3.0.tgz
+tar -xvf smart-parking-1.4.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart
@@ -73,6 +73,8 @@ cd ..
         username: # example: username: myuser
         password: # example: password: mypassword
     ```
+
+    > **Note:** To make use of GPU / NPU set the property `privileged_access_required` to `true` in the above `values.yaml` file.
 
 ## Step 3: Deploy the application and Run multiple AI pipelines
 
@@ -182,6 +184,8 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X
     }
 }'
 ```
+
+> **Note:** To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:

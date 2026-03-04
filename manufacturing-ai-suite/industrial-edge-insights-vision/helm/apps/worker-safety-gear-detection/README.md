@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- [System Requirements](../get-started/system-requirements.md)
+- [System Requirements](../../../docs/user-guide/worker-safety-gear-detection/get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
 - For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
@@ -29,8 +29,6 @@
         MINIO_SECRET_KEY: <DATABASE PASSWORD> #  example: minioadmin
         http_proxy: <http proxy> # proxy details if behind proxy
         https_proxy: <https proxy>
-        POSTGRES_PASSWORD: <POSTGRES PASSWORD> #  example: intel1234
-        MR_URL: https://<HOST_IP>:30443/registry/ # Model reigstry URL
         SAMPLE_APP: worker-safety-gear-detection # application directory
     webrtcturnserver:
         username: <username>  # WebRTC credentials e.g. intel1234

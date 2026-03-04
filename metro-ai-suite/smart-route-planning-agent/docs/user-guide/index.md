@@ -1,3 +1,14 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-route-planning-agent">
+     GitHub project
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-route-planning-agent/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Smart Route Planning Agent
 
 The Smart Route Planning Agent is an AI-powered route optimization agent that uses multi-agent
@@ -17,7 +28,7 @@ to gather live analysis reports for informed routing decisions.
 
 ## How It Works
 
-The agent receives source and destination inputs, finds the shortest route from available
+The agent receives source and destination inputs, finds the shortest route from the available
 routes, queries traffic intersection agents for live reports, and determines the optimal route.
 
 ![System Architecture Diagram](./_assets/ITS_architecture.png)

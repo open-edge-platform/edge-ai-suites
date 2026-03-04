@@ -21,19 +21,27 @@ spec:
       labels:
         app: telegraf
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
       {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
       imagePullSecrets:
       - name: registryauth
       {{- end }}
       containers:
       - name: ia-telegraf
-        image: telegraf:1.34.3
+        image: telegraf:1.37.2
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         command: ["/bin/sh"]
         args: ["/entrypoint.sh"]
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false
+          runAsNonRoot: true
           capabilities:
             drop:
               - ALL

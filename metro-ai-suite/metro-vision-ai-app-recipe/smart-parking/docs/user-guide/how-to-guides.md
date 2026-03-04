@@ -15,6 +15,7 @@ This section collects guides for the Smart Parking sample application.
 ./how-to-guides/customize-application
 ./how-to-guides/generate-offline-package
 ./how-to-guides/use-gpu-for-inference
+./how-to-guides/use-npu-for-inference
 ./how-to-guides/view-telemetry-data
 ./how-to-guides/benchmark
 

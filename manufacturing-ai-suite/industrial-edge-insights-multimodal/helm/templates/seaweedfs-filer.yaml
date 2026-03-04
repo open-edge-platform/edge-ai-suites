@@ -40,6 +40,9 @@ spec:
         fsGroup: {{ .Values.env.TIMESERIES_UID | int }}
         runAsUser: {{ .Values.env.TIMESERIES_UID | int }}
         runAsGroup: {{ .Values.env.TIMESERIES_UID | int }}
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: seaweedfs-filer
         image: {{ .Values.images.seaweedfs_image }}
