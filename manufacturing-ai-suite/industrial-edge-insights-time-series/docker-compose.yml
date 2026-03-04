@@ -130,7 +130,7 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group ID for ubuntu 24.04 host OS
+    # render group IDs for ubuntu 24.04 host OS
     - "992"
     - "993"
     devices:
