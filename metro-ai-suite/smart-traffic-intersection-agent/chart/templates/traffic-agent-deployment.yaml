@@ -86,17 +86,12 @@ spec:
             - name: TRAFFIC_BUFFER_DURATION
               value: {{ .Values.trafficAgent.traffic.bufferDuration | quote }}
             {{- end }}
+          {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
           volumeMounts:
-            - name: agent-config
-              mountPath: /app/config
-              readOnly: true
-            - name: agent-data
-              mountPath: /app/data
-            {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
             - name: ca-cert
               mountPath: /app/secrets/certs
               readOnly: true
-            {{- end }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -117,18 +112,8 @@ spec:
             {{- toYaml .Values.trafficAgent.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
+      {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
       volumes:
-        - name: agent-config
-          configMap:
-            name: {{ include "stia.trafficAgent.fullname" . }}-config
-        - name: agent-data
-          {{- if .Values.trafficAgent.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "stia.trafficAgent.fullname" . }}-data
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
         - name: ca-cert
           secret:
             secretName: {{ include "stia.caCertSecretName" . }}
@@ -137,4 +122,4 @@ spec:
               - key: {{ .Values.tls.caCertKey }}
                 path: scenescape-ca.pem
             {{- end }}
-        {{- end }}
+      {{- end }}

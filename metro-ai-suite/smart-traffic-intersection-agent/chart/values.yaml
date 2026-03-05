@@ -27,9 +27,7 @@ trafficAgent:
   service:
     type: NodePort
     backendPort: 8081
-    backendNodePort: 30881
     uiPort: 7860
-    uiNodePort: 30860
   # Intersection identification
   intersection:
     name: "intersection_1"
@@ -42,12 +40,12 @@ trafficAgent:
     weatherMock: "false"
     vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
-  # For Helm/K8s: use the K8s service DNS of the SceneScape broker, e.g.:
-  #   smart-intersection-broker (same namespace)
-  #   smart-intersection-broker.<namespace>.svc.cluster.local (cross-namespace)
-  # For Docker Compose: broker.scenescape.intel.com
+  # Uses the fully qualified K8s DNS name so the agent works even when deployed
+  # in a different namespace than the Smart Intersection stack.
+  # Format: <service-name>.<namespace>.svc.cluster.local
+  # Override the namespace portion if Smart Intersection is deployed elsewhere.
   mqtt:
-    host: "smart-intersection-broker"
+    host: "smart-intersection-broker.smart-intersection.svc.cluster.local"
     port: "1883"
   # Traffic analysis thresholds
   traffic:
@@ -80,8 +78,10 @@ vlmServing:
   service:
     type: NodePort
     port: 8000
-    nodePort: 30800
   env:
+    # Validated default VLM model for traffic scene analysis. Users can override
+    # with any compatible HuggingFace vision-language model via:
+    #   --set vlmServing.env.modelName="<org/model-name>"
     modelName: "microsoft/Phi-3.5-vision-instruct"
     compressionWeightFormat: "int4"
     device: "CPU"
