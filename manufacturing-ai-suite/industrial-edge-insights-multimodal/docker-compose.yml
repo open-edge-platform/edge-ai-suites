@@ -232,7 +232,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.28.0-bookworm-perl
+    image: nginx:1.29.1-bookworm-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
