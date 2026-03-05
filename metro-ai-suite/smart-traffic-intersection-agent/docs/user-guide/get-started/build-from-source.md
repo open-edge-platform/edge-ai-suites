@@ -13,7 +13,7 @@ This section shows how to build the Smart Traffic Intersection Agent from source
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 

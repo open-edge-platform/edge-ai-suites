@@ -36,7 +36,7 @@ Traffic Intersection Agent.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
@@ -113,7 +113,7 @@ locations on the same machine for `n` required instances.
 1.  Clone the repository into a new directory:
 
     ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0 edge-ai-suites-instance1
     cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
     ```
 
@@ -155,7 +155,7 @@ locations on the same machine for `n` required instances.
 1.  Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
     ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0 edge-ai-suites-instance2
     cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
     ```
 

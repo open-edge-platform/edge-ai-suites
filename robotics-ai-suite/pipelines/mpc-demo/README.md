@@ -15,7 +15,7 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
 
 ## ROS2 Humble Setup
 
@@ -76,7 +76,7 @@ mesa-common-dev \
 python3-pip \
 python3-wstool \
 wget
-      
+
 # install ros2 library
 sudo apt-get install -y \
 ros-humble-pinocchio \
@@ -118,7 +118,7 @@ rosdep install --from-paths src --ignore-src -r -y
 
 # build
 source /opt/ros/humble/setup.bash
-colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release 
+colcon build --packages-skip mujoco_ros_utils --cmake-args -DCMAKE_BUILD_TYPE=Release
 ```
 
 ## MUJOCO Setup

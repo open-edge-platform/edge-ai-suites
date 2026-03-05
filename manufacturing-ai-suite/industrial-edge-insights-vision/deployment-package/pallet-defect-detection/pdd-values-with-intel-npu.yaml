@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: (C) 2025 Intel Corporation
 # SPDX-License-Identifier: LicenseRef-Intel
 ---
-namespace: pcb
+namespace: pdd
 env:
   HOST_IP: # IP address of the target Edge Node, example: HOST_IP: 10.100.100.100
   http_proxy: # example: http_proxy: http://proxy.example.com:891
@@ -26,7 +26,4 @@ config:
     ext:
       coturn_tcp_port: 30478
       coturn_udp_port: 30478
-gpu:
-  enabled: true
-  type: # example: type: "gpu.intel.com/i915, gpu.intel.com/xe"
-  count: # example: count: 1
+privileged_access_required: true
