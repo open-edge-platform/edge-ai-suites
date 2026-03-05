@@ -18,12 +18,12 @@ Docker images pulled from docker hub:
 ====================================
 
 License-Identifier: MIT
-- telegraf:1.37.2
+- telegraf:1.37.3
 - influxdb:1.12.2
 ----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
-- grafana/grafana-oss:12.3.3-ubuntu
+- grafana/grafana-oss:12.4.0-ubuntu
 ----------------------------------------------------------------------
 
 License-Identifier: EPL-2.0/EPL-1.0
@@ -31,7 +31,7 @@ License-Identifier: EPL-2.0/EPL-1.0
 ----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
-- nginx:1.29.1-bookworm-perl
+- nginx:1.28.0-bookworm-perl
 
 ---------------------------------------------------------------------------------------------------------------------------
 

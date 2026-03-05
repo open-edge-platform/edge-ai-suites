@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.2
+    image: telegraf:1.37.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -134,7 +134,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.3.3-ubuntu
+    image: grafana/grafana-oss:12.4.0-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -360,7 +360,7 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -385,10 +385,10 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.2
+    image: bluenviron/mediamtx:1.16.3
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -521,7 +521,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.8.0
+    image: coturn/coturn:4.9.0
     container_name: coturn
     read_only: true
     security_opt:
