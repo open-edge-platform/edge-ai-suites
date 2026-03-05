@@ -117,3 +117,21 @@ fully ready.
 **Solution**
 
 No action required --- wait for the deployment to complete and for all pods to become ready.
+
+## 5. `docker exec` issues seen in EMT OS w/ alpine base images
+
+**Issue**
+
+Doing `docker exec` on `ia-mqtt-broker` container on EMT OS gives error as below: 
+`OCI runtime exec failed: exec failed: unable to start container process: error writing config to pipe: write init-p: broken pipe: unknown`
+
+**Solution**
+
+Workaround is to run the below steps to be able to successfully exec and execute the command.
+As the container is functioning as expected, please ignore any `unhealthy` status showing up against this
+container in `docker ps`
+
+```bash
+PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
+sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+```

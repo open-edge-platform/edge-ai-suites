@@ -98,3 +98,21 @@ initializes and starts inferencing.
 No action required --- wait for the **time-series-analytics**
 microservice to complete downloading the dependent packages and
 initialize Kapacitor to start inference.
+
+## 4. `docker exec` issues seen in EMT OS w/ alpine base images
+
+### 4.1 Issue
+
+Doing `docker exec` on `ia-mqtt-broker` container on EMT OS gives error as below: 
+`OCI runtime exec failed: exec failed: unable to start container process: error writing config to pipe: write init-p: broken pipe: unknown`
+
+### 4.2 Solution
+
+Workaround is to run the below steps to be able to successfully exec and execute the command.
+As the container is functioning as expected, please ignore any `unhealthy` status showing up against this
+container in `docker ps`
+
+```bash
+PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
+sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
+```
