@@ -2,6 +2,8 @@
 
 The application ingests RTSP streams, performs VLM inference, and delivers real-time alerts through a web dashboard.
 
+![System Architecture](./_assets/Architecture.png)
+
 ## Data Flow
 
 ```text

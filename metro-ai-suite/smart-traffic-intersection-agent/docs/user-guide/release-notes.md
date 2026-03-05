@@ -2,12 +2,13 @@
 
 ## Current Release: 1.0.0-rc2
 
-**Release Date**: 27 Feb 2026
+**Release Date**: 05 March 2026
 
 **Features**
 
 - Fixed security vulnerabities in code
 - Update base image to python:3.13-slim
+- Added support for helmchart for the application
 
 ## Previous Releases: 1.0.0-rc1
 
@@ -29,5 +30,4 @@
 - **Setup Script Enhancements**: Added `--build` option for building service images without starting containers
 
 **Known Issues**
-- Helm is not supported
 - This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.

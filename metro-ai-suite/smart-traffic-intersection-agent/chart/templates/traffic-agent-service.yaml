@@ -1,0 +1,30 @@
+{{/*
+Copyright (C) 2025 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "stia.trafficAgent.fullname" . }}
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traffic-agent
+spec:
+  type: {{ .Values.trafficAgent.service.type }}
+  ports:
+    - name: backend
+      port: {{ .Values.trafficAgent.service.backendPort }}
+      targetPort: 8081
+      protocol: TCP
+      {{- if and (eq .Values.trafficAgent.service.type "NodePort") .Values.trafficAgent.service.backendNodePort }}
+      nodePort: {{ .Values.trafficAgent.service.backendNodePort }}
+      {{- end }}
+    - name: ui
+      port: {{ .Values.trafficAgent.service.uiPort }}
+      targetPort: 7860
+      protocol: TCP
+      {{- if and (eq .Values.trafficAgent.service.type "NodePort") .Values.trafficAgent.service.uiNodePort }}
+      nodePort: {{ .Values.trafficAgent.service.uiNodePort }}
+      {{- end }}
+  selector:
+    app: {{ include "stia.trafficAgent.fullname" . }}

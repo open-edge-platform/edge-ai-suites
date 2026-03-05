@@ -13,6 +13,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
      ```bash
      # Clone the release branch
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b release-2026.0.0
+     ```
 
 2. **Navigate to the Directory**:
      ```bash
@@ -22,7 +23,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 3. **Configure Image Registry and Tag**:
      ```bash
      export REGISTRY="intel/"
-     export TAG="1.0.0-rc.0"
+     export TAG="1.0.0-rc.1"
      ```
     Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
@@ -34,9 +35,12 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
    # Use a different VLM model (default: Phi-3.5-vision-instruct-int4-ov)
-   # Example: Use InternVL2-2B model instead
-   export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-   export MODEL_NAME=InternVL2-2B
+   export OVMS_SOURCE_MODEL=<supported_model_name> (eg OpenVINO/InternVL2-2B-int4-ov)
+   export MODEL_NAME=<model_name> (eg InternVL2-2B)
+   
+   # Switch to GPU inference (default: CPU)
+   export TARGET_DEVICE=GPU
+   
 
    # Change application port (default: 9000)
    export PORT=9001

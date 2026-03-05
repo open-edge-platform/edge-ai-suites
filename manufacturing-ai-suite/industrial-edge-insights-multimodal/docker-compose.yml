@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.2
+    image: telegraf:1.37.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -125,15 +125,16 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group ID for ubuntu 24.04 host OS
+    # render group IDs for ubuntu 24.04 host OS
     - "992"
+    - "993"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.3.3-ubuntu
+    image: grafana/grafana-oss:12.4.0-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -359,7 +360,7 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -384,10 +385,10 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.2
+    image: bluenviron/mediamtx:1.16.3
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -431,8 +432,8 @@ services:
     volumes:
       - seaweed_master_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
 
   seaweedfs-volume:
@@ -448,8 +449,8 @@ services:
     volumes:
       - seaweed_volume_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
       - seaweedfs-master
@@ -468,8 +469,8 @@ services:
       - seaweed_filer_data:/data
       - "vol_temp_seaweed_filer:/tmp"
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
       - seaweedfs-master
@@ -492,8 +493,8 @@ services:
     networks:
       - timeseries_network
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       # Comma-separated list of default buckets to create
       - DEFAULT_S3_BUCKETS=dlstreamer-pipeline-results
       # S3 credentials from .env file
@@ -520,7 +521,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.8.0
+    image: coturn/coturn:4.9.0
     container_name: coturn
     read_only: true
     security_opt:
