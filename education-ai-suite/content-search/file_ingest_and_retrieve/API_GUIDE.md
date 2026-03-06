@@ -14,7 +14,10 @@ Base URL: `http://<host>:9990`
 4. [Query Indexed Files](#query-indexed-files)
 5. [Delete Files from Index](#delete-files-from-index)
 6. [Clear the Entire Index](#clear-the-entire-index)
-7. [Retrieval](#retrieval)
+7. [File and Embedding ID Maps](#file-and-embedding-id-maps)
+   - [Get ID Maps](#get-id-maps)
+   - [Recover ID Maps](#recover-id-maps)
+8. [Retrieval](#retrieval)
 
 ---
 
@@ -198,6 +201,14 @@ curl "http://localhost:9990/v1/dataprep/get?file_path=minio://my-bucket/document
 }
 ```
 
+**Error responses**
+
+| Code | Condition |
+|------|-----------|
+| `400` | `file_path` is missing or not a string |
+| `404` | Path scheme is not `minio://` or `http(s)://` |
+| `200` | File embedding not found in the database (not yet ingested, or id_map out of sync — call `POST /v1/dataprep/recover` to resync) |
+
 ---
 
 ## Delete Files from Index
@@ -227,6 +238,14 @@ curl -X DELETE "http://localhost:9990/v1/dataprep/delete?file_path=minio://my-bu
 }
 ```
 
+**Error responses**
+
+| Code | Condition |
+|------|-----------|
+| `400` | `file_path` is missing or not a string |
+| `404` | Path scheme is not `minio://` or `http(s)://` |
+| `200` | File embedding not found in the database (not yet ingested, or id_map out of sync — call `POST /v1/dataprep/recover` to resync) |
+
 ---
 
 ## Clear the Entire Index
@@ -246,6 +265,66 @@ curl -X DELETE http://localhost:9990/v1/dataprep/delete_all
 ```json
 { "message": "Database successfully cleared. db returns: ..." }
 ```
+
+---
+
+## File and Embedding ID Maps
+
+### Get ID Maps
+
+`GET /v1/dataprep/list`
+
+Returns the current in-memory id_maps without modifying anything. Use this to inspect which file paths and DB IDs are currently tracked.
+
+**Request**
+
+```bash
+curl http://localhost:9990/v1/dataprep/list
+```
+
+**Response**
+
+```json
+{
+  "visual": {
+    "minio://my-bucket/images/photo.jpg": ["2001"]
+  },
+  "document": {
+    "minio://my-bucket/docs/report.pdf": ["1001", "1002", "1003"]
+  }
+}
+```
+
+---
+
+### Recover ID Maps
+
+`POST /v1/dataprep/recover`
+
+Clears and rebuilds the in-memory id_maps by re-querying both ChromaDB collections. Use this when `GET /v1/dataprep/get` or `DELETE /v1/dataprep/delete` returns an unexpected "not found" message for a file that was previously ingested — which can happen after a server restart, a crash mid-ingest, or any direct modification of the database outside this service.
+
+**Request**
+
+```bash
+curl -X POST http://localhost:9990/v1/dataprep/recover
+```
+
+**Response**
+
+```json
+{
+  "message": "ID maps successfully recovered from database.",
+  "recovered": {
+    "visual_files": 12,
+    "document_files": 5
+  }
+}
+```
+
+- `visual_files` — number of distinct file paths recovered into the visual id_map
+- `document_files` — number of distinct file paths recovered into the document id_map
+
+> **Note:** POST is write-only with respect to in-memory state — it rebuilds the id_maps from the database but does not modify any stored data.
 
 ---
 

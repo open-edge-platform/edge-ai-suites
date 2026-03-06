@@ -216,9 +216,15 @@ def get_file_info(file_path: str):
 
         # For remote files, we don't check for local existence
         if not (file_path.startswith("minio://") or file_path.startswith("http")):
-            raise HTTPException(status_code=404, detail="File not found.")
+            raise HTTPException(status_code=404, detail="File not found. Only 'minio://' and 'http(s)://' paths are supported.")
         
         res, ids = indexer.query_file(file_path)
+
+        if not ids:
+            return JSONResponse(
+                content={"message": f"No entry related to '{file_path}' found in the database."},
+                status_code=200,
+            )
         
         return JSONResponse(
             content={
@@ -232,6 +238,43 @@ def get_file_info(file_path: str):
         raise http_exc
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving file: {str(e)}")
+
+@app.get("/v1/dataprep/list")
+def get_id_maps():
+    """
+    Get the current in-memory id_maps content (file paths and their DB IDs).
+
+    Returns:
+        JSONResponse: Current visual and document id_maps.
+    """
+    try:
+        maps = indexer.get_id_maps()
+        return JSONResponse(content=maps, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving id_maps: {str(e)}")
+
+
+@app.post("/v1/dataprep/recover")
+def recover_id_maps():
+    """
+    Recover id_maps by re-querying the database.
+    Use this if the in-memory id_map is out of sync (e.g. after direct DB modifications).
+
+    Returns:
+        JSONResponse: Number of files recovered per collection.
+    """
+    try:
+        stats = indexer.recover_id_maps()
+        return JSONResponse(
+            content={
+                "message": "ID maps successfully recovered from database.",
+                "recovered": stats,
+            },
+            status_code=200,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recovering id_maps: {str(e)}")
+
 
 @app.delete("/v1/dataprep/delete")
 def delete_file_in_db(file_path: str):
@@ -253,6 +296,12 @@ def delete_file_in_db(file_path: str):
             raise HTTPException(status_code=404, detail="File not found.")
         
         res, ids = indexer.delete_by_file_path(file_path)
+
+        if res is None and not ids:
+            return JSONResponse(
+                content={"message": f"No entry related to '{file_path}' found in the database."},
+                status_code=200,
+            )
         
         return JSONResponse(
             content={

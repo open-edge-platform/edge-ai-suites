@@ -101,6 +101,28 @@ class Indexer:
                     id_map_dict[file_path] = []
                 id_map_dict[file_path].append(int(item["id"]))
 
+    def get_id_maps(self):
+        """Return current in-memory id_maps content."""
+        return {
+            "visual": {fp: list(ids) for fp, ids in self.visual_id_map.items()},
+            "document": {fp: list(ids) for fp, ids in self.document_id_map.items()},
+        }
+
+    def recover_id_maps(self):
+        """Clear and rebuild both id_maps by querying the database."""
+        self.visual_id_map.clear()
+        self.document_id_map.clear()
+        self._recover_id_map(self.visual_collection_name, self.visual_id_map)
+        self._recover_id_map(self.document_collection_name, self.document_id_map)
+        logger.info(
+            f"ID maps recovered: {len(self.visual_id_map)} visual file(s), "
+            f"{len(self.document_id_map)} document file(s)."
+        )
+        return {
+            "visual_files": len(self.visual_id_map),
+            "document_files": len(self.document_id_map),
+        }
+
     def count_files(self):
         files = set()
         for key, value in self.visual_id_map.items():
@@ -121,6 +143,8 @@ class Indexer:
         elif file_path in self.document_id_map:
             ids = self.document_id_map[file_path]
             collection = self.document_collection_name
+        else:
+            logger.warning(f"File {file_path} not found in id_map.")
 
         res = None
         # TBD: are vector and meta needed from db?
@@ -149,7 +173,7 @@ class Indexer:
             res = self.client.delete(collection_name=self.document_collection_name, ids=ids)
             del self.document_id_map[file_path]
         else:
-            logger.info(f"File {file_path} not found in db.")
+            logger.warning(f"File {file_path} not found in id_map.")
         
         return res, ids
     
