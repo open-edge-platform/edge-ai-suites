@@ -32,12 +32,12 @@ License-Identifier: EPL-2.0/EPL-1.0
 ----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
-- nginx:1.28.0-bookworm-perl
+- nginx:1.29.5-trixie-perl
 ----------------------------------------------------------------------
 
 License-Identifier: Apache 2.0
 - intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
-- chrislusf/seaweedfs:4.13
+- chrislusf/seaweedfs:4.15
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
