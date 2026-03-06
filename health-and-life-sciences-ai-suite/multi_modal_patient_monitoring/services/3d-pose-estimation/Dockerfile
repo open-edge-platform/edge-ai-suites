@@ -4,7 +4,6 @@ ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
 
-
 # GPU support (if using OpenVINO with GPU plugin, ensure the base image has necessary drivers/libraries)
 ARG INSTALL_DRIVER_VERSION="25.31.34666"
 ARG USER_ID=1000
@@ -13,6 +12,7 @@ ARG USER_GROUP_ID=1000
 RUN groupadd -g ${USER_GROUP_ID} appuser && useradd -m -s /bin/bash -u ${USER_ID} -g ${USER_GROUP_ID} appuser
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends --fix-missing \
+    ca-certificates \
     curl \
     && rm -rf /var/lib/apt/lists/* 
 
@@ -32,7 +32,7 @@ WORKDIR /app
 
 # Copy requirements and install Python dependencies (relative to build context)
 COPY src/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=300 --retries=5 -r requirements.txt
 
 # Copy proto files and generate Python code (relative to build context)
 COPY proto/ ./proto/

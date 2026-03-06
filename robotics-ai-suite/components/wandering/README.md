@@ -22,7 +22,7 @@ In the diagram above, kobuki robot was used, and its kobuki ROS node is used for
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 ### Build
 
@@ -118,7 +118,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help                                                                                                                                            
+$ make help
 Target               Description
 ------               -----------
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse

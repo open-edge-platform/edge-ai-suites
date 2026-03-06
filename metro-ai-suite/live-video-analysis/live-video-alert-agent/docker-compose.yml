@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-name: ${PROJECT_NAME:-live-video-alert}
+name: ${PROJECT_NAME:-live-video-alert-agent}
 services:
   ovms-init:
     image: busybox:latest
@@ -54,10 +54,10 @@ services:
       start_period: 300s
     network_mode: host
 
-  live-video-alert:
+  live-video-alert-agent:
     image: ${REGISTRY:-}live-video-alert:${TAG:-latest}
     build: .
-    container_name: live-video-alert
+    container_name: live-video-alert-agent
     restart: unless-stopped
     ports:
       - "${PORT:-9000}:${PORT:-9000}"
@@ -73,7 +73,7 @@ services:
       - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
       - PORT=${PORT:-9000}
     volumes:
-      - ./resources:/app/resources
+      - ./resources:/temp/resources
     depends_on:
       ovms:
         condition: service_healthy
