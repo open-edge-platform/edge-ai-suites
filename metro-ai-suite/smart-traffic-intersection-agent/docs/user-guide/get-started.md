@@ -184,7 +184,7 @@ locations on the same machine for `n` required instances.
     ```bash
     export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
     ```
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
+    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4.  Run Setup for Instance #2
 
@@ -221,7 +221,7 @@ For advanced users who need more control over the configuration, you can configu
 # Set log level to debug to help in debugging issues, default value is info
 export LOG_LEVEL=DEBUG
 
-# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU 
+# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU
 export VLM_DEVICE=GPU
 
 # Other VLM related config, sample values
@@ -277,6 +277,7 @@ unique. Additionally, ensure no other external services are running on these por
 
 ./get-started/system-requirements
 ./get-started/build-from-source
+./get-started/deploy-with-helm
 
 :::
 hide_directive-->

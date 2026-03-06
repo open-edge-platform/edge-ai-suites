@@ -19,7 +19,4 @@ config:
     ext:
       coturn_tcp_port: 30386
       coturn_udp_port: 30386
-gpu:
-  enabled: true
-  type: # example: type: "gpu.intel.com/i915, gpu.intel.com/xe"
-  count: # example: count: 1
+privileged_access_required: true

@@ -39,8 +39,7 @@ class MindmapComponent(PipelineComponent):
                 add_generation_prompt=True
             )
 
-            mindmap_streamer = self.model.generate(mindmap_prompt)
-            full_mindmap = "".join(token for token in mindmap_streamer)
+            full_mindmap = self.model.generate(mindmap_prompt, False)
             StorageManager.save(mindmap_path, full_mindmap, append=False)
             logger.info("Mindmap generation completed successfully.")
             return full_mindmap

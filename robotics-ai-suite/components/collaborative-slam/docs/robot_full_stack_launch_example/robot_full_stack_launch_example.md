@@ -37,7 +37,7 @@ To test the connection, you can use commands like ```dmesg``` or ```lsusb```. Yo
 
 #### FastMapping
 
-Follow the [Readme](../../fast-mapping/) to build. Note that Fast mapping does not have all needed parameters exposed. Following parameters should be changed in the code and re-compiled:
+Follow the [Fast Mapping module](../use_fast_mapping.md) guide to build. Note that Fast mapping does not have all the needed parameters exposed. The following parameters should be changed in the code and re-compiled:
 
 ```sh
 "depth_noise_factor": "0.08",
