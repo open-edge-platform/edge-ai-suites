@@ -25,7 +25,7 @@ The setup looks like as described in the table below.
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 ### Build
 
@@ -182,11 +182,11 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 
 ##### Prerequisites
 
-* [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html)
-* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/apt-setup.html)
-* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-openvino.html)
-* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install.html)
-* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-npu-driver.html)
+* [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html)
+* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
+* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
+* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
+* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
 ##### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 

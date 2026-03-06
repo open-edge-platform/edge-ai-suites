@@ -62,7 +62,7 @@ The Smart Traffic Intersection stack includes the following containerized servic
 
 get-started
 api-reference
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->

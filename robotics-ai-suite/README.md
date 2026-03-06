@@ -1,3 +1,5 @@
+# Robotics AI Suite
+
 The **Robotics AI Suite** is a preview collection of robotics applications, libraries, samples, and benchmarking tools to help you build solutions faster. It includes models and pipelines optimized with the OpenVINO™ toolkit for accelerated performance on Intel® CPUs, integrated GPUs, and NPUs. Refer to the [detailed user guide and documentation](https://docs.openedgeplatform.intel.com/dev/ai-suite-robotics.html).
 
 The **Robotics AI Suite** is organized into **collections** that group workflows and capabilities for different robot categories. Each collection provides:

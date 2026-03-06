@@ -19,7 +19,7 @@ The application is designed as a ROS2 node and provides two output topics:
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 ### Build
 
@@ -106,7 +106,7 @@ Target               Description
 ------               -----------
 build                Build debian package
 clean                Clean build artifacts
-help                 
+help
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
 lint                 Run all sub-linters using super-linter (using linters defined for this repo only)
 lint-all             Run super-linter over entire repository (auto-detects code to lint)
