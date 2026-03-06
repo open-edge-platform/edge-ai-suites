@@ -15,8 +15,8 @@ Accepted file formats:
 - Audio: *.mp3 or .wav or .m4a*
 - Video: *.mp4*
 
-![upload button](../user-guide/_assets/uploadbutton.png)
-![upload modal](../user-guide/_assets/uploadmodal.png)
+![upload button](./_assets/uploadbutton.png)
+![upload modal](./_assets/uploadmodal.png)
 
 **After successful upload click Apply & Start Processing**
 
