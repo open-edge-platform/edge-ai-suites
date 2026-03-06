@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.3
+    image: telegraf:1.35.4
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -62,9 +62,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      # The InfluxDB retention policy durations can be configured using a combination 
-      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
-      RETENTION_DURATION: 1h0m0s
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
@@ -442,6 +440,8 @@ services:
     container_name: seaweedfs-volume
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
+    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
     security_opt:
     - no-new-privileges
     networks:
@@ -488,6 +488,8 @@ services:
     container_name: seaweedfs-s3
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
+    memswap_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
     security_opt:
     - no-new-privileges
     networks:
@@ -500,6 +502,7 @@ services:
       # S3 credentials from .env file
       - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
       - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
+      - S3_BUCKET_TTL=${S3_BUCKET_TTL:-30m}
     entrypoint: ["/s3-init-buckets.sh"]
     command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
     depends_on:
@@ -580,6 +583,7 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+      o: size=${SEAWEEDFS_VOLUME_TMPFS_SIZE:-2g}
   seaweed_filer_data:
     driver: local
     driver_opts:
@@ -597,3 +601,4 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+      o: size=${SEAWEEDFS_S3_TMPFS_SIZE:-128m}
