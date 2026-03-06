@@ -1,20 +1,16 @@
-# Release Notes
+# Release Notes: Smart Traffic Intersection Agent
 
-## Current Release: 1.0.0-rc2
+## Version 1.0.0-rc2 - March 05, 2026
 
-**Release Date**: 05 March 2026
+**Improved**
 
-**Features**
+- Fixed security vulnerabities in code.
+- Updated base image to python:3.13-slim.
+- Added support for helmchart for the application.
 
-- Fixed security vulnerabities in code
-- Update base image to python:3.13-slim
-- Added support for helmchart for the application
+## Version 1.0.0-rc1 - Feb 17, 2026
 
-## Previous Releases: 1.0.0-rc1
-
-**Release Date**: 17 Feb 2026
-
-**Features**
+**New**
 
 - **Real-time Traffic Analysis**: Comprehensive directional traffic density monitoring with MQTT integration
 - **VLM Integration**: Vision Language Model (VLM)-powered traffic scene analysis with sustained traffic detection
@@ -22,7 +18,7 @@
 - **Camera Image Management**: Intelligent camera image retention and coordination between API and VLM services
 - **RESTful API**: Complete HTTP API for traffic summaries, intersection monitoring, and VLM analysis retrieval
 
-**Improvements**
+**Improved**
 
 - **Concurrency Control**: Semaphore-based VLM worker management for optimal resource utilization
 - **Image Retention Logic**: Camera images persist with VLM analysis for consistent data correlation
