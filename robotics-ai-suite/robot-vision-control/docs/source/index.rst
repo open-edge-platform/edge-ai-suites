@@ -72,7 +72,7 @@ Stationary Robot Vision & Control Resources
 
 - :doc:`Troubleshootings <troubleshooting>`
 
-- :doc:`Notices and Disclaimers <legal>`
+- :doc:`Notices and Disclaimers <../../../docs/legal>`
 
 .. toctree::
    :maxdepth: 2
