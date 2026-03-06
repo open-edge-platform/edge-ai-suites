@@ -62,9 +62,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      # The InfluxDB retention policy durations can be configured using a combination 
-      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
-      RETENTION_DURATION: 1h0m0s
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
@@ -504,11 +502,7 @@ services:
       # S3 credentials from .env file
       - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
       - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
-      # S3_BUCKET_TTL specifies the time-to-live duration for buckets in SeaweedFS S3. 
-      # After this duration, buckets that have not been accessed will be automatically deleted. 
-      # The duration can be specified using a combination of time units such as hours(h), minutes(m), and seconds(s), 
-      # eg., 1h0m0s for 1 hour.
-      - S3_BUCKET_TTL=30m
+      - S3_BUCKET_TTL=${S3_BUCKET_TTL:-30m}
     entrypoint: ["/s3-init-buckets.sh"]
     command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
     depends_on:
