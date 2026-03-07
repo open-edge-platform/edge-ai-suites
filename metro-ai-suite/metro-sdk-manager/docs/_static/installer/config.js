@@ -48,6 +48,10 @@ const CONFIG = {
           value: "latest"
         },
         {
+          label: "2026.0",
+          value: "2026.0"
+        },
+        {
           label: "2025.2",
           value: "2025.2"
         }
@@ -96,6 +100,52 @@ const CONFIG = {
             SDK: "VISUAL_AI_DEMO",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
+          },
+          components: [
+            "DLStreamer Pipeline Server",
+            "Node Red",
+            "Grafana",
+            "MediaMTX",
+            "MQTT Broker",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "METRO_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          components: [
+            "DLStreamer",
+            "DLStreamer Pipeline Server",
+            "OpenVINO",
+            "OpenVINO Model Server",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "METRO_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          components: [
+            "Audio Analyzer Microservice",
+            "Document Ingestion (pgvector)",
+            "Multimodal Embedding Serving",
+            "Visual Data Preparation For Retrieval",
+            "VLM OpenVINO Serving",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
           },
           components: [
             "DLStreamer Pipeline Server",
@@ -189,6 +239,32 @@ const CONFIG = {
           when: {
             SDK: "METRO_VISION",
             OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.0.0/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash`
+        },
+
+        {
+          when: {
+            SDK: "METRO_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.0.0/metro-ai-suite/metro-sdk-manager/scripts/metro-gen-ai-sdk.sh | bash`
+        },
+
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.0.0/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
+        {
+          when: {
+            SDK: "METRO_VISION",
+            OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash`
@@ -226,7 +302,7 @@ const CONFIG = {
             VERSION: "2025.2"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/metro-vision-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/metro-sdk-manager/metro-vision-ai-sdk/get-started.html`
         },
         {
           when: {
@@ -235,7 +311,7 @@ const CONFIG = {
             VERSION: "2025.2"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/metro-gen-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/metro-sdk-manager/metro-gen-ai-sdk/get-started.html`
         },
         {
           when: {
@@ -244,7 +320,34 @@ const CONFIG = {
             VERSION: "2025.2"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/visual-ai-demo-kit/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/metro-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
+        {
+          when: {
+            SDK: "METRO_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/metro-sdk-manager/metro-vision-ai-sdk/get-started.html`
+        },
+        {
+          when: {
+            SDK: "METRO_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/metro-sdk-manager/metro-gen-ai-sdk/get-started.html`
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/metro-sdk-manager/visual-ai-demo-kit/get-started.html`
         },
         {
           when: {
@@ -287,8 +390,8 @@ const CONFIG = {
             VERSION: "2025.2"
           },
           links: [
-            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
-            { text: "DLStreamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "DLStreamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
             { text: "OpenVINO", url: "https://docs.openvino.ai/2025/get-started.html" },
             { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
@@ -303,7 +406,7 @@ const CONFIG = {
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
-            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md" },
+            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
             { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
@@ -316,6 +419,50 @@ const CONFIG = {
             SDK: "VISUAL_AI_DEMO",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
+          },
+          links: [
+            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "DLStreamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "METRO_VISION",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          links: [
+            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "DLStreamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2025/get-started.html" },
+            { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "METRO_GENAI",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          links: [
+            { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
+            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
+            { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "VISUAL_AI_DEMO",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
           },
           links: [
             { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
@@ -347,7 +494,7 @@ const CONFIG = {
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
-            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md" },
+            { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
             { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
