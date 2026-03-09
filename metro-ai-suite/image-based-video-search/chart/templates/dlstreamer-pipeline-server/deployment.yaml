@@ -25,7 +25,7 @@ spec:
         supplementalGroups: [109, 110, 992]
       initContainers:
       - name: openvino-container
-        image: openvino/ubuntu22_dev:2024.6.0
+        image: openvino/ubuntu24_dev:2024.6.0
         env:
           {{- if .Values.httpProxy }}
           - name: http_proxy
@@ -58,7 +58,7 @@ spec:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /output
       - name: model-downloader
-        image: intel/dlstreamer:2025.1.2-ubuntu24
+        image: intel/dlstreamer:2026.0.0-ubuntu24-rc1
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true
