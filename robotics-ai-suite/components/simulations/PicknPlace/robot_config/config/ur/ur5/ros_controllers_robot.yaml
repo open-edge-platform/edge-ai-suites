@@ -3,7 +3,7 @@
 ---
 controller_manager:
   ros__parameters:
-    update_rate: 50  # Hz
+    update_rate: 100  # Hz
     use_sim_time: true
 
     arm_controller:
@@ -21,50 +21,53 @@ controller_manager:
 arm_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - $(var arm_prefix)shoulder_pan_joint
+      - $(var arm_prefix)shoulder_lift_joint
+      - $(var arm_prefix)elbow_joint
+      - $(var arm_prefix)wrist_1_joint
+      - $(var arm_prefix)wrist_2_joint
+      - $(var arm_prefix)wrist_3_joint
     command_interfaces:
       - position
+      - velocity
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 30.0
+    type: joint_trajectory_controller/JointTrajectoryController
+    state_publish_rate: 100.0
     action_monitor_rate: 20.0
     allow_partial_joints_goal: false
-    use_sim_time: true
     constraints:
-      stopped_velocity_tolerance: 0.01
-      goal_time: 0.0
-      shoulder_pan_joint: {trajectory: 0.25, goal: 0.1}
-      shoulder_lift_joint: {trajectory: 0.25, goal: 0.1}
-      elbow_joint: {trajectory: 0.25, goal: 0.1}
-      wrist_1_joint: {trajectory: 0.25, goal: 0.1}
-      wrist_2_joint: {trajectory: 0.25, goal: 0.1}
-      wrist_3_joint: {trajectory: 0.25, goal: 0.1}
+      stopped_velocity_tolerance: 0.2
+      goal_time: 2.0
+      $(var arm_prefix)shoulder_pan_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+      $(var arm_prefix)shoulder_lift_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+      $(var arm_prefix)elbow_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+      $(var arm_prefix)wrist_1_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+      $(var arm_prefix)wrist_2_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+      $(var arm_prefix)wrist_3_joint: {trajectory: 0.5, goal: 0.5, state: 0.5}
+    use_sim_time: true
 
 forward_velocity_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
-    interface_name: velocity
+      - $(var arm_prefix)shoulder_pan_joint
+      - $(var arm_prefix)shoulder_lift_joint
+      - $(var arm_prefix)elbow_joint
+      - $(var arm_prefix)wrist_1_joint
+      - $(var arm_prefix)wrist_2_joint
+      - $(var arm_prefix)wrist_3_joint
+    interface_name:
+      - velocity
     use_sim_time: true
 
 forward_position_controller:
   ros__parameters:
     joints:
-      - shoulder_pan_joint
-      - shoulder_lift_joint
-      - elbow_joint
-      - wrist_1_joint
-      - wrist_2_joint
-      - wrist_3_joint
+      - $(var arm_prefix)shoulder_pan_joint
+      - $(var arm_prefix)shoulder_lift_joint
+      - $(var arm_prefix)elbow_joint
+      - $(var arm_prefix)wrist_1_joint
+      - $(var arm_prefix)wrist_2_joint
+      - $(var arm_prefix)wrist_3_joint
     use_sim_time: true
