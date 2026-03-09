@@ -18,15 +18,15 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-libraries|release-2025.2.0|edge-ai-libraries"
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2025.2.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.0.0|edge-ai-libraries"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.0.0|edge-ai-suites"
 )
 
 images=(
-  "openvino/model_server:2025.3"
-  "openvino/ubuntu24_dev:2025.3.0"
-  "intel/dlstreamer:2025.1.2-ubuntu24"
-  "intel/dlstreamer-pipeline-server:3.1.0-ubuntu24"
+  "openvino/model_server:2026.0"
+  "openvino/ubuntu24_dev:2026.0.0"
+  "intel/dlstreamer:2026.0.0-ubuntu24-rc1"
+  "intel/dlstreamer-pipeline-server:2026.0.0-extended-ubuntu24-rc1"
 )
 
 NAME="Metro Vision AI SDK"

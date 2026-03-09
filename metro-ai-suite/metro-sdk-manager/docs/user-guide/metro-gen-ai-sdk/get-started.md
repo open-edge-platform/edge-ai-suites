@@ -43,11 +43,28 @@ Navigate to the pre-installed question-answering application directory:
 cd $HOME/metro/edge-ai-libraries/sample-applications/chat-question-and-answer
 ```
 
-### Step 2: Configure Environment and Dependencies
+### Step 2: Setup Model Download Service
+
+Configure and start the Model Download service to manage LLM and embedding model downloads:
+
+```bash
+cd $HOME/metro/edge-ai-libraries/microservices/model-download
+export REGISTRY="intel/"
+export TAG=latest
+export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
+source scripts/run_service.sh up --plugins openvino --model-path $HOME/metro/models/
+```
+
+> **Note:** Keep this terminal open while the model download service is running. Open a new terminal to continue with the next steps.
+
+Update the `<your-huggingface-token>` to your Access Token from Hugging Face. To learn more, follow this [guide](https://huggingface.co/docs/hub/en/security-tokens).
+
+### Step 3: Configure Environment and Dependencies
 
 Set up the Python virtual environment and install required dependencies:
 
 ```bash
+cd $HOME/metro/edge-ai-libraries/sample-applications/chat-question-and-answer
 # Configure application environment variables
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 export LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
@@ -55,28 +72,30 @@ export EMBEDDING_MODEL_NAME=Alibaba-NLP/gte-large-en-v1.5
 export RERANKER_MODEL=BAAI/bge-reranker-base
 export DEVICE="CPU"
 export REGISTRY="intel/"
-export TAG=2.0.0
+export TAG=latest
+export MODEL_DOWNLOAD_HOST=localhost
+export MODEL_DOWNLOAD_PORT=8200
 source setup.sh llm=OVMS embed=OVMS
 ```
-Update the <your-huggingface-token> to your Access Token from Hugging Face. To know more, follow this [guide](https://huggingface.co/docs/hub/en/security-tokens).
 
-### Step 3: Deploy the Application
+### Step 4: Deploy the Application
 
 Start the complete Gen AI application stack using Docker Compose:
 
 ```bash
+export ALLOWED_HOSTS="*.intel.com,en.wikipedia.org,*.wikipedia.org,*.github.com"
 docker compose up
 ```
 
-### Step 4: Verify Deployment Status
+### Step 5: Verify Deployment Status
 
-Check that all application components are running correctly:
+Run below command in another terminal to check that all application components are running correctly:
 
 ```bash
 docker ps
 ```
 
-### Step 5: Access the Application Interface
+### Step 6: Access the Application Interface
 
 Open a web browser and navigate to the application dashboard:
 
