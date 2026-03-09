@@ -28,10 +28,10 @@ def download_file(url: str, dest: Path, desc: str) -> None:
         raise
 
 
-def load_ecg_models_from_config() -> list[tuple[Path, str, str]]:
+def load_ecg_models_from_config() -> list[tuple[Path, str, str, str]]:
     """Load ECG model directories and filenames from model-config.yaml.
 
-    Returns a list of tuples: (target_dir, xml_filename, bin_filename).
+    Returns a list of tuples: (target_dir, xml_filename, bin_filename, model_url).
     This function expects /app/configs/model-config.yaml to exist and to
     define ai-ecg.models[*] entries with at least target_dir and
     ir_file or name. If the file is missing or malformed, it will
@@ -61,6 +61,7 @@ def load_ecg_models_from_config() -> list[tuple[Path, str, str]]:
         target_dir_val = m.get("target_dir")
         ir_file_val = m.get("ir_file")
         name_val = m.get("name")
+        model_url_val = m.get("model_url")
 
         if not target_dir_val:
             raise ValueError(
@@ -86,7 +87,19 @@ def load_ecg_models_from_config() -> list[tuple[Path, str, str]]:
             )
 
         bin_file = xml_file.replace(".xml", ".bin")
-        result.append((target_dir, xml_file, bin_file))
+
+        # model_url is optional in config for backward compatibility; if
+        # omitted, fall back to the legacy BASE_URL.
+        if not model_url_val:
+            logger.warning(
+                "ai-ecg.models entry missing model_url; falling back to BASE_URL %s",
+                BASE_URL,
+            )
+            model_url = BASE_URL
+        else:
+            model_url = str(model_url_val)
+
+        result.append((target_dir, xml_file, bin_file, model_url))
 
     return result
 
@@ -96,7 +109,7 @@ def main() -> int:
 
     models = load_ecg_models_from_config()
 
-    for target_dir, xml_name, bin_name in models:
+    for target_dir, xml_name, bin_name, model_url in models:
         target_dir.mkdir(parents=True, exist_ok=True)
         logger.info("Using ECG model directory: %s", target_dir)
 
@@ -106,7 +119,7 @@ def main() -> int:
                 logger.info("%s already exists, skipping", dest)
                 continue
 
-            url = f"{BASE_URL}/{fname}"
+            url = f"{model_url}/{fname}"
             download_file(url, dest, fname)
 
     logger.info("ECG models ready")

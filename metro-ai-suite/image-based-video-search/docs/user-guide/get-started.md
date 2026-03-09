@@ -55,7 +55,7 @@ By following this guide, you will learn how to:
           --user=root \
           -e http_proxy -e https_proxy -e no_proxy \
           -v "$MODELS_PATH:/output" \
-          openvino/ubuntu22_dev:2024.6.0 bash -c \
+          openvino/ubuntu24_dev:2024.6.0 bash -c \
           "omz_downloader --name resnet-50-pytorch --output_dir models && \
           omz_converter --name resnet-50-pytorch --download_dir models --output_dir models && \
           cp -r ./models/public/resnet-50-pytorch /output && \
@@ -65,7 +65,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2025.1.2-ubuntu24 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.0.0-ubuntu24-rc1 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 

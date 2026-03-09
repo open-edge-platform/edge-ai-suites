@@ -4,7 +4,11 @@ This tutorial demonstrates advanced video processing capabilities using Intel's 
 
 ## Overview
 
-Multi-stream video processing is essential for applications like video surveillance, broadcasting, and media production. This tutorial showcases how Intel's hardware acceleration can efficiently decode and composite 16 simultaneous video streams into a single 4K display output, demonstrating the power of Intel® Quick Sync Video technology.
+Multi-stream video processing is essential for applications like video surveillance, broadcasting, and media production. This tutorial showcases how the **Intel® integrated GPU (iGPU)** can efficiently decode and composite 16 simultaneous video streams into a single 4K display output, demonstrating the power of Intel® Quick Sync Video technology. The entire media pipeline — decode, scale, compose, and display — runs on the iGPU.
+
+> **Recommended Device: Integrated GPU (iGPU)**
+>
+> Media pipelines achieve the best throughput and lowest latency when running on the Intel® integrated GPU. The iGPU provides dedicated hardware-accelerated media decode/encode engines and parallel compute units purpose-built for real-time video processing. **CPU and NPU are not recommended** for media-intensive pipelines like multi-stream video decode and composition.
 
 > **Platform Compatibility**
 > This tutorial requires Intel® Core™ or Intel® Core™ Ultra processors with integrated graphics. Intel® Xeon® processors without integrated graphics are not supported for this specific use case.
@@ -42,7 +46,7 @@ Before starting this tutorial, ensure you have:
 - **Memory:** Minimum 8GB RAM (16GB recommended for smooth performance)
 - **Display:** 4K monitor (3840x2160) or compatible display
 - **Storage:** 2GB free disk space for video files
-- **Graphics:** Intel integrated graphics with VAAPI support
+- **Graphics:** Intel® integrated GPU (iGPU) with VAAPI support — **required** (this pipeline cannot run on CPU or NPU)
 
 **Important Display Requirements**
 This tutorial requires **Ubuntu Desktop** with a **local physical display** and active graphical session. It will **not work properly** with:
@@ -229,7 +233,9 @@ ls -la /dev/dri/
 
 ### Step 5: Execute Multi-Stream Video Processing
 
-Launch the containerized multi-stream decode and composition pipeline:
+Launch the containerized multi-stream decode and composition pipeline. The `--device /dev/dri` flag gives the container access to the Intel® integrated GPU, which handles all decode, scaling, and composition in hardware:
+
+> **Running on iGPU:** Every stage of this pipeline — H.264 decode (`vah264dec`), scaling (`vapostproc`), and composition (`vacompositor`) — executes on the integrated GPU via VAAPI. The CPU only orchestrates the pipeline; all heavy media processing is offloaded to the iGPU.
 
 ```bash
 # Set up GPU device access
@@ -295,14 +301,15 @@ docker system prune -f
 
 ### Intel® Quick Sync Video Technology
 
-This tutorial leverages Intel's hardware-accelerated video processing capabilities:
+This tutorial leverages the Intel® integrated GPU's hardware-accelerated video processing capabilities. Media pipelines like this one are best run on the iGPU — **not on CPU or NPU** — because the iGPU contains dedicated fixed-function media engines designed specifically for video decode, encode, and processing.
 
-**Hardware Acceleration Benefits:**
+**Why iGPU for Media Pipelines?**
 
-- **Dedicated Video Engines**: Separate silicon for video decode/encode operations
-- **CPU Offloading**: Frees CPU resources for other computational tasks
-- **Power Efficiency**: Lower power consumption compared to software decoding
-- **Parallel Processing**: Multiple decode engines can process streams simultaneously
+- **Dedicated Video Engines**: The iGPU contains separate silicon (multi-format codec engines) for video decode/encode operations that far exceed CPU software decode performance
+- **CPU Offloading**: Running the media pipeline on the iGPU frees CPU cores for other computational tasks such as application logic or AI post-processing
+- **Power Efficiency**: Hardware media engines consume significantly less power than CPU-based software decoding
+- **Parallel Processing**: Multiple decode engines on the iGPU can process many streams simultaneously
+- **Not suitable for CPU/NPU**: CPU software decode lacks the throughput for multi-stream real-time 4K composition; NPU is designed for AI inference workloads, not media decode/encode
 
 ### VAAPI Integration
 

@@ -1,6 +1,6 @@
 # Multi-Modal Patient Monitoring
 
-The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs (GE Healthcare, Philips, Mindray) evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
+The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
 You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
 
