@@ -1,14 +1,40 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version 1.0.0-rc2 - March 05, 2026
+## Version 1.0.0
+
+**March 05, 2026**
+
+Smart Traffic Intersection Agent (STIA) is a new addition to the Metro AI Sute. It showcases
+Hybrid AI usage in combination with the Smart Route Planning Agent (SRPA) sample application,
+acting as an agent deployed at the edge (traffic intersection in this case) and providing rich
+data on the “what” and “why” of the surrounding events, using SceneScape and VLMs respectively.
+It provides a *UI to visualize the events* at the intersection, reporting on the number of
+vehicles, showing the feed from the camera, and explaining the traffic situation.
+
+The sample is intended to mimic a real-world deployment scenario of an orchestrating agent in
+the cloud that communicates with numerous agents deployed at the edge to realize a particular
+goal. For example, it tracks the number of vehicles at the intersection and if the traffic is
+heavy, it reports the reason. The default prompt is tuned to look for weather and accidents
+as sources of a traffic buildup.
+
+
+## Version 1.0.0-rc2
+
+**Feb 17, 2026**
+
+**New**
+
+- Added support for helmchart for the application.
 
 **Improved**
 
-- Fixed security vulnerabities in code.
+- Security vulnerabities in code.
 - Updated base image to python:3.13-slim.
-- Added support for helmchart for the application.
 
-## Version 1.0.0-rc1 - Feb 17, 2026
+
+## Version 1.0.0-rc1
+
+**Feb 17, 2026**
 
 **New**
 
@@ -26,4 +52,6 @@
 - **Setup Script Enhancements**: Added `--build` option for building service images without starting containers
 
 **Known Issues**
-- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.
+
+- This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet
+  be fully validated across all scenarios.
