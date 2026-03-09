@@ -49,7 +49,7 @@ pip install --upgrade -r requirements.txt
 
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
-```bash
+```yaml
 asr:
   provider: openai            # Supported: openvino, openai, funasr
   name: whisper-small          # Options: whisper-tiny, whisper-small, paraformer-zh etc.
@@ -68,10 +68,16 @@ summarizer:
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 
-```bash
+```yaml
 asr:
   provider: funasr
   name: paraformer-zh
+```
+Please also config the summarizer to output Chinese
+
+```yaml
+summarizer:
+  language: zh
 ```
 
 **Important: After updating the configuration, reload the application for changes to take effect.**

@@ -8,7 +8,11 @@ With this feature, during runtime, you can download a new model using the micros
 ## Contents
 
 ### Pre-requisites
->NOTE: Model Download service has already downloaded the model to be updated to `/tmp/models`
+
+We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`. 
+To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#quick-start)
+
+If not available, you can simulate this by downloading the sample model from edge-ai-resources repository [here](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/INT8/worker-safety-gear-detection.zip). Once downloaded, extract to `/tmp/models` directory.
 
 
 ### Steps
@@ -120,12 +124,14 @@ With this feature, during runtime, you can download a new model using the micros
         }
     ]
     ```
+    Run the following.
+    ```bash
+    ./sample_start.sh -p worker_safety_gear_detection_mlops
+    ```
 
 11. View the WebRTC streaming on `http://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
 ## Additional resources
-### Setting up Model Download
-To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#quick-start)
 
 ### Downloading models from Geti Server
 To learn how to download models from a running Geti server, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#sample-usage-with-curl-command)

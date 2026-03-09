@@ -1,4 +1,3 @@
-
 # How It Works
 
 This section provides a high-level view of how the application processes audio input and integrates with a modular backend architecture.
