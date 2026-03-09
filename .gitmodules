@@ -3,7 +3,7 @@
 	url = https://github.com/intel-retail/loss-prevention.git
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/g2o"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/g2o
-	url = https://github.com/RainerKuemmerle/g2o.git
+	url = https://github.com/ros2-gbp/libg2o-release.git
 [submodule "robotics-ai-suite/components/collaborative-slam/3rd/DBoW2"]
 	path = robotics-ai-suite/components/collaborative-slam/3rd/DBoW2
 	url = https://github.com/shinsumicco/DBoW2.git

@@ -10,6 +10,7 @@ if [ $# -eq 0 ]; then
 fi
 
 ROS_DISTRO_INPUT="$1"
+COVERITY_SCAN="$3"
 # shellcheck disable=SC1090
 source /opt/ros/"${ROS_DISTRO_INPUT}"/setup.bash
 git config --global --add safe.directory '*'
@@ -42,6 +43,7 @@ find . -maxdepth 1 -name "*.ddeb" -delete
 find . -maxdepth 1 -name "*.buildinfo" -delete
 find . -maxdepth 1 -name "*.changes" -delete
 
+find 3rd -name "*.deb" -delete 2>/dev/null || true
 find slam -name "*.deb" -delete 2>/dev/null || true
 find msgs -name "*.deb" -delete 2>/dev/null || true
 find tracker -name "*.deb" -delete 2>/dev/null || true
@@ -84,6 +86,33 @@ build_package() {
   cd "${current_dir}"
 }
 
+if [ "${COVERITY_SCAN}" != "true" ] && [ "${ROS_DISTRO_INPUT}" = "jazzy" ]; then
+    if [[ ! -d "3rd/g2o/${ROS_DISTRO_INPUT}" ]]; then
+        mkdir -p "3rd/g2o/${ROS_DISTRO_INPUT}"
+        cp -r "3rd/g2o/debian" "3rd/g2o/${ROS_DISTRO_INPUT}" || :
+        rm -r "3rd/g2o/debian"
+        rm -f "3rd/g2o/${ROS_DISTRO_INPUT}/debian/source/format"
+        sed -i '1s/(\(.*\))/(\1-eci1)/' "3rd/g2o/${ROS_DISTRO_INPUT}/debian/changelog"
+
+        # Build libg2o with specific configuration
+        sed -i -r '/^\tdh_auto_configure[[:space:]]*--[[:space:]]*\\/{
+N
+s|(\n[[:space:]]*-DCMAKE_INSTALL_PREFIX=.*)|\
+		-DCMAKE_BUILD_TYPE=Release \\\
+		-DG2O_BUILD_EXAMPLES=OFF \\\
+		-DG2O_BUILD_APPS=OFF \\\
+		-DG2O_USE_CHOLMOD=OFF \\\
+		-DG2O_USE_CSPARSE=ON \\\
+		-DBUILD_LGPL_SHARED_LIBS=ON \\\
+		-DG2O_USE_OPENGL=OFF \\\
+		-DG2O_USE_OPENMP=OFF \\\
+		-DOpenGL_GL_PREFERENCE=LEGACY \\\
+		-DBUILD_WITH_MARCH_NATIVE=ON \\\1|
+}' "3rd/g2o/${ROS_DISTRO_INPUT}/debian/rules"
+    fi
+    build_package "3rd/g2o"
+fi
+
 # Build in dependency order
 build_package "slam/openvslam"
 
@@ -120,6 +149,10 @@ done
 
 # === Copy built deb packages ===
 mkdir -p /tmp/"${ROS_DISTRO_INPUT}"_cslam_deb_packages
+cd "${current_dir}"
+cd 3rd
+cp ./*.deb /tmp/"${ROS_DISTRO_INPUT}"_cslam_deb_packages/ 2>/dev/null || true
+cd "${current_dir}"
 cd slam
 cp ./*.deb /tmp/"${ROS_DISTRO_INPUT}"_cslam_deb_packages/ 2>/dev/null || true
 cd "${current_dir}"
@@ -132,7 +165,11 @@ echo "Built packages:"
 ls -la /tmp/"${ROS_DISTRO_INPUT}"_cslam_deb_packages/
 
 # === Verify package count ===
-EXPECTED_PACKAGES=25
+if [ "${COVERITY_SCAN}" != "true" ] && [ "${ROS_DISTRO_INPUT}" = "jazzy" ]; then
+    EXPECTED_PACKAGES=26
+else
+    EXPECTED_PACKAGES=25
+fi
 ACTUAL_PACKAGES=$(find /tmp/"${ROS_DISTRO_INPUT}"_cslam_deb_packages/ -name "*.deb" -not -name "*-build-deps_*" -not -name "*-dbgsym_*" | wc -l)
 
 echo "Expected: ${EXPECTED_PACKAGES}, Actual: ${ACTUAL_PACKAGES}"
