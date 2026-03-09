@@ -25,7 +25,7 @@ This release introduces **S3-based frame storage**, **deployment hardening**, an
 - System requirements have been updated to reflect CPU-only validated configurations.
 - Third-party service images have been updated: Telegraf, Grafana, Eclipse Mosquitto,
   MediaMTX, Coturn, and SeaweedFS.
-- SeaweedFS container runtime has been hardened for better security
+- **Security**: SeaweedFS container runtime has been hardened.
 - Documentation has been extended and improved for ease of navigation, covering updates to
   setup guides, Helm deployment, and more.
 
@@ -36,6 +36,7 @@ For information on older versions, check [release notes 2025](./release-notes/re
 ```{toctree}
 :maxdepth: 5
 :hidden:
+
 release-notes/release-notes-2025.md
 ```
 hide_directive-->
