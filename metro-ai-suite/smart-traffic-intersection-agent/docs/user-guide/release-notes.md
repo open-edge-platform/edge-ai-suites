@@ -1,8 +1,8 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version 1.0.0
+## Version 2026.0
 
-**March 05, 2026**
+**April 01, 2026**
 
 Smart Traffic Intersection Agent (STIA) is a new addition to the Metro AI Sute. It showcases
 Hybrid AI usage in combination with the Smart Route Planning Agent (SRPA) sample application,
@@ -24,11 +24,10 @@ as sources of a traffic buildup.
 - **Sliding Window Analysis**: 15-second sliding window with 3-second sustained threshold for accurate traffic state detection.
 - **Camera Image Management**: Intelligent camera image retention and coordination between API and VLM services.
 - **RESTful API**: Complete HTTP API for traffic summaries, intersection monitoring, and VLM analysis retrieval.
-- Support for helmchart for the application is included.
+- **Helmchart Support**: Support for helmchart for the application is included.
 - **Concurrency Control**: Semaphore-based VLM worker management for optimal resource utilization.
 - **Image Retention Logic**: Camera images persist with VLM analysis for consistent data correlation.
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services.
-- **Setup Script Enhancements**: `--build` option for building service images without starting containers.
 
 **Known Issues**
 
