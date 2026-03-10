@@ -12,31 +12,31 @@ Installation
 
 .. code-block:: bash
 
-    $ sudo apt install -y customizations-grub
+    sudo apt install -y customizations-grub
 
 2. Install linux-firmware
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-firmware
+    sudo apt install -y linux-firmware
 
 **Note:** Linux OS version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in ``/lib/firmware/i915/experimental/``. Confirm the following boot parameters through ``cat /proc/cmdline`` after the next reboot:
 
 .. code-block:: bash
 
-    $ i915.guc_firmware_path=i915/experimental/mtl_guc_70.bin i915.dmc_firmware_path=i915/experimental/mtl_dmc.bin i915.gsc_firmware_path=i915/experimental/mtl_gsc_1.bin
+    i915.guc_firmware_path=i915/experimental/mtl_guc_70.bin i915.dmc_firmware_path=i915/experimental/mtl_dmc.bin i915.gsc_firmware_path=i915/experimental/mtl_gsc_1.bin
 
 If you cannot find the firmwares in ``/lib/firmware/i915/experimental/``, install the latest ``linux-firmware``:
 
 .. code-block:: bash
 
-   $ sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
+   sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
 
 You can double check if the correct linux-firmware is in use:
 
 .. code-block:: bash
 
-   $ sudo apt-cache policy linux-firmware
+   sudo apt-cache policy linux-firmware
 
 Expected result:
 
@@ -49,13 +49,13 @@ Expected result:
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-intel-rt-experimental
+    sudo apt install -y linux-intel-rt-experimental
 
 **Note:** If you don't need to use RT kernel, install with the following command:
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-intel-experimental
+    sudo apt install -y linux-intel-experimental
 
 4. To modify default boot parameters, edit ``/etc/grub.d/10_eci_experimental``.
 
@@ -64,12 +64,12 @@ Expected result:
 .. code-block:: bash
 
     # Modify default cmdline parameters to enable cstate/pstate
-    $ sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+    sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to affinity irq to core 0-9
-    $ sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
+    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to isolate cpus to core 10-13
-    $ sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
-    $ sudo update-grub
+    sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+    sudo update-grub
 
 The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
 
@@ -224,7 +224,7 @@ Timer migration can be disabled with the following command:
 
 .. code-block:: bash
 
-    $ echo 0 > /proc/sys/kernel/timer_migration
+    echo 0 > /proc/sys/kernel/timer_migration
 
 Disable Swap
 ::::::::::::::
@@ -234,7 +234,7 @@ Swap can be disabled with following command:
 
 .. code-block:: bash
 
-   $ swapoff -a
+   swapoff -a
 
 Verify Benchmark Performance
 ===============================
@@ -246,22 +246,22 @@ Follow with below steps, you can find ``cyclictest v2.6`` in ``rt-tests-2.6``：
 
 .. code-block:: bash
 
-    $ wget https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
-    $ tar zxvf rt-tests-2.6.tar.gz
-    $ cd rt-tests-2.6
-    $ make
+    wget https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
+    tar zxvf rt-tests-2.6.tar.gz
+    cd rt-tests-2.6
+    make
 
 **Note**: Please ensure you had installed ``libnuma-dev`` as dependence before compilation.
 
   .. code-block:: bash
 
-     $ sudo apt install libnuma-dev
+     sudo apt install libnuma-dev
 
 An example command that runs the cyclictest benchmark as below:
 
 .. code-block:: bash
 
-    $ cyclictest -mp 99 -t1 -a 13 -i 1000 --laptop -D 72h  -N --mainaffinity 12
+    cyclictest -mp 99 -t1 -a 13 -i 1000 --laptop -D 72h  -N --mainaffinity 12
 
 Default parameters are used unless otherwise specified. Run ``cyclictest --help`` to list the modifiable arguments.
 

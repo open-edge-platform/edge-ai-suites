@@ -36,14 +36,14 @@ Virtual environment setup
 
    .. code-block:: bash
 
-      $ sudo apt install python3-venv
-      $ python3 -m venv act
+      sudo apt install python3-venv
+      python3 -m venv act
 
 2. Activate the virtual environment with the following command:
 
    .. code-block:: bash
 
-      $ source act/bin/activate
+      source act/bin/activate
 
 Install OpenVINO™
 ::::::::::::::::::::
@@ -52,7 +52,7 @@ Install the OpenVINO™ with the following command:
 
    .. code-block:: bash
 
-      $ pip install openvino==2025.2.0
+      pip install openvino==2025.2.0
 
 Dependencies setup
 ::::::::::::::::::::::
@@ -61,7 +61,7 @@ Install the dependencies with the following command:
 
    .. code-block:: bash
 
-      $ pip install torch==2.7.1 torchvision==0.22.1 pyquaternion==0.9.9 pyyaml==6.0 rospkg==1.5.0 pexpect==4.8.0 mujoco==3.2.6 dm_control==1.0.26 matplotlib==3.10.0 einops==0.6.0 packaging==23.0 h5py==3.12.1 ipython==8.12.0 opencv-python==4.10.0.84 transformers==4.37.0 accelerate==0.23.0 huggingface-hub==0.24.7
+      pip install torch==2.7.1 torchvision==0.22.1 pyquaternion==0.9.9 pyyaml==6.0 rospkg==1.5.0 pexpect==4.8.0 mujoco==3.2.6 dm_control==1.0.26 matplotlib==3.10.0 einops==0.6.0 packaging==23.0 h5py==3.12.1 ipython==8.12.0 opencv-python==4.10.0.84 transformers==4.37.0 accelerate==0.23.0 huggingface-hub==0.24.7
 
 Install ACT package
 :::::::::::::::::::
@@ -72,8 +72,8 @@ The Embodied Intelligence SDK provides optimized source code for OpenVINO™. To
 
    .. code-block:: bash
 
-      $ sudo apt install act-ov
-      $ sudo chown -R $USER /opt/act-ov/
+      sudo apt install act-ov
+      sudo chown -R $USER /opt/act-ov/
 
 After installing the ``act-ov`` package, follow the ``README.md`` file in ``/opt/act-ov/`` to set up the complete source code environment.
 
@@ -84,8 +84,8 @@ Install the DETR with the following command:
 
    .. code-block:: bash
 
-      $ cd <act_SOURCE_CODE_PATH>/detr
-      $ pip install -e .
+      cd <act_SOURCE_CODE_PATH>/detr
+      pip install -e .
 
 Run pipeline
 =============
@@ -101,14 +101,14 @@ Inference
 
    .. code-block:: bash
 
-      $ cd <act_SOURCE_CODE_PATH>
-      $ python3 ov_convert.py -h
+      cd <act_SOURCE_CODE_PATH>
+      python3 ov_convert.py -h
 
 For example, you can convert the model with the following command:
 
    .. code-block:: bash
 
-      $ python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
+      python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
 
    .. attention::
 
@@ -138,7 +138,7 @@ Below is a camera viewer showcasing four different camera perspectives, the left
 
    .. code-block:: bash
 
-      $ python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
+      python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
 
    .. note::
 
@@ -168,17 +168,17 @@ Training **(Optional)**
    .. code-block:: bash
 
       # Bimanual Insertion task
-      $ python3 record_sim_episodes.py --task_name sim_insertion_scripted --dataset_dir <data save dir> --num_episodes 50
+      python3 record_sim_episodes.py --task_name sim_insertion_scripted --dataset_dir <data save dir> --num_episodes 50
 
 2. Visualize the episode with the following command:
 
    .. code-block:: bash
 
-      $ python3 visualize_episodes.py --dataset_dir <data save dir> --episode_idx 0
+      python3 visualize_episodes.py --dataset_dir <data save dir> --episode_idx 0
 
 3. Train ACT with the following command:
 
    .. code-block:: bash
 
       # Bimanual Insertion task
-      $ python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
+      python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0

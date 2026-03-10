@@ -24,7 +24,7 @@ Each project is tagged consistently so when pulling these repositories pull the 
 
     .. code-block:: console
 
-        $ cat /proc/cmdline | grep i915
+        cat /proc/cmdline | grep i915
         i915.force_probe=*
 
 Installation
@@ -34,23 +34,23 @@ Installation
 
 .. code-block:: bash
 
-    $ wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_gsc_1.bin --no-check-certificate
-    $ wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin --no-check-certificate
+    wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_gsc_1.bin --no-check-certificate
+    wget https://web.git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git/plain/i915/mtl_guc_70.bin --no-check-certificate
 
 2. Remove the ``zst`` firmware files with the following command (Optional):
 
 .. code-block:: bash
 
-    $ sudo rm /lib/firmware/i915/mtl_guc_70.bin.zst
-    $ sudo rm /lib/firmware/i915/mtl_gsc_1.bin.zst
+    sudo rm /lib/firmware/i915/mtl_guc_70.bin.zst
+    sudo rm /lib/firmware/i915/mtl_gsc_1.bin.zst
 
 3. Update the Intel® Graphics Driver firmware with the following command:
 
 .. code-block:: bash
 
-    $ sudo cp mtl_guc_70.bin /lib/firmware/i915/
-    $ sudo cp mtl_gsc_1.bin /lib/firmware/i915/
-    $ sudo update-initramfs -u -k $(uname -r)
+    sudo cp mtl_guc_70.bin /lib/firmware/i915/
+    sudo cp mtl_gsc_1.bin /lib/firmware/i915/
+    sudo update-initramfs -u -k $(uname -r)
 
 4. Reboot.
 
