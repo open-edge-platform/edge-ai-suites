@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+"""Launch file for wandering AAEON robot tutorial."""
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -26,15 +28,65 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
-def generate_launch_description():
+def get_ros_distro():
+    """Get the ROS 2 distribution name."""
+    return os.environ.get('ROS_DISTRO', 'humble')
+
+
+def generate_launch_description():  # pylint: disable=too-many-locals
+    """Generate launch description for wandering AAEON tutorial."""
+    wandering_tutorial_dir = get_package_share_directory(
+        'wandering_aaeon_tutorial'
+    )
+
+    ros_distro = get_ros_distro()
+
+    if ros_distro == 'humble':
+        nav2_param_file = os.path.join(
+            wandering_tutorial_dir,
+            'params',
+            'aaeon_nav.param_humble.yaml'
+        )
+        # For Humble we use the standard nav2_bringup
+        nav2_launch_file = os.path.join(
+            get_package_share_directory('nav2_bringup'),
+            'launch',
+            'navigation_launch.py'
+        )
+        nav2_launch_args = {
+            'params_file': nav2_param_file,
+            'namespace': '',
+            'use_namespace': 'false',
+        }
+        timer_period = 4.0
+    else:  # jazzy or newer distributions
+        nav2_param_file = os.path.join(
+            wandering_tutorial_dir,
+            'params',
+            'aaeon_nav.param_jazzy.yaml'
+        )
+        # For Jazzy we use a custom launch file
+        nav2_launch_file = os.path.join(
+            wandering_tutorial_dir,
+            'launch',
+            'custom_nav2_launch.py'
+        )
+        nav2_launch_args = {
+            'params_file': nav2_param_file,
+            'namespace': '',
+            'use_sim_time': 'false',
+            'autostart': 'true',
+        }
+        timer_period = 8.0
+
     aaeon_interface_config = os.path.join(
-        get_package_share_directory('ros2_amr_interface'), 'params', 'aaeon_node_params.yaml'
+        get_package_share_directory('ros2_amr_interface'),
+        'params',
+        'aaeon_node_params.yaml'
     )
-    nav2_param_file = os.path.join(
-        get_package_share_directory('wandering_aaeon_tutorial'), 'params', 'aaeon_nav.param.yaml'
-    )
+
     rviz_config_file = os.path.join(
-        get_package_share_directory('wandering_aaeon_tutorial'),
+        wandering_tutorial_dir,
         'rviz',
         'wandering-aaeon-tutorial.rviz',
     )
@@ -69,6 +121,14 @@ def generate_launch_description():
         ],
     )
 
+    camera_tf = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_tf',
+        arguments=['0.09', '0', '0.16', '0', '0', '0', 'base_link', 'camera_link'],
+        parameters=[{'use_sim_time': False}],
+    )
+
     realsense_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [
@@ -101,7 +161,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             [
                 os.path.join(
-                    get_package_share_directory('wandering_aaeon_tutorial'),
+                    wandering_tutorial_dir,
                     'launch',
                     'rtabmap.launch.py',
                 )
@@ -118,21 +178,17 @@ def generate_launch_description():
     )
 
     navigation_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(
-                get_package_share_directory('nav2_bringup'), 'launch', 'navigation_launch.py'
-            )
-        ),
-        launch_arguments={
-            'params_file': params_file,
-            'namespace': '',
-            'use_namespace': 'false',
-        }.items(),
+        PythonLaunchDescriptionSource(nav2_launch_file),
+        launch_arguments=nav2_launch_args.items(),
     )
 
     rviz_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('nav2_bringup'), 'launch', 'rviz_launch.py')
+            os.path.join(
+                get_package_share_directory('nav2_bringup'),
+                'launch',
+                'rviz_launch.py'
+            )
         ),
         launch_arguments={
             'params_file': params_file,
@@ -142,7 +198,11 @@ def generate_launch_description():
         condition=IfCondition(use_rviz),
     )
 
-    wandering_app = Node(package='wandering_app', executable='wandering', parameters=[params_file])
+    wandering_app = Node(
+        package='wandering_app',
+        executable='wandering',
+        parameters=[params_file]
+    )
 
     return LaunchDescription(
         [
@@ -150,12 +210,13 @@ def generate_launch_description():
             declare_use_rviz_cmd,
             declare_rviz_config_cmd,
             amr_interface_node,
+            camera_tf,
             realsense_launch,
             depthimage_to_laserscan_node,
             rtabmap_launch,
             imu_filter_node,
             TimerAction(
-                period=4.0,
+                period=timer_period,
                 actions=[
                     navigation_launch,
                 ],

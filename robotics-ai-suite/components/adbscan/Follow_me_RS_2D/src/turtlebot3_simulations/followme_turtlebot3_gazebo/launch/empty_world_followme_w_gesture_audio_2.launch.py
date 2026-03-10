@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 
 # Copyright (C) 2025 Intel Corporation
 # Copyright 2019 ROBOTIS CO., LTD.
 #
 # SPDX-License-Identifier: Apache-2.0
 
+"""Launch file for TurtleBot3 Gazebo simulation."""
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
-from launch.actions import DeclareLaunchArgument
-from launch.actions import OpaqueFunction
 
 
-def launch_setup(context, *args, **kwargs):
+def launch_setup(context, *_args, **_kwargs):
+    """Set up launch nodes based on SOC configuration."""
     soc = LaunchConfiguration('soc', default='tgl').perform(context)
     gesture_recognition_params_file = os.path.join(
         get_package_share_directory('gesture_recognition_pkg'),
@@ -53,16 +56,7 @@ def launch_setup(context, *args, **kwargs):
 
 
 def generate_launch_description():
-    launch_file_dir = os.path.join(
-        get_package_share_directory('followme_turtlebot3_gazebo'), 'launch'
-    )
-    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
-
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    x_pose_gbot = LaunchConfiguration('x_pose_gbot', default='1.0')
-    y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='1.0')
-    sim_mode = True
-
+    """Generate launch description."""
     declare_soc = DeclareLaunchArgument(
         'soc', default_value='tgl', description='Specify SOC. supported values = tgl, adl, rpl'
     )

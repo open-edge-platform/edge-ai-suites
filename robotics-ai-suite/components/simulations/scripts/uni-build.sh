@@ -148,7 +148,7 @@ for pkg_info in "${packages[@]}"; do
   pkg_path="${pkg_info%%:*}"
   pkg_name="${pkg_info##*:}"
 
-  echo "🔨 [$(($built_packages + 1))/${total_packages}] Building ${pkg_name}"
+  echo "🔨 [$((built_packages + 1))/${total_packages}] Building ${pkg_name}"
   cd "${pkg_path}"
   if DEB_BUILD_OPTIONS="nocheck" dpkg-buildpackage -us -uc -b -tc -d; then
     built_packages=$((built_packages + 1))
@@ -162,7 +162,7 @@ for pkg_info in "${packages[@]}"; do
 done
 
 # Verify all packages were built
-if [ ${built_packages} -ne ${total_packages} ]; then
+if [ ${built_packages} -ne "${total_packages}" ]; then
   echo "❌ ERROR: Expected ${total_packages} packages, but only ${built_packages} were built!"
   exit 1
 fi
