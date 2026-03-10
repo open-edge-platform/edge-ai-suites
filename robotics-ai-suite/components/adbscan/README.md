@@ -1,5 +1,5 @@
 <!--
-Copyright (C) 2025 Intel Corporation
+Copyright (C) 2026 Intel Corporation
 
 SPDX-License-Identifier: Apache-2.0
 -->
@@ -15,7 +15,7 @@ This repository contains several AMR (Autonomous Mobile Robot) algorithm impleme
 - **ROS2_node** - ROS2 package with a node that subscribes to pointcloud sensors (LIDAR/RealSense) and publishes a list of objects in ObstacleArray message format
 - **Standalone** - Standalone C++ source code for the ADBSCAN algorithm with sample input files
 - **Visualization** - Python scripts to visualize the bounding boxes of detected object clusters in pointcloud data
-- **Follow_me_RS_2D** - ROS2 package implementing a person-following algorithm, including a gesture-based version
+- **Follow_me_RS_2D** - ROS2 package implementing a person-following algorithm with gesture and voice audio control
 - **package/tutorial_follow_me** - ROS2 tutorial for running the follow-me application on a custom AAEON robot
 - **package/tutorial_follow_me_w_gesture** - ROS2 tutorial for running the gesture-based follow-me application on a custom AAEON robot
 - **package/tutorial_aaeon_adbscan** - ROS2 tutorial for running the ADBSCAN algorithm on a custom AAEON robot

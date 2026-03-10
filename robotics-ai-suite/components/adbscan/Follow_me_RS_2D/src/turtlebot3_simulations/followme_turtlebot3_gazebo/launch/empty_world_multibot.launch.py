@@ -2,7 +2,7 @@
 # pylint: disable=duplicate-code
 
 # Copyright (C) 2025 Intel Corporation
-# Copyright 2019 Joep Tool ROBOTIS CO., LTD.
+# Copyright 2019 ROBOTIS CO., LTD.
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -35,11 +35,22 @@ def generate_launch_description():
         os.path.join('/usr/share/gazebo-11/models/')
     )
 
+    # Default waffle model from the system turtlebot3_gazebo package
+    turtlebot3_model = os.environ.get('TURTLEBOT3_MODEL', 'waffle')
+    default_model_sdf = os.path.join(
+        turtlebot3_gazebo_path,
+        'models',
+        'turtlebot3_' + turtlebot3_model,
+        'model.sdf',
+    )
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='0.0')
     x_pose_gbot = LaunchConfiguration('x_pose_gbot', default='0.4')
     y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='0.0')
+    yaw_pose_gbot = LaunchConfiguration('yaw_pose_gbot', default='0.0')
+    model_sdf_path = LaunchConfiguration('model_sdf_path', default=default_model_sdf)
 
     # Declare the launch arguments
 
@@ -52,6 +63,11 @@ def generate_launch_description():
         'y_pose_gbot',
         default_value='0.0',
         description='Specify initial y position of the guide robot',
+    )
+    declare_yaw_gbot = DeclareLaunchArgument(
+        'yaw_pose_gbot',
+        default_value='0.0',
+        description='Specify initial yaw of the guide robot',
     )
 
     # Use world file from official turtlebot3_gazebo package
@@ -76,7 +92,11 @@ def generate_launch_description():
 
     spawn_turtlebot_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'spawn_turtlebot3.launch.py')),
-        launch_arguments={'x_pose': x_pose, 'y_pose': y_pose}.items(),
+        launch_arguments={
+            'x_pose': x_pose,
+            'y_pose': y_pose,
+            'model_sdf_path': model_sdf_path,
+        }.items(),
     )
 
     # guide robot: robot state publisher and spawn_entity
@@ -89,7 +109,11 @@ def generate_launch_description():
 
     spawn_gbot_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(launch_file_dir, 'spawn_gbot.launch.py')),
-        launch_arguments={'x_pose': x_pose_gbot, 'y_pose': y_pose_gbot}.items(),
+        launch_arguments={
+            'x_pose': x_pose_gbot,
+            'y_pose': y_pose_gbot,
+            'yaw_pose': yaw_pose_gbot,
+        }.items(),
     )
 
     ld = LaunchDescription()
@@ -100,6 +124,7 @@ def generate_launch_description():
     # Add the commands to the launch description
     ld.add_action(declare_x_pos_gbot)
     ld.add_action(declare_y_pos_gbot)
+    ld.add_action(declare_yaw_gbot)
 
     ld.add_action(gzserver_cmd)
     ld.add_action(robot_state_publisher_cmd)

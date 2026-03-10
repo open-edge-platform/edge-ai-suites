@@ -192,6 +192,7 @@ public:
     this->declare_parameter("max_angular", double(0.8));
     this->declare_parameter("max_frame_blocked", int(2));
     this->declare_parameter("tracking_radius", double(0.2));
+    this->declare_parameter("optical_frame", false);
 #endif  // PRE_ROS_HUMBLE
 
     rclcpp::Parameter Lidar_type_param = this->get_parameter("Lidar_type");
@@ -236,6 +237,7 @@ public:
     CONFIG_PARAMS.max_angular = max_angular_param.as_double();
     CONFIG_PARAMS.max_frame_blocked = max_frame_blocked_param.as_int();
     CONFIG_PARAMS.tracking_radius = tracking_radius.as_double();
+    CONFIG_PARAMS.optical_frame = this->get_parameter("optical_frame").as_bool();
 
     target_loc.x = CONFIG_PARAMS.init_tgt_loc;  // 0.5;
     target_loc.y = 0;
@@ -250,14 +252,15 @@ public:
       RCLCPP_INFO(this->get_logger(), "adbscan_sub_node started; ");
     }
     auto defalt_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
+    auto sensor_qos = rclcpp::SensorDataQoS();
 
     if (Lidar_type_ == "2D") {
       subscription_2D_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_2D_callback, this, std::placeholders::_1));
     } else if (Lidar_type_ == "3D" || Lidar_type_ == "RS") {
       subscription_3D_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_3D_callback, this, std::placeholders::_1));
     } else {
       RCLCPP_ERROR(this->get_logger(), "topic not found");
@@ -373,12 +376,14 @@ private:
 
     vector<Point_xyz> point_list = PointCloud2_to_point_xyz(_msg);
 
-    // jcao7 for RealSense, go through each point and rotate
-    if (Lidar_type_ == "RS") {
+    // For RealSense in optical frame (real hardware), rotate from optical
+    // convention (x-right, y-down, z-forward) to robot body frame
+    // (x-forward, y-left, z-up).  Gazebo Harmonic already publishes in
+    // robot body frame, so the transform is skipped when optical_frame is false.
+    if (Lidar_type_ == "RS" && CONFIG_PARAMS.optical_frame) {
       int num_pt = point_list.size();
-      float tmp;
       for (int i = 0; i < num_pt; i++) {
-        tmp = point_list[i].z;
+        float tmp = point_list[i].z;
         point_list[i].z = -point_list[i].y;
         point_list[i].y = point_list[i].x;
         point_list[i].x = tmp;
