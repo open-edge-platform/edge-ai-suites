@@ -21,13 +21,35 @@ sudo apt update
 sudo apt install ros-humble-followme-turtlebot3-gazebo
 ```
 
-### Install python modules
+### Create Python Virtual Environment
+
+```bash
+sudo apt install pipx
+pipx install virtualenv
+pipx ensurepath
+source ~/.bashrc
+virtualenv venv_followme
+source venv_followme/bin/activate
+```
+
+### Install Python modules
 
 This application uses [Mediapipe Hands Framework](https://mediapipe.readthedocs.io/en/latest/solutions/hands.html) for hand gesture recognition. Please install the following python packages as a pre-requisite
 
+For ROS Jazzy:
 ```bash
-pip3 install mediapipe
+pip3 install numpy==1.26.4
+pip3 install mediapipe==0.10.31
+pip3 install opencv-python==4.8.0.76
+pip3 install pyyaml
+```
+
+For ROS Humble:
+```bash
 pip3 install numpy==1.24.3
+pip3 install mediapipe==0.10.9
+pip3 install opencv-python==4.8.0.76
+pip3 install pyyaml
 ```
 
 ## Run gazebo simulator with 2D lidar
@@ -47,7 +69,7 @@ sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.s
 /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
 ```
 
-Terminal 2:  This command will run the adbscan package
+Terminal 2: This command will run the ADBSCAN package
 
 ```bash
 source /opt/ros/humble/setup.bash 
