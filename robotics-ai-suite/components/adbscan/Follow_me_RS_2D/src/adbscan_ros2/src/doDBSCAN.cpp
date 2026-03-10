@@ -327,8 +327,8 @@ Point_xyz doDBSCAN(
           velo_n, num_points, Z_INDEX, FILTER_OP_LESS_THAN, adbscan_params.z_filter);
       }
 
-      // X filter the LiDAR data
-      // num_points = filter_LiDAR_data(velo_n, num_points, X_INDEX, FILTER_OP_LESS_THAN, 0.5);
+      // X filter: remove points too close (< 0.2m) and too far (> x_filter_back)
+      num_points = filter_LiDAR_data(velo_n, num_points, X_INDEX, FILTER_OP_LESS_THAN, 0.2);
       num_points = filter_LiDAR_data(
         velo_n, num_points, X_INDEX, FILTER_OP_GREATER_THAN, adbscan_params.x_filter_back);
 
@@ -463,8 +463,6 @@ Point_xyz doDBSCAN(
 
       // get obstacle list for RVIZ2 visualization
       for (long unsigned int i = 0; i < clusters.size(); i++) {
-        // cout << i << ": " << clusters[i].cluster_id << " "<< clusters[i].size <<endl;
-        // clusters[i].print_list();
         cout << i << ": "
              << "centroid: " << clusters[i].get_centroid().x << " " << clusters[i].get_centroid().y
              << " " << clusters[i].get_centroid().z << endl;
@@ -477,7 +475,8 @@ Point_xyz doDBSCAN(
 
       // get new target location given prevous target_loc:
       int cluster_size = clusters.size();
-      // go through each cluster to find one closest to previous target_loc within 0.2 m
+      // go through each cluster to find the closest to previous target_loc within tracking_radius
+      float min_tracking_dist = CONFIG_PARAMS.tracking_radius;
       for (int i = 0; i < cluster_size; i++) {
         // convert centroid from Point class to Point_xyz struct
         Point_xyz cluster_centroid;
@@ -487,9 +486,10 @@ Point_xyz doDBSCAN(
         cluster_centroid.z = cluster_centroid_org.z;
         float dist = distance(target_loc, cluster_centroid);
 
-        if (dist < CONFIG_PARAMS.tracking_radius) {
+        if (dist < min_tracking_dist) {
           new_target_loc = cluster_centroid;
           target_found = true;
+          min_tracking_dist = dist;
         }
         cout << "cluster " << i << " distance: " << dist << std::endl;
         cout << i << ": new_target_loc x,y,z: " << new_target_loc.x << "," << new_target_loc.y
