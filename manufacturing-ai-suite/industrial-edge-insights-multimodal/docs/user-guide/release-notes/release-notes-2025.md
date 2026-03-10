@@ -1,15 +1,15 @@
 # December 2025
 
-## [v1.0.0]
+## version 1.0.0
 
-This is the first version of the Multimodal - Weld Defect Detection sample app
-showcasing a Vision and Time Series defect detection use case by detecting anomalous welding.
+This is the first version of the Multimodal - Weld Defect Detection sample app,
+showcasing the Vision and Time Series defect detection use case by detecting anomalous welding.
 
-### Deployments
+**Deployments**
 
-- Docker compose deployment on a single node
+- Docker compose deployment on a single node.
 
-### Features
+**Features**
 
 - Introduced a comprehensive sample application combining vision (video inspection) and
   time-series sensor analytics for industrial weld defect detection.

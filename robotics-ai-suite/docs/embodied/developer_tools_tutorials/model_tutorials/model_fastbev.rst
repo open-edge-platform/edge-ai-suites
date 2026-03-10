@@ -111,7 +111,7 @@ Steps to Convert ONNX Models
 
    .. code-block::  bash
    
-      $ cd resnet18
+      cd resnet18
 
 2. **Run the `ovc` Command for Each ONNX Model**  
 
@@ -119,19 +119,19 @@ Steps to Convert ONNX Models
 
    .. code-block::  bash
    
-      $ ovc fastbev_post_trt_decode.onnx
+      ovc fastbev_post_trt_decode.onnx
 
    To convert `fastbev_post_trt.onnx`:
 
    .. code-block::  bash
    
-      $ ovc fastbev_post_trt.onnx
+      ovc fastbev_post_trt.onnx
 
    To convert `fastbev_pre_trt.onnx`:
 
    .. code-block::  bash
    
-      $ ovc fastbev_pre_trt.onnx
+      ovc fastbev_pre_trt.onnx
 
 By default, this command converts the ONNX model to FP16 IR format. The conversion will generate the following files for each model:
 

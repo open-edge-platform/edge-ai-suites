@@ -21,53 +21,53 @@ Installation
 
 .. code-block:: bash
 
-    $ sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
+    sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
 
 2. Download all debs package
 
 .. code-block:: bash
 
-    $ wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-driver-compiler-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
-    $ wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-fw-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
-    $ wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-level-zero-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
+    wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-driver-compiler-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
+    wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-fw-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
+    wget https://github.com/intel/linux-npu-driver/releases/download/v1.13.0/intel-level-zero-npu_1.13.0.20250131-13074932693_ubuntu22.04_amd64.deb --no-check-certificate
 
 3. Install ``libtbb12`` which is a dependency for ``intel-driver-compiler-npu``
 
 .. code-block:: bash
 
-    $ sudo apt update
-    $ sudo apt install libtbb12
+    sudo apt update
+    sudo apt install libtbb12
 
 4. Install all packages
 
 .. code-block:: bash
 
-    $ sudo dpkg -i *.deb
+    sudo dpkg -i *.deb
 
 5. Install Level Zero if it is not in the system
 
 .. code-block:: bash
 
     # Check if Level Zero is installed
-    $ dpkg -l level-zero
+    dpkg -l level-zero
 
 Download and install package if Level Zero is missing
 
 .. code-block:: bash
 
-    $ wget https://github.com/oneapi-src/level-zero/releases/download/v1.18.5/level-zero_1.18.5+u22.04_amd64.deb --no-check-certificate
-    $ sudo dpkg -i level-zero*.deb
+    wget https://github.com/oneapi-src/level-zero/releases/download/v1.18.5/level-zero_1.18.5+u22.04_amd64.deb --no-check-certificate
+    sudo dpkg -i level-zero*.deb
 
 6. Reboot
 
 .. code-block:: bash
 
-    $ reboot
+    reboot
     # if everything works, we should see /dev/accel/accel0 device
-    $ ls /dev/accel/accel0
+    ls /dev/accel/accel0
     /dev/accel/accel0
     # to receive intel_vpu state
-    $ dmesg | grep intel_vpu
+    dmesg | grep intel_vpu
 
 7. User access to the device
 
@@ -79,10 +79,10 @@ The ``accel`` devices should be in the "render" group in Ubuntu:
 .. code-block:: bash
 
     # set the render group for accel device
-    $ sudo chown root:render /dev/accel/accel0
-    $ sudo chmod g+rw /dev/accel/accel0
+    sudo chown root:render /dev/accel/accel0
+    sudo chmod g+rw /dev/accel/accel0
     # add user to the render group
-    $ sudo usermod -a -G render <user-name>
+    sudo usermod -a -G render <user-name>
     # user needs to restart the session to use the new group (log out and log in)
 
 The above steps must be repeated each time module is reloaded or on every reboot.
@@ -90,15 +90,15 @@ To avoid manual setup of the group for ``accel`` device, the udev rules can be u
 
 .. code-block:: bash
 
-    $ sudo bash -c "echo 'SUBSYSTEM==\"accel\", KERNEL==\"accel*\", GROUP=\"render\", MODE=\"0660\"' > /etc/udev/rules.d/10-intel-vpu.rules"
-    $ sudo udevadm control --reload-rules
-    $ sudo udevadm trigger --subsystem-match=accel
+    sudo bash -c "echo 'SUBSYSTEM==\"accel\", KERNEL==\"accel*\", GROUP=\"render\", MODE=\"0660\"' > /etc/udev/rules.d/10-intel-vpu.rules"
+    sudo udevadm control --reload-rules
+    sudo udevadm trigger --subsystem-match=accel
 
 .. tip:: In case of NPU is not visible, always check the access to the device with following command:
 
     .. code-block:: console
 
-        $ ls -lah /dev/accel/accel0
+        ls -lah /dev/accel/accel0
         crw-rw---- 1 root render 261, 0 Mar 22 13:22 /dev/accel/accel0
 
     If render is missing, or ``crw-rw----`` is not set, please repeat the steps to set the access to the device.

@@ -26,4 +26,4 @@ For robotics software developers, IPEX-LLM offers the opportunity to empower the
 
 .. code-block:: bash
 
-   $ pip install --pre --upgrade ipex-llm[xpu]==2.2.0b2 --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/cn/
+   pip install --pre --upgrade ipex-llm[xpu]==2.2.0b2 --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/cn/
