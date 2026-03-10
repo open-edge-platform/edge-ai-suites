@@ -143,7 +143,7 @@ profiles:
         type: number
         default: "1"
   - name: "with-intel-npu"
-    description: "Uses NPU profile with privileged access enabled"
+    description: "Uses NPU for inferencing"
     valuesFileName: "wsgd-values-with-intel-npu.yaml"
     parameterTemplates:
       - name: env.HOST_IP
@@ -202,3 +202,11 @@ profiles:
         displayName: "Coturn UDP NodePort"
         type: number
         default: "30478"
+      - name: gpu.type
+        displayName: "NPU type"
+        type: string
+        default: "npu.intel.com/accel"
+      - name: gpu.count
+        displayName: "NPU count"
+        type: number
+        default: "1"
