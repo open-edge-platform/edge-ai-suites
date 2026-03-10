@@ -32,7 +32,7 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # App scripts used to build assets (model-config.yaml is mounted at runtime)
 # ----------------------------
 COPY scripts/ /app/scripts/
-RUN mkdir -p /app/configs && chmod +x /app/scripts/*.sh
+RUN mkdir -p /app/configs
 
 ## ----------------------------
 ## (No asset build at image build time)
@@ -78,7 +78,7 @@ CMD ["sh", "-c", "\
     mkdir -p /models /videos /app/configs && \
     python /app/scripts/rppg_download_assets.py && \
     python /app/scripts/3d_pose_model_convert.py && \
-    python /app/scripts/ecg_download_assets.py && \
+    python /app/scripts/ecg_model_convert.py && \
     echo '[INFO] Patient monitoring asset preparation complete. Exiting container.'\
 "]
 
