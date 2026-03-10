@@ -45,7 +45,7 @@ The Education AI Suite now also includes built-in telemetry hooks and benchmarki
 :::{toctree}
 :hidden:
 
-./get-started/release-notes-2025.md
+./release-notes/release-notes-2025.md
 
 :::
 hide_directive-->
