@@ -1,6 +1,6 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version 2026.0
+## Version 1.0.0
 
 **April 01, 2026**
 
