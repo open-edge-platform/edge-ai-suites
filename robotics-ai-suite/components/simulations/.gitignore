@@ -1,90 +1,33 @@
 # Copyright (C) 2025 Intel Corporation
 #
 # SPDX-License-Identifier: Apache-2.0
-
-# IDE and Editor Files
-.idea/
-.vscode/
-*.code-workspace
-*.swp
-*.swo
-
-# Python Related
-.pytest_cache/
-.venv/
+build/
+install/
+log/
 __pycache__/
 *.pyc
-*.pyo
-*.egg-info/
+*.gv
+*.pdf
+run.logs
 
-# Build Artifacts (but keep .github/ files)
-build/
-build*
-devel*
-install/
-install*
-log/
-log
-output/
-*.cmake
-CMakeCache.txt
-**/CMakeFiles/
-*.o
-*.bin
-*/*.d
+# IDE
+.vscode/
+.venv/
 
-# Debian Build Artifacts
-*.deb
-*.ddeb
+# Debian packaging artifacts
 *.dsc
-*.tar.xz
-*.tar.gz
-*.changes
-*.buildinfo
-*-build-deps_*
-debian/files
-debian/.debhelper/
-debian/tmp/
-debian/*-stamp
-debian/debhelper-build-stamp
-**/debian/*.orig
-**/debian/*.log
-**/debian/*.substvars
-**/debian/ros-*/
+*.xz
+*.orig.tar.gz
 
-# ROS Specific
-*.bag
-*.db3
+# Source extracts
+ros-jazzy-gz-ros2-control-1.2.17/
 
-# Local Development (but keep .github/ workflows)
-local_jazzy/
-Dockerfile.local-*
-docker-compose.local.yml
-*-entrypoint.sh
-run-local-*.sh
-build-local.sh
+# TF frame dumps
+frames_*
+*.gv
+*.pdf
 
-# Security - Certificates and Keys
-*.crt
-*.key
+# TLS certificates and keys
 *.pem
-*.p12
-*.pfx
-
-# Temporary Files
-temp_*
-*.log
-
-# OS Files
-.DS_Store
-Thumbs.db
-
-debian/
-
-!*/humble/debian/
-!*/jazzy/debian/
-!**/humble/debian/
-!**/jazzy/debian/
-
-PicknPlace/gazebo_plugins/.obj-x86_64-linux-gnu/
-PicknPlace/picknplace/launch/empty.launch.py
+*.key
+*.crt

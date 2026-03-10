@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 ---
-shoulder_pan_joint: 1.57
-shoulder_lift_joint: -0.97
-elbow_joint: 2.0
-wrist_1_joint: -2.56
-wrist_2_joint: -1.55
-wrist_3_joint: 0.0
+# Home position: arm retracted upward, gripper clear of workspace
+# This configuration keeps the gripper ~40cm above the pedestal top
+shoulder_pan_joint: 0.0      # Facing forward
+shoulder_lift_joint: -1.57   # Shoulder lifted up (90° from horizontal)
+elbow_joint: 1.57            # Elbow bent up (90°)
+wrist_1_joint: -1.57         # Wrist aligned
+wrist_2_joint: -1.57         # Wrist rotated
+wrist_3_joint: 0.0           # No tool rotation
