@@ -24,7 +24,7 @@ version:
 # External URLs and repositories
 externalUrls:
   githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
-  videosRepo: "https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
+  videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
 
 # Container images for utilities and init containers
 images:
@@ -105,7 +105,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: v2026.0.0-rc1-1
+  tag: v2026.0.0-rc2
 
   service:
     type: ClusterIP
@@ -125,7 +125,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: v2026.0.0-rc1-1
+    tag: v2026.0.0-rc2
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -133,7 +133,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.0.0-ubuntu24-rc1
+  tag: 2026.0.0-ubuntu24-rc2
   # Overrides the storage class name
   storageClassName: "standard"
   gpuWorkload: false
