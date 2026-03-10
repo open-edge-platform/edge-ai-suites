@@ -24,7 +24,7 @@ version:
 # External URLs and repositories
 externalUrls:
   githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
-  videosRepo: "https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
+  videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
 
 # Container images for utilities and init containers
 images:
