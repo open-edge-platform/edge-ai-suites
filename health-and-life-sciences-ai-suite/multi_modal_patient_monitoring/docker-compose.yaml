@@ -18,10 +18,12 @@ services:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - NO_PROXY=${NO_PROXY}
+      - HF_HOME=/root/.cache/huggingface
     volumes:
       - ./configs/model-config.yaml:/app/configs/model-config.yaml:ro
       - ./models:/models
       - ./videos:/videos
+      - ./models:/root/.cache/huggingface
   
   patient-monitoring-aggregator:
     build:

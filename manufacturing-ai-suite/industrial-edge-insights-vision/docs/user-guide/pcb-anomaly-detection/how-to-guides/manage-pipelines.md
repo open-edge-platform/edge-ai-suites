@@ -38,8 +38,8 @@ Customize the pipeline according to your needs. For details, see the following D
 
 ## Start the Pipeline
 
->Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
->If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 Follow this procedure to start the pipeline.
 
@@ -110,10 +110,13 @@ curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
 > [pipeline statistics were requested](#get-statistics-of-the-running-pipelines).
 
 ## Additional Usage
+
 ### Frame Batching
+
 You can process multiple streams together when batching is enabled and the same model instance (that is, the same model-instance-id) is used across pipeline instances.
 
 To enable this, configure the pipeline’s inference element to support batching and assign a shared model instance ID. For example:
+
 ```sh
 ... ! gvadetect model=/path/to/model.xml model-instance-id=inst0 batch-size=4 ! ...
 ```

@@ -1,128 +1,94 @@
 #!/usr/bin/env python3
 import logging
-import sys
-import urllib.request
 from pathlib import Path
 
+import torch
+import openvino as ov
 import yaml
+from transformers import AutoModel
 
-BASE_URL = "https://raw.githubusercontent.com/Einse57/OpenVINO_sample/master/ai-ecg-master"
+
 CONFIG_PATH = Path("/app/configs/model-config.yaml")
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(levelname)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger("hubert-ecg-convert")
 
 
-def download_file(url: str, dest: Path, desc: str) -> None:
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    logger.info("Downloading %s -> %s", desc, dest)
-    try:
-        with urllib.request.urlopen(url) as resp, dest.open("wb") as f:
-            f.write(resp.read())
-    except Exception as e:
-        logger.error("Failed to download %s from %s: %s", desc, url, e)
-        raise
+def _load_hubert_ecg_model_cfg() -> tuple[str, str, Path]:
+    """Return (model_id, model_name, target_dir) for HuBERT-ECG from model-config.yaml.
 
-
-def load_ecg_models_from_config() -> list[tuple[Path, str, str, str]]:
-    """Load ECG model directories and filenames from model-config.yaml.
-
-    Returns a list of tuples: (target_dir, xml_filename, bin_filename, model_url).
-    This function expects /app/configs/model-config.yaml to exist and to
-    define ai-ecg.models[*] entries with at least target_dir and
-    ir_file or name. If the file is missing or malformed, it will
-    raise instead of silently using hardcoded defaults.
+    We expect model-config.yaml to define an ai-ecg.models entry with
+    `source: hubert-ecg`. Its `name` field is used as the IR base
+    filename and `target_dir` as the directory where IR files are
+    stored (typically /models/ai-ecg).
     """
 
     if not CONFIG_PATH.exists():
         raise FileNotFoundError(
-            f"ECG config not found at {CONFIG_PATH}. Ensure model-config.yaml is mounted."
+            f"HuBERT-ECG config not found at {CONFIG_PATH}. Ensure model-config.yaml is mounted."
         )
 
     try:
-        data = yaml.safe_load(CONFIG_PATH.read_text()) or {}
-    except Exception as e:
-        raise RuntimeError(f"Failed to parse ECG config {CONFIG_PATH}: {e}") from e
+        cfg = yaml.safe_load(CONFIG_PATH.read_text()) or {}
+    except Exception as e:  # pragma: no cover - config errors are runtime issues
+        raise RuntimeError(f"Failed to parse config {CONFIG_PATH}: {e}") from e
 
-    ai_ecg_cfg = data.get("ai-ecg", {})
-    models = ai_ecg_cfg.get("models", [])
+    ai_ecg = cfg.get("ai-ecg", {})
+    models = ai_ecg.get("models", [])
     if not models:
         raise ValueError(
-            "model-config.yaml has no ai-ecg.models entries; please define at least one."
+            "model-config.yaml has no ai-ecg.models entries; cannot determine HuBERT-ECG model."
         )
 
-    result: list[tuple[Path, str, str]] = []
-    for m in models:
-        m = m or {}
-        target_dir_val = m.get("target_dir")
-        ir_file_val = m.get("ir_file")
-        name_val = m.get("name")
-        model_url_val = m.get("model_url")
+    hubert_models = [m for m in models if (m or {}).get("source") == "hubert-ecg"]
+    if not hubert_models:
+        raise ValueError(
+            "No ai-ecg.models entry with source: hubert-ecg found in model-config.yaml."
+        )
+    if len(hubert_models) > 1:
+        raise ValueError(
+            "Multiple ai-ecg.models entries with source: hubert-ecg found; please keep only one."
+        )
 
-        if not target_dir_val:
-            raise ValueError(
-                "Each ai-ecg.models entry must define target_dir in model-config.yaml."
-            )
+    m = hubert_models[0] or {}
+    model_id = m.get("model_id")
+    name = m.get("name")
+    target_dir = m.get("target_dir")
 
-        target_dir = Path(str(target_dir_val))
+    if not name or not target_dir:
+        raise ValueError(
+            "HuBERT-ECG ai-ecg.models entry must define both name and target_dir in model-config.yaml."
+        )
 
-        # Prefer explicit ir_file; otherwise require name so we can derive
-        # the IR filename as `<name>.xml`.
-        if ir_file_val:
-            xml_file = str(ir_file_val)
-        else:
-            if not name_val:
-                raise ValueError(
-                    "ai-ecg.models entries must define ir_file or name in model-config.yaml."
-                )
-            xml_file = f"{str(name_val).strip()}.xml"
-
-        if not xml_file.endswith(".xml"):
-            raise ValueError(
-                f"ai-ecg model ir_file '{xml_file}' must be an .xml file."
-            )
-
-        bin_file = xml_file.replace(".xml", ".bin")
-
-        # model_url is optional in config for backward compatibility; if
-        # omitted, fall back to the legacy BASE_URL.
-        if not model_url_val:
-            logger.warning(
-                "ai-ecg.models entry missing model_url; falling back to BASE_URL %s",
-                BASE_URL,
-            )
-            model_url = BASE_URL
-        else:
-            model_url = str(model_url_val)
-
-        result.append((target_dir, xml_file, bin_file, model_url))
-
-    return result
+    return str(model_id), str(name), Path(str(target_dir))
 
 
 def main() -> int:
-    logger.info("ECG Asset Downloader starting")
+    model_id, model_name, target_dir = _load_hubert_ecg_model_cfg()
+    target_dir.mkdir(parents=True, exist_ok=True)
 
-    models = load_ecg_models_from_config()
+    ov_model_path = target_dir / f"{model_name}.xml"
 
-    for target_dir, xml_name, bin_name, model_url in models:
-        target_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("Using ECG model directory: %s", target_dir)
+    if ov_model_path.exists():
+        logger.info("HuBERT-ECG IR already exists at %s, skipping conversion", ov_model_path)
+        return 0
 
-        for fname in (xml_name, bin_name):
-            dest = target_dir / fname
-            if dest.exists():
-                logger.info("%s already exists, skipping", dest)
-                continue
+    logger.info("Loading HuBERT-ECG backbone '%s' from Hugging Face", model_id)
+    hubert = AutoModel.from_pretrained(model_id, trust_remote_code=True)
+    hubert.eval()
 
-            url = f"{model_url}/{fname}"
-            download_file(url, dest, fname)
+    logger.info("Converting HuBERT-ECG to OpenVINO IR at %s", ov_model_path)
+    with torch.no_grad():
+        example_input = torch.zeros([1, 5000], dtype=torch.float32)
+        ov_model = ov.convert_model(
+            hubert,
+            example_input=example_input,
+            input=[1, 5000],
+        )
+        ov.save_model(ov_model, ov_model_path)
 
-    logger.info("ECG models ready")
+    logger.info("HuBERT-ECG OpenVINO IR saved: %s", ov_model_path)
     return 0
 
 

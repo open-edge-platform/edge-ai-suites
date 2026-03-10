@@ -49,8 +49,6 @@ from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
 
-import robot_config.utils as util
-
 LOG_LEVEL = 'info'
 
 
@@ -88,7 +86,39 @@ def launch_setup(context: LaunchContext):
         package_path, 'urdf', 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf'
     )
 
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    # Read URDF content
+    with open(urdf, 'r') as infp:
+        robot_description = infp.read()
+
+    # Prefix all link and joint names in the URDF with the AMR namespace
+    # so that they match the TF frame names published by robot_state_publisher
+    # (which uses frame_prefix). This makes RViz Robot Model work correctly.
+    import re
+    prefix = amr_name + '/'
+    # Prefix link names:  <link name="X"> → <link name="amr1/X">
+    robot_description = re.sub(
+        r'<link\s+name="([^"]+)"',
+        lambda m: f'<link name="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    # Prefix joint names: <joint name="X" ...> → <joint name="amr1/X" ...>
+    robot_description = re.sub(
+        r'<joint\s+name="([^"]+)"',
+        lambda m: f'<joint name="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    # Prefix parent/child link references
+    robot_description = re.sub(
+        r'<parent\s+link="([^"]+)"',
+        lambda m: f'<parent link="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    robot_description = re.sub(
+        r'<child\s+link="([^"]+)"',
+        lambda m: f'<child link="{prefix}{m.group(1)}"',
+        robot_description
+    )
+
     actions = []
 
     # If launch request with Full or Gazebo only mode.
@@ -96,15 +126,33 @@ def launch_setup(context: LaunchContext):
         # Create state publisher node for that instance
         turtlebot_state_publisher = Node(
             package='robot_state_publisher',
-            namespace=['/', amr_name],
+            namespace=amr_name,
             executable='robot_state_publisher',
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time, 'publish_frequency': 10.0}],
-            remappings=remappings,
-            arguments=[urdf],
+            parameters=[{
+                'robot_description': robot_description,
+                'use_sim_time': use_sim_time,
+                'publish_frequency': 10.0,
+                # frame_prefix removed: link names in URDF are already prefixed
+                # with amr_name/ so robot_state_publisher publishes correct TF frames
+            }],
         )
 
         actions.append(turtlebot_state_publisher)
+
+        # Odometry TF publisher - converts /amr1/odom messages to TF transforms
+        # This is needed because Gazebo Harmonic's DiffDrive plugin doesn't publish TF directly
+        odom_tf_publisher = Node(
+            package='robot_config',
+            executable='odom_tf_publisher.py',
+            output='screen',
+            parameters=[{
+                'odom_topic': f'/{amr_name}/odom',
+                'publish_tf': True,
+                'use_sim_time': use_sim_time,
+            }],
+        )
+        actions.append(odom_tf_publisher)
 
         # Create spawn call
         spawn_turtlebot3 = Node(
@@ -156,50 +204,7 @@ def launch_setup(context: LaunchContext):
             }.items(),
         )
 
-        qx, qy, qz, qw = util.quaternion_from_euler(0.0, 0.0, float(yaw))
-
-        # Wait for initialpose before setting initial pose.
-        wait_for_initialpose = ExecuteProcess(
-            cmd=[
-                'ros2',
-                'run',
-                'robot_config',
-                'wait_for_interface.py',
-                'topic',
-                '/' + amr_name + '/initialpose',
-            ],
-            output='screen',
-        )
-
-        message = f'{{header: {{frame_id: map}}, pose: {{pose: {{position: \
-                    {{x: {context.launch_configurations["x_pos"]}, \
-                    y: {context.launch_configurations["y_pos"]}, \
-                    z: {0.05} }}, orientation: {{x: {qx}, y: {qy}, z: {qz}, w: {qw} }} }}, }} }}'
-
-        initial_pose_cmd = ExecuteProcess(
-            cmd=[
-                'ros2',
-                'topic',
-                'pub',
-                '-1',
-                '--qos-reliability',
-                'reliable',
-                '/' + amr_name + '/initialpose',
-                'geometry_msgs/PoseWithCovarianceStamped',
-                message,
-            ],
-            output='screen',
-        )
-
-        set_pose_event = RegisterEventHandler(
-            event_handler=OnProcessExit(
-                target_action=wait_for_initialpose, on_exit=[initial_pose_cmd]
-            )
-        )
-
         actions.append(bringup_cmd)
-        actions.append(wait_for_initialpose)
-        actions.append(set_pose_event)
 
     # Check if wait_on is provided.  If exist then create a dependency action on it
     if 'wait_on' in context.launch_configurations:
@@ -225,21 +230,13 @@ def launch_setup(context: LaunchContext):
     if mode == 'full' or mode == 'gazebo':
         amr_namespace = '/' + amr_name
 
-        # Clock bridge
-        gz_ros_bridge_clock = Node(
-            package='ros_gz_bridge',
-            executable='parameter_bridge',
-            arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock]'],
-            output='screen',
-        )
-
         # Joint states bridge for AMR
         gz_ros_bridge_joint_states = Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
             arguments=[
                 (f'{amr_namespace}/joint_states@sensor_msgs/msg/JointState'
-                 '[gz.msgs.Model]'),
+                 '[gz.msgs.Model'),
             ],
             output='screen',
         )
@@ -250,18 +247,7 @@ def launch_setup(context: LaunchContext):
             executable='parameter_bridge',
             arguments=[
                 (f'{amr_namespace}/odom@nav_msgs/msg/Odometry'
-                 '[gz.msgs.Odometry]'),
-            ],
-            output='screen',
-        )
-
-        # Velocity commands bridge
-        gz_ros_bridge_cmd_vel = Node(
-            package='ros_gz_bridge',
-            executable='parameter_bridge',
-            arguments=[
-                (f'{amr_namespace}/cmd_vel@geometry_msgs/msg/Twist'
-                 '[gz.msgs.Twist]'),
+                 '[gz.msgs.Odometry'),
             ],
             output='screen',
         )
@@ -272,7 +258,7 @@ def launch_setup(context: LaunchContext):
             executable='parameter_bridge',
             arguments=[
                 (f'{amr_namespace}/scan@sensor_msgs/msg/LaserScan'
-                 '[gz.msgs.LaserScan]'),
+                 '[gz.msgs.LaserScan'),
             ],
             output='screen',
         )
@@ -283,33 +269,31 @@ def launch_setup(context: LaunchContext):
             executable='parameter_bridge',
             arguments=[
                 (f'{amr_namespace}/camera/image_raw@sensor_msgs/msg/Image'
-                 '[gz.msgs.Image]'),
+                 '[gz.msgs.Image'),
                 (f'{amr_namespace}/camera/camera_info@sensor_msgs/msg/CameraInfo'
-                 '[gz.msgs.CameraInfo]'),
+                 '[gz.msgs.CameraInfo'),
             ],
             output='screen',
         )
 
-        # IMU bridge
-        gz_ros_bridge_imu = Node(
+        # cmd_vel bridge (ROS → Gazebo) for Nav2 to drive the AMR
+        gz_ros_bridge_cmd_vel = Node(
             package='ros_gz_bridge',
             executable='parameter_bridge',
             arguments=[
-                (f'{amr_namespace}/imu@sensor_msgs/msg/Imu'
-                 '[gz.msgs.IMU]'),
+                (f'{amr_namespace}/cmd_vel@geometry_msgs/msg/Twist'
+                 ']gz.msgs.Twist'),
             ],
             output='screen',
         )
 
         # Add bridge nodes to actions
         actions.extend([
-            gz_ros_bridge_clock,
             gz_ros_bridge_joint_states,
             gz_ros_bridge_odom,
-            gz_ros_bridge_cmd_vel,
             gz_ros_bridge_scan,
             gz_ros_bridge_camera,
-            gz_ros_bridge_imu
+            gz_ros_bridge_cmd_vel,
         ])
 
     return actions

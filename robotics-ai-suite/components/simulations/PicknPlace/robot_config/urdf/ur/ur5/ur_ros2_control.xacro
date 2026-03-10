@@ -6,7 +6,6 @@
     prefix
     use_fake_hardware:=false fake_sensor_commands:=false
     sim_gazebo:=false
-    sim_ignition:=false
     headless_mode:=false
     initial_positions:=${dict(shoulder_pan_joint=0.0,shoulder_lift_joint=-1.57,elbow_joint=0.0,wrist_1_joint=-1.57,wrist_2_joint=0.0,wrist_3_joint=0.0)}
     use_tool_communication:=false
@@ -21,17 +20,18 @@
     <ros2_control name="${name}" type="system">
       <hardware>
         <xacro:if value="${sim_gazebo}">
-          <plugin>gazebo_ros2_control/GazeboSystem</plugin>
-        </xacro:if>
-        <xacro:if value="${sim_ignition}">
-          <plugin>ign_ros2_control/IgnitionSystem</plugin>
+          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+          <!-- position_proportional_gain MUST be inside <hardware> so GazeboSimSystem
+               reads it at initialization. Setting via YAML /** or ros2 param set only
+               reaches the ROS parameter server, not the hardware interface. -->
+          <param name="position_proportional_gain">100.0</param>
         </xacro:if>
         <xacro:if value="${use_fake_hardware}">
           <plugin>fake_components/GenericSystem</plugin>
           <param name="fake_sensor_commands">${fake_sensor_commands}</param>
           <param name="state_following_offset">0.0</param>
         </xacro:if>
-        <xacro:unless value="${use_fake_hardware or sim_gazebo or sim_ignition}">
+        <xacro:unless value="${use_fake_hardware or sim_gazebo}">
           <plugin>ur_robot_driver/URPositionHardwareInterface</plugin>
           <param name="robot_ip">${robot_ip}</param>
           <param name="script_filename">${script_filename}</param>
@@ -58,8 +58,8 @@
       </hardware>
       <joint name="${prefix}shoulder_pan_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>        
+          <param name="min">-6.28318</param>
+          <param name="max">6.28318</param>        
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -74,8 +74,8 @@
       </joint>
       <joint name="${prefix}shoulder_lift_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>          
+          <param name="min">-6.28318</param>
+          <param name="max">6.28318</param>        
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -90,8 +90,8 @@
       </joint>
       <joint name="${prefix}elbow_joint">
         <command_interface name="position">
-          <param name="min">{-pi}</param>
-          <param name="max">{pi}</param>          
+          <param name="min">-3.14159</param>
+          <param name="max">3.14159</param>          
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.15</param>
@@ -106,8 +106,8 @@
       </joint>
       <joint name="${prefix}wrist_1_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">-6.28318</param>
+          <param name="max">6.28318</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
@@ -122,8 +122,8 @@
       </joint>
       <joint name="${prefix}wrist_2_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>
+          <param name="min">-6.28318</param>
+          <param name="max">6.28318</param>
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
@@ -138,8 +138,8 @@
       </joint>
       <joint name="${prefix}wrist_3_joint">
         <command_interface name="position">
-          <param name="min">{-2*pi}</param>
-          <param name="max">{2*pi}</param>          
+          <param name="min">-6.28318</param>
+          <param name="max">6.28318</param>          
         </command_interface>
         <command_interface name="velocity">
           <param name="min">-3.2</param>
@@ -153,18 +153,33 @@
         <state_interface name="effort"/>
       </joint>
 
-      <joint name="${prefix}gripper_joint1">     
-        <command_interface name="position"/>
-        <state_interface name="position">
-        <param name="initial_value">0</param>
-        </state_interface>
-      </joint>
-      <joint name="${prefix}gripper_joint2">
-        <command_interface name="position"/>      
-        <state_interface name="position"/>      
-      </joint>
+      <!-- Gripper finger joints (merged here so they share the same GazeboSimSystem hardware as arm joints) -->
+      <!-- Right finger mirrors left finger via mimic param; both controlled by gripper_controller -->
+      <xacro:if value="${sim_gazebo}">
+        <joint name="${prefix}left_finger_joint">
+          <command_interface name="position">
+            <param name="min">0.0</param>
+            <param name="max">0.035</param>
+          </command_interface>
+          <command_interface name="velocity"/>
+          <state_interface name="position">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+        <joint name="${prefix}right_finger_joint">
+          <param name="mimic">${prefix}left_finger_joint</param>
+          <param name="multiplier">1.0</param>
+          <state_interface name="position">
+            <param name="initial_value">0.0</param>
+          </state_interface>
+          <state_interface name="velocity"/>
+          <state_interface name="effort"/>
+        </joint>
+      </xacro:if>
 
-      <xacro:unless value="${sim_gazebo or sim_ignition}">
+      <xacro:unless value="${sim_gazebo }">
         <sensor name="tcp_fts_sensor">
           <state_interface name="force.x"/>
           <state_interface name="force.y"/>

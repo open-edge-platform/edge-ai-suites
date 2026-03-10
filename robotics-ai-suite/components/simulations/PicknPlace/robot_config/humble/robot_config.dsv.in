@@ -1,0 +1,1 @@
+prepend-non-duplicate;GAZEBO_MODEL_PATH;share/robot_config/models;share/robot_config/models/aws_robomaker;share/robot_config/urdf/ur/meshes;

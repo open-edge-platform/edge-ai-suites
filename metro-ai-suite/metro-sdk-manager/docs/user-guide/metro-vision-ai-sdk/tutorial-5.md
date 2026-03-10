@@ -67,7 +67,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2025.1.2-ubuntu24 \
+  intel/dlstreamer:2026.0.0-ubuntu24-rc1 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -78,6 +78,8 @@ cat > metro_vision_pipeline.sh << 'EOF'
 CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
+DEVICE=GPU
+
 
 echo "Starting Metro Vision AI Pipeline with Docker DLStreamer..."
 echo "Model: $MODEL_PATH"
@@ -105,7 +107,7 @@ while true; do
         --device /dev/dri:/dev/dri \
         -v "$CURRENT_DIR:/workspace" \
         -w /workspace \
-        intel/dlstreamer:2025.1.2-ubuntu24  \
+        intel/dlstreamer:2026.0.0-ubuntu24-rc1  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
@@ -120,7 +122,6 @@ while true; do
 done
 EOF
 
-export DEVICE=GPU
 chmod +x metro_vision_pipeline.sh
 
 # Start the pipeline in background
