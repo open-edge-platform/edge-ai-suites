@@ -20,7 +20,7 @@ The Education AI Suite now also includes built-in telemetry hooks and benchmarki
   - track questions asked and answered
   - track student-teacher interaction frequency
 
-- **Class Engagement Metrics – Video**
+- **Class Engagement Metrics – Video**:
   - track student hand raises
   - track posture changes (stand up/sit down)
   - track teacher movement
