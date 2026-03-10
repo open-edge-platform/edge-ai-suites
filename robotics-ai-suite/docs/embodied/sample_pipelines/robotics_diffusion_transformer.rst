@@ -71,8 +71,8 @@ The Embodied Intelligence SDK provides optimized source code for Intel® OpenVIN
 
 .. code-block:: bash
 
-    $ sudo apt install rdt-ov
-    $ sudo chown -R $USER /opt/rdt-ov/
+    sudo apt install rdt-ov
+    sudo chown -R $USER /opt/rdt-ov/
 
 After installing the ``rdt-ov`` package, follow the ``README.md`` file in ``/opt/rdt-ov/`` to set up the complete source code environment.
 
@@ -89,8 +89,8 @@ Next, copy these assets to the RDT pipeline directory as follows:
 
 .. code-block:: bash
 
-    $ mkdir -p <rdt_SOURCE_CODE_PATH>/eval_sim/assets/mujoco/
-    $ cp -r <act_SOURCE_CODE_PATH>/assets/* <rdt_SOURCE_CODE_PATH>/eval_sim/assets/mujoco/
+    mkdir -p <rdt_SOURCE_CODE_PATH>/eval_sim/assets/mujoco/
+    cp -r <act_SOURCE_CODE_PATH>/assets/* <rdt_SOURCE_CODE_PATH>/eval_sim/assets/mujoco/
 
 Prepare Environment
 :::::::::::::::::::::::::
@@ -104,38 +104,38 @@ Download and install the ``Miniforge`` as follows if you don't have conda instal
 
 .. code-block:: bash
 
-    $ wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
-    $ bash Miniforge3-Linux-x86_64.sh
-    $ source ~/.bashrc
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+    bash Miniforge3-Linux-x86_64.sh
+    source ~/.bashrc
 
 You can use ``conda --version`` to verify you conda installation.
 After installation, create a new python environment ``rdt-ov``:
 
 .. code-block:: bash
 
-    $ conda create -n rdt-ov python=3.11
+    conda create -n rdt-ov python=3.11
 
 After installation, activate the ``rdt-ov`` Python environment in your current terminal:
 
 .. code-block:: bash
 
-    $ conda activate rdt-ov
+    conda activate rdt-ov
 
 Install the dependencies with the following command:
 
 .. code-block:: bash
 
-    $ pip install torch==2.2.0 torchvision --index-url https://download.pytorch.org/whl/cpu
-    $ pip install packaging==24.0
-    $ cd <rdt_SOURCE_CODE_PATH>
-    $ pip install -r requirements.txt
-    $ pip install huggingface_hub==0.23.4 opencv-python==4.10.0.84 numpy==1.26.4 mujoco==3.2.6 dm_control==1.0.26 einops ipython
+    pip install torch==2.2.0 torchvision --index-url https://download.pytorch.org/whl/cpu
+    pip install packaging==24.0
+    cd <rdt_SOURCE_CODE_PATH>
+    pip install -r requirements.txt
+    pip install huggingface_hub==0.23.4 opencv-python==4.10.0.84 numpy==1.26.4 mujoco==3.2.6 dm_control==1.0.26 einops ipython
 
 Install the OpenVINO™ with the following command:
 
 .. code-block:: bash
 
-    $ pip install openvino==2025.2
+    pip install openvino==2025.2
 
 Use Docker Container
 ----------------------
@@ -146,8 +146,8 @@ Build the docker image:
 
 .. code-block:: bash
 
-    $ cd <rdt_SOURCE_CODE_PATH>/docker
-    $ docker build -t embodied-intelligence-sdk/rdt-1b-ov:latest --build-arg http_proxy=${http_proxy}  --build-arg https_proxy=${https_proxy} .
+    cd <rdt_SOURCE_CODE_PATH>/docker
+    docker build -t embodied-intelligence-sdk/rdt-1b-ov:latest --build-arg http_proxy=${http_proxy}  --build-arg https_proxy=${https_proxy} .
 
 
 .. note::
@@ -162,7 +162,7 @@ Run the docker container:
 
 .. code-block:: bash
 
-    $ docker run -it \
+    docker run -it \
         --network host \
         --device /dev/dri \
         -v <rdt_SOURCE_CODE_PATH>:<rdt_SOURCE_CODE_PATH> \
@@ -193,12 +193,12 @@ Inference
 
    .. code-block:: bash
 
-      $ cd <rdt_SOURCE_CODE_PATH>
-      $ mkdir google & cd google
-      $ sudo apt install git-lft
-      $ GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/google/t5-v1_1-xxl
-      $ cd t5-v1_1-xxl
-      $ git lfs pull
+      cd <rdt_SOURCE_CODE_PATH>
+      mkdir google & cd google
+      sudo apt install git-lft
+      GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/google/t5-v1_1-xxl
+      cd t5-v1_1-xxl
+      git lfs pull
 
 2. Use the following command to generate the language instruction embedding file. This file will be loaded by the pipeline during inference.
 
@@ -210,15 +210,15 @@ Inference
 
 .. code-block:: bash
 
-    $ cd <rdt_SOURCE_CODE_PATH>
-    $ python -m eval_sim.language_to_pt --instruction_name "TransferCube-v1" --instruction "Use the right robot arm to pick up the red cube and transfer it to the left robot arm." --device cpu
+    cd <rdt_SOURCE_CODE_PATH>
+    python -m eval_sim.language_to_pt --instruction_name "TransferCube-v1" --instruction "Use the right robot arm to pick up the red cube and transfer it to the left robot arm." --device cpu
 
 * Peg Insertion task:
 
 .. code-block:: bash
 
-    $ cd <rdt_SOURCE_CODE_PATH>
-    $ python -m eval_sim.language_to_pt --instruction_name "PegInsertion-v1" --instruction "Pick up a red peg and insert into the blue socket with a hole in it." --device cpu
+    cd <rdt_SOURCE_CODE_PATH>
+    python -m eval_sim.language_to_pt --instruction_name "PegInsertion-v1" --instruction "Pick up a red peg and insert into the blue socket with a hole in it." --device cpu
 
 After running the above command, you will get two files named ``text_embed_TransferCube-v1.pt`` and ``text_embed_PegInsertion-v1.pt`` in the ``<rdt_SOURCE_CODE_PATH>`` directory.
 
@@ -231,8 +231,8 @@ After running the above command, you will get two files named ``text_embed_Trans
 
 .. code-block:: bash
 
-    $ cd <rdt_SOURCE_CODE_PATH>
-    $ python -m scripts.convert.ov_convert --pretrained <fine-tuned_weights_path> --output_dir ov_ir
+    cd <rdt_SOURCE_CODE_PATH>
+    python -m scripts.convert.ov_convert --pretrained <fine-tuned_weights_path> --output_dir ov_ir
 
 After running the above command, you will get a ``ov_ir`` directory in the ``<rdt_SOURCE_CODE_PATH>`` directory.
 
@@ -250,5 +250,5 @@ After running the above command, you will get a ``ov_ir`` directory in the ``<rd
 
 .. code-block:: bash
 
-    $ cd <rdt_SOURCE_CODE_PATH>
-    $ MUJOCO_GL=egl python -m eval_sim.eval_rdt_aloha_static_ov --env-id "TransferCube-v1" --openvino_ir_path "ov_ir" --device GPU --num-traj 50
+    cd <rdt_SOURCE_CODE_PATH>
+    MUJOCO_GL=egl python -m eval_sim.eval_rdt_aloha_static_ov --env-id "TransferCube-v1" --openvino_ir_path "ov_ir" --device GPU --num-traj 50

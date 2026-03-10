@@ -9,15 +9,16 @@ SPDX-License-Identifier: Apache-2.0
 
 <package format="3">
   <name>followme_turtlebot3_gazebo</name>
-  <version>2.2.6</version>
+  <version>2.3.0</version>
   <description>
     This package is modified from Gazebo simulation package for the TurtleBot3.
-    It adds a guide robot along with the turtlebot3 and activates depth camera for turtlebot
+    It adds a guide robot along with the turtlebot3 and activates depth camera for turtlebot.
+    Supports Humble (Gazebo Fortress) and Jazzy (Gazebo Harmonic).
   </description>
   <maintainer email="eci.maintainer@intel.com">ECI Maintainer</maintainer>
   <license>Apache 2.0</license>
   <buildtool_depend>ament_cmake</buildtool_depend>
-  <depend>gazebo_ros_pkgs</depend>
+  <depend>ros_gz_sim</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rclcpp</depend>
@@ -28,6 +29,7 @@ SPDX-License-Identifier: Apache-2.0
   <exec_depend>speech_recognition_pkg</exec_depend>
   <export>
     <build_type>ament_cmake</build_type>
-    <gazebo_ros gazebo_model_path="${prefix}/models"/>
+    <gz model_path="${prefix}/models"/>
+    <ros_gz model_path="${prefix}/models"/>
   </export>
 </package>

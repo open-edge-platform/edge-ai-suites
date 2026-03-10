@@ -18,4 +18,4 @@ For robotics software developers, the OpenVINO™ toolkit provides essential too
 
 .. code-block:: bash
 
-   $ pip install openvino==2025.2
+   pip install openvino==2025.2

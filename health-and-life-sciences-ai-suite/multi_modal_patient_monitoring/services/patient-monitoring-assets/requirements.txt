@@ -1,13 +1,15 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 tqdm
-requests
 
 # TensorFlow (needed to load Keras HDF5 rPPG model for conversion)
 tensorflow-cpu==2.16.1
 
-# PyTorch (required for OMZ PyTorch→ONNX conversion)
+# PyTorch (required for OMZ PyTorch→ONNX conversion and HuBERT-ECG)
 torch==2.8.0
+
+# Hugging Face Transformers for HuBERT-ECG backbone
+transformers>=4.45.0
 
 # Conversion deps
 onnx>=1.14.0
