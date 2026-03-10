@@ -1,7 +1,10 @@
 # Copyright (C) 2025 Intel Corporation
+# pylint: disable=duplicate-code
 # Copyright 2019 Open Source Robotics Foundation, Inc.
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""Launch file for TurtleBot3 Gazebo simulation."""
 
 import os
 
@@ -13,21 +16,16 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    # Get the urdf file
-    TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-    model_folder = 'turtlebot3_' + TURTLEBOT3_MODEL
+    """Generate launch description."""
+    # Get the urdf file from official turtlebot3_gazebo package
+    turtlebot3_model = os.environ['TURTLEBOT3_MODEL']
+    model_folder = 'turtlebot3_' + turtlebot3_model
     urdf_path = os.path.join(
-        get_package_share_directory('followme_turtlebot3_gazebo'),
+        get_package_share_directory('turtlebot3_gazebo'),
         'models',
         model_folder,
-        'model_final_v2.sdf',
+        'model.sdf',
     )
-    # urdf_path = os.path.join(
-    # get_package_share_directory('turtlebot3_gazebo'),
-    # 'models',
-    # model_folder,
-    # 'model.sdf'
-    # )
 
     # Launch configuration variables specific to simulation
     x_pose = LaunchConfiguration('x_pose', default='0.0')
@@ -43,11 +41,11 @@ def generate_launch_description():
     )
 
     start_gazebo_ros_spawner_cmd = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
+        package='ros_gz_sim',
+        executable='create',
         arguments=[
             '-entity',
-            TURTLEBOT3_MODEL,
+            turtlebot3_model,
             '-file',
             urdf_path,
             '-x',

@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 
 # Copyright (C) 2025 Intel Corporation
 # Copyright 2019 ROBOTIS CO., LTD.
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""Launch file for TurtleBot3 Gazebo simulation."""
 
 import os
 
@@ -16,14 +19,12 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    """Generate launch description."""
     launch_file_dir = os.path.join(
         get_package_share_directory('followme_turtlebot3_gazebo'), 'launch'
     )
-    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
-
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    x_pose_gbot = LaunchConfiguration('x_pose_gbot', default='1.0')
-    y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='1.0')
+    x_pose_gbot = LaunchConfiguration('x_pose_gbot', default='0.8')
+    y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='0.0')
 
     launch_gz_world_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -61,11 +62,56 @@ def generate_launch_description():
         executable='traj_and_img_publisher_node.py',
         parameters=[gesture_recognition_params_file],
     )
+
+    # Bridge to convert Gazebo /scan to ROS2 /scan and ROS2 /tb3/cmd_vel to Gazebo /cmd_vel
+    gz_scan_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
+        ],
+        output='screen',
+    )
+
+    gz_cmd_vel_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+        ],
+        remappings=[
+            ('/cmd_vel', '/tb3/cmd_vel'),
+        ],
+        output='screen',
+    )
+
+    gz_guide_cmd_vel_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/guide_robot/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
+        ],
+        output='screen',
+    )
+
+    gz_guide_odom_bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/guide_robot/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
+        ],
+        output='screen',
+    )
+
     ld = LaunchDescription()
 
     # Add the commands to the launch description
     ld.add_action(launch_gz_world_cmd)
+    ld.add_action(gz_scan_bridge)
+    ld.add_action(gz_cmd_vel_bridge)
     ld.add_action(adbscan_node)
     ld.add_action(gesture_recognition_node)
+    ld.add_action(gz_guide_cmd_vel_bridge)
+    ld.add_action(gz_guide_odom_bridge)
     ld.add_action(traj_and_img_publisher_node)
     return ld

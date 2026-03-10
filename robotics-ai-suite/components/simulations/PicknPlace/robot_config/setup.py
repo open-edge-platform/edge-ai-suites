@@ -41,6 +41,7 @@ setup(
             'wait_for_name = scripts.wait_for_name:main',
             'controller = scripts.controller:main',
             'sync_call = scripts.sync_call:main',
+            'odom_tf_publisher = scripts.odom_tf_publisher:main',
         ],
     },
 )

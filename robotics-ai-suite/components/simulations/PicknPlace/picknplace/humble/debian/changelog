@@ -1,3 +1,12 @@
+ros-humble-picknplace (2.3-2) jammy; urgency=low
+
+  * Implement unified TF system for robots and cubes.
+  * Refactor arm and AMR controller scripts.
+  * Update launch files and warehouse bridge configuration.
+  * Update URDF models for improved compatibility.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 25 Feb 2026 00:00:00 +0000
+
 ros-humble-picknplace (2.3-1) jammy; urgency=low
 
   * Updated to version 2.3

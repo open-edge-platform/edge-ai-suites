@@ -41,7 +41,7 @@ adbscan_sub_w_gesture_node:
     coeff_2: -0.22432557
     scale_factor: 0.07
     init_tgt_loc: 0.5
-    max_dist: 1.5
+    max_dist: 3.0
     min_dist: 0.5
     max_linear: 0.8
     max_angular: 0.6

@@ -69,9 +69,7 @@
       </sensor>
     </link>
 
-    <!-- Plugin for ROS bridge -->
-    <plugin filename="libgz_ros2_control-system.so" name="gz_ros2_control::GazeboSimROS2ControlPlugin">
-      <parameters>$(find robot_config)/config/camera_bridge.yaml</parameters>
-    </plugin>
+    <!-- ROS bridge no longer needed - camera topics bridged via ros_gz_bridge in launch files -->
+    <!-- Removing gz_ros2_control plugin to prevent multiple plugin instances causing segfaults -->
   </model>
 </sdf>

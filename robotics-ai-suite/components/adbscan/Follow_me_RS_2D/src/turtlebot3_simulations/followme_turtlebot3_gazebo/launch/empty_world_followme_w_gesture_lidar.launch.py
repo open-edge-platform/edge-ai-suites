@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 
 # Copyright (C) 2025 Intel Corporation
 # Copyright 2019 ROBOTIS CO., LTD.
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""Launch file for TurtleBot3 Gazebo simulation."""
 
 import os
 
@@ -16,12 +19,10 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
+    """Generate launch description."""
     launch_file_dir = os.path.join(
         get_package_share_directory('followme_turtlebot3_gazebo'), 'launch'
     )
-    pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
-
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     x_pose_gbot = LaunchConfiguration('x_pose_gbot', default='1.0')
     y_pose_gbot = LaunchConfiguration('y_pose_gbot', default='1.0')
 

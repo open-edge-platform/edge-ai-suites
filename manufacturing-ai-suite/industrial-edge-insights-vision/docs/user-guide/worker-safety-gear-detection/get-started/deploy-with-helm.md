@@ -392,7 +392,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/worker-safety-gear-detection.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/1d40dfe1791d44e8cf6e8472c28c034e40fa508d/models/INT8/worker-safety-gear-detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 
