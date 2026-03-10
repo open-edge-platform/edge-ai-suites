@@ -27,6 +27,4 @@ utilization. The sample application introduces camera streaming with Frigate.
 - First‑time model downloads may take several minutes.
 - Time‑range queries require the clock and timezone on the host to be accurate.
 
-**HW used for validation**:
-
-- Intel® Xeon® 5 + Intel® Arc&trade; B580 GPU
+> *The application has been validated on Intel® Xeon® 5 + Intel® Arc&trade; B580 GPU.*
