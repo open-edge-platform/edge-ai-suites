@@ -25,13 +25,13 @@ You can either generate or download the Helm charts.
   1. Download Helm chart with the following command:
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.0.0-rc1
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.0.0-rc2
      ```
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.0.0-rc1.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.0.0-rc2.tgz
      ```
 
 - Get into the Helm directory:
