@@ -4,6 +4,13 @@
 
 .PHONY: init-mdpnp build-mdpnp build-dds-bridge run down download-rppg-assets
 
+HTTP_PROXY := $(or $(HTTP_PROXY),$(http_proxy))
+HTTPS_PROXY := $(or $(HTTPS_PROXY),$(https_proxy))
+NO_PROXY := $(or $(NO_PROXY),$(no_proxy))
+export HTTP_PROXY
+export HTTPS_PROXY
+export NO_PROXY
+
 MDPNP_PATH := services/mdpnp/mdpnp
 DDS_BRIDGE_PATH := services/dds-bridge
 DOCKER_COMPOSE := docker-compose.yaml

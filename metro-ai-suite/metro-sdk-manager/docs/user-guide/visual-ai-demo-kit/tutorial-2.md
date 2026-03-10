@@ -48,7 +48,7 @@ hostname -I | awk '{print $1}'
 
 Open your web browser and navigate to the Node-RED interface:
 ```
-https://<HOST_IP>/grafana
+https://<HOST_IP>/nodered
 ```
 
 Replace `<HOST_IP>` with your actual system IP address.
@@ -288,4 +288,4 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [DL Streamer Documentation](https://dlstreamer.github.io/)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite)

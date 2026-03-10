@@ -77,7 +77,7 @@ def generate_launch_description():
     )
     ld.add_action(gzserver_cmd)
 
-    # Clock Bridge (global)
+    # Clock Bridge (global) - Fixed syntax for Gazebo Harmonic
     gz_ros_bridge_clock = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -86,28 +86,20 @@ def generate_launch_description():
     )
     ld.add_action(gz_ros_bridge_clock)
 
-    # TF Bridge (global)
-    gz_ros_bridge_tf = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
-        ],
-        output='screen',
-    )
-    ld.add_action(gz_ros_bridge_tf)
+    # Remove faulty TF Bridge - TF will be handled by robot state publishers
+    # and static transform publishers instead of trying to bridge from Gazebo
+    # gz_ros_bridge_tf = Node(
+    #     package='ros_gz_bridge',
+    #     executable='parameter_bridge',
+    #     arguments=[
+    #         '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+    #         '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+    #     ],
+    #     output='screen',
+    # )
+    # ld.add_action(gz_ros_bridge_tf)
 
-    # Entity State Bridge - for entity_location function (via services)
-    gz_ros_bridge_entity = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '/world/default/get_entity_state@gazebo_msgs/srv/GetEntityState',
-            '/world/default/set_entity_state@gazebo_msgs/srv/SetEntityState',
-        ],
-        output='screen',
-    )
-    ld.add_action(gz_ros_bridge_entity)
+    # Entity service bridges are intentionally disabled for Harmonic in this launch.
+    # Primary runtime uses TF-based object/AMR tracking, which is stable and sufficient.
 
     return ld

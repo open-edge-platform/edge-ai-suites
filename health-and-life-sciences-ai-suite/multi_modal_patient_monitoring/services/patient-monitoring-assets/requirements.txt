@@ -14,7 +14,6 @@ transformers>=4.45.0
 # Conversion deps
 onnx>=1.14.0
 onnxscript
-protobuf<5.0.0
 PyYAML
 
 # OpenVINO (model conversion)

@@ -6,7 +6,7 @@ For more information on FastMapping, see [how_it_works](../../how_it_works/index
 
 ## Source Code
 
-The source code of this component can be found here: [FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/fast-mapping)
+The source code of this component can be found here: [FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/fast-mapping)
 
 ## Prerequisites
 
@@ -92,7 +92,7 @@ Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
    Expected output:
 
-   <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
+   <https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
 
 5. Run the FastMapping sample application using Intel® RealSense™ camera
    input with RTAB-Map:

@@ -47,9 +47,9 @@ intended for clinical or diagnostic use.
 :::{toctree}
 :hidden:
 
-get-started.md
-how-it-works.md
-release-notes.md
+Get Started <get-started.md>
+How It Works <how-it-works.md>
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

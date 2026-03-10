@@ -1,3 +1,11 @@
+ros-humble-robot-config-plugins (3.6-2) jammy; urgency=high
+
+  * Enhance vacuum tool plugin for Gazebo Harmonic compatibility.
+  * Refactor vacuum gripper plugin headers and improve joint management.
+  * Update conveyor belt plugin for Gazebo Harmonic.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 25 Feb 2026 00:00:00 +0000
+
 ros-humble-robot-config-plugins (3.6-1) jammy; urgency=high
 
   * Updated to version 3.6.

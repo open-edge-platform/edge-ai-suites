@@ -994,7 +994,7 @@ As per the business logic mentioned in previous steps, you would see that when a
 ## Supporting Resources
 
 - [DL Streamer Documentation](https://dlstreamer.github.io/)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Euclidean Distance Algorithms](https://en.wikipedia.org/wiki/Euclidean_distance)

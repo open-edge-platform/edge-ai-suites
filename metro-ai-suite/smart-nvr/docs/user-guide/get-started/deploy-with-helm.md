@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This section shows how to deploy the Video Search and Summary Sample Application using Helm chart.
+This section shows how to deploy the Smart NVR Application using Helm chart.
 
 ## Prerequisites
 
@@ -24,16 +24,16 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
 ### 2. VLM Microservice (Optional)
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 
@@ -193,7 +193,7 @@ smart_nvr_port=$(kubectl get service nvr-event-router-ui-nginx -n $my_namespace 
 echo "http://${smart_nvr_ip}:${smart_nvr_port}"
 ```
 
-Copy the output of above bash snippet and paste it into your browser to access the **Video Search and Summarization Application**.
+Copy the output of above bash snippet and paste it into your browser to access the **Smart NVR Application**.
 
 ### Step 8: Update Helm Dependencies
 
@@ -206,7 +206,7 @@ helm dependency update
 
 ### Step 9: Uninstall Helm chart
 
-To uninstall the Video Summary Helm chart, use the following command:
+To uninstall the Smart NVR Helm chart, use the following command:
 
 ```bash
 helm uninstall smart-nvr -n $my_namespace
@@ -215,11 +215,8 @@ helm uninstall smart-nvr -n $my_namespace
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
-- Access the Video Summary application dashboard and verify that it is functioning as expected.
-- Upload a test video to verify that the ingestion, processing, and summary pipeline works
-correctly.
-- Check that all components (MinIO, PostgreSQL, RabbitMQ, Video Ingestion, VLM inference,
-Audio Analyzer) are functioning properly.
+- Access the Smart NVR application dashboard and verify that it is functioning as expected.
+- Check that all components (Frigate, MQTT Broker, Redis, NVR Event Router, NVR Event Router UI) are functioning properly.
 
 ## Troubleshooting
 

@@ -1,11 +1,10 @@
 # Release Notes
 
-
 ## Current Release: 1.0.0-rc2
 
 **Release Date**: 27 Feb 2026
 
-### Features
+**Features**
 
 - Bumped up versions of some dependencies and updated lock file to fix security vulnerabities
 
@@ -13,7 +12,7 @@
 
 **Release Date**: 17 Feb 2026
 
-### Features
+**Features**
 
 - **Real-time Traffic Analysis**: Comprehensive directional traffic density monitoring with MQTT integration
 - **VLM Integration**: Vision Language Model (VLM)-powered traffic scene analysis with sustained traffic detection
@@ -21,7 +20,7 @@
 - **Camera Image Management**: Intelligent camera image retention and coordination between API and VLM services
 - **RESTful API**: Complete HTTP API for traffic summaries, intersection monitoring, and VLM analysis retrieval
 
-### Improvements
+**Improvements**
 
 - **Concurrency Control**: Semaphore-based VLM worker management for optimal resource utilization
   - **Impact**: Prevents VLM service overload and ensures reliable traffic analysis
@@ -30,7 +29,7 @@
 - **Enhanced Error Handling**: Comprehensive error management across MQTT, VLM, and image services
   - **Impact**: Improved service reliability and diagnostic capabilities
 
-### Known Issues
+**Known Issues**
 
 - Helm is not supported
 - This release includes only limited testing on EMT‑S and EMT‑D, some behaviors may not yet be fully validated across all scenarios.

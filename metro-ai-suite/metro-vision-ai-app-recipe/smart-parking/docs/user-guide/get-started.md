@@ -124,11 +124,7 @@ By following this guide, you will learn how to:
 - **URL**: `https://localhost/nodered/`
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: `https://localhost/api/pipelines`
-  -   - **Check Pipeline Status**:
-    ```bash
-    curl -k https://localhost/api/pipelines
-    ```
+- **REST API**: `https://localhost/api/pipelines/status`
 - **WebRTC**: `https://localhost/mediamtx/object_detection_1/`
 
 
@@ -147,7 +143,7 @@ edge application deployment process.
 
 ## Supporting Resources
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive
 :::{toctree}

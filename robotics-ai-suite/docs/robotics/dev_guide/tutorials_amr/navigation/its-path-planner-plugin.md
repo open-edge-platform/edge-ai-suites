@@ -41,7 +41,7 @@ For customization options, see
 ## Source Code
 
 The source code of this component can be found here:
-[ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/its-planner)
+[ITS-Planner](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/its-planner)
 
 ## Getting Started
 

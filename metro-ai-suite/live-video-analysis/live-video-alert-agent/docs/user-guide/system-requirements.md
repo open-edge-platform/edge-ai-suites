@@ -19,7 +19,7 @@ This page summarizes the recommended environment for running Live Video Alert.
 
 - Docker Engine and Docker Compose
 - Intel® Graphics compute runtime (if using Intel GPU for inference acceleration)
-- RTSP source reachable from the `live-video-alert` container (optional, can be added via UI)
+- RTSP source reachable from the `live-video-alert-agent` container (optional, can be added via UI)
 
 ## Network / Ports
 

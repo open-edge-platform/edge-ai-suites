@@ -26,7 +26,7 @@ WORKDIR /app
 # Python deps for asset generation
 # ----------------------------
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r /app/requirements.txt
+RUN pip install --default-timeout=300 --retries 5 --no-cache-dir -r /app/requirements.txt
 
 # ----------------------------
 # App scripts used to build assets (model-config.yaml is mounted at runtime)
@@ -52,7 +52,6 @@ FROM python:3.11-slim
 ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
-
 
 
 WORKDIR /app

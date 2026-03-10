@@ -18,12 +18,12 @@
 
 # Array of repositories to clone: "url|branch|directory"
 repositories=(
-  "https://github.com/open-edge-platform/edge-ai-suites|release-2025.2.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/edge-ai-suites|release-2026.0.0|edge-ai-suites"
 )
 
 images=(
   eclipse-mosquitto:2.0.21
-  intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+  intel/dlstreamer-pipeline-server:2026.0.0-extended-ubuntu24-rc1
   bluenviron/mediamtx:1.11.3
   coturn/coturn:4.7
   grafana/grafana:11.5.4

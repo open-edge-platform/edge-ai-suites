@@ -23,7 +23,7 @@ an introduction.
 - **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. Following is the recommended default setting.
   ```bash
   export REGISTRY="intel"
-  export TAG="1.0.0-rc1"
+  export TAG="1.0.0-rc2"
   ```
 
 
@@ -36,7 +36,7 @@ Traffic Intersection Agent.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
@@ -113,7 +113,7 @@ locations on the same machine for `n` required instances.
 1.  Clone the repository into a new directory:
 
     ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0 edge-ai-suites-instance1
     cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
     ```
 
@@ -155,7 +155,7 @@ locations on the same machine for `n` required instances.
 1.  Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
     ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0 edge-ai-suites-instance2
     cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
     ```
 
@@ -184,7 +184,7 @@ locations on the same machine for `n` required instances.
     ```bash
     export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
     ```
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
+    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4.  Run Setup for Instance #2
 
@@ -221,7 +221,7 @@ For advanced users who need more control over the configuration, you can configu
 # Set log level to debug to help in debugging issues, default value is info
 export LOG_LEVEL=DEBUG
 
-# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU 
+# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU
 export VLM_DEVICE=GPU
 
 # Other VLM related config, sample values
@@ -277,6 +277,7 @@ unique. Additionally, ensure no other external services are running on these por
 
 ./get-started/system-requirements
 ./get-started/build-from-source
+./get-started/deploy-with-helm
 
 :::
 hide_directive-->

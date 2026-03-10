@@ -35,7 +35,7 @@ AMR Controller to support four Intel® RealSense™ Depth Camera D457.
 ## Source Code
 
 The source code of this component can be found here:
-[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/multicam-demo).
+[Multicamera-Demo](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/multicam-demo).
 
 ## Prerequisites
 
