@@ -61,6 +61,7 @@ include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
 DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
 export DRI_MOUNT_PATH
+$(shell chmod 600 .env helm/values.yaml)
 
 # Build Docker containers
 .PHONY: build
