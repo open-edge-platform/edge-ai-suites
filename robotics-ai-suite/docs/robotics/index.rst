@@ -28,3 +28,4 @@ Click each icon to learn more.
 
    gsg_robot/index
    dev_guide/index
+   Release Notes <release-notes>
