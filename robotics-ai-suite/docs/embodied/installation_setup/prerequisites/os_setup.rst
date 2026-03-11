@@ -36,8 +36,8 @@ Use the ``date`` command to display the current date and time. If the Linux OS t
 
 .. code-block:: bash
 
-   $ date
-   $ sudo date -s "2025-03-30 12:00"
+   date
+   sudo date -s "2025-03-30 12:00"
 
 Setup Sources
 --------------

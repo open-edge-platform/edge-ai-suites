@@ -36,16 +36,16 @@ Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, `vajpegdec`
 Additionally, one can also enforce zero-copy of buffers using GStreamer capabilities to the
 pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated and discrete).
 
-Read the DL Streamer [GPU Device Selection](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) document for more details.
+Read the DL Streamer [GPU Device Selection](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) document for more details.
 
 ### GPU specific element properties
 DL Streamer inference elements also provides property such as `device=GPU` and
 `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read the DL Streamer
-[Model Preparation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) documentation for more information.
+[Model Preparation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) documentation for more information.
 
 ### Selecting the GPU render device of your choice if there is more than one GPU device on the system
 
-If you have multiple GPUs (integrated/discrete), please follow the [GPU Device Selection](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html)
+If you have multiple GPUs (integrated/discrete), please follow the [GPU Device Selection](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html)
 DL Streamer document for selecting the GPU render device of your choice for VA codecs plugins.
 
 ## Tutorial on how to use GPU specific pipelines

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
@@ -14,6 +15,8 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+"""Mel-spectrogram to waveform vocoder models with OpenVINO inference."""
+
 import os.path as osp
 
 import numpy as np
@@ -26,12 +29,13 @@ from utils.wav_processing import (
 )
 
 
-class WaveRNNIE:
-    def __init__(
+class WaveRNNIE:  # pylint: disable=too-many-instance-attributes
+    """OpenVINO-based WaveRNN vocoder for mel-to-waveform synthesis."""
+    def __init__(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         model_upsample,
         model_rnn,
-        ie,
+        core,
         target=11000,
         overlap=550,
         hop_length=275,
@@ -61,12 +65,14 @@ class WaveRNNIE:
         self.indent = 550
         self.pad = 2
         self.batch_sizes = [1, 2, 4, 8, 16, 32, 64, 128, 256]
-        self.ie = ie
+        self.core = core
 
         self.upsample_net = self.load_network(model_upsample)
         if upsampler_width > 0:
-            orig_shape = self.upsample_net.input_info['mels'].input_data.shape
-            self.upsample_net.reshape({'mels': (orig_shape[0], upsampler_width, orig_shape[2])})
+            orig_shape = self.upsample_net.inputs[0].shape
+            inp_name = self.upsample_net.inputs[0].any_name
+            new_shape = (orig_shape[0], upsampler_width, orig_shape[2])
+            self.upsample_net.reshape({inp_name: new_shape})
 
         self.upsample_exec = self.create_exec_network(self.upsample_net)
 
@@ -74,34 +80,52 @@ class WaveRNNIE:
         self.rnn_exec = self.create_exec_network(self.rnn_net, batch_sizes=self.batch_sizes)
 
         # fixed number of the mels in mel-spectrogramm
-        self.mel_len = self.upsample_net.input_info['mels'].input_data.shape[1] - 2 * self.pad
-        self.rnn_width = self.rnn_net.input_info['x'].input_data.shape[1]
+        self.mel_len = self.upsample_net.inputs[0].shape[1] - 2 * self.pad
+        self.rnn_width = next(
+            (inp for inp in self.rnn_net.inputs if inp.any_name == 'x'),
+            self.rnn_net.inputs[0],
+        ).shape[1]
 
     def load_network(self, model_xml):
+        """Read an OpenVINO IR model from disk."""
         model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
-        net = self.ie.read_network(model=model_xml, weights=model_bin)
+        print(f'Loading network files:\n\t{model_xml}\n\t{model_bin}')
+        net = self.core.read_model(model=model_xml)
         return net
 
     def create_exec_network(self, net, batch_sizes=None):
+        """Compile a model for the target device, optionally per batch size."""
         if batch_sizes is not None:
             exec_net = []
-            for b_s in batch_sizes:
-                net.batch_size = b_s
-                exec_net.append(self.ie.load_network(network=net, device_name=self.device))
+            for _b_s in batch_sizes:
+                # Create a new model instance with batch size
+                rt_info = net.get_rt_info()
+                model_path = (
+                    rt_info["model_path"]
+                    if "model_path" in rt_info
+                    else None
+                )
+                reshaped_net = self.core.read_model(model=model_path)
+                if reshaped_net is None:
+                    # If we can't reload, reshape the existing one
+                    reshaped_net = net
+                # Note: OpenVINO 2024 doesn't have batch_size property, need to reshape inputs
+                exec_net.append(self.core.compile_model(reshaped_net, self.device))
         else:
-            exec_net = self.ie.load_network(network=net, device_name=self.device)
+            exec_net = self.core.compile_model(net, self.device)
         return exec_net
 
     @staticmethod
     def get_rnn_init_states(b_size=1, rnn_dims=328):
+        """Return zeroed initial hidden states for the RNN."""
         h1 = np.zeros((b_size, rnn_dims), dtype=float)
         h2 = np.zeros((b_size, rnn_dims), dtype=float)
         x = np.zeros((b_size, 1), dtype=float)
         return h1, h2, x
 
     def forward(self, mels):
+        """Synthesise a waveform from mel-spectrogram frames."""
         mels = (mels + 4) / 8
         np.clip(mels, 0, 1, out=mels)
         mels = np.transpose(mels)
@@ -153,13 +177,17 @@ class WaveRNNIE:
         return audio
 
     def forward_upsample(self, mels):
+        """Upsample mel frames to match the audio sample rate."""
         mels = pad_tensor(mels, pad=self.pad)
 
-        out = self.upsample_exec.infer(inputs={'mels': mels})
-        upsample_mels, aux = out['upsample_mels'][:, self.indent: -self.indent, :], out['aux']  # noqa: E501 # fmt: skip
+        out = self.upsample_exec(mels)
+        upsample_out = out[self.upsample_exec.outputs[0]]
+        upsample_mels = upsample_out[:, self.indent:-self.indent, :]
+        aux = out[self.upsample_exec.outputs[1]]
         return upsample_mels, aux
 
-    def forward_rnn(self, mels, upsampled_mels, aux):
+    def forward_rnn(self, mels, upsampled_mels, aux):  # pylint: disable=too-many-locals
+        """Run the autoregressive RNN to produce audio samples."""
         wave_len = (mels.shape[1] - 1) * self.hop_length
 
         d = aux.shape[2] // 4
@@ -169,8 +197,8 @@ class WaveRNNIE:
         seq_len = min(seq_len, aux_split[0].shape[1])
 
         if b_size not in self.batch_sizes:
-            raise Exception(
-                'Incorrect batch size {0}. Correct should be 2 ** something'.format(b_size)
+            raise ValueError(
+                f'Incorrect batch size {b_size}. Correct should be 2 ** something'
             )
 
         active_network = self.batch_sizes.index(b_size)
@@ -184,8 +212,8 @@ class WaveRNNIE:
 
             a1_t, a2_t, a3_t, a4_t = (a[:, i, :] for a in aux_split)
 
-            out = self.rnn_exec[active_network].infer(
-                inputs={
+            out = self.rnn_exec[active_network](
+                {
                     'm_t': m_t,
                     'a1_t': a1_t,
                     'a2_t': a2_t,
@@ -197,9 +225,9 @@ class WaveRNNIE:
                 }
             )
 
-            logits = out['logits']
-            h1 = out['h1']
-            h2 = out['h2']
+            logits = out[self.rnn_exec[active_network].outputs[0]]
+            h1 = out[self.rnn_exec[active_network].outputs[1]]
+            h2 = out[self.rnn_exec[active_network].outputs[2]]
 
             sample = infer_from_discretized_mix_logistic(logits)
 
@@ -221,55 +249,59 @@ class WaveRNNIE:
         return output
 
 
-class MelGANIE:
-    def __init__(self, model, ie, device='CPU', default_width=800):
+class MelGANIE:  # pylint: disable=too-many-instance-attributes
+    """OpenVINO-based MelGAN vocoder for mel-to-waveform synthesis."""
+    def __init__(self, model, core, device='CPU', default_width=800):
         """
         return class provided MelGAN inference.
 
         :param model: path to xml with MelGAN model of WaveRNN
-        :param ie: instance of the IECore
+        :param core: instance of the Core
         :param device: target device
         :return:
         """
         self.device = device
-        self.ie = ie
+        self.core = core
 
         self.scales = 4
         self.hop_length = 256
 
         self.net = self.load_network(model)
-        if self.net.input_info['mel'].input_data.shape[2] != default_width:
-            orig_shape = self.net.input_info['mel'].input_data.shape
+        if self.net.inputs[0].shape[2] != default_width:
+            orig_shape = self.net.inputs[0].shape
             new_shape = (orig_shape[0], orig_shape[1], default_width)
-            self.net.reshape({'mel': new_shape})
+            self.net.reshape({self.net.inputs[0].any_name: new_shape})
 
         self.exec_net = self.create_exec_network(self.net, self.scales)
 
         # fixed number of columns in mel-spectrogramm
-        self.mel_len = self.net.input_info['mel'].input_data.shape[2]
+        self.mel_len = self.net.inputs[0].shape[2]
         self.widths = [self.mel_len * (i + 1) for i in range(self.scales)]
 
     def load_network(self, model_xml):
+        """Read an OpenVINO IR model from disk."""
         model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
-        net = self.ie.read_network(model=model_xml, weights=model_bin)
+        print(f'Loading network files:\n\t{model_xml}\n\t{model_bin}')
+        net = self.core.read_model(model=model_xml)
         return net
 
     def create_exec_network(self, net, scales=None):
+        """Compile the model at multiple scales for variable-length input."""
         if scales is not None:
-            orig_shape = net.input_info['mel'].input_data.shape
+            orig_shape = list(net.inputs[0].shape)
             exec_net = []
             for i in range(scales):
                 new_shape = (orig_shape[0], orig_shape[1], orig_shape[2] * (i + 1))
-                net.reshape({'mel': new_shape})
-                exec_net.append(self.ie.load_network(network=net, device_name=self.device))
-                net.reshape({'mel': orig_shape})
+                net.reshape({net.inputs[0].any_name: new_shape})
+                exec_net.append(self.core.compile_model(net, self.device))
+                net.reshape({net.inputs[0].any_name: orig_shape})
         else:
-            exec_net = self.ie.load_network(network=net, device_name=self.device)
+            exec_net = self.core.compile_model(net, self.device)
         return exec_net
 
     def forward(self, mel):
+        """Synthesise a waveform from a mel-spectrogram using MelGAN."""
         mel = np.expand_dims(mel, axis=0)
         res_audio = []
         last_padding = 0
@@ -295,8 +327,8 @@ class MelGANIE:
         c_begin = 0
         c_end = cur_w
         while c_begin < cols:
-            audio = self.exec_net[active_net].infer(inputs={'mel': mel[:, :, c_begin:c_end]})[
-                'audio'
+            audio = self.exec_net[active_net](mel[:, :, c_begin:c_end])[
+                self.exec_net[active_net].outputs[0]
             ]
             res_audio.extend(audio)
 

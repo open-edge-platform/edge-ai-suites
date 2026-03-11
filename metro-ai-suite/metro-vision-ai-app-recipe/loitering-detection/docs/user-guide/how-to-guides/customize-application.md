@@ -22,7 +22,7 @@ providing real-time dashboards.
 ## DL Streamer Pipeline Server
 
 > For detailed documentation on Deep Learning Streamer Pipeline Server (DL Streamer Pipeline
-Server), visit the [DL Streamer Pipeline Server Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html).
+Server), visit the [DL Streamer Pipeline Server Documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html).
 
 ![Pipeline Architecture](../_assets/pipeline.png)
 

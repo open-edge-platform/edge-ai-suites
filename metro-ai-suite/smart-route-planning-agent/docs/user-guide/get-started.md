@@ -17,7 +17,7 @@ and manages the Smart Route Planning Agent.
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
 cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent
 ```
 

@@ -28,3 +28,8 @@ deploymentProfiles:
     applicationProfiles:
       - application: "wp-app"
         profile: "with-intel-gpu"
+  - name: "with-intel-npu"
+    description: "Uses NPU profile with privileged access enabled"
+    applicationProfiles:
+      - application: "wp-app"
+        profile: "with-intel-npu"

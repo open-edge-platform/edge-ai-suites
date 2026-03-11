@@ -23,6 +23,7 @@
    ```sh
    cp helm/values_pcb-anomaly-detection.yaml helm/values.yaml
    ```
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
@@ -30,10 +31,10 @@
 
    - Download helm chart with the following command
 
-       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc1`
+       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc2`
    - unzip the package using the following command
 
-       `tar -xvf pcb-anomaly-detection-1.2.0-rc1.tgz`
+       `tar -xvf pcb-anomaly-detection-1.2.0-rc2.tgz`
    - Replace the helm directory
 
        `rm -rf helm && mv pcb-anomaly-detection helm`
@@ -400,7 +401,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 

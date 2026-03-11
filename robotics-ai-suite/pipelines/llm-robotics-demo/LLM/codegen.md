@@ -28,9 +28,9 @@
 
     Follow the documentation below to export and save SAM (ViT-B) and CLIP (ViT-B) models:
     ```bash
-    SAM: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/segment-anything
+    SAM: https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/segment-anything
 
-    CLIP: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/clip-zero-shot-image-classification
+    CLIP: https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/clip-zero-shot-image-classification
     ```
 
     Copy the generated model and XML files to the `ov_models` directory, or update the model loading paths to point to your exported model locations. For example:

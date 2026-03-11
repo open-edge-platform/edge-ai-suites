@@ -43,8 +43,8 @@ The Embodied Intelligence SDK provides optimized source code for Intel® OpenVIN
 
 .. code-block:: bash
 
-    $ sudo apt install diffusion-policy-ov
-    $ sudo chown -R $USER /opt/diffusion-policy-ov/
+    sudo apt install diffusion-policy-ov
+    sudo chown -R $USER /opt/diffusion-policy-ov/
 
 After installing the ``diffusion-policy-ov`` package, follow the ``README.md`` file in ``/opt/diffusion-policy-ov/`` to set up the complete source code environment.
 
@@ -55,23 +55,23 @@ Download and install the ``Miniforge`` as follows if you don't have conda instal
 
 .. code-block:: bash
 
-    $ wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
-    $ bash Miniforge3-Linux-x86_64.sh
-    $ source ~/.bashrc
+    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
+    bash Miniforge3-Linux-x86_64.sh
+    source ~/.bashrc
 
 You can use ``conda --version`` to verify you conda installation.
 After installation, create a new python environment ``robodiff``:
 
 .. code-block:: bash
 
-    $ cd <diffusion-policy_SOURCE_CODE_PATH>
-    $ mamba env create -f conda_environment.yaml
+    cd <diffusion-policy_SOURCE_CODE_PATH>
+    mamba env create -f conda_environment.yaml
 
 After installation, activate the ``robodiff`` Python environment in your current terminal:
 
 .. code-block:: bash
 
-    $ conda activate robodiff
+    conda activate robodiff
 
 Install OpenVINO™
 ::::::::::::::::::::
@@ -80,7 +80,7 @@ Install the OpenVINO™ with the following command:
 
 .. code-block:: bash
 
-    $ pip install huggingface_hub==0.24.7 openvino==2024.6
+    pip install huggingface_hub==0.24.7 openvino==2024.6
 
 Run pipeline
 =============
@@ -130,11 +130,14 @@ Inference
 
     You need to set the ``--output_dir`` to save the converted model to ``~/ov_models/pushT/`` directory.
 
-The expectation result of this step is that you will have the following files in ``~/ov_models/pushT/`` directory:
+Run the following command to list the converted models. The output should include the files below:
 
 .. code-block:: bash
 
-    $ ls ~/ov_models/pushT/ -l
+    ls ~/ov_models/pushT/ -l
+
+.. code-block:: text
+
     -rw-rw-r-- ... image_c884_obs_encoder_onepass.bin
     -rw-rw-r-- ... image_c884_obs_encoder_onepass.xml
     -rw-rw-r-- ... image_c884_unet_onepass.bin
@@ -159,15 +162,18 @@ The expectation result of this step is that you will have the following files in
 
 .. code-block:: bash
 
-    $ conda activate robodiff
-    $ cd <diffusion-policy_SOURCE_CODE_PATH>
-    $ python eval.py --checkpoint <Pre-Trained_ckpt_PATH> --output_dir <output_dir>
+    conda activate robodiff
+    cd <diffusion-policy_SOURCE_CODE_PATH>
+    python eval.py --checkpoint <Pre-Trained_ckpt_PATH> --output_dir <output_dir>
 
 4. The inference results will be saved in the ``<output_dir>`` directory, which contains the following files:
 
 .. code-block:: bash
 
-    $ ls <output_dir> -l
+    ls <output_dir> -l
+
+.. code-block:: text
+
     -rw-rw-r-- ... eval_log.json
     drwxrwxr-x ... media
 

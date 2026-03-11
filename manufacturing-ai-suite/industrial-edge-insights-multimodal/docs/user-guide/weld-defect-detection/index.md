@@ -48,7 +48,7 @@ defect classification model, publishes the frame metadata results over MQTT, sto
 | `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`        |
 | `source`       | The source type for video ingestion.                                        | `"gstreamer"`                         |
 | `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                  |
-| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
+| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvawatermark ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
 | `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
 
 **Parameters Properties**:

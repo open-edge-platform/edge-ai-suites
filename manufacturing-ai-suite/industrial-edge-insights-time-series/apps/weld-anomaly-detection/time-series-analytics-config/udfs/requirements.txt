@@ -1,1 +1,1 @@
-catboost==1.2.8
+catboost==1.2.10

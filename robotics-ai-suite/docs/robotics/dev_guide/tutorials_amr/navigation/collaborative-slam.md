@@ -7,7 +7,7 @@ The default installation of Collaborative Visual SLAM is designed to run on the 
 ## Source Code
 
 The source code of this component can be found here:
-[Collaborative-Slam](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/collaborative-slam)
+[Collaborative-Slam](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/collaborative-slam)
 
 ## Prerequisites
 

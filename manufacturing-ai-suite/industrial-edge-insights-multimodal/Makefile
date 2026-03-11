@@ -21,6 +21,7 @@ HELM_PACKAGE_SCRIPT = ./package_helm.sh
 
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
+$(shell chmod 600 .env helm/values.yaml)
 
 # Default values
 KEY_LENGTH=3072

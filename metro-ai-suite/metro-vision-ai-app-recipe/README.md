@@ -17,9 +17,9 @@ The key features are:
 
 |              |             |            |
 |:-------------|:------------|:-----------|
-| [Smart Intersection Management (includes optional Scenescape components)](./smart-intersection/)                                           | AI-driven traffic flow optimization and intersection monitoring.                                 | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html)                                                          |
-| [Loitering Detection](./loitering-detection) | Real-time detection of loitering behavior in transportation hubs                                   | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/index.html)                       |
-| [Smart Parking](./smart-parking)     | Automated parking space monitoring and management.             | [Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/loitering-detection/index.html)                         |
+| [Smart Intersection Management (includes optional Scenescape components)](./smart-intersection/)                                           | AI-driven traffic flow optimization and intersection monitoring.                                 | [Documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-intersection/index.html)                                                          |
+| [Loitering Detection](./loitering-detection) | Real-time detection of loitering behavior in transportation hubs                                   | [Documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/index.html)                       |
+| [Smart Parking](./smart-parking)     | Automated parking space monitoring and management.             | [Documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/loitering-detection/index.html)                         |
 
 
 ## How It Works

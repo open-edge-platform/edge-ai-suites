@@ -44,7 +44,7 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 - [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
 - [Customize the Application](./how-to-guides/customize-application.md)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 - [Release Notes](./release-notes.md)
 
 <!--hide_directive

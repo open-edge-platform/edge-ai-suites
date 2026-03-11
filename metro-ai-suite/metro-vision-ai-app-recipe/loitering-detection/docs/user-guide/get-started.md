@@ -113,11 +113,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 - **URL**: `https://localhost/nodered/`
 
 ### **DL Streamer Pipeline Server** ###
-- **REST API**: `https://localhost/api/pipelines`
-  - **Check Pipeline Status**:
-    ```bash
-    curl -k https://localhost/api/pipelines
-    ```
+- **REST API**: `https://localhost/api/pipelines/status`
 - **WebRTC**: `https://localhost/mediamtx/object_tracking_1/`
 
 ## **Stop the Application**:
@@ -182,7 +178,7 @@ a simplified edge application deployment process.
 
 ## Supporting Resources
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 <!--hide_directive
 :::{toctree}

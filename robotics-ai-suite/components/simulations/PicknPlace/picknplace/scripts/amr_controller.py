@@ -77,14 +77,16 @@ class RobotController(Node):
     def object_grasping(self, msg):
         self.grasping = msg.data
 
-    def amr_goto_pose(self, x, y, z):
+    def amr_goto_pose(self, x, y, yaw=0.0):
+        import math
         goal_pose = PoseStamped()
         goal_pose.header.frame_id = 'map'
         goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         goal_pose.pose.position.x = x
         goal_pose.pose.position.y = y
-        goal_pose.pose.orientation.z = z
-        goal_pose.pose.orientation.w = 1.0
+        # Convert yaw angle to quaternion (rotation about Z axis)
+        goal_pose.pose.orientation.z = math.sin(yaw / 2.0)
+        goal_pose.pose.orientation.w = math.cos(yaw / 2.0)
         self.navigator.goToPose(goal_pose)
 
 
@@ -99,12 +101,41 @@ class Setup(State):
 
 class Home(State):
     def __init__(self, robot_controller):
-        State.__init__(self, outcomes=['wait', 'failed'])
+        State.__init__(self, outcomes=['idle', 'failed'])
         self.robot_controller = robot_controller
 
     def execute(self, userdata):
-        self.robot_controller.amr_goto_pose(-0.1, -0.3, 0.004)
-        return 'wait'
+        self.robot_controller.logger.info(
+            "[STATE: HOME] Navigating back to ARM1 loading area (-0.1, 2.5)..."
+        )
+        self.robot_controller.amr_goto_pose(-0.1, 2.5, yaw=3.14159)
+        while not self.robot_controller.navigator.isTaskComplete():
+            time.sleep(0.5)
+        self.robot_controller.logger.info("[STATE: HOME] Arrived at ARM1 loading area")
+
+        self.robot_controller.set_parameters(
+            [Parameter('state', Parameter.Type.STRING, 'idle')]
+        )
+        self.robot_controller.logger.info(
+            "[STATE: HOME] AMR returned home. Demo complete."
+        )
+        return 'idle'
+
+
+class Idle(State):
+    """Final state — AMR idles at home position after cycle 1."""
+
+    def __init__(self, robot_controller):
+        State.__init__(self, outcomes=['done'])
+        self.robot_controller = robot_controller
+
+    def execute(self, userdata):
+        self.robot_controller.logger.info(
+            "[STATE: IDLE] ========== AMR DEMO COMPLETE =========="
+        )
+        while rclpy.ok():
+            time.sleep(1.0)
+        return 'done'
 
 
 class Wait(State):
@@ -128,8 +159,8 @@ class TransferObject(State):
     def execute(self, userdata):
         x = float(self.robot_controller.get_parameter('point_x').value)
         y = float(self.robot_controller.get_parameter('point_y').value)
-        print(f'Going to {x}, {y}')
-        self.robot_controller.amr_goto_pose(x, y, 0.004)
+        self.robot_controller.get_logger().info(f'Going to {x}, {y}')
+        self.robot_controller.amr_goto_pose(x, y, yaw=0.0)
         while not self.robot_controller.navigator.isTaskComplete():
             time.sleep(0.5)
 
@@ -146,7 +177,7 @@ class WaitForPickup(State):
 
         utils.call_set_parameters(
             self.robot_controller,
-            '/ARM2Controller',
+            '/arm2/ARM2Controller',
             Parameter(
                 'object_name',
                 Parameter.Type.STRING,
@@ -156,7 +187,7 @@ class WaitForPickup(State):
 
         utils.call_set_parameters(
             self.robot_controller,
-            '/ARM2Controller',
+            '/arm2/ARM2Controller',
             Parameter('state', Parameter.Type.STRING, 'move'),
         )
 
@@ -171,7 +202,7 @@ def run_smach(client):
     sm = StateMachine(outcomes=['succeeded', 'aborted'])
     with sm:
         StateMachine.add('SETUP', Setup(client), transitions={'wait': 'WAIT', 'failed': 'WAIT'})
-        StateMachine.add('HOME', Home(client), transitions={'wait': 'WAIT', 'failed': 'HOME'})
+        StateMachine.add('HOME', Home(client), transitions={'idle': 'IDLE', 'failed': 'IDLE'})
         StateMachine.add(
             'WAIT', Wait(client), transitions={'transfer': 'TRANSFER', 'failed': 'HOME'}
         )
@@ -182,6 +213,9 @@ def run_smach(client):
         )
         StateMachine.add(
             'WAITFORPICKUP', WaitForPickup(client), transitions={'home': 'HOME', 'failed': 'HOME'}
+        )
+        StateMachine.add(
+            'IDLE', Idle(client), transitions={'done': 'succeeded'}
         )
 
     # Execute SMACH plan
