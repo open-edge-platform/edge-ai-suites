@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This section shows how to deploy the Video Search and Summary Sample Application using Helm chart.
+This section shows how to deploy the Smart NVR Application using Helm chart.
 
 ## Prerequisites
 
@@ -193,7 +193,7 @@ smart_nvr_port=$(kubectl get service nvr-event-router-ui-nginx -n $my_namespace 
 echo "http://${smart_nvr_ip}:${smart_nvr_port}"
 ```
 
-Copy the output of above bash snippet and paste it into your browser to access the **Video Search and Summarization Application**.
+Copy the output of above bash snippet and paste it into your browser to access the **Smart NVR Application**.
 
 ### Step 8: Update Helm Dependencies
 
@@ -206,7 +206,7 @@ helm dependency update
 
 ### Step 9: Uninstall Helm chart
 
-To uninstall the Video Summary Helm chart, use the following command:
+To uninstall the Smart NVR Helm chart, use the following command:
 
 ```bash
 helm uninstall smart-nvr -n $my_namespace
@@ -215,11 +215,8 @@ helm uninstall smart-nvr -n $my_namespace
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
-- Access the Video Summary application dashboard and verify that it is functioning as expected.
-- Upload a test video to verify that the ingestion, processing, and summary pipeline works
-correctly.
-- Check that all components (MinIO, PostgreSQL, RabbitMQ, Video Ingestion, VLM inference,
-Audio Analyzer) are functioning properly.
+- Access the Smart NVR application dashboard and verify that it is functioning as expected.
+- Check that all components (Frigate, MQTT Broker, Redis, NVR Event Router, NVR Event Router UI) are functioning properly.
 
 ## Troubleshooting
 
