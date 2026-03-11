@@ -1,4 +1,4 @@
-# Release Notes: Smart Classroom 2026
+# Release Notes: Smart Classroom
 
 ## Version 2026.0
 
@@ -45,7 +45,7 @@ The Education AI Suite now also includes built-in telemetry hooks and benchmarki
 :::{toctree}
 :hidden:
 
-./release-notes/release-notes-2025.md
+Release Notes 2025 <./release-notes/release-notes-2025.md>
 
 :::
 hide_directive-->
