@@ -3,26 +3,13 @@ param(
   [string]$ConfigPath = "config.json",
 
   [Parameter(Mandatory=$false)]
-  [string]$MinioExe = "C:\Users\Intel\Downloads\minio.exe",
+  [string]$MinioExe = "",
 
   [Parameter(Mandatory=$false)]
-  [string]$DataDir = "C:\Users\Intel\Downloads\minio-data"
+  [string]$DataDir = ""
 )
 
 $ErrorActionPreference = "Stop"
-
-# This script does NOT download minio.exe automatically.
-# Download it manually from the official MinIO releases page and pass -MinioExe,
-# or place it next to this script and use the default.
-
-if (-not (Test-Path $MinioExe)) {
-  throw "minio.exe not found: $MinioExe. Download minio.exe first, then pass -MinioExe `"C:\path\to\minio.exe`""
-}
-
-if (-not (Test-Path $DataDir)) {
-  Write-Host "Creating data dir: $DataDir"
-  New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
-}
 
 if (-not (Test-Path $ConfigPath)) {
   throw "Config file not found: $ConfigPath"
@@ -34,6 +21,32 @@ $config = $configRaw | ConvertFrom-Json
 $minio = $config.minio
 if ($null -eq $minio) {
   throw "Missing 'minio' object in config.json. Expected format: { `"minio`": { ... } }"
+}
+
+if ([string]::IsNullOrWhiteSpace($MinioExe)) {
+  $MinioExe = [string]$minio.minio_exe
+}
+if ([string]::IsNullOrWhiteSpace($DataDir)) {
+  $DataDir = [string]$minio.data_dir
+}
+
+if ([string]::IsNullOrWhiteSpace($MinioExe)) {
+  $exeNearScript = Join-Path $PSScriptRoot "minio.exe"
+  if (Test-Path $exeNearScript) {
+    $MinioExe = $exeNearScript
+  }
+}
+if ([string]::IsNullOrWhiteSpace($DataDir)) {
+  $DataDir = "C:\Users\Intel\Downloads\minio-data"
+}
+
+if (-not (Test-Path $MinioExe)) {
+  throw "minio.exe not found: $MinioExe. Set minio.minio_exe in config.json or pass -MinioExe `"C:\path\to\minio.exe`""
+}
+
+if (-not (Test-Path $DataDir)) {
+  Write-Host "Creating data dir: $DataDir"
+  New-Item -ItemType Directory -Force -Path $DataDir | Out-Null
 }
 
 $addressFromConfig = $minio.address

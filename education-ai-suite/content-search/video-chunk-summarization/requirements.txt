@@ -1,0 +1,15 @@
+# Runtime dependencies for video-chunk-summarization (video_process_summary service)
+
+fastapi>=0.110
+uvicorn>=0.23
+pydantic>=2.0
+requests>=2.31.0
+
+# Frame sampling / image handling
+numpy>=1.24
+pillow>=10.0
+
+decord
+
+# Shared MinIO client wrapper dependency
+minio>=7.2.0

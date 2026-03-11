@@ -24,6 +24,8 @@ Example:
     "address": ":9000",
     "console_address": ":9001",
     "server": "127.0.0.1:9000",
+    "minio_exe": "C:\\Users\\Intel\\Downloads\\minio.exe",
+    "data_dir": "C:\\Users\\Intel\\Downloads\\minio-data",
     "root_user": "minioadmin",
     "root_password": "minioadmin",
     "bucket": "content-search",
@@ -36,6 +38,8 @@ Fields:
 - `minio.address`: bind address for the MinIO S3 API (required by `start_minio_server.ps1`)
 - `minio.console_address`: bind address for the MinIO Console UI (required by `start_minio_server.ps1`)
 - `minio.server`: `host:port` (for example `127.0.0.1:9000`)
+- `minio.minio_exe`: MinIO executable path on Windows (for example `C:\Users\Intel\Downloads\minio.exe`)
+- `minio.data_dir`: MinIO data directory (for example `C:\Users\Intel\Downloads\minio-data`)
 - `minio.root_user` / `minio.root_password`: credentials
 - `minio.bucket`: default bucket name
 - `minio.secure`: whether to use HTTPS (default `false`)
@@ -51,11 +55,18 @@ Recommended (PowerShell):
 
 ```powershell
 cd <this-folder>
-.\start_minio_server.ps1 -MinioExe "C:\path\to\minio.exe" -DataDir "C:\minio-data"
+.\start_minio_server.ps1
 ```
 
 Optional parameters:
 - `-ConfigPath`: default `config.json`
+- `-MinioExe`: override `minio.minio_exe`
+- `-DataDir`: override `minio.data_dir`
+
+Precedence:
+1. CLI args (`-MinioExe`, `-DataDir`)
+2. `config.json` (`minio.minio_exe`, `minio.data_dir`)
+3. Built-in fallback (`minio.exe` next to script for exe; `C:\Users\Intel\Downloads\minio-data` for data dir)
 
 The script reads `root_user/root_password` from `config.json` and sets:
 - `MINIO_ROOT_USER`
