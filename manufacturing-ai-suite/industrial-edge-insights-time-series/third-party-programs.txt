@@ -18,7 +18,7 @@ Docker images pulled from docker hub:
 ====================================
 
 License-Identifier: MIT
-- telegraf:1.37.3
+- telegraf:1.38.0
 - influxdb:1.12.2
 ----------------------------------------------------------------------
 
