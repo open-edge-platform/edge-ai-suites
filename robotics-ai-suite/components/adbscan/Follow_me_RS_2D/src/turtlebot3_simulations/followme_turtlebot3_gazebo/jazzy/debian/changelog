@@ -1,3 +1,10 @@
+ros-jazzy-followme-turtlebot3-gazebo (2.3-3) UNRELEASED; urgency=low
+
+  * Update launch variants for lidar/realsense and gesture/audio demo combinations.
+  * Refresh simulation assets and demo scripts used by OpenVINO 2024 validation.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 10 Mar 2026 00:00:00 +0000
+
 ros-jazzy-followme-turtlebot3-gazebo (2.3-2) UNRELEASED; urgency=low
 
   * Enable Jazzy support with Gazebo Harmonic on Ubuntu 24.04
