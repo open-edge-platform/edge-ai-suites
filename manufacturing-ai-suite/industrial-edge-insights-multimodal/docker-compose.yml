@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.35.4
+    image: telegraf:1.38.0
     restart: unless-stopped
     depends_on:
       - ia-influxdb
