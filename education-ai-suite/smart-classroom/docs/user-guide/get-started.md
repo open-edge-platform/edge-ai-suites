@@ -212,7 +212,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Crash during application bring-up on Intel® Core™ Ultra Series 3 processors without any error:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting use_ov_genai: False in config.yaml.
+ - **Crash during application bring-up on Intel® Core™ Ultra Series 3 processors without any error:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 
