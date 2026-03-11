@@ -77,6 +77,7 @@ for the framework:
 
 ```bash
 pip3 install --upgrade pip
+pip3 install pyyaml
 pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements_audio_jazzy.txt
 ```
 
@@ -86,6 +87,7 @@ pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirem
 
 ```bash
 pip3 install --upgrade pip
+pip3 install pyyaml
 pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements_audio_humble.txt
 ```
 
@@ -98,133 +100,47 @@ Please make sure to source the `/opt/ros/jazzy/setup.bash` file at first before
 executing any command in a new terminal. You can get more details in
 [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
 
-Run the following commands one by one in five separate terminals:
+Run the following script to launch Gazebo simulator and ROS 2 rviz2.
 
-1. Terminal 1: This command will open ROS 2 rviz2.
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+```bash
+sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_lidar_audio.sh
+/opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_lidar_audio.sh
+```
 
-   ```bash
-   rviz2 -d /opt/ros/jazzy/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
-   ```
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+```bash
+sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar_audio.sh
+/opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar_audio.sh
+```
 
-   ```bash
-   rviz2 -d /opt/ros/humble/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
-   ```
+<!--hide_directive:::
+::::hide_directive-->
 
-   <!--hide_directive:::
-   ::::hide_directive-->
+You will see two panels side-by-side: Gazebo GUI on the left and ROS 2 rviz display on the right.
 
-   You will see the ROS 2 rviz2 with a panel for `Image` visualization. It will
-   display the published RGB image in the simulated RGB camera.
+![follow_me_demo_gazebo_rviz](../../../../../images/follow_me_demo_gazebo_rviz.png)
 
-   ![rviz_display_follow_me](../../../../../images/rviz_display_follow_me.png)
+- The green square robot is a guide robot (namely, the target), which will
+  follow a pre-defined trajectory.
+- The gray circular robot is a
+  [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
+  robot, which will follow the guide robot.
 
-2. Terminal 2: This command will launch `ros-jazzy-text-to-speech-pkg`.
+  TurtleBot3 robot is equipped with a 2D Lidar and an RealSense™ Depth Camera.
+  In this demo, the 2D Lidar is selected as the point cloud input.
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+In this demo, we used a pre-defined trajectory for the guide robot and published
+gesture image as well as pre-recorded audio at different points of time to show
+`start`, `follow` and `stop` activities of the TurtleBot3 robot.
 
-   ```bash
-   ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/jazzy/share/text_to_speech_pkg/config/text_to_speech_config.yaml
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/humble/share/text_to_speech_pkg/config/text_to_speech_config.yaml
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-   You will see the ROS 2 node starting up and loading the parameter files for the underlying neural networks. This operation may take ~5-10 seconds depending on the system speed.
-
-   ![text_to_speech_launch_follow_me](../../../../../images/text_to_speech_launch_follow_me.png)
-
-3. Terminal 3: This command will launch `Gazebo`.
-
-   ```bash
-   export TURTLEBOT3_MODEL=waffle
-   ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_1.launch.py
-   ```
-
-   You will see the `Gazebo` GUI with two simulated robots in an empty `Gazebo` world.
-   We suggest to rescale and place the `Gazebo` and rviz panels side by side
-   (like the following picture) for better visualization of the demo.
-
-   ![follow_me_demo_gazebo_rviz](../../../../../images/follow_me_demo_gazebo_rviz.png)
-
-   - The green square robot is a guide robot (namely, the target), which will
-     follow a pre-defined trajectory.
-   - The gray circular robot is a
-     [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
-     robot, which will follow the guide robot.
-
-     TurtleBot3 robot is equipped with a 2D Lidar and an Intel® RealSense™ Depth Camera.
-     In this demo, the 2D Lidar is selected as the point cloud input.
-
-   In this demo, we used a pre-defined trajectory for the guide robot and published
-   gesture image as well as pre-recorded audio at different points of time to show
-   `start`, `follow` and `stop` activities of the TurtleBot3 robot.
-
-4. Terminal 4: This command will launch the `adbscan` node, which will publish
-   `twist` msg to the `tb3/cmd_vel` topic:
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-   You will view the following information in the terminal.
-
-   ![adbscan_screenshot_lidar](../../../../../images/adbscan_screenshot_lidar.png)
-
-5. Terminal 5: This command will launch the pre-defined trajectory for the guide
-   robot as well as the simulated gesture images and pre-recorded audio publisher nodes:
-
-   ```bash
-   ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py
-   ```
-
-  > **Note**:
-  >
-  > If you are running the demo in 13th Generation Intel® Core™ processors with
-  > Intel® Iris® Xe Integrated Graphics (known as Raptor Lake-P), please replace
-  > the commands in  terminal with the following:
-  >
-  > ```bash
-  > ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py soc:='rpl'
-  > ```
-
-  This command will display the following information:
-
-  ![publisher_screenshot](../../../../../images/publisher_screenshot.png)
-
-As soon as the last command is executed, you will view that the guide robot
+After the command is executed, you will view that the guide robot
 starts moving towards TurtleBot3 robot.
 To start the TurtleBot3 robot, condition 1 and either one of the conditions 2 or 3
 from the following list needs to be true:
@@ -262,124 +178,46 @@ the `start` and `stop` activity of the TurtleBot3 robot.
 > be ignored if it does not match `thumbs up` or `thumbs down`.
 > Thereby, any undesired manipulation of the robot is blocked.
 
-## Run Demo with Intel® RealSense™ Camera
+## Run Demo with RealSense™ Camera
 
 Please make sure to source the `/opt/ros/jazzy/setup.bash` file (or `/opt/ros/humble/setup.bash`)
 at first before executing any command in a new terminal.
 You can get more details in [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
 
-Execute the following commands one by one in three separate terminals:
+Run the following script to launch Gazebo simulator and ROS 2 rviz2.
 
-1. Terminal 1: This command will open ROS 2 rviz2.
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+```bash
+sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
+/opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
+```
 
-   ```bash
-   rviz2 -d /opt/ros/jazzy/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
-   ```
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+```bash
+sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
+/opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
+```
 
-   ```bash
-   rviz2 -d /opt/ros/humble/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz
-   ```
+<!--hide_directive:::
+::::hide_directive-->
 
-   <!--hide_directive:::
-   ::::hide_directive-->
+You will see two panels side-by-side: Gazebo GUI on the left and ROS 2 rviz display on the right.
 
-   You will see ROS 2 rviz2 GUI with a panel for `Image` visualization. It will
-   display the published RGB image in the simulated RGB camera.
+![follow_me_demo_gazebo_rviz](../../../../../images/follow_me_demo_gazebo_rviz.png)
 
-   ![rviz_display_follow_me](../../../../../images/rviz_display_follow_me.png)
-
-2. Terminal 2: This command will launch `ros-jazzy-text-to-speech-pkg`.
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/jazzy/share/text_to_speech_pkg/config/text_to_speech_config.yaml
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run text_to_speech_pkg text_to_speech_node.py --ros-args --params-file /opt/ros/humble/share/text_to_speech_pkg/config/text_to_speech_config.yaml
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-   You will see the ROS 2 node starting up and loading the parameter files for
-   the underlying neural networks. This operation may take ~5-10 seconds depending on the system speed.
-
-   ![text_to_speech_launch_follow_me](../../../../../images/text_to_speech_launch_follow_me.png)
-
-3. Terminal 3: This command will launch `Gazebo`.
-
-   ```bash
-   export TURTLEBOT3_MODEL=waffle
-   ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_1.launch.py
-   ```
-
-4. Terminal 4: This command will launch the `adbscan` node, which will publish
-   `twist` msg to the `tb3/cmd_vel` topic:
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture_audio --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel -p use_sim_time:=true
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-   In this instance, we execute `adbscan` with the parameter file for Intel® RealSense™ camera input: `adbscan_sub_RS.yaml`.
-
-   You will view the following information in the terminal.
-
-   ![adbscan_screenshot](../../../../../images/adbscan_screenshot.png)
-
-5. Terminal 5: This command will launch the pre-defined trajectory for the guide
-   robot as well as the simulated gesture images and pre-recorded audio publisher nodes:
-
-   ```bash
-   ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py
-   ```
-
-> **Note**:
-> If you are running the demo in 13th Generation Intel® Core™ processors with
-> Intel® Iris® Xe Integrated Graphics (known as Raptor Lake-P), please replace
-> the commands in terminal 5 with the following:
->
-> ```bash
-> ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_audio_2.launch.py soc:='rpl'
-> ```
-
-After running all of the above commands, you will observe similar behavior of
+After the command is executed, you will observe similar behavior of
 the TurtleBot3 robot and guide robot in the `Gazebo` GUI as in
 [Run Demo with 2D Lidar](#run-demo-with-2d-lidar).
 
 There are reconfigurable parameters in the
 `/opt/ros/jazzy/share/adbscan_ros2_follow_me/config/` directory for both LIDAR
-(`adbscan_sub_2D.yaml`) and Intel® RealSense™ camera (`adbscan_sub_RS.yaml`).
+(`adbscan_sub_2D.yaml`) and RealSense™ camera (`adbscan_sub_RS.yaml`).
 
 The user can modify the parameters depending on the respective robot, sensor
 configuration and environments (if required) before running the tutorial.
@@ -387,7 +225,7 @@ Find a brief description of the parameters in the following list:
 
 - ``Lidar_type``
 
-  Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs,
+  Type of the point cloud sensor. For RealSense™ camera and LIDAR inputs,
   the default value is set to ``RS`` and ``2D``, respectively.
 
 - ``Lidar_topic``
