@@ -23,7 +23,7 @@ Refer to [this paper](https://arxiv.org/abs/2102.03228) for more explanation of 
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 We support Ubuntu 22.04 with [ROS 2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html) and Ubuntu 24.04 with [ROS 2 Jazzy](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html).
 
@@ -51,6 +51,12 @@ Collaborative SLAM requires Intel oneAPI 2025.x with SYCL 8 (`libsycl.so.8`) for
 If you have a locally built ORB extractor with SYCL 8 support, you can use it during the build:
 
 ```bash
+export LOCAL_ORB_PATH=/path/to/orb-extractor
+ROS_DISTRO=jazzy make safe-package
+```
+
+This ensures your local SYCL 8 ORB extractor packages are used instead of repository versions.
+
 #### Safe Build (Recommended for <32GB RAM)
 
 For systems with limited memory (16-24GB), use the safe build option that automatically calculates optimal parallel job count:

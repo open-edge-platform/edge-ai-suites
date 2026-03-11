@@ -45,10 +45,10 @@ Optional: Pull the Helm chart and replace the existing `helm-chart` folder with 
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.4.0-rc1
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.4.0-rc2
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.4.0-rc1.tgz
+tar -xvf smart-parking-1.4.0-rc2.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart

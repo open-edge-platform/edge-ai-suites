@@ -38,7 +38,12 @@ package:
 		-v $(ROOT_DIR):/src \
 		-e DEBIAN_FRONTEND=noninteractive \
 		-e MK_BUILD_DEPS_AUTO=yes \
-		-e no_proxy=$(no_proxy) \
+		$(if $(http_proxy),-e http_proxy=$(http_proxy)) \
+		$(if $(https_proxy),-e https_proxy=$(https_proxy)) \
+		$(if $(HTTP_PROXY),-e HTTP_PROXY=$(HTTP_PROXY)) \
+		$(if $(HTTPS_PROXY),-e HTTPS_PROXY=$(HTTPS_PROXY)) \
+		$(if $(no_proxy),-e no_proxy=$(no_proxy)) \
+		$(if $(NO_PROXY),-e NO_PROXY=$(NO_PROXY)) \
 		amd64/ros:$(ROS_DISTRO)-ros-base \
 		bash -c "cd /src/ && \
 			curl https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg -o /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null && \

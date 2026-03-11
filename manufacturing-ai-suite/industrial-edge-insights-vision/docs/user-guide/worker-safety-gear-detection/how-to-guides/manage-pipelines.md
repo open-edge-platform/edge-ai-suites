@@ -33,8 +33,8 @@ The following is an example of the Worker Safety Gear Detection pipeline, which 
 
 Customize the pipeline according to your needs. For details, see the following DL Streamer Pipeline Server documentation:
 
-- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-launch-configurable-pipelines.html)
-- [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-autostart-pipelines.html)
+- [Launch configurable pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/launch-configurable-pipelines.html)
+- [Autostart pipelines](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/how-to-guides/autostart-pipelines.html)
 
 ## Start the Pipeline
 

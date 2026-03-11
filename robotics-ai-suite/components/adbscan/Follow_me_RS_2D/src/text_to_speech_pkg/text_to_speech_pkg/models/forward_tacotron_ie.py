@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
@@ -14,20 +15,27 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
+"""Forward Tacotron text-to-speech model with OpenVINO inference."""
+
 import os.path as osp
 
 import numpy as np
 
-from utils.text_preprocessing import text_to_sequence, _symbol_to_id
 from utils.embeddings_processing import PCA
+from utils.text_preprocessing import text_to_sequence, _symbol_to_id
 
 
-class ForwardTacotronIE:
-    def __init__(self, model_duration, model_forward, ie, device='CPU', verbose=False):
+class ForwardTacotronIE:  # pylint: disable=too-many-instance-attributes
+    """OpenVINO-based Forward Tacotron TTS inference wrapper."""
+
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def __init__(self, model_duration, model_forward, core,
+                 device='CPU', verbose=False):
+        """Load duration-predictor and forward models and compile them."""
         self.verbose = verbose
         self.device = device
 
-        self.ie = ie
+        self.core = core
 
         self.duration_predictor_net = self.load_network(model_duration)
         self.duration_predictor_exec = self.create_exec_network(self.duration_predictor_net)
@@ -36,16 +44,19 @@ class ForwardTacotronIE:
         self.forward_exec = self.create_exec_network(self.forward_net)
 
         # fixed length of the sequence of symbols
-        self.duration_len = self.duration_predictor_net.input_info['input_seq'].input_data.shape[1]
+        self.duration_len = self.duration_predictor_net.inputs[0].shape[1]
         # fixed length of the input embeddings for forward
-        self.forward_len = self.forward_net.input_info['data'].input_data.shape[1]
+        data_inp = next(
+            (inp for inp in self.forward_net.inputs if inp.any_name == 'data'),
+            self.forward_net.inputs[0],
+        )
+        self.forward_len = data_inp.shape[1]
         if self.verbose:
             print(
-                'Forward limitations : {0} symbols and {1} embeddings'.format(
-                    self.duration_len, self.forward_len
-                )
+                f'Forward limitations : {self.duration_len} symbols'
+                f' and {self.forward_len} embeddings'
             )
-        self.is_attention = 'pos_mask' in self.forward_net.input_info
+        self.is_attention = any(inp.any_name == 'pos_mask' for inp in self.forward_net.inputs)
         if self.is_attention:
             self.init_pos_mask()
             print('Load ForwardTacotron with attention')
@@ -63,6 +74,7 @@ class ForwardTacotronIE:
             self.male_embeddings = None
 
     def init_pos_mask(self, mask_sz=6000, window_size=4):
+        """Build the positional attention mask."""
         mask_arr = np.zeros((1, 1, mask_sz, mask_sz), dtype=np.float32)
         width = 2 * window_size + 1
         for i in range(mask_sz - width):
@@ -72,14 +84,16 @@ class ForwardTacotronIE:
 
     @staticmethod
     def sequence_mask(length, max_length=None):
+        """Create a boolean mask from sequence lengths."""
         if max_length is None:
             max_length = np.max(length)
         x = np.arange(max_length, dtype=length.dtype)
-        x = np.expand_dims(x, axis=(0))
-        length = np.expand_dims(length, axis=(1))
+        x = np.expand_dims(x, axis=0)
+        length = np.expand_dims(length, axis=1)
         return x < length
 
     def seq_to_indexes(self, text):
+        """Convert text to a sequence of symbol indices."""
         res = text_to_sequence(text)
         if self.verbose:
             print(res)
@@ -87,6 +101,7 @@ class ForwardTacotronIE:
 
     @staticmethod
     def build_index(duration, x):
+        """Build a gather index from predicted durations."""
         duration[np.where(duration < 0)] = 0
         tot_duration = np.cumsum(duration, 1)
         max_duration = int(tot_duration.max().item())
@@ -103,6 +118,7 @@ class ForwardTacotronIE:
 
     @staticmethod
     def gather(a, dim, index):
+        """Gather elements from *a* along *dim* using *index*."""
         expanded_index = [
             index
             if dim == i
@@ -112,31 +128,34 @@ class ForwardTacotronIE:
         return a[tuple(expanded_index)]
 
     def load_network(self, model_xml):
+        """Read an OpenVINO IR model from disk."""
         model_bin_name = '.'.join(osp.basename(model_xml).split('.')[:-1]) + '.bin'
         model_bin = osp.join(osp.dirname(model_xml), model_bin_name)
-        print('Loading network files:\n\t{}\n\t{}'.format(model_xml, model_bin))
-        net = self.ie.read_network(model=model_xml, weights=model_bin)
+        print(f'Loading network files:\n\t{model_xml}\n\t{model_bin}')
+        net = self.core.read_model(model=model_xml)
         return net
 
     def create_exec_network(self, net):
-        exec_net = self.ie.load_network(network=net, device_name=self.device)
+        """Compile a model for the target device."""
+        exec_net = self.core.compile_model(net, self.device)
         return exec_net
 
     def infer_duration(self, sequence, speaker_embedding=None, alpha=1.0, non_empty_symbols=None):
+        """Predict phoneme durations and return aligned embeddings."""
         if self.is_attention:
             input_mask = self.sequence_mask(np.array([[non_empty_symbols]]), sequence.shape[1])
             pos_mask = self.pos_mask[:, :, : sequence.shape[1], : sequence.shape[1]]
             inputs = {'input_seq': sequence, 'input_mask': input_mask, 'pos_mask': pos_mask}
             if speaker_embedding is not None:
                 inputs['speaker_embedding'] = speaker_embedding
-            out = self.duration_predictor_exec.infer(inputs)
+            out = self.duration_predictor_exec(inputs)
         else:
-            out = self.duration_predictor_exec.infer(inputs={'input_seq': sequence})
-        duration = out['duration'] * alpha
+            out = self.duration_predictor_exec({'input_seq': sequence})
+        duration = out[self.duration_predictor_exec.outputs[0]] * alpha
 
         duration = (duration + 0.5).astype('int').flatten()
         duration = np.expand_dims(duration, axis=0)
-        preprocessed_embeddings = out['embeddings']
+        preprocessed_embeddings = out[self.duration_predictor_exec.outputs[1]]
 
         if non_empty_symbols is not None:
             duration = duration[:, :non_empty_symbols]
@@ -144,33 +163,38 @@ class ForwardTacotronIE:
         indexes = self.build_index(duration, preprocessed_embeddings)
         if self.verbose:
             print(
-                'Index: {0}, duration: {1}, embeddings: {2}, non_empty_symbols: {3}'.format(
-                    indexes.shape, duration.shape, preprocessed_embeddings.shape, non_empty_symbols
-                )
+                f'Index: {indexes.shape}, duration: {duration.shape},'
+                f' embeddings: {preprocessed_embeddings.shape},'
+                f' non_empty_symbols: {non_empty_symbols}'
             )
 
         return self.gather(preprocessed_embeddings, 1, indexes)
 
     def infer_mel(self, aligned_emb, non_empty_symbols, speaker_embedding=None):
+        """Predict mel-spectrogram from aligned embeddings."""
         if self.is_attention:
             data_mask = self.sequence_mask(np.array([[non_empty_symbols]]), aligned_emb.shape[1])
             pos_mask = self.pos_mask[:, :, : aligned_emb.shape[1], : aligned_emb.shape[1]]
             inputs = {'data': aligned_emb, 'data_mask': data_mask, 'pos_mask': pos_mask}
             if speaker_embedding is not None:
                 inputs['speaker_embedding'] = speaker_embedding
-            out = self.forward_exec.infer(inputs)
+            out = self.forward_exec(inputs)
         else:
-            out = self.forward_exec.infer(inputs={'data': aligned_emb})
-        return out['mel'][:, :non_empty_symbols]
+            out = self.forward_exec({'data': aligned_emb})
+        return out[self.forward_exec.outputs[0]][:, :non_empty_symbols]
 
     def find_optimal_delimiters_position(self, sequence, delimiters, idx, window=20):
+        """Find the best delimiter position near *idx* for splitting."""
         res = {d: -1 for d in delimiters}
         for i in range(max(0, idx - window), idx):
             if sequence[i] in delimiters:
                 res[sequence[i]] = i + 1
         return res
 
-    def forward_duration_prediction_by_delimiters(self, text, speaker_embedding, alpha):
+    # pylint: disable=too-many-locals
+    def forward_duration_prediction_by_delimiters(
+            self, text, speaker_embedding, alpha):
+        """Predict durations by splitting text at punctuation delimiters."""
         sequence = self.seq_to_indexes(text)
         seq_len = len(sequence)
         outputs = []
@@ -206,10 +230,9 @@ class ForwardTacotronIE:
                         edge = positions[d]
                         break
                 if edge < 0:
-                    raise Exception(
-                        'Bad delimiter position {0} for sequence with length {1}'.format(
-                            edge, seq_len
-                        )
+                    raise ValueError(
+                        f'Bad delimiter position {edge}'
+                        f' for sequence with length {seq_len}'
                     )
 
                 sub_sequence = sequence[start_idx:edge]
@@ -230,6 +253,7 @@ class ForwardTacotronIE:
         return aligned_emb
 
     def forward(self, text, alpha=1.0, speaker_id=19, speaker_emb=None):
+        """Run full TTS inference and return a mel-spectrogram."""
         speaker_embedding = None
         if self.is_multi_speaker:
             if speaker_emb is not None:
@@ -255,27 +279,32 @@ class ForwardTacotronIE:
                     constant_values=0,
                 )
             if self.verbose:
-                print('SAEmb shape: {0}'.format(sub_aligned_emb.shape))
+                print(f'SAEmb shape: {sub_aligned_emb.shape}')
             mel = self.infer_mel(sub_aligned_emb, end_idx - start_idx, speaker_embedding)
             mels.append(mel)
             start_idx += self.forward_len
 
         res = np.concatenate(mels, axis=1)
         if self.verbose:
-            print('MEL shape :{0}'.format(res.shape))
+            print(f'MEL shape :{res.shape}')
 
         return res
 
     def get_speaker_embeddings(self):
+        """Return speaker embeddings if the model is multi-speaker."""
         if self.has_speaker_embeddings():
             return self.speaker_embeddings
-        else:
-            return None
+        return None
 
     def has_speaker_embeddings(self):
-        return 'speaker_embedding' in self.duration_predictor_net.input_info
+        """Check whether the duration model accepts speaker embeddings."""
+        return any(
+            inp.any_name == 'speaker_embedding'
+            for inp in self.duration_predictor_net.inputs
+        )
 
     def get_pca_speaker_embedding(self, gender, alpha):
+        """Generate a PCA-interpolated speaker embedding for *gender*."""
         if not self.has_speaker_embeddings():
             return None
 
@@ -289,6 +318,7 @@ class ForwardTacotronIE:
         return emb
 
     def init_speaker_information(self):
+        """Initialise speaker embedding arrays for male and female voices."""
         self.male_idx = [
             2,
             3,
@@ -311,7 +341,10 @@ class ForwardTacotronIE:
             36,
             38,
         ]
-        self.female_idx = [0, 1, 4, 5, 6, 8, 9, 10, 13, 14, 17, 18, 22, 23, 24, 28, 30, 31, 37, 39]
+        self.female_idx = [
+            0, 1, 4, 5, 6, 8, 9, 10, 13, 14,
+            17, 18, 22, 23, 24, 28, 30, 31, 37, 39,
+        ]
         self.speaker_embeddings = np.array(
             [
                 [-0.4327550530433655, -0.5420686602592468],
@@ -358,14 +391,14 @@ class ForwardTacotronIE:
         )
         mask = np.array(
             [
-                True if i in self.male_idx else False
+                i in self.male_idx
                 for i in range(self.speaker_embeddings.shape[0])
             ]
         )
         self.male_embeddings = self.speaker_embeddings[mask, :]
         mask = np.array(
             [
-                True if i in self.female_idx else False
+                i in self.female_idx
                 for i in range(self.speaker_embeddings.shape[0])
             ]
         )

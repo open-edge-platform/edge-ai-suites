@@ -17,13 +17,13 @@ For RT kernel:
 
 .. code-block:: bash
 
-   $ sudo apt install linux-intel-rt-experimental
+   sudo apt install linux-intel-rt-experimental
 
 For generic kernel:
 
 .. code-block:: bash
 
-   $ sudo apt install linux-intel-experimental
+   sudo apt install linux-intel-experimental
 
 Configure and Build Linux Kernel
 -----------------------------------
@@ -39,7 +39,7 @@ Install additional packages before building a kernel. To do so, run this command
 
 .. code-block:: bash
 
-   $ sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison debhelper
+   sudo apt-get install git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison debhelper
 
 The command we used above installs the following packages:
 
@@ -53,15 +53,15 @@ For RT kernel:
 
    .. code-block:: bash
 
-     $ sudo apt-get source linux-intel-rt-experimental
-     $ cd linux-intel-rt-experimental*
+     sudo apt-get source linux-intel-rt-experimental
+     cd linux-intel-rt-experimental*
 
 For generic kernel:
 
    .. code-block:: bash
 
-     $ sudo apt-get source linux-intel-experimental
-     $ cd linux-intel-experimental*
+     sudo apt-get source linux-intel-experimental
+     cd linux-intel-experimental*
 
 **Step 3: Configure RT Kernel**
 
@@ -114,13 +114,13 @@ For generic kernel:
 
      .. code-block:: bash
 
-        $ make olddefconfig
+        make olddefconfig
 
   #. if you need to modify configuration options by menu, run the ``menuconfig`` command:
 
      .. code-block:: bash
 
-        $ make menuconfig
+        make menuconfig
 
   Use the arrows to make a selection or choose **Help** to learn more about the options. When you finish making the changes, select **Save**, and then exit the menu.
 
@@ -132,8 +132,8 @@ For generic kernel:
 
       .. code-block:: bash
 
-         $ cp build-full/ltsintelrelease .
-         $ make ARCH=x86 bindeb-pkg
+         cp build-full/ltsintelrelease .
+         make ARCH=x86 bindeb-pkg
 
 **Step 5: Install the kernel**
 
@@ -141,8 +141,8 @@ For generic kernel:
 
       .. code-block:: bash
 
-         $ sudo dpkg -i *.deb
-         $ sudo update-grub
+         sudo dpkg -i *.deb
+         sudo update-grub
 
    **Note:** When updating or installing packages with `dpkg` on the same kernel, you might encounter issues if the kernel is actively in use. This can happen because certain files or resources are locked or in use by the running kernel, preventing the installation process from completing successfully.
 
@@ -159,7 +159,7 @@ For generic kernel:
 
       .. code-block:: bash
 
-         $ uname -mrs
+         uname -mrs
 
 
 Packages

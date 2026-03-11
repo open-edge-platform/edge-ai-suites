@@ -35,7 +35,8 @@ def generate_launch_description():
     map_file = LaunchConfiguration(
         'map', default=os.path.join(package_path, 'maps', 'default.yaml')
     )
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    # Removed TF remappings to allow unified world TF tree
+    # remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
 
     map_server = Node(
         package='nav2_map_server',
@@ -45,7 +46,7 @@ def generate_launch_description():
         parameters=[
             {'yaml_filename': map_file},
         ],
-        remappings=remappings,
+        # remappings=remappings,  # Removed for world TF system
     )
 
     map_server_lifecyle = Node(

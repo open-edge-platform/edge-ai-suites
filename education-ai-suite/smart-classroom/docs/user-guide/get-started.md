@@ -12,9 +12,9 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 
 ### B. Install DL Streamer
 
-Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases) Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
-For details, refer to [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/get_started/install/install_guide_windows.html).
+For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
 **Run your shell with admin privileges before starting the application**
 
@@ -49,7 +49,7 @@ pip install --upgrade -r requirements.txt
 
 By default, the project uses Whisper for transcription and OpenVINO-based Qwen models for summarization.You can modify these settings in the configuration file (`smart-classroom/config.yaml`):
 
-```bash
+```yaml
 asr:
   provider: openai            # Supported: openvino, openai, funasr
   name: whisper-small          # Options: whisper-tiny, whisper-small, paraformer-zh etc.
@@ -57,7 +57,7 @@ asr:
   temperature: 0.0
 
 summarizer:
-  provider: openvino          
+  provider: openvino
   name: Qwen/Qwen2-7B-Instruct # Examples: Qwen/Qwen1.5-7B-Chat, Qwen/Qwen2-7B-Instruct, Qwen/Qwen2.5-7B-Instruct
   device: GPU                 # Options: GPU or CPU
   weight_format: int8         # Supported: fp16, fp32, int4, int8
@@ -68,10 +68,16 @@ summarizer:
 
 For Chinese audio transcription, switch to funASR with Paraformer in your config (`smart-classroom/config.yaml`):
 
-```bash
+```yaml
 asr:
   provider: funasr
   name: paraformer-zh
+```
+Please also config the summarizer to output Chinese
+
+```yaml
+summarizer:
+  language: zh
 ```
 
 **Important: After updating the configuration, reload the application for changes to take effect.**
@@ -81,7 +87,7 @@ asr:
 Activate the environment before running the application:
 
 ```bash
-smartclassroom\Scripts\activate  
+smartclassroom\Scripts\activate
 ```
 
 Run the backend:
@@ -108,7 +114,7 @@ Bring Up the Frontend:
 > The backend terminal stays busy serving requests.
 
 ```bash
-cd C:\path\to\edge-ai-suites\education-ai-suite\smart-classroom\ui
+cd <path-to>\edge-ai-suites\education-ai-suite\smart-classroom\ui
 npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
@@ -119,12 +125,12 @@ After starting the frontend you can open the Smart Classroom UI in a browser:
 
 Local machine:
 
-- <http://localhost:5173>
-- <http://127.0.0.1:5173>
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
 
 From another device on the same network (replace <HOST_IP> with your computer’s IP):
 
-- http://<HOST_IP>:5173
+- `http://<HOST_IP>:5173`
 
 Find your IP (Windows PowerShell):
 
@@ -147,11 +153,9 @@ Pyannote diarization models require gated access.
 
 Request access here:
 
-Pyannote Speaker Diarization v3.1\
-<https://huggingface.co/pyannote/speaker-diarization-3.1>
+[Pyannote Speaker Diarization v3.1](https://huggingface.co/pyannote/speaker-diarization-3.1)
 
-Pyannote segmentation v3.0\
-<https://huggingface.co/pyannote/segmentation-3.0>
+[Pyannote segmentation v3.0](https://huggingface.co/pyannote/segmentation-3.0)
 
 Click "Request Access" on the model page and wait for approval.
 
@@ -159,7 +163,7 @@ Click "Request Access" on the model page and wait for approval.
 
 After approval:
 
-Go to <https://huggingface.co/settings/tokens>
+Go to the [Hugging Face Access Token](https://huggingface.co/settings/tokens) page.
 
 Create a Read access token
 

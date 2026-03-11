@@ -14,26 +14,37 @@
 </div>
 hide_directive-->
 
-Smart Intersection Sample Application uses edge AI to improve traffic flow. It combines feeds from multiple cameras to track vehicles across angles, analyze speed and direction, and understand interactions in real space. The system can run on existing cameras and deliver real-time, coordinated insights for smarter traffic monitoring.
+The Smart Intersection sample application uses edge AI to improve the traffic flow.
+It combines feeds from multiple cameras to track vehicles from different angles, analyze their
+speed and direction, and understand interactions in real space. The system can be implemented
+with existing cameras and deliver real-time, coordinated insights for smarter traffic monitoring.
 
 **Example Use Cases**
 
-- **Pedestrian Safety**: Enhance safety for people crossing the street. The system tracks pedestrians at crosswalks and generates alerts when people walk outside safe crossing areas.
-- **Traffic Flow Monitoring**: Count vehicles and measure dwell time in each lane, detecting when vehicles stay too long in lanes. This identifies stalled cars, accidents, and traffic jams.
+- **Pedestrian Safety**: enhance safety for people crossing the street. The system tracks
+  pedestrians at crosswalks and generates alerts when people walk outside safe crossing areas.
+- **Traffic Flow Monitoring**: count vehicles and measure dwell time in each lane, detecting
+  when vehicles stay in their lanes for too long. This identifies stalled cars, accidents,
+  and traffic jams.
 
 **Key Benefits**
 
-The key benefits are as follows:
+- **Multi-camera multi-object tracking**: enables tracking of objects across multiple camera
+  views.
+- **Scene-based analytics**: regions of interest that span multiple views can be easily
+  defined on the map rather than independently on each camera view. This greatly simplifies
+  business logic, enables more flexibility in defining regions, and enables additional sensors
+  such as lidar and radar to be used to track vehicles and people.
+- **Improved Urban Management**: object tracking and analytics are available near-real-time on
+  MQTT broker to enable actionable insights for traffic monitoring and safety applications.
+- **Reduced TCO**: works with the existing cameras, and makes scaling with additional sensors
+  and cameras easy. This simplifies business logic development, and future-proofs the solution.
 
-- **Multi-camera multi-object tracking**: Enables tracking of objects across multiple camera views.
-- **Scene based analytics**: Regions of interest that span multiple views can be easily defined on the map rather than independently on each camera view. This greatly simplifies business logic, enables more flexibility in defining regions, and allows, in addition to cameras, various types of sensors such as lidar and radar to be used to track vehicles and people.
-- **Improved Urban Management**: Object tracking and analytics are available near-real-time on the MQTT broker to enable actionable insights for traffic monitoring and safety applications.
-- **Reduced TCO**: Works with existing cameras, simplifies business logic development, and future-proofs the solution by enabling additional sensors and cameras as needed without changing the business logic.
 
-This guide is designed to help developers understand the architecture, setup, and customization of the sample application.
 
 ## Learn More
 
+- [Security Enablement](https://docs.openedgeplatform.intel.com/2026.0/OEP-articles/application-security.html)
 - [Intel® SceneScape](https://docs.openedgeplatform.intel.com/dev/scenescape/index.html): Intel Scene-based AI software framework.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
@@ -45,7 +56,6 @@ get-started
 how-it-works
 how-to-use-gpu-for-inference
 how-to-use-npu-for-inference
-application-security-enablement
 troubleshooting
 release-notes
 

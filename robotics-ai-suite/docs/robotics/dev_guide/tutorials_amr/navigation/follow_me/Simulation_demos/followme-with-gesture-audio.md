@@ -52,17 +52,32 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo ros-humble-text-to-speech
 <!--hide_directive:::
 ::::hide_directive-->
 
-### Install Pre-requisite Libraries
+### Activate Python Virtual Environment
 
-Install the pre-requisite modules for running the framework:
+```bash
+sudo apt install pipx
+pipx install virtualenv
+pipx ensurepath
+source ~/.bashrc
+virtualenv venv_followme_audio
+cd venv_followme_audio
+source bin/activate
+```
+
+### Install Python Modules
+
+This application uses
+[Mediapipe Hands Framework](https://mediapipe.readthedocs.io/en/latest/solutions/hands.html)
+for hand gesture recognition. Install the following modules as a prerequisite
+for the framework:
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-pip install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements.txt
+pip3 install --upgrade pip
+pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements_audio_jazzy.txt
 ```
 
 <!--hide_directive:::
@@ -70,15 +85,12 @@ pip install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requireme
 <!--hide_directive:sync: humblehide_directive-->
 
 ```bash
-source /opt/ros/humble/setup.bash
-pip install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements.txt
+pip3 install --upgrade pip
+pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements_audio_humble.txt
 ```
 
 <!--hide_directive:::
 ::::hide_directive-->
-
-If you are under a proxy network, please make sure to use
-`--proxy <http-proxy-url>` with the `pip install` command.
 
 ## Run Demo with 2D Lidar
 
