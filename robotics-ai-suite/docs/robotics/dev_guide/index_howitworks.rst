@@ -1,4 +1,4 @@
-.. |how_it_works| image:: ../../images/icons/How_it_Works.png
+.. |how_it_works| image:: ../images/icons/How_it_Works.png
    :width: 70
    :align: bottom
 
