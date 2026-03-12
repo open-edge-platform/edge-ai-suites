@@ -1,136 +1,247 @@
 <!--
-Copyright (C) 2025 Intel Corporation
+Copyright (C) 2026 Intel Corporation
 
 SPDX-License-Identifier: Apache-2.0
 -->
 
-# Intel's Robotics AI Suite : Follow-me with gesture-control
+# Intel's Robotics AI Suite: Follow-Me with Gesture and Audio Control
 
-This release version contains `debian` package building rules. `dpkg-buildpackage` is automatically triggered in the CI/CD pipeline and the created debian packages are pushed to Intel's AMR repo.
+A Gazebo simulation of a TurtleBot3 Waffle autonomously following a guide robot using Intel's
+ADBSCAN (Adaptive DBSCAN) algorithm. Supports two sensor modes — 2D LiDAR and Intel RealSense
+depth camera — with optional hand-gesture control and voice audio control.
+
+## Demo Modes
+
+| Mode | Sensor | Gesture | Audio | Script |
+|------|--------|---------|-------|--------|
+| LiDAR + Gesture | 2D LiDAR | Yes | No | `demo_lidar.sh` |
+| LiDAR + Gesture + Audio | 2D LiDAR | Yes | Yes | `demo_lidar_audio.sh` |
+| RealSense + Gesture | Depth camera | Yes | No | `demo_RS.sh` |
+| RealSense + Gesture + Audio | Depth camera | Yes | Yes | `demo_RS_audio.sh` |
+
+---
 
 ## Prerequisites
 
-Please make sure to include intel's AMR repo to `/etc/apt/sources.list.d/`
+### Supported ROS 2 Distributions
 
-### Install debian packages
+| ROS 2 | Gazebo | Status |
+|-------|--------|--------|
+| Jazzy | Harmonic | Recommended |
+| Humble | Fortress | Supported |
 
-Install `ros-humble-followme-turtlebot3-gazebo` debian package
+### System Packages
 
 ```bash
-sudo apt update
-sudo apt install ros-humble-followme-turtlebot3-gazebo
+sudo apt install python3-colcon-common-extensions python3-pip
+# For ROS 2 Humble only:
+sudo apt install ros-humble-gazebo-* ros-humble-dynamixel-sdk \
+    ros-humble-turtlebot3-msgs ros-humble-turtlebot3 ros-humble-xacro
 ```
 
-### Create Python Virtual Environment
+### Python Virtual Environment
+
+Create a virtual environment **outside** the colcon workspace to avoid build interference:
 
 ```bash
 sudo apt install pipx
 pipx install virtualenv
 pipx ensurepath
 source ~/.bashrc
-virtualenv venv_followme
-source venv_followme/bin/activate
+
+# Create venv (example location):
+virtualenv ~/followme_env
+source ~/followme_env/bin/activate
 ```
 
-### Install Python modules
+### Python Packages
 
-This application uses [Mediapipe Hands Framework](https://mediapipe.readthedocs.io/en/latest/solutions/hands.html) for hand gesture recognition. Please install the following python packages as a pre-requisite
+This application uses the [MediaPipe Hands Framework](https://mediapipe.readthedocs.io/en/latest/solutions/hands.html)
+for hand gesture recognition.
 
-For ROS Jazzy:
+For ROS 2 **Jazzy** (gesture only):
 ```bash
-pip3 install numpy==1.26.4
-pip3 install mediapipe==0.10.31
-pip3 install opencv-python==4.8.0.76
-pip3 install pyyaml
+pip3 install numpy==1.26.4 mediapipe==0.10.31 opencv-python==4.8.0.76 pyyaml
 ```
 
-For ROS Humble:
+For ROS 2 **Jazzy** (gesture + audio):
 ```bash
-pip3 install numpy==1.24.3
-pip3 install mediapipe==0.10.9
-pip3 install opencv-python==4.8.0.76
-pip3 install pyyaml
+pip3 install numpy==1.26.4 mediapipe==0.10.31 opencv-python==4.8.0.76 pyyaml \
+    librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
 ```
 
-## Run gazebo simulator with 2D lidar
-
+For ROS 2 **Humble** (gesture only):
 ```bash
-sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
-/opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
+pip3 install numpy==1.24.3 mediapipe==0.10.9 opencv-python==4.8.0.76 pyyaml tensorflow
 ```
 
-## Run gazebo simulator with RealSense
-
-Open three terminals and run the following commands
-Terminal 1: This command will open gazebo simulator and rviz
-
+For ROS 2 **Humble** (gesture + audio):
 ```bash
-sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
-/opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+pip3 install numpy==1.24.3 mediapipe==0.10.9 opencv-python==4.8.0.76 pyyaml tensorflow \
+    librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
 ```
 
-Terminal 2: This command will run the ADBSCAN package
+---
+
+## Build
 
 ```bash
-source /opt/ros/humble/setup.bash 
-ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel
- ```  
+cd Follow_me_RS_2D
+source /opt/ros/<distro>/setup.bash
+source ~/followme_env/bin/activate
+colcon build --symlink-install
+source install/setup.bash
+```
 
-Terminal 3: This command will run the gesture recognition package
+---
+
+## Running the Demos
+
+All demo scripts auto-detect the installed ROS 2 distribution, source the workspace, kill any
+stale Gazebo processes, and launch the full stack (Gazebo, ROS-Gazebo bridges, ADBSCAN, gesture,
+trajectory, and optionally audio nodes) with RViz.
+
+### 2D LiDAR — Gesture only
 
 ```bash
-source /opt/ros/humble/setup.bash 
-ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args --params-file /opt/ros/humble/share/gesture_recognition_pkg/config/gesture_recognition.yaml
- ```
+source ~/followme_env/bin/activate
+./src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/demo_lidar.sh
+```
 
-## Robotic SDK 2023.1 Release: Follow-me
+### 2D LiDAR — Gesture + Audio
 
-## Hardware
+```bash
+source ~/followme_env/bin/activate
+./src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/demo_lidar_audio.sh
+```
 
-1. Turn off Pengo;
-2. Unplug HDMI cable and replace with dungo;
-3. Unplug power cable and replace it with battery;
-4. Turn on the robot by pressing the switch button;
+### RealSense — Gesture only
 
-To check if RealSense camera is working, type:
-realsense-viewer
+```bash
+source ~/followme_env/bin/activate
+./src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+```
 
-## To Run Follow-me on Pengo with RealSense
+### RealSense — Gesture + Audio
 
-note: the Kobuki chassis needs to be turned on for the motor to run.
+```bash
+source ~/followme_env/bin/activate
+./src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/demo_RS_audio.sh
+```
 
-Step 1: Enable Kobuki (only needed when moving the actual Pengo robot chassis’s Kobuki chassis):
-cd /home/awm/project/robotic/ati/iotg_workloads-robotic_platform_poc
-source ./setup.sh
-./run_kobuki.sh
+> **Note:** Allow ~10 seconds after launch for Gazebo and all nodes to initialize before the
+> TurtleBot3 begins following. The guide robot trajectory runs for ~45 seconds.
 
-Step 2: Start RealSense ROS2 publication:
+---
 
-1. . /opt/ros/foxy/setup.sh
-2. ros2 launch realsense2_camera rs_launch.py serial_no:="_109622074344" depth_module.profile:=640x480x6 pointcloud.enable:=true camera_namespace:=/
+## Architecture
 
-Step 3: To run RealSense version of Follow-me:
-cd /home/awm/project/robotic/ati/Follow_me_demo/Follow_me_configurable_2/src
-. ./install/setup.sh
-./start_adbscan_sub_RS.sh
+Each demo runs in a single terminal using a two-phase launch sequence:
 
-## To Run Follow-me on Pengo with 2D lidar
+1. **Shared launch** (`*_shared.launch.py`) — Gazebo world, robot state publishers,
+   Gazebo↔ROS bridges, and spawn of both the TurtleBot3 Waffle and guide robot.
+2. **Perception launch** (`*_gesture.launch.py` or `*_gesture_audio.launch.py`) — ADBSCAN
+   node, gesture recognition, trajectory publisher, and (for audio modes) speech recognition
+   and audio file publisher.
 
-note: the Kobuki chassis needs to be turned on for the motor to run.
+### Launch Files
 
-Step 1: Enable Kobuki (only needed when moving the actual Pengo robot chassis’s Kobuki chassis):
-cd /home/awm/project/robotic/ati/iotg_workloads-robotic_platform_poc
-source ./setup.sh
-./run_pengo_lslam.sh
+| Launch File | Phase | Description |
+|-------------|-------|-------------|
+| `lidar_shared.launch.py` | 1 | Gazebo world + bridges for 2D LiDAR |
+| `rs_shared.launch.py` | 1 | Gazebo world + bridges for depth camera |
+| `lidar_gesture.launch.py` | 2 | ADBSCAN + gesture + trajectory (LiDAR) |
+| `lidar_gesture_audio.launch.py` | 2 | ADBSCAN + gesture + audio + trajectory (LiDAR) |
+| `rs_gesture.launch.py` | 2 | ADBSCAN + gesture + trajectory (RS) |
+| `rs_gesture_audio.launch.py` | 2 | ADBSCAN + gesture + audio + trajectory (RS) |
 
-Step 2: To run RealSense version of Follow-me:
-cd /home/awm/project/robotic/ati/Follow_me_demo/Follow_me_configurable_2/src
-. ./install/setup.sh
-./start_adbscan_sub_2.sh
+```text
+                 ┌─────────────────────────────────────────────┐
+                 │          Gazebo Harmonic / Fortress           │
+                 │  ┌─────────────┐     ┌──────────────────┐   │
+                 │  │ Guide Robot │────▶│ TurtleBot3 Waffle │   │
+                 │  │ (traj node) │     │ (ADBSCAN follower)│   │
+                 │  └─────────────┘     └──────────────────┘   │
+                 └───────────┬─────────────────────────────────┘
+                             │ /camera/points  OR  /scan
+                             ▼
+                  ┌─────────────────────┐
+                  │     ADBSCAN Node    │  ◀── gesture_recognition_node
+                  │  adbscan_sub_w_     │  ◀── speech_recognition_node (audio modes)
+                  │  gesture[_audio]    │
+                  └──────────┬──────────┘
+                             │ /tb3/cmd_vel
+                             ▼
+                     TurtleBot3 Waffle
+```
 
-## To configure
+### Key Nodes
 
-The configuration file for 2D lidar version is: adbscan_sub_2D.yaml
-The configuration file for RealSense camera version is: adbscan_sub_RS.yaml
+| Node | Package | Description |
+|------|---------|-------------|
+| `adbscan_sub_w_gesture` | `adbscan_ros2_follow_me` | ADBSCAN follower (gesture mode) |
+| `adbscan_sub_w_gesture_audio` | `adbscan_ros2_follow_me` | ADBSCAN follower (gesture + audio) |
+| `gesture_recognition_node.py` | `gesture_recognition_pkg` | MediaPipe hand gesture classifier |
+| `traj_and_img_publisher_node.py` | `gesture_recognition_pkg` | Guide robot trajectory publisher |
+| `speech_recognition_node.py` | `speech_recognition_pkg` | Voice command recognizer |
+| `audio_publisher_node.py` | `speech_recognition_pkg` | Audio file publisher |
 
-Parameters such as subsample ratio, filter range, sensor type etc. can be configured in this file.  
+---
+
+## Key Configuration Parameters
+
+### Sensor Config Files
+
+| Sensor | Config File |
+|--------|-------------|
+| 2D LiDAR | `src/adbscan_ros2/config/adbscan_sub_2D.yaml` |
+| RealSense | `src/adbscan_ros2/config/adbscan_sub_RS.yaml` |
+
+### Important Parameters
+
+| Parameter | Description | Recommended Value |
+|-----------|-------------|-------------------|
+| `tracking_radius` | Search radius (m) around last known target each frame | `1.0` |
+| `init_tgt_loc` | Initial target distance (m) the follower aims to maintain | `0.8` (hardware) / `0.5` (Gazebo sim) |
+| `max_dist` | Maximum follow distance (m) — no command if guide is farther | `3.0` |
+| `min_dist` | Minimum follow distance (m) — slow/stop when guide is closer | `0.5` (hardware) / `0.3` (Gazebo sim) |
+| `max_linear` | Maximum linear velocity (m/s) | `0.8` |
+| `max_angular` | Maximum angular velocity (rad/s) | `0.6` |
+| `max_frame_blocked` | Frames without detection before target is considered lost | `5` |
+| `z_filter` | Minimum Z height (m) for RS point cloud — filters ground | `-0.15` |
+| `subsample_ratio` | Keep 1 in N points (RS point cloud subsampling) | `15.0` |
+| `gesture_enable` | Enable hand gesture start/stop control | `true` |
+| `audio_enable` | Enable voice command start/stop control | `true` |
+
+> **Important:** `tracking_radius` must be large enough to cover the guide's lateral movement
+> between frames. Values that are too small (e.g. `0.2`) cause the tracker to lose the target
+> during turns, making the follower go straight instead of turning.
+>
+> **Gazebo simulation note:** The RealSense launch files (`rs_gesture.launch.py`,
+> `rs_gesture_audio.launch.py`) override three parameters for the simulated depth camera:
+> `optical_frame: False` (Gazebo publishes in body frame, not optical frame),
+> `min_dist: 0.3` (guide robot front surface appears at ~0.44 m, below the YAML default 0.5),
+> and `init_tgt_loc: 0.5` (matching the actual cluster centroid distance). These overrides are
+> not needed on real hardware with an Intel RealSense camera.
+
+---
+
+## Guide Robot
+
+The guide robot (airport-style follow-me car) uses a black-and-yellow checkerboard visual
+pattern and follows a pre-programmed S-curve trajectory lasting ~50 seconds. It starts facing
+the `+X` direction (yaw = 0) so it is immediately visible in the TurtleBot3's sensor FOV.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| TurtleBot3 goes straight, no turning | `tracking_radius` too small | Set `tracking_radius: 1.0` in YAML |
+| TurtleBot3 does not move at all | Guide robot facing away | Verify `spawn_gbot.launch.py` uses `-Y 0.0` |
+| Target lost immediately (RS) | `z_filter` too high | Set `z_filter: -0.15` in `adbscan_sub_RS.yaml` |
+| Gesture node not starting | Python venv not active | Run `source ~/followme_env/bin/activate` first |
+| Audio commands not reaching ADBSCAN | Speech node overloaded | Ensure `speech_recognition_pkg` is rebuilt; the node skips empty filenames and holds valid commands for 3 s |
+| TTS node fails to start | Missing audio packages | Install audio requirements: `pip3 install librosa openvino simpleaudio sounddevice tqdm inflect` |
+| Gazebo fails to start | Stale `gz` process | Run `sudo killall -9 gz ruby` before launching |

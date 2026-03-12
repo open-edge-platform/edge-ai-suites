@@ -22,7 +22,7 @@ adbscan_sub_node:
     max_linear: 0.8
     max_angular: 0.8
     max_frame_blocked: 5
-    tracking_radius: 0.2
+    tracking_radius: 1.0
 
 adbscan_sub_w_gesture_node:
   ros__parameters:
@@ -46,7 +46,7 @@ adbscan_sub_w_gesture_node:
     max_linear: 0.8
     max_angular: 0.6
     max_frame_blocked: 5
-    tracking_radius: 0.2
+    tracking_radius: 1.0
 
 adbscan_sub_w_gesture_audio_node:
   ros__parameters:
@@ -65,10 +65,10 @@ adbscan_sub_w_gesture_audio_node:
     coeff_1: -0.350137
     coeff_2: -0.22432557
     scale_factor: 0.07
-    init_tgt_loc: 0.25
-    max_dist: 1.5
-    min_dist: 0.25
-    max_linear: 0.5
-    max_angular: 0.25
+    init_tgt_loc: 0.5
+    max_dist: 3.0
+    min_dist: 0.5
+    max_linear: 0.8
+    max_angular: 0.6
     max_frame_blocked: 5
-    tracking_radius: 0.27
+    tracking_radius: 1.0

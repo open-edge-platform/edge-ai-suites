@@ -27,7 +27,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BaslerDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc1
+FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2
 
 USER root
 

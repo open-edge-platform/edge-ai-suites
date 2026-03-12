@@ -89,6 +89,7 @@ typedef struct _config_params  // to be moved into ADBScan.h and becomes global 
   float max_angular;
   int max_frame_blocked;
   float tracking_radius;
+  bool optical_frame;  // true = camera optical frame (real RS), false = robot body frame (Gazebo)
 } Config_params_t;
 
 typedef struct _point
