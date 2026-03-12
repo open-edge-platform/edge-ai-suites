@@ -23,7 +23,7 @@
    ```sh
    cp helm/values_weld-porosity.yaml helm/values.yaml
    ```
-      > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
     - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`

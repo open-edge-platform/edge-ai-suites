@@ -58,7 +58,7 @@
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
-    > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
+    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
 4. Install pre-requisites for all instances
 
