@@ -5,9 +5,9 @@ API_V1_PREFIX = "/api/v1/tasks"
 
 def test_submit_summary_async(client, mock_db_session, mock_redis):
     """
-    测试异步逻辑：
-    1. 状态应为 QUEUED
-    2. 必须触发 Redis xadd
+    Test sync=False logic:
+    1. Status should be QUEUED
+    2. Redis xadd must be triggered
     """
     payload = {
         "video_url": "http://example.com/test.mp4",
@@ -32,9 +32,9 @@ def test_submit_summary_async(client, mock_db_session, mock_redis):
 @pytest.mark.asyncio
 async def test_submit_summary_sync(client, mock_db_session, mock_ai_processor):
     """
-    测试同步逻辑：
-    1. 状态应为 COMPLETED
-    2. 响应应包含 AI 处理结果
+    Test sync=True logic:
+    1. Status should become COMPLETED
+    2. Response should contain result
     """
     payload = {
         "video_url": "http://example.com/test.mp4",
@@ -54,7 +54,6 @@ async def test_submit_summary_sync(client, mock_db_session, mock_ai_processor):
     print("\n✅ Sync processing test passed")
 
 def test_get_task_status(client, mock_db_session):
-    """测试查询接口"""
     new_task = AITask(
         id=999,
         task_type="video_summary",
