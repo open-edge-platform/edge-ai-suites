@@ -1,76 +1,98 @@
 import pytest
-from unittest.mock import patch, AsyncMock
 from core.models import AITask
 
-# Mock AI handler (corresponds to run_dummy_ai_logic in api/route.py)
-# If the function is not defined yet, we can patch it in tests
-async def mock_ai_work(url):
-    return {"summary": "This is a mocked AI video summary", "duration": 120}
+# 基础路径前缀
+API_V1_PREFIX = "/api/v1/tasks"
 
-## --- Test case 1: async callback mode ---
-def test_submit_summary_async(client, mock_db_session):
+## --- Test case 1: 异步模式 (sync=False) ---
+def test_submit_summary_async(client, mock_db_session, mock_redis):
     """
-    Test sync=False logic:
-    1. Status should be QUEUED
-    2. Redis xadd must be triggered
+    测试异步逻辑：
+    1. 状态应为 QUEUED
+    2. 必须触发 Redis xadd
     """
-    with patch("api.route.redis_client") as mock_redis:
-        payload = {
-            "video_url": "http://example.com/test.mp4",
-            "sync": False,
-            "callback_url": "http://webhook.site/123"
-        }
-        
-        response = client.post("/api/tasks/video-summary", json=payload)
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "QUEUED"
-        assert data["mode"] == "asynchronous"
-        
-        # Verify DB status
-        task = mock_db_session.query(AITask).filter(AITask.id == data["task_id"]).first()
-        assert task.status == "QUEUED"
-        
-        # Verify Redis was called
-        mock_redis.xadd.assert_called_once()
-        print("\n✅ Async submit test passed")
+    payload = {
+        "video_url": "http://example.com/test.mp4",
+        "sync": False,
+        "callback_url": "http://webhook.site/123"
+    }
+    
+    # 使用重构后的 URL
+    response = client.post(f"{API_V1_PREFIX}/video-summary", json=payload)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "QUEUED"
+    assert data["mode"] == "asynchronous"
+    
+    # 验证数据库状态
+    task = mock_db_session.query(AITask).filter(AITask.id == data["task_id"]).first()
+    assert task.status == "QUEUED"
+    
+    # 验证 Redis 是否被调用 (通过参数注入的 mock_redis)
+    mock_redis.xadd.assert_called_once()
+    print("\n✅ Async submit test passed")
 
-## --- Test case 2: synchronous mode ---
-@pytest.mark.asyncio  # Recommended when mocking async functions
-async def test_submit_summary_sync(client, mock_db_session):
-    """
-    Test sync=True logic:
-    1. Status should become COMPLETED
-    2. Response should contain result
-    """
-    # Assume api/route.py calls run_dummy_ai_logic
-    # Intercept the expensive call and return a mocked result
-    with patch("api.route.run_dummy_ai_logic", new_callable=AsyncMock) as mock_run:
-        mock_run.return_value = {"summary": "Synchronous processing OK"}
-        
-        payload = {
-            "video_url": "http://example.com/test.mp4",
-            "sync": True
-        }
-        
-        response = client.post("/api/tasks/video-summary", json=payload)
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["status"] == "COMPLETED"
-        assert "result" in data
-        assert data["result"]["summary"] == "Synchronous processing OK"
-        
-        # Verify DB status updated to COMPLETED
-        task = mock_db_session.query(AITask).filter(AITask.id == data["task_id"]).first()
-        assert task.status == "COMPLETED"
-        print("\n✅ Sync processing test passed")
 
-## --- Test case 3: error flow (optional) ---
-def test_submit_summary_invalid_payload(client, mock_db_session):
-    """Test missing required fields like video_url (if validation exists)."""
-    # If validation is missing, it may still write to DB; demo only
-    response = client.post("/api/tasks/video-summary", json={})
-    # Depending on your logic, it may be 200 or 422
-    assert response.status_code in [200, 422]
+## --- Test case 2: 同步模式 (sync=True) ---
+@pytest.mark.asyncio
+async def test_submit_summary_sync(client, mock_db_session, mock_ai_processor):
+    """
+    测试同步逻辑：
+    1. 状态应为 COMPLETED
+    2. 响应应包含 AI 处理结果
+    """
+    # 这里的 mock_ai_processor 已经在 conftest 中设置了默认 return_value
+    # 如果想在这个特定测试中改返回值，可以这样：
+    # mock_ai_processor.return_value = {"summary": "Specific Test Summary"}
+
+    payload = {
+        "video_url": "http://example.com/test.mp4",
+        "sync": True
+    }
+    
+    response = client.post(f"{API_V1_PREFIX}/video-summary", json=payload)
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "COMPLETED"
+    assert "result" in data
+    # 验证返回内容是否匹配 conftest 中的 Mock 设置
+    assert data["result"]["summary"] == "Mocked AI Result"
+    
+    # 验证数据库状态更新
+    task = mock_db_session.query(AITask).filter(AITask.id == data["task_id"]).first()
+    assert task.status == "COMPLETED"
+    print("\n✅ Sync processing test passed")
+
+
+## --- Test case 3: 获取任务状态 (GET) ---
+def test_get_task_status(client, mock_db_session):
+    """测试查询接口"""
+    # 先在 Mock DB 中造一条数据
+    new_task = AITask(
+        id=999,
+        task_type="video_summary",
+        status="COMPLETED",
+        payload={"video_url": "test.mp4"},
+        result={"summary": "Historical result"},
+        user_id="admin"
+    )
+    mock_db_session.add(new_task)
+    mock_db_session.commit()
+
+    response = client.get(f"{API_V1_PREFIX}/999")
+    
+    assert response.status_code == 200
+    assert response.json()["status"] == "COMPLETED"
+    # assert response.json()["id"] == 999
+    assert int(response.json()["id"]) == 999
+    print("\n✅ Get task status test passed")
+
+
+## --- Test case 4: 异常流 ---
+def test_get_nonexistent_task(client, mock_db_session):
+    """测试查询不存在的任务"""
+    response = client.get(f"{API_V1_PREFIX}/999999")
+    assert response.status_code == 404
+    print("\n✅ 404 error flow passed")
