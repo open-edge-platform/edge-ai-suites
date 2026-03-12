@@ -24,10 +24,10 @@ Autonomous Mobile Robot Middleware
    -  `Intel® DPC++ Compatibility Tool Self-Guided Jupyter Notebook Tutorial
       <https://www.intel.com/content/www/us/en/developer/articles/training/intel-dpcpp-compatibility-tool-training.html>`__
 
--  The Intel® RealSense™ ROS 2 Wrapper node is utilized for Intel® RealSense™ cameras within ROS 2.
+-  The RealSense™ ROS 2 Wrapper node is utilized for RealSense™ cameras within ROS 2.
 
--  The `Intel® RealSense™ SDK <https://dev.intelrealsense.com/docs/ros-wrapper>`__ is
-   used to implement software for Intel® RealSense™ cameras.
+-  The `RealSense™ SDK 2 <https://www.realsenseai.com/developers/>`__ is
+   used to implement software for RealSense™ cameras.
 
 -  The ROS 2 OpenVINO™ Toolkit provides a ROS 2 adapted runtime framework of
    neural networks, enabling rapid deployment of applications and solutions for vision

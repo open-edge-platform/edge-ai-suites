@@ -18,7 +18,7 @@ Similar to the Action Chunking Transformer (ACT), the Diffusion Policy is anothe
 
 - Full paper: https://arxiv.org/abs/2303.04137v5
 - Homepage: https://diffusion-policy.cs.columbia.edu/
-- Github link: https://github.com/columbia-ai-robotics/diffusion_policy
+- Github link: https://github.com/real-stanford/diffusion_policy
 
 Model Conversion
 ================
@@ -29,10 +29,10 @@ This document demonstrates how to convert DP model checkpoints to OpenVINO IR us
 Model Checkpoints
 -----------------
 
-- **Low Dim Transformer DP model checkpoint**:  
+- **Low Dim Transformer DP model checkpoint**:
   `epoch=0850-test_mean_score=0.967.ckpt <https://diffusion-policy.cs.columbia.edu/data/experiments/low_dim/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch%3D0850-test_mean_score%3D0.967.ckpt>`_
 
-- **Image Transformer DP model checkpoint**:  
+- **Image Transformer DP model checkpoint**:
   `epoch=0100-test_mean_score=0.748.ckpt <https://diffusion-policy.cs.columbia.edu/data/experiments/image/pusht/diffusion_policy_transformer/train_0/checkpoints/epoch%3D0100-test_mean_score%3D0.748.ckpt>`_
 
 Low Dim Transformer DP Model KEY Conversion Steps
@@ -135,7 +135,7 @@ Checkpoint files contain model parameters saved during training. To prepare for 
 
 .. note::
 
-   Make sure OpenVINO is installed by following the official guide:  
+   Make sure OpenVINO is installed by following the official guide:
    :ref:`Install OpenVINO via pip <openvino_install>`
 
 6. Convert ONNX to OpenVINO IR Format
@@ -195,7 +195,7 @@ Two components need to be wrapped for ONNX export: the observation encoder and t
            self.policy = policy
            self.policy.model.eval()
            self.policy.obs_encoder.eval()
-           
+
            class ConvertObsEncoder(nn.Module):
                def __init__(self, policy):
                    super().__init__()
@@ -271,7 +271,7 @@ Two components need to be wrapped for ONNX export: the observation encoder and t
 
 .. note::
 
-   Ensure that OpenVINO is installed. Follow the official installation guide:  
+   Ensure that OpenVINO is installed. Follow the official installation guide:
    `Install OpenVINO via pip <https://docs.openvino.ai/2025/get-started/install-openvino/install-openvino-pip.html>`_
 
 6. Convert ONNX to OpenVINO IR

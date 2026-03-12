@@ -35,4 +35,3 @@ Legacy documentation
 * `EI4AMR at Intel Developer Zone <https://www.intel.com/content/www/us/en/developer/topic-technology/edge-5g/edge-solutions/autonomous-mobile-robots/overview.html>`_
 * `EI4AMR Legacy - Documents Overview <https://www.intel.com/content/www/us/en/developer/topic-technology/edge-5g/edge-solutions/autonomous-mobile-robots.html#tab-blade-1-1>`__
 * `AAEON UP Xtreme* i11 & UP Squared* 6000 Robotic Development Kits <https://www.intel.com/content/www/us/en/developer/articles/training/devkit-gsg22-ei-for-autonomous-mobile-robots.html>`__
-* `Documentation of the last EI4AMR release <https://amrdocs.intel.com/docs/2023.1.0/index.html>`__
