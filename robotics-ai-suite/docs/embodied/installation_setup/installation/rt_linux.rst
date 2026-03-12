@@ -102,15 +102,15 @@ To achieve real-time performance on a target system, specific runtime configurat
 Use Cache Allocation Technology
 :::::::::::::::::::::::::::::::::
 
-Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy. providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
+Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy, providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
 
 This is an example configuration should be tailored to your specific use case and processor. To determine cache topology, including size and number of ways supported by a processor, use the CPUID leaf "Deterministic Cache Parameters Leaf - 0x4". Linux utilities link ``lstopo`` are also useful for obtaining an overview of a processor's cache topology.
 
 For more information about CAT, refer to the following resources:
 
- - Public Intel® Time Coordinated Computing (TCC) User Guide - `RDC #[831067] <https://cdrdv2.intel.com/v1/dl/getContent/831067>`_
- - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - `RDC #[789566] <https://cdrdv2.intel.com/v1/dl/getContent/789566>`_
- - Intel® 64 and IA-32 Architectures Software Developer’s Manual - `RDC#[671200] <https://cdrdv2.intel.com/v1/dl/getContent/671200>`_
+ - Public Intel® Time Coordinated Computing (TCC) User Guide - `RDC #[831067] <https://cdrdv2-public.intel.com/851159/Public%20TCC%20User%20Guide%20-%20Q4%202025%20-%20RDC-831067.pdf>`_
+ - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - `RDC #[789566] <https://cdrdv2-public.intel.com/851356/356688-004-intel-rdt-architecture-spec.pdf>`_
+ - Intel® 64 and IA-32 Architectures Software Developer’s Manual - `RDC#[671200] <https://cdrdv2-public.intel.com/874240/325462-090-sdm-vol-1-2abcd-3abcd-4.pdf>`_
 
 Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux ``msr-tools`` to test it according to your configuration:
 

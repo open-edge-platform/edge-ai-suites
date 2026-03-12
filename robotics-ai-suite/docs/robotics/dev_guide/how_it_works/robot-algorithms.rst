@@ -15,7 +15,7 @@ training your own models to speed up the development and production deployment
 process.
 
 For details, see `Model Zoo
-<https://docs.openvino.ai/latest/model_zoo.html>`__.
+<https://github.com/openvinotoolkit/open_model_zoo>`__.
 
 
 ADBSCAN

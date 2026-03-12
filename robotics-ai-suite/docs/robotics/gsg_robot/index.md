@@ -54,13 +54,13 @@ To install ROS 2 on your system, follow the **ROS 2 setup guide**:
 :::{tab-item} **Jazzy**
 :sync: jazzy
 
-[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 :::{tab-item} **Humble**
 :sync: humble
 
-[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 ::::
@@ -833,12 +833,11 @@ To install the Intel® NPU driver, complete the following steps:
 sudo reboot
 ```
 
-
 ## Installation Troubleshooting
 
 ### Support Forum
 
-If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Intel-Edge-Software-Hub/bd-p/edge-software-hub) for assistance.
+If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Edge-Software-Catalog/bd-p/EdgeSoftwareCatalog) for assistance.
 
 ### APT Package Manager
 
@@ -867,4 +866,3 @@ If the APT package manager is unable to connect to the repositories, follow thes
 
     After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
     you will have to reboot the device, so these settings become effective.
-

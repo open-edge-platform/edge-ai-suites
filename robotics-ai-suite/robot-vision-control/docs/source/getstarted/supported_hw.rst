@@ -13,7 +13,7 @@ Tier 1 Sensors
 
 Preferred sensors, utilized for use-case examples, tested & validated
 
-* Intel® RealSense™ `D400 Family <https://www.intelrealsense.com/introducing-intel-realsense-d400-product-family/>`__ cameras
+* RealSense™ `D400 Family <https://www.realsenseai.com/stereo-depth-cameras/>`__ cameras
 
 Tier 2 Sensors
 --------------

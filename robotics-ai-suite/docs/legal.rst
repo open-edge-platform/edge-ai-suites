@@ -21,7 +21,7 @@ Intel's identification of these resources does not expand or otherwise alter Int
 
 Benchmarking Disclaimer
 -----------------------
-Performance varies by use, configuration and other factors. Learn more at `https://intel.com/PerformanceIndex <https://intel.com/PerformanceIndex>`_.
+Performance varies by use, configuration and other factors. Learn more at the `Intel Performance Index page <https://edc.intel.com/content/www/us/en/products/performance/benchmarks/overview/>`_.
 
 Performance results are based on testing as of dates shown in configurations and may not reflect all publicly available updates. See configuration disclosure for details. No product or component can be absolutely secure.
 

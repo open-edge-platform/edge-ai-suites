@@ -1,9 +1,9 @@
-# OpenVINO™ Tutorial on Multi-camera Object Detection using Intel® RealSense™ Depth Camera D457
+# OpenVINO™ Tutorial on Multi-camera Object Detection using RealSense™ Depth Camera D457
 
 In this tutorial, the multi-camera use case is demonstrated using an
 [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
 and four
-[Intel® RealSense™ Depth Camera D457](https://www.intelrealsense.com/depth-camera-d457).
+[RealSense™ Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra/).
 Here, the four cameras are connected to the Industrial Gigabit Multimedia Serial
 Link™ (GMSL) supported Axiomtek Robox500 ROS 2 AMR Controller through GMSL/FAKRA
 (female-to-female) cables, which provide high-bandwidth video transmission.
