@@ -1,6 +1,6 @@
 # Backend
 
-### System Workflow
+## System Workflow
 The system employs a Producer-Consumer pattern to decouple heavy AI inference from the API response cycle.
 
 ```mermaid
@@ -53,41 +53,84 @@ graph TD
     Worker -->|Inference| AI_Service
     Worker -->|Writeback Result| DB
 ```
-### Project Structure
+## Project Structure
 ```bash
 backend/
-├── api/              # API Routes and Business Logic
-├── core/             # Database Models (SQLAlchemy)
-├── mock_services/    # Independent AI Mock Provider
-├── tests/            # Pytest Suite (Unit & Integration)
-├── processor.py      # Synchronous AI Task Handler
-├── database.py       # Database Engine & Session Config
-├── worker_run.py     # Redis Stream Consumer (Worker)
-├── main.py           # Application Entry Point
-└── pytest.ini        # Testing Configuration
+edu-ai-backend/
+├── api
+│   ├── __init__.py
+│   └── v1
+│       ├── api.py
+│       └── endpoints
+│           ├── health.py
+│           ├── __init__.py
+│           └── tasks.py
+├── conda_env.yml
+├── config.py
+├── core
+│   ├── checks.py
+│   ├── exceptions.py
+│   ├── models.py
+│   └── redis_client.py
+├── crud
+│   └── task_crud.py
+├── database.py
+├── ext_components
+│   ├── conf.ini
+│   ├── readme.md
+│   └── set_submodule.py
+├── main.py
+├── mock_services
+│   └── dummy_ai_provider.py
+├── processor.py
+├── pytest.ini
+├── README.md
+├── schemas
+│   └── task.py
+├── services
+│   ├── storage_service.py
+│   └── task_service.py
+├── tests
+│   ├── postman
+│   │   └── collection.json
+│   ├── pytest
+│   │   ├── conftest.py
+│   │   ├── test_consume.py
+│   │   └── test_submit.py
+│   ├── readme.md
+│   └── requirements.txt
+└── worker_run.py
 ```
-### Prerequisites
-#### Hardware & OS
+## Prerequisites
+### Hardware & OS
 OS: Windows 11 / Linux
 
 Python: 3.12.x
 
-#### Infrastructure
-Redis: Task queuing (v5.0+)
-
-PostgreSQL: Metadata storage (v16+)
-
-MinIO: Large file object storage
-
-### Environment Setup
-#### Conda Environment (Miniforge)
-install conda (miniforge) and setup env
-```bash
-conda create -n edu-ai python=3.12
-conda activate edu-ai
+### Infrastructure
+#### Redis
+```powershell
+# Task queuing (v5.0+)
+https://github.com/tporadowski/redis/releases
 ```
-#### .condarc
-```bash
+#### PostgreSQL
+```powershell
+# Metadata storage (v16+)
+https://www.postgresql.org/download/windows/ 
+# passwd: edu-ai port: 5432
+```
+#### MinIO
+MinIO: Large file object storage
+Reference MinIO Doc education-ai-suite/content-search/content_search_minio/README.md
+
+## Environment Setup
+### Install Conda Environment (Miniforge)
+```powershell
+https://conda-forge.org/miniforge/
+```
+### Configure if need
+```powershell
+# configure .condarc
 channels:
   - https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud/conda-forge/
   - https://mirrors.ustc.edu.cn/anaconda/cloud/conda-forge/
@@ -101,59 +144,115 @@ proxy_servers:
   http: http://proxy-dmz.intel.com:911
   https: http://proxy-dmz.intel.com:912
 ```
-```
-conda install -c conda-forge psycopg2 redis-py
-pip install fastapi uvicorn httpx pydantic-settings
-```
-python (3.12.x) C:\Users\user\miniforge3\python.exe
-
+### Setup env
 ```powershell
-conda activate edu-ai
-pip install -r requirements.txt
+conda env create -f conda_env.yml
+# if conda env not exist
+conda env update -n edu-ai -f conda_env.yml
 ```
-#### backup env
-conda env export > environment.yml
-#### restore env
-conda env create -f environment.yml
+### backup env if need
+conda env export --no-build > conda_env.yml
 
-### Running the System
-#### Prepare 3rdpart modules
-copy `education-ai-suite/content-search/content_search_minio` under `backend/ext_components/storage_minio` or just create a softlink,
-like
+## Prepare 3rdpart modules
+```powershell
+# 1. enter into ext_components directory
+cd ext_components
+# 2. configure the conf.ini to the right submodule's path
+# 3. create (remove) softlink
+conda activate edu-ai
+python .\set_submodule.py -create -f .\conf.ini
+python .\set_submodule.py -remove -f .\conf.ini
+```
+The directory will be like:
 ```bash
 tree -L 3 ext_components/
 ext_components/
 ├── readme.md
-└── storage_minio
-    └── content_search_minio -> /xx/x/edge-ai-suites/education-ai-suite/content-search/content_search_minio
+... ...
+├── content_search_minio -> /xx/x/edge-ai-suites/education-ai-suite/content-search/content_search_minio
+└── file_ingest_and_retrieve -> /xx/x/edge-ai-suites/education-ai-suite/content-search/file_ingest_and_retrieve
 ```
-#### Launch the serives
+## Launch the backend
 ```powershell
+conda activate edu-ai
 # Terminal A
-& "C:\Users\user\miniforge3\envs\edu-ai\python.exe" .\main.py
-
+& python .\main.py
 # Terminal B
-& "C:\Users\user\miniforge3\envs\edu-ai\python.exe" .\worker_run.py
-
+& python .\worker_run.py
 # Terminal C
-& "C:\Users\user\miniforge3\envs\edu-ai\python.exe" .\mock_services\dummy_ai_provider.py
+& python .\mock_services\dummy_ai_provider.py
 ```
 
-### API Usage & Testing
-#### Synchronous Summary (Immediate Result)
-Method: POST
-
-Endpoint: http://127.0.0.1:8000/api/tasks/video-summary
-
-Body (JSON):
+## API Usage & Testing
+Using curl or postman
+### Health check
+```powershell
+curl --location 'http://127.0.0.1:8000/api/v1/system/health'
+```
+response example
 ```json
 {
-    "video_url": "C:/videos/classroom_test.mp4",
-    "sync": true
+    "status": "healthy",
+    "timestamp": 1773293770.3809352,
+    "services": {
+        "postgres": "online",
+        "redis": "online",
+        "minio": "online"
+    }
 }
 ```
-
-#### Asynchronous Summary (Webhook Notification)
+### Get task info
+#### request example
+```powershell
+curl --location 'http://127.0.0.1:8000/api/v1/tasks/task/371109e5-d374-4064-ba72-8f61b999d824' \
+--header 'Content-Type: application/json'
+```
+#### response example
+```json
+{
+    "status": "COMPLETED",
+    "result": {
+        "summary": "This is a mock result from the local Dummy service for None.",
+        "confidence": 0.98,
+        "provider": "Mock-Windows-Service"
+    },
+    "id": "371109e5-d374-4064-ba72-8f61b999d824",
+    "payload": {
+        "source": "minio",
+        "video_key": "runs/run_3b90b38a/raw/video/default/dog_sign.mp4",
+        "bucket": "content-search",
+        "filename": "dog_sign.mp4",
+        "run_id": "run_3b90b38a"
+    },
+    "task_type": "video_summary",
+    "user_id": "admin",
+    "created_at": "2026-03-12T13:04:30.115899"
+}
+```
+### Synchronous Summary (Immediate Result)
+#### request example
+```powershell
+curl --location 'http://127.0.0.1:8000/api/v1/tasks/video-summary' \
+--header 'Content-Type: application/json' \
+--data '{
+    "video_url": "C:/videos/video-examples-14-11-2025/dog_sign.mp4",
+    "sync": true
+}'
+```
+##### response example
+```json
+{
+    "task_id": "db517846-1aab-4436-9288-be504085ae17",
+    "status": "COMPLETED",
+    "mode": "synchronous",
+    "result": {
+        "summary": "This is a mock result from the local Dummy service for C:/videos/video-examples-14-11-2025/dog_sign.mp4.",
+        "confidence": 0.98,
+        "provider": "Mock-Windows-Service"
+    }
+}
+```
+### Asynchronous Summary (Webhook Notification)
 Method: POST
 
 Endpoint: http://127.0.0.1:8000/api/tasks/video-summary
@@ -169,30 +268,31 @@ Body (JSON):
 webhook.site
 https://webhook.site/ unique URL: e.g. https://webhook.site/28865adb-376c-4a0a-ac59-5204a60f9fe3
 
-#### Video Upload (MinIO Integration)
+### Video Upload (MinIO Integration)
 Method: POST
-
 Endpoint: http://127.0.0.1:8000/api/tasks/video-upload
-
 Body: form-data | key: video_file | type: File
 
-### Automated Tests
+#### request example
+```powershell
+curl --location 'http://127.0.0.1:8000/api/v1/tasks/video-upload' \
+--form 'video_file=@"/C:/videos/video-examples-14-11-2025/dog_sign.mp4"'
+```
+#### response example
+```json
+{
+    "task_id": "0c2e046f-a1d2-4bff-a97e-6d0f8c01ca58",
+    "status": "QUEUED",
+    "object_key": "runs/run_28f3baf4/raw/video/default/dog_sign.mp4"
+}
+```
+## Automated Tests
 ```powershell
 pip install -r .\tests\requirements.txt
 pytest .\tests\pytest -v
 ```
 
-### Debug tools
+## Debug tools
 pgadmin 4
 tiny RDM
-
-
-### Others
-install Redis
-https://github.com/tporadowski/redis/releases
-
-install PostgreSQL
-16.11.3 https://www.postgresql.org/download/windows/ passwd: edu-ai port: 5432
-
-install postman
-xxx
+postman

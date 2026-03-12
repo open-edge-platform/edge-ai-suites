@@ -1,26 +1,19 @@
 # main.py
-import uvicorn
+import uvicorn, sys
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from database import engine, get_db, Base
-from api.route import router as api_router
 
-import sys
+from database import engine, get_db, Base
+from api.v1.api import api_router
 from core.checks import check_services
+from core.exceptions import setup_exception_handlers
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Edu-AI Orchestrator")
-
-app.include_router(api_router, prefix="/api")
-
-@app.get("/health")
-def health_check(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))
-        return {"status": "ok", "database": "connected"}
-    except Exception as e:
-        return {"status": "error", "database": str(e)}
+setup_exception_handlers(app)
+# app.include_router(api_router, prefix="/api")
+app.include_router(api_router, prefix="/api/v1", tags=["EDU AI Tasks"])
 
 if __name__ == "__main__":
     if not check_services():

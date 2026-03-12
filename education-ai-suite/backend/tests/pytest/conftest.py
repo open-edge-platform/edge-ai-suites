@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch, AsyncMock
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -6,13 +7,10 @@ from sqlalchemy.pool import StaticPool
 
 from database import Base, get_db
 from main import app
-# Ensure models are imported to register Base
-try:
-    from core.models import AITask 
-except ImportError:
-    from models import AITask
+from core.models import AITask 
 
-# Use StaticPool so all connections share the same in-memory DB
+# --- Database Fixtures ---
+
 @pytest.fixture(scope="session")
 def engine():
     return create_engine(
@@ -23,27 +21,31 @@ def engine():
 
 @pytest.fixture
 def mock_db_session(engine):
-    # 1. Create tables
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    
-    # 2. Create session
+
     TestingSessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     session = TestingSessionLocal()
 
-    # 3. Override FastAPI dependency
-    def override_get_db():
-        yield session  # Must yield the same session
+    app.dependency_overrides[get_db] = lambda: session
 
-    app.dependency_overrides[get_db] = override_get_db
-    
     yield session
-    
-    # 4. Cleanup
+
     session.close()
     app.dependency_overrides.clear()
 
 @pytest.fixture
 def client(mock_db_session):
-    # Dependency override takes effect after mock_db_session
     return TestClient(app)
+
+@pytest.fixture
+def mock_redis():
+    with patch("services.task_service.redis_client") as m:
+        m.ping.return_value = True
+        yield m
+
+@pytest.fixture
+def mock_ai_processor():
+    with patch("services.task_service.run_dummy_ai_logic", new_callable=AsyncMock) as m:
+        m.return_value = {"summary": "Mocked AI Result", "status": "success"}
+        yield m
