@@ -71,10 +71,10 @@ specifically important for Autonomous Mobile Robot include:
 -  The Serial Driver, the serial stream as used in Ethernet and USB interfaces.
 
 
-.. include:: tools.rst
+.. include:: how_it_works/tools.rst
 
-.. include:: robot-apps.rst
+.. include:: how_it_works/robot-apps.rst
 
-.. include:: robot-algorithms.rst
+.. include:: how_it_works/robot-algorithms.rst
 
-.. include:: robot-middleware.rst
+.. include:: how_it_works/robot-middleware.rst

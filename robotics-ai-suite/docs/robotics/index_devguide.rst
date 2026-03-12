@@ -31,8 +31,8 @@ various nodes on the factory floor.
 .. toctree::
    :maxdepth: 1
 
-   how_it_works/index
-   requirements
-   tutorials_amr/index
-   system_integrator/index
-   terminology
+   dev_guide/index_howitworks
+   dev_guide/requirements
+   dev_guide/index_tutorials
+   dev_guide/index_systemintegrator
+   dev_guide/terminology

@@ -16,8 +16,8 @@ these tutorials provide a learning path for developers to use and configure Auto
 .. toctree::
    :maxdepth: 1
 
-   developer_kit/index
-   perception/index
-   navigation/index
-   simulation/index
-   robot-tutorials-troubleshooting
+   tutorials_amr/developer_kit/index
+   tutorials_amr/perception/index
+   tutorials_amr/navigation/index
+   tutorials_amr/simulation/index
+   tutorials_amr/robot-tutorials-troubleshooting

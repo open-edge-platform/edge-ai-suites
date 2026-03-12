@@ -14,12 +14,26 @@ Click each icon to learn more.
 
         Install a Robot Kit.
 
-    .. grid-item-card:: Developer Guide
+    .. grid-item-card:: How it works
         :link: dev_guide/index
         :link-type: doc
         :link-alt: clickable cards
 
-        Resources to get started with development.
+        Describes how the software works
+
+    .. grid-item-card:: Tutorials
+        :link: dev_guide/index
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Provides a learning path for developers to use and configure Autonomous Mobile Robot
+
+    .. grid-item-card:: System Integrators
+        :link: dev_guide/system_integrators/index
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Information specifically for System Integrators.
 
 
 .. toctree::
@@ -27,4 +41,4 @@ Click each icon to learn more.
    :hidden:
 
    gsg_robot/index
-   dev_guide/index
+   index_devguide
