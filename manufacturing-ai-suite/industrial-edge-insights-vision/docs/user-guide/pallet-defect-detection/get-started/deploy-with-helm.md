@@ -23,6 +23,7 @@
    ```sh
    cp helm/values_pallet-defect-detection.yaml helm/values.yaml
    ```
+      > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
@@ -32,13 +33,13 @@
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.6.0-rc1
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.6.0-rc2
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.6.0-rc1.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.6.0-rc2.tgz
      ```
 
    - Replace the helm directory
@@ -408,7 +409,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 

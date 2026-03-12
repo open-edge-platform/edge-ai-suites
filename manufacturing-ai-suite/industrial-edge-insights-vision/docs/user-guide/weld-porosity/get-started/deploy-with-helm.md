@@ -23,16 +23,17 @@
    ```sh
    cp helm/values_weld-porosity.yaml helm/values.yaml
    ```
+      > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
     - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc1`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc2`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.4.0-rc1.tgz`
+        `tar -xvf weld-porosity-sample-application-1.4.0-rc2.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`

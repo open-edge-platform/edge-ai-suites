@@ -60,13 +60,13 @@ Prepare a python environment with the required dependencies by running the follo
 
 .. code-block:: bash
 
-   $ pip install opencv-python==4.11.0.86 torch==2.6.0 typer==0.15.2 onnx==1.17.0 onnxruntime==1.21.0
+   pip install opencv-python==4.11.0.86 torch==2.6.0 typer==0.15.2 onnx==1.17.0 onnxruntime==1.21.0
 
 Use the following command to export the LightGlue model to ONNX format:
 
 .. code-block:: bash
 
-   $ python dynamo.py export --output weights/superpoint_lightglue_pipeline_static.onnx --batch-size 2 --height 1280 --width 720
+   python dynamo.py export --output weights/superpoint_lightglue_pipeline_static.onnx --batch-size 2 --height 1280 --width 720
 
 - ``--batch-size 2`` : Specifies the batch size for inference.
 - ``--output weights/superpoint_lightglue_pipeline_static.onnx`` : Defines the output path for the ONNX model.
@@ -91,7 +91,7 @@ Run the following command to perform the conversion:
 
 .. code-block:: bash
 
-   $ ovc superpoint_lightglue_pipeline_static.onnx
+   ovc superpoint_lightglue_pipeline_static.onnx
 
 By default, this command converts the ONNX model to FP16 IR format, generating the following files:
 
@@ -102,4 +102,4 @@ If you need an FP32 precision model, add the following parameter to the ovc conv
 
 .. code-block:: bash
 
-   $ ovc superpoint_lightglue_pipeline_static.onnx --compress_to_fp16=False
+   ovc superpoint_lightglue_pipeline_static.onnx --compress_to_fp16=False

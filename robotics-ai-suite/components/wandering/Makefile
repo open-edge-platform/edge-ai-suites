@@ -21,7 +21,7 @@ else
 endif
 
 .DEFAULT_GOAL := help
-.PHONY: license-check package test lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json source-package help
+.PHONY: license-check package test test-e2e lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json source-package help
 
 PACKAGES = wandering wandering_aaeon_tutorial wandering_irobot_tutorial wandering_jackal_tutorial wandering_gazebo_tutorial wandering_tutorials
 
@@ -62,6 +62,32 @@ test:
 			colcon build --executor sequential --event-handlers console_direct+ && \
 			source install/setup.bash && \
 			colcon test --return-code-on-test-failure --executor sequential --event-handlers console_direct+"
+
+test-e2e:
+	@# Help: Run E2E functional tests
+	@if ! ls ros-$(ROS_DISTRO)-wandering_*.deb 2>/dev/null | grep -v 'ros-$(ROS_DISTRO)-fast-mapping-build-deps_.*_amd64.deb' | grep -q .; then \
+		echo "Error: ros-$(ROS_DISTRO)-wandering_*.deb not found. Run 'make package' first"; \
+		exit 1; \
+	fi
+	docker run --rm -t --platform linux/amd64 \
+		-v $(ROOT_DIR):/src \
+		-w /src \
+		-e DEBIAN_FRONTEND=noninteractive \
+		amd64/ros:${ROS_DISTRO}-ros-base \
+		bash -c "curl https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg -o /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null && \
+		curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null && \
+		echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee /etc/apt/sources.list.d/eci.list > /dev/null && \
+		echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee -a /etc/apt/sources.list.d/eci.list > /dev/null && \
+		echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee /etc/apt/sources.list.d/amr.list > /dev/null && \
+		echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee -a /etc/apt/sources.list.d/amr.list > /dev/null && \
+		echo \"deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" | tee /etc/apt/sources.list.d/oneAPI.list > /dev/null && \
+		apt-get -qq update && apt-get -q install -y wget python3 python3-pip xvfb graphicsmagick fluxbox wmctrl ffmpeg xdotool x11-utils && \
+		$(if $(filter humble,$(ROS_DISTRO)),python3 -m pip install --upgrade pip &&) \
+		pip3 install pytest Pillow $(if $(filter humble,$(ROS_DISTRO)),-U,--break-system-packages) && \
+		find . -name '*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -exec apt-get -q install -y {} \; && \
+		source /opt/ros/$(ROS_DISTRO)/setup.bash && \
+		export ROS_DOMAIN_ID=1 && \
+		pytest tests/ -s -v"
 
 lint:
 	@# Help: Run all sub-linters using super-linter (using linters defined for this repo only)

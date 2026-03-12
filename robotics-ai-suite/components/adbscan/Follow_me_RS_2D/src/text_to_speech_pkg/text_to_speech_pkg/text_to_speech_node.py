@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2025 Intel Corporation
 #
@@ -14,29 +15,32 @@
 # See the License for the specific language governing permissions
 # and limitations under the License.
 
-import rclpy
-from rclpy.node import Node
-import wave
-from ament_index_python.packages import get_package_share_directory
-import os
-import numpy as np
-from openvino.inference_engine import IECore
-import simpleaudio as sa
+"""Text-to-speech ROS 2 node using Forward Tacotron and MelGAN vocoders."""
 
-from models.forward_tacotron_ie import ForwardTacotronIE
-from models.mel2wave_ie import MelGANIE
+import os
+import wave
+
+import numpy as np
+import openvino as ov
+import rclpy
+import simpleaudio as sa
+from ament_index_python.packages import get_package_share_directory
+from rclpy.node import Node
 from tqdm import tqdm
 
-from std_msgs.msg import Bool
-from geometry_msgs.msg import Point
 from follow_me_interfaces.msg import AudioCommand
 from follow_me_interfaces.msg import GestureCategory
-
+from geometry_msgs.msg import Point
+from models.forward_tacotron_ie import ForwardTacotronIE
+from models.mel2wave_ie import MelGANIE
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool
 
 
-class text_to_speech(Node):
-    def __init__(self):
+class TextToSpeech(Node):  # pylint: disable=too-many-instance-attributes
+    """ROS 2 node that converts detected commands to audible speech."""
+    def __init__(self):  # pylint: disable=too-many-statements
+        """Initialise TTS models, parameters, and ROS pub/sub."""
         super().__init__('text_to_speech_node')
 
         # declare parameters
@@ -65,7 +69,7 @@ class text_to_speech(Node):
         self.device_name_ = self.device_name_.upper()
         if self.device_name_ not in ['CPU', 'GPU', 'NPU']:
             self.device_name_ = 'CPU'
-        self.get_logger().info('using device: {}'.format(self.device_name_))
+        self.get_logger().info(f'using device: {self.device_name_}')
         # audio and gesture subscriber
         self.audio_subscriber_ = self.create_subscription(
             AudioCommand, self.audio_command_topic_name_, self.audio_topic_callback, 10
@@ -99,8 +103,8 @@ class text_to_speech(Node):
             'model_files',
             'text-to-speech-en-0001-generation.xml',
         )
-        ie = IECore()
-        self.vocoder = MelGANIE(self.melgan_model_file_, ie, device=self.device_name_)
+        core = ov.Core()
+        self.vocoder = MelGANIE(self.melgan_model_file_, core, device=self.device_name_)
         # Loading model parameter files
         self.model_duration_file_ = os.path.join(
             get_package_share_directory('text_to_speech_pkg'),
@@ -117,7 +121,7 @@ class text_to_speech(Node):
         self.forward_tacotron = ForwardTacotronIE(
             self.model_duration_file_,
             self.model_forward_file_,
-            ie,
+            core,
             verbose=False,
             device=self.device_name_,
         )
@@ -137,24 +141,30 @@ class text_to_speech(Node):
         self.get_logger().info('text_to_speech_node has been started')
 
     def save_wavefile(self, x, path):
+        """Write raw PCM samples *x* to a WAV file at *path*."""
         sr = 22050
+        # pylint: disable=no-member
         with wave.open(path, 'w') as f:
             f.setnchannels(1)
             f.setsampwidth(2)
             f.setframerate(sr)
             f.writeframes(x.tobytes())
+        # pylint: enable=no-member
 
     def motor_state_topic_callback(self, motor_state_msg):
+        """Handle motor-state updates from the ADBSCAN node."""
         self.motor_initiated = motor_state_msg.data
         if self.declare_target_loc_ and not self.motor_initiated:
             self.played_distance_info = False
 
     def target_loc_topic_callback(self, target_loc_msg):
+        """Store the latest target distance from the ADBSCAN node."""
         self.target_distance = np.sqrt(
             target_loc_msg.x * target_loc_msg.x + target_loc_msg.y * target_loc_msg.y
         )
 
     def tbot_odom_topic_callback(self, odom_msg):
+        """Store the TurtleBot position from odometry."""
         self.tbot_pos_ = [
             odom_msg.pose.pose.position.x,
             odom_msg.pose.pose.position.y,
@@ -162,6 +172,7 @@ class text_to_speech(Node):
         ]
 
     def gbot_odom_topic_callback(self, odom_msg):
+        """Store the guide-bot position from odometry."""
         self.gbot_pos_ = [
             odom_msg.pose.pose.position.x,
             odom_msg.pose.pose.position.y,
@@ -169,12 +180,14 @@ class text_to_speech(Node):
         ]
 
     def calculate_distance(self):
+        """Compute the Euclidean distance between TurtleBot and guide-bot."""
         x = self.tbot_pos_[0] - self.gbot_pos_[0]
         y = self.tbot_pos_[1] - self.gbot_pos_[1]
         self.distance = np.sqrt(x * x + y * y)
         # print("distance between tbot and guide robot : ", self.distance)
 
     def audio_topic_callback(self, msg):
+        """Latch the incoming audio command."""
         if msg.audio_command != 'no_action':
             self.audio_command = msg.audio_command
         else:
@@ -182,6 +195,7 @@ class text_to_speech(Node):
             self.played_audio_command = False
 
     def gesture_topic_callback(self, msg):
+        """Latch the incoming gesture command."""
         if msg.gesture_category != 'No_Action':
             if msg.gesture_category == 'Thumb_Down':
                 self.gesture_command = 'thumbs down'
@@ -193,7 +207,8 @@ class text_to_speech(Node):
             self.gesture_command = ''
             self.played_gesture_command = False
 
-    def play_audio(self):
+    def play_audio(self):  # pylint: disable=too-many-locals
+        """Synthesise and play TTS audio for pending commands."""
         audio_res = np.array([], dtype=np.int16)
         len_th = 512
         lines = []
@@ -210,7 +225,7 @@ class text_to_speech(Node):
         if len(lines) != 0:
             for i, line in enumerate(lines):
                 line = line.rstrip()
-                print('\nProcess line {} with length {}.'.format(i, len(line)))
+                print(f'\nProcess line {i} with length {len(line)}.')
                 print(line)
                 if len(line) > len_th:
                     texts = []
@@ -236,8 +251,9 @@ class text_to_speech(Node):
 
 
 def main(args=None):
+    """Entry point for the text-to-speech node."""
     rclpy.init(args=args)
-    node = text_to_speech()
+    node = TextToSpeech()
     rclpy.spin(node)
     rclpy.shutdown()
 

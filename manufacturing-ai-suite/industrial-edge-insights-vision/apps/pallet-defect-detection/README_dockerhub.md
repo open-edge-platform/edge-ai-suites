@@ -12,19 +12,6 @@ For more details on deployment, refer to the [documentation](https://docs.opened
 ---
 For more details on deployment, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/get-started/deploy-with-helm.html).
 
-## Supported versions
-
----
-2.4.0
-
-2.3.0
-
-2.2.0
-
-2.1.0
-
-2.0.0
-
 ## License Agreement
 
 ---
