@@ -1,10 +1,11 @@
 import logging
 import os
+import re
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
 from llama_index.core import Document
-from llama_index.core.node_parser import SentenceSplitter
+from llama_index.core.node_parser import SentenceSplitter, SemanticSplitterNodeParser
 from llama_index.core.schema import BaseNode
 from llama_index.readers.file import UnstructuredReader
 from unstructured.partition.docx import register_picture_partitioner
@@ -12,6 +13,32 @@ from unstructured.partition.docx import register_picture_partitioner
 from file_ingest_and_retrieve.utils import DocxParagraphPicturePartitioner, ensure_directory, is_supported_file
 
 logger = logging.getLogger(__name__)
+
+# Sentence boundary pattern for both Chinese and English.
+# Splits after: 。！？；…… \n\n  or  . ! ? followed by whitespace
+_SENT_SPLIT_RE = re.compile(
+    r'(?<=[。！？；…\n])|(?<=[.!?])(?=\s)'
+)
+
+
+def _bilingual_sentence_splitter(text: str) -> List[str]:
+    """Split text into sentences supporting both Chinese and English."""
+    parts = _SENT_SPLIT_RE.split(text)
+    # Strip whitespace-only fragments and rejoin very short fragments (< 10 chars)
+    sentences: List[str] = []
+    buf = ""
+    for part in parts:
+        buf += part
+        if len(buf.strip()) >= 10:
+            sentences.append(buf)
+            buf = ""
+    if buf.strip():
+        if sentences:
+            sentences[-1] += buf
+        else:
+            sentences.append(buf)
+    return sentences if sentences else [text]
+
 
 class DocumentParser:
     """
@@ -21,10 +48,12 @@ class DocumentParser:
     Supported formats: TXT, PDF, DOCX, DOC, PPTX, PPT, XLSX, HTML, XML, MD, etc.
 
     Features:
-    - High-resolution PDF parsing with OCR
-    - Image extraction from PDFs and DOCX files
-    - Multi-language OCR support (English, Chinese Simplified, Chinese Traditional)
-    - Configurable chunking with overlap
+    - Two chunking modes: fixed-size (basic) chunking by default; semantic chunking when embed_model is provided
+    - OCR for PDFs: enabled when use_hi_res_strategy=True (hi_res renders each page as image for Tesseract OCR);
+      fast strategy only uses OCR as fallback for image-only pages
+    - Multi-language OCR support (English, Chinese Simplified, Chinese Traditional) via ocr_languages parameter
+    - Image extraction from PDFs (extract_images=True) and DOCX files: saves image files to disk only,
+      no further OCR or text recognition is performed on extracted images
     - Deduplication of processed files
     """
 
@@ -36,17 +65,29 @@ class DocumentParser:
         image_output_dir: str = "./extracted_images",
         ocr_languages: Optional[List[str]] = None,
         use_hi_res_strategy: bool = True,
+        embed_model=None,
+        semantic_buffer_size: int = 2,
+        semantic_breakpoint_percentile: int = 85,
+        semantic_min_chunk_size: int = 200,
     ):
         """
         Initialize the document parser.
 
         Args:
-            chunk_size: Maximum characters per chunk (default: 250)
-            chunk_overlap: Characters overlap between chunks (default: 50)
+            chunk_size: Maximum characters per chunk (default: 250). Used only when embed_model is None.
+            chunk_overlap: Characters overlap between chunks (default: 50). Used only when embed_model is None.
             extract_images: Whether to extract images from PDFs (default: True)
             image_output_dir: Directory to save extracted images (default: './extracted_images')
             ocr_languages: List of OCR languages (default: ['eng', 'chi_sim', 'chi'])
             use_hi_res_strategy: Use high-resolution parsing (slower but more accurate)
+            embed_model: LlamaIndex-compatible embedding model for semantic chunking.
+                         If provided, SemanticSplitterNodeParser is used instead of basic chunking.
+            semantic_buffer_size: Number of surrounding sentences to compare when detecting
+                                  semantic boundaries (default: 2).
+            semantic_breakpoint_percentile: Percentile threshold for breakpoint detection (default: 85).
+                                            Higher = fewer, larger chunks.
+            semantic_min_chunk_size: Minimum characters per chunk when using semantic splitting.
+                                     Chunks shorter than this are merged into the next chunk (default: 400).
         """
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
@@ -54,7 +95,21 @@ class DocumentParser:
         self.image_output_dir = ensure_directory(image_output_dir)
         self.ocr_languages = ocr_languages or ["eng", "chi_sim", "chi"]
         self.use_hi_res_strategy = use_hi_res_strategy
+        self.semantic_min_chunk_size = semantic_min_chunk_size
         self.reader = UnstructuredReader()
+
+        # Splitter: semantic or basic fixed-size
+        if embed_model is not None:
+            self.splitter = SemanticSplitterNodeParser(
+                embed_model=embed_model,
+                buffer_size=semantic_buffer_size,
+                breakpoint_percentile_threshold=semantic_breakpoint_percentile,
+                sentence_splitter=_bilingual_sentence_splitter,
+            )
+            logger.info("DocumentParser: using SemanticSplitterNodeParser.")
+        else:
+            self.splitter = None  # unstructured basic chunking will be used
+            logger.info("DocumentParser: using unstructured basic chunking.")
 
         self.excluded_embed_metadata_keys = [
             "file_size",
@@ -99,15 +154,20 @@ class DocumentParser:
                     f"Please install LibreOffice or convert to modern format (.docx, .pptx, .xlsx)"
                 )
 
-        register_picture_partitioner(DocxParagraphPicturePartitioner)
+        if ext == ".docx":
+            register_picture_partitioner(DocxParagraphPicturePartitioner)
 
         unstructured_kwargs = {
             "strategy": "hi_res" if self.use_hi_res_strategy else "fast",
-            "chunking_strategy": "basic",
-            "overlap_all": True,
-            "max_characters": self.chunk_size,
-            "overlap": self.chunk_overlap,
         }
+
+        if self.splitter is None:
+            unstructured_kwargs.update({
+                "chunking_strategy": "basic",
+                "overlap_all": True,
+                "max_characters": self.chunk_size,
+                "overlap": self.chunk_overlap,
+            })
 
         if Path(file_path).suffix.lower() == ".pdf":
             unstructured_kwargs.update(
@@ -123,15 +183,56 @@ class DocumentParser:
             nodes = self.reader.load_data(
                 file=file_path,
                 unstructured_kwargs=unstructured_kwargs,
-                split_documents=True,
+                split_documents=self.splitter is None,  # False when semantic: keep as one Document
                 document_kwargs={
                     "excluded_embed_metadata_keys": self.excluded_embed_metadata_keys,
                     "excluded_llm_metadata_keys": self.excluded_llm_metadata_keys,
                 },
             )
+            if self.splitter is not None:
+                # reader returned a single Document; attach file_path meta and semantic-split
+                nodes[0].metadata["file_path"] = file_path
+                logger.info(f"SemanticSplitter input: {len(nodes[0].get_content())} chars")
+                nodes = self.splitter.get_nodes_from_documents(nodes)
+                for _n in nodes:
+                    _n.set_content(re.sub(r'\s*\n+\s*', ' ', _n.get_content()).strip())
+                nodes = self._merge_short_chunks(nodes)
+                logger.info(f"SemanticSplitter: {file_path} → {len(nodes)} chunks")
             return nodes
         except Exception as e:
             raise RuntimeError(f"Failed to parse {file_path}: {str(e)}")
+
+    def _merge_short_chunks(self, nodes: List[BaseNode]) -> List[BaseNode]:
+        """Merge chunks shorter than semantic_min_chunk_size into the following chunk."""
+        if not nodes or self.semantic_min_chunk_size <= 0:
+            return nodes
+        merged = []
+        carry_text = ""
+        carry_meta = None
+        for node in nodes:
+            text = node.get_content()
+            if carry_text:
+                text = carry_text + " " + text
+                node.set_content(text)
+                if carry_meta:
+                    node.metadata = {**carry_meta, **node.metadata}
+                carry_text = ""
+                carry_meta = None
+            if len(text) < self.semantic_min_chunk_size:
+                carry_text = text
+                carry_meta = node.metadata
+            else:
+                merged.append(node)
+        # flush any remaining carry into the last merged chunk
+        if carry_text:
+            if merged:
+                last = merged[-1]
+                last.set_content(last.get_content() + " " + carry_text)
+            else:
+                nodes[-1].set_content(carry_text)
+                merged.append(nodes[-1])
+        logger.info(f"Semantic split: {len(nodes)} → {len(merged)} chunks after merging short ones.")
+        return merged
 
     def parse_files(self, file_paths: List[str], deduplicate: bool = True) -> List[BaseNode]:
         """

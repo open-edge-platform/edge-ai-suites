@@ -57,6 +57,9 @@ class Indexer:
         self.document_parser = DocumentParser(
             chunk_size=250,
             chunk_overlap=50,
+            # embed_model=self.document_embedding_model,  # ✅ OpenVINOEmbedding 实例，不是字符串
+            # semantic_breakpoint_percentile=95,
+            # semantic_min_chunk_size=150,
             extract_images=False,  # Don't extract images for now
             use_hi_res_strategy=False  # Use fast strategy for better performance
         )
@@ -294,7 +297,7 @@ class Indexer:
             for idx, node in enumerate(nodes):
                 meta_data = copy.deepcopy(meta)
                 meta_data["chunk_index"] = idx
-                meta_data["chunk_text"] = node.get_content()[:100]  # Store first 100 chars for reference
+                meta_data["chunk_text"] = node.get_content()
                 
                 if hasattr(node, 'metadata') and node.metadata:
                     for key, value in node.metadata.items():

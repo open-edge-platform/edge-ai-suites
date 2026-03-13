@@ -34,8 +34,9 @@ pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
 
 ### Install System Dependencies
 
-#### Tesseract OCR for image text extraction
+#### Tesseract OCR for text extraction
 
+This will be enabled with high-resolution mode, for processing PDF file.
 1. Download the latest installer `tesseract-ocr-w64-setup-v5.x.x.exe` (64-bit) from [UB-Mannheim Tesseract](https://github.com/UB-Mannheim/tesseract/wiki)
 2. Run the installer, default installation path: `C:\Program Files\Tesseract-OCR`
 3. Add to PATH:
@@ -78,6 +79,50 @@ pip install multimodal_embedding_serving-0.1.1-py3-none-any.whl
    import shutil
    shutil.which("soffice") is not None
    ```
+
+## Document Parsing Configuration
+
+`DocumentParser` supports two chunking modes that can be selected when initialising the class directly or via `Indexer`.
+
+### Basic (fixed-size) chunking — default
+
+Text is split by the `unstructured` library into fixed-size chunks.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `chunk_size` | `250` | Maximum characters per chunk |
+| `chunk_overlap` | `50` | Overlapping characters between adjacent chunks |
+| `use_hi_res_strategy` | `True` | Renders PDF pages as images for Tesseract OCR (slower, higher accuracy); `False` uses fast strategy with OCR only as fallback |
+| `ocr_languages` | `["eng", "chi_sim", "chi"]` | Tesseract language codes used for OCR |
+
+### Semantic chunking (optional)
+
+Pass a LlamaIndex-compatible embedding model to `embed_model` to enable `SemanticSplitterNodeParser`. Instead of splitting by a fixed character count, the parser detects natural topic boundaries using embedding similarity, producing semantically coherent chunks.
+
+A bilingual sentence splitter is used internally, supporting both **Chinese** (。！？；……) and **English** (`. ! ?`) punctuation boundaries.
+
+| Parameter | Default | Description |
+|---|---|---|
+| `embed_model` | `None` | LlamaIndex embedding model instance. When set, semantic chunking is used instead of basic chunking |
+| `semantic_buffer_size` | `2` | Number of surrounding sentences compared when detecting a semantic boundary |
+| `semantic_breakpoint_percentile` | `85` | Percentile threshold for breakpoint detection; higher value → fewer, larger chunks |
+| `semantic_min_chunk_size` | `200` | Minimum characters per chunk; chunks below this threshold are merged into the next chunk |
+
+**Example — enabling semantic chunking in `Indexer`:**
+
+```python
+# In indexer.py, pass the embedding model instance to DocumentParser:
+self.document_parser = DocumentParser(
+    embed_model=self.document_embedding_model,  # LlamaIndex-compatible OpenVINOEmbedding instance
+    semantic_breakpoint_percentile=95,
+    semantic_min_chunk_size=150,
+    use_hi_res_strategy=False,
+)
+```
+
+> **Note:** When `embed_model` is provided, `chunk_size` and `chunk_overlap` are ignored.
+
+---
 
 ## Start service
 
