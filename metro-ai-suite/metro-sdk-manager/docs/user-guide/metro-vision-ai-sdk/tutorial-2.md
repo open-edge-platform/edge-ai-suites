@@ -254,7 +254,7 @@ docker run -it --rm --net=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   -v $PWD/videos:/home/dlstreamer/videos:ro \
   -v $PWD/decode.sh:/home/dlstreamer/decode.sh:ro \
-  intel/dlstreamer:2025.1.2-ubuntu24 \
+  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
   /home/dlstreamer/decode.sh
 ```
 
