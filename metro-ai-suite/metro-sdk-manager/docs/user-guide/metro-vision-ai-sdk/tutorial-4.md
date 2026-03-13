@@ -116,7 +116,7 @@ docker run -it --rm --net=host \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   -v ${PWD}:/home/dlstreamer/data \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
   bash -c "export MODELS_PATH=/home/dlstreamer/data/models && \
            /opt/intel/dlstreamer/samples/gstreamer/gst_launch/human_pose_estimation/human_pose_estimation.sh \
            /home/dlstreamer/data/face-demographics-walking.mp4"
