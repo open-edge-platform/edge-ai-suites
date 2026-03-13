@@ -84,7 +84,6 @@ get-started
 how-to-guides
 api-reference
 troubleshooting
-export-and-optimize-geti-model
 release-notes
 
 :::
