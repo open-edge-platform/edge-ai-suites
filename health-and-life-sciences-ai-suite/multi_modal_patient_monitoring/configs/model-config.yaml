@@ -1,18 +1,12 @@
 ai-ecg:
-  models:
-    - name: ecg_8960_ir10_fp16
+  models:   
+    - name: hubert_ecg_small_fp16
       type: ai-ecg
-      hub: hls
+      hub: hf
+      source: hubert-ecg
+      model_id: Edoardo-BS/hubert-ecg-small
       target_dir: /models/ai-ecg
-      nodel_url: https://raw.githubusercontent.com/Einse57/OpenVINO_sample/master/ai-ecg-master
-      ir_file: ecg_8960_ir10_fp16.xml
-      video_dir: /videos/ai-ecg
-    - name: ecg_17920_ir10_fp16
-      type: ai-ecg
-      hub: hls
-      target_dir: /models/ai-ecg
-      nodel_url: https://raw.githubusercontent.com/Einse57/OpenVINO_sample/master/ai-ecg-master
-      ir_file: ecg_17920_ir10_fp16.xml
+      ir_file: hubert_ecg_small_fp16.xml
       video_dir: /videos/ai-ecg
 
 rppg:

@@ -19,7 +19,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
 
-Install Ubuntu Ubuntu 24.04 (Noble Numat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
+Install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
 ::::{tab-set}
 :::{tab-item} **Ubuntu 24.04**
@@ -29,7 +29,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 |Processor type|Canonical Ubuntu 24.04 LTS variant|ROS2 Compatibility|
 |-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
 
 :::
 :::{tab-item}  **Ubuntu 22.04**
@@ -54,13 +54,13 @@ To install ROS 2 on your system, follow the **ROS 2 setup guide**:
 :::{tab-item} **Jazzy**
 :sync: jazzy
 
-[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 :::{tab-item} **Humble**
 :sync: humble
 
-[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 ::::
@@ -341,7 +341,7 @@ The following steps will install the OpenVINO™ packages:
    sudo apt install openvino
    ```
 
-6. Install the the ROS 2 OpenVINO™ Toolkit:
+6. Install the ROS 2 OpenVINO™ Toolkit:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -813,12 +813,11 @@ To install the Intel® NPU driver, complete the following steps:
 sudo reboot
 ```
 
-
 ## Installation Troubleshooting
 
 ### Support Forum
 
-If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Intel-Edge-Software-Hub/bd-p/edge-software-hub) for assistance.
+If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Edge-Software-Catalog/bd-p/EdgeSoftwareCatalog) for assistance.
 
 ### APT Package Manager
 
@@ -847,4 +846,3 @@ If the APT package manager is unable to connect to the repositories, follow thes
 
     After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
     you will have to reboot the device, so these settings become effective.
-

@@ -41,13 +41,13 @@ Installation
 
    .. code-block:: bash
 
-      $ sudo apt install librealsense2
+      sudo apt install librealsense2
 
 #. Install the ORB-SLAM3 packages by following the below command:
 
    .. code-block:: bash
 
-      $ sudo apt install orb-slam3
+      sudo apt install orb-slam3
 
 After installation, the VSLAM example programs are installed under folder ``/opt/intel/orb-slam3``.
 
@@ -68,10 +68,10 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
 
    .. code-block:: bash
 
-      $ mkdir -p ~/orb-slam3/dataset
-      $ cd ~/orb-slam3/dataset
-      $ wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_04_difficult/MH_04_difficult.zip
-      $ unzip MH_04_difficult.zip -d MH04
+      mkdir -p ~/orb-slam3/dataset
+      cd ~/orb-slam3/dataset
+      wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_04_difficult/MH_04_difficult.zip
+      unzip MH_04_difficult.zip -d MH04
 
     NOTE: This demo uses MH_04_difficult dataset. If you want to try other dataset, you may download them from the link: https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets.
 
@@ -81,9 +81,9 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
 
    .. code-block:: bash
 
-      $ mkdir -p ~/orb-slam3/log
-      $ cd ~/orb-slam3/
-      $ /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
+      mkdir -p ~/orb-slam3/log
+      cd ~/orb-slam3/
+      /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
 
     NOTE: If you use other datasets other than MH_04_difficult, you should make sure you update the command above with the correct name of dataset you use.
 
@@ -103,5 +103,5 @@ This Demo uses Intel Realsense Camera as stereo inputs.
 
    .. code-block:: bash
 
-      $ /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
+      /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
 

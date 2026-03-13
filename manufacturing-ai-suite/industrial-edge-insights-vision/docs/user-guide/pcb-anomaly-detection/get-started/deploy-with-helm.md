@@ -23,17 +23,17 @@
    ```sh
    cp helm/values_pcb-anomaly-detection.yaml helm/values.yaml
    ```
-
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
    - Download helm chart with the following command
 
-       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc1`
+       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc2`
    - unzip the package using the following command
 
-       `tar -xvf pcb-anomaly-detection-1.2.0-rc1.tgz`
+       `tar -xvf pcb-anomaly-detection-1.2.0-rc2.tgz`
    - Replace the helm directory
 
        `rm -rf helm && mv pcb-anomaly-detection helm`

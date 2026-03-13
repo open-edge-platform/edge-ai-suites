@@ -277,13 +277,14 @@ public:
       RCLCPP_INFO(this->get_logger(), "adbscan_sub_node started; ");
     }
     auto defalt_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
+    auto sensor_qos = rclcpp::SensorDataQoS();
     if (Lidar_type_ == "2D") {
       subscription_2D_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_2D_callback, this, std::placeholders::_1));
     } else if (Lidar_type_ == "3D" || Lidar_type_ == "RS") {
       subscription_3D_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_3D_callback, this, std::placeholders::_1));
     } else {
       RCLCPP_ERROR(this->get_logger(), "topic not found");

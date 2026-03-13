@@ -49,6 +49,10 @@ vector<Point_xyz> PointCloud2_to_point_xyz(
   vector<Point_xyz> point_list;
 
   for (const auto & pt : point_cloud.points) {
+    // Filter out inf/NaN values from RGBD depth camera (pixels with no depth return)
+    if (!std::isfinite(pt.x) || !std::isfinite(pt.y) || !std::isfinite(pt.z)) {
+      continue;
+    }
     Point_xyz new_pt;
     new_pt.x = pt.x;
     new_pt.y = pt.y;
@@ -200,6 +204,7 @@ public:
     this->declare_parameter("max_angular", double(0.8));
     this->declare_parameter("max_frame_blocked", int(2));
     this->declare_parameter("tracking_radius", double(0.2));
+    this->declare_parameter("optical_frame", false);
 
 #endif  // PRE_ROS_HUMBLE
 
@@ -249,9 +254,11 @@ public:
     CONFIG_PARAMS.max_angular = max_angular_param.as_double();
     CONFIG_PARAMS.max_frame_blocked = max_frame_blocked_param.as_int();
     CONFIG_PARAMS.tracking_radius = tracking_radius.as_double();
+    CONFIG_PARAMS.optical_frame = this->get_parameter("optical_frame").as_bool();
 
     cout << "Use gesture control: " << gesture_enable_ << endl;
     cout << "Use audio control: " << audio_enable_ << endl;
+    cout << "optical_frame: " << CONFIG_PARAMS.optical_frame << endl;
     target_loc.x = CONFIG_PARAMS.init_tgt_loc;  // 0.5;
     target_loc.y = 0;
     target_loc.z = 0;
@@ -269,6 +276,7 @@ public:
     }
 
     auto defalt_qos = rclcpp::QoS(rclcpp::SystemDefaultsQoS());
+    auto sensor_qos = rclcpp::SensorDataQoS();
 
     if (gesture_enable_) {
       subscription_gesture_ = this->create_subscription<follow_me_interfaces::msg::GestureCategory>(
@@ -284,11 +292,11 @@ public:
 
     if (Lidar_type_ == "2D") {
       subscription_2D_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_2D_callback, this, std::placeholders::_1));
     } else if (Lidar_type_ == "3D" || Lidar_type_ == "RS") {
       subscription_3D_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
-        Lidar_topic_, defalt_qos,
+        Lidar_topic_, sensor_qos,
         std::bind(&MinimalSubscriber::topic_3D_callback, this, std::placeholders::_1));
     } else {
       RCLCPP_ERROR(this->get_logger(), "topic not found");
@@ -431,15 +439,34 @@ private:
 
     vector<Point_xyz> point_list = PointCloud2_to_point_xyz(_msg);
 
-    // jcao7 for RealSense, go through each point and rotate
+    // For RealSense in optical frame (real hardware), rotate from optical
+    // convention (x-right, y-down, z-forward) to robot body frame
+    // (x-forward, y-left, z-up).  Gazebo Harmonic already publishes in
+    // robot body frame when gz_frame_id is set, so the transform is skipped
+    // when optical_frame is false.
     if (Lidar_type_ == "RS") {
       int num_pt = point_list.size();
-      float tmp;
-      for (int i = 0; i < num_pt; i++) {
-        tmp = point_list[i].z;
-        point_list[i].z = -point_list[i].y;
-        point_list[i].y = -point_list[i].x;
-        point_list[i].x = tmp;
+      float min_z = 1e6, max_z = -1e6, sum_y = 0.0;
+      if (CONFIG_PARAMS.optical_frame) {
+        for (int i = 0; i < num_pt; i++) {
+          float tmp = point_list[i].z;
+          point_list[i].z = -point_list[i].y;
+          point_list[i].y = -point_list[i].x;
+          point_list[i].x = tmp;
+          if (point_list[i].z < min_z) min_z = point_list[i].z;
+          if (point_list[i].z > max_z) max_z = point_list[i].z;
+          sum_y += point_list[i].y;
+        }
+      } else {
+        for (int i = 0; i < num_pt; i++) {
+          if (point_list[i].z < min_z) min_z = point_list[i].z;
+          if (point_list[i].z > max_z) max_z = point_list[i].z;
+          sum_y += point_list[i].y;
+        }
+      }
+      if (Verbose_) {
+        cout << "[RS diag] pts=" << num_pt << " z_min=" << min_z << " z_max=" << max_z
+             << " y_mean=" << (num_pt > 0 ? sum_y / num_pt : 0.0) << endl;
       }
     }
 
@@ -574,13 +601,15 @@ private:
 
     float distance = sqrt(target_loc.x * target_loc.x + target_loc.y * target_loc.y);
     RCLCPP_INFO(this->get_logger(), "distance : '%f'", distance);
-    if (distance < MIN_DIST || distance > MAX_DIST) {
-      // too far or too close, stop linear movement
+    if (distance < MIN_DIST) {
+      // Too close � stop forward motion but keep angular to track target
       message.linear.x = 0.0;
-    } else if (distance > 1.0) {
-      message.linear.x = MAX_LINEAR;
+    } else if (distance > MAX_DIST) {
+      // Too far � stop
+      message.linear.x = 0.0;
     } else {
-      message.linear.x = MAX_LINEAR * (distance - MIN_DIST) / (1.0 - MIN_DIST);
+      // Proportional speed: ramp linearly from 0 at MIN_DIST to MAX_LINEAR at MAX_DIST
+      message.linear.x = MAX_LINEAR * (distance - MIN_DIST) / (MAX_DIST - MIN_DIST);
     }
 
     // message.linear.x = 4.0; // used for testing
@@ -590,6 +619,12 @@ private:
     RCLCPP_INFO(
       this->get_logger(), "Sending - Linear Velocity : '%f', Angular Velocity : '%f'",
       message.linear.x, message.angular.z);
+
+    if (Verbose_) {
+      cout << "[RS twist] lin=" << message.linear.x << " ang=" << message.angular.z
+           << " tgt_x=" << target_loc.x << " tgt_y=" << target_loc.y << endl;
+    }
+
     publisher_->publish(message);
     // exit(0); // for debug
     i += 0.1;

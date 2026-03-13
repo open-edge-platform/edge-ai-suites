@@ -32,10 +32,10 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
-get-started
-how-it-works
-application-flow
-release-notes
+./get-started
+./how-it-works
+./application-flow
+Release Notes <./release-notes>
 
 :::
 hide_directive-->

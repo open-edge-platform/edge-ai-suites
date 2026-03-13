@@ -44,7 +44,7 @@ arm1_launch_cmd = IncludeLaunchDescription(
                            'x_pos': '0.18',
                            'y_pos': '0.0',
                            'yaw': '0.0',
-                           'pedestal_height': '0.16',
+                           'pedestal_height': '0.18',
                            'use_sim_time': use_sim_time,
                            'launch_stack': 'true',
                            'wait_on': 'topic /amr1/cmd_vel'

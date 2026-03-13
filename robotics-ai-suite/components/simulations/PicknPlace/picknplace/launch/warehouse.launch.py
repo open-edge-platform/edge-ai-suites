@@ -24,9 +24,11 @@ from launch.event_handlers import OnProcessExit
 from launch.actions import (
     DeclareLaunchArgument,
     IncludeLaunchDescription,
-    ExecuteProcess,
     RegisterEventHandler,
-    AppendEnvironmentVariable
+    AppendEnvironmentVariable,
+    SetEnvironmentVariable,
+    TimerAction,
+    LogInfo
 )
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
@@ -79,6 +81,21 @@ def generate_launch_description():
         env_str)
     ld.add_action(set_env_vars_resources)
 
+    # Set CycloneDDS config to increase max participant limit (needed for multi-robot)
+    # Search upward from package_path for cyclonedds.xml
+    _search = os.path.dirname(package_path)
+    cyclonedds_config = ''
+    for _ in range(8):
+        candidate = os.path.join(_search, 'cyclonedds.xml')
+        if os.path.exists(candidate):
+            cyclonedds_config = candidate
+            break
+        _search = os.path.dirname(_search)
+    if cyclonedds_config:
+        set_cyclonedds = SetEnvironmentVariable(
+            'CYCLONEDDS_URI', f'file://{cyclonedds_config}')
+        ld.add_action(set_cyclonedds)
+
     # Gazebo Environment Launch
     gazebo_launch_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -95,24 +112,8 @@ def generate_launch_description():
     )
     ld.add_action(gazebo_launch_cmd)
 
-    bridge_params = os.path.join(
-        package_path,
-        'params',
-        'warehouse_bridge.yaml'
-    )
-
-    start_gazebo_ros_bridge_cmd = Node(
-        package='ros_gz_bridge',
-        executable='parameter_bridge',
-        arguments=[
-            '--ros-args',
-            '-p',
-            f'config_file:={bridge_params}',
-        ],
-        output='screen',
-    )
-
-    ld.add_action(start_gazebo_ros_bridge_cmd)
+    # AMR bridges are launched by robot_config/amr.launch.py.
+    # Do not duplicate them here to avoid duplicate topic bridges and clock instability.
 
     conveyorbelt_spawn_entity = Node(
         package='ros_gz_sim',
@@ -207,24 +208,23 @@ def generate_launch_description():
     )
     ld.add_action(arm1_launch_cmd)
 
-    # Spawn ARM2 only after the ARM1 is fully spawned in gazebo
-    # (e.g /arm1/arm_controller/follow_joint_trajectory available)
+    # ARM2 spawn — positioned at (-4.0, 0.0) with 0.16m pedestal (same as arm1)
     arm2_launch_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(robot_config_launch_dir, 'arm.launch.py')
         ),
         launch_arguments={
             'arm_name': 'arm2',
-            'x_pos': '-7.0',
-            'y_pos': '-0.0',
+            'x_pos': '-4.0',
+            'y_pos': '0.0',
             'z_pos': '0.01',
             'yaw': '0.0',
+            'pedestal_height': '0.16',
             'use_sim_time': use_sim_time,
             'launch_stack': launch_stack,
-            # 'wait_on': 'action /arm1/arm_controller/follow_joint_trajectory'
+            'wait_on': 'action /arm1/arm_controller/follow_joint_trajectory',
         }.items()
     )
-
     ld.add_action(arm2_launch_cmd)
 
     # Launch cube, amr, arm1 & arm2 controllers
@@ -232,6 +232,7 @@ def generate_launch_description():
         package='picknplace',
         executable='cube_controller.py',
         output='screen',
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '--ros-args',
             '--log-level',
@@ -243,6 +244,8 @@ def generate_launch_description():
         package='picknplace',
         executable='arm1_controller.py',
         output='screen',
+        namespace='/arm1',
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '--ros-args',
             '--log-level',
@@ -255,6 +258,7 @@ def generate_launch_description():
         executable='amr_controller.py',
         output='screen',
         namespace='/amr1',
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '--ros-args',
             '--log-level',
@@ -266,6 +270,8 @@ def generate_launch_description():
         package='picknplace',
         executable='arm2_controller.py',
         output='screen',
+        namespace='/arm2',
+        parameters=[{'use_sim_time': True}],
         arguments=[
             '--ros-args',
             '--log-level',
@@ -273,21 +279,48 @@ def generate_launch_description():
         ],
     )
 
-    # Start controllers after ARM2 is fully spawned in gazebo
-    # (e.g /arm2/arm_controller/follow_joint_trajectory available)
-    wait_for_action_server = ExecuteProcess(
-        cmd=[
-            'ros2',
-            'run',
-            'robot_config',
-            'wait_for_interface.py',
-            'action',
-            '/arm2/arm_controller/follow_joint_trajectory',
-        ],
+    # Static TF Publishers following proper ROS2 Nav2 TF architecture
+    # ============================================================================
+    # TF ARCHITECTURE (Jazzy + Harmonic Requirement)
+    # ============================================================================
+    # Single unified tree required for mobile manipulation:
+    #
+    #   map (root - Nav2 reference)
+    #    └── world (Gazebo reference - static offset from map)
+    #        ├── arm1/pedestal → arm1/base_link → arm1/... → arm1/ee_link → gripper
+    #        ├── arm2/pedestal → arm2/base_link → arm2/... → arm2/ee_link → gripper
+    #        ├── cube_1, cube_2, ... (objects)
+    #        └── odom (connected via map)
+    #             └── amr1/base_link → amr1/... (mobile base)
+    #
+    # Note: AMCL publishes map → amr1/odom dynamically
+    #       Gazebo TF bridge publishes amr1/odom → amr1/base_footprint
+    # ============================================================================
+
+    # CRITICAL: map → world bridge (connects Nav2 and manipulation frames)
+    static_tf_map_world = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='static_tf_publisher_map_world',
+        arguments=['--x', '0.0',
+                   '--y', '0.0',
+                   '--z', '0.0',
+                   '--yaw', '0.0',
+                   '--roll', '0',
+                   '--pitch', '0',
+                   '--frame-id', 'map',
+                   '--child-frame-id', 'world'],
+        parameters=[{'use_sim_time': True}],
         output='screen',
     )
 
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    # ❌ REMOVED: Direct world → arm1/base_link (breaks pedestal chain)
+    # ❌ REMOVED: Direct world → arm2/base_link (breaks pedestal chain)
+    # ✅ NOW: Arms spawn in Gazebo at world coordinates, URDF provides
+    #         world → pedestal → base_link chain via robot_state_publisher
+
+    # Note: Cube TF broadcasting now handled directly by cube_controller.py
+    # No separate cube_tf_publisher node needed
 
     amr1_rviz_file = os.path.join(
         get_package_share_directory('picknplace'), 'rviz', 'amr1_view.rviz'
@@ -298,7 +331,6 @@ def generate_launch_description():
         name='rviz2',
         namespace='/amr1',
         output='log',
-        remappings=remappings,
         arguments=['-d', amr1_rviz_file, '--ros-args', '--log-level',
                    LOG_LEVEL],
     )
@@ -312,25 +344,58 @@ def generate_launch_description():
         name='rviz2',
         namespace='/arm1',
         output='log',
-        remappings=remappings,
         arguments=['-d', arm1_rviz_file, '--ros-args', '--log-level',
                    LOG_LEVEL],
     )
 
-    launch_controllers = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=wait_for_action_server,
+    # Launch controllers, TF publishers, and RViz with delays
+    # ARM controllers start at 10s (need MoveIt initialization time)
+    arm_controllers_launch = TimerAction(
+        period=10.0,  # Wait 10 seconds for MoveIt and ros2_control to be ready
+        actions=[
+            static_tf_map_world,  # ✅ Connect map and world frames
+            # cube_tf_publisher removed - now handled by cube_controller directly
+            arm1_controller,
+            arm2_controller,
+            amr_controller,
+            amr1_rviz_node,
+            arm1_rviz_node,
+        ],
+    )
+
+    # Cube controller waits for arm to be operational (verified via topic)
+    # This ensures arm1_controller and joint_state_broadcaster are
+    # publishing before cubes spawn
+    from launch.actions import ExecuteProcess
+    cube_controller_wait = ExecuteProcess(
+        cmd=[
+            'bash', '-c',
+            # Wait for joint states AND arm controller param service
+            'timeout 30 bash -c "until ros2 topic echo'
+            ' /arm1/joint_states --once >/dev/null 2>&1 &&'
+            ' ros2 service list | grep -q'
+            ' /arm1/ARM1Controller/get_parameters;'
+            ' do sleep 0.5; done" &&'
+            ' echo "ARM1 ready - starting cube controller"'
+        ],
+        output='screen',
+    )
+
+    cube_controller_launch = RegisterEventHandler(
+        OnProcessExit(
+            target_action=cube_controller_wait,
             on_exit=[
+                LogInfo(msg='Starting cube controller - ARM1 verified operational'),
                 cube_controller,
-                arm1_controller,
-                amr_controller,
-                arm2_controller,
-                amr1_rviz_node,
-                arm1_rviz_node,
-            ],
+            ]
         )
     )
-    ld.add_action(wait_for_action_server)
-    ld.add_action(launch_controllers)
+
+    ld.add_action(arm_controllers_launch)
+    # Start checking after 10s
+    ld.add_action(
+        TimerAction(period=10.0, actions=[cube_controller_wait])
+    )
+    ld.add_action(cube_controller_launch)
 
     return ld

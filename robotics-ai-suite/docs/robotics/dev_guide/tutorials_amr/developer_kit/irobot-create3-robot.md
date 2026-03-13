@@ -26,7 +26,7 @@ following modifications have been applied to the robot:
 - Intel® RealSense™ camera mounted on the front of the top layer and
   connected to a USB port on the Intel® board,
 
-- Slamtec RPLIDAR 2D ([Slamtec RPLIDAR A3 laser range scanner](https://www.slamtec.ai/product/slamtec-rplidar-a3) or [Slamtec RPLIDAR A2 laser range scanner (A2M8)](https://www.slamtec.ai/product/slamtec-rplidar-a2)) sensor on a mount in the center of the
+- Slamtec RPLIDAR 2D ([Slamtec RPLIDAR A3 laser range scanner](https://www.slamtec.com/en/Lidar/A3) or [Slamtec RPLIDAR A2 laser range scanner (A2M8)](https://www.slamtec.com/en/Lidar/A2)) sensor on a mount in the center of the
   top layer and connected to two USB ports on the Intel® board,
 
 - custom battery in the cargo bay to power the Intel® board and
@@ -50,7 +50,7 @@ following modifications have been applied to the robot:
 
 Update the robot to use the latest ROS 2 firmware for your selected OS distribution, and configure it
 to access your WiFi network following the
-[iRobot® Create® 3 Setup](https://edu.irobot.com/create3-setup) documentation.
+[iRobot® Create® 3 Setup](https://iroboteducation.github.io/create3_docs/setup/provision/) documentation.
 
 With the robot connected to your WiFi network continue configuring it
 using its web interface. Refer to the [iRobot Create 3 mobile robotics platform documentation](https://iroboteducation.github.io/create3_docs/) for the exact

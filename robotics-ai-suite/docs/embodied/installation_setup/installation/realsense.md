@@ -69,7 +69,7 @@ ROS is a set of open-source software libraries and tools that help you build rob
 
 8. (Optional) Install other tools or packages of Intel RealSense depth cameras:
 
-    See the [installation link](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md)>
+    See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
     to install librealsense packages and more other tools from Intel® RealSense™ depth camera sources.
 
 ## Troubleshooting

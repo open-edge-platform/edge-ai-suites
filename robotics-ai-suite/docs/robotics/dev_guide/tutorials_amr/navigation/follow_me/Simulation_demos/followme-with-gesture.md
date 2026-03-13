@@ -70,6 +70,7 @@ for the framework:
 
 ```bash
 pip3 install --upgrade pip
+pip3 install pyyaml
 pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirements_jazzy.txt
 ```
 
@@ -79,6 +80,7 @@ pip3 install -r /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/requirem
 
 ```bash
 pip3 install --upgrade pip
+pip3 install pyyaml
 pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
 ```
 
@@ -120,7 +122,7 @@ display on the right.
 - The gray circular robot is a
   [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
   robot, which will follow the guide robot. TurtleBot3 robot is equipped with a
-  2D Lidar and an Intel® RealSense™ Depth Camera. In this demo, the 2D Lidar is
+  2D Lidar and a RealSense™ Depth Camera. In this demo, the 2D Lidar is
   used as the input topic.
 
 **Both** of the following conditions need to be fulfilled to start the
@@ -149,82 +151,37 @@ the following conditions are true:
 
 ## Run Demo with Intel® RealSense™ Camera
 
-Execute the following commands one by one in three separate terminals.
+Run the following script to launch `Gazebo` simulator and ROS 2 rviz2.
 
-1. Terminal 1: This command will open `Gazebo` simulator and ROS 2 rviz2.
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
+```bash
+sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+/opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+```
 
-   ```bash
-   sudo chmod +x /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
-   /opt/ros/jazzy/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
-   ```
+<!--hide_directive:::
+:::{tab-item}hide_directive-->  **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
+```bash
+sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+/opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
+```
 
-   ```bash
-   sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
-   /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_RS.sh
-   ```
+<!--hide_directive:::
+::::hide_directive-->
 
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-2. Terminal 2: This command will launch the ADBSCAN Deb package. It runs the
-   ADBScan node on the point cloud data to detect the location of the target.
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture --ros-args --params-file /opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture --ros-args --params-file /opt/ros/humble/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml -r cmd_vel:=tb3/cmd_vel
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-3. Terminal 3: This command will run the gesture recognition package.
-
-   <!--hide_directive::::{tab-set}
-   :::{tab-item}hide_directive--> **Jazzy**
-   <!--hide_directive:sync: jazzyhide_directive-->
-
-   ```bash
-   ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args --params-file /opt/ros/jazzy/share/gesture_recognition_pkg/config/gesture_recognition.yaml
-   ```
-
-   <!--hide_directive:::
-   :::{tab-item}hide_directive-->  **Humble**
-   <!--hide_directive:sync: humblehide_directive-->
-
-   ```bash
-   ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args --params-file /opt/ros/humble/share/gesture_recognition_pkg/config/gesture_recognition.yaml
-   ```
-
-   <!--hide_directive:::
-   ::::hide_directive-->
-
-In this demo, Intel® RealSense™ camera of the TurtleBot3 robot is selected as
+In this demo, RealSense™ camera of the TurtleBot3 robot is selected as
 the input point cloud sensor. After running all of the above commands,
 you will observe similar behavior of the TurtleBot3 robot and guide robot in the
 `Gazebo` GUI as in [Run Demo with 2D Lidar](#run-demo-with-2d-lidar).
 
 There are reconfigurable parameters in
 `/opt/ros/humble/share/adbscan_ros2_follow_me/config/` directory for both LIDAR
-(`adbscan_sub_2D.yaml`) and Intel® RealSense™ camera (`adbscan_sub_RS.yaml`).
+(`adbscan_sub_2D.yaml`) and RealSense™ camera (`adbscan_sub_RS.yaml`).
 
 The user can modify parameters depending on the respective robot, sensor
 configuration and environments (if required) before running the tutorial.
@@ -232,7 +189,7 @@ Find a brief description of the parameters in the following list:
 
 - ``Lidar_type``
 
-  Type of the point cloud sensor. For Intel® RealSense™ camera and LIDAR inputs,
+  Type of the point cloud sensor. For RealSense™ camera and LIDAR inputs,
   the default value is set to ``RS`` and ``2D``, respectively.
 
 - ``Lidar_topic``

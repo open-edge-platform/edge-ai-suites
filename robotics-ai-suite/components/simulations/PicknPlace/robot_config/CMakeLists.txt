@@ -38,7 +38,14 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Environment hooks
-ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/robot_config.dsv.in")
+# Environment hooks - distribution specific
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/humble/robot_config.dsv.in")
+elseif($ENV{ROS_DISTRO} STREQUAL "jazzy")
+  ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/jazzy/robot_config.dsv.in")
+else()
+  # Default fallback - use GZ_SIM_RESOURCE_PATH for newer distributions
+  ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/robot_config.dsv.in")
+endif()
 
 ament_package()

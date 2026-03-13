@@ -19,4 +19,7 @@ config:
     ext:
       coturn_tcp_port: 30386
       coturn_udp_port: 30386
-privileged_access_required: true
+gpu:
+  enabled: true
+  type: # example: type: "npu.intel.com/accel"
+  count: # example: count: 1

@@ -23,6 +23,7 @@
    ```sh
    cp helm/values_pallet-defect-detection.yaml helm/values.yaml
    ```
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
@@ -32,13 +33,13 @@
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.6.0-rc1
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.6.0-rc2
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.6.0-rc1.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.6.0-rc2.tgz
      ```
 
    - Replace the helm directory
