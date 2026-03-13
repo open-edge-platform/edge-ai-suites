@@ -24,7 +24,7 @@ defects before they impact operations.
 ## How It Works
 
 This sample application consists of the following microservices:
-DL Streamer Pipeline Server, MediaMTX server,Coturn server, 
+DL Streamer Pipeline Server, MediaMTX server,Coturn server,
 Open Telemetry Collector, Prometheus and Minio.
 
 You start the pallet defect detection pipeline with a REST request using Client URL (cURL).
@@ -35,9 +35,9 @@ facilitate NAT traversal and ensure that the webrtc stream is accessible on a no
 browser client and helps in cases where firewall is enabled. DL Streamer Pipeline Server
 also sends the images to S3 compliant storage. The Open Telemetry Data exported by
 DL Streamer Pipeline Server to Open Telemetry Collector is scraped by Prometheus and can
-be seen on Prometheus UI. Any desired AI model from supported OpenVINO public models and 
+be seen on Prometheus UI. Any desired AI model from supported OpenVINO public models and
 Geti trained models can be downloaded with the help of Model Download Microservice
-and can be made available to DL Streamer Pipeline Server for inference in the 
+and can be made available to DL Streamer Pipeline Server for inference in the
 sample application.
 
 ![architecture and high-level representation of the flow of data through the architecture](./_assets/industrial-edge-insights-vision-architecture.drawio.svg)
@@ -84,7 +84,6 @@ get-started
 how-to-guides
 api-reference
 troubleshooting
-export-and-optimize-geti-model
 release-notes
 
 :::
