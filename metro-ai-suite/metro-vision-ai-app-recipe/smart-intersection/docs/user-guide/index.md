@@ -56,7 +56,7 @@ get-started
 how-it-works
 how-to-use-gpu-for-inference
 how-to-use-npu-for-inference
-export-and-optimize-model
+export-and-optimize-geti-model
 troubleshooting
 release-notes
 

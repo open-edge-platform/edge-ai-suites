@@ -101,7 +101,7 @@ To perform inferencing on an NPU device (for platforms with NPU accelerators suc
 
 If you experience errors or failures when running an NPU workload with a model trained in Intel Geti, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
 
-**Resolution**: Follow the [Export and Optimize Geti Model](./how-to-guides/export-and-optimize-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+**Resolution**: Follow the [Export and Optimize Geti Model](./how-to-guides/export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
 
 ## Unable to parse JSON payload due to missing `jq` package
 

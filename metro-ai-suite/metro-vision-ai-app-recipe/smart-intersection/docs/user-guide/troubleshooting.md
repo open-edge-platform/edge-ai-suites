@@ -111,7 +111,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 If you experience errors or failures when running an NPU workload with a model trained in Intel Geti, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
 
-**Resolution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+**Resolution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
 
 ## Troubleshooting Helm Deployments
 
