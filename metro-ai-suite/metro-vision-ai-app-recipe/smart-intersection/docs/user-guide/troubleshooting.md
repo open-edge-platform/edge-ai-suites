@@ -33,6 +33,10 @@ to file new tickets there (after learning about the guidelines for [Contributing
   sudo apt-get install -y <dependency>
   ```
 
+### 4. Camera Stream Stuck
+- **Issue**: Camera Streams seem to be stuck when SceneScape UI is accessed with localhost URL.
+- **Solution**: Make sure to access the localhost URL ONLY via RDP/VNC sessions. Opening via browser extensions from a remote machine is NOT recommended.
+
 ## Troubleshooting Docker Deployments
 
 ### 1. Containers Failing To Start:
