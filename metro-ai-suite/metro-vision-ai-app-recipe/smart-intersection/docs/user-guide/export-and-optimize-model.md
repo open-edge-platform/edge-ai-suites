@@ -12,15 +12,15 @@ Before you begin, ensure you have the following:
 
 - A trained model exported from Intel Geti as a **PyTorch weights file** (`.pth`)
 
-  ![Download PyTorch Weights from Intel Geti](../_assets/download_model_pytorch_weights.png)
+  ![Download PyTorch Weights from Intel Geti](_assets/download_model_pytorch_weights.png)
 
   *Note: Image is for illustration purposes only.*
 
 - A **COCO-format dataset** (`.zip`) used during training (required for post-training optimization)
 
-  ![Download COCO Dataset - Step 1](../_assets/download_coco_datasets1.png)
+  ![Download COCO Dataset - Step 1](_assets/download_coco_datasets1.png)
 
-  ![Download COCO Dataset - Step 2](../_assets/download_coco_datasets2.png)
+  ![Download COCO Dataset - Step 2](_assets/download_coco_datasets2.png)
 
   *Note: Images are for illustration purposes only.*
 
@@ -186,7 +186,7 @@ output/
 
 Both files can be used directly with the OpenVINO inference engine. The INT8 model (`optimized_model.xml`) offers faster inference with reduced memory footprint, while the FP32 model (`exported_model.xml`) retains full numerical precision.
 
-![Generated Model Output](../_assets/generated_model.png)
+![Generated Model Output](_assets/generated_model.png)
 
 *Note: Image is for illustration purposes only.*
 

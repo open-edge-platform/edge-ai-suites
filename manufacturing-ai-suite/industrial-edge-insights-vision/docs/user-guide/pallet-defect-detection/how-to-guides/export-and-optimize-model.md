@@ -4,7 +4,7 @@
 
 This guide starts by downloading the trained YOLOX PyTorch weights from Intel Geti and the COCO dataset used during training. A workspace is then set up and the [Training Extensions](https://github.com/open-edge-platform/training_extensions) repository is cloned, which provides the conversion script. After installing the required Python and Rust dependencies, the `export_and_optimize.py` script is run to convert the model to OpenVINO IR format — producing a full-precision FP32 model and an INT8 post-training quantized model optimized for Intel hardware.
 
-
+---
 
 ## Prerequisites
 
@@ -152,7 +152,7 @@ python export_and_optimize.py \
 | `--weights`        | Yes      | Path to the PyTorch weights file (`.pth`)                      |
 | `--source_dataset` | Yes      | Path to the COCO dataset directory                             |
 | `--output_dir`     | Yes      | Directory where exported and optimized model files are saved   |
-| `--model_name`     | Yes       | Model variant to use. Supported values: `yolox_tiny`, `yolox_s`, `yolox_l`, `yolox_x` (default: `yolox_tiny`) |
+| `--model_name`     | Yes      | Model variant to use. Supported values: `yolox_tiny`, `yolox_s`, `yolox_l`, `yolox_x` (default: `yolox_tiny`) |
 
 ### Example with Absolute Paths
 
@@ -170,7 +170,7 @@ python export_and_optimize.py \
 
 ## Output
 
-After the script completes, the `output/` directory will contain the exported and optimized model files ready for deployment in the Worker Safety Gear Detection pipeline:
+After the script completes, the `output/` directory will contain the exported and optimized model files ready for deployment in the Pallet Defect Detection pipeline:
 
 ```
 output/
