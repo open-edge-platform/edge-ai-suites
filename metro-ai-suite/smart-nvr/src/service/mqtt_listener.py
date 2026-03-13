@@ -165,7 +165,7 @@ def start_mqtt(broker, port, user, password, userdata,
         client.tls_insecure_set(True) 
     client.on_connect = on_connect
     client.on_message = on_message
-    client.connect(broker, port)
+    client.connect_async(broker, port)
     client.loop_start()
     logger.info(f" Connecting to MQTT broker {userdata} at {broker}:{port}")
 

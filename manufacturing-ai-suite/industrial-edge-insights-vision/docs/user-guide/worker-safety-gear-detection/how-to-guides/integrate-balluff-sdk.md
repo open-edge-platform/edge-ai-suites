@@ -29,7 +29,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BalluffDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2
 
 USER root
 
@@ -46,7 +46,7 @@ RUN chmod +x /home/pipeline-server/src-gst-gencamsrc/autogen.sh
 RUN chmod +x /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
 RUN /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
 
-# For Ubuntu24 intel/dlstreamer-pipeline-server:3.1.0-ubuntu24 base image
+# For Ubuntu24 intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
 
 # For Ubuntu 22 with intel/dlstreamer-pipeline-server:3.1.0-ubuntu22, uncomment the line below and comment the above line
@@ -74,7 +74,7 @@ USER intelmicroserviceuser
 Run the following command to build the image:
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-balluff -f BalluffDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-balluff -f BalluffDockerfile .
 ```
 
 This command builds your Docker image using the steps defined above.
@@ -85,7 +85,7 @@ This command builds your Docker image using the steps defined above.
 
 After the build completes, update .env and start the container:
 
-> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-balluff
+> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-balluff
 
 ```bash
 docker compose up -d
@@ -127,7 +127,7 @@ cp .env_worker-safety-gear-detection .env
 Update the `.env` file with the newly created image as below and modify any other required variables.
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-balluff
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-balluff
 ```
 
 ---
@@ -174,7 +174,7 @@ services:
     .
     network_mode: "host"
     # networks:
-    #   - mraas
+    #   - industrial-edge-vision
 ```
 
 Additionally, add the following entries to the `/etc/hosts` file on the host machine:
@@ -249,7 +249,8 @@ https://<HOST_IP>/mediamtx/wsgd/
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 
->If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
 ## Troubleshooting
 

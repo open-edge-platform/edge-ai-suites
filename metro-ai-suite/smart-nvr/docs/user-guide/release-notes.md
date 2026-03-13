@@ -1,5 +1,6 @@
 # Release Notes
 
+- [Version 1.2.4-rc1](#version-124-rc1)
 - [Version 1.2.3](#version-123)
 - [Version 1.2.2](#version-122)
 - [Version 1.2.1](#version-121)
@@ -8,13 +9,15 @@
 
 ## Current Release
 
-### Version 1.2.3
+### Version 1.2.4-rc1
 
-**Release Date**: 24 November 2025
+**Release Date**: 17 Feb 2026  
 
 **New Features**:
 
-- Minor Fixes
+- Dependabot fixes for security vulnerabilities in dependencies.
+- Documentation updates for clarity and accuracy.
+- Minor bug fixes.
 
 **Known Issues**:
 
@@ -24,6 +27,14 @@
 - The **AI-Powered Event Viewer** feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
 ## Previous Releases
+
+### Version 1.2.3
+
+**Release Date**: 24 November 2025
+
+**New Features**:
+
+- Minor Fixes
 
 ### Version 1.2.2
 

@@ -362,7 +362,7 @@ RUN curl -k -o GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB https://apt.repos.intel.com/int
 WORKDIR /tmp/
 RUN apt update && \
 	apt install -y -q --no-install-recommends intel-gsc && \
-	curl -k -o xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb https://github.com/intel/xpumanager/releases/download/v1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb -L && \
+	curl -k -o xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb https://github.com/intel/xpumanager/releases/download/V1.3.3/xpu-smi_1.3.3_20250926.101214.8a6b6526.u24.04_amd64.deb -L && \
 	dpkg -i xpu-smi_*.deb && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*

@@ -19,6 +19,13 @@ traffic data streaming, or use the included broker.
 - **Docker commands and terminal usage**: You are familiar with Docker commands and using the
 terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for
 an introduction.
+- **Hugging Face token**: Set your token using `export HUGGINGFACE_TOKEN="<your-huggingface-token>"`
+- **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. Following is the recommended default setting.
+  ```bash
+  export REGISTRY="intel"
+  export TAG="latest"
+  ```
+
 
 ## Quick Start with Setup Script
 
@@ -33,7 +40,14 @@ git clone https://github.com/open-edge-platform/edge-ai-suites.git
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
-### 2. Run the Complete Setup
+### 2. Set the required environment variables
+
+```bash
+export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+```
+> **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+
+### 3. Run the Complete Setup
 
 The easiest way to set up the service is to use default configurations without making any
 changes. Run the setup script with the `--setup` option to set up the agent quickly with
@@ -52,7 +66,31 @@ This single command will:
 - Build Docker images
 - Start services in the Smart Traffic Intersection Agent's application stack
 
-### 3. Access Services
+### 4. Run alternative setup options
+
+For a more granular control, run these commands:
+
+```bash
+#  Set environment variables without building image or starting any containers
+source setup.sh --setenv
+
+# Build service images only (without starting containers)
+source setup.sh --build
+
+# Start services without building the image
+source setup.sh --run
+
+# Stop services
+source setup.sh --stop
+
+# Restart services. The variable `service_type` can be set to `agent`, `deps`, and `all`. Run with --help to get details of each type.
+source setup.sh --restart [service_type]
+
+# Clean up containers. Run with --help to get details of the option.
+source setup.sh --clean [option]
+```
+
+### 5. Access Services
 
 When the script completes, it will show the URLs to access the services. Go to these URLs so
 that the respective services can access them in a web browser.
@@ -72,81 +110,92 @@ locations on the same machine for `n` required instances.
 
 ### Set up Instance #1
 
-1. Clone the repository into a new directory:
+1.  Clone the repository into a new directory:
 
-```bash
-# First instance
-git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
-cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
-```
+    ```bash
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+    cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
+    ```
 
-2. Edit the deployment configuration file for instance #1:
+2.  Edit the deployment configuration file for instance #1:
 
-```bash
-nano src/config/deployment_instance.json
-```
+    ```bash
+    nano src/config/deployment_instance.json
+    ```
 
-Update the `latitude` and `longitude` values as required. If not required, use the default
-values without updating this config file. Following is a sample value for the Instance #1
-deployment config:
+    Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
 
-```json
-{
-    "name": "intersection_1",
-    "latitude": 37.7049108,
-    "longitude": -121.9096158,
-    "agent_backend_port": "8081",
-    "agent_ui_port": "7860"
-}
-```
+    ```json
+    {
+        "name": "intersection_1",
+        "latitude": 37.5879818,
+        "longitude": -122.0534334,
+        "agent_backend_port": "8081",
+        "agent_ui_port": "7860"
+    }
+    ```
 
-3. Run the setup for instance #1:
+    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-```bash
-source setup.sh --setup
-```
+3.  Set the required environment variable.
+
+    ```bash
+    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+    ```
+    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+
+4.  Run the setup for instance #1:
+
+    ```bash
+    source setup.sh --setup
+    ```
 
 ### Set up Instance #2
 
-1. Clone the repository into a new directory:
+1.  Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
-Open a new terminal window and move to different directory and run the following.
+    ```bash
+    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+    cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
+    ```
 
-```bash
-git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
-cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
-```
+2.  Edit the deployment configuration for instance #2:
 
-2. Edit the deployment configuration for instance #2:
+    ```bash
+    nano src/config/deployment_instance.json
+    ```
 
-```bash
-nano src/config/deployment_instance.json
-```
+    The following is a sample value for instance #2 deployment configuration:
 
-The following is a sample value for instance #2 deployment configuration:
+    ```json
+    {
+        "name": "intersection_2",
+        "latitude": 37.33874,
+        "longitude": -121.8852525,
+        "agent_backend_port": "8082",
+        "agent_ui_port": "7861"
+    }
+    ```
 
-```json
-{
-    "name": "intersection_2",
-    "latitude": 37.33874,
-    "longitude": -121.8852525,
-    "agent_backend_port": "8082",
-    "agent_ui_port": "7861"
-}
-```
-3. Run Setup for Instance #2
+    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-```bash
-source setup.sh --setup
-```
+3.  Set the required environment variable.
 
-> **Note:** Keep the `agent_backend_port` and `agent_ui_port` values empty to use random
-> ephemeral ports and avoid port conflicts.
+    ```bash
+    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+    ```
+    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+
+4.  Run Setup for Instance #2
+
+    ```bash
+    source setup.sh --setup
+    ```
 
 Ensure each instance has their `deployment_instance.json` updated with:
 
 - A unique value for `name` field
-- Unique latitude and longitude co-ordinates
+- Unique `latitude` and `longitude` co-ordinates
 - Different `agent_backend_port` and `agent_ui_port` values to avoid port conflicts. This is
 optional. If not specified, an ephemeral port is picked automatically.
 
@@ -160,18 +209,20 @@ are reached. Hence, deploy new instances only if you have the required resource 
 To spin-up more instances - say `n number of new instances`, repeat the steps mentioned in
 [Set up Instance #2](#set-up-instance-2), by changing to a new directory `n` times.
 
+### Disclaimer for Using Third-Party AI Models
+
+Compliance with all license obligations and responsible use for a third-party AI Model is the user’s responsibility.
+
 ## Advanced Environment Configuration
 
-For advanced users who need more control over the configuration, you can configure the
-following environment variables before running the setup script to override the default
-behaviour:
+For advanced users who need more control over the configuration, you can configure the following environment variables before running the setup script to override the default behaviour:
 
 ```bash
 # Set log level to debug to help in debugging issues, default value is info
 export LOG_LEVEL=DEBUG
 
-# Change the VLM Model name. Default value set in script.sh is microsoft/Phi-3.5-vision-instruct.
-export VLM_MODEL_NAME=Qwen/Qwen2.5-VL-3B-Instruct
+# Select iGPU as the accelerator to perform VLM inference. By default, it is set to CPU
+export VLM_DEVICE=GPU
 
 # Other VLM related config, sample values
 export VLM_TIMEOUT_SECONDS=600          # Default 300
@@ -183,7 +234,12 @@ export VLM_TOP_P=0.3                    # Default 0.1, range 0-1; another parame
 export HIGH_DENSITY_THRESHOLD=5        # Default value 10
 export MODERATE_DENSITY_THRESHOLD=3    # Default value 5; Make sure this is less than HIGH_DENSITY_THRESHOLD
 export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of traffic feeds in seconds
+
+# To mock the weather data (say in airgapped deployment)
+export WEATHER_MOCK=True
 ```
+### Customizing the video used by sample application
+The video used by this sample application is determined by the configuration in [Smart Intersection application](../../../metro-vision-ai-app-recipe/smart-intersection/). Refer to its documentation for further details.
 
 ## Accessing the Services
 
@@ -194,7 +250,7 @@ from the response, and access it in a web browser.
 The following is a sample response that you might get at script completion, which displays the
 URLs for accessing the relevant services:
 
-![alt text](./_assets/service_endpoints.png)
+![Service endpoints displayed after setup completion](./_assets/service_endpoints.png)
 
 ## Troubleshooting
 
@@ -221,6 +277,7 @@ unique. Additionally, ensure no other external services are running on these por
 
 ./get-started/system-requirements
 ./get-started/build-from-source
+./get-started/deploy-with-helm
 
 :::
 hide_directive-->

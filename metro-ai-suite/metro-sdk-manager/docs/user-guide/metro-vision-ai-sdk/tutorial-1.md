@@ -46,29 +46,26 @@ First, create a dedicated workspace and download the required video sample and A
 # Create working directory
 mkdir -p ~/metro/metro-vision-tutorial-1
 cd ~/metro/metro-vision-tutorial-1
-
-# Download sample video for benchmarking
-wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/videos/bottle-detection.mp4
 ```
 
 ### Step 2: Download Pre-trained Model
 
-Download the YOLOv10s model using the DL Streamer container:
+Download the YOLO11s model using the DL Streamer container:
 
 ```bash
-# Download YOLOv10s model using DL Streamer
+# Download YOLO11s model using DL Streamer
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2025.1.2-ubuntu24 \
-  bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
+  intel/dlstreamer:2026.0.0-ubuntu24-rc1 \
+  bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolo11s"
 ```
 
 This command will:
 
-- Download the YOLOv10s object detection model
+- Download the YOLO11s object detection model
 - Convert it to OpenVINO IR format (FP16 precision)
-- Store the model files in the `public/yolov10s/FP16/` directory
+- Store the model files in the `public/yolo11s/FP16/` directory
 
 ### Step 3: Run Benchmark on CPU
 
@@ -81,14 +78,14 @@ docker run -it --rm \
   --env http_proxy=$http_proxy \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
-  openvino/ubuntu24_dev:2025.3.0
+  openvino/ubuntu24_dev:2026.0.0
 ```
 
 ```bash
 # Run the sample application
-/opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
--m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
--i /home/openvino/bottle-detection.mp4 \
+/opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+-m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
+-data_shape "x[1,3,640,640]" \
 -d CPU
 ```
 
@@ -112,16 +109,14 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user=root \
-  openvino/ubuntu24_dev:2025.3.0 \
-  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
-  -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
-  -i /home/openvino/bottle-detection.mp4 \
+  openvino/ubuntu24_dev:2026.0.0 \
+  /opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+  -m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
+  -shape "[1,3,640,640]" \
   -d GPU
 ```
 
 ### Step 5: Run Benchmark on NPU (Intel® Core™ Ultra Processors)
-
-For systems with Intel® Core™ Ultra processors, benchmark the Neural Processing Unit (NPU):
 
 ```bash
 docker run -it --rm \
@@ -131,9 +126,9 @@ docker run -it --rm \
   --env https_proxy=$https_proxy \
   --env no_proxy=$no_proxy \
   --user=root \
-  openvino/ubuntu24_dev:2025.3.0 \
-  /opt/intel/openvino_2025.3.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
-  -m /home/openvino/public/yolov10s/FP16/yolov10s.xml \
-  -i /home/openvino/bottle-detection.mp4 \
+  openvino/ubuntu24_dev:2026.0.0 \
+  /opt/intel/openvino_2026.0.0.0/samples/cpp/samples_bin/samples_bin/benchmark_app \
+  -m /home/openvino/public/yolo11s/FP16/yolo11s.xml \
+  -shape "[1,3,640,640]" \
   -d NPU
 ```

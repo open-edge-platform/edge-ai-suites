@@ -14,12 +14,12 @@ Pi0 created by Physical Intelligence introduces a groundbreaking robotic model d
 **Model Architecture:**
 
 - A larger VLM backbone with weights initialized from PaliGemma that is pre-trained from large-scale Internet pre-training.
-- A smaller action expert (Diffusion Transformer) addresses robot states and generates actions. 
+- A smaller action expert (Diffusion Transformer) addresses robot states and generates actions.
 
 **More Information:**
 
-- Full paper: https://www.physicalintelligence.company/download/pi0.pdf
-- Homepage: https://www.physicalintelligence.company/blog/pi0
+- Full paper: https://www.pi.website/download/pi0.pdf
+- Homepage: https://www.pi.website/blog/pi0
 - Github link: https://github.com/Physical-Intelligence/openpi
 
 Model Conversion

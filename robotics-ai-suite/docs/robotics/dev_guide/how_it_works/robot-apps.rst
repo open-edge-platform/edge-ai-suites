@@ -9,7 +9,7 @@ Autonomous Mobile Robot Applications
    detected in another ROS topic (It uses the robot's sensors and actuators based on its hardware configuration.)
 
 -  **Object Detection AI Application**, detects objects in video data using a deep
-   learning neural network model from the OpenVINO™ `Model Zoo <https://docs.openvino.ai/2023.2/model_zoo.html>`__
+   learning neural network model from the OpenVINO™ `Model Zoo <https://github.com/openvinotoolkit/open_model_zoo>`__
 
 -  **Semantic Segmentation AI Application**, is a computer vision application that assigns labels to each pixel according to the object it belongs to,
    creating so-called segmentation masks.

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, JSX } from 'react';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import { startProcessing, stopProcessing } from '../../redux/slices/appSlice';
 // ADD THIS IMPORT:
@@ -15,6 +15,7 @@ const TopPanel = () => {
   const [isStarting, setIsStarting] = useState(false);
   const [isStopping, setIsStopping] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const autoStopTimeoutRef = useRef<number | null>(null);
 
   const handleStart = async () => {
     if (!isBackendReady) {
@@ -37,6 +38,15 @@ const TopPanel = () => {
       
       if (response.status === 'ok') {
         setNotification('✅ Workloads started successfully'); // REMOVE auto-stop message
+        // Schedule automatic stop after 10 minutes
+        if (autoStopTimeoutRef.current) {
+          clearTimeout(autoStopTimeoutRef.current);
+        }
+        autoStopTimeoutRef.current = window.setTimeout(() => {
+          autoStopTimeoutRef.current = null;
+          // Force stop even if local isProcessing flag is stale
+          handleStop(true);
+        }, 10 * 60 * 1000);
         
         const eventsUrl = api.getEventsUrl(['rppg', 'ai-ecg', 'mdpnp', '3d-pose']);
         dispatch({ type: 'sse/connect', payload: { url: eventsUrl } });
@@ -55,12 +65,16 @@ const TopPanel = () => {
     }
   };
 
-  const handleStop = async () => {
-    if (isStopping || !isProcessing) {
+  const handleStop = async (force: boolean = false) => {
+    if (!force && (isStopping || !isProcessing)) {
       return;
     }
 
     try {
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current);
+        autoStopTimeoutRef.current = null;
+      }
       setIsStopping(true);
       setNotification('⏹️ Stopping...');
       dispatch(stopProcessing());
@@ -93,6 +107,14 @@ const TopPanel = () => {
     checkBackend();
     const interval = setInterval(checkBackend, 10000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (autoStopTimeoutRef.current) {
+        clearTimeout(autoStopTimeoutRef.current);
+      }
+    };
   }, []);
 
   return (

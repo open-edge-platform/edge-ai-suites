@@ -6,7 +6,7 @@ developed and distributed by Clearpath Robotics, a Rockwell Automation company.
 Detailed information about this robot is provided by Clearpath Robotics:
 
 * `Jackal Unmanned Ground Vehicle <https://clearpathrobotics.com/jackal-small-unmanned-ground-vehicle/>`_ product page
-* `Jackal User Manual  <https://docs.clearpathrobotics.com/docs/robots/outdoor_robots/jackal/user_manual_jackal/>`_
+* `Jackal User Manual  <https://docs.clearpathrobotics.com/docs_robots/outdoor_robots/jackal/user_manual_jackal/>`_
 
 The following pages describe how the Autonomous Mobile Robot can be used with a
 Clearpath Robotics Jackal robot.

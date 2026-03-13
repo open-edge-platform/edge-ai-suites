@@ -3,12 +3,18 @@
 <sdf version='1.7'>
   <model name='conveyor_belt_simplified'>
     
+    <!-- Fixed joint to world to prevent belt from moving when hit -->
+    <joint name='world_fixed_joint' type='fixed'>
+      <parent>world</parent>
+      <child>belt_visual</child>
+    </joint>
+    
     <link name='belt_visual'>
      
       <pose>0 0 0.0 0 -0 0</pose>
       <inertial>
         <pose>0 0 0. 0 -0 0</pose>
-        <mass>100</mass>
+        <mass>1000</mass>
         <inertia>
           <ixx>7.5972</ixx>  <!-- for a box: ixx = 0.083 * mass * (y*y + z*z) -->
           <ixy>0</ixy>       <!-- for a box: ixy = 0 -->
@@ -203,12 +209,13 @@
     <static>0</static>
     <allow_auto_disable>1</allow_auto_disable>
     
-    <plugin name='libConveyorBeltPlugin' filename='libConveyorBeltPlugin'>
-      <max_velocity>1.0</max_velocity>
+    <plugin filename="libConveyorBeltPlugin.so" name="gz::sim::v8::systems::ConveyorBeltPlugin">
+      <max_velocity>0.120</max_velocity>
       <publish_rate>1000</publish_rate>
       <joint_name>belt_joint</joint_name>
       <lower_limit>0.0</lower_limit>
       <upper_limit>1.01</upper_limit>
+      <initial_power>100</initial_power>
     </plugin>
   </model>
 </sdf>

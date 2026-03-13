@@ -18,54 +18,27 @@ Check available images:
 ```bash
 docker images | grep intel/hl-ai
 ```
-## If Docker Images Are Missing
 
-If the required images are **not present locally**, Kubernetes pods will fail with `ImagePullBackOff`.
-
-### Build Images Locally
-
-From the repository root, build each service image:
-
-```bash
-# MDPnP
-docker build -t intel/hl-ai-mdpnp:1.0.0 mdpnp-service/
-
-# DDS Bridge
-docker build -t intel/hl-ai-dds-bridge:1.0.0 dds-bridge/
-
-# Aggregator
-docker build -t intel/hl-ai-aggregator-service:1.0.0 aggregator-service/
-
-# AI ECG
-docker build -t intel/hl-ai-ecg:1.0.0 ai-ecg/backend/
-
-# 3D Pose
-docker build -t intel/hl-ai-3dpose:1.0.0 3d-pose-estimation/src/
-
-# Metrics
-docker build -t intel/hl-ai-metrics-service:1.0.0 metrics-service/
-
-```
 
 ## Install
 
 ```bash
-cd health-and-life-sciences-ai-suite/helm
+cd health-and-life-sciences-ai-suite/helm/multi_modal_patient_monitoring
 
-helm install health-ai . \
-  --namespace health-ai \
+helm install multi-modal-patient-monitoring . \
+  --namespace multi-modal-patient-monitoring \
   --create-namespace
 ```
 
 ## Upgrade (after changes)
 ```bash
-helm upgrade health-ai . -n health-ai
+helm upgrade multi-modal-patient-monitoring . -n multi-modal-patient-monitoring
 ``` 
 
 ## Verify Deployment
 Pods
 ```bash
-kubectl get pods -n health-ai
+kubectl get pods -n multi-modal-patient-monitoring
 ``` 
 
 All pods should be:
@@ -75,17 +48,18 @@ READY: 1/1
 ``` 
 ## Services
 ```bash
-kubectl get svc -n health-ai
+kubectl get svc -n multi-modal-patient-monitoring
 ``` 
 
 ## Check Logs (recommended)
 ```bash
-kubectl logs -n health-ai deploy/mdpnp
-kubectl logs -n health-ai deploy/dds-bridge
-kubectl logs -n health-ai deploy/aggregator
-kubectl logs -n health-ai deploy/ai-ecg
-kubectl logs -n health-ai deploy/pose
-kubectl logs -n health-ai deploy/metrics
+kubectl logs -n multi-modal-patient-monitoringi deploy/mdpnp
+kubectl logs -n multi-modal-patient-monitoring deploy/dds-bridge
+kubectl logs -n multi-modal-patient-monitoring deploy/aggregator
+kubectl logs -n multi-modal-patient-monitoring deploy/ai-ecg
+kubectl logs -n multi-modal-patient-monitoring deploy/pose
+kubectl logs -n multi-modal-patient-monitoring deploy/metrics
+kubectl logs -n multi-modal-patient-monitoring deploy/ui
 ``` 
 
 Healthy services will show:
@@ -95,29 +69,53 @@ Healthy services will show:
 - No crash loops
 
 
-## Access Services (Port Forward)
-AI ECG
+## Access the Frontend UI
+Check Ingress resource:
+
 ```bash
-kubectl port-forward svc/ai-ecg 8000:8000 -n health-ai
-``` 
-http://localhost:8000/docs
+kubectl get ingress -n multi-modal-patient-monitoring
+```
+This will show the hostname or IP and the path for the UI.
 
-Aggregator
+Example output:
 ```bash
-kubectl port-forward svc/aggregator 8001:50051 -n health-ai
-``` 
-http://localhost:8000/docs
+NAME       HOSTS               PATHS   ADDRESS         PORTS
+multi-modal-patient-monitoring  multi-modal-patient-monitoring.local       /       xx.xx.xx.xx   80
+```
 
-
-Pose
+Add an entry on your Linux host (replace <IP> with the one you found):
 ```bash
-kubectl port-forward svc/pose 8002:8001 -n health-ai
-``` 
-http://localhost:8002/docs
+echo "<IP> multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
+```
 
+Open your browser and go to:
+```bash
+http://<host-or-ip>/
+``` 
+Example:
+```bash
+http://multi-modal-patient-monitoring.local/
+``` 
+If using Minikube, you may need to enable the ingress addon:
+```bash
+minikube addons enable ingress
+``` 
+This will open the Health AI Suite frontend dashboard.
+
+From here you can access:
+
+  - 3D Pose Estimation
+
+  - ECG Monitoring
+
+  - RPPG Monitoring
+
+  - MdPnP service
+
+  - Metrics Dashboard
 
 
 ## Uninstall
 ```bash
-helm uninstall health-ai -n health-ai
+helm uninstall multi-modal-patient-monitoring -n multi-modal-patient-monitoring
 ``` 

@@ -5,6 +5,7 @@ import folderIcon from '../../assets/images/folder.svg';
 import { 
   startVideoAnalyticsPipeline, 
   uploadAudio, 
+  storeAudioDuration,
   createSession,
   startMonitoring,  
   stopMonitoring,    
@@ -34,9 +35,9 @@ import {
 import { resetTranscript } from '../../redux/slices/transcriptSlice';
 import { resetSummary } from '../../redux/slices/summarySlice';
 import { clearMindmap } from '../../redux/slices/mindmapSlice';
+import { resetMediaValidation } from '../../redux/slices/mediaValidationSlice';
 import { constants } from '../../constants';
 import { useTranslation } from 'react-i18next';
-
 interface UploadFilesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -70,8 +71,8 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         const file = target.files[0];
         const fileName = file.name.toLowerCase();
         let isValidFile = false;
-        if (accept === '.wav,.mp3') {
-          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3');
+        if (accept === '.wav,.mp3,.m4a') {
+          isValidFile = fileName.endsWith('.wav') || fileName.endsWith('.mp3') || fileName.endsWith('.m4a');
         } else if (accept === '.mp4') {
           isValidFile = fileName.endsWith('.mp4');
         } else {
@@ -183,18 +184,26 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       return;
     }
 
+    setNotification('Starting processing...');
+    dispatch(resetFlow());  // Reset flow FIRST
+    dispatch(resetTranscript());
+    dispatch(resetSummary());
+    dispatch(clearMindmap());
+    dispatch(resetMediaValidation());  // Reset media validation state
+    dispatch(startProcessing());
+
+    // Set uploaded video files AFTER reset to preserve them
+    console.log('🎥 Setting uploaded video files in Redux:', {
+      front: frontCameraPath ? frontCameraPath.name : 'null',
+      back: rearCameraPath ? rearCameraPath.name : 'null',
+      board: boardCameraPath ? boardCameraPath.name : 'null'
+    });
+    
     dispatch(setUploadedVideoFiles({
       front: frontCameraPath,
       back: rearCameraPath,
       board: boardCameraPath,
     }));
-
-    setNotification('Starting processing...');
-    dispatch(resetFlow());
-    dispatch(resetTranscript());
-    dispatch(resetSummary());
-    dispatch(clearMindmap());
-    dispatch(startProcessing());
 
     if (hasAudioFile) {
       dispatch(setAudioStatus('processing'));
@@ -233,17 +242,33 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
         dispatch(setUploadedAudioPath(audioResponse.path));
         audioPath = audioResponse.path;
         console.log('✅ Audio uploaded successfully:', audioResponse);
+
+        // Extract and store audio duration
+        try {
+          console.log('🔊 Extracting audio duration from file:', audioFile.name);
+          await storeAudioDuration(sessionId, audioFile);
+          console.log('✅ Audio duration stored successfully');
+        } catch (durationError) {
+          console.error('⚠️ Failed to store audio duration:', durationError);
+        }
+        
         dispatch(setProcessingMode('audio'));
       } else {
         console.log('📝 No audio file provided, skipping audio upload');
         dispatch(setProcessingMode('video-only'));
       }
 
+      console.log('🎥 Video files uploaded:', {
+        frontCameraPath: frontCameraPath ? `File: ${frontCameraPath.name}` : 'null',
+        rearCameraPath: rearCameraPath ? `File: ${rearCameraPath.name}` : 'null',
+        boardCameraPath: boardCameraPath ? `File: ${boardCameraPath.name}` : 'null'
+      });
+
       const frontFullPath = frontCameraPath ? constructFilePath(frontCameraPath.name) : "";
       const rearFullPath = rearCameraPath ? constructFilePath(rearCameraPath.name) : "";
       const boardFullPath = boardCameraPath ? constructFilePath(boardCameraPath.name) : "";
 
-      console.log('📹 Video file paths:', {
+      console.log('📹 Constructed file paths for video analytics:', {
         front: frontFullPath,
         rear: rearFullPath,
         board: boardFullPath,
@@ -269,9 +294,16 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
       );
 
       const hasValidVideo = validPipelines.length > 0;
+      console.log('🎯 Has valid video files:', hasValidVideo);
       dispatch(setHasUploadedVideoFiles(hasValidVideo));
 
       if (hasValidVideo) {
+        console.log('🎥 Setting uploaded video files in Redux (second time, inside video block):', {
+          front: frontCameraPath ? frontCameraPath.name : 'null',
+          back: rearCameraPath ? rearCameraPath.name : 'null',
+          board: boardCameraPath ? boardCameraPath.name : 'null'
+        });
+        
         dispatch(setUploadedVideoFiles({
           front: frontCameraPath,
           back: rearCameraPath,
@@ -344,7 +376,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
               placeholder="Enter the base directory"
             />
           </div>
-          <div className="modal-input-group">
+          <div className="modal-input-group modal-title fw-semibold">
             <label>{t('uploadFiles.audioFileLabel')}</label>
             <div className="file-input-wrapper">
               <input

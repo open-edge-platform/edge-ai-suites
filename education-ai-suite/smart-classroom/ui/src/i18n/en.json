@@ -7,7 +7,7 @@
       "timer": "Timer"
     },
     "footer": {
-      "copyright": "© 2025 Smart Classroom Sample App"
+      "copyright": "© 2025-{{year}} Smart Classroom Sample App"
     },
     "notifications": {
       "start": "Upload the files or Start recording to begin a new session",
@@ -176,6 +176,24 @@
     "audioAnalytics": "Audio Analytics",
     "lastUpdated": "Last updated",
     "noData": "No data available"
+  },
+  "search": {
+    "preparingContent": "Content Generating...",
+    "contentError": "Content preparation failed",
+    "placeholder": "Search for topics...",
+    "searching": "Searching...",
+    "clearResults": "Clear Results",
+    "submitSearch": "Search",
+    "query":"Query",
+    "resultsFound":"results found",
+    "noResults":"No results found.",
+    "Relevance":"Relevance",
+    "Timestamp":"Timestamp",
+    "expandResults":"Expand Results",
+    "durationError":"Duration Mismatch - check your files",
+    "durationMismatch":"⚠️ Audio and video durations don't match. Please ensure both files have similar lengths.",
+    "durationExtractionFailed":"⚠️ Unable to extract audio or video duration. Please check your files and try again.",
+    "contentPreparationFailed":"Content preparation failed. Please try again."
   }
 }
  

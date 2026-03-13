@@ -27,7 +27,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BaslerDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2
 
 USER root
 
@@ -60,7 +60,7 @@ USER intelmicroserviceuser
 Run the following command to build the image:
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-basler -f BaslerDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-basler -f BaslerDockerfile .
 ```
 
 This command builds your Docker image using the steps defined above.
@@ -71,7 +71,7 @@ This command builds your Docker image using the steps defined above.
 
 After the build completes, update .env and start the container:
 
-> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-basler
+> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-basler
 
 ```bash
 docker compose up -d
@@ -113,7 +113,7 @@ cp .env_worker-safety-gear-detection .env
 Update the `.env` file with the newly created image as below and modify any other required variables.
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:3.1.0-ubuntu24-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2-gencamsrc-basler
 ```
 
 ---
@@ -160,7 +160,7 @@ services:
     .
     network_mode: "host"
     # networks:
-    #   - mraas
+    #   - industrial-edge-vision
 ```
 
 Additionally, add the following entries to the `/etc/hosts` file on the host machine:
@@ -235,7 +235,8 @@ https://<HOST_IP>/mediamtx/wsgd/
 
 Replace `<HOST_IP>` with the IP address configured in your `.env` file.
 
->If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+>Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+>If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
 ## Troubleshooting
 

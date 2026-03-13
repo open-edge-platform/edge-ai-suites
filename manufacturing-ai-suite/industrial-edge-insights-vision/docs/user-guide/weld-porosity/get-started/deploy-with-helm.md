@@ -23,16 +23,17 @@
    ```sh
    cp helm/values_weld-porosity.yaml helm/values.yaml
    ```
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
     - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.3.0`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc2`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.3.0.tgz`
+        `tar -xvf weld-porosity-sample-application-1.4.0-rc2.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`
@@ -159,6 +160,7 @@
    ```
 
    > **Note:**- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
+   >If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 5. Get status of pipeline instance(s) running.
 
@@ -303,6 +305,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
    ```sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
        "source": {
@@ -325,6 +329,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
@@ -391,7 +396,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/weld_porosity_classification.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 
@@ -408,6 +413,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:30443/api/pipelines/{instance_id}
    ```
@@ -437,6 +444,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+>Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
     ![WebRTC streaming](../_assets/webrtc-streaming.png)
 

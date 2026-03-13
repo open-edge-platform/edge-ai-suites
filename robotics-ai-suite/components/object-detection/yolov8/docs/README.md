@@ -17,20 +17,20 @@ RealSense™ camera image as the input.
 
 ## Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html)
-- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/apt-setup.html)
-- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-openvino.html)
-- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install.html)
-- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-npu-driver.html)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html)
+- [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
+- [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
+- [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
+- [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
 ## Install OpenVINO™ package
 
-Follow the instructions on [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/install-openvino.html) to install OpenVINO™.
+Follow the instructions on [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages) to install OpenVINO™.
 
 ## Install Python packages (optional)
 
 Following Python packages are necessary to automatically download and
-convert the model to IR files. Also You can provide your own model files
+convert the model to IR files. Also, you can provide your own model files
 in the config, if you have them already.
 
 > ```bash
@@ -87,7 +87,7 @@ be generated in the command output when executing the
 > rgb_topic = []
 > rgb_topic_max_fps = [] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
 > # depth is not used by yolo, but if provided this node will synchronize rgb and depth and transform to camera frame
-> # this can be later used to place detections in 3D sSpace
+> # this can be later used to place detections in 3D space
 > # topics need to be provided in pairs
 > rgbd_topic_rgb = ["/camera/color/image_raw"]
 > rgbd_topic_depth = ["/camera/depth/image_raw"]
@@ -180,7 +180,7 @@ fine tuned models.
 
 Automatic downloading of INT8 models is only supported for square input
 shapes and only for detection task. This is a limitation of
-ultralytics/nncf library. Therefore if you posses an quantized model for
+ultralytics/nncf library. Therefore if you possess a quantized model for
 another task or resolution you can still use it.
 
 Resolution of input images (coming from ROS 2 topic) is not tied to the

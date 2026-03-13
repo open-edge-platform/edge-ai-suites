@@ -18,11 +18,7 @@ import uvicorn
 from proto import vital_pb2, vital_pb2_grpc, pose_pb2, pose_pb2_grpc
 from .consumer import VitalConsumer
 from .ws_broadcaster import SSEManager
-from .frame_streamer import FrameStreamManager
 from .ai_ecg_client import AIECGClient
-
-# Add frame streaming manager initialization
-frame_manager = FrameStreamManager()
 
 app = FastAPI(title="Aggregator Service")
 
@@ -40,6 +36,7 @@ event_loop: asyncio.AbstractEventLoop | None = None
 
 WORKLOAD_TYPE = os.getenv("WORKLOAD_TYPE", "mdpnp")
 METRICS_SERVICE_URL = os.getenv("METRICS_SERVICE_URL", "http://localhost:9000")
+METRICS_TIMEOUT_SECONDS = float(os.getenv("METRICS_TIMEOUT_SECONDS", "10"))
 DDS_BRIDGE_CONTROL_URL = os.getenv("DDS_BRIDGE_CONTROL_URL", "http://localhost:8082")
 POSE_3D_CONTROL_URL = os.getenv("POSE_3D_CONTROL_URL", "http://localhost:8083")
 RPPG_CONTROL_URL = os.getenv("RPPG_CONTROL_URL", "http://localhost:8084")
@@ -49,7 +46,7 @@ def _proxy_metrics_get(path: str):
     """Proxy GET request to metrics service."""
     url = f"{METRICS_SERVICE_URL}{path}"
     try:
-        resp = requests.get(url, timeout=5)
+        resp = requests.get(url, timeout=METRICS_TIMEOUT_SECONDS)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"metrics-service unreachable: {exc}")
     
@@ -89,7 +86,6 @@ async def root():
             "GET /health - Service health",
             "GET / - This info",
             "GET /events - SSE stream",
-            "GET /video-stream - Video frames stream", 
             "GET /metrics - System metrics",
             "GET /platform-info - Platform info",
             "GET /memory - Memory usage",
@@ -151,55 +147,6 @@ async def stream_events(
     )
 
 
-
-@app.get("/video-stream")
-async def stream_video_frames(request: Request):
-    """Stream video frames from 3D pose detection as MJPEG."""
-    print("[VIDEO] Client connected to video stream")
-    
-    client_queue = await frame_manager.connect()
-    
-    async def frame_generator():
-        frame_count = 0
-        try:
-            while True:
-                if await request.is_disconnected():
-                    print(f"[VIDEO] Client disconnected after {frame_count} frames")
-                    break
-                
-                try:
-                    # Wait for next frame with timeout
-                    frame_data = await asyncio.wait_for(client_queue.get(), timeout=5.0)
-                    frame_count += 1
-                    
-                    # MJPEG format: each frame is a separate JPEG with multipart boundary
-                    yield (
-                        b'--frame\r\n'
-                        b'Content-Type: image/jpeg\r\n\r\n' +
-                        frame_data + b'\r\n'
-                    )
-                    
-                except asyncio.TimeoutError:
-                    # Send a small keepalive frame or continue waiting
-                    continue
-                    
-        except Exception as e:
-            print(f"[VIDEO] Error in frame generator: {e}")
-        finally:
-            await frame_manager.disconnect(client_queue)
-            print(f"[VIDEO] Client cleanup complete, sent {frame_count} frames")
-    
-    return StreamingResponse(
-        frame_generator(),
-        media_type="multipart/x-mixed-replace; boundary=frame",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        }
-    )
-
-
 @app.get("/metrics")
 async def metrics_summary():
     """Proxy for metrics service."""
@@ -226,20 +173,14 @@ async def device_config():
 
 @app.get("/streaming-status")
 async def stream_window_state():
-    """Return current streaming window state for UI (lock + remaining time)."""
-    now = time.time()
-    lock_until = getattr(app.state, "streaming_lock_until", None)
+    """Return current streaming window state for UI.
 
-    if lock_until is None or now >= lock_until:
-        return {
-            "locked": False,
-            "remaining_seconds": 0,
-        }
-
-    remaining = int(lock_until - now)
+    Auto-stop has been disabled at the backend layer, so this
+    endpoint always reports unlocked (no remaining time).
+    """
     return {
-        "locked": True,
-        "remaining_seconds": max(0, remaining),
+        "locked": False,
+        "remaining_seconds": 0,
     }
 
 @app.post("/start")
@@ -293,20 +234,6 @@ async def start_workloads(target: str = Query("dds-bridge", description="Which w
             results["rppg"] = "already running"
         else:
             results["rppg"] = _call(f"{RPPG_CONTROL_URL}/start")
-
-    # Schedule automatic stop after 60 seconds (instead of 300)
-    window_seconds = 300.0
-    now = time.time()
-    app.state.streaming_lock_until = now + window_seconds
-
-    # Cancel any previous auto-stop task before creating a new one
-    existing_task = getattr(app.state, "auto_stop_task", None)
-    if existing_task is not None:
-        existing_task.cancel()
-
-    app.state.auto_stop_task = asyncio.create_task(
-        _auto_stop_after(window_seconds, targets)
-    )
 
     return {
         "status": "ok",
@@ -380,30 +307,8 @@ async def stop_workloads(target: str = Query("dds-bridge", description="Which wo
     """Wrapper API for UI to stop streaming from backend workloads."""
     targets = {t.strip() for t in target.split(",")} if target else {"dds-bridge"}
 
-    # Manual stop clears any scheduled auto-stop and lock.
-    existing_task = getattr(app.state, "auto_stop_task", None)
-    if existing_task is not None:
-        existing_task.cancel()
-        app.state.auto_stop_task = None
-    app.state.streaming_lock_until = None
-
     results = await _stop_workloads_internal(targets)
     return {"status": "ok", "results": results}
-
-
-async def _auto_stop_after(delay_seconds: float, targets: set[str]) -> None:
-    """Background task that waits for the window then stops workloads."""
-    try:
-        await asyncio.sleep(delay_seconds)
-        print(f"[AutoStop] Stopping workloads after {delay_seconds} seconds: {targets}")
-        await _stop_workloads_internal(targets)
-    except asyncio.CancelledError:
-        print("[AutoStop] Cancelled before completion")
-        raise
-    finally:
-        # Clear lock and task reference when done.
-        app.state.streaming_lock_until = None
-        app.state.auto_stop_task = None
 
 
 class VitalService(vital_pb2_grpc.VitalServiceServicer):
@@ -526,9 +431,6 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                       f"3D={len(person.joints_3d)} joints, "
                       f"Conf={avg_conf:.1f}%")
             
-            # Convert frame_data (bytes) to base64 string for JSON transmission
-            frame_base64 = base64.b64encode(request.frame_data).decode('utf-8') if request.frame_data else ""
-            
             message = {
                 "workload_type": "3d-pose",
                 "event_type": "pose3d",
@@ -536,20 +438,9 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
                 "payload": {
                     "source_id": request.source_id,
                     "frame_number": request.frame_number,
-                    "frame_base64": frame_base64,
                     "people": people_payload,
                 },
             }
-            
-            # Stream raw frame data to video endpoint - ADD THIS BLOCK
-            if request.frame_data and event_loop is not None:
-                asyncio.run_coroutine_threadsafe(
-                    frame_manager.broadcast_frame(request.frame_data), event_loop
-                )
-            
-            frame_size_kb = len(request.frame_data) / 1024 if request.frame_data else 0
-            print(f"[POSE] Frame {request.frame_number} from {request.source_id} @ {request.timestamp_ms}ms - "
-                  f"{len(request.people)} people, {frame_size_kb:.1f}KB")
             
             if event_loop is not None:
                 asyncio.run_coroutine_threadsafe(
@@ -563,55 +454,6 @@ class PoseServicer(pose_pb2_grpc.PoseServiceServicer):
             import traceback
             traceback.print_exc()
             return pose_pb2.Ack(ok=False, message=str(e))
-    
-
-    def StreamPoseData(self, request_iterator, context):
-        """Handle streaming pose frames (kept for backward compatibility)"""
-        import base64
-        frame_count = 0
-        try:
-            for pose_frame in request_iterator:
-                frame_count += 1
-                
-                people_payload = []
-                for person in pose_frame.people:
-                    person_dict = {
-                        "person_id": person.person_id,
-                        "confidence": list(person.confidence),
-                        "joints_2d": [{"x": j.x, "y": j.y} for j in person.joints_2d],
-                        "joints_3d": [{"x": j.x, "y": j.y, "z": j.z} for j in person.joints_3d]
-                    }
-                    people_payload.append(person_dict)
-                
-                # Convert frame_data to base64
-                frame_base64 = base64.b64encode(pose_frame.frame_data).decode('utf-8') if pose_frame.frame_data else ""
-                
-                message = {
-                    "workload_type": "3d-pose",
-                    "event_type": "pose3d",
-                    "timestamp": pose_frame.timestamp_ms,
-                    "payload": {
-                        "source_id": pose_frame.source_id,
-                        "frame_number": pose_frame.frame_number,
-                        "frame_base64": frame_base64,  # Add frame data
-                        "people": people_payload,
-                    },
-                }
-                
-                if event_loop is not None:
-                    asyncio.run_coroutine_threadsafe(
-                        sse_manager.broadcast(message), event_loop
-                    )
-            
-            print(f"[POSE] Streaming session completed: {frame_count} frames received")
-            return pose_pb2.Ack(ok=True, message=f"Received {frame_count} frames")
-            
-        except Exception as e:
-            print(f"[POSE ERROR] Streaming error: {e}")
-            import traceback
-            traceback.print_exc()
-            return pose_pb2.Ack(ok=False, message=str(e))
-
 
 async def ai_ecg_polling_loop():
     client = AIECGClient()
@@ -654,8 +496,6 @@ async def on_startup():
     print(f"✓ Event loop initialized: {event_loop}")
     
     app.state.ai_ecg_task = None
-    app.state.auto_stop_task = None
-    app.state.streaming_lock_until = None
 
     await asyncio.sleep(0.5)
     

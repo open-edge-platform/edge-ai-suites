@@ -26,12 +26,6 @@ install(PROGRAMS speech_recognition_pkg/speech_recognition_node.py
 
 install(PROGRAMS speech_recognition_pkg/audio_publisher_node.py
         DESTINATION lib/${PROJECT_NAME})
-
-install(PROGRAMS speech_recognition_pkg/audio_publisher_node_RS.py
-        DESTINATION lib/${PROJECT_NAME})
-
-install(PROGRAMS speech_recognition_pkg/audio_publisher_node_v2.py
-        DESTINATION lib/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME}/)
 
 ament_package()
