@@ -54,7 +54,7 @@ User Input (Source/Destination) → Route Planning Agent
 :hidden:
 
 get-started
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->

@@ -64,7 +64,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 ## Gamepad Robot Control Method
 
-1. If you use joystick, remeber that joystick outputs to /joy_vel and you might have to remap it to cmd_vel.
+1. If you use joystick, remember that joystick outputs to /joy_vel and you might have to remap it to cmd_vel.
    You have to either remove ``remappings=[('cmd_vel', '/joy_vel')]`` from ``/opt/ros/$ROS_DISTRO/share/tutorial_aaeon_adbscan/launch/aaeon_adbscan_gamepad_launch.py`` or run ``ros2_interface`` with remap to `joy_vel`.
 
 2. Launch the ADBSCAN AAEON Robot gamepad control program:

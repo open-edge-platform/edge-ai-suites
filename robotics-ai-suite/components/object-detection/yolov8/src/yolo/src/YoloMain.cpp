@@ -52,7 +52,7 @@ publish_detections = true # publish detections (special message type), can be us
 rgb_topic = []
 rgb_topic_max_fps = [] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
 # depth is not used by yolo, but if provided this node will synchronize rgb and depth and transform to camera frame
-# this can be later used to place detections in 3D sSpace
+# this can be later used to place detections in 3D space
 # topics need to be provided in pairs
 rgbd_topic_rgb = ["/camera/color/image_raw"]
 rgbd_topic_depth = ["/camera/depth/image_raw"]

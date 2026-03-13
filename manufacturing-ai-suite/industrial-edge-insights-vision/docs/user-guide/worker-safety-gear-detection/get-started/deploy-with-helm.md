@@ -157,7 +157,7 @@
    ```
 
    > **Note:** This would start the pipeline. You can view the inference stream on WebRTC by
-   > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/anomaly/` for PCB Anomaly Detection.
+   > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/worker_safety/` for Worker Safety gear detection.
    > If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
 5. Get status of pipeline instance(s) running.

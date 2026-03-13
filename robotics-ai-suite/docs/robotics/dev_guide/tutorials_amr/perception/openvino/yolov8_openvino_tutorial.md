@@ -17,7 +17,7 @@ Follow the [Install Openvino](../../../../gsg_robot/install-openvino.md) instruc
 ### Install Python packages (optional)
 
 Following Python packages are necessary to automatically download and convert the model to IR files.
-Also You can provide your own model files in the config, if you have them already.
+Also, you can provide your own model files in the config, if you have them already.
 
 ```bash
 pip3 install numpy pandas openvino-dev ultralytics nncf onnx
@@ -86,7 +86,7 @@ publish_detections = true # publish detections (special message type), can be us
 rgb_topic = []
 rgb_topic_max_fps = [] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
 # depth is not used by yolo, but if provided this node will synchronize rgb and depth and transform to camera frame
-# this can be later used to place detections in 3D sSpace
+# this can be later used to place detections in 3D space
 # topics need to be provided in pairs
 rgbd_topic_rgb = ["/camera/color/image_raw"]
 rgbd_topic_depth = ["/camera/depth/image_raw"]
@@ -175,7 +175,7 @@ This package requires the model to have fixed shape, and to have 80 classes
 
 Automatic downloading of INT8 models is only supported for square input shapes
 and only for detection task. This is a limitation of ultralytics/nncf library.
-Therefore if you posses an quantized model for another task or resolution
+Therefore if you possess a quantized model for another task or resolution
 you can still use it.
 
 Resolution of input images (coming from ROS 2 topic) is not tied to the input

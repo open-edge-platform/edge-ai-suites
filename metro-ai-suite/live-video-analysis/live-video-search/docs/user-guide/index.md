@@ -75,7 +75,7 @@ system-requirements
 how-to-build-from-source
 how-it-works
 api-reference
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->
