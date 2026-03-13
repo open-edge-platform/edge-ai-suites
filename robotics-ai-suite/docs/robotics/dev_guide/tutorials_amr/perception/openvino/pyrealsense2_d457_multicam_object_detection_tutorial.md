@@ -129,7 +129,7 @@ ROS 2 AMR Controller is called ``Standalone-mode``.
   the Intel® RealSense™ Depth Camera D457, follow the steps described in
   [Enable ROS2 Intel® RealSense™ Depth Camera D457 GMSL](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#enable-ros2-intel-realsense-depth-camera-d457-gmsl).
 
-> **Note::**
+> **Note:**
 > The steps, such as BIOS settings and d4xx module user parameters, must be
 > configured to be relevant to the ``Standalone-mode`` of the Add-in-Card for
 > Axiomtek Robox500 ROS 2 AMR Controller.

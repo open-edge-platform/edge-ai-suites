@@ -19,7 +19,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
 
-Install Ubuntu Ubuntu 24.04 (Noble Numat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
+Install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
 ::::{tab-set}
 :::{tab-item} **Ubuntu 24.04**
@@ -29,7 +29,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 |Processor type|Canonical Ubuntu 24.04 LTS variant|ROS2 Compatibility|
 |-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
 
 :::
 :::{tab-item}  **Ubuntu 22.04**
@@ -365,7 +365,7 @@ The following steps will install the OpenVINO™ packages:
    sudo apt install openvino
    ```
 
-6. Install the the ROS 2 OpenVINO™ Toolkit:
+6. Install the ROS 2 OpenVINO™ Toolkit:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
