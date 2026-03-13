@@ -9,3 +9,4 @@
 - Removed Model Registry service and its references
 - NGINX,COTURN and MINIO ports made configurable as environment variables
 - Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
+- Model changed from FP16 to INT8
