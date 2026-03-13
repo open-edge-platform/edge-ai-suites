@@ -38,7 +38,6 @@ Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
 ./how-to-guides/store-frames-in-s3
 ./how-to-guides/use-opcua-publisher
 ./how-to-guides/enable-mlops
-./how-to-guides/export-and-optimize-geti-model
 ./how-to-guides/start-mqtt-publisher
 ./how-to-guides/benchmark
 ./how-to-guides/view-telemetry-data
