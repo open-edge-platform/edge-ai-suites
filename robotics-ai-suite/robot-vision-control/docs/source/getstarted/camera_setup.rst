@@ -2,14 +2,13 @@ Camera Setup
 ====================
 
 RVC supports |Realsense| |D4xx| cameras, with many `Exemplary Use Cases <../use_cases.html>`_ utilizing
-the `D415 <https://realsenseai.com/stereo-depth-cameras/stereo-depth-camera-d415/>`_. Therefore, choosing the
+the `D415 <https://www.realsenseai.com/products/stereo-depth-camera-d415/>`_ camera. Therefore, choosing the
 D415 for your project ensures most example use cases will run with minimal configuration.
-
 
 Initial Setup
 ~~~~~~~~~~~~~
 Out of the box the |Realsense| cameras need to be updated to the latest firmware version. The most straight forward way to
-accomplish this is by using the RealSense Viewer. This software, part of the `Intel® RealSense™ SDK 2.0 <https://github.com/IntelRealSense/librealsense>`_,
+accomplish this is by using the RealSense Viewer. This software, part of the `RealSense™ SDK 2.0 <https://www.realsenseai.com/developers/>`_,
 is a graphical user interface allowing one to view camera streams, edit configuration files, update firmware, and much more.
 
 If you are running the exemplary use cases their docker containers have the **realsense-viewer** application installed, along with the entire **librealsense2-util** library. This

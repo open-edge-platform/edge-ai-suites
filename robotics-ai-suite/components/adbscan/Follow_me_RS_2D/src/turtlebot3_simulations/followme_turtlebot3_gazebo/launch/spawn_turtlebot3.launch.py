@@ -18,9 +18,9 @@ from launch_ros.actions import Node
 def generate_launch_description():
     """Generate launch description."""
     # Get the urdf file from official turtlebot3_gazebo package
-    turtlebot3_model = os.environ['TURTLEBOT3_MODEL']
+    turtlebot3_model = os.environ.get('TURTLEBOT3_MODEL', 'waffle')
     model_folder = 'turtlebot3_' + turtlebot3_model
-    urdf_path = os.path.join(
+    default_urdf_path = os.path.join(
         get_package_share_directory('turtlebot3_gazebo'),
         'models',
         model_folder,
@@ -30,6 +30,7 @@ def generate_launch_description():
     # Launch configuration variables specific to simulation
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='0.0')
+    model_sdf_path = LaunchConfiguration('model_sdf_path', default=default_urdf_path)
 
     # Declare the launch arguments
     declare_x_position_cmd = DeclareLaunchArgument(
@@ -40,6 +41,12 @@ def generate_launch_description():
         'y_pose', default_value='0.0', description='Specify namespace of the robot'
     )
 
+    declare_model_sdf_path_cmd = DeclareLaunchArgument(
+        'model_sdf_path',
+        default_value=default_urdf_path,
+        description='Path to custom model SDF file (overrides TURTLEBOT3_MODEL default)',
+    )
+
     start_gazebo_ros_spawner_cmd = Node(
         package='ros_gz_sim',
         executable='create',
@@ -47,7 +54,7 @@ def generate_launch_description():
             '-entity',
             turtlebot3_model,
             '-file',
-            urdf_path,
+            model_sdf_path,
             '-x',
             x_pose,
             '-y',
@@ -63,6 +70,7 @@ def generate_launch_description():
     # Declare the launch options
     ld.add_action(declare_x_position_cmd)
     ld.add_action(declare_y_position_cmd)
+    ld.add_action(declare_model_sdf_path_cmd)
 
     # Add any conditioned actions
     ld.add_action(start_gazebo_ros_spawner_cmd)

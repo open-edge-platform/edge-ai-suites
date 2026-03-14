@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <model name="guide_robot">  
-  <pose>0.4 0.0 0.0 0.0 0.0 -2.35</pose> 
-  <!-- <pose>0.4 0.0 0.0 0.0 0.0 0.0</pose> -->
+  <pose>0.4 0.0 0.0 0.0 0.0 0.0</pose>
+  <!-- <pose>0.4 0.0 0.0 0.0 0.0 -2.35</pose> -->
   <!-- <pose>1.4 1.0 0.0 0.0 0.0 -2.35</pose>  -->
 
     <link name="base_footprint"/>
@@ -32,21 +32,108 @@
         </geometry>
       </collision>
 
-      <visual name="base_visual">
-        <pose>-0.064 0 0 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://turtlebot3_common/meshes/waffle_base.dae</uri>
-            <scale>0.001 0.001 0.002</scale>
-          </mesh>
-        </geometry>
-        <material> <!-- base_link material -->
-          <ambient>0 0 0 1</ambient>
-          <diffuse>0 0 0 1</diffuse>
-          <specular>0 0 0 0</specular>
-          <emissive>0 1 0 1</emissive>
-        </material> <!-- End base_link material -->
+      <!-- ===== Airport Follow-Me Car (box primitives, 4x4 checkerboard) ===== -->
+      <!-- Body: X -0.1965..0.0685  Y -0.1325..0.1325  Z 0..0.15 -->
+      <!-- 4x4 tile size: 0.066 x 0.066 -->
+      <!-- Tile X centers: -0.163, -0.097, -0.031, 0.035 -->
+      <!-- Tile Y centers: -0.099, -0.033, 0.033, 0.099 -->
+      <!-- Only BLACK tiles are overlaid; yellow base shows through -->
+
+      <!-- Base body: yellow box matching collision -->
+      <visual name="base_body">
+        <pose>-0.064 0 0.075 0 0 0</pose>
+        <geometry><box><size>0.265 0.265 0.150</size></box></geometry>
+        <material>
+          <ambient>0.95 0.85 0.0 1</ambient>
+          <diffuse>0.95 0.85 0.0 1</diffuse>
+          <specular>0.2 0.2 0.0 1</specular>
+          <emissive>0.15 0.12 0.0 1</emissive>
+        </material>
       </visual>
+
+      <!-- ── TOP face 4x4 checkerboard (z=0.152) ── black tiles only ── -->
+      <visual name="t00"><pose>-0.163 -0.099 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t02"><pose>-0.163  0.033 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t11"><pose>-0.097 -0.033 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t13"><pose>-0.097  0.099 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t20"><pose>-0.031 -0.099 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t22"><pose>-0.031  0.033 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t31"><pose> 0.035 -0.033 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="t33"><pose> 0.035  0.099 0.152 0 0 0</pose>
+        <geometry><box><size>0.066 0.066 0.005</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+
+      <!-- ── FRONT face 4x2 checkerboard (x=0.070) ── black tiles ── -->
+      <visual name="f00"><pose>0.070 -0.099 0.1125 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="f02"><pose>0.070  0.033 0.1125 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="f11"><pose>0.070 -0.033 0.0375 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="f13"><pose>0.070  0.099 0.0375 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+
+      <!-- ── BACK face 4x2 checkerboard (x=-0.199) ── black tiles ── -->
+      <visual name="b01"><pose>-0.199 -0.033 0.1125 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="b03"><pose>-0.199  0.099 0.1125 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="b10"><pose>-0.199 -0.099 0.0375 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="b12"><pose>-0.199  0.033 0.0375 0 0 0</pose>
+        <geometry><box><size>0.005 0.066 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+
+      <!-- ── LEFT face 4x2 checkerboard (y=0.135) ── black tiles ── -->
+      <visual name="l00"><pose>-0.163 0.135 0.1125 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="l02"><pose>-0.031 0.135 0.1125 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="l11"><pose>-0.097 0.135 0.0375 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="l13"><pose> 0.035 0.135 0.0375 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+
+      <!-- ── RIGHT face 4x2 checkerboard (y=-0.135) ── black tiles ── -->
+      <visual name="r01"><pose>-0.097 -0.135 0.1125 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="r03"><pose> 0.035 -0.135 0.1125 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="r10"><pose>-0.163 -0.135 0.0375 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+      <visual name="r12"><pose>-0.031 -0.135 0.0375 0 0 0</pose>
+        <geometry><box><size>0.066 0.005 0.075</size></box></geometry>
+        <material><ambient>0.05 0.05 0.05 1</ambient><diffuse>0.05 0.05 0.05 1</diffuse></material></visual>
+
+
     </link>
     
     <link name="wheel_left_link">
@@ -106,9 +193,9 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
-        <material> <!-- wheel_left material -->
+        <material>
           <ambient>0.1 0.1 0.1 1</ambient>
-          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <diffuse>0.15 0.15 0.15 1</diffuse>
           <specular>0 0 0 0</specular>
           <emissive>0 0 0 1</emissive>
         </material> <!-- End wheel_left material -->
@@ -172,9 +259,9 @@
             <scale>0.001 0.001 0.001</scale>
           </mesh>
         </geometry>
-        <material> <!-- wheel_right material -->
+        <material>
           <ambient>0.1 0.1 0.1 1</ambient>
-          <diffuse>0.1 0.1 0.2 1</diffuse>
+          <diffuse>0.15 0.15 0.15 1</diffuse>
           <specular>0 0 0 0</specular>
           <emissive>0 0 0 1</emissive>
         </material> <!-- End wheel_right material -->

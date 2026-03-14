@@ -45,24 +45,18 @@ export TURTLEBOT3_MODEL=waffle
 RVIZ_CONFIG="$(ros2 pkg prefix followme_turtlebot3_gazebo)/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz"
 
 echo "=========================================="
-echo "RealSense Demo - 3 Terminal Setup"
+echo "RealSense Follow-Me Demo (Gesture)"
 echo "=========================================="
-echo "This will launch Gazebo + RViz + Bridges only."
-echo ""
-echo "After this launches, run in separate terminals:"
-echo ""
-echo "Terminal 2 (ADBSCAN):"
-echo "  ros2 run adbscan_ros2_follow_me adbscan_sub_w_gesture --ros-args \\"
-echo "    --params-file \$(ros2 pkg prefix adbscan_ros2_follow_me)/share/adbscan_ros2_follow_me/config/adbscan_sub_RS.yaml \\"
-echo "    -r cmd_vel:=tb3/cmd_vel"
-echo ""
-echo "Terminal 3 (Gesture + Trajectory):"
-echo "  ros2 run gesture_recognition_pkg gesture_recognition_node.py --ros-args \\"
-echo "    --params-file \$(ros2 pkg prefix gesture_recognition_pkg)/share/gesture_recognition_pkg/config/gesture_recognition.yaml &"
-echo "  ros2 run gesture_recognition_pkg traj_and_img_publisher_node.py --ros-args \\"
-echo "    --params-file \$(ros2 pkg prefix gesture_recognition_pkg)/share/gesture_recognition_pkg/config/gesture_recognition.yaml"
-echo "=========================================="
-echo ""
 
-ros2 launch followme_turtlebot3_gazebo empty_world_followme_RS_gazebo_only.launch.py &
+echo "Step 1/3: Launching Gazebo world + bridges (depth camera model)..."
+ros2 launch followme_turtlebot3_gazebo rs_shared.launch.py &
+
+echo "Waiting 15s for Gazebo to initialize..."
+sleep 15
+
+echo "Step 2/3: Launching ADBSCAN + gesture nodes..."
+ros2 launch followme_turtlebot3_gazebo rs_gesture.launch.py &
+
+echo "Step 3/3: Opening RViz..."
+echo "=========================================="
 rviz2 -d "${RVIZ_CONFIG}"

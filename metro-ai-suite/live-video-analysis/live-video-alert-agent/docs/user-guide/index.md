@@ -42,7 +42,7 @@ how-to-build-source
 how-it-works
 api-reference
 known-issues
-release-notes
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

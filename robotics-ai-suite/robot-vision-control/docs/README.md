@@ -1,6 +1,6 @@
 # Robotic Vision & Control [RVC] Documentation
 
-This directpry contains the **Robotic Vision & Control [RVC]** system documentation, which is built from source using [Sphinx](https://www.sphinx-doc.org/). The following instructions will guide you through setting up the environment, installing dependencies, and building the HTML documentation.
+This directory contains the **Robotic Vision & Control [RVC]** system documentation, which is built from source using [Sphinx](https://www.sphinx-doc.org/). The following instructions will guide you through setting up the environment, installing dependencies, and building the HTML documentation.
 
 ---
 

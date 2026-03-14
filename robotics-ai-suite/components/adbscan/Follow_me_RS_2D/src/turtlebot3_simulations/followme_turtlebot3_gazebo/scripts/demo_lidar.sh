@@ -44,5 +44,19 @@ export TURTLEBOT3_MODEL=waffle
 # Get the correct rviz config path from installed workspace
 RVIZ_CONFIG="$(ros2 pkg prefix followme_turtlebot3_gazebo)/share/followme_turtlebot3_gazebo/rviz/followme_lidar.rviz"
 
-ros2 launch followme_turtlebot3_gazebo empty_world_followme_w_gesture_lidar_v2.launch.py &
+echo "=========================================="
+echo "2D LiDAR Follow-Me Demo (Gesture)"
+echo "=========================================="
+
+echo "Step 1/3: Launching Gazebo world + bridges..."
+ros2 launch followme_turtlebot3_gazebo lidar_shared.launch.py &
+
+echo "Waiting 15s for Gazebo to initialize..."
+sleep 15
+
+echo "Step 2/3: Launching ADBSCAN + gesture nodes..."
+ros2 launch followme_turtlebot3_gazebo lidar_gesture.launch.py &
+
+echo "Step 3/3: Opening RViz..."
+echo "=========================================="
 rviz2 -d "${RVIZ_CONFIG}"
