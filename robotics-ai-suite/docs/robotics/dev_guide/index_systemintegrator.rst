@@ -1,4 +1,4 @@
-.. |sys_integrator| image:: ../../images/icons/Integrate.png
+.. |sys_integrator| image:: ../images/icons/Integrate.png
    :width: 70
    :align: bottom
 
