@@ -20,7 +20,7 @@ Click each icon to learn more.
         Install a Robot Kit.
 
     .. grid-item-card:: How it works
-        :link: index_howitworks
+        :link: dev_guide/index_howitworks
         :link-type: doc
         :link-alt: clickable cards
 
