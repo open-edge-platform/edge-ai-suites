@@ -163,6 +163,12 @@ check_and_setup_dependencies() {
         return 1
     fi
     
+    # Ensure all required secrets are generated
+    if [ -f "$RI_DIR/src/secrets/browser.auth" ] && [ ! -f "$RI_DIR/src/secrets/pgserver/pgserver.env" ]; then
+        echo -e "${YELLOW}Required secrets not found. Regenerating secrets...${NC}"
+        rm -f "$RI_DIR/src/secrets/browser.auth"
+    fi
+
     # Run the installation script
     echo -e "${BLUE}==> Running installation script for smart-intersection...${NC}"
     cd $RI_DIR && ./install.sh && cd - > /dev/null
@@ -242,46 +248,33 @@ print_all_service_host_endpoints() {
     echo -e "SERVICE ENDPOINTS"
     echo -e "=======================================================${NC}"
     
-    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep $PROJECT_NAME);
+    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep -E "${PROJECT_NAME}|nginx-reverse-proxy");
     do
         # Set/print service name and the host port based on corresponding container name
         case "$CONTAINER_NAME" in
-            *dlstreamer-pipeline-server*)
-                SERVICE_NAME="DLStreamer Pipeline Server"
-                PORT=$(docker port "$CONTAINER_NAME" 8080 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}/pipelines"
-                ;;
-            *grafana*)
-                SERVICE_NAME="Grafana Dashboard"
-                PORT=$(docker port "$CONTAINER_NAME" 3000 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
-                ;;
-            *node-red*)
-                SERVICE_NAME="Node-RED"
-                PORT=$(docker port "$CONTAINER_NAME" 1880 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
-                ;;
-            *web*)
-                SERVICE_NAME="Scenescape Web UI"
-                PORT=$(docker port "$CONTAINER_NAME" 443 | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> https://$HOST_IP:$PORT${NC}"
+            *nginx-reverse-proxy*)
+                SERVICE_NAME="Nginx Reverse Proxy"
+                HTTPS_PORT=$(docker port "$CONTAINER_NAME" 443 2>/dev/null | cut -d: -f2)
+                if [ -n "$HTTPS_PORT" ]; then
+                    echo -e "${BLUE}Access Grafana Dashboard -> https://$HOST_IP:$HTTPS_PORT/grafana/${NC}"
+                    echo -e "${BLUE}Access Node-RED -> https://$HOST_IP:$HTTPS_PORT/nodered/${NC}"
+                    echo -e "${BLUE}Access DLStreamer Pipeline Server -> https://$HOST_IP:$HTTPS_PORT/api/pipelines${NC}"
+                    echo -e "${BLUE}Access Scenescape Web UI -> https://$HOST_IP:$HTTPS_PORT/${NC}"
+                fi
                 ;;
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
-                PORT=$(docker port "$CONTAINER_NAME" 8081 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 8081 2>/dev/null | cut -d: -f2)
                 echo -e "${CYAN}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
-                PORT=$(docker port "$CONTAINER_NAME" 7860 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 7860 2>/dev/null | cut -d: -f2)
                 echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *vlm*)
                 SERVICE_NAME="VLM OpenVINO Serving API"
-                PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | cut -d: -f2)
                 echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
-                ;;
-            *)
-                SERVICE_NAME="Unknown Service"
                 ;;
         esac
     done
