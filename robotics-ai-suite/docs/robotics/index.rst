@@ -15,21 +15,21 @@ Click each icon to learn more.
         Install a Robot Kit.
 
     .. grid-item-card:: How it works
-        :link: dev_guide/index
+        :link: index_howitworks
         :link-type: doc
         :link-alt: clickable cards
 
         Describes how the software works
 
     .. grid-item-card:: Tutorials
-        :link: dev_guide/index
+        :link: dev_guide/index_tutorials
         :link-type: doc
         :link-alt: clickable cards
 
         Provides a learning path for developers to use and configure Autonomous Mobile Robot
 
     .. grid-item-card:: System Integrators
-        :link: dev_guide/system_integrators/index
+        :link: dev_guide/index_systemintegrator
         :link-type: doc
         :link-alt: clickable cards
 
