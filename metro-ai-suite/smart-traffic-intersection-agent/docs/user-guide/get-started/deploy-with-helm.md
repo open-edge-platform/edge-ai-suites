@@ -414,6 +414,6 @@ helm install stia . -n traffic -f values-override.yaml \
 
 ## Related Links
 
-- [Get Started](./get-started.md)
-- [API Reference](./api-reference.md)
-- [Release Notes](./release-notes.md)
+- [Get Started](../get-started.md)
+- [API Reference](../api-reference.md)
+- [Release Notes](../release-notes.md)
