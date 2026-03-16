@@ -45,7 +45,7 @@ This diagram shows the software components included in the Autonomous Mobile Rob
 package.
 
 
-.. image:: ../../images/amr_sdk_software_components.png
+.. image:: ../images/amr_sdk_software_components.png
 
 
 The Autonomous Mobile Robot software stack relies on the underlying hardware platform, software supported by and integrated into
