@@ -287,10 +287,11 @@ git submodule update --init --depth 1 deps/metro-vision
 ### 3. Clean and Re-setup
 
 For **major version upgrades** (for example, from SceneScape v1.x to v2026.x), stale data
-volumes and secrets can cause failures. Run a clean setup:
+volumes and secrets can cause failures. Clean up old containers and re-run setup:
 
 ```bash
 source setup.sh --clean --keep-models
+export VLM_MODEL_NAME=<supported_model_name>
 source setup.sh --setup
 ```
 
