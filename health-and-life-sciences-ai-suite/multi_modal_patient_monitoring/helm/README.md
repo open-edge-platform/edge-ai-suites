@@ -8,22 +8,12 @@ This Helm chart deploys the **Health & Life Sciences AI Suite** on Kubernetes.
 - Kubernetes cluster (Minikube / Kind / Bare-metal)
 - `kubectl`
 - `helm` (v3+)
-- Docker images built locally
-
-## Required Docker Images
-
-The following images **must exist locally** before deploying the Helm chart.
-
-Check available images:
-```bash
-docker images | grep intel/hl-ai
-```
 
 
 ## Install
 
 ```bash
-cd health-and-life-sciences-ai-suite/helm/multi_modal_patient_monitoring
+cd /health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/helm/multi_modal_patient_monitoring
 
 helm install multi-modal-patient-monitoring . \
   --namespace multi-modal-patient-monitoring \
@@ -53,7 +43,7 @@ kubectl get svc -n multi-modal-patient-monitoring
 
 ## Check Logs (recommended)
 ```bash
-kubectl logs -n multi-modal-patient-monitoringi deploy/mdpnp
+kubectl logs -n multi-modal-patient-monitoring deploy/mdpnp
 kubectl logs -n multi-modal-patient-monitoring deploy/dds-bridge
 kubectl logs -n multi-modal-patient-monitoring deploy/aggregator
 kubectl logs -n multi-modal-patient-monitoring deploy/ai-ecg

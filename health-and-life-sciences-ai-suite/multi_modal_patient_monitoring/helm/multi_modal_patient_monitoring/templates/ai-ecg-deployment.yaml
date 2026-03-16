@@ -12,17 +12,6 @@ spec:
       labels:
         app: ai-ecg
     spec:
-      initContainers:
-        - name: copy-models
-          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
-          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - cp -r /opt/assets/models/* /models/
-          volumeMounts:
-            - name: models
-              mountPath: /models
-
       containers:
         - name: ai-ecg
           image: "{{ .Values.aiEcg.image.repository }}/{{ .Values.aiEcg.image.name }}:{{ .Values.aiEcg.image.tag }}"
@@ -37,14 +26,19 @@ spec:
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: videos
+              mountPath: /videos
             - name: dri
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
-
       volumes:
         - name: models
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: videos
+          persistentVolumeClaim:
+            claimName: videos-pvc
         - name: dri
           hostPath:
             path: /dev/dri
