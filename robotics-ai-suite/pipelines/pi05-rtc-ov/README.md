@@ -183,16 +183,39 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - **MuJoCo simulation** (`--robot_type mujoco_aloha`) for tasks like `sim_transfer_cube`.
 - **Real ALOHA robot** (`--robot_type real_aloha`) for tasks like `transfer_cube`.
 
+#### Arguments:
+
+- `--pretrained_model_path`: Path to the pretrained model checkpoint or Hugging Face repo id. Default: `lerobot/pi05_base`.
+- `--dataset_path`: (Optional) Local dataset directory used to load metadata (e.g. task language) and, if needed, dataset statistics.
+- `--stats_path`: (Optional) Path to `stats.json` used for normalization. If omitted, the script attempts to load `<pretrained_model_path>/stats.json`, falling back to `--dataset_path` if available.
+- `--robot_type`: `mujoco_aloha` or `real_aloha`.
+- `--task`: Task name, e.g. `sim_transfer_cube`, `sim_insertion`, `transfer_cube`.
+- `--num_episodes`: Number of trajectories/episodes to run. Default: `1`.
+- `--max_steps`: Max steps per episode. Default: `400`.
+- `--fps`: Control Frequency (Hz). Default: `50.0`.
+
+**OpenVINO:**
+
+- `--use_ov`: Use OpenVINO model for inference.
+- `--ov_model_path`: Path to the OpenVINO IR model directory (containing `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
+- `--ov_device`: OpenVINO device string (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
+
+> **Note**: OpenVINO inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO model.
+> **Note**: Dataset statistics are required for normalization; please provide them via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
+
+**RTC (Real-Time Chunking):**
+
+- `--rtc_enabled`: Enable RTC algorithm.
+- `--rtc_horizon`: Execution horizon for RTC. Default: `45`.
+
+**Visualization/Logging:**
+
+- `--plot`: Enable visualization (typically used with MuJoCo).
+> **Note**: If visualization windows do not appear when using `--plot`, install python3-tk to enable the Matplotlib interactive backend: `sudo apt install python3-tk`.
+- `--save_traj`: Save trajectory data and plots.
+- `--save_traj_path`: Output directory for saved trajectories/plots. Default: `trajectory_plots`.
+
 ### Simulation Pipeline
-
-#### Run `sim_transfer_cube` in MuJoCo (PyTorch model)
-
-```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
-    --robot_type mujoco_aloha \
-    --task sim_transfer_cube \
-    --pretrained_model_path <path_to_pretrained_model>
-```
 
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
@@ -205,9 +228,18 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-> **Note**: Even when using `--use_ov`, you still need to provide `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO model.
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO + RTC
 
-> **Note**: For correct normalization, you should also provide dataset statistics via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
+```bash
+MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+    --robot_type mujoco_aloha \
+    --task sim_transfer_cube \
+    --pretrained_model_path <path_to_pretrained_model> \
+    --use_ov \
+    --ov_model_path <path_to_ov_model> \
+    --rtc_enabled \
+    --rtc_horizon 45
+```
 
 ### Real-robot Pipeline
 
@@ -236,10 +268,10 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --use_ov \
     --ov_model_path <path_to_ov_model> \
     --rtc_enabled \
-    --rtc_horizon 30
+    --rtc_horizon 45
 ```
 
-> **Tip**: When running OpenVINO inference on Intel platforms, pinning the process to P-cores can help achieve more stable inference performance. For example, prefix your command with `taskset`:
-> ```bash
-> taskset -c 0-5 uv run --extra pi-ov examples/aloha/eval_aloha.py ...
-> ```
+**Tip**: When running OpenVINO inference on Intel platforms, pinning the process to P-cores can help achieve more stable inference performance. For example, prefix your command with `taskset`:
+```bash
+taskset -c 0-5 uv run --extra pi-ov examples/aloha/eval_aloha.py ...
+```
