@@ -86,12 +86,8 @@ elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" !
 elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
     
-    # check if ri-compose.yaml exists and run docker compose down accordingly
-    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
-    else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
-    fi
+    # Use project name only for teardown to avoid needing env vars to parse compose files
+    docker compose -p ${PROJECT_NAME} down 2> /dev/null
 
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to stop Smart-Traffic-Intersection-Agent services. ${NC}"
