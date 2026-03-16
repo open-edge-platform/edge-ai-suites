@@ -156,7 +156,7 @@ Profiling and monitoring performance of Metro Vision AI workloads using command-
 
 ### Technical Documentation
 
-- [DL Streamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+- [DL Streamer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
