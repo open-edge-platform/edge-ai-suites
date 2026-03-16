@@ -8,22 +8,12 @@ This Helm chart deploys the **Health & Life Sciences AI Suite** on Kubernetes.
 - Kubernetes cluster (Minikube / Kind / Bare-metal)
 - `kubectl`
 - `helm` (v3+)
-- Docker images built locally
-
-## Required Docker Images
-
-The following images **must exist locally** before deploying the Helm chart.
-
-Check available images:
-```bash
-docker images | grep intel/hl-ai
-```
 
 
 ## Install
 
 ```bash
-cd health-and-life-sciences-ai-suite/helm/multi_modal_patient_monitoring
+cd /health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/helm/multi_modal_patient_monitoring
 
 helm install multi-modal-patient-monitoring . \
   --namespace multi-modal-patient-monitoring \
@@ -53,7 +43,7 @@ kubectl get svc -n multi-modal-patient-monitoring
 
 ## Check Logs (recommended)
 ```bash
-kubectl logs -n multi-modal-patient-monitoringi deploy/mdpnp
+kubectl logs -n multi-modal-patient-monitoring deploy/mdpnp
 kubectl logs -n multi-modal-patient-monitoring deploy/dds-bridge
 kubectl logs -n multi-modal-patient-monitoring deploy/aggregator
 kubectl logs -n multi-modal-patient-monitoring deploy/ai-ecg
@@ -70,7 +60,9 @@ Healthy services will show:
 
 
 ## Access the Frontend UI
-Check Ingress resource:
+### 1. Check the Ingress Resource
+
+Run the following command to view the ingress configuration:
 
 ```bash
 kubectl get ingress -n multi-modal-patient-monitoring
@@ -82,13 +74,34 @@ Example output:
 NAME       HOSTS               PATHS   ADDRESS         PORTS
 multi-modal-patient-monitoring  multi-modal-patient-monitoring.local       /       xx.xx.xx.xx   80
 ```
+### 2. If an IP Address Appears in ADDRESS
 
-Add an entry on your Linux host (replace <IP> with the one you found):
+Add the hostname mapping to your local machine:
 ```bash
 echo "<IP> multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
 ```
+Replace <IP> with the value shown in the ADDRESS column.
 
-Open your browser and go to:
+### 3. If the ADDRESS Field is Empty (Common in Minikube)
+Some local Kubernetes environments (such as Minikube) do not automatically populate the ingress IP.
+
+Retrieve the Minikube cluster IP:
+```bash
+minikube ip
+```
+Then map the hostname to the IP:
+```bash
+echo "$(minikube ip) multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
+```
+
+### 4. Enable Ingress in Minikube (if not already enabled)
+```bash
+minikube addons enable ingress
+```
+Wait a few moments for the ingress controller to start.
+
+### 5.Open the Application
+Open your browser and navigate to:
 ```bash
 http://<host-or-ip>/
 ``` 
@@ -96,10 +109,7 @@ Example:
 ```bash
 http://multi-modal-patient-monitoring.local/
 ``` 
-If using Minikube, you may need to enable the ingress addon:
-```bash
-minikube addons enable ingress
-``` 
+
 This will open the Health AI Suite frontend dashboard.
 
 From here you can access:

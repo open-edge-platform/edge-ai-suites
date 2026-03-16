@@ -1,13 +1,23 @@
 persistence:
   size: 20Gi
 
+# Shared PVCs for models and videos
+models:
+  enabled: true
+  mountPath: /models
+  claimName: models-pvc
+
+videos:
+  enabled: true
+  mountPath: /videos
+  claimName: videos-pvc
+
 service:
   type: ClusterIP
 
 ingress:
   enabled: true
   className: nginx
-
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/use-regex: "true"
@@ -17,28 +27,26 @@ ingress:
     nginx.ingress.kubernetes.io/chunked-transfer-encoding: "on"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
-
   hosts:
     - host: multi-modal-patient-monitoring.local
       paths:
+        # Aggregator API
         - path: /video-stream(/|$)(.*)
           pathType: ImplementationSpecific
           service: aggregator
-          port: 8001
-
+          port: 80
         - path: /api(/|$)(.*)
           pathType: ImplementationSpecific
           service: aggregator
-          port: 8001
-
+          port: 80
+        # Frontend UI
         - path: /()(.*)
           pathType: ImplementationSpecific
           service: ui
           port: 80
-
   tls: []
 
-
+# Images
 ui:
   image:
     repository: intel
@@ -102,6 +110,7 @@ assets:
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
 
+# Devices
 devices:
   ECG_DEVICE: "GPU"
   RPPG_DEVICE: "GPU"

@@ -1,0 +1,45 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: assets-prep
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: assets
+          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
+          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: device-config
+          env:
+            - name: HTTP_PROXY
+              value: "http://proxy-pilot.intel.com:912"
+            - name: HTTPS_PROXY
+              value: "http://proxy-pilot.intel.com:912"
+            - name: http_proxy
+              value: "http://proxy-pilot.intel.com:912"
+            - name: https_proxy
+              value: "http://proxy-pilot.intel.com:912"
+            - name: NO_PROXY
+              value: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
+            - name: no_proxy
+              value: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: videos
+              mountPath: /videos
+            - name: model-config
+              mountPath: /app/configs
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: videos
+          persistentVolumeClaim:
+            claimName: videos-pvc
+        - name: model-config
+          configMap:
+            name: rppg-model-config
