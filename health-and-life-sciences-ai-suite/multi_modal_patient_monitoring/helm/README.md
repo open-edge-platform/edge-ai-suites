@@ -1,6 +1,6 @@
-# Health AI Suite – Helm Deployment
+# Multi modal patient monitoring – Helm Deployment
 
-This Helm chart deploys the **Health & Life Sciences AI Suite** on Kubernetes.
+This Helm chart deploys the **Multi modal patient monitoring app** on Kubernetes.
 
 
 ## Prerequisites
@@ -8,6 +8,65 @@ This Helm chart deploys the **Health & Life Sciences AI Suite** on Kubernetes.
 - Kubernetes cluster (Minikube / Kind / Bare-metal)
 - `kubectl`
 - `helm` (v3+)
+- A working PersistentVolume provisioner (required for PVC binding)
+
+### Storage prerequisite (required)
+
+This chart creates PVCs (`models-pvc`, `videos-pvc`, `health-ai-assets-pvc`) and expects your
+cluster to provide PersistentVolumes through a StorageClass.
+
+If your cluster has no dynamic provisioner, PVCs will remain `Pending` and workloads will not
+schedule.
+
+- For single-node/local clusters, install a dynamic provisioner (for example,
+  `local-path-provisioner`) before installing this chart.
+- Or pre-create matching static PersistentVolumes for all claims.
+
+> `local-path-provisioner` does **not** support `ReadWriteMany`.
+> Use `ReadWriteOnce` (this chart default) unless you use a RWX-capable storage backend.
+
+## Optional: Proxy configuration for assets job
+
+Proxy values are configured via `values.yaml` (not hardcoded in templates).
+
+```yaml
+assets:
+  proxy:
+    enabled: true
+    httpProxy: "http://your-proxy:3128"
+    httpsProxy: "http://your-proxy:3128"
+    noProxy: "localhost,127.0.0.1,.svc,.cluster.local"
+```
+
+Set via CLI if needed:
+
+```bash
+--set assets.proxy.enabled=true \
+--set assets.proxy.httpProxy=http://your-proxy:3128 \
+--set assets.proxy.httpsProxy=http://your-proxy:3128 \
+--set assets.proxy.noProxy=localhost,127.0.0.1,.svc,.cluster.local
+```
+
+## Setup Storage Provisioner (For Single-Node Clusters)
+Check if your cluster has a default storage class with dynamic provisioning. If not, install a storage provisioner:
+
+```bash
+# Check for existing storage classes
+kubectl get storageclass
+
+# If no storage classes exist or none are marked as default, install local-path-provisioner
+# This step is typically needed for single-node bare Kubernetes installations
+# (Managed clusters like EKS/GKE/AKS already have storage classes configured)
+
+# Install local-path-provisioner for automatic storage provisioning
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+
+# Set it as default storage class
+kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+# Verify storage class is ready
+kubectl get storageclass
+```
 
 
 ## Install

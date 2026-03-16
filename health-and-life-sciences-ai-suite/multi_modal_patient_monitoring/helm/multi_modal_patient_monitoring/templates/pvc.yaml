@@ -4,7 +4,10 @@ metadata:
   name: models-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.persistence.accessMode }}
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName | quote }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.persistence.size }}
@@ -16,7 +19,10 @@ metadata:
   name: videos-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.persistence.accessMode }}
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName | quote }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.persistence.size }}
@@ -28,7 +34,10 @@ metadata:
   name: health-ai-assets-pvc
 spec:
   accessModes:
-    - ReadWriteMany
+    - {{ .Values.persistence.accessMode }}
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName | quote }}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.persistence.size }}
