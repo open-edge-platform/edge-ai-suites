@@ -1,4 +1,4 @@
-.. |dev_guide| image:: ../images/icons/Developer_Guide.png
+.. |dev_guide| image:: images/icons/Developer_Guide.png
    :width: 70
    :align: bottom
 
