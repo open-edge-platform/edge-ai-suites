@@ -1081,5 +1081,5 @@ Follow the guide from [Get Started](./get-started-guide.md) to run sensor fusion
 Some of the code is referenced from the following projects:
 
 - [IGT GPU Tools](https://gitlab.freedesktop.org/drm/igt-gpu-tools)(MIT License)
-- [Intel DL Streamer](https://github.com/dlstreamer/dlstreamer) (MIT License)
+- [Intel DL Streamer](https://github.com/open-edge-platform/dlstreamer) (MIT License)
 - [Open Model Zoo](https://github.com/openvinotoolkit/open_model_zoo) (Apache-2.0 License)

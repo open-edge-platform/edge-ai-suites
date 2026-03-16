@@ -34,4 +34,4 @@ graph TD
 ## Related Architecture References
 
 - Smart NVR architecture: [Smart NVR Overview](../../../../smart-nvr/docs/user-guide/index.md)
-- VSS Search architecture: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/overview-architecture-search.md)
+- VSS Search architecture: [Video Search and Summarization Docs](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/video-search-and-summarization/how-it-works/video-search-and-summarization.html)
