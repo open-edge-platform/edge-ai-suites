@@ -25,25 +25,25 @@ schedule.
 > `local-path-provisioner` does **not** support `ReadWriteMany`.
 > Use `ReadWriteOnce` (this chart default) unless you use a RWX-capable storage backend.
 
-## Optional: Proxy configuration for assets job
+## Optional: Proxy configuration 
 
-Proxy values are configured via `values.yaml` (not hardcoded in templates).
+Configure Proxy Settings (If behind a proxy)
 
-```yaml
-assets:
-  proxy:
-    enabled: true
-    httpProxy: "http://your-proxy:3128"
-    httpsProxy: "http://your-proxy:3128"
-    noProxy: "localhost,127.0.0.1,.svc,.cluster.local"
+If you are deploying in a proxy environment, also update the proxy settings in the same values.yaml file:
+```bash
+http_proxy: "http://your-proxy-server:port"
+https_proxy: "http://your-proxy-server:port"
+no_proxy: "localhost,127.0.0.1,.local,.cluster.local"
 ```
+Replace your-proxy-server:port with your actual proxy server details.
+ 
 
 Set via CLI if needed:
 
 ```bash
 --set assets.proxy.enabled=true \
---set assets.proxy.httpProxy=http://your-proxy:3128 \
---set assets.proxy.httpsProxy=http://your-proxy:3128 \
+--set assets.proxy.httpProxy=http://your-proxy-server:port\
+--set assets.proxy.httpsProxy=http://your-proxy-server:port\
 --set assets.proxy.noProxy=localhost,127.0.0.1,.svc,.cluster.local
 ```
 
