@@ -50,7 +50,7 @@ package.
 
 The Autonomous Mobile Robot software stack relies on the underlying hardware platform, software supported by and integrated into
 their respective Unified Extensible Firmware Interface (UEFI) based boot processes, and supported Linux
-operating system. For requirement details, see :doc:`../../dev_guide/requirements`.
+operating system. For requirement details, see :doc:`../dev_guide/requirements`.
 
 
 Autonomous Mobile Robot Drivers
