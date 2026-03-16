@@ -1,4 +1,4 @@
-.. |tutorials_robot| image:: ../../images/icons/Tutorial_Robot.png
+.. |tutorials_robot| image:: ../images/icons/Tutorial_Robot.png
    :width: 70
    :align: bottom
 
