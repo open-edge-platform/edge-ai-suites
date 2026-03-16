@@ -115,7 +115,7 @@ Install external_control.urcap
 
 
 Configure the URCaps for the robot and the Robotiq 2F-85 URCap. For details, refer to
-`Connect to External Control via URCap <https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver#connect-to-external-control-via-urcap>`_.
+`Connect to External Control via URCap <https://docs.universal-robots.com/Universal_Robots_ROS2_Documentation/doc/ur_client_library/doc/setup/robot_setup.html#urcap-installation>`_.
 
 After installing `external_control.urcap`, the screen, shown in the following figure, will be displayed.
 
@@ -134,9 +134,9 @@ Install Gripper URCaps
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-The URCaps are available on the `Robotiq <https://robotiq.com/products/2f85-140-adaptive-robot-gripper?ref=nav_product_new_button>`_ website.
+The URCaps are available on the `Robotiq Support <https://robotiq.com/support>`_ website.
 
-To download the latest Gripper URCaps, click **Download files**. From the left panel, click **Universal Robots**. Then, click **Software** > **Gripper Software**. Click **DOWNLOAD ZIP**.
+To download the latest Gripper URCaps, click **2F-85 and 2F-140 Grippers**. From there, click **Universal Robots**. Then, click **Software** and choose the Gripper URCap package to download.
 
 Install these URCaps on the UR5e robot teach pendant using a USB drive.
 

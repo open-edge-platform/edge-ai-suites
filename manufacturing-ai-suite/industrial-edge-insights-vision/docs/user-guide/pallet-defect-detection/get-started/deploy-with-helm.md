@@ -23,7 +23,7 @@
    ```sh
    cp helm/values_pallet-defect-detection.yaml helm/values.yaml
    ```
-      > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 

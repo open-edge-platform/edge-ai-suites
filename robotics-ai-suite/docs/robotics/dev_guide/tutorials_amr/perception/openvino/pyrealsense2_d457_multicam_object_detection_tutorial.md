@@ -1,9 +1,9 @@
-# OpenVINO™ Tutorial on Multi-camera Object Detection using Intel® RealSense™ Depth Camera D457
+# OpenVINO™ Tutorial on Multi-camera Object Detection using RealSense™ Depth Camera D457
 
 In this tutorial, the multi-camera use case is demonstrated using an
 [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
 and four
-[Intel® RealSense™ Depth Camera D457](https://www.intelrealsense.com/depth-camera-d457).
+[RealSense™ Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra/).
 Here, the four cameras are connected to the Industrial Gigabit Multimedia Serial
 Link™ (GMSL) supported Axiomtek Robox500 ROS 2 AMR Controller through GMSL/FAKRA
 (female-to-female) cables, which provide high-bandwidth video transmission.
@@ -129,7 +129,7 @@ ROS 2 AMR Controller is called ``Standalone-mode``.
   the Intel® RealSense™ Depth Camera D457, follow the steps described in
   [Enable ROS2 Intel® RealSense™ Depth Camera D457 GMSL](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#enable-ros2-intel-realsense-depth-camera-d457-gmsl).
 
-> **Note::**
+> **Note:**
 > The steps, such as BIOS settings and d4xx module user parameters, must be
 > configured to be relevant to the ``Standalone-mode`` of the Add-in-Card for
 > Axiomtek Robox500 ROS 2 AMR Controller.
