@@ -21,7 +21,7 @@ For details, see `Model Zoo
 ADBSCAN
 ++++++++
 
-**Tutorial**: :doc:`../dev_guide/tutorials_amr/navigation/adbscan/index`
+**Tutorial**: :doc:`../tutorials_amr/navigation/adbscan/index`
 
 
 DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is an
