@@ -195,7 +195,7 @@ Inference
 
       cd <rdt_SOURCE_CODE_PATH>
       mkdir google & cd google
-      sudo apt install git-lft
+      sudo apt install git-lfs
       GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/google/t5-v1_1-xxl
       cd t5-v1_1-xxl
       git lfs pull
