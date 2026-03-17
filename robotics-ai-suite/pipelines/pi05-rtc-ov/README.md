@@ -217,6 +217,8 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 ### Simulation Pipeline
 
+> **Note**: If you encountered MESA warnings, please try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
+
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
 ```bash

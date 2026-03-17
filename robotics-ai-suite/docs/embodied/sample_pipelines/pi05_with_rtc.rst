@@ -265,6 +265,10 @@ Arguments:
 Simulation Pipeline
 :::::::::::::::::::
 
+.. note::
+
+   If you encountered MESA warnings, please try ``sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0``.
+
 Run ``sim_transfer_cube`` in MuJoCo using an OpenVINO model
 
 .. code-block:: bash
