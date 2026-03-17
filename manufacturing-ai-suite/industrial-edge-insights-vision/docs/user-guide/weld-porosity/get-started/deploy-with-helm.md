@@ -161,6 +161,21 @@
 
    > **Note:**- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
    >If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   
+   ### Starting GPU and NPU based pipelines
+   For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
+
+      **For GPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p weld_porosity_classification_gpu
+      ```
+
+      **For NPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p weld_porosity_classification_npu
+      ```
 
 5. Get status of pipeline instance(s) running.
 
