@@ -2,4 +2,4 @@
 Terminology
 ======================================================================
 
-.. include:: /shared/terminology.rst
+.. include:: ./robotics/shared/terminology.rst
