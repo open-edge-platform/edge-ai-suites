@@ -35,7 +35,7 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 1.0.0-rc2-helm
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 1.0.0-helm
 ```
 
 #### Step 2: Extract the `.tgz` File
@@ -43,7 +43,7 @@ helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --ve
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-1.0.0-rc2-helm.tgz
+tar -xvf smart-traffic-intersection-agent-1.0.0-helm.tgz
 ```
 
 Navigate to the extracted directory:
@@ -125,6 +125,9 @@ Deploy the Smart Traffic Intersection Agent Helm chart:
 ```bash
 helm install stia . -n <your-namespace> --create-namespace
 ```
+
+> **Note:** Please make sure to use the same namespace as the Smart Intersection application. Default namespace for Smart Intersection is `smart-intersection`.
+
 
 > **Note:** The VLM OpenVINO Serving pod will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `vlmServing.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
 
@@ -225,7 +228,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `trafficAgent.image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `trafficAgent.image.tag` | Image tag | `1.0.0-rc2` |
+| `trafficAgent.image.tag` | Image tag | `1.0.0` |
 | `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
 | `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
