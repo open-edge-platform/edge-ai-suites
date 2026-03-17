@@ -14,25 +14,15 @@ spec:
     spec:
       initContainers:
         - name: wait-for-rppg-assets
-          image: "{{ .Values.rppg.image.repository }}/{{ .Values.rppg.image.name }}:{{ .Values.rppg.image.tag }}"
-          imagePullPolicy: {{ .Values.rppg.image.pullPolicy }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              set -e
-              MODEL_XML="/models/rppg/mtts_can.xml"
-              MODEL_HDF5="/models/rppg/mtts_can.hdf5"
-              VIDEO="/videos/rppg/sample.mp4"
-              for i in $(seq 1 120); do
-                if [ -f "$VIDEO" ] && { [ -f "$MODEL_XML" ] || [ -f "$MODEL_HDF5" ]; }; then
-                  echo "RPPG assets found"
-                  exit 0
-                fi
-                echo "Waiting for RPPG assets..."
-                sleep 5
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >
+              until { [ -f /models/rppg/mtts_can.xml ] || [ -f /models/rppg/mtts_can.hdf5 ]; } && [ -f /videos/rppg/sample.mp4 ]; do
+                echo "Waiting for RPPG assets...";
+                sleep 5;
               done
-              echo "Timed out waiting for RPPG assets"
-              exit 1
           volumeMounts:
             - name: models
               mountPath: /models

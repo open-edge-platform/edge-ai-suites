@@ -4,6 +4,11 @@ metadata:
   name: pose
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: pose
@@ -14,24 +19,15 @@ spec:
     spec:
       initContainers:
         - name: wait-for-pose-assets
-          image: "{{ .Values.pose.image.repository }}/{{ .Values.pose.image.name }}:{{ .Values.pose.image.tag }}"
-          imagePullPolicy: {{ .Values.pose.image.pullPolicy }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - |
-              set -e
-              MODEL="/models/3d-pose/human-pose-estimation-3d-0001.xml"
-              VIDEO="/videos/3d-pose/face-demographics-walking.mp4"
-              for i in $(seq 1 120); do
-                if [ -f "$MODEL" ] && [ -f "$VIDEO" ]; then
-                  echo "Pose assets found"
-                  exit 0
-                fi
-                echo "Waiting for pose assets..."
-                sleep 5
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >
+              until [ -f /models/3d-pose/human-pose-estimation-3d-0001.xml ] && [ -f /videos/3d-pose/face-demographics-walking.mp4 ]; do
+                echo "Waiting for 3D-Pose assets...";
+                sleep 5;
               done
-              echo "Timed out waiting for pose assets"
-              exit 1
           volumeMounts:
             - name: models
               mountPath: /models
