@@ -1,0 +1,11 @@
+Session: remote_test
+Started: 2026-02-27 16:19:25
+Target Node: All nodes
+Interval: 5s
+Monitor Resources: True
+Monitor Graph: True
+Output Directory: monitoring_sessions/remote_test
+Remote System: intel@10.34.94.191
+--------------------------------------------------------------------------------
+
+Stopped: 2026-02-27 16:19:35
