@@ -65,8 +65,10 @@ Edit the `values.yaml` file to set the necessary environment variables. Refer to
 Clone the repository containing the Helm chart:
 
 ```bash
-# Clone the release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
+# Clone the latest on mainline
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+# Alternatively, clone a specific release branch
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -225,7 +227,7 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `trafficAgent.image.repository` | Traffic agent container image repository | `intel/smart-traffic-intersection-agent` |
-| `trafficAgent.image.tag` | Image tag | `1.0.0-rc2` |
+| `trafficAgent.image.tag` | Image tag | `latest` |
 | `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
 | `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
