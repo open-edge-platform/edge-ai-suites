@@ -1,0 +1,163 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+
+These contents may have been developed with support from one or more
+Intel-operated generative artificial intelligence solutions.
+-->
+
+  ROS2 KPI Toolkit - One-Page Cheat Sheet
+
+
+
+ MONITORING
+
+
+make monitor                              Monitor all nodes (60s)
+make monitor NODE=/my_node                Monitor specific node
+make monitor NODE=/my_node DURATION=120   Custom duration
+make monitor-gpu                          Monitor + Intel GPU metrics
+make quick-check                          Quick 30s check
+
+
+ PICKNPLACE SIMULATION
+
+
+make picknplace                           Single PicknPlace run + monitor
+make picknplace-repeat                    3 runs, 10s pause (default)
+make picknplace-repeat REPEAT=5 PAUSE=15  Custom repeat count and pause
+
+Sessions → monitoring_sessions/picknplace/<timestamp>/
+Averages → monitoring_sessions/picknplace/average_N/ (after repeat)
+
+Visualize:
+  make visualize-last ALGORITHM=picknplace
+  make visualize-gpu  ALGORITHM=picknplace
+  make pipeline-graph ALGORITHM=picknplace
+  make view-average-plot RUNS=3
+
+
+ REMOTE MONITORING
+
+
+make monitor-remote REMOTE_IP=192.168.1.100
+make monitor-remote REMOTE_IP=192.168.1.100 GPU=1          + Intel GPU metrics
+make monitor-remote REMOTE_IP=192.168.1.100 NPU=1          + Intel NPU metrics
+make monitor-remote REMOTE_IP=192.168.1.100 GPU=1 NPU=1    + both
+make monitor-remote-repeat REMOTE_IP=192.168.1.100 REPEAT=3  N back-to-back runs
+
+
+ INTEL GPU / NPU ANALYSIS
+
+
+make gpu-pids                             One-shot GPU snapshot (engines, freq, temp, watts)
+make gpu-pids-watch                       Live GPU refresh (Ctrl-C to stop)
+make gpu-pids-csv                         60s capture → CSV
+make gpu-pids-remote REMOTE_IP=<ip>       Remote GPU PID analysis
+make setup-remote-gpu REMOTE_IP=<ip>      Grant CAP_PERFMON for richer metrics
+make visualize-gpu                        GPU dashboard for last session
+make visualize-gpu ALGORITHM=picknplace   ... for latest picknplace session
+make visualize-npu                        NPU dashboard for last session
+make visualize-gpu-pid-bar                Per-PID engine breakdown bar chart
+
+NPU reads from sysfs: /sys/class/accel/accel0/device/  (no root needed)
+
+
+ DASHBOARDS (Grafana)
+
+
+make grafana-start                        Start Grafana/Prometheus
+make grafana-open                         Open in browser
+make grafana-status                       Check status
+make grafana-stop                         Stop services
+Export a session to Grafana:
+  make grafana-export SESSION=20260306_154140
+  make grafana-export                      # uses latest session
+  make grafana-export-live                 # live mode
+
+Metrics served on port 9092 (Prometheus occupies 9090)Access: http://localhost:3000 (admin/admin)
+
+
+ RESULTS
+
+
+make list-sessions                        List all sessions
+make visualize-last                       Visualize last session
+make visualize-last ALGORITHM=picknplace  Visualize latest picknplace session
+make pipeline-graph                       Render pipeline graph (PNG)
+make pipeline-graph SESSION=<name>        Specific session graph
+make pipeline-graph ALGORITHM=picknplace  Latest picknplace graph
+make analyze-session SESSION=20260305_123456
+
+Cross-session averages:
+  make view-average                       Avg KPIs, last 5 sessions
+  make view-average RUNS=10               Last N sessions
+  make view-average-plot RUNS=3           + save bar-chart PNGs
+  make view-average ALGORITHM=picknplace  Scope to picknplace sessions
+
+Interactive graph (click nodes for topic detail):
+  uv run python src/visualize_graph.py monitoring_sessions/<name> --show
+
+Results saved in: monitoring_sessions/YYYYMMDD_HHMMSS/
+   graph_timing.csv         (topic timing data)
+   graph_topology.json       (node→topic→node edges)
+   resource_usage.log        (CPU/memory)
+   gpu_usage.log             (GPU metrics, when --gpu)
+   npu_usage.log             (NPU metrics, when --npu)
+   visualizations/           (auto-generated plots)
+
+
+ SETUP
+
+
+source /opt/ros/humble/setup.bash         Source ROS2
+export ROS_DOMAIN_ID=45                    Set domain ID
+
+make install                              Install dependencies
+make check-deps                           Verify installation
+
+
+ EXAMPLES
+
+
+# Monitor navigation stack
+ros2 launch nav2_bringup tb3_simulation_launch.py  # Terminal 1
+make monitor NODE=/controller_server DURATION=120  # Terminal 2
+
+# Remote monitoring
+make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
+
+# Export to Grafana
+make grafana-start
+make monitor DURATION=120
+make grafana-export
+
+
+ DOCUMENTATION
+
+
+docs/COMMANDS.md                          All commands
+make help                                 Show all make targets
+
+
+ QUICK TROUBLESHOOTING
+
+
+No ROS2 nodes found:
+  → Start your ROS2 app first, then run monitoring
+
+Permission denied:
+  -> chmod +x src/*.py monitor_stack.py grafana/*.sh scripts/*.sh
+
+ROS2 not sourced:
+  → source /opt/ros/humble/setup.bash
+
+UV not found:
+  → curl -LsSf https://astral.sh/uv/install.sh | sh
+
+
+
+                        Questions? Check README.md
+
+
