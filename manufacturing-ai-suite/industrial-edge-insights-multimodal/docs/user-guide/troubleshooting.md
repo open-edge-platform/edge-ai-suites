@@ -122,7 +122,7 @@ PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
 sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
 
-## 6. Docker Network Subnet Conflict -- `make up` Fails with "Pool overlaps with other one on this address space"
+## 5. Docker Network Subnet Conflict -- `make up` Fails with "Pool overlaps with other one on this address space"
 
 **Issue**
 
@@ -171,6 +171,4 @@ The subnet configured for the Docker network (in `docker-compose.yml`) is alread
              gateway: 172.29.0.1
    ```
 
-4. Run `make up` again.
-
-> **Note:** All subnets in the `172.16.0.0/12` range are covered by the standard `no_proxy=172.16.0.0/12` setting, so proxy bypass will continue to work regardless of which block you choose within this range.
+4. Run `make up` again from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal` directory.
