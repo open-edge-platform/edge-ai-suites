@@ -72,7 +72,7 @@ kubectl get storageclass
 ## Install
 
 ```bash
-cd /health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/helm/multi_modal_patient_monitoring
+cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/helm/multi_modal_patient_monitoring
 
 helm install multi-modal-patient-monitoring . \
   --namespace multi-modal-patient-monitoring \
