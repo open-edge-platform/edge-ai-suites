@@ -13,7 +13,7 @@ The aim is to harnesses the capabilities of both the Nav2 and MoveIt2 stacks, pr
 
 OS: Ubuntu 22.04
 
-ROS2: Tested on Humble (but Should work with Foxy too)
+ROS2: Tested on Humble
 
 ### Prerequisites
 
