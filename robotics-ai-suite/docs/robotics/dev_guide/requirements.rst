@@ -5,6 +5,6 @@
 .. requirements:
 
 System Requirements |checklist_robot|
-===================================
+============================================
 
 .. include:: ../shared/requirements_robot.md
