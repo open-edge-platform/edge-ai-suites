@@ -1,20 +1,31 @@
+namespace: ""
+replicaCount: 1
+http_proxy: 
+https_proxy: 
+no_proxy: "localhost,127.0.0.1,.svc,.cluster.local"
+ 
+ 
 persistence:
   size: 20Gi
-
+  # For local-path-provisioner and most single-node setups, use ReadWriteOnce.
+  accessMode: ReadWriteOnce
+  # Leave empty to use the cluster default StorageClass.
+  storageClassName: ""
+ 
 # Shared PVCs for models and videos
 models:
   enabled: true
   mountPath: /models
   claimName: models-pvc
-
+ 
 videos:
   enabled: true
   mountPath: /videos
   claimName: videos-pvc
-
+ 
 service:
   type: ClusterIP
-
+ 
 ingress:
   enabled: true
   className: nginx
@@ -45,7 +56,7 @@ ingress:
           service: ui
           port: 80
   tls: []
-
+ 
 # Images
 ui:
   image:
@@ -53,63 +64,63 @@ ui:
     name: hl-ai-ui
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 aggregator:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-aggregator
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 aiEcg:
   image:
     repository: intel
     name: hl-ai-ecg
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 rppg:
   image:
     repository: intel
     name: hl-ai-rppg
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 pose:
   image:
     repository: intel
     name: hl-ai-3dpose
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 metrics:
   image:
     repository: intel
     name: hl-ai-metrics-collector
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 ddsBridge:
   image:
     repository: intel
     name: hl-ai-dds-bridge
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 mdpnp:
   image:
     repository: intel
     name: hl-ai-mdpnp
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 assets:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-assets
     tag: "2026.0-rc1"
     pullPolicy: IfNotPresent
-
+ 
 # Devices
 devices:
   ECG_DEVICE: "GPU"
