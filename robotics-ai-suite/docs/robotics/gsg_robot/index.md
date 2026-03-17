@@ -846,3 +846,14 @@ If the APT package manager is unable to connect to the repositories, follow thes
 
     After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
     you will have to reboot the device, so these settings become effective.
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+../dev_guide/requirements
+
+:::
+hide_directive-->
+

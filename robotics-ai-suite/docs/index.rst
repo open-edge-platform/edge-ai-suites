@@ -120,3 +120,4 @@ Click each icon to learn more.
    embodied/index
    rvc/index
    legal
+   terminology

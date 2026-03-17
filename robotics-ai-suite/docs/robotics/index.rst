@@ -47,7 +47,6 @@ Click each icon to learn more.
 
    gsg_robot/index
    dev_guide/index_howitworks
-   dev_guide/requirements
    dev_guide/index_tutorials
    dev_guide/index_systemintegrator
-   dev_guide/terminology
+   
