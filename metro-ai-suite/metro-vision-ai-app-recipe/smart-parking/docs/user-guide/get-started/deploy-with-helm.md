@@ -61,14 +61,12 @@ cd ..
 1. Update the below fields in `values.yaml` file in the Helm chart
 
     ```bash
-        # Edit the values.yml file to add proxy configuration
+        # Edit the values.yml file to update configuration
         nano ./smart-parking/helm-chart/values.yaml
     ```
 
     ``` sh
     HOST_IP: # replace localhost with system IP example: HOST_IP: 10.100.100.100
-    http_proxy: # example: http_proxy: http://proxy.example.com:891
-    https_proxy: # example: http_proxy: http://proxy.example.com:891
     webrtcturnserver:
         username: # example: username: myuser
         password: # example: password: mypassword
@@ -80,19 +78,30 @@ cd ..
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
 
-1. Deploy Helm chart
+1. Copy system proxies
 
     ```sh
-    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
+    cat <<EOF > proxy-values.yaml
+    env:
+      http_proxy: "$http_proxy"
+      https_proxy: "$https_proxy"
+      no_proxy: "$no_proxy"
+    EOF
     ```
 
-2. Wait for all pods to be ready:
+2. Deploy Helm chart
+
+    ```sh
+    helm install smart-parking ./smart-parking/helm-chart -n sp --create-namespace -f proxy-values.yaml
+    ```
+
+3. Wait for all pods to be ready:
 
     ```sh
     kubectl wait --for=condition=ready pod --all -n sp --timeout=300s
     ```
 
-3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
+4. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
 ``` sh
 #!/bin/bash
