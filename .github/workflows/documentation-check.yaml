@@ -27,7 +27,6 @@ jobs:
       industrial-edge-insights-multimodal_changed: ${{ steps.filter.outputs.industrial-edge-insights-multimodal }}
       edge-insights-time-series_changed: ${{ steps.filter.outputs.edge-insights-time-series }}
       edge-insights-vision_changed: ${{ steps.filter.outputs.edge-insights-vision }}
-
       deterministic-threat-detection_changed: ${{ steps.filter.outputs.deterministic-threat-detection }}
       image-based-video-search_changed: ${{ steps.filter.outputs.image-based-video-search }}
       live-metrics-service_changed: ${{ steps.filter.outputs.live-metrics-service }}
@@ -37,6 +36,7 @@ jobs:
       metro-sdk-manager_changed: ${{ steps.filter.outputs.metro-sdk-manager }}
       metro-vision-ai-app-recipe_changed: ${{ steps.filter.outputs.metro-vision-ai-app-recipe }}
       loitering-detection_changed: ${{ steps.filter.outputs.loitering-detection }}
+      robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
       smart-intersection_changed: ${{ steps.filter.outputs.smart-intersection }}
       smart-parking_changed: ${{ steps.filter.outputs.smart-parking }}
       smart-tolling_changed: ${{ steps.filter.outputs.smart-tolling }}
@@ -47,7 +47,6 @@ jobs:
       video-processing-for-nvr_changed: ${{ steps.filter.outputs.video-processing-for-nvr }}
       visual-search-question-and-answering_changed: ${{ steps.filter.outputs.visual-search-question-and-answering }}
 
-      # robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -243,6 +242,16 @@ jobs:
     with:
       docs_directory: metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
 
+  build-robotics-ai-suite:
+    permissions:
+      contents: read # needed for actions/checkout
+    needs: filter
+    if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
+    uses: ./.github/workflows/docs-reusable-workflow.yaml
+    with:
+      docs_directory: robotics-ai-suite
+      simple_mode: false
+
   build-smart-intersection:
     permissions:
       contents: read # needed for actions/checkout
@@ -324,13 +333,3 @@ jobs:
     uses: ./.github/workflows/docs-reusable-workflow.yaml
     with:
       docs_directory: metro-ai-suite/visual-search-question-and-answering
-
-  # build-robotics-ai-suite:
-  #   permissions:
-  #     contents: read # needed for actions/checkout
-  #   needs: filter
-  #   if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
-  #   uses: ./.github/workflows/docs-reusable-workflow.yaml
-  #   with:
-  #     docs_directory: robotics-ai-suite
-  #     simple_mode: false
