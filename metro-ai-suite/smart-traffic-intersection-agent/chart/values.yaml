@@ -124,7 +124,7 @@ vlmServing:
     failureThreshold: 180
   resources:
     requests:
-      memory: "8Gi"
+      memory: "12Gi"
   # Volume for model cache
   persistence:
     enabled: true
