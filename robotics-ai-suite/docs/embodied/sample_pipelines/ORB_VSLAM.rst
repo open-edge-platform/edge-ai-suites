@@ -75,6 +75,8 @@ This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
 
     NOTE: This demo uses MH_04_difficult dataset. If you want to try other dataset, you may download them from the link: https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets.
 
+    Please download EUROC Machine Hall datasets from https://www.research-collection.ethz.ch/entities/researchdata/bcaf173e-5dac-484b-bc37-faf97a594f1f if there are any issues with the above links.
+   
 #. Launch ORB-SLAM3 Demo pipeline
 
    Run the below commands in a bash terminal:
