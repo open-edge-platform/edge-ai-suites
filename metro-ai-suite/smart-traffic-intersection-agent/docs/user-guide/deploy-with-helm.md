@@ -146,7 +146,14 @@ You should see two pods:
 | `stia-traffic-agent-*` | The traffic intersection agent (backend + Gradio UI) |
 | `stia-vlm-openvino-serving-*` | The VLM inference server |
 
-Wait until both pods show `Running` and `READY 1/1`:
+When live metrics is enabled (the default), you will also see:
+
+| Pod | Description |
+| --- | ----------- |
+| `stia-live-metrics-service-*` | WebSocket relay for live system metrics |
+| `stia-collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
+
+Wait until all pods show `Running` and `READY 1/1`:
 
 ```bash
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=stia -n <your-namespace> --timeout=600s
@@ -281,6 +288,29 @@ helm uninstall stia -n <your-namespace>
 | `tls.caCert` | PEM-encoded CA certificate for the MQTT broker (base64-encoded in the Secret) | `""` |
 | `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`) | `smart-intersection-broker-rootcert` |
 | `tls.caCertKey` | Key name inside the external secret (required when `caCertSecretName` is set) | `root-cert` |
+
+### Live Metrics Service Settings
+
+| Key | Description | Default |
+| --- | ----------- | ------- |
+| `liveMetrics.enabled` | Deploy the live-metrics WebSocket relay and collector | `true` |
+| `liveMetrics.image.repository` | Live metrics container image repository | `intel/live-metrics-service` |
+| `liveMetrics.image.tag` | Image tag | `latest` |
+| `liveMetrics.service.type` | Kubernetes service type | `ClusterIP` |
+| `liveMetrics.service.port` | Service port | `9090` |
+| `liveMetrics.env.metricsPort` | Port the relay listens on inside the container | `9090` |
+| `liveMetrics.env.logLevel` | Log level | `INFO` |
+| `liveMetrics.env.corsOrigins` | Allowed CORS origins | `*` |
+
+### Collector (Telegraf) Settings
+
+| Key | Description | Default |
+| --- | ----------- | ------- |
+| `collector.enabled` | Deploy the Telegraf collector (requires `liveMetrics.enabled=true`) | `true` |
+| `collector.image.repository` | Collector container image repository | `docker.io/intel/vippet-collector` |
+| `collector.image.tag` | Image tag | `2025.2.0` |
+| `collector.env.prometheusPort` | Prometheus metrics port | `9273` |
+| `collector.securityContext.privileged` | Run privileged for host-level metrics (CPU, memory, temperature, GPU) | `true` |
 
 ---
 

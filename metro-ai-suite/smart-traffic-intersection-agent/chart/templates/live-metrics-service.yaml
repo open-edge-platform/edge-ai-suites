@@ -1,0 +1,22 @@
+{{/*
+Copyright (C) 2025 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{- if .Values.liveMetrics.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "stia.liveMetrics.fullname" . }}
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: live-metrics
+spec:
+  type: {{ .Values.liveMetrics.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.liveMetrics.service.port }}
+      targetPort: 9090
+      protocol: TCP
+  selector:
+    app: {{ include "stia.liveMetrics.fullname" . }}
+{{- end }}

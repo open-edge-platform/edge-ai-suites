@@ -1,0 +1,84 @@
+{{/*
+Copyright (C) 2025 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{- if and .Values.liveMetrics.enabled .Values.collector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stia.collector.fullname" . }}
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "stia.collector.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "stia.collector.fullname" . }}
+        {{- include "stia.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: collector
+    spec:
+      hostPID: true
+      containers:
+        - name: {{ .Values.collector.name }}
+          image: "{{ .Values.collector.image.repository }}:{{ .Values.collector.image.tag }}"
+          imagePullPolicy: {{ .Values.collector.image.pullPolicy }}
+          ports:
+            - name: prometheus
+              containerPort: 9273
+              protocol: TCP
+          env:
+            - name: WEBSOCKET_URL
+              value: "ws://{{ include "stia.liveMetrics.fullname" . }}:{{ .Values.liveMetrics.service.port }}/ws/collector"
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,{{ include "stia.liveMetrics.fullname" . }}"
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            - name: collector-signals
+              mountPath: /app/.collector-signals
+            - name: host-sys
+              mountPath: /sys
+              readOnly: true
+            - name: host-dev
+              mountPath: /dev
+              readOnly: true
+            - name: host-run
+              mountPath: /run
+              readOnly: true
+            - name: host-proc
+              mountPath: /proc
+              readOnly: true
+          resources:
+            {{- toYaml .Values.collector.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.collector.securityContext | nindent 12 }}
+      volumes:
+        - name: telegraf-config
+          configMap:
+            name: {{ include "stia.collector.fullname" . }}-config
+        - name: collector-signals
+          emptyDir: {}
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-run
+          hostPath:
+            path: /run
+        - name: host-proc
+          hostPath:
+            path: /proc
+{{- end }}

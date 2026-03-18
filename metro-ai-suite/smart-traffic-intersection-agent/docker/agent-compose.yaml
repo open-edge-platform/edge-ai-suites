@@ -162,10 +162,11 @@ services:
       - no_proxy=localhost,127.0.0.1,live-metrics-service,${no_proxy}
       - WEBSOCKET_URL=ws://live-metrics-service:9090/ws/collector
     depends_on:
-      - live-metrics-service
+      live-metrics-service:
+        condition: service_healthy
     networks:
       - scenescape
-    restart: on-failure:5
+    restart: unless-stopped
 
 volumes:
   ov-models:

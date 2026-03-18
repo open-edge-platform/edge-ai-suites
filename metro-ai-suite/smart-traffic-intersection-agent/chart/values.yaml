@@ -147,3 +147,62 @@ tls:
   # The key will be mapped to the expected filename "scenescape-ca.pem"
   # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
   caCertKey: "root-cert"
+
+# =============================================================================
+# Live Metrics Service Configuration
+# =============================================================================
+liveMetrics:
+  # Set to false to skip deploying the live-metrics relay and collector
+  enabled: true
+  name: live-metrics-service
+  image:
+    repository: intel/live-metrics-service
+    tag: "latest"
+    pullPolicy: Always
+  replicas: 1
+  service:
+    type: ClusterIP
+    port: 9090
+  env:
+    metricsPort: "9090"
+    logLevel: "INFO"
+    corsOrigins: "*"
+  healthcheck:
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  resources:
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+# =============================================================================
+# Collector (Telegraf) Configuration
+# =============================================================================
+collector:
+  # Set to false to skip deploying the Telegraf collector
+  # Requires liveMetrics.enabled=true to function
+  enabled: true
+  name: collector
+  image:
+    repository: docker.io/intel/vippet-collector
+    tag: "2025.2.0"
+    pullPolicy: IfNotPresent
+  env:
+    prometheusPort: "9273"
+  # The collector requires privileged access for host-level system metrics
+  # (CPU, memory, temperature, GPU). This is equivalent to the Docker
+  # --privileged flag used in docker-compose.
+  securityContext:
+    privileged: true
+  resources:
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+    requests:
+      cpu: "200m"
+      memory: "256Mi"

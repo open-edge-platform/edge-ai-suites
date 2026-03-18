@@ -20,8 +20,9 @@ def update_dashboard(debug_mode=False):
         data = load_monitoring_data(api_url=Config.get_api_url())
         
         if not data:
-            error_msg = "<div style='color: red; text-align: center; padding: 20px;'>❌ No data available</div>"
-            return error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
+            # Return no-ops to preserve existing DOM (avoids flicker from metrics JS)
+            return (gr.update(), gr.update(), gr.update(), gr.update(),
+                    gr.update(), gr.update(), gr.update())
         
         # Generate UI components
         header = UIComponents.create_header(data)
@@ -37,8 +38,8 @@ def update_dashboard(debug_mode=False):
 
     except Exception as e:
         logging.exception("update_dashboard failed: %s", e)
-        error_msg = f"<div style='color: red; text-align: center; padding: 20px;'>❌ Error: {str(e)}</div>"
-        return error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
+        return (gr.update(), gr.update(), gr.update(), gr.update(),
+                gr.update(), gr.update(), gr.update())
 
 def _metrics_panel_html():
     """HTML markup for the metrics panel — matches LVC chart-grid style."""
@@ -93,10 +94,14 @@ def _metrics_panel_html():
     """
 
 
-def _metrics_js(metrics_ws_url: str):
-    """JavaScript for gr.Blocks(js=...) — LVC-style Chart.js + Telegraf parsing."""
-    return f"""
-    function() {{
+def _metrics_script_html(metrics_ws_url: str):
+    """Return a <script> tag for Chart.js + Telegraf metrics — rendered via gr.HTML()."""
+    return f"""<script>
+    (function() {{
+      /* Prevent duplicate initialization */
+      if (window.__metricsInitialized) return;
+      window.__metricsInitialized = true;
+
       /* ── Chart.js loader ── */
       function loadChartJs(cb) {{
         if (window.Chart) return cb();
@@ -313,8 +318,8 @@ def _metrics_js(metrics_ws_url: str):
         }});
       }}
       initMetrics(0);
-    }}
-    """
+    }})();
+    </script>"""
 
 def _device_security_panel_html():
     """Static Device Security State panel — hardcoded for now, configurable via CLI/env later."""
@@ -462,7 +467,7 @@ def create_dashboard_interface():
         css=css,
         title=Config.get_app_title(),
         theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome(),
-        js=_metrics_js(Config.get_metrics_ws_url())
+        head=_metrics_script_html(Config.get_metrics_ws_url()),
     ) as interface:
 
         # Header component (full width)
