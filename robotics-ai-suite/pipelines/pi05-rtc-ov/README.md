@@ -8,7 +8,10 @@ Key structural features of π₀.₅ include:
 *   **Discretized State Tokenization**: Robot proprioceptive state is discretized and treated as text tokens within the input prefix, allowing the model to "read" its physical state using the same attention mechanisms as natural language.
 *   **Unified Prefix Processing**: Visual patch tokens from SigLIP and text tokens are concatenated into a single sequence, which the transformer processes holistically before passing context to the Action Expert.
 
-![Pi0.5 Overview](README.assets/pi05-overview.png)
+<p align="center">
+  <img src="README.assets/pi05-overview.png" alt="Pi0.5 Overview"><br>
+  <em>Figure source: <a href="https://arxiv.org/abs/2504.16054">Paper</a> π₀.₅: a Vision-Language-Action Model with Open-World Generalization</em>
+</p>
 
 Real-Time Chunking (RTC) is an inference strategy designed to enable high-frequency robotic control with high-latency flow-matching policies (e.g., Pi0, Pi0.5). Based on the application of asynchronous inference execution, RTC employs a unique **Prefix Guidance** mechanism during inference. Instead of blending overlapping chunks after generation (temporal ensembling), RTC uses the unexecuted portion of the previous chunk as a constraint during the flow-matching process. By treating the transition as an inpainting problem, the model is guided to generate new trajectories that seamlessly extend the current motion, ensuring continuous control.
 
@@ -16,7 +19,10 @@ The synergy between Pi0.5 and RTC enables sophisticated generalist control on st
 1.  **Eliminating Action Waiting**: RTC runs inference asynchronously in the background while the robot executes buffered actions. This ensures the robot never pauses to "think," maintaining high-frequency control (e.g., 50Hz) despite the model's lower inference speed.
 2.  **Preventing Action Jumping**: Through **Prefix Guidance**, RTC treats trajectory generation as an inpainting task. It constrains the start of the new plan to align perfectly with the unexecuted tail of the previous plan, enforcing continuity at the generation level rather than relying on post-hoc smoothing.
 
-![RTC Overview](README.assets/RTC-overview.png)
+<p align="center">
+  <img src="README.assets/RTC-overview.png" alt="RTC Overview"><br>
+  <em>Figure source: <a href="https://arxiv.org/abs/2506.07339">Paper</a> Real-Time Execution of Action Chunking Flow Policies</em>
+</p>
 
 This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline, covering both MuJoCo simulation for policy validation and a modular workflow for deployment on real ALOHA robots.
 
