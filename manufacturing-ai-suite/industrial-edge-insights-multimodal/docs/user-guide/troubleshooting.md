@@ -121,3 +121,54 @@ container in `docker ps`.
 PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)
 sudo nsenter -t "$PID" -m -u -i -n -p mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
 ```
+
+## 5. Docker Network Subnet Conflict -- `make up` Fails with "Pool overlaps with other one on this address space"
+
+**Issue**
+
+Running `make up` fails with the following error:
+
+```
+[+] Running 1/1
+ ✘ Network timeseriessoftware_timeseries_network  Error                        0.0s
+failed to create network timeseriessoftware_timeseries_network: Error response from daemon: Pool overlaps with other one on this address space
+make: *** [Makefile:131: up] Error 1
+```
+
+**Reason**
+
+The subnet configured for the Docker network (in `docker-compose.yml`) is already in use by another Docker network on the host. Docker cannot create two networks with overlapping IP ranges.
+
+**Solution**
+
+1. Check which subnets are currently in use:
+
+   ```bash
+   docker network ls -q | xargs docker network inspect --format '{{.Name}}: {{range .IPAM.Config}}{{.Subnet}}{{end}}'
+   ```
+
+2. Open `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/docker-compose.yml` and locate the `networks` section at the bottom of the file:
+
+   ```yaml
+   networks:
+     timeseries_network:
+       driver: bridge
+       ipam:
+         config:
+           - subnet: 172.30.0.0/24
+             gateway: 172.30.0.1
+   ```
+
+3. Change the `subnet` and `gateway` to a free block from the `172.16.0.0/12` range (i.e., `172.16.x.x` to `172.31.x.x`) that is **not listed** in the output of step 1. For example:
+
+   ```yaml
+   networks:
+     timeseries_network:
+       driver: bridge
+       ipam:
+         config:
+           - subnet: 172.29.0.0/24
+             gateway: 172.29.0.1
+   ```
+
+4. Run `make up` again from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal` directory.

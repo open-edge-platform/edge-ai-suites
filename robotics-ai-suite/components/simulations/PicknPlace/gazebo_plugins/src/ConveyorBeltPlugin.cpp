@@ -75,6 +75,19 @@ void ConveyorBeltPlugin::Configure(
   this->publish_period_ = std::chrono::nanoseconds(
       static_cast<int64_t>((1.0 / this->publish_rate_) * 1e9));
 
+  // Initialize ROS node if it hasn't been initialized yet
+  if (!rclcpp::ok()) {
+    rclcpp::init(0, nullptr);
+  }
+
+  // Initialize ROS node
+  std::string node_name = "conveyor_belt_simplified";
+  if (_sdf) {
+    node_name =
+        _sdf->Get<std::string>("node_name", "conveyor_belt_simplified").first;
+  }
+  this->ros_node_ = rclcpp::Node::make_shared(node_name);
+
   // Resolve joint
   this->joint = model.JointByName(_ecm, this->joint_name_);
   if (this->joint == gazebo::kNullEntity) {
@@ -87,16 +100,6 @@ void ConveyorBeltPlugin::Configure(
   if (!_ecm.Component<gazebo::components::JointVelocityCmd>(this->joint))
     _ecm.CreateComponent(this->joint,
                          gazebo::components::JointVelocityCmd({0.0}));
-
-  // Initialize ROS node if it hasn't been initialized yet
-  if (!rclcpp::ok()) {
-    rclcpp::init(0, nullptr);
-  }
-
-  // // Initialize ROS node
-  auto node_name =
-      _sdf->Get<std::string>("node_name", "conveyor_belt_simplified").first;
-  this->ros_node_ = rclcpp::Node::make_shared(node_name);
 
   std::string stateTopic = "conveyor/state";
   std::string controlTopic = "conveyor/control";

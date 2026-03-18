@@ -538,6 +538,11 @@ services:
 networks:
   timeseries_network:
     driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.30.0.0/24
+          gateway: 172.30.0.1
 
 volumes:
   vol_influxdb_conf:

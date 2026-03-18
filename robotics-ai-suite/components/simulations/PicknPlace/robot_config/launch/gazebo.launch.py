@@ -16,20 +16,6 @@
 # and limitations under the License.
 
 # Description: Helper launch file to spawn AMR in Gazebo separated by namespace
-# Example usage:
-#
-#    gazebo_launch_cmd = IncludeLaunchDescription(
-#        PythonLaunchDescriptionSource(
-#            os.path.join(robot_config_launch_dir, 'gazebo.launch.py')),
-#        launch_arguments={ 'use_sim_time': 'true',
-#                           'world': os.path.join(
-#                                        package_path,
-#                                        'worlds',
-#                                        'warehouse.world',
-#                                    )
-#                          }.items()
-#                        )
-#    ld.add_action(gazebo_launch_cmd)
 
 import os
 
@@ -71,7 +57,7 @@ def generate_launch_description():
             os.path.join(ros_gz_sim, 'launch', 'gz_sim.launch.py')
         ),
         launch_arguments={
-            'gz_args': [world, ' -v 4'],
+            'gz_args': [world, ' -v 4 -r'],
             'on_exit_shutdown': 'true'
         }.items(),
     )
@@ -85,21 +71,4 @@ def generate_launch_description():
         output='screen',
     )
     ld.add_action(gz_ros_bridge_clock)
-
-    # Remove faulty TF Bridge - TF will be handled by robot state publishers
-    # and static transform publishers instead of trying to bridge from Gazebo
-    # gz_ros_bridge_tf = Node(
-    #     package='ros_gz_bridge',
-    #     executable='parameter_bridge',
-    #     arguments=[
-    #         '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-    #         '/tf_static@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
-    #     ],
-    #     output='screen',
-    # )
-    # ld.add_action(gz_ros_bridge_tf)
-
-    # Entity service bridges are intentionally disabled for Harmonic in this launch.
-    # Primary runtime uses TF-based object/AMR tracking, which is stable and sufficient.
-
     return ld
