@@ -82,7 +82,7 @@ If not available, you can simulate this by downloading the sample model from edg
    ./sample_start.sh -p worker_safety_gear_detection_mlops
    ```
 
-8. Verify the pipeline is running. You can View the WebRTC streaming on `http://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+8. Verify the pipeline is running. You can View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
     ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
@@ -90,7 +90,7 @@ If not available, you can simulate this by downloading the sample model from edg
 
     At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/index.md) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md).
 
-    For our demonstration, we will assume the worker safety gear detection model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/tmp-models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
+    For our demonstration, we will assume the worker safety gear detection model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
 
 9. Stop the running pipeline by using the pipeline instance "id".
 
@@ -129,7 +129,7 @@ If not available, you can simulate this by downloading the sample model from edg
     ./sample_start.sh -p worker_safety_gear_detection_mlops
     ```
 
-11. View the WebRTC streaming on `http://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+11. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
 ## Additional resources
 

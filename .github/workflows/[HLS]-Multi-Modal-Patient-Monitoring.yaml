@@ -1,0 +1,428 @@
+---
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[HLS - Multi Modal Patient Monitoring] SDLe Scans"
+run-name: "[HLS - Multi Modal Patient Monitoring] PR workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+
+# Only run at most 1 workflow concurrently per PR, unlimited for branches
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/**'
+
+jobs:   
+  trivy-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Run Trivy Filesystem Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "json"
+          scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
+          report_suffix: "-CT7"
+
+      - name: Run Trivy Filesystem Scan (SPDX)
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-fs-spdx
+        with:
+          scan_type: "fs"  
+          scan-scope: "all"  
+          severity: "HIGH,CRITICAL" 
+          format: "spdx-json"
+          scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
+          report_suffix: "-CT7-spdx"
+      
+      - name: Build Docker image - 3d-pose-estimation
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/3d-pose-estimation/
+          docker build -t multi-modal-3d-pose-estimation:latest -f Dockerfile .
+
+      - name: Build Docker image - ai-ecg-backend
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/ai-ecg/backend/
+          docker build -t multi-modal-ai-ecg-backend:latest -f Dockerfile .
+
+      - name: Build Docker image - dds-bridge
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/dds-bridge/
+          docker build -t multi-modal-dds-bridge:latest -f Dockerfile .
+
+      - name: Build Docker image - mdpnp
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/
+          docker build -t multi-modal-mdpnp:latest -f Dockerfile .
+
+      - name: Build Docker image - metrics-collector
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/metrics-collector/
+          docker build -t multi-modal-metrics-collector:latest -f Dockerfile .
+
+      - name: Build Docker image - patient-monitoring-aggregator
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/patient-monitoring-aggregator/
+          docker build -t multi-modal-patient-monitoring-aggregator:latest -f Dockerfile .
+
+      - name: Build Docker image - patient-monitoring-assets
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/patient-monitoring-assets/
+          docker build -t multi-modal-patient-monitoring-assets:latest -f Dockerfile .
+
+      - name: Build Docker image - rppg
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/rppg/
+          docker build -t multi-modal-rppg:latest -f Dockerfile .
+
+      - name: Build Docker image - ui
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/ui/
+          docker build -t multi-modal-ui:latest -f Dockerfile .
+
+      - name: Run trivy Scan - 3d-pose-estimation
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-3d-pose-estimation
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-3d-pose-estimation:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-3d-pose-estimation"
+
+      - name: Run trivy Scan (SPDX) - 3d-pose-estimation
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-3d-pose-estimation-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-3d-pose-estimation:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-3d-pose-estimation-spdx"
+
+      - name: Run trivy Scan - ai-ecg-backend
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-ai-ecg-backend
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-ai-ecg-backend:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-ai-ecg-backend"
+
+      - name: Run trivy Scan (SPDX) - ai-ecg-backend
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-ai-ecg-backend-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-ai-ecg-backend:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-ai-ecg-backend-spdx"
+
+      - name: Run trivy Scan - dds-bridge
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-dds-bridge
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-dds-bridge:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-dds-bridge"
+
+      - name: Run trivy Scan (SPDX) - dds-bridge
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-dds-bridge-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-dds-bridge:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-dds-bridge-spdx"
+
+      - name: Run trivy Scan - mdpnp
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-mdpnp
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-mdpnp:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-mdpnp"
+
+      - name: Run trivy Scan (SPDX) - mdpnp
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-mdpnp-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-mdpnp:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-mdpnp-spdx"
+
+      - name: Run trivy Scan - metrics-collector
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-metrics-collector
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-metrics-collector:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-metrics-collector"
+
+      - name: Run trivy Scan (SPDX) - metrics-collector
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-metrics-collector-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-metrics-collector:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-metrics-collector-spdx"
+
+      - name: Run trivy Scan - patient-monitoring-aggregator
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-patient-monitoring-aggregator
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-patient-monitoring-aggregator:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-patient-monitoring-aggregator"
+
+      - name: Run trivy Scan (SPDX) - patient-monitoring-aggregator
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-patient-monitoring-aggregator-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-patient-monitoring-aggregator:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-patient-monitoring-aggregator-spdx"
+
+      - name: Run trivy Scan - patient-monitoring-assets
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-patient-monitoring-assets
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-patient-monitoring-assets:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-patient-monitoring-assets"
+
+      - name: Run trivy Scan (SPDX) - patient-monitoring-assets
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-patient-monitoring-assets-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-patient-monitoring-assets:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-patient-monitoring-assets-spdx"
+
+      - name: Run trivy Scan - rppg
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-rppg
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-rppg:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-rppg"
+
+      - name: Run trivy Scan (SPDX) - rppg
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-rppg-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-rppg:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-rppg-spdx"
+
+      - name: Run trivy Scan - ui
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-ui
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-ui:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "json"
+          report_suffix: "-CT248-ui"
+
+      - name: Run trivy Scan (SPDX) - ui
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        id: trivy-ui-spdx
+        with:
+          scan_type: "image"  
+          scan-scope: all
+          scan_target: "multi-modal-ui:latest"  
+          severity: "HIGH,CRITICAL"  
+          format: "spdx-json"
+          report_suffix: "-CT248-ui-spdx"
+      
+      - name: Scan Dockerfiles with Trivy
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        with:
+          scan_type: "config"
+          scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services"
+          severity: "HIGH,CRITICAL"
+          format: "json"
+          misconfig_scanners: "Dockerfile"
+          report_suffix: "-CT222"
+           
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: trivy-report
+          path: security-results/trivy*
+
+  bandit-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run Bandit Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/bandit@27276444a9bcf247a27369406686b689933bd1ff
+        id: bandit
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false"
+          paths: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
+          report_suffix: "-CT161"
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: bandit-report
+          path: bandit-report-*.txt
+        
+
+  clamav-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Run ClamAV Scan
+        uses: open-edge-platform/orch-ci/.github/actions/security/clamav@27276444a9bcf247a27369406686b689933bd1ff
+        id: clamav
+        with:
+          scan-scope: "all"  
+          output-format: "txt" 
+          fail-on-findings: "false"
+          paths: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
+          exclude_dirs: ".git,node_modules,venv,ui/test"
+          
+      - name: Upload Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: clamav-report
+          path: security-results/clamav*
+
+# GitLeaks scanning job
+  gitleaks-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+          
+      - name: Install gitleaks
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@5f1c7f544b235db6ded508b6b4c6a2d3a78a38be
+        with:
+          bootstrap_tools: "gitleaks"
+          
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "time=$(date +%s)" >> "$GITHUB_OUTPUT"
+        
+      - name: Clone CI repo
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          repository: open-edge-platform/orch-ci
+          path: ci
+          persist-credentials: false
+          
+      - name: Scan for secrets
+        run: |
+          gitleaks dir "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/" -v -c ci/.gitleaks.toml --baseline-path ci/gitleaks_baselines/gitleaks-multi-modal-patient-monitoring.json -r gitleaks-multi-modal-patient-monitoring.json || true
+          
+      - name: Upload Gitleaks Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: gitleaks-report-multi-modal-patient-monitoring-${{ steps.timestamp.outputs.time }}
+          path: gitleaks-multi-modal-patient-monitoring.json
+
+# ShellCheck scanning job
+  shellcheck-scan:
+    runs-on: ubuntu-22.04-32core-128GB
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+      
+      - name: Setup environment with shellcheck
+        uses: open-edge-platform/orch-ci/.github/actions/bootstrap@5f1c7f544b235db6ded508b6b4c6a2d3a78a38be
+        with:
+          bootstrap_tools: "shellcheck"
+      
+      - name: Run ShellCheck
+        run: |
+          mkdir -p security-results
+          echo "=== ShellCheck Scan Results ===" > security-results/shellcheck-report-multi-modal-patient-monitoring.txt
+          echo "Scan Date: $(date)" >> security-results/shellcheck-report-multi-modal-patient-monitoring.txt
+          echo "" >> security-results/shellcheck-report-multi-modal-patient-monitoring.txt
+          
+          # Find all shell scripts and check them
+          find health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/ -type f \( -name "*.sh" -o -name "*.bash" \) -print0 | while IFS= read -r -d '' file; do
+            echo "Checking: $file" >> security-results/shellcheck-report-multi-modal-patient-monitoring.txt
+            shellcheck "$file" >> security-results/shellcheck-report-multi-modal-patient-monitoring.txt 2>&1 || true
+            echo "---" >> security-results/shellcheck-report-multi-modal-patient-monitoring.txt
+          done
+          
+          echo "ShellCheck scan completed"
+      
+      - name: Upload ShellCheck Report
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: shellcheck-report
+          path: security-results/shellcheck-report-multi-modal-patient-monitoring.txt

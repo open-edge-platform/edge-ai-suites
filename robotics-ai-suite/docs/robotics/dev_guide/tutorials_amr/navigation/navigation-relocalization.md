@@ -78,9 +78,9 @@ Set the robot **2D Pose Estimate** in rviz2:
 
 1. Set the initial robot pose by pressing **2D Pose Estimate** in rviz2.
 2. At the robot estimated location, down-click inside the 2D map. For
-   : reference, use the robot pose as it appears in Gazebo\*.
+   reference, use the robot pose as it appears in Gazebo\*.
 3. Set the orientation by dragging forward from the down-click. This also
-   : enables ROS 2 navigation.
+   enables ROS 2 navigation.
 
 ![2d_pose_estimate](../../../images/2d_pose_estimate.png)
 

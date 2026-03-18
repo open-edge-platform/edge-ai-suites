@@ -13,16 +13,19 @@ spec:
         app: ai-ecg
     spec:
       initContainers:
-        - name: copy-models
-          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
-          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - cp -r /opt/assets/models/* /models/
+        - name: wait-for-ecg-model
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >-
+              until [ -f /models/ai-ecg/hubert_ecg_small_fp16.xml ]; do
+                echo "Waiting for HuBERT-ECG model asset...";
+                sleep 5;
+              done
           volumeMounts:
             - name: models
               mountPath: /models
-
       containers:
         - name: ai-ecg
           image: "{{ .Values.aiEcg.image.repository }}/{{ .Values.aiEcg.image.name }}:{{ .Values.aiEcg.image.tag }}"
@@ -32,19 +35,43 @@ spec:
           envFrom:
             - configMapRef:
                 name: device-config
+          startupProbe:
+            tcpSocket:
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            failureThreshold: 3
           ports:
             - containerPort: 8000
           volumeMounts:
             - name: models
               mountPath: /models
+            - name: videos
+              mountPath: /videos
             - name: dri
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
-
       volumes:
         - name: models
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: models-pvc
+        - name: videos
+          persistentVolumeClaim:
+            claimName: videos-pvc
         - name: dri
           hostPath:
             path: /dev/dri

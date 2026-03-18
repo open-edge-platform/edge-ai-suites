@@ -15,6 +15,21 @@ spec:
         app: ui
 
     spec:
+      initContainers:
+        - name: patch-ui-pose-stream-url
+          image: "{{ .Values.ui.image.repository }}/{{ .Values.ui.image.name }}:{{ .Values.ui.image.tag }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              mkdir -p /work
+              cp -a /usr/share/nginx/html/. /work/
+              find /work/assets -type f -name "*.js" -print0 | xargs -0 sed -i 's|:8085/video_feed|/video_feed|g'
+              echo "UI bundle patched for pose stream path"
+          volumeMounts:
+            - name: ui-www
+              mountPath: /work
       containers:
         - name: ui
 
@@ -25,6 +40,10 @@ spec:
           ports:
             - containerPort: 3000
 
+          volumeMounts:
+            - name: ui-www
+              mountPath: /usr/share/nginx/html
+
           env:
             # Use ingress path instead of NodePort
             - name: VITE_API_BASE_URL
@@ -33,3 +52,7 @@ spec:
             # Pose MJPEG stream exposed via ingress
             - name: VITE_POSE_STREAM_URL
               value: "/video_feed"
+
+      volumes:
+        - name: ui-www
+          emptyDir: {}

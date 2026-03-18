@@ -79,7 +79,7 @@ Download the YOLOv10s object detection model and convert it to OpenVINO format:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 ```
 
