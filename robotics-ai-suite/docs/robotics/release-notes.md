@@ -102,9 +102,8 @@ advantage of hardware accelerators such as the GPU and NPU.
   - Remove hardcoded Humble references throughout documentation.
   - Improve the `collab_slam` script with automatic ROS environment detection.
 - **ADBScan**
-  - Update `CMakeLists.txt` to support both Humble and Jazzy with Gazebo Harmonic on Ubuntu 24.04.
+  - Update `CMakeLists.txt` to support both Humble and Jazzy with Gazebo Harmonic on Ubuntu 22.04 and 24.04 respectively.
   - Update Makefile to include the `turtlebot3_simulations` package for Jazzy builds.
-  - Update the version in the `package.xml` to match debian changelog (2.3.0).
 
 **Fixed**
 
