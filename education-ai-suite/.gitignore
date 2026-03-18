@@ -19,6 +19,6 @@ monitoring/executionlogs/
 
 *venv*
 
-chroma-data/
-docs/
+chroma_data/
+minio_data/
 extracted_images/
