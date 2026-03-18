@@ -17,7 +17,7 @@ Key structural features of π₀.₅ include:
    :width: 85%
    :align: center
 
-*(Figure source:* `Paper <https://arxiv.org/abs/2504.16054>`_ *π₀.₅: a Vision-Language-Action Model with Open-World Generalization)*
+*(Figure source:* `Pi0.5 Paper <https://arxiv.org/abs/2504.16054>`_ *π₀.₅: a Vision-Language-Action Model with Open-World Generalization)*
 
 Real-Time Chunking (RTC) is an inference strategy designed to enable high-frequency robotic control with high-latency flow-matching policies (e.g., Pi0, Pi0.5). Based on the application of asynchronous inference execution, RTC employs a unique **Prefix Guidance** mechanism during inference. Instead of blending overlapping chunks after generation (temporal ensembling), RTC uses the unexecuted portion of the previous chunk as a constraint during the flow-matching process. By treating the transition as an inpainting problem, the model is guided to generate new trajectories that seamlessly extend the current motion, ensuring continuous control.
 
@@ -30,7 +30,7 @@ The synergy between Pi0.5 and RTC enables sophisticated generalist control on st
    :width: 85%
    :align: center
 
-*(Figure source:* `Paper <https://arxiv.org/abs/2506.07339>`_ *Real-Time Execution of Action Chunking Flow Policies)*
+*(Figure source:* `RTC Paper <https://arxiv.org/abs/2506.07339>`_ *Real-Time Execution of Action Chunking Flow Policies)*
 
 This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline, covering both MuJoCo simulation for policy validation and a modular workflow for deployment on real ALOHA robots.
 
