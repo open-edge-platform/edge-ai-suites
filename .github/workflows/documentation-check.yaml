@@ -41,7 +41,7 @@ jobs:
       smart-route-planning-agent_changed: ${{ steps.filter.outputs.smart-route-planning-agent }}
       metro-sdk-manager_changed: ${{ steps.filter.outputs.metro-sdk-manager }}
       smart-traffic-intersection-agent_changed: ${{ steps.filter.outputs.smart-traffic-intersection-agent }}
-      robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
+      # robotics-ai-suite_changed: ${{ steps.filter.outputs.robotics-ai-suite }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
@@ -297,12 +297,12 @@ jobs:
     with:
       docs_directory: metro-ai-suite/smart-traffic-intersection-agent
 
-  build-robotics-ai-suite:
-    permissions:
-      contents: read          # needed for actions/checkout
-    needs: filter
-    if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
-    uses: ./.github/workflows/docs-reusable-workflow.yaml
-    with:
-      docs_directory: robotics-ai-suite
-      simple_mode: false
+  # build-robotics-ai-suite:
+  #   permissions:
+  #     contents: read          # needed for actions/checkout
+  #   needs: filter
+  #   if: ${{ needs.filter.outputs.robotics-ai-suite_changed == 'true' }}
+  #   uses: ./.github/workflows/docs-reusable-workflow.yaml
+  #   with:
+  #     docs_directory: robotics-ai-suite
+  #     simple_mode: false
