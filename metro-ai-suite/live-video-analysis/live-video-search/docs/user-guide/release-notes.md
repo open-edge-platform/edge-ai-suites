@@ -1,4 +1,4 @@
-# Release Notes - Live Video Search
+# Release Notes: Live Video Search
 
 ## Version 1.0.0
 

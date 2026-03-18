@@ -13,22 +13,31 @@ spec:
         app: rppg
     spec:
       initContainers:
-        - name: copy-models
-          image: "{{ .Values.assets.image.repository }}/{{ .Values.assets.image.name }}:{{ .Values.assets.image.tag }}"
-          imagePullPolicy: {{ .Values.assets.image.pullPolicy }}
+        - name: wait-for-rppg-assets
+          image: "{{ .Values.rppg.image.repository }}/{{ .Values.rppg.image.name }}:{{ .Values.rppg.image.tag }}"
+          imagePullPolicy: {{ .Values.rppg.image.pullPolicy }}
           command: ["/bin/sh", "-c"]
           args:
-            - >
-              mkdir -p /models/rppg;
-              cp -r /opt/assets/models/rppg/* /models/rppg/;
-              mkdir -p /videos/rppg;
-              cp -r /opt/assets/videos/rppg/* /videos/rppg/
+            - |
+              set -e
+              MODEL_XML="/models/rppg/mtts_can.xml"
+              MODEL_HDF5="/models/rppg/mtts_can.hdf5"
+              VIDEO="/videos/rppg/sample.mp4"
+              for i in $(seq 1 120); do
+                if [ -f "$VIDEO" ] && { [ -f "$MODEL_XML" ] || [ -f "$MODEL_HDF5" ]; }; then
+                  echo "RPPG assets found"
+                  exit 0
+                fi
+                echo "Waiting for RPPG assets..."
+                sleep 5
+              done
+              echo "Timed out waiting for RPPG assets"
+              exit 1
           volumeMounts:
             - name: models
               mountPath: /models
             - name: videos
               mountPath: /videos
-
       containers:
         - name: rppg
           image: "{{ .Values.rppg.image.repository }}/{{ .Values.rppg.image.name }}:{{ .Values.rppg.image.tag }}"
@@ -46,7 +55,6 @@ spec:
               value: aggregator
             - name: AGGREGATOR_PORT
               value: "50051"
-            # Ensure in-cluster gRPC to aggregator bypasses HTTP proxies
             - name: NO_PROXY
               value: "aggregator,localhost,127.0.0.1"
             - name: no_proxy
@@ -60,12 +68,13 @@ spec:
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
-
       volumes:
         - name: models
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: models-pvc
         - name: videos
-          emptyDir: {}
+          persistentVolumeClaim:
+            claimName: videos-pvc
         - name: dri
           hostPath:
             path: /dev/dri

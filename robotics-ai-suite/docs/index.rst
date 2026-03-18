@@ -31,12 +31,33 @@ Click each icon to learn more.
 
         Install a Robot Kit.
 
-    .. grid-item-card:: Developer Guide
-        :link: robotics/dev_guide/index
+    .. grid-item-card:: Get Started with Autonomous Mobile Robot
+        :link: robotics/gsg_robot/index
         :link-type: doc
         :link-alt: clickable cards
 
-        Resources to get started with development.
+        Install a Robot Kit.
+
+    .. grid-item-card:: How it works
+        :link: robotics/dev_guide/index_howitworks
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Describes how the software works
+
+    .. grid-item-card:: Tutorials
+        :link: robotics/dev_guide/index_tutorials
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Provides a learning path for developers to use and configure Autonomous Mobile Robot
+
+    .. grid-item-card:: System Integrators
+        :link: robotics/dev_guide/index_systemintegrator
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Information specifically for System Integrators.
 
 Stationary Robot Vision & Control Framework
 **************************************************
@@ -99,3 +120,4 @@ Click each icon to learn more.
    embodied/index
    rvc/index
    legal
+   terminology

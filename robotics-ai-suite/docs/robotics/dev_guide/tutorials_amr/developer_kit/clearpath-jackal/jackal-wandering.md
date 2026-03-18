@@ -14,7 +14,7 @@ Complete the [GSG Robot](../../../../gsg_robot/index.md) guide before continuing
 
 Make sure that you have set up your Jackal robot as described on the
 [Jackal Intel Robotics SDK](./jackal-intel-robotics-sdk.md) page. In addition, you can run the
-steps on page [Jackal Keyboard Teleop](./jackal-keyboard-teleop.md)` in order to verify that
+steps on page [Jackal Keyboard Teleop](./jackal-keyboard-teleop.md) in order to verify that
 your ROS 2 installation can communicate with the Motor Control Unit (MCU).
 
 To install the Deb package of the Wandering tutorial on Jackal robots,

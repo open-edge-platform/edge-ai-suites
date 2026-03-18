@@ -1,0 +1,33 @@
+{{/*
+Copyright (C) 2025 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Smart Traffic Intersection Agent — Helm chart post-install notes
+*/}}
+
+1. Smart Traffic Intersection Agent has been deployed.
+
+   Instance : {{ .Values.trafficAgent.intersection.name }}
+   Namespace: {{ .Release.Namespace }}
+
+2. Get the traffic-agent backend URL:
+{{- if contains "NodePort" .Values.trafficAgent.service.type }}
+   export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[?(@.name=='backend')].nodePort}" services {{ include "stia.trafficAgent.fullname" . }})
+   export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   echo "Backend: http://$NODE_IP:$NODE_PORT"
+{{- else if contains "ClusterIP" .Values.trafficAgent.service.type }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "stia.trafficAgent.fullname" . }} 8081:{{ .Values.trafficAgent.service.backendPort }} &
+   echo "Backend: http://127.0.0.1:8081"
+{{- end }}
+
+3. Get the traffic-agent UI URL:
+{{- if contains "NodePort" .Values.trafficAgent.service.type }}
+   export UI_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[?(@.name=='ui')].nodePort}" services {{ include "stia.trafficAgent.fullname" . }})
+   echo "UI: http://$NODE_IP:$UI_PORT"
+{{- else if contains "ClusterIP" .Values.trafficAgent.service.type }}
+   kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "stia.trafficAgent.fullname" . }} 7860:{{ .Values.trafficAgent.service.uiPort }} &
+   echo "UI: http://127.0.0.1:7860"
+{{- end }}
+
+4. The VLM serving endpoint is available internally at:
+   http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}

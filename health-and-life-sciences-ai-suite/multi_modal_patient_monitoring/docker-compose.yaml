@@ -38,7 +38,7 @@ services:
     environment:
       - WORKLOAD_TYPE=mdpnp
       - GRPC_PORT=50051
-      - HTTP_PORT=8000    
+      - HTTP_PORT=8001
     network_mode: "host"
     
   metrics-collector:
@@ -99,7 +99,7 @@ services:
     environment:
       - GRPC_HOST=localhost
       - GRPC_PORT=50051
-      - MDPNP_DEVICE=${MDPNP_DEVICE}
+      - MDPNP_DEVICE=${MDPNP_DEVICE:-}
     env_file:
         - ./configs/device.env   
     depends_on:
@@ -127,7 +127,7 @@ services:
       patient-monitoring-aggregator:
         condition: service_started
     environment:
-      - ECG_DEVICE=${ECG_DEVICE}  
+      - ECG_DEVICE=${ECG_DEVICE:-}  
     env_file:
       - ./configs/device.env  
     volumes:
@@ -191,7 +191,7 @@ services:
       patient-monitoring-aggregator:
           condition: service_started  
     environment:
-      - RPPG_DEVICE=${RPPG_DEVICE}  
+      - RPPG_DEVICE=${RPPG_DEVICE:-}  
     env_file:
       - ./configs/device.env  
     volumes:
@@ -207,6 +207,8 @@ services:
       context: ./services/ui
       dockerfile: Dockerfile
       args:
+        VITE_API_BASE_URL: http://${HOST_IP:-localhost}:8001
+        VITE_POSE_STREAM_URL: http://${HOST_IP:-localhost}:8085/video_feed
         HTTP_PROXY: ${HTTP_PROXY}
         HTTPS_PROXY: ${HTTPS_PROXY}
         NO_PROXY: ${NO_PROXY}
