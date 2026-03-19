@@ -48,11 +48,8 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo
 ### Activate Python Virtual Environment
 
 ```bash
-sudo apt install pipx
-pipx install virtualenv
-pipx ensurepath
-source ~/.bashrc
-virtualenv venv_followme
+sudo apt install python3-venv
+python3 -m venv venv_followme
 cd venv_followme
 source bin/activate
 ```
