@@ -8,11 +8,11 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # ROS2 KPI Grafana Dashboard Setup
 
-##  Overview
+## 🎯 Overview
 
 This integration provides real-time visualization of ROS2 metrics using **Grafana** dashboards powered by **Prometheus**. Monitor topic frequencies, processing delays, CPU/memory usage, and more with beautiful, interactive graphs.
 
-##  Features
+## 📊 Features
 
 - **Real-time Metrics Visualization**
   - Topic message frequencies and rates
@@ -35,7 +35,7 @@ This integration provides real-time visualization of ROS2 metrics using **Grafan
 
 ---
 
-##  Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 
@@ -55,7 +55,7 @@ pip3 install prometheus-client
 
 ```bash
 # From the ros2-kpi directory
-./grafana/start_grafana.sh
+./start_grafana.sh
 ```
 
 This will:
@@ -95,7 +95,7 @@ make grafana-export-live
 
 ---
 
-##  Dashboard Panels
+## 📈 Dashboard Panels
 
 ### 1. Topic Message Frequencies
 Line chart showing message rates (Hz) for all topics over time.
@@ -152,7 +152,7 @@ Two table panels showing per-topic detail for a selected node.
 
 ---
 
-##  Configuration
+## 🔧 Configuration
 
 ### Custom Prometheus Port
 
@@ -207,7 +207,7 @@ self.my_custom_metric.labels(label1='value1', label2='value2').set(123.45)
 
 ---
 
-##  Monitoring Modes
+## 🔍 Monitoring Modes
 
 ### Mode 1: File-Based (Current Implementation)
 
@@ -246,7 +246,7 @@ This requires updating `monitor_stack.py` to call the exporter directly (see TOD
 
 ---
 
-##  Docker Stack Management
+## 📦 Docker Stack Management
 
 ### Start Services
 ```bash
@@ -280,7 +280,7 @@ docker-compose restart
 
 ---
 
-##  Troubleshooting
+## 🛠️ Troubleshooting
 
 ### Grafana shows "No Data"
 
@@ -349,7 +349,7 @@ uv run python src/prometheus_exporter.py --port 9092 --session-dir monitoring_se
 fuser -k 9092/tcp && make grafana-export SESSION=<name>
 ```
 
-**Change Grafana or Prometheus UI port in `grafana/docker-compose.yml`:**
+**Change Grafana or Prometheus UI port in `docker-compose.yml`:**
 ```yaml
 services:
   grafana:
@@ -370,7 +370,7 @@ newgrp docker
 
 ---
 
-##  Advanced Usage
+## 📊 Advanced Usage
 
 ### Create Custom Dashboards
 
@@ -380,10 +380,10 @@ newgrp docker
    ```promql
    # Example: Average processing delay
    avg(ros2_processing_delay_ms)
-
+   
    # Example: Max CPU usage by process
    max(ros2_process_cpu_percent) by (process)
-
+   
    # Example: Total messages across all topics
    sum(rate(ros2_topic_message_count[1m]))
    ```
@@ -426,7 +426,7 @@ predict_linear(ros2_process_memory_mb[1h], 3600)
 
 ---
 
-##  Dashboard Customization
+## 🎨 Dashboard Customization
 
 ### Change Theme
 
@@ -436,7 +436,7 @@ Grafana → Configuration → Preferences → UI Theme → Dark/Light
 
 Top-right time picker:
 - Last 5 minutes
-- Last 30 minutes
+- Last 30 minutes  
 - Last 1 hour
 - Custom range
 
@@ -451,7 +451,7 @@ Create dashboard variables for filtering:
 
 ---
 
-##  Integration with Existing Tools
+## 🔗 Integration with Existing Tools
 
 ### Use with ROS Bags
 
@@ -478,7 +478,7 @@ ros2 bag play my_bag.db3 &
 
 ---
 
-##  Resources
+## 📚 Resources
 
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
@@ -487,7 +487,7 @@ ros2 bag play my_bag.db3 &
 
 ---
 
-##  Contributing
+## 🤝 Contributing
 
 Improvements welcome:
 - Additional dashboard panels
@@ -497,7 +497,7 @@ Improvements welcome:
 
 ---
 
-##  TODO
+## 📝 TODO
 
 - [ ] Direct integration mode (bypass file I/O)
 - [ ] Automatic session detection for exporter

@@ -138,17 +138,17 @@ flowchart LR
 
 ```
 monitoring_sessions/
-
- <timestamp>/              # Auto-generated session
-    session_info.txt     # Metadata: time, node, options
-    graph_timing.csv     # Raw timing data
-    resource_usage.log   # Raw resource data
-    visualizations/      # Generated plots
-        timing_*.png
-        resource_*.png
-
- <custom_name>/           # Named session (--session flag)
-     ... (same structure)
+│
+├── <timestamp>/              # Auto-generated session
+│   ├── session_info.txt     # Metadata: time, node, options
+│   ├── graph_timing.csv     # Raw timing data
+│   ├── resource_usage.log   # Raw resource data
+│   └── visualizations/      # Generated plots
+│       ├── timing_*.png
+│       └── resource_*.png
+│
+└── <custom_name>/           # Named session (--session flag)
+    └── ... (same structure)
 ```
 
 ---

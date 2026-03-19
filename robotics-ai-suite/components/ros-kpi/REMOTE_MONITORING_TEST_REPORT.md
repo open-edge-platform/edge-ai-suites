@@ -15,8 +15,8 @@ Intel-operated generative artificial intelligence solutions.
 
 ## Executive Summary
 
- **Remote resource monitoring is WORKING**
- **Remote graph monitoring requires local ROS2 installation**
+✅ **Remote resource monitoring is WORKING**
+⚠️ **Remote graph monitoring requires local ROS2 installation**
 
 The remote monitoring system successfully connects to intel@10.34.94.191 and monitors ROS2 processes. However, to enable full functionality (graph monitoring), ROS2 needs to be installed on the local monitoring machine.
 
@@ -24,7 +24,7 @@ The remote monitoring system successfully connects to intel@10.34.94.191 and mon
 
 ## Test Results
 
-### 1.  SSH Connectivity Test
+### 1. ✅ SSH Connectivity Test
 **Status:** PASSED
 
 - SSH connection to `intel@10.34.94.191` successful
@@ -37,17 +37,17 @@ ssh intel@10.34.94.191 'echo "SSH connection successful"'
 # Result: SSH connection successful
 ```
 
-### 2.  Remote System Prerequisites
+### 2. ✅ Remote System Prerequisites
 **Status:** PASSED
 
 Remote system (intel@10.34.94.191) has all required components:
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| ROS2 Humble |  Installed | `/opt/ros/humble/setup.bash` |
-| pidstat |  Installed | `/usr/bin/pidstat` |
-| ROS2 Nodes |  Running | 13 ROS2 processes detected |
-| ROS_DOMAIN_ID |  Not set | Defaults to 0 |
+| ROS2 Humble | ✅ Installed | `/opt/ros/humble/setup.bash` |
+| pidstat | ✅ Installed | `/usr/bin/pidstat` |
+| ROS2 Nodes | ✅ Running | 13 ROS2 processes detected |
+| ROS_DOMAIN_ID | ⚠️ Not set | Defaults to 0 |
 
 **Running ROS2 Processes:**
 - `gzserver` (Gazebo simulator)
@@ -63,7 +63,7 @@ Remote system (intel@10.34.94.191) has all required components:
   - `robot_state_publisher`
 - `wandering_gazebo_tutorial` launch file
 
-### 3.  Remote Resource Monitoring
+### 3. ✅ Remote Resource Monitoring
 **Status:** FULLY FUNCTIONAL
 
 Successfully monitored remote ROS2 processes via SSH:
@@ -79,11 +79,11 @@ python3 src/monitor_resources.py \
 ```
 
 **Results:**
--  Connected to remote system via SSH
--  Discovered 13 ROS2-related processes
--  Successfully monitored CPU and memory usage
--  Collected 3 samples at 2-second intervals
--  Data shows realistic resource usage (gzserver at ~85-90% CPU, rviz2 at ~500% CPU)
+- ✅ Connected to remote system via SSH
+- ✅ Discovered 13 ROS2-related processes
+- ✅ Successfully monitored CPU and memory usage
+- ✅ Collected 3 samples at 2-second intervals
+- ✅ Data shows realistic resource usage (gzserver at ~85-90% CPU, rviz2 at ~500% CPU)
 
 **Sample Output:**
 ```
@@ -95,16 +95,16 @@ Time         UID    PID     %usr  %system  %CPU   RSS     %MEM  Command
 ...
 ```
 
-### 4.  Remote Graph Monitoring
+### 4. ⚠️ Remote Graph Monitoring
 **Status:** REQUIRES LOCAL ROS2 INSTALLATION
 
 Graph monitoring (topic rates, latencies, message flow) currently fails due to missing local dependencies:
 
 **Missing on Local Machine:**
--  `rclpy` Python module (ROS2 Python bindings)
--  `matplotlib` Python module (for visualizations)
--  ROS2 installation (`/opt/ros/humble/setup.bash` not found)
--  `uv` package manager
+- ❌ `rclpy` Python module (ROS2 Python bindings)
+- ❌ `matplotlib` Python module (for visualizations)
+- ❌ ROS2 installation (`/opt/ros/humble/setup.bash` not found)
+- ❌ `uv` package manager
 
 **Error Message:**
 ```
@@ -123,14 +123,24 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.cargo/env
 ```
 
-#### 2. Install ROS2
+#### 2. Install ROS2 Humble
 ```bash
-# Follow the Open Edge Platform Robotics Getting Started Guide:
-# https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html
+# Add ROS2 repository
+sudo apt update && sudo apt install -y software-properties-common curl
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    -o /usr/share/keyrings/ros-archive-keyring.gpg
 
-# After installation, source ROS2 (add to ~/.bashrc for persistence)
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+    http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | \
+    sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# Install ROS2 Humble
+sudo apt update
+sudo apt install -y ros-humble-ros-base python3-rosdep
+
+# Source ROS2 (add to ~/.bashrc for persistence)
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 ```
 
 #### 3. Install Python Dependencies
@@ -145,10 +155,10 @@ uv sync
 ```bash
 # Source ROS2
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 
 # Check Python packages
-uv run python -c "import matplotlib, numpy, psutil, rclpy; print(' All modules OK')"
+uv run python -c "import matplotlib, numpy, psutil, rclpy; print('✅ All modules OK')"
 ```
 
 ---
@@ -221,16 +231,16 @@ python3 src/monitor_resources.py \
 
 ## ROS_DOMAIN_ID Configuration
 
- **Important:** Ensure `ROS_DOMAIN_ID` matches on both machines for graph monitoring!
+⚠️ **Important:** Ensure `ROS_DOMAIN_ID` matches on both machines for graph monitoring!
 
 ### On Local Machine:
 ```bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 ```
 
 ### On Remote Machine (intel@10.34.94.191):
 ```bash
-ssh intel@10.34.94.191 "echo 'export ROS_DOMAIN_ID=45' >> ~/.bashrc"
+ssh intel@10.34.94.191 "echo 'export ROS_DOMAIN_ID=0' >> ~/.bashrc"
 ```
 
 Or add to the remote system's launch files.
@@ -240,7 +250,7 @@ Or add to the remote system's launch files.
 ## Troubleshooting
 
 ### Issue: "Permission denied (publickey,password)"
-**Solution:** SSH keys are now configured and working 
+**Solution:** SSH keys are now configured and working ✅
 
 ### Issue: "ModuleNotFoundError: No module named 'rclpy'"
 **Solution:** Install ROS2 locally (see Installation Requirements above)
@@ -257,7 +267,7 @@ Or add to the remote system's launch files.
 **Check:**
 ```bash
 # On local machine (after ROS2 is installed):
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 export ROS_LOCALHOST_ONLY=0
 source /opt/ros/humble/setup.bash
 ros2 node list
@@ -269,10 +279,10 @@ ros2 node list
 
 ## Next Steps
 
-1.  **SSH connectivity is confirmed and working**
-2.  **Remote resource monitoring is fully functional**
-3.  **Install ROS2 and dependencies on local machine to enable full monitoring**
-4.  **Test full remote monitoring after installation:**
+1. ✅ **SSH connectivity is confirmed and working**
+2. ✅ **Remote resource monitoring is fully functional**
+3. ⚠️ **Install ROS2 and dependencies on local machine to enable full monitoring**
+4. 🔲 **Test full remote monitoring after installation:**
    ```bash
    make monitor-remote REMOTE_IP=10.34.94.191 REMOTE_USER=intel DURATION=60
    ```
@@ -285,5 +295,5 @@ The remote monitoring infrastructure is **working correctly** for resource monit
 
 To unlock the full monitoring capability (including graph/topic monitoring), install ROS2 and Python dependencies on the local monitoring machine as described in the Installation Requirements section.
 
-**Remote Resource Monitoring:  VERIFIED AND WORKING**
-**Remote Graph Monitoring:  REQUIRES LOCAL ROS2 INSTALLATION**
+**Remote Resource Monitoring: ✅ VERIFIED AND WORKING**
+**Remote Graph Monitoring: ⚠️ REQUIRES LOCAL ROS2 INSTALLATION**

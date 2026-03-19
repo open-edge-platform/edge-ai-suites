@@ -26,14 +26,14 @@ NC='\033[0m' # No Color
 
 print_status() {
     if [ $1 -eq 0 ]; then
-        echo -e "${GREEN} PASS${NC}: $2"
+        echo -e "${GREEN}✅ PASS${NC}: $2"
     else
-        echo -e "${RED} FAIL${NC}: $2"
+        echo -e "${RED}❌ FAIL${NC}: $2"
     fi
 }
 
 print_warning() {
-    echo -e "${YELLOW}  WARN${NC}: $1"
+    echo -e "${YELLOW}⚠️  WARN${NC}: $1"
 }
 
 # Test 1: SSH Connectivity
@@ -201,10 +201,10 @@ echo "=================================================="
 echo ""
 
 if [ $LOCAL_ROS2 -eq 0 ] || [ $LOCAL_UV -eq 0 ]; then
-    echo -e "${YELLOW}  PARTIAL FUNCTIONALITY${NC}"
+    echo -e "${YELLOW}⚠️  PARTIAL FUNCTIONALITY${NC}"
     echo ""
-    echo "Remote resource monitoring:  WORKING"
-    echo "Remote graph monitoring:     REQUIRES INSTALLATION"
+    echo "Remote resource monitoring: ✅ WORKING"
+    echo "Remote graph monitoring:    ❌ REQUIRES INSTALLATION"
     echo ""
     echo "To enable full remote monitoring:"
     echo "  1. Install ROS2 Humble locally (see INSTALL.md)"
@@ -214,7 +214,7 @@ if [ $LOCAL_ROS2 -eq 0 ] || [ $LOCAL_UV -eq 0 ]; then
     echo "For now, you can use resource monitoring:"
     echo "  python3 src/monitor_resources.py --remote-ip ${REMOTE_IP} --remote-user ${REMOTE_USER} --memory --threads --continuous"
 else
-    echo -e "${GREEN} FULL FUNCTIONALITY AVAILABLE${NC}"
+    echo -e "${GREEN}✅ FULL FUNCTIONALITY AVAILABLE${NC}"
     echo ""
     echo "You can now use full remote monitoring:"
     echo "  make monitor-remote REMOTE_IP=${REMOTE_IP} REMOTE_USER=${REMOTE_USER}"
@@ -224,5 +224,5 @@ else
 fi
 
 echo ""
-echo "For detailed test results, see: docs/REMOTE_MONITORING_TEST_REPORT.md"
+echo "For detailed test results, see: REMOTE_MONITORING_TEST_REPORT.md"
 echo "=================================================="

@@ -40,7 +40,7 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 
-#  Data loading 
+# ── Data loading ──────────────────────────────────────────────────────────────
 
 def load_npu_log(path: str) -> List[dict]:
     """Parse JSON-lines npu_usage.log; skip start/stop event markers."""
@@ -84,7 +84,7 @@ def _fmt_xaxis(ax, times):
     return elapsed
 
 
-#  Summary 
+# ── Summary ───────────────────────────────────────────────────────────────────
 
 def print_summary(records: List[dict]):
     if not records:
@@ -95,7 +95,7 @@ def print_summary(records: List[dict]):
     freq   = [r.get('cur_freq_mhz', 0) for r in records]
     mem    = [r.get('memory_used_mb', 0.0) for r in records]
 
-    print(f'\n Intel NPU Summary ({len(records)} samples) ')
+    print(f'\n── Intel NPU Summary ({len(records)} samples) ──')
     print(f'  {"Metric":<25} {"Mean":>8}  {"Max":>8}  {"Min":>8}')
     print(f'  {"-"*55}')
 
@@ -111,7 +111,7 @@ def print_summary(records: List[dict]):
     print()
 
 
-#  Legend interactivity 
+# ── Legend interactivity ──────────────────────────────────────────────────────
 
 def _wire_legend(fig, legend, handle_artists: dict):
     """Click a legend entry to toggle visibility of the corresponding line."""
@@ -148,7 +148,7 @@ def _wire_legend(fig, legend, handle_artists: dict):
     fig.canvas.mpl_connect('button_press_event', on_click)
 
 
-#  Panels 
+# ── Panels ────────────────────────────────────────────────────────────────────
 
 def _panel_busy(ax, elapsed, records):
     busy = [r.get('busy_pct', 0.0) for r in records]
@@ -188,7 +188,7 @@ def _panel_memory(ax, elapsed, records):
     _wire_legend(ax.figure, leg, {'Memory (MB)': line})
 
 
-#  Main dashboard 
+# ── Main dashboard ────────────────────────────────────────────────────────────
 
 def plot_npu_full(records: List[dict],
                   save_path: Optional[str] = None,
@@ -230,7 +230,7 @@ def plot_npu_full(records: List[dict],
     return saved
 
 
-#  Session discovery 
+# ── Session discovery ─────────────────────────────────────────────────────────
 
 def _latest_npu_log(sessions_root: str = 'monitoring_sessions') -> Optional[Path]:
     """Find the most-recent npu_usage.log under sessions_root (flat or grouped)."""
@@ -244,7 +244,7 @@ def _latest_npu_log(sessions_root: str = 'monitoring_sessions') -> Optional[Path
     return candidates[0] if candidates else None
 
 
-#  CLI 
+# ── CLI ───────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(

@@ -52,9 +52,9 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Constants
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 _LOCAL_IGT_CANDIDATES = [
     '/usr/bin/intel_gpu_top',
@@ -80,9 +80,9 @@ _ENGINE_CLASSES: Dict[str, re.Pattern] = {
 
 _ENG_COLS: List[str] = list(_ENGINE_CLASSES.keys())   # ordered list
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Binary discovery & runner
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _find_local_igt() -> Optional[str]:
     """Return the path to a locally installed intel_gpu_top binary, or None."""
@@ -135,9 +135,9 @@ def _run_igt_remote(remote_ip: str, remote_user: str, interval_ms: int) -> str:
                     timeout=interval_ms // 1000 + 15)
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # JSON parsing
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _parse_igt_json(raw: str) -> Optional[dict]:
     """
@@ -163,9 +163,9 @@ def _parse_igt_json(raw: str) -> Optional[dict]:
     return samples[-1] if len(samples) >= 2 else None
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Temperature – sysfs hwmon
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _read_gpu_temp_local() -> Optional[float]:
     """
@@ -209,9 +209,9 @@ def read_gpu_temp(remote_ip: str = None,
     return _read_gpu_temp_local()
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Engine classification
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _classify_engines(engines_raw: dict) -> Dict[str, Dict[str, float]]:
     """
@@ -239,9 +239,9 @@ def _classify_engines(engines_raw: dict) -> Dict[str, Dict[str, float]]:
     return out
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Per-PID client parsing
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _parse_clients(sample: dict) -> List[dict]:
     """
@@ -310,9 +310,9 @@ def _parse_clients(sample: dict) -> List[dict]:
     return result
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Main probe
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def collect_snapshot(interval: float = 2.0,
                      remote_ip: str = None,
@@ -387,13 +387,13 @@ def collect_snapshot(interval: float = 2.0,
     return snap
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Display
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _bar(pct: float, width: int = 12) -> str:
     filled = max(0, min(int(round(pct / 100 * width)), width))
-    return '' * filled + '' * (width - filled)
+    return '█' * filled + '░' * (width - filled)
 
 
 def print_snapshot(snap: dict):
@@ -405,7 +405,7 @@ def print_snapshot(snap: dict):
                     if snap.get('temp_c') is not None else '')
         print(f'\n[{ts}]  intel_gpu_top unavailable (PMU blocked / not installed)'
               f'{temp_str}')
-        print('    sudo setcap cap_perfmon+eip $(which intel_gpu_top)')
+        print('  ▶  sudo setcap cap_perfmon+eip $(which intel_gpu_top)')
         return
 
     freq_a  = snap['freq_actual_mhz']
@@ -421,16 +421,16 @@ def print_snapshot(snap: dict):
     pwr_str  = (f'  GPU: {pwr_g:.1f} W   Pkg: {pwr_p:.1f} W'
                 if pwr_g else '  Power: RAPL unavailable')
 
-    print(f'\n Intel GPU  [{ts}]  period={period:.0f} ms{bin_str}')
-    print(f'')
-    print(f'  Frequency : {freq_a:>5} MHz actual  /  {freq_r:>5} MHz requested')
-    print(f'  RC6       : {rc6:.1f} %  (idle residency – higher = more idle)')
-    print(f'  Power     :{pwr_str}')
-    print(f'  Temp      :{temp_str}')
-    print(f'')
-    print(f'   Engine Utilisation ')
-    print(f'   {"Engine":<12}  {"Busy":>6}  {"Bar":^14}  {"Sema":>6}  {"Wait":>6}')
-    print(f'   {""*12}  {""*6}  {""*14}  {""*6}  {""*6}')
+    print(f'\n╔══ Intel GPU  [{ts}]  period={period:.0f} ms{bin_str}')
+    print(f'║')
+    print(f'║  Frequency : {freq_a:>5} MHz actual  /  {freq_r:>5} MHz requested')
+    print(f'║  RC6       : {rc6:.1f} %  (idle residency – higher = more idle)')
+    print(f'║  Power     :{pwr_str}')
+    print(f'║  Temp      :{temp_str}')
+    print(f'║')
+    print(f'║  ── Engine Utilisation ──────────────────────────────────────────')
+    print(f'║   {"Engine":<12}  {"Busy":>6}  {"Bar":^14}  {"Sema":>6}  {"Wait":>6}')
+    print(f'║   {"─"*12}  {"─"*6}  {"─"*14}  {"─"*6}  {"─"*6}')
 
     eng = snap.get('engines', {})
     for cls in _ENG_COLS:
@@ -439,16 +439,16 @@ def print_snapshot(snap: dict):
         sema = d.get('sema', 0.0)
         wait = d.get('wait', 0.0)
         bar  = _bar(busy)
-        print(f'   {cls:<12}  {busy:>5.1f}%  [{bar}]  {sema:>5.1f}%  {wait:>5.1f}%')
+        print(f'║   {cls:<12}  {busy:>5.1f}%  [{bar}]  {sema:>5.1f}%  {wait:>5.1f}%')
 
     clients = snap.get('clients', [])
     if clients:
-        print(f'')
-        print(f'   Per-PID GPU Usage ')
+        print(f'║')
+        print(f'║  ── Per-PID GPU Usage ───────────────────────────────────────────')
         # header
         hdr_eng = '  '.join(f'{c:<9}' for c in _ENG_COLS)
-        print(f'   {"PID":>7}  {"Process":<28}  {"Total":>6}  {hdr_eng}')
-        print(f'   {""*7}  {""*28}  {""*6}  {""*(9*len(_ENG_COLS)+2*(len(_ENG_COLS)-1))}')
+        print(f'║   {"PID":>7}  {"Process":<28}  {"Total":>6}  {hdr_eng}')
+        print(f'║   {"─"*7}  {"─"*28}  {"─"*6}  {"─"*(9*len(_ENG_COLS)+2*(len(_ENG_COLS)-1))}')
 
         shown = 0
         for c in clients:
@@ -457,19 +457,19 @@ def print_snapshot(snap: dict):
             eng_vals = '  '.join(
                 f'{c["engines"].get(cls, 0.0):>8.1f}%' for cls in _ENG_COLS
             )
-            print(f'   {c["pid"]:>7}  {c["name"]:<28}  {c["total"]:>5.1f}%  {eng_vals}')
+            print(f'║   {c["pid"]:>7}  {c["name"]:<28}  {c["total"]:>5.1f}%  {eng_vals}')
             shown += 1
     else:
-        print(f'')
-        print(f'  Per-PID data: requires intel_gpu_top ≥ 1.27 with "clients" support')
-        print(f'  (try: intel_gpu_top --help | grep clients)')
+        print(f'║')
+        print(f'║  Per-PID data: requires intel_gpu_top ≥ 1.27 with "clients" support')
+        print(f'║  (try: intel_gpu_top --help | grep clients)')
 
-    print(f'{"" * 68}')
+    print(f'╚{"═" * 68}')
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # CSV helpers
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _csv_header() -> str:
     eng_hdrs = ','.join(f'{c}_busy_pct' for c in _ENG_COLS)
@@ -506,9 +506,9 @@ def _snap_to_csv(snap: dict) -> str:
     )
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Entry point
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(
@@ -543,7 +543,7 @@ def main():
                         help='Suppress console output (useful with --csv)')
     args = parser.parse_args()
 
-    #  Open output files 
+    # ── Open output files ──────────────────────────────────────────────────
     csv_fp = json_fp = None
     if args.csv:
         write_header = not os.path.exists(args.csv)
@@ -554,7 +554,7 @@ def main():
     if args.json_log:
         json_fp = open(args.json_log, 'a', buffering=1)
 
-    #  Print preamble 
+    # ── Print preamble ─────────────────────────────────────────────────────
     loop     = args.watch or args.duration > 0
     deadline = time.monotonic() + args.duration if args.duration > 0 \
                else float('inf')
@@ -574,7 +574,7 @@ def main():
     else:
         print('  Press Ctrl-C to stop.\n')
 
-    #  Sampling loop 
+    # ── Sampling loop ──────────────────────────────────────────────────────
     try:
         while True:
             snap = collect_snapshot(

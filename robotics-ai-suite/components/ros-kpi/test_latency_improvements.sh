@@ -13,11 +13,11 @@ echo ""
 
 # Check ROS2
 if [ -z "$ROS_DISTRO" ]; then
-    echo " ROS2 not sourced. Run: source /opt/ros/humble/setup.bash"
+    echo "❌ ROS2 not sourced. Run: source /opt/ros/humble/setup.bash"
     exit 1
 fi
 
-echo " ROS2 $ROS_DISTRO detected"
+echo "✅ ROS2 $ROS_DISTRO detected"
 echo ""
 
 # Get user choice
@@ -61,7 +61,7 @@ case $choice in
         nodes_count=$(ros2 node list 2>/dev/null | grep -v "^$" | wc -l)
         
         if [ "$nodes_count" -eq 0 ]; then
-            echo "  No ROS2 nodes detected. Options:"
+            echo "⚠️  No ROS2 nodes detected. Options:"
             echo ""
             echo "  a) Start ros-humble-wandering-gazebo-tutorial:"
             echo "     ros2 launch wandering_gazebo_tutorial wandering.launch.py"

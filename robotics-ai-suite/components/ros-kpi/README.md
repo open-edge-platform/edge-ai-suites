@@ -10,31 +10,33 @@ Intel-operated generative artificial intelligence solutions.
 
 Monitor, analyze, and visualize Key Performance Indicators in ROS2 systems — node latencies, CPU/memory usage, message flow, and thread-level resource distribution.
 
-## Quick Start
+## ⚡ Quick Start (Easiest Way)
 
 ```bash
 cd ~/Documents/ros2-kpi
 
-# Source ROS2 first
-source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+# Interactive launcher - guides you through everything
+./quickstart
 
-# Run a 60-second monitoring session
-make monitor
-
-# Quick 30-second health check
-make quick-check
+# Or use make shortcuts
+make start     # Interactive menu
+make quick     # Quick 30-second health check
+make test      # Quick latency test
 ```
 
-Press `Ctrl+C` to stop at any time. Visualizations are auto-generated on exit.
+**That's it!** The interactive launcher handles ROS2 setup automatically and guides you through all features.
+
+📖 **New User?** See [QUICKSTART.md](QUICKSTART.md) for a complete beginner's guide.
 
 ---
 
 **Quick Links:**
+- [QUICKSTART.md](QUICKSTART.md) — Complete beginner's guide (start here!)
 - [Quick Start](docs/QUICK_START.md) — Command-line quick start
 - [Command Reference](docs/COMMANDS.md) — All commands and options
 - [Examples](examples/) — Practical usage examples
-- [Remote Monitoring Test Report](docs/REMOTE_MONITORING_TEST_REPORT.md) — Verify remote monitoring setup
+- [Latency Testing](docs/LATENCY_TESTING_QUICK_REF.md) — DDS/RTSP performance testing
+- [Remote Monitoring Test Report](REMOTE_MONITORING_TEST_REPORT.md) — Verify remote monitoring setup
 - [Improvements](docs/IMPROVEMENTS.md) — What's new
 
 ---
@@ -55,7 +57,7 @@ Press `Ctrl+C` to stop at any time. Visualizations are auto-generated on exit.
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble+ | [Open Edge Platform Robotics Getting Started Guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#) |
+| ROS2 Humble+ | [docs.ros.org](https://docs.ros.org/) |
 | Python 3.8+ | included with Ubuntu 22.04 |
 | `pidstat` | `sudo apt-get install sysstat` |
 | `psutil`, `matplotlib`, `numpy` | `pip3 install psutil matplotlib numpy` |
@@ -86,7 +88,6 @@ Orchestrates graph + resource monitors, saves all output to a dated session fold
 |--------|-------------|
 | `--node NAME` | Monitor a specific node (e.g. `/slam_toolbox`) |
 | `--session NAME` | Session label (default: timestamp) |
-| `--algorithm NAME` | Group session under `monitoring_sessions/<name>/` |
 | `--duration SECS` | Auto-stop after N seconds (remote: allow ≥90s — DDS discovery takes 30-60s before topic data flows) |
 | `--interval SECS` | Update interval (default: 5) |
 | `--output-dir PATH` | Where to save results |
@@ -96,9 +97,6 @@ Orchestrates graph + resource monitors, saves all output to a dated session fold
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
-| `--ros-domain-id ID` | Override `ROS_DOMAIN_ID` for the session |
-| `--gpu` | Collect Intel GPU metrics via `intel_gpu_top` |
-| `--npu` | Collect Intel NPU metrics via sysfs |
 | `--list-sessions` | List previous sessions and exit |
 
 ```bash
@@ -267,38 +265,26 @@ Edit `db_path` in the script to point to your bag file, then run:
 
 ### picknplace_run.sh — Pick-and-Place Benchmark Runner
 
-Automates a full pick-and-place experiment: launches the `picknplace warehouse` simulation, waits for it to stabilize, starts GPU+resource monitoring, then cleanly stops everything once the demo completes.
+Automates a full pick-and-place experiment: launches the `picknplace warehouse` simulation, waits for it to stabilize, captures GPU+resource metrics for 120 seconds, then cleanly stops the simulation.
 
 ```bash
-# Single run (direct script)
-bash src/picknplace_run.sh
-
-# Via make (recommended)
-make picknplace
-
-# Repeat N times back-to-back with cross-run averaging
-make picknplace-repeat             # 3 runs (default), 10s pause
-make picknplace-repeat REPEAT=5 PAUSE=15
+./src/picknplace_run.sh
 ```
 
 **What it does:**
 
-1. Launches `ros2 launch picknplace warehouse.launch.py` in the background using `setsid`/`nohup`.
-2. Waits **30 seconds** for the simulation to stabilize, then presses the Gazebo play button via `gz service`.
-3. Starts `monitor_stack.py --gpu --algorithm picknplace` to capture GPU and resource metrics.
-4. Waits up to **240 seconds** for the simulation to emit `AMR DEMO COMPLETE` in the launch log.
-5. Sends `SIGINT` then `SIGKILL` to the entire process group to cleanly tear down ROS2 and Gazebo.
+1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
+2. Waits **30 seconds** for the simulation to stabilize.
+3. Starts `make monitor-gpu DURATION=120` to capture GPU and resource metrics.
+4. After 120 seconds, sends `SIGINT` to the simulation process (equivalent to Ctrl-C) and waits for both processes to exit cleanly.
 
-Sessions are grouped under `monitoring_sessions/picknplace/<timestamp>/` and can be visualized with:
+Results land in the latest `monitoring_sessions/` directory and can be visualized with the standard make targets:
 
 ```bash
-make visualize-last ALGORITHM=picknplace   # timeline / resource plots
-make visualize-gpu ALGORITHM=picknplace    # GPU dashboard
-make pipeline-graph ALGORITHM=picknplace   # node topology diagram
-make view-average-plot RUNS=3              # averaged KPIs across last N runs
+make visualize-last          # timeline / resource plots
+make visualize-gpu           # GPU dashboard for the session
+make pipeline-graph          # node topology diagram
 ```
-
-After `make picknplace-repeat`, cross-run averages are saved automatically to `monitoring_sessions/picknplace/average_N/`.
 
 ---
 
@@ -331,23 +317,6 @@ make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ros NODE=/slam_toolbox
 ./monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
-### Repeat Runs
-
-Run N monitoring sessions back-to-back and automatically compute cross-run averages:
-
-```bash
-make monitor-remote-repeat REMOTE_IP=192.168.1.100 REPEAT=3
-make monitor-remote-repeat REMOTE_IP=192.168.1.100 REPEAT=5 DURATION=120 PAUSE=10
-make monitor-remote-repeat REMOTE_IP=192.168.1.100 REPEAT=3 GPU=1 NPU=1 ALGORITHM=slam DOMAIN_ID=46
-```
-
-| Param | Default | Description |
-|-------|---------|-------------|
-| `REPEAT` | 3 | Number of runs |
-| `DURATION` | 60 | Seconds per run |
-| `PAUSE` | 5 | Seconds between runs |
-| `ALGORITHM` | — | Groups sessions under `monitoring_sessions/<name>/` |
-
 > **Note:** CycloneDDS peer discovery over a LAN typically takes **30–60 seconds** before the remote graph is visible and topic messages start being logged. Use `DURATION=180` or longer for remote sessions to ensure meaningful data capture.
 
 Results are stored and visualized locally on the monitoring machine.
@@ -357,19 +326,19 @@ Results are stored and visualized locally on the monitoring machine.
 Before starting remote monitoring, verify connectivity and prerequisites:
 
 ```bash
-./scripts/verify_remote_monitoring.sh
+./verify_remote_monitoring.sh
 ```
 
 This automated verification script checks:
--  SSH connectivity and key-based authentication
--  Remote system has ROS2 and pidstat installed
--  Remote ROS2 processes are running
--  Local prerequisites for graph monitoring (ROS2, Python packages)
--  Quick functional test of remote resource monitoring
+- ✅ SSH connectivity and key-based authentication
+- ✅ Remote system has ROS2 and pidstat installed
+- ✅ Remote ROS2 processes are running
+- ✅ Local prerequisites for graph monitoring (ROS2, Python packages)
+- ✅ Quick functional test of remote resource monitoring
 
 **Quick verification for specific remote system:**
 
-Edit `scripts/verify_remote_monitoring.sh` to set `REMOTE_IP` and `REMOTE_USER`, or test directly:
+Edit `verify_remote_monitoring.sh` to set `REMOTE_IP` and `REMOTE_USER`, or test directly:
 
 ```bash
 # Test SSH connectivity
@@ -379,13 +348,13 @@ ssh -o BatchMode=yes remote_user@remote_ip 'echo "Connected"'
 python3 src/monitor_resources.py --remote-ip REMOTE_IP --remote-user USER --list
 ```
 
-For detailed test results and troubleshooting, see [REMOTE_MONITORING_TEST_REPORT.md](docs/REMOTE_MONITORING_TEST_REPORT.md).
+For detailed test results and troubleshooting, see [REMOTE_MONITORING_TEST_REPORT.md](REMOTE_MONITORING_TEST_REPORT.md).
 
 **Note:** Resource monitoring works immediately if SSH is configured. Graph monitoring requires ROS2 installed locally.
 
 ---
 
-##  Intel GPU Monitoring (Kernel 6.17+)
+## 🖥️ Intel GPU Monitoring (Kernel 6.17+)
 
 Remote monitoring automatically collects Intel GPU metrics when `--remote-ip` is set.
 It tries **`intel_gpu_top`** first (per-engine busy%, power, RC6%) and falls back to
@@ -394,7 +363,7 @@ sysfs RC6 residency if PMU access is blocked.
 ### Why a custom build?
 
 The `intel-gpu-tools` package shipped with Ubuntu 24.04 (`1.28`) crashes with
-`get_num_gts: Assertion failed` on **kernel 6.17** (Meteor Lake / Arc GPUs).
+`get_num_gts: Assertion failed` on **kernel 6.17** (Meteor Lake / Arc GPUs).  
 Git master has the fix, so we build it once from source.
 
 ### One-time build on the remote machine
@@ -485,7 +454,7 @@ cp build/tools/intel_gpu_top ~/.local/bin/
 
 ### Enable PMU (richer metrics)
 
-`intel_gpu_top` needs `CAP_PERFMON` when `perf_event_paranoid > 0`.
+`intel_gpu_top` needs `CAP_PERFMON` when `perf_event_paranoid > 0`.  
 Run **once** (requires sudo on the remote):
 
 ```bash
@@ -497,7 +466,7 @@ sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top
 ```
 
 With CAP_PERFMON you get full data: per-engine busy%, actual/requested frequency,
-RC6 residency %, and GPU/Package power.
+RC6 residency %, and GPU/Package power.  
 Without it the monitor falls back to sysfs RC6 residency (busy% + frequency only).
 
 ### What gets collected
@@ -517,7 +486,7 @@ visualised as `visualizations/gpu_utilization.png`.
 
 ---
 
-##  Intel NPU Monitoring
+## 🧠 Intel NPU Monitoring
 
 For systems with an Intel NPU (Meteor Lake, Arrow Lake, Lunar Lake and later),
 the stack reads kernel sysfs directly — **no root, no special capabilities, no
@@ -596,22 +565,22 @@ found — NPU monitoring skipped.` and continues normally.
 
 ```
 monitoring_sessions/
- <timestamp>/                   # flat layout (no --algorithm)
-    session_info.txt
-    graph_timing.csv
-    graph_topology.json
-    resource_usage.log
-    gpu_usage.log              # present when --gpu / remote monitoring
-    npu_usage.log              # present when --npu
-    visualizations/
- <algorithm>/                   # grouped layout (--algorithm <name>)
-     <timestamp>/
-         ...
+├── <timestamp>/                   # flat layout (no --algorithm)
+│   ├── session_info.txt
+│   ├── graph_timing.csv
+│   ├── graph_topology.json
+│   ├── resource_usage.log
+│   ├── gpu_usage.log              # present when --gpu / remote monitoring
+│   ├── npu_usage.log              # present when --npu
+│   └── visualizations/
+└── <algorithm>/                   # grouped layout (--algorithm <name>)
+    └── <timestamp>/
+        └── ...
 ```
 
 ---
 
-##  Grafana Dashboard Integration
+## 📊 Grafana Dashboard Integration
 
 Visualize ROS2 metrics in real-time with **Grafana** dashboards!
 
@@ -679,7 +648,7 @@ See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 ### Stop Dashboard Stack
 
 ```bash
-./grafana/stop_grafana.sh
+./stop_grafana.sh
 ```
 
 ---
@@ -691,8 +660,8 @@ See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 | No ROS2 processes found | Verify with `ros2 node list`; source your ROS2 setup |
 | `pidstat` not found | `sudo apt-get install sysstat` |
 | Matplotlib display error | `export MPLBACKEND=Agg` for headless systems |
-| Permission denied | `chmod +x src/*.py monitor_stack.py grafana/*.sh scripts/*.sh` |
-| Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; run `./scripts/verify_remote_monitoring.sh` |
+| Permission denied | `chmod +x src/*.py monitor_stack.py` |
+| Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; run `./verify_remote_monitoring.sh` |
 | Visualizations not generated | Run `make visualize-last` manually |
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 full core. See the **Avg Cores** column in the summary report. |
 | `grafana-export` port in use | Port 9092 conflict: `fuser -k 9092/tcp && make grafana-export SESSION=...` |

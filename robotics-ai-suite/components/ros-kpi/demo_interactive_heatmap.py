@@ -26,7 +26,7 @@ print("Loading monitoring data...")
 data, sessions = parse_pidstat_log(log_file)
 core_data = aggregate_core_utilization(data)
 
-print(f" Loaded {len(data['threads'])} threads across {len(core_data)} cores")
+print(f"✓ Loaded {len(data['threads'])} threads across {len(core_data)} cores")
 print()
 print("Instructions:")
 print("  • HOVER over heatmap cells to see a quick preview")

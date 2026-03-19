@@ -8,7 +8,7 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # Quick Reference Guide - ROS2 KPI Monitoring Stack
 
-##  Fastest Way to Get Started
+## 🚀 Fastest Way to Get Started
 
 ### 1. Simple Monitoring (All Defaults)
 ```bash
@@ -28,7 +28,7 @@ make monitor NODE=/slam_toolbox
 
 ---
 
-##  Common Use Cases
+## 📊 Common Use Cases
 
 ### Quick Performance Check (30 seconds)
 ```bash
@@ -74,7 +74,7 @@ make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
 
 ---
 
-##  Thread vs PID Monitoring Modes
+## 🔍 Thread vs PID Monitoring Modes
 
 ### Thread Mode (Default - More Detailed)
 - Tracks individual threads (TIDs)
@@ -90,61 +90,48 @@ make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
 
 ---
 
-##  Quick Commands Cheat Sheet
+## 🎯 Quick Commands Cheat Sheet
 
 | Command | What It Does |
 |---------|-------------|
 | `make monitor` | Start full monitoring with threads (graph + resources) |
 | `make monitor-pid` | Start full monitoring with PIDs only (lighter) |
-| `make monitor-gpu` | Full monitoring + Intel GPU metrics |
 | `make monitor NODE=/node_name` | Monitor specific node with threads |
 | `make monitor-remote REMOTE_IP=<ip>` | Monitor ROS2 pipeline on a remote machine |
-| `make monitor-remote REMOTE_IP=<ip> GPU=1 NPU=1` | Remote + GPU + NPU |
 | `make monitor-remote-pid REMOTE_IP=<ip>` | Remote monitoring, PID mode |
-| `make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3` | N back-to-back remote sessions |
-| `make picknplace` | Single PicknPlace AMR simulation + monitor |
-| `make picknplace-repeat REPEAT=3` | N PicknPlace runs back-to-back |
 | `make quick-check` | 30-second performance check |
+| `make monitor-long` | Extended 5-minute monitoring with threads |
+| `make monitor-long-pid` | Extended 5-minute monitoring with PIDs only |
 | `make list-sessions` | Show all previous sessions |
 | `make visualize-last` | Re-generate visualizations for last session |
-| `make visualize-last ALGORITHM=picknplace` | Visualize latest picknplace session |
-| `make visualize-gpu` | GPU dashboard for last session |
-| `make visualize-npu` | NPU dashboard for last session |
-| `make pipeline-graph` | rqt_graph-style node→topic→node PNG |
-| `make view-average` | Average KPIs across last 5 sessions |
-| `make view-average-plot RUNS=3` | Average + bar-chart PNGs |
 | `make graph-only` | Monitor only timing/graph data |
 | `make resources-threads` | Monitor only CPU/memory with thread details |
 | `make resources-pid` | Monitor only CPU/memory with PIDs only |
-| `make gpu-pids` | One-shot Intel GPU snapshot (engines + per-PID) |
-| `make gpu-pids-watch` | Live GPU refresh (Ctrl-C to stop) |
 | `make clean` | Delete all monitoring data |
 | `make clean-last` | Delete the most recent session |
 
 ---
 
-##  Where to Find Your Data
+## 📁 Where to Find Your Data
 
 All monitoring data goes to: `monitoring_sessions/<session_name>/`
 
 ```
 monitoring_sessions/
- <timestamp>/              # flat layout (no --algorithm)
-    session_info.txt
-    graph_timing.csv
-    graph_topology.json
-    resource_usage.log
-    gpu_usage.log             # present when --gpu / GPU=1
-    npu_usage.log             # present when --npu / NPU=1
-    visualizations/           # Auto-generated plots
- picknplace/               # algorithm-grouped layout
-     <timestamp>/
-     average_3/               # cross-run averages after picknplace-repeat
+└── 20260209_143022/              # Auto-generated timestamp
+    ├── session_info.txt          # Session details
+    ├── graph_timing.csv          # Message timing data
+    ├── resource_usage.log        # CPU/memory logs
+    └── visualizations/           # All plots (auto-generated)
+        ├── timing_delays.png
+        ├── message_frequencies.png
+        ├── cpu_usage_timeline.png
+        └── cpu_heatmap.png
 ```
 
 ---
 
-##  Advanced Options
+## 🔧 Advanced Options
 
 ### Custom Session Name
 ```bash
@@ -178,60 +165,7 @@ monitoring_sessions/
 
 ---
 
-##  PicknPlace AMR Simulation
-
-```bash
-# Single run
-make picknplace
-
-# Repeat N times (cross-run averages auto-saved)
-make picknplace-repeat             # 3 runs, 10s pause (default)
-make picknplace-repeat REPEAT=5 PAUSE=15
-```
-
-Results are organized under `monitoring_sessions/picknplace/`. After a repeat run, cross-session averages are saved to `monitoring_sessions/picknplace/average_N/`.
-
----
-
-##  Repeat Runs
-
-Run N monitoring sessions back-to-back (useful for benchmarking):
-
-```bash
-make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3
-make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=5 DURATION=120 PAUSE=10
-make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3 GPU=1 NPU=1 ALGORITHM=slam
-```
-
-After all runs complete, cross-session averaged KPIs and bar-charts are saved automatically.
-
----
-
-##  Intel GPU / NPU Monitoring
-
-```bash
-# Local GPU monitoring
-make monitor-gpu
-
-# Remote GPU and/or NPU
-make monitor-remote REMOTE_IP=<ip> GPU=1
-make monitor-remote REMOTE_IP=<ip> NPU=1
-make monitor-remote REMOTE_IP=<ip> GPU=1 NPU=1
-
-# GPU PID analysis (standalone)
-make gpu-pids             # One-shot snapshot
-make gpu-pids-watch       # Live refresh
-
-# Visualize
-make visualize-gpu        # GPU dashboard (last session)
-make visualize-npu        # NPU dashboard (last session)
-```
-
-Requires: `sudo setcap cap_perfmon+eip $(which intel_gpu_top)` on the target machine (or `make setup-remote-gpu REMOTE_IP=<ip>`).
-
----
-
-##  Old Way vs New Way
+## 🆚 Old Way vs New Way
 
 ### Old Way (Multiple Terminals)
 ```bash
@@ -256,7 +190,7 @@ Requires: `sudo setcap cap_perfmon+eip $(which intel_gpu_top)` on the target mac
 
 ---
 
-##  Pro Tips
+## 💡 Pro Tips
 
 1. **Always name your sessions** for experiments:
    ```bash
@@ -285,7 +219,7 @@ Requires: `sudo setcap cap_perfmon+eip $(which intel_gpu_top)` on the target mac
 
 ---
 
-##  Troubleshooting
+## 🐛 Troubleshooting
 
 ### No ROS2 processes found
 - Make sure your ROS2 nodes are running before starting the monitor
@@ -300,11 +234,11 @@ Requires: `sudo setcap cap_perfmon+eip $(which intel_gpu_top)` on the target mac
 - Run visualization manually: `make visualize-last`
 
 ### Permission denied
-- Make scripts executable: `chmod +x src/*.py monitor_stack.py grafana/*.sh scripts/*.sh`
+- Make scripts executable: `chmod +x *.py`
 
 ---
 
-##  Need More Details?
+## 📚 Need More Details?
 
 See the full [README.md](README.md) for:
 - Individual script documentation

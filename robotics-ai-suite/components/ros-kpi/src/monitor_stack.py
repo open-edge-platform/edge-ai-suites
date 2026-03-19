@@ -30,7 +30,7 @@ class MonitoringSession:
     """Manages a complete monitoring session with multiple concurrent monitors."""
 
     def __init__(self, session_name: Optional[str] = None, output_dir: Optional[str] = None,
-                 target_node: Optional[str] = None, interval: int = 5,
+                 target_node: Optional[str] = None, interval: float = 5.0,
                  monitor_resources: bool = True, monitor_graph: bool = True,
                  auto_visualize: bool = True, pid_only: bool = False,
                  remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
@@ -93,12 +93,12 @@ class MonitoringSession:
 
     def _signal_handler(self, signum, frame):
         """Handle shutdown signals gracefully."""
-        print("\n\n Received shutdown signal. Cleaning up...")
+        print("\n\n🛑 Received shutdown signal. Cleaning up...")
         self.stop()
 
     def setup(self):
         """Setup the monitoring session directories and files."""
-        print(f" Setting up monitoring session: {self.session_name}")
+        print(f"📁 Setting up monitoring session: {self.session_name}")
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.visualization_dir.mkdir(parents=True, exist_ok=True)
 
@@ -150,19 +150,19 @@ class MonitoringSession:
             if self.ros_domain_id is not None:
                 # User explicitly specified --ros-domain-id; use it and skip auto-detect.
                 env['ROS_DOMAIN_ID'] = str(self.ros_domain_id)
-                print(f"    ROS_DOMAIN_ID={self.ros_domain_id} (explicit override).")
+                print(f"   ✅ ROS_DOMAIN_ID={self.ros_domain_id} (explicit override).")
             else:
                 # Auto-detect the remote's ROS_DOMAIN_ID and align locally.
                 # This is the most common reason DDS peer discovery silently fails.
                 remote_domain = self._get_remote_domain_id()
                 local_domain  = env.get('ROS_DOMAIN_ID', '0')
                 if remote_domain is not None and str(remote_domain) != str(local_domain):
-                    print(f"     ROS_DOMAIN_ID mismatch detected:")
+                    print(f"   ⚠  ROS_DOMAIN_ID mismatch detected:")
                     print(f"      local={local_domain}  remote={remote_domain}")
                     print(f"      Setting ROS_DOMAIN_ID={remote_domain} for monitoring processes.")
                     env['ROS_DOMAIN_ID'] = str(remote_domain)
                 elif remote_domain is not None:
-                    print(f"    ROS_DOMAIN_ID={remote_domain} matches on both machines.")
+                    print(f"   ✅ ROS_DOMAIN_ID={remote_domain} matches on both machines.")
                 else:
                     print(f"   ℹ  Could not detect remote ROS_DOMAIN_ID (SSH auth issue?).")
                     print(f"      Using local ROS_DOMAIN_ID={local_domain}.")
@@ -190,9 +190,9 @@ class MonitoringSession:
         # Prepare subprocess environment (adds DDS peer vars when monitoring remotely)
         proc_env = self._build_remote_env()
 
-        print("\n Starting monitoring processes...")
+        print("\n🚀 Starting monitoring processes...")
         if self.remote_ip:
-            print(f"    Monitoring remote system: {self.remote_user}@{self.remote_ip}")
+            print(f"   🌐 Monitoring remote system: {self.remote_user}@{self.remote_ip}")
             print(f"      Ensure ROS_DOMAIN_ID matches on both machines.")
 
         # Start graph monitor if enabled
@@ -216,7 +216,7 @@ class MonitoringSession:
             # Skip the interactive countdown when launched programmatically
             cmd.append("--no-countdown")
 
-            print(f"    Starting graph monitor...")
+            print(f"   📊 Starting graph monitor...")
             print(f"      Logging to: {self.graph_log}")
 
             process = subprocess.Popen(
@@ -260,7 +260,7 @@ class MonitoringSession:
                 cmd.extend(["--remote-ip", self.remote_ip,
                              "--remote-user", self.remote_user])
 
-            print(f"    Starting resource monitor...")
+            print(f"   💻 Starting resource monitor...")
             print(f"      Logging to: {self.resource_log}")
 
             process = subprocess.Popen(
@@ -281,7 +281,7 @@ class MonitoringSession:
                 daemon=True
             ).start()
 
-        print(f"\n All monitors started. Collecting data...")
+        print(f"\n✅ All monitors started. Collecting data...")
         print(f"   Press Ctrl+C to stop monitoring and generate visualizations.\n")
 
     def _stream_output(self, process: subprocess.Popen, label: str):
@@ -297,7 +297,7 @@ class MonitoringSession:
                 # Check if any process has died unexpectedly
                 for process in self.processes:
                     if process.poll() is not None:
-                        print(f"\n  Monitor process exited unexpectedly (exit code: {process.returncode})")
+                        print(f"\n⚠️  Monitor process exited unexpectedly (exit code: {process.returncode})")
                         # Show any error output
                         stderr = process.stderr.read()
                         if stderr:
@@ -313,7 +313,7 @@ class MonitoringSession:
             return
 
         self.running = False
-        print("\n Stopping monitors...")
+        print("\n🛑 Stopping monitors...")
 
         for process in self.processes:
             if process.poll() is None:
@@ -328,20 +328,20 @@ class MonitoringSession:
         with open(info_file, 'a') as f:
             f.write(f"\nStopped: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
 
-        print(" All monitors stopped.")
+        print("✅ All monitors stopped.")
 
     def visualize(self):
         """Generate visualizations from collected data."""
         if not self.auto_visualize:
-            print("\n  Skipping visualization (disabled)")
+            print("\n⏭️  Skipping visualization (disabled)")
             return
 
-        print("\n Generating visualizations...")
+        print("\n📈 Generating visualizations...")
         script_dir = Path(__file__).parent
 
         # Visualize timing data if graph monitor was running
         if self.monitor_graph and self.graph_log.exists():
-            print("    Creating timing visualizations...")
+            print("   📊 Creating timing visualizations...")
             cmd = [
                 sys.executable,
                 str(script_dir / "visualize_timing.py"),
@@ -352,12 +352,12 @@ class MonitoringSession:
             ]
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"       Timing plots saved to {self.visualization_dir}")
+                print(f"      ✅ Timing plots saved to {self.visualization_dir}")
             else:
-                print(f"        Error generating timing plots: {result.stderr}")
+                print(f"      ⚠️  Error generating timing plots: {result.stderr}")
 
             # Pipeline graph – rqt_graph-style directed view with KPI metrics
-            print("     Creating pipeline graph (rqt_graph style)...")
+            print("   🗺️  Creating pipeline graph (rqt_graph style)...")
             graph_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_graph.py"),
@@ -369,13 +369,13 @@ class MonitoringSession:
                 graph_cmd.extend(["--topology", str(self.topology_log)])
             result = subprocess.run(graph_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"       Pipeline graph saved to {self.visualization_dir}/pipeline_graph.png")
+                print(f"      ✅ Pipeline graph saved to {self.visualization_dir}/pipeline_graph.png")
             else:
-                print(f"        Error generating pipeline graph: {result.stderr}")
+                print(f"      ⚠️  Error generating pipeline graph: {result.stderr}")
 
         # Visualize resource data if resource monitor was running
         if self.monitor_resources and self.resource_log.exists():
-            print("    Creating resource visualizations...")
+            print("   💻 Creating resource visualizations...")
             cmd = [
                 sys.executable,
                 str(script_dir / "visualize_resources.py"),
@@ -389,13 +389,13 @@ class MonitoringSession:
                 cmd.extend(["--gpu-log", str(self.gpu_log)])
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"       Resource plots saved to {self.visualization_dir}")
+                print(f"      ✅ Resource plots saved to {self.visualization_dir}")
             else:
-                print(f"        Error generating resource plots: {result.stderr}")
+                print(f"      ⚠️  Error generating resource plots: {result.stderr}")
 
         # Visualize GPU data if collected
         if self.gpu_log.exists():
-            print("     Creating GPU visualizations...")
+            print("   🖥️  Creating GPU visualizations...")
             gpu_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_gpu.py"),
@@ -405,13 +405,13 @@ class MonitoringSession:
             ]
             result = subprocess.run(gpu_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"       GPU plots saved to {self.visualization_dir}")
+                print(f"      ✅ GPU plots saved to {self.visualization_dir}")
             else:
-                print(f"        Error generating GPU plots: {result.stderr}")
+                print(f"      ⚠️  Error generating GPU plots: {result.stderr}")
 
         # Visualize NPU data if collected
         if self.npu_log.exists():
-            print("    Creating NPU visualizations...")
+            print("   🧠 Creating NPU visualizations...")
             npu_cmd = [
                 sys.executable,
                 str(script_dir / "visualize_npu.py"),
@@ -421,16 +421,16 @@ class MonitoringSession:
             ]
             result = subprocess.run(npu_cmd, capture_output=True, text=True)
             if result.returncode == 0:
-                print(f"       NPU plots saved to {self.visualization_dir}")
+                print(f"      ✅ NPU plots saved to {self.visualization_dir}")
             else:
-                print(f"        Error generating NPU plots: {result.stderr}")
+                print(f"      ⚠️  Error generating NPU plots: {result.stderr}")
 
-        print(f"\n Session complete! Results saved to: {self.output_dir}")
+        print(f"\n📊 Session complete! Results saved to: {self.output_dir}")
         print(f"   Visualizations: {self.visualization_dir}")
 
         # Remind the user how to compare across runs rather than doing it automatically
         algo_hint = f" ALGORITHM={self.algorithm}" if self.algorithm else ""
-        print(f"\n To compare across multiple runs:")
+        print(f"\n💡 To compare across multiple runs:")
         print(f"   make view-average{algo_hint}          # avg KPIs across last 5 sessions")
         print(f"   make view-average-plot{algo_hint}     # same + save bar-chart PNGs")
 
@@ -495,9 +495,9 @@ All data is automatically saved and visualized (unless --no-visualize is used).
 
     parser.add_argument(
         '--interval', '-i',
-        type=int,
-        default=5,
-        help='Update interval in seconds (default: 5)'
+        type=float,
+        default=5.0,
+        help='Update interval in seconds (default: 5.0)'
     )
 
     parser.add_argument(
@@ -621,14 +621,14 @@ All data is automatically saved and visualized (unless --no-visualize is used).
             print("No monitoring sessions found.")
             return
 
-        print("\n Previous Monitoring Sessions:\n")
+        print("\n📂 Previous Monitoring Sessions:\n")
         last_algo = None
         for session_path, info_file in entries:
             # Determine algorithm group label
             parent = session_path.parent
             algo_label = None if parent == sessions_dir else parent.name
             if algo_label != last_algo:
-                header = f" {algo_label} " if algo_label else " (no algorithm) "
+                header = f"── {algo_label} ──" if algo_label else "── (no algorithm) ──"
                 print(f"  {header}")
                 last_algo = algo_label
             print(f"   {session_path.name}:")
@@ -671,7 +671,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     if args.duration:
         def stop_after_duration():
             time.sleep(args.duration)
-            print(f"\n Duration limit reached ({args.duration}s)")
+            print(f"\n⏰ Duration limit reached ({args.duration}s)")
             session.stop()
 
         timer_thread = threading.Thread(target=stop_after_duration, daemon=True)
@@ -680,7 +680,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     try:
         session.run()
     except Exception as e:
-        print(f"\n Error: {e}")
+        print(f"\n❌ Error: {e}")
         session.stop()
         sys.exit(1)
 

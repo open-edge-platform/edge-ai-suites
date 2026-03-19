@@ -3,39 +3,41 @@
 #
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
-.PHONY: help monitor monitor-node monitor-pid monitor-remote monitor-remote-pid monitor-remote-grafana monitor-remote-pid-grafana monitor-remote-repeat quick-check \
-        graph-only resources-threads resources-pid \
+.PHONY: help monitor monitor-node monitor-pid monitor-remote monitor-remote-pid monitor-remote-grafana monitor-remote-pid-grafana monitor-remote-repeat monitor-long monitor-long-pid quick-check \
+        benchmark benchmark-pid graph-only resources-threads resources-pid \
         latency-test-main latency-test-relay latency-quick latency-remote-main latency-remote-relay \
         list-sessions visualize-last visualize-all visualize-gpu visualize-gpu-pid-bar visualize-npu pipeline-graph interactive-heatmap analyze-session compare-sessions \
         view-average view-average-timing view-average-resources view-average-plot \
-        demo clean clean-last clean-session install check-deps check-domain docs setup-remote-gpu \
+        clean clean-last clean-session install check-deps check-domain docs setup-remote-gpu \
         monitor-gpu \
         gpu-pids gpu-pids-watch gpu-pids-remote gpu-pids-csv \
         grafana-start grafana-stop grafana-pull grafana-export grafana-export-live grafana-demo grafana-status grafana-logs grafana-open \
-        picknplace picknplace-repeat
+        wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
+        picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
+        analyze-benchmark
 
 # Default target
 help:
 	@echo "ROS2 KPI Monitoring Stack - Available Commands"
 	@echo ""
-	@echo " QUICK START:"
-	@echo "  make quick-check              - Quick 30-second health check"
-	@echo "  make latency-quick           - Quick latency test"
-	@echo ""
-	@echo "  IMPORTANT: Source ROS2 before monitoring:"
-	@echo "   source /opt/ros/humble/setup.bash"
-	@echo "   export ROS_DOMAIN_ID=45  (must match target system)"
+	@echo "⚠️  IMPORTANT: Source ROS2 before monitoring:"
+	@echo "   source /opt/ros/humble/setup.bash  (or run: source ./setup_ros2_env.sh)"
+	@echo "   export ROS_DOMAIN_ID=0  (must match target system)"
 	@echo ""
 	@echo "MONITORING (Thread Mode - detailed TID tracking):"
 	@echo "  make monitor              - Start full monitoring (60s, graph + resources)"
 	@echo "  make monitor-gpu          - Full local monitoring + Intel GPU (60s)"
 	@echo "  make monitor-node NODE=<name> - Narrow discovery to one node (proc delay works for all nodes)"
 	@echo "  make quick-check          - Quick 30-second monitoring session"
+	@echo "  make monitor-long         - Extended 5-minute monitoring session"
+	@echo "  make benchmark            - Benchmark monitoring (10 min, 1s interval)"
 	@echo "  make graph-only           - Monitor only graph/timing"
 	@echo "  make resources-threads    - Monitor only system resources (with threads)"
 	@echo ""
 	@echo "MONITORING (PID Mode - process-level only):"
 	@echo "  make monitor-pid          - Full monitoring with PIDs only"
+	@echo "  make monitor-long-pid     - Extended monitoring with PIDs only (5 min)"
+	@echo "  make benchmark-pid        - Benchmark with PID-only monitoring (10 min)"
 	@echo "  make resources-pid        - Monitor system resources (PIDs only)"
 	@echo ""
 	@echo "REMOTE MONITORING (from a second machine):"
@@ -49,12 +51,23 @@ help:
 	@echo "  Example: make monitor NODE=/slam_toolbox REMOTE_IP=192.168.1.100"
 	@echo "  Note: requires SSH key auth and matching ROS_DOMAIN_ID"
 	@echo ""
-	@echo "PICKNPLACE SIMULATION:"
-	@echo "  make picknplace            - Run a single PicknPlace AMR simulation + monitor"
-	@echo "  make picknplace-repeat     - Run N PicknPlace simulations back-to-back (default: 3)"
-	@echo "  make picknplace-repeat REPEAT=5 PAUSE=15  - ... with custom repeat count and pause"
-	@echo "  Results are organized under monitoring_sessions/picknplace/<timestamp>/"
-	@echo "  Averages saved to         monitoring_sessions/picknplace/average_N/"
+	@echo "WANDERING SIMULATION (see also: make -f src/Makefile help):"
+	@echo "  make wandering               - Single run + graph monitor + trigger-latency"
+	@echo "  make wandering-record        - + record KPI rosbag"
+	@echo "  make wandering-benchmark     - RUNS x TIMEOUT-s runs, then aggregate KPIs"
+	@echo "  make wandering-benchmark RUNS=5 TIMEOUT=180"
+	@echo "  Sessions -> monitoring_sessions/wandering/"
+	@echo ""
+	@echo "PICKNPLACE SIMULATION (see also: make -f src/Makefile help):"
+	@echo "  make picknplace-run          - Single run + graph monitor + trigger-latency"
+	@echo "  make picknplace-record       - + record KPI rosbag"
+	@echo "  make picknplace-benchmark    - RUNS runs (up to PN_TIMEOUT=300s each), then aggregate"
+	@echo "  Sessions -> monitoring_sessions/picknplace/"
+	@echo ""
+	@echo "BENCHMARKING:"
+	@echo "  make analyze-benchmark BENCH=<path>  - Re-aggregate KPIs from a bench dir"
+	@echo "  Params: RUNS=25  TIMEOUT=120  PN_TIMEOUT=300  PAUSE=30  NODE=<filter>"
+	@echo "  Full target list: make -f src/Makefile help"
 	@echo ""
 	@echo "LATENCY TESTING (performance_test-style roundtrip measurement):"
 	@echo "  make latency-test-main    - Run roundtrip latency test (Main node)"
@@ -110,7 +123,6 @@ help:
 	@echo "  make grafana-open         - Open Grafana in browser"
 	@echo ""
 	@echo "UTILITIES:"
-	@echo "  make demo                 - Run interactive demo of the tool"
 	@echo "  make clean                - Remove all monitoring session data"
 	@echo "  make clean-last           - Remove the most recent session"
 	@echo "  make clean-session SESSION=<name> - Remove specific session"
@@ -133,17 +145,16 @@ help:
 	@echo "            sudo setcap cap_perfmon+eip \$$(which intel_gpu_top)"
 	@echo ""
 	@echo "Examples:"
-	@echo "  make quick-check                              # Quick check"
 	@echo "  make monitor NODE=/slam_toolbox DURATION=120  # scope graph discovery to one node"
 	@echo "  make monitor DURATION=120                     # all nodes (proc delay for all)"
 	@echo "  make monitor-pid DURATION=120"
+	@echo "  make quick-check"
+	@echo "  make wandering-benchmark RUNS=5 TIMEOUT=180"
+	@echo "  make picknplace-benchmark RUNS=5"
+	@echo "  make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421"
 	@echo "  make latency-test-main RATE=2000 DURATION=60"
 	@echo "  make latency-remote-main REMOTE_IP=192.168.1.100 RATE=1000"
 	@echo "  make analyze-session SESSION=20260211_202949"
-
-# ============================================================================
-# ============================================================================
-
 
 # Full monitoring with optional parameters (defaults to 60 seconds)
 #   make monitor
@@ -212,6 +223,26 @@ quick-check:
 	@echo "Running quick 30-second monitoring check..."
 	@uv run python src/monitor_stack.py --duration 30 --interval 2
 
+# Extended monitoring session (5 minutes) - Thread mode
+monitor-long:
+	@echo "Running extended monitoring session (5 minutes, with threads)..."
+	@uv run python src/monitor_stack.py --duration 300 --interval 5 $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
+
+# Extended monitoring session (5 minutes) - PID mode
+monitor-long-pid:
+	@echo "Running extended monitoring session (5 minutes, PID-only)..."
+	@uv run python src/monitor_stack.py --duration 300 --interval 5 --pid-only $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
+
+# Benchmark mode (10 minutes, 1 second interval)
+benchmark:
+	@echo "Running benchmark monitoring (10 minutes, high frequency)..."
+	@uv run python src/monitor_stack.py --duration 600 --interval 1 $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
+
+# Benchmark mode with PID-only monitoring
+benchmark-pid:
+	@echo "Running benchmark monitoring (PID-only, 10 minutes, high frequency)..."
+	@uv run python src/monitor_stack.py --duration 600 --interval 1 --pid-only $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
+
 # Graph monitoring only
 graph-only:
 	@uv run python src/monitor_stack.py --graph-only $(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
@@ -231,7 +262,7 @@ resources-pid:
 # Roundtrip latency test - Main node (publishes and measures)
 latency-test-main:
 	@echo "Starting roundtrip latency test (Main node)..."
-	@echo "  Make sure Relay node is running in another terminal:"
+	@echo "⚠️  Make sure Relay node is running in another terminal:"
 	@echo "   make latency-test-relay"
 	@echo ""
 	@uv run latency-tester \
@@ -255,7 +286,7 @@ latency-test-relay:
 # Quick latency check (30 seconds)
 latency-quick:
 	@echo "Running quick 30-second latency test..."
-	@echo "  Make sure Relay node is running: make latency-test-relay"
+	@echo "⚠️  Make sure Relay node is running: make latency-test-relay"
 	@echo ""
 	@uv run latency-tester \
 		--mode Main \
@@ -273,7 +304,7 @@ latency-remote-main:
 		exit 1; \
 	fi
 	@echo "Starting remote roundtrip latency test on $(REMOTE_IP)..."
-	@echo "  Make sure remote Relay node is running:"
+	@echo "⚠️  Make sure remote Relay node is running:"
 	@echo "   ssh $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP) 'cd ~/Documents/ros2-kpi && source /opt/ros/humble/setup.bash && make latency-test-relay'"
 	@echo ""
 	@ssh $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP) \
@@ -381,13 +412,13 @@ visualize-all:
 		echo "No monitoring sessions found."; \
 	fi
 
-#
+# ─────────────────────────────────────────────────────────────────────────────
 # GPU-specific visualization targets
 #
 #   make visualize-gpu                         # latest session, save + interactive
 #   make visualize-gpu SESSION=20260312_134253  # specific session
 #   make visualize-gpu-pid-bar                 # per-PID engine breakdown only
-#
+# ─────────────────────────────────────────────────────────────────────────────
 visualize-gpu:
 	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
 	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
@@ -450,7 +481,7 @@ visualize-npu:
 	uv run python src/visualize_npu.py "$$NPU_LOG" \
 		--output-dir "$$SESSION_DIR/visualizations"
 
-#
+# ─────────────────────────────────────────────────────────────────────────────
 # rqt_graph-style pipeline view – Node → Topic → Node directed graph + KPIs
 #
 #   make pipeline-graph                         # latest session, interactive window
@@ -459,7 +490,7 @@ visualize-npu:
 #   make pipeline-graph INCLUDE_SYSTEM=1        # also show /rosout /clock /parameter_events /_action etc
 #   make pipeline-graph INCLUDE_MONITORS=1      # show rviz/rqt/monitor observer nodes
 #   make pipeline-graph INCLUDE_ISOLATED=1      # show topic boxes with no edges
-#
+# ─────────────────────────────────────────────────────────────────────────────
 pipeline-graph:
 	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
 	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
@@ -536,7 +567,7 @@ compare-sessions:
 	@echo ""
 	@SESSIONS=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n5 | xargs -I{} basename {}); \
 	for session in $$SESSIONS; do \
-		echo ""; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		echo "Session: $$session"; \
 		if [ -f "monitoring_sessions/$$session/session_info.txt" ]; then \
 			cat "monitoring_sessions/$$session/session_info.txt" | head -n5; \
@@ -552,7 +583,7 @@ compare-sessions:
 		echo ""; \
 	done
 
-#
+# ─────────────────────────────────────────────────────────────────────────────
 # Cross-session KPI averages
 #
 #   make view-average               # timing + resources, last 5 sessions
@@ -561,7 +592,7 @@ compare-sessions:
 #   make view-average-resources     # resource log only
 #   make view-average-plot          # save bar-chart PNGs
 #   make view-average-plot RUNS=10 SHOW=show  # open windows too
-#
+# ─────────────────────────────────────────────────────────────────────────────
 view-average:
 	@uv run python src/view_average.py \
 		--runs $(if $(RUNS),$(RUNS),5) \
@@ -597,40 +628,6 @@ view-average-tables:
 		--save-tables \
 		$(if $(OUTPUT_DIR),--output-dir $(OUTPUT_DIR)) \
 		$(if $(TOP),--top $(TOP))
-
-# Interactive demo
-demo:
-	@echo ""
-	@echo "         ROS2 KPI Monitoring Stack - Interactive Demo          "
-	@echo ""
-	@echo ""
-	@echo "This demo will show you the capabilities of the monitoring stack."
-	@echo ""
-	@echo "1⃣  Basic Monitoring"
-	@echo "   → make monitor              # 60-second full monitoring (threads)"
-	@echo "   → make monitor-pid          # 60-second monitoring (PIDs only)"
-	@echo "   → make quick-check          # 30-second quick check"
-	@echo ""
-	@echo "2⃣  Targeted Monitoring"
-	@echo "   → make monitor-node NODE=/my_node"
-	@echo "   → make graph-only           # Graph/timing only"
-	@echo "   → make resources-threads    # System resources (with threads)"
-	@echo "   → make resources-pid        # System resources (PIDs only)"
-	@echo ""
-	@echo "3⃣  Visualization & Analysis"
-	@echo "   → make list-sessions        # List all sessions"
-	@echo "   → make visualize-last       # Interactive plots"
-	@echo "   → make visualize-all        # All plot types"
-	@echo "   → make analyze-session SESSION=<name>"
-	@echo ""
-	@echo "4⃣  Advanced Usage"
-	@echo "   → make compare-sessions     # Compare recent sessions"
-	@echo "   → make monitor NODE=/slam DURATION=120 INTERVAL=1"
-	@echo ""
-	@echo " PID-only mode is faster and uses less memory than thread mode"
-	@echo ""
-	@echo "Try running: make quick-check"
-	@echo ""
 
 # Clean all monitoring data
 clean:
@@ -668,42 +665,39 @@ clean-session:
 install:
 	@echo "Installing required dependencies..."
 	@echo ""
-	@echo "[1/4] Making scripts executable..."
-	@chmod +x src/*.py monitor_stack.py grafana/*.sh scripts/*.sh 2>/dev/null || true
-	@echo ""
-	@echo "[2/4] Installing system packages (sysstat, python3-tk)..."
+	@echo "[1/3] Installing system packages (sysstat, python3-tk)..."
 	@sudo apt-get update -qq && sudo apt-get install -y sysstat python3-tk
 	@echo ""
-	@echo "[3/4] Installing Python dependencies with uv..."
+	@echo "[2/3] Installing Python dependencies with uv..."
 	@uv sync
 	@sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg 2>/dev/null || true
 	@echo ""
-	@echo "[4/4] Checking Docker (needed for Grafana dashboard)..."
+	@echo "[3/3] Checking Docker (needed for Grafana dashboard)..."
 	@if command -v docker >/dev/null 2>&1; then \
 		if docker info >/dev/null 2>&1; then \
-			echo "   Docker is installed and running: $$(docker --version)"; \
+			echo "  ✅ Docker is installed and running: $$(docker --version)"; \
 		else \
-			echo "    Docker is installed but not running (or no permission)"; \
+			echo "  ⚠️  Docker is installed but not running (or no permission)"; \
 			echo "     Start Docker  : sudo systemctl start docker"; \
 			echo "     Add to group  : sudo usermod -aG docker $$USER  (then log out/in)"; \
 		fi; \
 	else \
-		echo "    Docker is NOT installed (required for Grafana/Prometheus stack)"; \
+		echo "  ⚠️  Docker is NOT installed (required for Grafana/Prometheus stack)"; \
 		echo "     Install Docker:"; \
 		echo "       sudo apt-get install -y docker.io docker-compose-v2"; \
 		echo "       sudo usermod -aG docker $$USER"; \
 		echo "       newgrp docker   (or log out/in)"; \
 	fi
 	@echo ""
-	@echo " Core dependencies installed!"
+	@echo "✅ Core dependencies installed!"
 	@echo ""
-	@echo "  ROS2 REQUIRED to monitor ROS2 systems:"
-	@echo "   See: https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html"
-	@echo "   (Open Edge Platform Robotics Getting Started Guide)"
+	@echo "⚠️  ROS2 REQUIRED to monitor ROS2 systems:"
+	@echo "   sudo apt install -y ros-humble-ros-base"
+	@echo "   See INSTALL.md for full instructions."
 	@echo ""
 	@echo "After installing ROS2:"
 	@echo "   source /opt/ros/humble/setup.bash"
-	@echo "   export ROS_DOMAIN_ID=45"
+	@echo "   export ROS_DOMAIN_ID=0"
 
 # Grant CAP_PERFMON to the pre-built intel_gpu_top on the remote machine
 # Run once after 'make monitor-remote' or building the binary.
@@ -715,10 +709,10 @@ setup-remote-gpu:
 		exit 1; \
 	fi
 	@RUSER=$$([ -n "$(REMOTE_USER)" ] && echo "$(REMOTE_USER)" || echo "intel"); \
-	echo " Granting CAP_PERFMON to intel_gpu_top on $$RUSER@$(REMOTE_IP)..."; \
+	echo "🔑 Granting CAP_PERFMON to intel_gpu_top on $$RUSER@$(REMOTE_IP)..."; \
 	ssh $$RUSER@$(REMOTE_IP) 'sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top && \
-	  echo " CAP_PERFMON granted — intel_gpu_top will now use PMU for rich GPU metrics." || \
-	  echo " setcap failed (check sudo permissions)"'
+	  echo "✅ CAP_PERFMON granted — intel_gpu_top will now use PMU for rich GPU metrics." || \
+	  echo "❌ setcap failed (check sudo permissions)"'
 
 # ============================================================================
 # INTEL GPU PID ANALYSIS
@@ -768,73 +762,73 @@ gpu-pids-remote:
 
 # Check all dependencies
 check-deps:
-	@echo ""
-	@echo "         ROS2 KPI Monitoring - Dependency Checker              "
-	@echo ""
+	@echo "╔════════════════════════════════════════════════════════════════╗"
+	@echo "║         ROS2 KPI Monitoring - Dependency Checker              ║"
+	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Checking dependencies..."
 	@echo ""
 	@echo "[1/7] Checking uv installation..."
 	@if command -v uv >/dev/null 2>&1; then \
-		echo "   uv is installed: $$(uv --version)"; \
+		echo "  ✅ uv is installed: $$(uv --version)"; \
 	else \
-		echo "   uv is NOT installed"; \
+		echo "  ❌ uv is NOT installed"; \
 		echo "     Install: curl -LsSf https://astral.sh/uv/install.sh | sh"; \
 		exit 1; \
 	fi
 	@echo ""
 	@echo "[2/7] Checking ROS2 installation..."
 	@if [ -d "/opt/ros/humble" ]; then \
-		echo "   ROS2 Humble is installed"; \
+		echo "  ✅ ROS2 Humble is installed"; \
 	elif [ -d "/opt/ros/foxy" ]; then \
-		echo "   ROS2 Foxy is installed"; \
+		echo "  ✅ ROS2 Foxy is installed"; \
 	elif [ -d "/opt/ros/iron" ]; then \
-		echo "   ROS2 Iron is installed"; \
+		echo "  ✅ ROS2 Iron is installed"; \
 	else \
-		echo "   ROS2 is NOT installed"; \
-		echo "     See: https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html"; \
-		echo "     (Open Edge Platform Robotics Getting Started Guide)"; \
+		echo "  ❌ ROS2 is NOT installed"; \
+		echo "     Install: sudo apt install -y ros-humble-ros-base"; \
 		exit 1; \
 	fi
 	@echo ""
 	@echo "[3/7] Checking ROS2 environment..."
 	@if [ -n "$$ROS_DISTRO" ]; then \
-		echo "   ROS2 is sourced: $$ROS_DISTRO"; \
+		echo "  ✅ ROS2 is sourced: $$ROS_DISTRO"; \
 		echo "     ROS_DOMAIN_ID: $${ROS_DOMAIN_ID:-not set (will use default 0)}"; \
 	else \
-		echo "    ROS2 is not sourced in current shell"; \
+		echo "  ⚠️  ROS2 is not sourced in current shell"; \
 		echo "     Run: source /opt/ros/humble/setup.bash"; \
+		echo "     Or:  source ./setup_ros2_env.sh"; \
 	fi
 	@echo ""
 	@echo "[4/7] Checking Python dependencies..."
 	@if uv run python -c "import matplotlib, numpy, psutil, prometheus_client" 2>/dev/null; then \
-		echo "   Python packages installed (matplotlib, numpy, psutil, prometheus-client)"; \
+		echo "  ✅ Python packages installed (matplotlib, numpy, psutil, prometheus-client)"; \
 	else \
-		echo "   Python packages missing"; \
+		echo "  ❌ Python packages missing"; \
 		echo "     Run: make install"; \
 		exit 1; \
 	fi
 	@if uv run python -c "import tkinter" 2>/dev/null; then \
-		echo "   tkinter available (interactive graph popups enabled)"; \
+		echo "  ✅ tkinter available (interactive graph popups enabled)"; \
 	else \
-		echo "    tkinter not found (interactive graph click popups will be disabled)"; \
+		echo "  ⚠️  tkinter not found (interactive graph click popups will be disabled)"; \
 		echo "     Install: sudo apt-get install -y python3-tk"; \
 	fi
 	@echo ""
 	@echo "[5/7] Checking system utilities..."
 	@if command -v iostat >/dev/null 2>&1; then \
-		echo "   sysstat (iostat/pidstat) is installed"; \
+		echo "  ✅ sysstat (iostat/pidstat) is installed"; \
 	else \
-		echo "   sysstat is NOT installed"; \
+		echo "  ❌ sysstat is NOT installed"; \
 		echo "     Install: sudo apt-get install -y sysstat"; \
 		exit 1; \
 	fi
 	@echo ""
 	@echo "[6/7] Checking Docker (Grafana stack)..."
 	@if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then \
-		echo "   Docker is available (Grafana stack ready)"; \
+		echo "  ✅ Docker is available (Grafana stack ready)"; \
 	else \
-		echo "    Docker not available — Grafana dashboard won't work"; \
+		echo "  ⚠️  Docker not available — Grafana dashboard won't work"; \
 		echo "     Install: sudo apt-get install -y docker.io docker-compose-v2"; \
 		echo "     Then   : sudo usermod -aG docker $$USER && newgrp docker"; \
 	fi
@@ -843,28 +837,28 @@ check-deps:
 	@if [ -n "$(REMOTE_IP)" ]; then \
 		echo "  Testing connection to $(REMOTE_IP)..."; \
 		if ping -c 1 -W 2 $(REMOTE_IP) >/dev/null 2>&1; then \
-			echo "   Network connection to $(REMOTE_IP) OK"; \
+			echo "  ✅ Network connection to $(REMOTE_IP) OK"; \
 		else \
-			echo "   Cannot ping $(REMOTE_IP)"; \
+			echo "  ❌ Cannot ping $(REMOTE_IP)"; \
 			echo "     Check network connectivity"; \
 			exit 1; \
 		fi; \
 		REMOTE_USER=$${REMOTE_USER:-ubuntu}; \
 		if ssh -o BatchMode=yes -o ConnectTimeout=5 $$REMOTE_USER@$(REMOTE_IP) "echo 'SSH OK'" >/dev/null 2>&1; then \
-			echo "   SSH connection to $$REMOTE_USER@$(REMOTE_IP) OK"; \
+			echo "  ✅ SSH connection to $$REMOTE_USER@$(REMOTE_IP) OK"; \
 		else \
-			echo "   SSH connection failed"; \
+			echo "  ❌ SSH connection failed"; \
 			echo "     Set up SSH keys: ssh-copy-id $$REMOTE_USER@$(REMOTE_IP)"; \
 			exit 1; \
 		fi; \
 	else \
-		echo "  ℹ  Skipping remote checks (no REMOTE_IP specified)"; \
+		echo "  ℹ️  Skipping remote checks (no REMOTE_IP specified)"; \
 		echo "     To check remote: make check-deps REMOTE_IP=<ip> REMOTE_USER=<user>"; \
 	fi
 	@echo ""
-	@echo ""
-	@echo "                    All checks passed!                        "
-	@echo ""
+	@echo "╔════════════════════════════════════════════════════════════════╗"
+	@echo "║                   ✅ All checks passed!                        ║"
+	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Next steps:"
 	@echo "  • make quick-check                           # Quick local test"
@@ -878,17 +872,17 @@ docs:
 	@echo "Building PDF documentation..."
 	@uv run python docs/build_pdfs.py
 
-#
+# ─────────────────────────────────────────────────────────────────────────────
 # ROS_DOMAIN_ID checker
 #
 #   make check-domain                                # local only
 #   make check-domain REMOTE_IP=10.34.94.113         # local + remote
 #   make check-domain REMOTE_IP=<ip> REMOTE_USER=<u> # custom SSH user
-#
+# ─────────────────────────────────────────────────────────────────────────────
 check-domain:
-	@echo ""
-	@echo "           ROS_DOMAIN_ID Check                                  "
-	@echo ""
+	@echo "╔════════════════════════════════════════════════════════════════╗"
+	@echo "║           ROS_DOMAIN_ID Check                                  ║"
+	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@LOCAL_DOMAIN=$${ROS_DOMAIN_ID:-0}; \
 	LOCAL_DISTRO=$${ROS_DISTRO:-not sourced}; \
@@ -908,7 +902,7 @@ check-domain:
 			 echo DOMAIN=$${D:-UNSET}; echo RMW=$${R:-UNSET}; echo DISTRO=$${S:-UNSET}' \
 			2>&1) || REMOTE_INFO="SSH_FAILED"; \
 		if echo "$$REMOTE_INFO" | grep -q 'SSH_FAILED\|Permission denied\|Connection refused\|timed out'; then \
-			echo "   SSH connection to $$REMOTE_USER@$(REMOTE_IP) failed."; \
+			echo "  ❌ SSH connection to $$REMOTE_USER@$(REMOTE_IP) failed."; \
 			echo "     Ensure SSH key auth: ssh-copy-id $$REMOTE_USER@$(REMOTE_IP)"; \
 		else \
 			REMOTE_DOMAIN=$$(echo "$$REMOTE_INFO" | grep '^DOMAIN=' | cut -d= -f2 | tr -d '\r' | sed 's/^UNSET$$/0/'); \
@@ -919,17 +913,17 @@ check-domain:
 			echo "Remote ROS_DISTRO    : $${REMOTE_DISTRO:-not sourced}"; \
 			echo ""; \
 			if [ "$${REMOTE_DOMAIN:-0}" = "$$LOCAL_DOMAIN" ]; then \
-				echo "   ROS_DOMAIN_ID matches ($${REMOTE_DOMAIN:-0}) — DDS peer discovery should work."; \
+				echo "  ✅ ROS_DOMAIN_ID matches ($${REMOTE_DOMAIN:-0}) — DDS peer discovery should work."; \
 			else \
-				echo "   ROS_DOMAIN_ID MISMATCH: local=$$LOCAL_DOMAIN  remote=$${REMOTE_DOMAIN:-0}"; \
+				echo "  ❌ ROS_DOMAIN_ID MISMATCH: local=$$LOCAL_DOMAIN  remote=$${REMOTE_DOMAIN:-0}"; \
 				echo "     monitor-remote-grafana auto-corrects this at runtime."; \
 				echo "     To fix permanently, add to remote ~/.bashrc:  export ROS_DOMAIN_ID=$$LOCAL_DOMAIN"; \
 			fi; \
 			if [ "$${REMOTE_DISTRO:-UNSET}" != "UNSET" ] && [ "$$LOCAL_DISTRO" != "not sourced" ] && [ "$$REMOTE_DISTRO" != "$$LOCAL_DISTRO" ]; then \
-				echo "    ROS distro mismatch: local=$$LOCAL_DISTRO  remote=$$REMOTE_DISTRO"; \
+				echo "  ⚠  ROS distro mismatch: local=$$LOCAL_DISTRO  remote=$$REMOTE_DISTRO"; \
 				echo "     Topic/service APIs may be incompatible between distros."; \
 			elif [ "$${REMOTE_DISTRO:-UNSET}" != "UNSET" ] && [ "$$LOCAL_DISTRO" != "not sourced" ]; then \
-				echo "   ROS distro matches ($$REMOTE_DISTRO)."; \
+				echo "  ✅ ROS distro matches ($$REMOTE_DISTRO)."; \
 			fi; \
 		fi; \
 	else \
@@ -938,25 +932,25 @@ check-domain:
 	fi
 	@echo ""
 
-#
+# ═══════════════════════════════════════════════════════════════
 # Grafana Dashboard Integration
-#
+# ═══════════════════════════════════════════════════════════════
 
 # Start Grafana dashboard stack
 grafana-start:
-	@echo " Starting Grafana Dashboard Stack..."
-	@./grafana/start_grafana.sh
+	@echo "🚀 Starting Grafana Dashboard Stack..."
+	@./start_grafana.sh
 
 # Stop Grafana dashboard stack
 grafana-stop:
-	@echo " Stopping Grafana Dashboard Stack..."
-	@./grafana/stop_grafana.sh
+	@echo "🛑 Stopping Grafana Dashboard Stack..."
+	@./stop_grafana.sh
 
 # Pull latest Grafana/Prometheus images
 grafana-pull:
-	@echo " Pulling latest Grafana/Prometheus images..."
+	@echo "📦 Pulling latest Grafana/Prometheus images..."
 	@docker compose pull
-	@echo " Images updated"
+	@echo "✅ Images updated"
 
 # Start Prometheus exporter in file mode
 grafana-export:
@@ -965,14 +959,14 @@ grafana-export:
 	@if [ -z "$(SESSION)" ]; then \
 		LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
 		if [ -z "$$LAST_SESSION" ]; then \
-			echo " No monitoring sessions found"; \
+			echo "❌ No monitoring sessions found"; \
 			echo "Run 'make monitor' first to create a session"; \
 			exit 1; \
 		fi; \
-		echo " Exporting metrics from latest session: $$LAST_SESSION"; \
+		echo "📊 Exporting metrics from latest session: $$LAST_SESSION"; \
 		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$LAST_SESSION; \
 	else \
-		echo " Exporting metrics from session: $(SESSION)"; \
+		echo "📊 Exporting metrics from session: $(SESSION)"; \
 		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(SESSION); \
 	fi
 
@@ -980,7 +974,7 @@ grafana-export:
 grafana-export-live:
 	@fuser -k 9092/tcp 2>/dev/null || true
 	@sleep 0.3
-	@echo " Starting live metrics exporter on port 9092..."
+	@echo "📊 Starting live metrics exporter on port 9092..."
 	@echo "   Watching monitoring_sessions/ for the latest session"
 	@uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092
 
@@ -991,7 +985,7 @@ monitor-remote-grafana:
 		echo "Example: make monitor-remote-grafana REMOTE_IP=192.168.1.100"; \
 		exit 1; \
 	fi
-	@echo " Starting remote monitoring + live Grafana export..."
+	@echo "🚀 Starting remote monitoring + live Grafana export..."
 	@echo "   Remote host : $(REMOTE_IP)"
 	@echo "   Metrics     : http://localhost:9092/metrics"
 	@echo "   Grafana      : http://localhost:3000"
@@ -1012,9 +1006,9 @@ monitor-remote-grafana:
 		$(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)); \
 	_stop; \
 	echo ""; \
-	echo " Monitoring complete."; \
+	echo "✅ Monitoring complete."; \
 	echo ""; \
-	echo " Session results:"; \
+	echo "📁 Session results:"; \
 	SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
@@ -1030,7 +1024,7 @@ monitor-remote-pid-grafana:
 		echo "Example: make monitor-remote-pid-grafana REMOTE_IP=192.168.1.100"; \
 		exit 1; \
 	fi
-	@echo " Starting remote PID monitoring + live Grafana export..."
+	@echo "🚀 Starting remote PID monitoring + live Grafana export..."
 	@echo "   Remote host : $(REMOTE_IP)"
 	@echo "   Metrics     : http://localhost:9092/metrics"
 	@echo "   Grafana      : http://localhost:3000"
@@ -1053,9 +1047,9 @@ monitor-remote-pid-grafana:
 		$(if $(ALGORITHM),--algorithm '$(ALGORITHM)') $(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)); \
 	_stop; \
 	echo ""; \
-	echo " Monitoring complete."; \
+	echo "✅ Monitoring complete."; \
 	echo ""; \
-	echo " Session results:"; \
+	echo "📁 Session results:"; \
 	SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
@@ -1073,7 +1067,7 @@ monitor-remote-pid-grafana:
 #   REPEAT  : number of monitoring runs (default: 3)
 #   DURATION: seconds per run (default: 60)
 #   PAUSE   : seconds to wait between runs (default: 5)
-#
+# ─────────────────────────────────────────────────────────────────────────────
 monitor-remote-repeat:
 	@if [ -z "$(REMOTE_IP)" ]; then \
 		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
@@ -1087,7 +1081,7 @@ monitor-remote-repeat:
 	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 \
 		> /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
-	echo " Exporter started (PID $$EXPORTER_PID)"; \
+	echo "📊 Exporter started (PID $$EXPORTER_PID)"; \
 	_stop() { \
 		echo ""; \
 		echo "Stopping exporter..."; \
@@ -1095,14 +1089,14 @@ monitor-remote-repeat:
 		fuser -k 9092/tcp 2>/dev/null || true; \
 	}; \
 	trap _stop INT TERM; \
-	echo " Running $$REPEAT monitoring session(s) × $${DURATION}s each (pause=$${PAUSE}s)"; \
+	echo "🔁 Running $$REPEAT monitoring session(s) × $${DURATION}s each (pause=$${PAUSE}s)"; \
 	echo "   Remote: $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP)"; \
 	echo "   Grafana: http://localhost:3000"; \
 	echo ""; \
 	for i in $$(seq 1 $$REPEAT); do \
-		echo ""; \
-		echo "  Run $$i / $$REPEAT"; \
-		echo ""; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
+		echo "▶  Run $$i / $$REPEAT"; \
+		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		uv run python src/monitor_stack.py \
 			--remote-ip $(REMOTE_IP) \
 			$(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
@@ -1114,87 +1108,50 @@ monitor-remote-repeat:
 			$(if $(NPU),--npu) \
 			$(if $(ALGORITHM),--algorithm '$(ALGORITHM)'); \
 		SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
-		echo "    Session saved: $$SESSION_DIR"; \
+		echo "   ✅ Session saved: $$SESSION_DIR"; \
 		if [ $$i -lt $$REPEAT ]; then \
-			echo "    Pausing $${PAUSE}s before next run..."; \
+			echo "   ⏳ Pausing $${PAUSE}s before next run..."; \
 			sleep $$PAUSE; \
 		fi; \
 	done; \
 	_stop; \
 	echo ""; \
-	echo " All $$REPEAT runs complete."; \
+	echo "✅ All $$REPEAT runs complete."; \
 	echo ""; \
-	echo " Cross-session average (last $$REPEAT runs):"; \
+	echo "📁 Cross-session average (last $$REPEAT runs):"; \
 	uv run python src/view_average.py --plot --runs $$REPEAT --no-show \
 		--output-dir monitoring_sessions/average_$${REPEAT} 2>/dev/null || true; \
 	echo "   make view-average-plot RUNS=$$REPEAT"; \
 	echo "   make pipeline-graph"
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Simulation benchmarking — delegate to src/Makefile
 #
-# PicknPlace simulation targets
-#
-# Sessions are automatically grouped under monitoring_sessions/picknplace/
-# because picknplace_run.sh passes --algorithm picknplace to monitor_stack.py.
-#
-#   make picknplace                            # single run
-#   make picknplace-repeat                     # 3 runs (default)
-#   make picknplace-repeat REPEAT=5 PAUSE=15   # custom repeat count and pause
-#
-#   REPEAT : number of simulation runs (default: 3)
-#   PAUSE  : seconds to wait between runs (default: 10)
-#
-picknplace:
-	@echo "Starting PicknPlace AMR simulation..."
-	@echo "  Sessions will be saved to: monitoring_sessions/picknplace/<timestamp>/"
-	@bash src/picknplace_run.sh
-	@SESSION_DIR=$$(ls -td monitoring_sessions/picknplace/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
-	if [ -n "$$SESSION_DIR" ]; then \
-		echo ""; \
-		echo " Session saved: $$SESSION_DIR"; \
-		echo "   make visualize-last ALGORITHM=picknplace"; \
-		echo "   make pipeline-graph ALGORITHM=picknplace"; \
-	fi
+# Params forwarded: RUNS  TIMEOUT  PN_TIMEOUT  PAUSE  BENCH  NODE
+# Full target list: make -f src/Makefile help
+# ─────────────────────────────────────────────────────────────────────────────
 
-picknplace-repeat:
-	@REPEAT=$(if $(REPEAT),$(REPEAT),3); \
-	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
-	echo " Running $$REPEAT PicknPlace simulation(s) (pause=$${PAUSE}s between runs)"; \
-	echo "   Sessions → monitoring_sessions/picknplace/"; \
-	echo ""; \
-	for i in $$(seq 1 $$REPEAT); do \
-		echo ""; \
-		echo "  Run $$i / $$REPEAT"; \
-		echo ""; \
-		bash src/picknplace_run.sh; \
-		SESSION_DIR=$$(ls -td monitoring_sessions/picknplace/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
-		echo "    Session saved: $$SESSION_DIR"; \
-		if [ $$i -lt $$REPEAT ]; then \
-			echo "    Pausing $${PAUSE}s before next run..."; \
-			sleep $$PAUSE; \
-		fi; \
-	done; \
-	echo ""; \
-	echo " All $$REPEAT runs complete."; \
-	echo ""; \
-	echo " Cross-session average (last $$REPEAT picknplace runs):"; \
-	uv run python src/view_average.py --plot --runs $$REPEAT --no-show \
-		--sessions-dir monitoring_sessions/picknplace \
-		--output-dir monitoring_sessions/picknplace/average_$${REPEAT} 2>/dev/null || true; \
-	echo "   make view-average-plot RUNS=$$REPEAT"; \
-	echo "   make pipeline-graph ALGORITHM=picknplace"
+_SRC_FWD = $(if $(RUNS),RUNS=$(RUNS)) $(if $(TIMEOUT),TIMEOUT=$(TIMEOUT)) \
+           $(if $(PN_TIMEOUT),PN_TIMEOUT=$(PN_TIMEOUT)) $(if $(PAUSE),PAUSE=$(PAUSE)) \
+           $(if $(BENCH),BENCH=$(BENCH)) $(if $(NODE),NODE=$(NODE))
+
+wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
+picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
+analyze-benchmark:
+	$(MAKE) -f src/Makefile $@ $(_SRC_FWD)
 
 # Quick start: start stack + monitor + export
 grafana-demo:
-	@echo " Starting Grafana Demo..."
+	@echo "🎬 Starting Grafana Demo..."
 	@echo "This will:"
 	@echo "  1. Start Grafana/Prometheus stack"
 	@echo "  2. Start monitoring (60s)"
 	@echo "  3. Start metrics exporter"
 	@echo ""
-	@./grafana/start_grafana.sh
+	@./start_grafana.sh
 	@sleep 5
 	@echo ""
-	@echo " Starting monitoring (60s)..."
+	@echo "📡 Starting monitoring (60s)..."
 	@echo "Open http://localhost:3000 in your browser (admin/admin)"
 	@echo ""
 	@./monitor_stack.py --session grafana_demo --duration 60 &
@@ -1203,24 +1160,24 @@ grafana-demo:
 
 # Check Grafana stack status
 grafana-status:
-	@echo " Grafana Dashboard Stack Status"
+	@echo "📊 Grafana Dashboard Stack Status"
 	@echo "=================================="
 	@if docker compose ps 2>/dev/null | grep -q "Up"; then \
-		echo " Services running:"; \
+		echo "✅ Services running:"; \
 		docker compose ps; \
 		echo ""; \
-		echo " Access Points:"; \
+		echo "🌐 Access Points:"; \
 		echo "   Grafana:    http://localhost:3000 (admin/admin)"; \
 		echo "   Prometheus: http://localhost:9091"; \
 		echo ""; \
 		if curl -s http://localhost:9092/metrics > /dev/null 2>&1; then \
-			echo " Metrics exporter: http://localhost:9092/metrics"; \
+			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
 		else \
-			echo "  Metrics exporter not running"; \
+			echo "⚠️  Metrics exporter not running"; \
 			echo "   Start with: make grafana-export"; \
 		fi; \
 	else \
-		echo "  Services not running"; \
+		echo "⚠️  Services not running"; \
 		echo "Start with: make grafana-start"; \
 	fi
 
@@ -1230,7 +1187,7 @@ grafana-logs:
 
 # Open Grafana in browser
 grafana-open:
-	@echo " Opening Grafana dashboard..."
+	@echo "🌐 Opening Grafana dashboard..."
 	@if command -v xdg-open >/dev/null 2>&1; then \
 		xdg-open http://localhost:3000; \
 	elif command -v firefox >/dev/null 2>&1; then \

@@ -45,9 +45,9 @@ import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Engine-class mapping  (canonical label → regex)
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 _ENGINE_CLASSES: Dict[str, re.Pattern] = {
     'Render/3D': re.compile(r'render|3d',                      re.I),
@@ -71,9 +71,9 @@ def _classify_engine_key(key: str) -> Optional[str]:
     return None
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Data loading
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def load_gpu_log(path: str) -> List[dict]:
     """
@@ -127,9 +127,9 @@ def _canonical_engines(record: dict) -> Dict[str, Dict[str, float]]:
     return out
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Summary printer
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def print_summary(records: List[dict]):
     if not records:
@@ -144,9 +144,9 @@ def print_summary(records: List[dict]):
     pwr_p = [r.get('power_pkg_w', 0) for r in records]
     rc6   = [r.get('rc6_pct', 0) for r in records]
 
-    print(f'\n{""*60}')
+    print(f'\n{"═"*60}')
     print(f'  Intel GPU Summary  ({source})  –  {n} samples')
-    print(f'{""*60}')
+    print(f'{"═"*60}')
     print(f'  Busy %   : avg={sum(busy)/n:.1f}  max={max(busy):.1f}  min={min(busy):.1f}')
     print(f'  Freq MHz : avg={sum(freq)/n:.0f}  max={max(freq)}  min={min(freq)}')
     if temps:
@@ -181,9 +181,9 @@ def print_summary(records: List[dict]):
     print()
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Plot helpers
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _ts(records: List[dict]) -> list:
     return [datetime.fromisoformat(r['ts']) for r in records]
@@ -250,9 +250,9 @@ def _wire_legend(fig, legend, handle_artists):
     fig.canvas.mpl_connect('button_press_event', on_click)
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Individual panels
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _panel_engines(ax, times, records):
     """Panel 1: GPU overall busy + per-engine-class lines."""
@@ -468,9 +468,9 @@ def _panel_pids(ax, times, records, top_n: int = 8):
     _wire_legend(ax.get_figure(), leg, handle_map)
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Stacked-bar per-engine breakdwon per PID (static snapshot chart)
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def plot_pid_engine_breakdown(records: List[dict],
                               top_n: int = 12,
@@ -554,9 +554,9 @@ def plot_pid_engine_breakdown(records: List[dict],
         plt.close()
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # Main combined plot
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def plot_gpu_full(records: List[dict],
                   output_file: str = None,
@@ -652,9 +652,9 @@ def plot_gpu_full(records: List[dict],
         plt.close(fig)
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 # CLI
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _latest_session_dir(sessions_root: str = 'monitoring_sessions') -> Optional[Path]:
     root = Path(sessions_root)
@@ -697,7 +697,7 @@ def main():
                         help='Also generate per-PID engine-class bar chart')
     args = parser.parse_args()
 
-    #  Resolve log file path 
+    # ── Resolve log file path ───────────────────────────────────────────────
     log_path: Optional[Path] = None
     vis_dir:  Optional[Path] = None
 
@@ -731,13 +731,13 @@ def main():
     print(f'  {len(records)} data records  '
           f'(source: {records[0].get("source", "unknown")})')
 
-    #  Summary 
+    # ── Summary ─────────────────────────────────────────────────────────────
     print_summary(records)
 
     if args.summary:
         return
 
-    #  Output paths 
+    # ── Output paths ────────────────────────────────────────────────────────
     out_dir: Optional[Path] = None
     if args.output_dir:
         out_dir = Path(args.output_dir)
@@ -751,7 +751,7 @@ def main():
 
     show = args.show and not args.no_show
 
-    #  Main dashboard 
+    # ── Main dashboard ──────────────────────────────────────────────────────
     main_out = str(out_dir / 'gpu_dashboard.png') if out_dir else None
     print('Generating GPU dashboard...')
     plot_gpu_full(records,
@@ -760,7 +760,7 @@ def main():
                   stacked_engines=not args.lines,
                   top_pids=args.top)
 
-    #  Per-PID bar chart (optional) 
+    # ── Per-PID bar chart (optional) ─────────────────────────────────────────
     if args.pid_bar and any(r.get('clients') for r in records):
         bar_out = str(out_dir / 'gpu_pid_engine_breakdown.png') if out_dir else None
         print('Generating per-PID engine-class bar chart...')

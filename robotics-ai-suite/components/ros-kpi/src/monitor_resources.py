@@ -766,8 +766,8 @@ def monitor_gpu(interval: float = 2.0,
     def _fmt_igt(stats: dict) -> str:
         engs     = stats.get('engines', {})
         render_b = stats.get('busy_pct', 0.0)
-        pwr      = f"  {stats['power_gpu_w']:.1f}W" if stats.get('power_gpu_w') else ''
-        temp     = (f"  {stats['temp_c']:.0f}°C"
+        pwr      = f"  ⚡{stats['power_gpu_w']:.1f}W" if stats.get('power_gpu_w') else ''
+        temp     = (f"  🌡{stats['temp_c']:.0f}°C"
                     if stats.get('temp_c') is not None else '')
         # Build per-engine summary  e.g.  Render/3D:28.1%  Video:0.0%
         eng_parts = []
@@ -791,7 +791,7 @@ def monitor_gpu(interval: float = 2.0,
     def _fmt_sysfs(stats: dict) -> str:
         return (f"[GPU] busy={stats['busy_pct']:5.1f}%  "
                 f"freq={stats['act_freq_mhz']}/{stats.get('max_freq_mhz', 0)} MHz"
-                f"{'  THROTTLE' if stats.get('throttled') else ''}")
+                f"{'  ⚠THROTTLE' if stats.get('throttled') else ''}")
 
     try:
         while not stop_event.is_set():
@@ -839,7 +839,7 @@ def monitor_gpu(interval: float = 2.0,
 
 
 
-#  Intel NPU monitoring (sysfs / SSH) 
+# ── Intel NPU monitoring (sysfs / SSH) ───────────────────────────────────────
 
 _NPU_SYSFS = '/sys/class/accel/accel0/device'
 _NPU_SYSFS_FILES = [
