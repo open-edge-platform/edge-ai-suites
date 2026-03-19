@@ -1,4 +1,4 @@
-.. |how_it_works| image:: ../../images/icons/How_it_Works.png
+.. |how_it_works| image:: ../images/icons/How_it_Works.png
    :width: 70
    :align: bottom
 
@@ -45,12 +45,12 @@ This diagram shows the software components included in the Autonomous Mobile Rob
 package.
 
 
-.. image:: ../../images/amr_sdk_software_components.png
+.. image:: ../images/amr_sdk_software_components.png
 
 
 The Autonomous Mobile Robot software stack relies on the underlying hardware platform, software supported by and integrated into
 their respective Unified Extensible Firmware Interface (UEFI) based boot processes, and supported Linux
-operating system. For requirement details, see :doc:`../../dev_guide/requirements`.
+operating system. For requirement details, see :doc:`../dev_guide/requirements`.
 
 
 Autonomous Mobile Robot Drivers
@@ -71,10 +71,10 @@ specifically important for Autonomous Mobile Robot include:
 -  The Serial Driver, the serial stream as used in Ethernet and USB interfaces.
 
 
-.. include:: tools.rst
+.. include:: how_it_works/tools.rst
 
-.. include:: robot-apps.rst
+.. include:: how_it_works/robot-apps.rst
 
-.. include:: robot-algorithms.rst
+.. include:: how_it_works/robot-algorithms.rst
 
-.. include:: robot-middleware.rst
+.. include:: how_it_works/robot-middleware.rst
