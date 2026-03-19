@@ -77,7 +77,7 @@ Model Preparation
 =================
 
 Running model inference with the OpenVINO toolkit requires converting the model to the OpenVINO IR format.
-Here we provide a checkpoint finetuned on a simulation task for convenience. Please click `here <https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz>`_ to start downloading. 
+Here we provide a checkpoint finetuned on a simulation task for convenience. Please click `here <https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz>`__ to start downloading. 
 Alternatively, you can convert your own checkpoints trained using the LeRobot framework.
 
 .. code-block:: bash
@@ -102,7 +102,7 @@ Please use the ``convert_ov.py`` script to convert the standard Pi05 model to Op
 .. attention::
 
    Using the Pi0.5 model in LeRobot will automatically download the `google/paligemma-3b-pt-224 <https://huggingface.co/google/paligemma-3b-pt-224>`_ from Hugging Face. Downloading this model requires logging into your Hugging Face account due to author restrictions. 
-   If you encounter download errors, please follow the instructions `here <https://huggingface.co/docs/huggingface_hub/quick-start#authentication>`_ to log in and authorize your account.
+   If you encounter download errors, please follow the instructions `here <https://huggingface.co/docs/huggingface_hub/quick-start#authentication>`__ to log in and authorize your account.
 
 Examples (``uv``):
 
