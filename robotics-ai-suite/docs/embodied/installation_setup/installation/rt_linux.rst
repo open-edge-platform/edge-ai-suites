@@ -13,9 +13,7 @@ Installation
 Automated Setup Script
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-You can automate the installation flow on this page with:
-
-.. download:: rt_linux_setup.sh
+:download:`You can automate the installation flow on this page with: <rt_linux_setup.sh>`
 
 Default real-time kernel setup (includes OS setup prerequisites):
 
