@@ -233,7 +233,7 @@ class ROS2GraphMonitor(Node):
         if self.target_node:
             self._filter_topics_for_node()
 
-        #  SSH fallback 
+        # ── SSH fallback ────────────────────────────────────────────────────
         # If DDS peer discovery found no user-space nodes but we're monitoring
         # remotely, try SSH to query the graph directly.  This bypasses DDS
         # domain mismatches, multicast filtering, and firewall UDP issues.
@@ -291,14 +291,14 @@ class ROS2GraphMonitor(Node):
             except Exception:
                 return ''
 
-        #  node list 
+        # ── node list ────────────────────────────────────────────────────────
         nodes_raw = _ssh('ros2 node list 2>/dev/null')
         nodes = [n.strip() for n in nodes_raw.splitlines()
                  if n.strip() and '/_' not in n]
         if not nodes:
             return node_info
 
-        #  topic list with types 
+        # ── topic list with types ─────────────────────────────────────────────
         topic_raw = _ssh('ros2 topic list -t 2>/dev/null')
         topic_types: Dict[str, str] = {}
         for line in topic_raw.splitlines():
@@ -306,7 +306,7 @@ class ROS2GraphMonitor(Node):
             if m:
                 topic_types[m.group(1)] = m.group(2)
 
-        #  per-node info 
+        # ── per-node info ─────────────────────────────────────────────────────
         for node in nodes[:40]:  # cap to avoid long SSH chains
             info_raw = _ssh(f'ros2 node info {node} 2>/dev/null')
             publishers: List[Tuple[str, str]]  = []
@@ -455,7 +455,7 @@ class ROS2GraphMonitor(Node):
                     'topics': {},
                 }
 
-                #  Node entries 
+                # ── Node entries ────────────────────────────────────────────
                 for node_name, info in self.node_info.items():
                     nd = _latency_stats(self.node_processing_delays[node_name])
                     topology['nodes'][node_name] = {
@@ -466,7 +466,7 @@ class ROS2GraphMonitor(Node):
                         'proc_delay_samples':    nd.get('samples', 0),
                     }
 
-                #  Topic entries with metrics 
+                # ── Topic entries with metrics ───────────────────────────────
                 for topic_name, data in self.topic_stats.items():
                     avg_delta = (sum(data['delta_samples']) / len(data['delta_samples'])
                                  if data['delta_samples'] else None)
@@ -773,11 +773,11 @@ def print_node_statistics(node_stats: Dict[str, Dict[str, Any]], node_info: Dict
         # Get node category
         category = categorize_node(node_name, node_info.get(node_name, {}))
         category_icons = {
-            'Sensor': ' Sensor',
-            'Perception': ' Perception',
-            'Motion Planning': ' Planning',
-            'Controls': ' Controls',
-            'Other': ' Other'
+            'Sensor': '📡 Sensor',
+            'Perception': '🧠 Perception',
+            'Motion Planning': '🗺️ Planning',
+            'Controls': '🎮 Controls',
+            'Other': '📋 Other'
         }
         category_display = category_icons.get(category, category)
         if len(category_display) > 14:
@@ -841,7 +841,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
         print(f"Total Nodes: {len(node_info)}\n")
 
         for node_name, info in sorted(node_info.items()):
-            print(f" {node_name}")
+            print(f"📦 {node_name}")
 
             if info['publishers']:
                 print(f"  Publishers ({len(info['publishers'])})")
@@ -881,13 +881,13 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 
             # Category header with icon
             category_icons = {
-                'Sensor': '',
-                'Perception': '',
-                'Motion Planning': '',
-                'Controls': '',
-                'Other': ''
+                'Sensor': '📡',
+                'Perception': '🧠',
+                'Motion Planning': '🗺️',
+                'Controls': '🎮',
+                'Other': '📋'
             }
-            icon = category_icons.get(category, '')
+            icon = category_icons.get(category, '📋')
             print(f"\n{icon} {category.upper()} ({len(topics)} topics)")
             
             if target_node:
@@ -938,19 +938,19 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 category = categorize_topic(topic_name, stats['msg_type'])
                 input_categorized[category].append((topic_name, stats))
             
-            print("\n INPUT TOPICS (Subscribed by target node):")
+            print("\n📥 INPUT TOPICS (Subscribed by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in input_categorized:
                     continue
                     
                 category_icons = {
-                    'Sensor': '',
-                    'Perception': '',
-                    'Motion Planning': '',
-                    'Controls': '',
-                    'Other': ''
+                    'Sensor': '📡',
+                    'Perception': '🧠',
+                    'Motion Planning': '🗺️',
+                    'Controls': '🎮',
+                    'Other': '📋'
                 }
-                icon = category_icons.get(category, '')
+                icon = category_icons.get(category, '📋')
                 print(f"\n  {icon} {category}:")
                 
                 for topic_name, stats in input_categorized[category]:
@@ -970,19 +970,19 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 category = categorize_topic(topic_name, stats['msg_type'])
                 output_categorized[category].append((topic_name, stats))
             
-            print("\n OUTPUT TOPICS (Published by target node):")
+            print("\n📤 OUTPUT TOPICS (Published by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in output_categorized:
                     continue
                     
                 category_icons = {
-                    'Sensor': '',
-                    'Perception': '',
-                    'Motion Planning': '',
-                    'Controls': '',
-                    'Other': ''
+                    'Sensor': '📡',
+                    'Perception': '🧠',
+                    'Motion Planning': '🗺️',
+                    'Controls': '🎮',
+                    'Other': '📋'
                 }
-                icon = category_icons.get(category, '')
+                icon = category_icons.get(category, '📋')
                 print(f"\n  {icon} {category}:")
                 
                 for topic_name, stats in output_categorized[category]:
@@ -1002,7 +1002,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             avg_all = [nd['mean_ms'] for nd in node_delays.values() if nd.get('mean_ms') is not None]
             if avg_all:
                 overall = sum(avg_all) / len(avg_all)
-                print(f"\n  PROCESSING: {overall:.2f} ms avg delay across {len(avg_all)} nodes (input → output)")
+                print(f"\n⏱️  PROCESSING: {overall:.2f} ms avg delay across {len(avg_all)} nodes (input → output)")
 
         print()
 
@@ -1032,18 +1032,18 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             
             # Category header with icon
             category_icons = {
-                'Sensor': '',
-                'Perception': '',
-                'Motion Planning': '',
-                'Controls': '',
-                'Other': ''
+                'Sensor': '📡',
+                'Perception': '🧠',
+                'Motion Planning': '🗺️',
+                'Controls': '🎮',
+                'Other': '📋'
             }
-            icon = category_icons.get(category, '')
+            icon = category_icons.get(category, '📋')
             print(f"\n{icon} {category.upper()}")
             print("-" * 80)
             
             for topic_name, stats in sorted(topics):
-                print(f"\n {topic_name}")
+                print(f"\n📡 {topic_name}")
                 print(f"   Type: {stats['msg_type']}")
 
                 if stats['publishers']:
@@ -1207,11 +1207,11 @@ Examples:
                 remote_domain = r.stdout.strip()
                 local_domain  = os.environ.get('ROS_DOMAIN_ID', '0')
                 if remote_domain.isdigit() and remote_domain != local_domain:
-                    print(f"    ROS_DOMAIN_ID mismatch: local={local_domain}, remote={remote_domain}")
+                    print(f"  ⚠  ROS_DOMAIN_ID mismatch: local={local_domain}, remote={remote_domain}")
                     print(f"     Setting ROS_DOMAIN_ID={remote_domain} to match remote.")
                     os.environ['ROS_DOMAIN_ID'] = remote_domain
                 else:
-                    print(f"   ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID','0')} matches.")
+                    print(f"  ✅ ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID','0')} matches.")
             except Exception:
                 pass
         os.environ['ROS_LOCALHOST_ONLY'] = '0'
@@ -1290,7 +1290,7 @@ Examples:
                 else:
                     if retry_count > 0:
                         print()  # New line after retry messages
-                    print(f" Node '{args.node}' found!")
+                    print(f"✓ Node '{args.node}' found!")
         else:
             print("Discovering ROS2 graph...")
             node_info = monitor.discover_graph()

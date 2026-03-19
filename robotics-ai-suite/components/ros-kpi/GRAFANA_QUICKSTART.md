@@ -47,7 +47,7 @@ make grafana-stop
 
 ```bash
 # Start stack
-./grafana/start_grafana.sh
+./start_grafana.sh
 
 # Run monitoring
 ./monitor_stack.py --session my_session
@@ -70,7 +70,7 @@ make grafana-stop
 3. Verify monitoring session has data: `ls monitoring_sessions/*/`
 
 **Port conflicts?**
-Edit `grafana/docker-compose.yml` to change ports.
+Edit `docker-compose.yml` to change ports.
 
 **More help?**
 See `docs/GRAFANA_SETUP.md`

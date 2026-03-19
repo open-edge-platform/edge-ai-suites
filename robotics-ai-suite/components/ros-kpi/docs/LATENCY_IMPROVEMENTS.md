@@ -118,10 +118,10 @@ INDUSTRIAL EVALUATION (1000 Hz → 1.000ms budget)
   Failures (>1.000ms): 0 / 59998 (0.0%)
   Worst case: 0.6492 ms
 
-   EXCELLENT - Even worst case within 1.000ms budget
+  ✅ EXCELLENT - Even worst case within 1.000ms budget
 
   Jitter (CoV): 14.2%
-      Moderate jitter
+    ⚠️  Moderate jitter
 ======================================================================
 ```
 
@@ -137,16 +137,16 @@ INDUSTRIAL EVALUATION (1000 Hz → 1.000ms budget)
 
 | Feature | performance_test | Our Implementation |
 |---------|------------------|-------------------|
-| Roundtrip measurement |  |  (latency_tester.py) |
-| Min/Max/Mean/Variance |  |  |
-| Main/Relay modes |  |  |
-| Configurable rates |  |  |
-| QoS configuration |  |  |
-| CSV logging |  |  |
-| Industrial evaluation |  |  |
-| Message ID matching |  |  (via header stamps) |
-| Live monitoring |  |  (ros2_graph_monitor) |
-| Multi-topic tracking |  |  (ros2_graph_monitor) |
+| Roundtrip measurement | ✅ | ✅ (latency_tester.py) |
+| Min/Max/Mean/Variance | ✅ | ✅ |
+| Main/Relay modes | ✅ | ✅ |
+| Configurable rates | ✅ | ✅ |
+| QoS configuration | ✅ | ✅ |
+| CSV logging | ✅ | ✅ |
+| Industrial evaluation | ✅ | ✅ |
+| Message ID matching | ❌ | ✅ (via header stamps) |
+| Live monitoring | ❌ | ✅ (ros2_graph_monitor) |
+| Multi-topic tracking | ❌ | ✅ (ros2_graph_monitor) |
 
 ## Integration with Existing Tools
 

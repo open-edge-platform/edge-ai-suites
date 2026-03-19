@@ -1,17 +1,16 @@
 #!/bin/bash
-# picknplace_run.sh  —  Launch the pick-n-place AMR simulation alongside the
-#                       graph monitor, then print a trigger-latency analysis.
+# wandering_run.sh  —  Launch the wandering simulation alongside the graph
+#                       monitor, then print a trigger-latency analysis at the end.
 #
 # Usage:
-#   bash src/picknplace_run.sh [--timeout SECS] [--record] [--plot]
+#   bash src/wandering_run.sh [--goals N] [--timeout SECS] [--record] [--plot]
 #                              [--output-parent DIR]
 #
-#   --timeout N          Hard stop after N seconds (default: 300)
-#                        Normal completed run = ~157s from launch.
-#                        300s gives ~2× safety margin for sim variance / cube spawn delays.
+#   --goals  N           Stop after N 'Goal was reached' events (0 = ignore, default: Ctrl-C)
+#   --timeout N          Hard stop after N seconds (default: 0 = off)
 #   --record             Record KPI topics to an MCAP bag
 #   --plot               Also save trigger-timeline PNG plots after analysis
-#   --output-parent DIR  Store session under DIR instead of monitoring_sessions/picknplace/
+#   --output-parent DIR  Store session under DIR instead of monitoring_sessions/wandering/
 
 set -euo pipefail
 
@@ -51,11 +50,13 @@ _cleanup() {
 
   sleep 1
   # Sweep any survivors.
-  # ⚠  "ros2 " (with trailing space) — avoids matching the repo path "ros2-kpi".
-  #    "picknplace" is safe here because the parent Make shell runs "bash
-  #    picknplace_run.sh" which DOES contain "picknplace" — so we use the
-  #    launch package name "warehouse.launch" instead.
-  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
+  # ⚠  PATTERN WARNING: the repo is at .../ros2-kpi/, so the bare string "ros2"
+  #    appears in the cmdline of the Make benchmark-loop shell (it contains the
+  #    full path "bash .../ros2-kpi/src/wandering_run.sh").  Using "ros2 " (ros2
+  #    followed by a space) matches only actual ros2 CLI invocations like
+  #    "ros2 launch" and "ros2 bag" without matching the path substring "ros2-kpi".
+  #    Similarly, "/opt/ros/" catches all installed ROS2 nodes by their install path.
+  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
   pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
   sleep 2
   pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
@@ -63,15 +64,17 @@ _cleanup() {
 }
 trap _cleanup EXIT
 
-MAX_TIMEOUT=300   # measured: demo completes ~157s from launch; 300s = ~2× safety margin
+GOAL_TARGET=0
+MAX_TIMEOUT=0
 RECORD_MODE=0
 PLOT_MODE=0
-OUTPUT_PARENT=""
 SESSION_DIR=""
+OUTPUT_PARENT=""
 LAUNCH_LOG=""   # set after SESSION_DIR is created
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --goals)          GOAL_TARGET="$2"; shift 2 ;;
     --timeout)        MAX_TIMEOUT="$2"; shift 2 ;;
     --record)         RECORD_MODE=1; shift ;;
     --plot)           PLOT_MODE=1; shift ;;
@@ -81,25 +84,33 @@ while [[ $# -gt 0 ]]; do
 done
 
 echo "============================================================"
-echo "  PicknPlace AMR simulation"
-echo "    Stop on      : 'ARM2 at standby. Demo complete.' OR ${MAX_TIMEOUT}s timeout"
-[[ "$RECORD_MODE" -eq 1 ]] && echo "    Recording     : KPI topics → session bag"
-[[ "$PLOT_MODE"   -eq 1 ]] && echo "    Plots         : trigger-timeline PNGs"
-[[ -n "$OUTPUT_PARENT" ]] && echo "    Output parent : $OUTPUT_PARENT"
+echo "  Wandering simulation"
+if   [[ "$GOAL_TARGET" -gt 0 ]]; then
+  echo "    Stop after goals : $GOAL_TARGET"
+elif [[ "$MAX_TIMEOUT" -gt 0 ]]; then
+  echo "    Stop after       : ${MAX_TIMEOUT}s (goals ignored)"
+else
+  echo "    Stop with        : Ctrl-C"
+fi
+[[ "$MAX_TIMEOUT"  -gt 0 ]] && [[ "$GOAL_TARGET" -gt 0 ]] && \
+  echo "    Hard timeout     : ${MAX_TIMEOUT}s"
+[[ "$RECORD_MODE"  -eq 1 ]] && echo "    Recording        : KPI topics → session bag"
+[[ "$PLOT_MODE"    -eq 1 ]] && echo "    Plots            : trigger-timeline PNGs"
+[[ -n "$OUTPUT_PARENT" ]]   && echo "    Output parent    : $OUTPUT_PARENT"
 echo "============================================================"
 echo ""
 
-# ── Session directory ─────────────────────────────────────────────────────────
-_PARENT="${OUTPUT_PARENT:-$REPO_ROOT/monitoring_sessions/picknplace}"
+# ── Session directory (shared by bag recorder + graph monitor) ───────────────
+_PARENT="${OUTPUT_PARENT:-$REPO_ROOT/monitoring_sessions/wandering}"
 SESSION_DIR="$_PARENT/$(date '+%Y%m%d_%H%M%S')"
 mkdir -p "$SESSION_DIR"
-LAUNCH_LOG="$SESSION_DIR/picknplace_launch.log"
+LAUNCH_LOG="$SESSION_DIR/wandering_launch.log"
 echo "  Session dir: $SESSION_DIR"
 echo ""
 
-# ── Process 1: picknplace launch ──────────────────────────────────────────────
-echo "Starting AMR simulation..."
-setsid nohup ros2 launch picknplace warehouse.launch.py \
+# ── Process 1: wandering launch ───────────────────────────────────────────────
+echo "Starting wandering simulation..."
+setsid nohup ros2 launch wandering_gazebo_tutorial wandering_gazebo.launch.py \
   > "$LAUNCH_LOG" 2>&1 &
 LAUNCH_PID=$!
 echo "  Launch PID : $LAUNCH_PID  (log: $LAUNCH_LOG)"
@@ -120,23 +131,14 @@ if [[ "$RECORD_MODE" -eq 1 ]]; then
     /collision_monitor_state \
     /behavior_tree_log \
     /joint_states \
-    /task_status /pick_result /place_result \
-    > /tmp/picknplace_record.log 2>&1 &
+    > /tmp/wandering_record.log 2>&1 &
   RECORD_PID=$!
   echo "  Recording  : $SESSION_DIR/bag  (PID: $RECORD_PID)"
 fi
 
 echo ""
-echo "Waiting 20s for simulation to initialise..."
-sleep 20
-
-# ── Press Gazebo play button ──────────────────────────────────────────────────
-echo "Pressing Gazebo play button..."
-gz service -s /world/default/control \
-  --reqtype gz.msgs.WorldControl \
-  --reptype gz.msgs.Boolean \
-  --req 'pause: false' \
-  --timeout 2000 2>/dev/null || echo "  (gz play button: service call failed — sim may already be running)"
+echo "Waiting 12s for simulation to initialise..."
+sleep 12
 
 # ── Process 2: graph monitor ──────────────────────────────────────────────────
 echo "Starting graph monitor..."
@@ -149,42 +151,46 @@ MONITOR_PID=$!
 echo "  Monitor PID : $MONITOR_PID"
 echo ""
 
-# ── Main loop — wait for "ARM2 at standby. Demo complete." or timeout ─────────
-echo "Waiting for 'ARM2 at standby. Demo complete.' (timeout: ${MAX_TIMEOUT}s)..."
+# ── Main loop ─────────────────────────────────────────────────────────────────
+if [[ "$GOAL_TARGET" -gt 0 ]]; then
+  echo "Watching for goals (stop at $GOAL_TARGET)..."
+elif [[ "$MAX_TIMEOUT" -gt 0 ]]; then
+  echo "Running for ${MAX_TIMEOUT}s (goals tracked but not used to stop)..."
+else
+  echo "Running until Ctrl-C..."
+fi
 START=$(date +%s)
-DEMO_COMPLETE=0
-TASK_COUNT=0
+GOAL_ARRIVALS=0
 
 while true; do
   sleep 1
   ELAPSED=$(( $(date +%s) - START ))
 
-  # Count task completions in log
-  CURRENT_TASKS=$(grep -c 'ARM2 at standby\. Demo complete\|GRASP SUCCESS\|Placed successfully\|CYCLE COMPLETE' \
-                  "$LAUNCH_LOG" 2>/dev/null || true)
-  CURRENT_TASKS=$(( ${CURRENT_TASKS:-0} + 0 ))
+  CURRENT_GOALS=$(grep -c 'Goal was reached' "$LAUNCH_LOG" 2>/dev/null || true)
+  CURRENT_GOALS=$(( ${CURRENT_GOALS:-0} + 0 ))
 
-  while [[ "$TASK_COUNT" -lt "$CURRENT_TASKS" ]]; do
-    TASK_COUNT=$(( TASK_COUNT + 1 ))
-    echo "  ✔ Task #${TASK_COUNT} complete at $(date '+%H:%M:%S')"
+  while [[ "$GOAL_ARRIVALS" -lt "$CURRENT_GOALS" ]]; do
+    GOAL_ARRIVALS=$(( GOAL_ARRIVALS + 1 ))
+    RAW_TS=$(grep 'Goal was reached' "$LAUNCH_LOG" 2>/dev/null \
+             | sed -n "${GOAL_ARRIVALS}p" \
+             | grep -oP '\[\K[0-9]+(?=\.[0-9]+\])')
+    ARRIVAL_TS=$( [[ -n "${RAW_TS:-}" ]] \
+                  && date -d "@${RAW_TS}" '+%H:%M:%S' \
+                  || date '+%H:%M:%S' )
+    echo "  ✔ Goal #${GOAL_ARRIVALS} at ${ARRIVAL_TS}"
   done
 
-  # Check for full demo completion — actual string from arm2_controller.py
-  if grep -q 'ARM2 at standby. Demo complete.' "$LAUNCH_LOG" 2>/dev/null; then
-    DEMO_COMPLETE=1
-    echo "  ✅ AMR DEMO COMPLETE at $(date '+%H:%M:%S') (${ELAPSED}s)"
-    break
-  fi
+  [[ "$GOAL_TARGET" -gt 0 && "$GOAL_ARRIVALS" -ge "$GOAL_TARGET" ]] \
+    && { echo "All ${GOAL_TARGET} goal(s) reached — stopping."; break; }
 
   [[ "$MAX_TIMEOUT" -gt 0 && "$ELAPSED" -ge "$MAX_TIMEOUT" ]] \
-    && { echo "  Timeout: ${MAX_TIMEOUT}s elapsed. Stopping."; break; }
+    && { echo "Timeout: ${MAX_TIMEOUT}s elapsed (goals: ${GOAL_ARRIVALS})."; break; }
 done
 
 echo ""
 echo "--- Summary ---"
-echo "  Tasks completed : $TASK_COUNT"
-echo "  Demo complete   : $([ $DEMO_COMPLETE -eq 1 ] && echo yes || echo no)"
-echo "  Elapsed         : $(( $(date +%s) - START ))s"
+echo "  Goals reached : $GOAL_ARRIVALS"
+echo "  Elapsed       : $(( $(date +%s) - START ))s"
 
 # ── Bag reindex safety-net ────────────────────────────────────────────────────
 if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" && ! -f "$SESSION_DIR/bag/metadata.yaml" ]]; then
@@ -197,7 +203,7 @@ fi
 echo ""
 echo "━━━━ Trigger-Latency Analysis ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Stop graph monitor so it flushes CSV + topology before we read them
+# Stop the graph monitor so it flushes CSV + topology before we read them
 if [[ "$MONITOR_PID" -gt 0 ]]; then
   kill -SIGTERM "$MONITOR_PID" 2>/dev/null || true
   sleep 2
@@ -218,6 +224,7 @@ if [[ -f "$TIMING_CSV" && -f "$TOPO_JSON" ]]; then
   echo "  Full detail:"
   echo "    python3 src/analyze_trigger_latency.py --session $SESSION_DIR"
 
+  # Copy topology into bag/ subdir so --bag analysis works without --topology
   if [[ "$RECORD_MODE" -eq 1 && -d "$SESSION_DIR/bag" ]]; then
     cp "$TOPO_JSON" "$SESSION_DIR/bag/graph_topology.json"
     echo ""

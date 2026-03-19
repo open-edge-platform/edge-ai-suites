@@ -8,7 +8,7 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # Summary of Improvements
 
-##  March 2026 — Latest Updates
+## 🗓️ March 2026 — Latest Updates
 
 ### CPU% Clarity in Resource Reports
 `visualize_resources.py` now makes multi-core CPU% readings unambiguous:
@@ -37,17 +37,17 @@ Prometheus runs in host-network mode and occupies port 9090. The KPI exporter no
 
 ---
 
-##  What's New
+## ✨ What's New
 
 Your ROS2 monitoring stack now has **3 cleaner ways to run**:
 
-### 1.  Python Orchestrator (`monitor_stack.py`)
+### 1. 🐍 Python Orchestrator (`monitor_stack.py`)
 Single Python script that manages everything:
 ```bash
 ./monitor_stack.py --node /your_node
 ```
 
-### 2.  Makefile Commands
+### 2. 🔨 Makefile Commands
 Simple, memorable commands:
 ```bash
 make monitor NODE=/your_node
@@ -57,9 +57,9 @@ make list-sessions
 
 ---
 
-##  Before vs After
+## 📊 Before vs After
 
-###  Before (The Old Way)
+### ❌ Before (The Old Way)
 Required **4 separate terminals** and manual coordination:
 
 ```bash
@@ -90,7 +90,7 @@ Required **4 separate terminals** and manual coordination:
 
 ---
 
-###  After (The New Way)
+### ✅ After (The New Way)
 
 **Single command in one terminal:**
 
@@ -106,26 +106,26 @@ make monitor NODE=/slam_toolbox
 ```
 
 **Benefits:**
--  Single command does everything
--  Automatic file organization
--  Auto-generates visualizations on exit
--  Graceful shutdown handling
--  Session history and management
--  Easy to reproduce
--  Clean output structure
+- ✅ Single command does everything
+- ✅ Automatic file organization
+- ✅ Auto-generates visualizations on exit
+- ✅ Graceful shutdown handling
+- ✅ Session history and management
+- ✅ Easy to reproduce
+- ✅ Clean output structure
 
 ---
 
-##  Key Features of the New Stack
+## 🎯 Key Features of the New Stack
 
 ### 1. Automatic Session Management
 ```
 monitoring_sessions/
- 20260209_143022/          # Auto-timestamped
-     session_info.txt      # What you monitored
-     graph_timing.csv      # Raw timing data
-     resource_usage.log    # Raw CPU/memory data
-     visualizations/       # Auto-generated plots
+└── 20260209_143022/          # Auto-timestamped
+    ├── session_info.txt      # What you monitored
+    ├── graph_timing.csv      # Raw timing data
+    ├── resource_usage.log    # Raw CPU/memory data
+    └── visualizations/       # Auto-generated plots
 ```
 
 ### 2. Concurrent Monitoring
@@ -170,7 +170,7 @@ make list-sessions
 
 ---
 
-##  Quick Start Examples
+## 🚀 Quick Start Examples
 
 ### Example 1: Quick Performance Check
 ```bash
@@ -206,45 +206,45 @@ make monitor NODE=/controller_server SESSION=after
 
 ---
 
-##  File Structure
+## 📁 File Structure
 
 ### New Files Added:
 ```
 ros2-kpi/
- monitor_stack.py      # Main orchestrator (NEW!)
- Makefile              # Make targets (NEW!)
- QUICK_START.md        # Quick reference (NEW!)
- IMPROVEMENTS.md       # This file (NEW!)
-
- ros2_graph_monitor.py     # Original (still works standalone)
- monitor_resources.py      # Original (still works standalone)
- visualize_timing.py       # Original (still works standalone)
- visualize_resources.py    # Original (still works standalone)
- analyze_rosbag.py         # Original (still works standalone)
- README.md                 # Updated with new info
+├── monitor_stack.py      # Main orchestrator (NEW!)
+├── Makefile              # Make targets (NEW!)
+├── QUICK_START.md        # Quick reference (NEW!)
+├── IMPROVEMENTS.md       # This file (NEW!)
+│
+├── ros2_graph_monitor.py     # Original (still works standalone)
+├── monitor_resources.py      # Original (still works standalone)
+├── visualize_timing.py       # Original (still works standalone)
+├── visualize_resources.py    # Original (still works standalone)
+├── analyze_rosbag.py         # Original (still works standalone)
+└── README.md                 # Updated with new info
 ```
 
 ### Output Structure:
 ```
 monitoring_sessions/
- 20260209_143022/
-    session_info.txt
-    graph_timing.csv
-    resource_usage.log
-    visualizations/
-        timing_delays.png
-        message_frequencies.png
-        cpu_usage_timeline.png
-        cpu_heatmap.png
- 20260209_150315/
-    ... (another session)
- my_experiment/
-     ... (named session)
+├── 20260209_143022/
+│   ├── session_info.txt
+│   ├── graph_timing.csv
+│   ├── resource_usage.log
+│   └── visualizations/
+│       ├── timing_delays.png
+│       ├── message_frequencies.png
+│       ├── cpu_usage_timeline.png
+│       └── cpu_heatmap.png
+├── 20260209_150315/
+│   └── ... (another session)
+└── my_experiment/
+    └── ... (named session)
 ```
 
 ---
 
-##  Learning Curve
+## 🎓 Learning Curve
 
 ### For Quick Tasks:
 Just remember: `make monitor`
@@ -257,7 +257,7 @@ Check `./monitor_stack.py --help` or `make help`
 
 ---
 
-##  Backward Compatibility
+## 🔧 Backward Compatibility
 
 **All original scripts still work!** You can use them individually if needed:
 ```bash
@@ -269,7 +269,7 @@ The new stack is just a convenience layer on top.
 
 ---
 
-##  Recommended Workflow
+## 💡 Recommended Workflow
 
 1. **Start your ROS2 system:**
    ```bash
@@ -300,7 +300,7 @@ The new stack is just a convenience layer on top.
 
 ---
 
-##  Benefits Summary
+## 🎉 Benefits Summary
 
 | Before | After |
 |--------|-------|
@@ -314,7 +314,7 @@ The new stack is just a convenience layer on top.
 
 ---
 
-##  Documentation
+## 📚 Documentation
 
 - **Quick Start:** See [QUICK_START.md](QUICK_START.md)
 - **Full Details:** See updated [README.md](README.md)
@@ -322,7 +322,7 @@ The new stack is just a convenience layer on top.
 
 ---
 
-##  Next Steps
+## 🤝 Next Steps
 
 1. Try a quick test:
    ```bash
@@ -340,4 +340,4 @@ The new stack is just a convenience layer on top.
 
 ---
 
-Enjoy your streamlined monitoring workflow! 
+Enjoy your streamlined monitoring workflow! 🎉

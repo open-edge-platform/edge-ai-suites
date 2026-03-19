@@ -44,7 +44,7 @@ make latency-test-main RATE=1000 DURATION=60 RELIABILITY=RELIABLE
 # On remote machine (192.168.1.100)
 cd ~/Documents/ros2-kpi
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 make latency-test-relay
 ```
 
@@ -189,7 +189,7 @@ Results:
 echo $ROS_DOMAIN_ID
 
 # Set explicitly
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 make latency-test-relay
 ```
 

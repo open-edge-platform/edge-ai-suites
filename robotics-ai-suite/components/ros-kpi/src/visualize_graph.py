@@ -56,9 +56,9 @@ from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 import numpy as np
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Pipeline category helpers  (mirrors ros2_graph_monitor.py)
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 CATEGORIES = ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']
 
@@ -101,9 +101,9 @@ CAT_HEADER_COLOR = {
     'Other':           '#7f7f7f',
 }
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Internal / system topic filter
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 import re as _re
 
@@ -186,9 +186,9 @@ def _infer_node_category(node_name: str, publishes: list, topic_meta: dict) -> s
     return max(cats, key=lambda c: priority.get(c, 0))
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Colour helpers for topic health
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _topic_health_colors(td: dict):
     """Return (face, edge, label) based on latency / spike data."""
@@ -219,9 +219,9 @@ def _fmt_ms(v):
     return f'{v:.1f} ms'
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  CSV parser  (metrics only, no topology)
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def _flt(v):
     try:
@@ -283,9 +283,9 @@ def _csv_meta_only(csv_file: str) -> dict:
             'duration': (end - start) if (start and end) else None}
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Layout engine
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 class GraphLayout:
     """
@@ -392,9 +392,9 @@ class GraphLayout:
         return self.pos.get(f'{kind}::{name}', (0.5, 0.5))
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Drawing
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 NODE_W  = 0.085   # axes-fraction width of a node box
 NODE_H  = 0.045
@@ -513,9 +513,9 @@ def _draw_edge(ax, x0, y0, x1, y1, color='#6699bb', lw=1.0, alpha=0.7,
     )
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Node detail popup
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 
 def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
@@ -548,7 +548,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
     else:
         proc_str = 'n/a  (pure publisher or no callback data yet)'
 
-    #  Try native Tkinter Toplevel first 
+    # ── Try native Tkinter Toplevel first ─────────────────────────────────
     try:
         import tkinter as tk
         from tkinter import font as tkfont
@@ -580,7 +580,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
         top.configure(bg='#1a1a2e')
         top.resizable(True, True)
 
-        #  fonts 
+        # ── fonts ─────────────────────────────────────────────────────────
         f_title = tkfont.Font(family='Helvetica', size=14, weight='bold')
         f_sub   = tkfont.Font(family='Helvetica', size=9)
         f_hdr   = tkfont.Font(family='Helvetica', size=9,  weight='bold')
@@ -589,7 +589,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
         BG1, BG2, BG3 = '#16213e', '#0f3460', '#1d2c4e'
         FG_TITLE, FG_HDR, FG_ROW = '#111111', '#aabbcc', '#ccd6ff'
 
-        #  Node header 
+        # ── Node header ───────────────────────────────────────────────────
         hdr_frame = tk.Frame(top, bg=CAT_NODE_FC.get(cat, '#eeeeee'),
                              relief='ridge', bd=2)
         hdr_frame.pack(fill='x', padx=8, pady=(8, 4))
@@ -601,7 +601,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
                  font=f_sub, bg=CAT_NODE_FC.get(cat, '#eeeeee'),
                  fg='#334466').pack(pady=(0, 6))
 
-        #  Helper: one table section 
+        # ── Helper: one table section ──────────────────────────────────────
         def _make_section(parent, title: str, topics: list):
             # Section heading
             sec_hdr = tk.Frame(parent, bg=BG3)
@@ -633,9 +633,9 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
                 return
 
             HEALTH_COLORS = {
-                'good':    ('#d5f5d5', ''),
-                'warn':    ('#fff3cc', ''),
-                'high':    ('#ffe0cc', ''),
+                'good':    ('#d5f5d5', '●'),
+                'warn':    ('#fff3cc', '●'),
+                'high':    ('#ffe0cc', '●'),
                 'spike':   ('#ffd0d0', '!'),
                 'no-data': ('#f5f5f5', '–'),
             }
@@ -677,7 +677,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
         # Tk not reachable (Qt backend, etc.) – fall back to matplotlib figure
         pass
 
-    #  Fallback: plain matplotlib figure 
+    # ── Fallback: plain matplotlib figure ────────────────────────────────
     try:
         pfig = plt.figure(num=f'node_detail__{nname}',
                           figsize=(15, min(max(4 + (len(pub_topics) + len(sub_topics)) * 0.4, 5.5), 26)),
@@ -713,9 +713,9 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
         pass
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  Main render function
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def render_graph(topology: dict, metrics: dict, meta: dict,
                  output_file: str = None, show: bool = True,
@@ -743,7 +743,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     nodes_raw  = topology.get('nodes', {})
     t_topo_raw = topology.get('topics', {})
 
-    #  Filter observer / monitor nodes 
+    # ── Filter observer / monitor nodes ──────────────────────────────────────
     if filter_monitor_nodes:
         nodes = {n: v for n, v in nodes_raw.items()
                  if not MONITOR_NODE_RE.search(n)}
@@ -752,7 +752,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         nodes = dict(nodes_raw)
         filtered_mnodes = 0
 
-    #  Build topics dict 
+    # ── Build topics dict ────────────────────────────────────────────────────────────────────────────────────
     # When topology JSON is present it is the single source of truth:
     # it already contains both structural data (publishers/subscribers) and
     # metrics (freq, delay, msg_count) for every topic the monitor subscribed
@@ -784,7 +784,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         for t, md in metrics.items():
             topics_merged[t] = dict(md)
 
-    #  Filter internal / system topics 
+    # ── Filter internal / system topics ──────────────────────────────────────────────────────────────
     if filter_internal:
         topics_to_show = {t: d for t, d in topics_merged.items()
                           if not INTERNAL_TOPIC_RE.search(t)}
@@ -793,7 +793,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         topics_to_show = topics_merged
         filtered_itopics = 0
 
-    #  Drop isolated topics (no edges after filtering) 
+    # ── Drop isolated topics (no edges after filtering) ───────────────────────────────────────────────
     if filter_isolated:
         def _has_drawn_edge(td):
             return (any(n in nodes for n in td.get('publishers',  []))
@@ -805,9 +805,9 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     else:
         filtered_isolated = 0
 
-    #  Early-exit: nothing to draw 
+    # ── Early-exit: nothing to draw ──────────────────────────────────────────
     if not nodes and not topics_to_show:
-        print('\n    No nodes or topics to display.')
+        print('\n  ⚠  No nodes or topics to display.')
         if filtered_mnodes and not filter_monitor_nodes is False:
             print(f'     (Only the ros2_graph_monitor node was found in this session —')
             print(f'      the ROS2 pipeline was not running when monitoring started.)')
@@ -853,7 +853,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         plt.close(fig)
         return
 
-    #  Compute layout 
+    # ── Compute layout ───────────────────────────────────────────────────────
     layout = GraphLayout(nodes, topics_to_show, topics_to_show)
 
     filter_parts = []
@@ -865,7 +865,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     print(f'  Densest column: {layout.max_bucket_size} items  →  figure height: '
           f'{max(16, layout.max_bucket_size * 0.55 + 4):.0f} in')
 
-    #  figure setup 
+    # ────────────────────── figure setup ─────────────────────────────────────
     n_nodes  = len(nodes)
     n_topics = len(topics_to_show)
     mode_label = 'Node-Topic-Node (full topology)' if nodes else 'Topic-only (CSV metrics)'
@@ -894,7 +894,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     ax_legend.set_xlim(0, 1); ax_legend.set_ylim(0, 1); ax_legend.axis('off')
     ax_legend.set_facecolor('#0f3460')
 
-    #  title bar 
+    # ────────────────────── title bar ────────────────────────────────────────
     dur_str = f'  |  {meta["duration"]:.0f} s' if meta.get('duration') else ''
     total_spikes = sum(
         (td.get('spikes', 0) or td.get('spike_count', 0) or 0)
@@ -912,7 +912,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
                   f'{n_topics} topics  |  {mode_label}{spike_txt}{filter_txt}  |  {session_label}',
                   ha='center', va='center', fontsize=12, fontweight='bold',
                   color='white', transform=ax_title.transAxes)
-    #  Adaptive box size so elements never overlap in the densest column 
+    # ── Adaptive box size so elements never overlap in the densest column ──
     # spacing = available y-range / (items_in_densest_bucket + 2 margins)
     y_range = GraphLayout.Y1 - GraphLayout.Y0   # 0.93
     slot    = y_range / (layout.max_bucket_size + 2)
@@ -929,7 +929,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     # Thin edges on dense graphs
     edge_lw    = max(0.3, 1.0  * scale)
     edge_alpha = max(0.4, 0.7  * scale)
-    #  column headers 
+    # ────────────────────── column headers ───────────────────────────────────
     for cat, x in CAT_NODE_X.items():
         n_cat_nodes  = sum(1 for n in nodes if layout.node_cat.get(n) == cat)
         n_cat_topics = sum(1 for t in topics_to_show
@@ -951,7 +951,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
                 ha='center', va='center', fontsize=6.5, color='#dddddd',
                 transform=ax.transAxes, zorder=4)
 
-    #  draw edges first (below boxes) 
+    # ────────────────────── draw edges first (below boxes) ───────────────────
     for tname, td in topics_to_show.items():
         tx, ty = layout.get('topic', tname)
         # Publisher node -> topic  (solid blue)
@@ -967,7 +967,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
                 _draw_edge(ax, tx, ty, nx, ny,
                            color='#dd8833', lw=edge_lw, alpha=edge_alpha)
 
-    #  draw topic boxes 
+    # ────────────────────── draw topic boxes ─────────────────────────────────
     topic_artists = []
     for tname, td in topics_to_show.items():
         tx, ty = layout.get('topic', tname)
@@ -991,7 +991,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         )
         topic_artists.append((patch, tname, info))
 
-    #  draw node boxes 
+    # ────────────────────── draw node boxes ──────────────────────────────────
     node_artists = []
     target = topology.get('target_node')
     for nname, nd in nodes.items():
@@ -1025,7 +1025,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     # node_artists:  (patch, name, info, nd, cat)
     all_artists = topic_artists + [(p, n, i) for p, n, i, *_ in node_artists]
 
-    #  legend 
+    # ────────────────────── legend ───────────────────────────────────────────
     legend_items = [
         (mpatches.Patch(fc='#d5f5d5', ec='#2ca02c', lw=1.5), 'Latency < 20 ms'),
         (mpatches.Patch(fc='#fff3cc', ec='#e6a817', lw=1.5), '20 – 100 ms'),
@@ -1056,7 +1056,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
                    ha='center', va='center', fontsize=8,
                    color='#aabbcc', transform=ax_legend.transAxes)
 
-    #  interactive tooltip 
+    # ────────────────────── interactive tooltip ───────────────────────────────
     tooltip = ax.text(
         0.0, 0.0, '',
         fontsize=7.5, color='#111111', ha='left', va='top',
@@ -1089,19 +1089,19 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
         # Check node artists first (they open detail popup on click)
         for patch, nname, info, nd, cat in node_artists:
             if patch.contains(event)[0]:
-                print(f'\n{""*60}\n{info}\n{""*60}')
+                print(f'\n{"─"*60}\n{info}\n{"─"*60}')
                 _open_node_detail(nname, nd, cat, topics_to_show, main_fig=fig)
                 return
         # Fall back to topic artists (print tooltip text to console)
         for patch, tname, info in topic_artists:
             if patch.contains(event)[0]:
-                print(f'\n{""*60}\n{info}\n{""*60}')
+                print(f'\n{"─"*60}\n{info}\n{"─"*60}')
                 return
 
     fig.canvas.mpl_connect('motion_notify_event', _on_motion)
     fig.canvas.mpl_connect('button_press_event',  _on_click)
 
-    #  save / show 
+    # ────────────────────── save / show ─────────────────────────────────────
     if output_file:
         fig.savefig(output_file, dpi=150, bbox_inches='tight',
                     facecolor=fig.get_facecolor())
@@ -1116,9 +1116,9 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     plt.close(fig)
 
 
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 #  CLI
-# 
+# ──────────────────────────────────────────────────────────────────────────────
 
 def main():
     parser = argparse.ArgumentParser(

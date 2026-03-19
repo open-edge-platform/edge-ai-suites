@@ -51,13 +51,35 @@ uv sync
 
 The monitoring stack needs ROS2 to connect to and monitor ROS2 systems.
 
-Install ROS2 by following the **[Open Edge Platform Robotics Getting Started Guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#)**.
-
-After installation, source the ROS2 environment:
+#### Ubuntu 22.04 (Humble)
 
 ```bash
-source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+# Add ROS2 apt repository
+sudo apt update && sudo apt install -y software-properties-common
+sudo add-apt-repository universe
+sudo apt update && sudo apt install -y curl gnupg lsb-release
+
+sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+    -o /usr/share/keyrings/ros-archive-keyring.gpg
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] \
+    http://packages.ros.org/ros2/ubuntu $(source /etc/os-release && echo $UBUNTU_CODENAME) main" | \
+    sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+# Install ROS2 Humble
+sudo apt update
+sudo apt install -y ros-humble-ros-base python3-rosdep
+
+# Initialize rosdep
+sudo rosdep init
+rosdep update
+```
+
+#### Ubuntu 20.04 (Foxy)
+
+```bash
+# Similar steps but install ros-foxy-ros-base instead
+sudo apt install -y ros-foxy-ros-base python3-rosdep
 ```
 
 ### 4. Source ROS2 Environment
@@ -67,11 +89,11 @@ Add to your `~/.bashrc` to automatically source ROS2:
 ```bash
 # Add this line to ~/.bashrc
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-echo "export ROS_DOMAIN_ID=45" >> ~/.bashrc
+echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
 
 # Or source it now for the current session:
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 ```
 
 **Important**: Make sure `ROS_DOMAIN_ID` matches between the monitoring machine and the target system!
@@ -80,14 +102,14 @@ export ROS_DOMAIN_ID=45
 
 ```bash
 # Check Python modules
-uv run python -c "import matplotlib, numpy, psutil; print(' Python modules OK')"
+uv run python -c "import matplotlib, numpy, psutil; print('✅ Python modules OK')"
 
 # Check ROS2 (after sourcing)
 source /opt/ros/humble/setup.bash
-uv run python -c "import rclpy; print(' ROS2 (rclpy) OK')"
+uv run python -c "import rclpy; print('✅ ROS2 (rclpy) OK')"
 
 # Check system tools
-which iostat && echo " sysstat OK"
+which iostat && echo "✅ sysstat OK"
 ```
 
 ## Quick Start
@@ -122,7 +144,7 @@ For monitoring a ROS2 system running on another machine:
 
 2. **Ensure ROS_DOMAIN_ID matches**:
    ```bash
-   export ROS_DOMAIN_ID=45  # Must match on both machines
+   export ROS_DOMAIN_ID=0  # Must match on both machines
    ```
 
 3. **Run remote monitoring**:
@@ -163,14 +185,14 @@ ROS2 uses DDS for communication. For cross-machine discovery:
 **Option 1: Same Local Network (easiest)**
 ```bash
 # On both machines
-export ROS_DOMAIN_ID=45  # Use same domain ID (0-101)
+export ROS_DOMAIN_ID=0  # Use same domain ID (0-101)
 export ROS_LOCALHOST_ONLY=0  # Allow network discovery
 ```
 
 **Option 2: Different Networks (requires explicit peers)**
 ```bash
 # On monitoring machine
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 export FASTRTPS_DEFAULT_PROFILES_FILE=/path/to/fastdds_profile.xml
 ```
@@ -232,7 +254,7 @@ Host robot
     HostName 192.168.1.100
     User ubuntu
     IdentityFile ~/.ssh/id_ed25519
-
+    
 Host jetson
     HostName 10.34.94.191
     User intel
@@ -247,20 +269,20 @@ Now you can use: `ssh robot` instead of `ssh ubuntu@192.168.1.100`
 
 **On monitoring machine:**
 ```bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 source /opt/ros/humble/setup.bash
 ```
 
 **On remote/target machine:**
 ```bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 source /opt/ros/humble/setup.bash
 # Start your ROS2 application
 ```
 
 **Make it permanent** (add to `~/.bashrc` on both machines):
 ```bash
-echo "export ROS_DOMAIN_ID=45" >> ~/.bashrc
+echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
 ```
 
@@ -305,12 +327,12 @@ ssh username@remote-ip "uptime"
 ```bash
 # On remote machine: start a simple talker
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 ros2 run demo_nodes_cpp talker
 
 # On monitoring machine: check if you can see topics
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
 ros2 topic list
 # Should see /chatter if DDS discovery works
 ```
@@ -435,8 +457,7 @@ A convenience script is provided to source ROS2:
 
 ```bash
 # Source ROS2 and set up environment
-source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+source ./setup_ros2_env.sh
 
 # Now run monitoring commands
 make monitor-remote REMOTE_IP=10.34.94.191 REMOTE_USER=intel
@@ -534,9 +555,10 @@ sudo apt install -y ros-humble-ros-base
 
 # Set up environment
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
-echo "export ROS_DOMAIN_ID=45" >> ~/.bashrc
+echo "export ROS_DOMAIN_ID=0" >> ~/.bashrc
 source ~/.bashrc
 
 # Verify
+./setup_ros2_env.sh
 make quick-check
 ```

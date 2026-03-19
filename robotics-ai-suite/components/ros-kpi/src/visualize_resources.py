@@ -490,9 +490,9 @@ def plot_core_heatmap(core_data, data, output_file=None):
                 items_sorted = sorted(items, key=lambda t: t['cpu'], reverse=True)
                 
                 # Build detailed popup text
-                detail_text = f"\n"
+                detail_text = f"═══════════════════════════════════════════════════\n"
                 detail_text += f"  CORE {core_val} PERFORMANCE @ {time_val}\n"
-                detail_text += f"\n\n"
+                detail_text += f"═══════════════════════════════════════════════════\n\n"
                 detail_text += f"CPU Utilization: {cpu_val:.2f}%\n\n"
                 
                 if items_sorted:
@@ -511,9 +511,9 @@ def plot_core_heatmap(core_data, data, output_file=None):
                     detail_text += f"  Major Faults/s:  {total_majflt:8.2f}\n\n"
                     
                     detail_text += f"Active {item_type}s ({len(items_sorted)}): \n"
-                    detail_text += f"{'' * 49}\n"
+                    detail_text += f"{'─' * 49}\n"
                     detail_text += f"{item_label:<8} {'CPU%':>6} {'MEM%':>6} {'RSS(MB)':>10} {'Command'}\n"
-                    detail_text += f"{'' * 49}\n"
+                    detail_text += f"{'─' * 49}\n"
                     
                     # Show all items
                     for item in items_sorted:
@@ -523,7 +523,7 @@ def plot_core_heatmap(core_data, data, output_file=None):
                 else:
                     detail_text += f"No active {item_type.lower()}s on this core at this time.\n"
                 
-                detail_text += f"\n{'' * 49}\n"
+                detail_text += f"\n{'─' * 49}\n"
                 detail_text += "Click elsewhere to close\n"
                 
                 # Create or update detail window
@@ -774,7 +774,7 @@ def plot_gpu(records: list, output_file=None, show=False):
         print("  No GPU data records to plot.")
         return
 
-    #  Prefer the dedicated visualize_gpu module 
+    # ── Prefer the dedicated visualize_gpu module ────────────────────────────
     try:
         import importlib.util, os as _os
         _script_dir = _os.path.dirname(_os.path.abspath(__file__))
@@ -788,7 +788,7 @@ def plot_gpu(records: list, output_file=None, show=False):
     except Exception:
         pass  # fall through to inline implementation
 
-    #  Inline fallback (no visualize_gpu.py available) 
+    # ── Inline fallback (no visualize_gpu.py available) ─────────────────────
     _ENG_RE = {
         'Render/3D': re.compile(r'render|3d',                      re.I),
         'Blitter':   re.compile(r'blitter|blt',                    re.I),

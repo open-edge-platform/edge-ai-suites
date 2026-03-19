@@ -20,9 +20,40 @@ cd ros2-kpi
 make install
 ```
 
+## Easiest Way to Use
+
+### Option 1: Interactive Launcher (Recommended)
+```bash
+./quickstart
+```
+
+This interactive menu guides you through:
+- Monitoring your ROS2 application
+- Testing DDS/RTSP latency
+- Quick health checks
+- Starting Grafana dashboards
+- Viewing results
+
+### Option 2: Make Shortcuts
+```bash
+# Quick start
+make start          # Same as ./quickstart
+
+# Quick health check (30 seconds)
+make quick
+
+# Quick latency test
+make test
+```
+
 ## Common Tasks
 
 ### Monitor Your ROS2 Application
+
+**Simplest:**
+```bash
+./quickstart         # Choose option 1
+```
 
 **Command line:**
 ```bash
@@ -33,19 +64,21 @@ make monitor
 make monitor NODE=/your_node_name DURATION=120
 
 # Quick 30-second check
-make quick-check
+make quick
 ```
 
 ### Test DDS/RTSP Latency
 
 **Terminal 1:**
 ```bash
-make latency-test-relay
+./quickstart         # Choose option 7 (hidden relay option)
+# Or: make latency-test-relay
 ```
 
 **Terminal 2:**
 ```bash
-make latency-test-main RATE=1000 DURATION=60
+./quickstart         # Choose option 2
+# Or: make latency-test-main RATE=1000 DURATION=60
 ```
 
 ### View Dashboards
@@ -74,11 +107,11 @@ make grafana-stop
 All results are saved in timestamped folders:
 ```
 monitoring_sessions/
- YYYYMMDD_HHMMSS/
-     graph_timing.csv         # Topic timing data
-     resource_usage.log        # CPU/memory usage
-     session_info.txt          # Test configuration
-     visualizations/           # Auto-generated plots
+└── YYYYMMDD_HHMMSS/
+    ├── graph_timing.csv         # Topic timing data
+    ├── resource_usage.log        # CPU/memory usage
+    ├── session_info.txt          # Test configuration
+    └── visualizations/           # Auto-generated plots
 ```
 
 View results:
@@ -106,6 +139,12 @@ make latency-remote-main REMOTE_IP=192.168.1.100
 
 ### Custom Parameters
 ```bash
+# Extended monitoring (5 minutes)
+make monitor-long DURATION=300
+
+# High-frequency benchmark (10 minutes)
+make benchmark NODE=/critical_node
+
 # Custom latency test
 make latency-test-main RATE=2000 DURATION=60 RELIABILITY=RELIABLE
 
@@ -123,7 +162,12 @@ make help           # Show all commands
 ### ROS2 Not Found
 ```bash
 source /opt/ros/humble/setup.bash
-export ROS_DOMAIN_ID=45
+export ROS_DOMAIN_ID=0
+```
+
+Or use the auto-setup script:
+```bash
+source ./auto-setup.sh
 ```
 
 ### No Nodes Detected
@@ -137,7 +181,7 @@ Then run the monitoring in another terminal.
 
 ### Permission Denied
 ```bash
-chmod +x src/*.py monitor_stack.py grafana/*.sh scripts/*.sh
+chmod +x quickstart auto-setup.sh test_latency_improvements.sh
 ```
 
 ### UV Not Found
@@ -154,7 +198,9 @@ source ~/.bashrc
 ros2 launch nav2_bringup tb3_simulation_launch.py
 
 # Terminal 2: Monitor it
-make monitor NODE=/your_node_name
+./quickstart
+# Choose: 1) Monitor my ROS2 application
+# Select the node you want to monitor
 ```
 
 ### Example 2: Benchmark DDS Performance
@@ -198,7 +244,8 @@ For issues or questions:
 
 **TL;DR:**
 ```bash
-make quick-check    # Quick health check
-make monitor        # Start full monitoring
-make help           # Show all commands
+./quickstart    # Interactive menu - easiest way!
+make quick      # Quick health check
+make start      # Same as ./quickstart
+make help       # Show all commands
 ```

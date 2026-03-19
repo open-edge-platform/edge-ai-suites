@@ -44,7 +44,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 
-#  helpers 
+# ── helpers ──────────────────────────────────────────────────────────────────
 
 def _f(v) -> Optional[float]:
     """Safe float conversion; returns None on empty / non-numeric input."""
@@ -73,7 +73,7 @@ def _fmt(mean: Optional[float], std: Optional[float], unit: str = "") -> str:
     return f"{mean:.3f}{unit}"
 
 
-#  session discovery 
+# ── session discovery ─────────────────────────────────────────────────────────
 
 def find_sessions(sessions_dir: Path, n: int) -> List[Path]:
     """Return the N most-recent session directories (sorted by name desc).
@@ -98,7 +98,7 @@ def find_sessions(sessions_dir: Path, n: int) -> List[Path]:
     return dirs[:n]
 
 
-#  graph timing CSV 
+# ── graph timing CSV ─────────────────────────────────────────────────────────
 
 def parse_graph_csv(csv_path: Path) -> Dict[str, Dict[str, List[float]]]:
     """
@@ -123,7 +123,7 @@ def parse_graph_csv(csv_path: Path) -> Dict[str, Dict[str, List[float]]]:
                     if v is not None:
                         results[topic][col].append(v)
     except Exception as exc:
-        print(f"    Could not parse {csv_path}: {exc}", file=sys.stderr)
+        print(f"  ⚠  Could not parse {csv_path}: {exc}", file=sys.stderr)
     return results
 
 
@@ -163,7 +163,7 @@ def aggregate_timing(sessions: List[Path]) -> Dict[str, Dict[str, Dict[str, Opti
     return result
 
 
-#  resource log (pidstat) 
+# ── resource log (pidstat) ───────────────────────────────────────────────────
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
@@ -206,7 +206,7 @@ def parse_resource_log(log_path: Path) -> Dict[str, Dict[str, List[float]]]:
                 except (ValueError, IndexError):
                     continue
     except Exception as exc:
-        print(f"    Could not parse {log_path}: {exc}", file=sys.stderr)
+        print(f"  ⚠  Could not parse {log_path}: {exc}", file=sys.stderr)
     return results
 
 
@@ -244,7 +244,7 @@ def aggregate_resources(sessions: List[Path]) -> Dict[str, Dict[str, Dict[str, O
     return result
 
 
-#  terminal output 
+# ── terminal output ───────────────────────────────────────────────────────────
 
 def print_timing_table(
     agg: Dict[str, Dict[str, Dict[str, Optional[float]]]],
@@ -257,7 +257,7 @@ def print_timing_table(
     col_w = 40
     print(f"\n{'TOPIC':<{col_w}} {'Sessions':>8}  {'Freq (Hz)':>22}  {'Delta (ms)':>22}  "
           f"{'Latency mean (ms)':>24}  {'Proc delay (ms)':>24}")
-    print("" * (col_w + 8 + 22 + 22 + 24 + 24 + 10))
+    print("─" * (col_w + 8 + 22 + 22 + 24 + 24 + 10))
 
     for topic in sorted(agg):
         m = agg[topic]
@@ -295,7 +295,7 @@ def print_resource_table(
 
     col_w = 50
     print(f"\n{'PROCESS':<{col_w}} {'Sessions':>8}  {'CPU %':>22}  {'RSS MB':>22}")
-    print("" * (col_w + 8 + 22 + 22 + 6))
+    print("─" * (col_w + 8 + 22 + 22 + 6))
 
     for cmd, metrics in ranked:
         sessions = max(v["sessions"] for v in metrics.values()) if metrics else 0
@@ -309,7 +309,7 @@ def print_resource_table(
         )
 
 
-#  optional matplotlib plots 
+# ── optional matplotlib plots ─────────────────────────────────────────────────
 
 def _screen_inches() -> Tuple[float, float, float]:
     """
@@ -386,7 +386,7 @@ def plot_timing(
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    #  shared data preparation 
+    # ── shared data preparation ───────────────────────────────────────────────
     topics = sorted(agg)
     lat_data, proc_data, freq_data = [], [], []
     labels = []
@@ -425,7 +425,7 @@ def plot_timing(
     legend_labels = ["< 10 ms  excellent", "10–50 ms  acceptable",
                      "50–200 ms  degraded", "> 200 ms  poor"]
 
-    #  Figure 1: Latency & Processing Delay 
+    # ── Figure 1: Latency & Processing Delay ─────────────────────────────────
     fig_w = max(10, min(n * 0.9 + 3, sw * 0.85))
     fig_h = max(5,  min(sh * 0.75, 9))
     fig1, ax_lat = plt.subplots(figsize=(fig_w, fig_h))
@@ -490,7 +490,7 @@ def plot_timing(
         plt.show()
     plt.close(fig1)
 
-    #  Figure 2: Message Frequency 
+    # ── Figure 2: Message Frequency ───────────────────────────────────────────
     freq_means_arr = np.array([f or 0 for f in freq_data])
 
     fig_h2 = max(4, min(sh * 0.55, 7))
@@ -569,7 +569,7 @@ def plot_resources(
     fig = plt.figure(figsize=(fig_w, fig_h))
     gs  = gridspec.GridSpec(1, 2, figure=fig, wspace=0.45)
 
-    #  CPU panel 
+    # ── CPU panel ─────────────────────────────────────────────────────────────
     ax_cpu = fig.add_subplot(gs[0])
     bars_c = ax_cpu.barh(y, cpu_means, xerr=cpu_stds, capsize=4,
                          color=cpu_colors, alpha=0.88,
@@ -594,7 +594,7 @@ def plot_resources(
                      fontsize=10, fontweight="bold")
     ax_cpu.grid(axis="x", alpha=0.25)
 
-    #  Memory panel 
+    # ── Memory panel ──────────────────────────────────────────────────────────
     ax_rss = fig.add_subplot(gs[1])
     bars_r = ax_rss.barh(y, rss_means, xerr=rss_stds, capsize=4,
                          color=rss_colors, alpha=0.88,
@@ -632,7 +632,7 @@ def plot_resources(
     plt.close(fig)
 
 
-#  table export (CSV + JSON) 
+# ── table export (CSV + JSON) ────────────────────────────────────────────────
 
 def save_timing_tables(
     agg: Dict[str, Dict[str, Dict[str, Optional[float]]]],
@@ -642,7 +642,7 @@ def save_timing_tables(
     """Write avg_timing.csv and avg_timing.json to *output_dir*."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    #  CSV 
+    # ── CSV ──────────────────────────────────────────────────────────────────
     csv_path = output_dir / "avg_timing.csv"
     with open(csv_path, "w", newline="") as fh:
         writer = csv.writer(fh)
@@ -669,7 +669,7 @@ def save_timing_tables(
             ])
     print(f"  Saved: {csv_path}")
 
-    #  JSON 
+    # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_timing.json"
     payload: Dict = {
         "n_sessions": n_sessions,
@@ -700,7 +700,7 @@ def save_resource_tables(
         reverse=True,
     )
 
-    #  CSV 
+    # ── CSV ──────────────────────────────────────────────────────────────────
     csv_path = output_dir / "avg_resources.csv"
     with open(csv_path, "w", newline="") as fh:
         writer = csv.writer(fh)
@@ -720,7 +720,7 @@ def save_resource_tables(
             ])
     print(f"  Saved: {csv_path}")
 
-    #  JSON 
+    # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_resources.json"
     payload = {
         "n_sessions": n_sessions,
@@ -744,7 +744,7 @@ def save_gpu_tables(
     """Write avg_gpu.csv and avg_gpu.json to *output_dir*."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    #  CSV 
+    # ── CSV ──────────────────────────────────────────────────────────────────
     csv_path = output_dir / "avg_gpu.csv"
     with open(csv_path, "w", newline="") as fh:
         writer = csv.writer(fh)
@@ -758,16 +758,16 @@ def save_gpu_tables(
             ])
     print(f"  Saved: {csv_path}")
 
-    #  JSON 
+    # ── JSON ─────────────────────────────────────────────────────────────────
     json_path = output_dir / "avg_gpu.json"
     with open(json_path, "w") as fh:
         json.dump(gpu_agg, fh, indent=2)
     print(f"  Saved: {json_path}")
 
 
-#  main 
+# ── main ──────────────────────────────────────────────────────────────────────
 
-#  GPU log (sysfs) 
+# ── GPU log (sysfs) ──────────────────────────────────────────────────────────
 
 def aggregate_gpu(sessions: List[Path]) -> Optional[Dict[str, Dict[str, Optional[float]]]]:
     """Average GPU busy%, act_freq, and throttle_fraction across sessions."""
@@ -916,9 +916,9 @@ def main() -> None:
         sys.exit(1)
 
     n_found = len(sessions)
-    print("")
-    print(f"  ROS2 KPI — Average across last {args.runs} session(s)               ")
-    print("")
+    print("╔══════════════════════════════════════════════════════════════════╗")
+    print(f"║  ROS2 KPI — Average across last {args.runs} session(s)               ║")
+    print("╚══════════════════════════════════════════════════════════════════╝")
     print(f"\nUsing {n_found} session(s) (of {args.runs} requested):")
     for s in reversed(sessions):   # oldest first
         print(f"  • {s.name}")
@@ -928,11 +928,11 @@ def main() -> None:
         sessions_dir / f"average_{args.runs}"
     )
 
-    #  timing ---------------------------------------------------------------
+    # ── timing ---------------------------------------------------------------
     if not args.resources_only:
-        print("")
+        print("══════════════════════════════════════════")
         print(f" GRAPH TIMING  (avg of {n_found} session(s))")
-        print("")
+        print("══════════════════════════════════════════")
         timing_agg = aggregate_timing(sessions)
         print_timing_table(timing_agg, n_found)
         if timing_agg:
@@ -945,11 +945,11 @@ def main() -> None:
 
     print()
 
-    #  resources ------------------------------------------------------------
+    # ── resources ------------------------------------------------------------
     if not args.timing_only:
-        print("")
+        print("══════════════════════════════════════════")
         print(f" RESOURCE USAGE  (avg of {n_found} session(s))")
-        print("")
+        print("══════════════════════════════════════════")
         resource_agg = aggregate_resources(sessions)
         print_resource_table(resource_agg, n_found, top=args.top)
         if resource_agg:
@@ -963,7 +963,7 @@ def main() -> None:
         # GPU average
         gpu_agg = aggregate_gpu(sessions)
         if gpu_agg:
-            print("\n GPU Average ")
+            print("\n── GPU Average ──")
             for key, info in gpu_agg.items():
                 print(f"  {key:20s}: {info['mean']:.1f} ± {info['std']:.1f}  (n={info['sessions']})")
             if args.save_tables:

@@ -334,21 +334,21 @@ class LatencyTesterNode(Node):
             print(f"  Worst case: {summary['max_ms']:.4f} ms")
             
             if summary['max_ms'] < cycle_time_ms:
-                print(f"\n   EXCELLENT - Even worst case within {cycle_time_ms:.3f}ms budget")
+                print(f"\n  ✅ EXCELLENT - Even worst case within {cycle_time_ms:.3f}ms budget")
             elif failures == 0:
-                print(f"\n   PASSED - All mean latencies within budget")
+                print(f"\n  ✅ PASSED - All mean latencies within budget")
             else:
-                print(f"\n    NEEDS TUNING - {failures} samples exceeded budget")
+                print(f"\n  ⚠️  NEEDS TUNING - {failures} samples exceeded budget")
             
             # Jitter assessment
             jitter_pct = (summary['std_dev_ms'] / summary['mean_ms']) * 100
             print(f"\n  Jitter (CoV): {jitter_pct:.1f}%")
             if jitter_pct < 10:
-                print(f"     Low jitter - Consistent performance")
+                print(f"    ✅ Low jitter - Consistent performance")
             elif jitter_pct < 25:
-                print(f"      Moderate jitter")
+                print(f"    ⚠️  Moderate jitter")
             else:
-                print(f"     High jitter - Needs investigation")
+                print(f"    ❌ High jitter - Needs investigation")
         
         print(f"{'='*70}\n")
         

@@ -228,7 +228,7 @@ def cleanup_tmp():
 _EMOJI_RE = re.compile(
     "["
     "\U0001F300-\U0001F9FF"  # Misc symbols, emoticons, transport, etc.
-    "\U00002600-\U000027BF"  # Misc symbols (   etc)
+    "\U00002600-\U000027BF"  # Misc symbols (✓ ✗ ★ etc)
     "\U0001FA00-\U0001FFFF"  # Extended symbols
     "\U00002702-\U000027B0"
     "\U000024C2-\U0001F251"
@@ -277,7 +277,7 @@ def convert_file(src: Path, dest: Path):
         text = "```\n" + text + "\n```"
     html = md_to_html(text, title=src.stem)
     ok = html_to_pdf(html, dest)
-    status = "" if ok else ""
+    status = "✅" if ok else "❌"
     print(f"  {status}  {src.name}  →  {dest.name}")
     return ok
 
@@ -321,7 +321,7 @@ def build_combined(sources: list[tuple[Path, str]], dest: Path):
     with open(dest, "wb") as f:
         result = pisa.CreatePDF(html.encode("utf-8"), dest=f, encoding="utf-8")
     ok = not result.err
-    status = "" if ok else ""
+    status = "✅" if ok else "❌"
     print(f"  {status}  Combined  →  {dest.name}")
     return ok
 
@@ -339,12 +339,12 @@ def main():
         (repo / "docs" / "CHEATSHEET.txt",     "Cheat Sheet"),
     ]
 
-    print("\n Building PDFs...\n")
+    print("\n📄 Building PDFs...\n")
 
     ok_all = True
     for src, label in sources:
         if not src.exists():
-            print(f"     {src.name} not found, skipping")
+            print(f"  ⚠️   {src.name} not found, skipping")
             continue
         dest = out_dir / (src.stem + ".pdf")
         ok_all &= convert_file(src, dest)
@@ -354,8 +354,8 @@ def main():
     existing = [(s, l) for s, l in sources if s.exists()]
     ok_all &= build_combined(existing, combined_dest)
 
-    print(f"\n{' All PDFs generated' if ok_all else '  Some PDFs failed'}.")
-    print(f" Output: {out_dir}\n")
+    print(f"\n{'✅ All PDFs generated' if ok_all else '⚠️  Some PDFs failed'}.")
+    print(f"📁 Output: {out_dir}\n")
     cleanup_tmp()
     return 0 if ok_all else 1
 
