@@ -16,10 +16,14 @@ Follow the [Install Openvino](../../../../gsg_robot/install-openvino.md) instruc
 
 ### Install Python packages (optional)
 
-Following Python packages are necessary to automatically download and convert the model to IR files.
+The following Python packages are necessary to automatically download and convert the model to IR files.
 Also, you can provide your own model files in the config, if you have them already.
 
 ```bash
+sudo apt install python3-venv
+python3 -m venv venv_openvino
+cd venv_openvino
+source bin/activate
 pip3 install numpy pandas openvino-dev ultralytics nncf onnx
 ```
 
@@ -46,72 +50,80 @@ sudo apt install ros-humble-openvino-yolov8 ros-humble-openvino-yolov8-msgs
 
 ## Run Demo with Intel® RealSense™ Camera Topic Input
 
-First create a config file `pipeline.toml`. If not present, sample content for
-this configuration file (including the comments) will be generated in the
-command output when executing the ``ros2 run yolo yolo`` command.
+1. Download and convert a YOLOv8 model into OpenVINO format:
 
 ```bash
-title = "Yolo Ros Node"
-
-[main]
-pipelines = ["pipeline1"] # names will be used to name output topics
-models = ["model1"]
-
-[model1]
-model_path = "" # if empty, model will be downloaded from ultralytics, otherwise provide path to .xml file or other format supported by openvino
-model_path_bin = "" # use only if you want to provide your own model in openvino format, and there you need to provide path to .bin file
-# following options are only used if model_path is empty
-task = "segmentation" # options: detection, segmentation, pose
-# w,h of internal resolution, input frames are resized
-# consider using smaller resolution for faster inference
-width = 640
-height = 480
-model_size = "n" # options: n, s, m, l, x (refer to ultralytics docs)
-half = true # use half precision
-
-[pipeline1]
-model = "model1" # model name from [main] section
-device = "CPU"  # options CPU, GPU (this is directly passed to openvino)
-performance_mode = 1 # Performance mode 1=Latency, 2=Throughput, 3=Cumulative throughput
-priority = 1 # 0=Low, 1=Normal, 2=High
-precision = 1 #  0 = FP32, 1 = FP16 , this is passed as hint to openvino
-num_requests = 1 # Number of inference requests (hint for openvino) recommended 1 per input stream
-map_frame = "map" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
-queue_size = 10
-workers = 2 # Aim for 2 workers per input stream
-max_fps = -1 # -1 for unlimited
-publish_video = true # publish video with detections
-publish_detections = true # publish detections (special message type), can be used to generate video with detections
-# use this if you don't have or don't need synchronized depth data
-rgb_topic = []
-rgb_topic_max_fps = [] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
-# depth is not used by yolo, but if provided this node will synchronize rgb and depth and transform to camera frame
-# this can be later used to place detections in 3D space
-# topics need to be provided in pairs
-rgbd_topic_rgb = ["/camera/color/image_raw"]
-rgbd_topic_depth = ["/camera/depth/image_raw"]
-rgbd_topic_max_fps = []
+python3 -c 'from ultralytics import YOLO; model = YOLO("yolov8n.pt"); model.export(format="openvino")'
 ```
 
-```bash
-ros2 run yolo yolo --toml pipeline.toml &
-ros2 run realsense2_camera realsense2_camera_node --ros-args \
-         -p depth_module.profile:=640x480x60 \
-         -p rgb_camera.profile:=640x480x60 \
-         -p align_depth.enable:=True \
-         -r /camera/camera/color/image_raw:=/camera/color/image_raw \
-         -r /camera/camera/color/camera_info:=/camera/color/camera_info \
-         -r /camera/camera/aligned_depth_to_color/image_raw:=/camera/depth/image_raw \
-         -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info
-```
+2. Create a config file `pipeline.toml`. If not present, sample content for
+   this configuration file (including the comments) will be generated in the
+   command output when executing the ``ros2 run yolo yolo`` command.
 
-Once you start the node, you view the output video and detections using the following command:
+   ```bash
+   title = "YOLO ROS Node"
 
-```bash
-rviz2
-```
+   [main]
+   pipelines = ["pipeline1"] # names will be used to name output topics
+   models = ["model1"]
 
-Then you can subscribe to the ``/pipeline1/color/image_raw/yolo_video`` topic to view the result.
+   [model1]
+   model_path = "yolov8n_openvino_model/yolov8n.xml" # if empty, model will be downloaded from ultralytics, otherwise provide path to .xml file or other format supported by openvino
+   model_path_bin = "" # use only if you want to provide your own model in openvino format, and there you need to provide path to .bin file
+   # following options are only used if model_path is empty
+   task = "detection" # options: detection, segmentation, pose
+   # w,h of internal resolution, input frames are resized
+   # consider using smaller resolution for faster inference
+   width = 640
+   height = 480
+   model_size = "n" # options: n, s, m, l, x (refer to ultralytics docs)
+   half = true # use half precision
+
+   [pipeline1]
+   model = "model1" # model name from [main] section
+   device = "CPU"  # options CPU, GPU (this is directly passed to openvino)
+   performance_mode = 1 # Performance mode 1=Latency, 2=Throughput, 3=Cumulative throughput
+   priority = 1 # 0=Low, 1=Normal, 2=High
+   precision = 1 #  0 = FP32, 1 = FP16 , this is passed as hint to openvino
+   num_requests = 1 # Number of inference requests (hint for openvino) recommended 1 per input stream
+   map_frame = "map" # setting is ignored if single topic is used, otherwise it will be used to synchronize camera location
+   queue_size = 10
+   workers = 2 # Aim for 2 workers per input stream
+   max_fps = -1 # -1 for unlimited
+   publish_video = true # publish video with detections
+   publish_detections = true # publish detections (special message type), can be used to generate video with detections
+   # use this if you don't have or don't need synchronized depth data
+   rgb_topic = []
+   rgb_topic_max_fps = [] # same length as rgb_topic, -1 for unlimited will assume -1 for all topics if not provided
+   # depth is not used by yolo, but if provided this node will synchronize rgb and depth and transform to camera frame
+   # this can be later used to place detections in 3D space
+   # topics need to be provided in pairs
+   rgbd_topic_rgb = ["/camera/color/image_raw"]
+   rgbd_topic_depth = ["/camera/depth/image_raw"]
+   rgbd_topic_max_fps = []
+   ```
+
+3. Launch the ROS YOLO node:
+
+   ```bash
+   ros2 run yolo yolo --toml pipeline.toml &
+   ros2 run realsense2_camera realsense2_camera_node --ros-args \
+            -p depth_module.profile:=640x480x60 \
+            -p rgb_camera.profile:=640x480x60 \
+            -p align_depth.enable:=True \
+            -r /camera/camera/color/image_raw:=/camera/color/image_raw \
+            -r /camera/camera/color/camera_info:=/camera/color/camera_info \
+            -r /camera/camera/aligned_depth_to_color/image_raw:=/camera/depth/image_raw \
+            -r /camera/camera/aligned_depth_to_color/camera_info:=/camera/depth/camera_info
+   ```
+
+4. Once you start the node, you view the output video and detections using the following command:
+
+   ```bash
+   rviz2
+   ```
+
+   Then you can subscribe to the ``/pipeline1/camera/color/image_raw/video`` topic to view the result.
 
 ## Advanced usage
 

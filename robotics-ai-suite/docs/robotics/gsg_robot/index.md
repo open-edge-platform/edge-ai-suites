@@ -197,29 +197,6 @@ This section explains the procedure to configure the APT package manager to use 
    echo -e "Package: intel-oneapi-runtime-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/oneapi > /dev/null
    ```
 
-7. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
-
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
-   ```
-
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   ```
-
-   :::
-   ::::
-
-
 ## 4. Install OpenVINO™ Packages
 
 The following steps will add the OpenVINO™ APT repository to your package management.
@@ -697,55 +674,7 @@ access to commonly used robotic functionality with ease.
    > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
 
 
-## 7. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
-
-If you want to run OpenVINO™ inferencing applications on the GPU device
-of Intel® Core™ Ultra processors, you need to install the Intel® GPU driver.
-If your system does not have an Intel® Core™ Ultra Processor, you should skip
-this step.
-
-1. Install mesa packages from ``kisak`` PPA:
-
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   ::::
-   :::::
-
-2. Install the latest Linux kernel:
-
-   ```bash
-   sudo apt install linux-intel-rt-experimental
-   ```
-
-3. Install the ``eci-customizations`` package to populate the GRUB menu
-   with the latest Linux kernel:
-
-   ```bash
-   sudo apt install eci-customizations
-   ```
-
-4. Install GuC and HuC Linux firmware package:
-
-   ```bash
-   sudo apt install linux-firmware
-   ```
-
-
-## 8. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
+## 7. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
 
 If you want to run OpenVINO™ inferencing applications on the NPU device
 of Intel® Core™ Ultra processors, you need to install the Intel® NPU driver.
@@ -827,11 +756,83 @@ To install the Intel® NPU driver, complete the following steps:
    ```
 
 
-## 9. Reboot to load latest Linux kernel and firmware
+## 8. Reboot to load latest Linux kernel and firmware
 
 ```bash
 sudo reboot
 ```
+
+## Optional - Enabling Intel® GPU
+
+If you are using Intel® silcon on an older OS distribution (Ex: Ubuntu 22)
+and are having trouble getting the Intel® GPU functioning, you may
+need to install a newer Linux kernel, firmware, and GPU drivers from
+development.
+
+1. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
+
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
+   ```
+
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   ```
+
+   :::
+   ::::
+
+2. Install mesa packages from ``kisak`` PPA:
+
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+   ::::
+   :::::
+
+3. Install the latest Linux kernel:
+
+   ```bash
+   sudo apt install linux-intel-rt-experimental
+   ```
+
+4. Install the ``eci-customizations`` package to populate the GRUB menu
+   with the latest Linux kernel:
+
+   ```bash
+   sudo apt install eci-customizations
+   ```
+
+5. Install GuC and HuC Linux firmware package:
+
+   ```bash
+   sudo apt install linux-firmware
+   ```
+
+6. Reboot the system to allow the latest Linux kernel to boot.
+
 
 ## Installation Troubleshooting
 
