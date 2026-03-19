@@ -48,7 +48,7 @@ hostname -I | awk '{print $1}'
 
 Open your web browser and navigate to the Node-RED interface:
 ```
-https://<HOST_IP>/grafana
+https://<HOST_IP>/nodered
 ```
 
 Replace `<HOST_IP>` with your actual system IP address.

@@ -8,7 +8,7 @@ The stack ingests an RTSP stream, runs a DLStreamer pipeline that samples frames
 
 ```
 RTSP Source → dlstreamer-pipeline-server
-            ├─→ 1fps AI branch (GStreamer gvagenai) → /tmp/results.jsonl
+            ├─→ 1fps AI branch (GStreamer gvagenai) → MQTT Broker
             └─→ 30fps preview → mediamtx (WebRTC) → Dashboard
                                                  ↓
                                   Dashboard collects metrics (CPU, GPU, RAM)
@@ -25,7 +25,7 @@ RTSP Source → dlstreamer-pipeline-server
 
 ## Learn More
 
-- [System Requirements](./system-requirements.md)
+- [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)

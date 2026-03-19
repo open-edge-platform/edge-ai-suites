@@ -87,6 +87,7 @@ continuously and appears in the UI as soon as the application starts.
 get-started
 how-it-works
 how-to-use-gpu-for-inference
+how-to-use-npu-for-inference
 troubleshooting
 release-notes
 

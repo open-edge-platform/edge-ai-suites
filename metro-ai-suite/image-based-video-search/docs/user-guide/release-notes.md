@@ -1,11 +1,18 @@
 # Release Notes
 
+- [Version 1.2.0](#version-120)
 - [Version 1.1.0](#version-110)
 - [Version 1.0.1](#version-101)
 - [Version 1.0.0](#version-100)
 
 Details about the changes, improvements, and known issues in this release of the
 application.
+
+## Version 1.2.0
+
+- Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
+- Changed model from person-vehicle-bike-detection-2004 to yolov11s model.
+- Support IBVS for NPU device
 
 ## Version 1.1.0
 

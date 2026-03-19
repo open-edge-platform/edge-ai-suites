@@ -2,9 +2,11 @@
 
 This section collects guides for PCB Anomaly Detection sample application.
 
+- [Run multiple apps](./how-to-guides/run-multiple-apps.md)
 - [Manage pipelines](./how-to-guides/manage-pipelines.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)
 - [Use GPU For Inference](./how-to-guides/use-gpu-for-inference.md)
+- [Use NPU For Inference](./how-to-guides/use-npu-for-inference.md)
 - [Use Your AI Model and Video](./how-to-guides/use-your-ai-model-and-video.md)
 - [Change the Input Video Source](./how-to-guides/change-input-video-source.md)
 - [Scale Video Resolution](./how-to-guides/scale-video-resolution.md)
@@ -14,14 +16,17 @@ This section collects guides for PCB Anomaly Detection sample application.
 - [Start MQTT publisher](./how-to-guides/start-mqtt-publisher.md)
 - [Benchmarks](./how-to-guides/benchmark.md)
 - [View Open Telemetry data](./how-to-guides/view-telemetry-data.md)
+- [Launching Multiple Instances of Apps](./how-to-guides/run-multiple-apps.md)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
+./how-to-guides/run-multiple-apps
 ./how-to-guides/manage-pipelines
 ./how-to-guides/run-multiple-ai-pipelines
 ./how-to-guides/use-gpu-for-inference
+./how-to-guides/use-npu-for-inference
 ./how-to-guides/use-your-ai-model-and-video
 ./how-to-guides/change-input-video-source
 ./how-to-guides/scale-video-resolution

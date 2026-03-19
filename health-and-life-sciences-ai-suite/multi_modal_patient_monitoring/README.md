@@ -1,58 +1,41 @@
-## Initial Application: Multi-Modal Patient Monitoring
+# Multi-Modal Patient Monitoring
 
-The Multi-Modal Patient Monitoring application demonstrates how multiple AI workloads can run **simultaneously on a single platform**, enabling consolidated patient monitoring.
+The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
----
+You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
 
-## Prerequisites
-```
-• MDPnP and DDS-Bridge components require Java 17.
+- MDPnP OpenICE device integration (vital signs and device data)
+- 3D pose estimation (OpenVINO webcam demo)
+- AI‑ECG analysis
+- Remote PPG (rPPG) for contactless vital sign estimation
 
-• Ensure Java is installed and JAVA_HOME is set correctly.
-  Example:
-    export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-    export PATH=$JAVA_HOME/bin:$PATH
+Outputs from these workloads are consolidated into a 2×2 layout, showing each stream in its own quadrant while sharing a single Intel Core Ultra CPU + iGPU + NPU platform. This helps validate BOM reduction and deployment simplification by consolidating multi‑modal AI on one edge system.
 
-• If you are behind a corporate proxy, configure Gradle:
-    mkdir -p ~/.gradle
-    nano ~/.gradle/gradle.properties
+The solution is intended to:
 
-  Add proxy details in gradle.properties:
-    systemProp.http.proxyHost=<PROXY_HOST>
-    systemProp.http.proxyPort=<PROXY_PORT>
-    systemProp.https.proxyHost=<PROXY_HOST>
-    systemProp.https.proxyPort=<PROXY_PORT>
-```
----
+- Showcase multi‑modal AI capabilities of Intel Core Ultra
+- Run on Ubuntu 24.04 with containerized workloads
+- Be startable with a **single command** from a clean system (end‑to‑end setup and launch targeted in ≤ 30 minutes)
 
-## 🐳 Run Health-AI-Suite Using Pre-Built Images
+Secure provisioning (for example, Polaris Peak integration) is not part of the initial implementation, but the architecture is intended to be extensible for future security integrations.
 
-```
-make run
-```
----
-## 🚀 Run Health-AI-Suite (Local Build)
-```
-# Initialize MDPnP submodules and dependencies
-make init-mdpnp
+## Get Started
 
-# Build MDPnP services locally
-make build-mdpnp
+To see the system requirements and other installations, see the following guides:
 
-# Build DDS bridge locally
-make build-dds-bridge
+- [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the hardware and software requirements for deploying the application.
 
-# Run the full Health-AI-Suite using locally built images
-# Set REGISTRY=false to avoid pulling images from a remote registry
-make run REGISTRY=false
+## How It Works
 
-# Stop and clean up all running containers
-make down
-```
----
+At a high level, the system is composed of several microservices that work together to ingest patient signals and video, run AI models on Intel hardware (CPU, GPU, and NPU), aggregate results, and expose them to a UI for clinicians.
 
-## Disclaimer
+![System design](./docs/user-guide/_assets/system-design.png)
 
-This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
+For details, see [How it Works](./docs/user-guide/how-it-works.md).
 
-sazIUkohj                                                                                           azsPOi
+## Learn More
+
+For detailed information about system requirements, architecture, and how the application works, see the
+
+- [Full Documentation](./docs/user-guide/index.md)

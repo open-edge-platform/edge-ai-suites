@@ -6,17 +6,17 @@ board. Feel free to file new tickets there (after learning about the guidelines 
 
 ## 1. Seeing "No Data" in Grafana
 
-### Issue
+### 1.1 Issue
 
 Grafana panels show **"No Data"** even though the container/stack is
 running.
 
-### Reason
+### 1.2 Reason
 
 The **system date/time is incorrect** on the device. If the system time
 is wrong, data timestamps fall outside Grafana's query window.
 
-### Solution
+### 1.3 Solution
 
 Check the date/time using the command below:
 
@@ -40,14 +40,14 @@ sudo date -s "$(wget --method=HEAD -qSO- --max-redirect=0 google.com 2>&1 | sed 
 
 ## 2. Influx -- Data Being Deleted Beyond Retention Policy (RP)
 
-### Issue
+### 2.1 Issue
 
 - Data appears to be deleted beyond the configured retention policy
   (RP).
 - InfluxDB 1.x deletes old data based on the retention policy duration
   and shard group duration.
 
-### Reason
+### 2.2 Reason
 
 - Data is grouped into **shards**.
 - Shards are deleted only when **all data inside them** is older than
@@ -71,7 +71,7 @@ So the effective expiration time is **1 hour RP + 1 hour shard duration
 | 2 days | 1 hour | 2 days + 1 hr |
 | 30 days | 24 hours | 30 days + 24 hr |
 
-### Solution
+### 2.3 Solution
 
 - Understand that this is **normal and expected behavior** in InfluxDB 1.x.
 - A 1-hour RP will **always** result in \~2 hours before deletion.
@@ -81,19 +81,19 @@ So the effective expiration time is **1 hour RP + 1 hour shard duration
 
 ## 3. Time Series Analytics Microservice (Docker) -- Takes Time to Start or Shows Python Packages Installing
 
-### Issue
+### 3.1 Issue
 
 The Time Series Analytics Microservice takes time to start or displays
 messages about Python packages being installed.
 
-### Reason
+### 3.2 Reason
 
 UDF packages require several dependent packages to be installed during
 runtime, as specified under `udfs/requirements.txt`. Once these
 dependencies are installed, the **Time Series Analytics** microservice
 initializes and starts inferencing.
 
-### Solution
+### 3.3 Solution
 
 No action required --- wait for the **time-series-analytics**
 microservice to complete downloading the dependent packages and

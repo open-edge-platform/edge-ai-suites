@@ -1,7 +1,7 @@
 # ADBSCAN on AAEON Robot Kit
 
 This tutorial describes how to run the ADBSCAN algorithm on the real robot
-[UP Xtreme i11 AAEON Robot Kit](https://up-shop.org/up-xtreme-i11-robotic-kit.html) using the Intel® RealSense™ camera input.
+[AAEON UP Xtreme i11 Robotic Kit](https://up-board.org/up-ai-dev-kit/) using the Intel® RealSense™ camera input.
 During the execution of the program the ADBSCAN algorithm detects objects, and draws them in rviz. Then, the FastMapping algorithm uses data from the ADBSCAN to generate a 2D Map of the environment around.
 User can use the default setup to move robot via gamepad or keyboard, so the 3D-camera on the robot can scan surroundings around.
 
@@ -64,7 +64,7 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 ## Gamepad Robot Control Method
 
-1. If you use joystick, remeber that joystick outputs to /joy_vel and you might have to remap it to cmd_vel.
+1. If you use joystick, remember that joystick outputs to /joy_vel and you might have to remap it to cmd_vel.
    You have to either remove ``remappings=[('cmd_vel', '/joy_vel')]`` from ``/opt/ros/$ROS_DISTRO/share/tutorial_aaeon_adbscan/launch/aaeon_adbscan_gamepad_launch.py`` or run ``ros2_interface`` with remap to `joy_vel`.
 
 2. Launch the ADBSCAN AAEON Robot gamepad control program:
@@ -198,4 +198,4 @@ User can use the default setup to move robot via gamepad or keyboard, so the 3D-
 
 ## Troubleshooting
 
-For general robot issues, refer to [Troubleshooting](../robot-tutorials-troubleshooting.md).
+For general robot issues, refer to [Troubleshooting](../../robot-tutorials-troubleshooting.md).

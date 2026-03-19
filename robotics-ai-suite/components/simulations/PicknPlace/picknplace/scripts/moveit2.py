@@ -132,7 +132,7 @@ class MoveIt2:
                 durability=QoSDurabilityPolicy.VOLATILE,
                 reliability=QoSReliabilityPolicy.BEST_EFFORT,
                 history=QoSHistoryPolicy.KEEP_LAST,
-                depth=1,
+                depth=10,
             ),
             callback_group=self._callback_group,
         )
@@ -298,7 +298,15 @@ class MoveIt2:
         """
 
         # Make sure and wait until self.__joint_state contains robot state via subcription call
+        wait_start = time.time()
         while self.__joint_state is None:
+            if time.time() - wait_start > 30.0:
+                self._node.get_logger().error(
+                    '[MOVEIT2] Timed out waiting for joint_state '
+                    '(no /joint_states messages received in 30s). '
+                    'Check that joint_state_broadcaster is active.'
+                )
+                return
             time.sleep(0.01)
 
         if self.__execute_via_moveit:
@@ -330,18 +338,26 @@ class MoveIt2:
 
         else:
             # Plan via MoveIt 2 and then execute directly with the controller
-            self.execute(
-                self.plan(
-                    position=position,
-                    quat_xyzw=quat_xyzw,
-                    frame_id=frame_id,
-                    tolerance_position=tolerance_position,
-                    tolerance_orientation=tolerance_orientation,
-                    weight_position=weight_position,
-                    weight_orientation=weight_orientation,
-                    cartesian=cartesian,
-                )
+            self._node.get_logger().debug(
+                "[MOVEIT2] move_to_pose called: "
+                f"position={position}, frame_id={frame_id}, "
+                f"cartesian={cartesian}"
             )
+            trajectory = self.plan(
+                position=position,
+                quat_xyzw=quat_xyzw,
+                frame_id=frame_id,
+                tolerance_position=tolerance_position,
+                tolerance_orientation=tolerance_orientation,
+                weight_position=weight_position,
+                weight_orientation=weight_orientation,
+                cartesian=cartesian,
+            )
+            self._node.get_logger().debug(
+                "[MOVEIT2] Planning complete, "
+                f"trajectory is None: {trajectory is None}"
+            )
+            self.execute(trajectory)
 
     def move_to_configuration(
         self,
@@ -472,6 +488,16 @@ class MoveIt2:
         Execute joint_trajectory by communicating directly with the controller.
         """
 
+        self._node.get_logger().debug(
+            '[MOVEIT2] Execute called. Trajectory is '
+            f'None: {joint_trajectory is None}'
+        )
+        if joint_trajectory is not None:
+            self._node.get_logger().debug(
+                '[MOVEIT2] Trajectory has '
+                f'{len(joint_trajectory.points)} points'
+            )
+
         if self.__ignore_new_calls_while_executing and self.__is_executing:
             self._node.get_logger().warn(
                 'Controller is already following a trajectory. Skipping motion.'
@@ -490,22 +516,39 @@ class MoveIt2:
             self.__is_motion_requested = False
             return
 
+        self._node.get_logger().debug('[MOVEIT2] Sending trajectory goal to controller...')
         self._send_goal_async_follow_joint_trajectory(goal=follow_joint_trajectory_goal)
 
-    def wait_until_executed(self):
+    def wait_until_executed(self, timeout_sec: float = 30.0):
         """
         Wait until the previously requested motion is finalised
         through either a success or failure.
         """
 
-        if not self.__is_motion_requested:
-            self._node.get_logger().warn(
-                'Cannot wait until motion is executed (no motion is in progress).'
-            )
+        # Brief grace period to allow the action server response callback to fire.
+        # Without this, a fast MultiThreadedExecutor may process the goal acceptance
+        # AND completion callbacks before we even enter the while-loop, causing a
+        # false "no motion in progress" early return.
+        time.sleep(0.05)
+
+        if not self.__is_motion_requested and not self.__is_executing:
+            # Both flags already cleared — motion completed (or was never started)
             return
 
+        start_time = time.time()
         while self.__is_motion_requested or self.__is_executing:
-            self.__wait_until_executed_rate.sleep()
+            if time.time() - start_time > timeout_sec:
+                self._node.get_logger().error(
+                    f'wait_until_executed timed out after {timeout_sec:.1f}s. '
+                    f'motion_requested={self.__is_motion_requested}, '
+                    f'is_executing={self.__is_executing}. Forcing reset.'
+                )
+                self.__is_motion_requested = False
+                self.__is_executing = False
+                return
+            # Use wall-clock sleep instead of Rate.sleep() to avoid blocking
+            # when use_sim_time=True and sim clock updates are delayed.
+            time.sleep(0.001)
 
     def reset_controller(self, joint_state: Union[JointState, List[float]], sync: bool = True):
         """
@@ -964,19 +1007,56 @@ class MoveIt2:
             )
             return None
 
-        res = self._plan_kinematic_path_service.call(
-            self.__kinematic_path_request
-        ).motion_plan_response
+        self._node.get_logger().debug('[MOVEIT2] Calling plan_kinematic_path service...')
+        try:
+            future = self._plan_kinematic_path_service.call_async(
+                self.__kinematic_path_request
+            )
+            # Wait with timeout to prevent indefinite blocking
+            timeout_sec = 30.0
+            start_wait = time.time()
+            while not future.done():
+                if time.time() - start_wait > timeout_sec:
+                    self._node.get_logger().error(
+                        f'[MOVEIT2] plan_kinematic_path service call '
+                        f'timed out after {timeout_sec}s'
+                    )
+                    future.cancel()
+                    return None
+                time.sleep(0.01)
+            response = future.result()
+            res = response.motion_plan_response
+            self._node.get_logger().debug(
+                '[MOVEIT2] Planning service returned. '
+                f'Error code: {res.error_code.val}'
+            )
 
-        if MoveItErrorCodes.SUCCESS == res.error_code.val:
-            return res.trajectory.joint_trajectory
-        else:
-            self._node.get_logger().warn(f'Planning failed! Error code: {res.error_code.val}.')
+            if MoveItErrorCodes.SUCCESS == res.error_code.val:
+                self._node.get_logger().debug('[MOVEIT2] Planning SUCCESS! Returning trajectory.')
+                return res.trajectory.joint_trajectory
+            else:
+                self._node.get_logger().warn(
+                    '[MOVEIT2] Planning failed! '
+                    f'Error code: {res.error_code.val}'
+                )
+                self._node.get_logger().warn(
+                    '[MOVEIT2] Planning time: '
+                    f'{res.planning_time}'
+                )
+                jt = res.trajectory.joint_trajectory
+                num_pts = len(jt.points) if jt else 0
+                self._node.get_logger().warn(
+                    '[MOVEIT2] Trajectory points: '
+                    f'{num_pts}'
+                )
+                return None
+        except Exception as e:
+            self._node.get_logger().error(f'[MOVEIT2] Exception during planning: {str(e)}')
             return None
 
     def _plan_cartesian_path(
         self,
-        max_step: float = 0.0025,
+        max_step: float = 0.005,
         wait_for_server_timeout_sec: Optional[float] = 1.0,
         frame_id: Optional[str] = None,
     ) -> Optional[JointTrajectory]:
@@ -1020,6 +1100,8 @@ class MoveIt2:
         )
 
         self.__cartesian_path_request.waypoints = [target_pose]
+        self.__cartesian_path_request.max_velocity_scaling_factor = 0.5
+        self.__cartesian_path_request.max_acceleration_scaling_factor = 0.5
 
         if not self._plan_cartesian_path_service.wait_for_service(
             timeout_sec=wait_for_server_timeout_sec
@@ -1029,12 +1111,30 @@ class MoveIt2:
             )
             return None
 
+        self._node.get_logger().debug('[MOVEIT2] Calling cartesian path planning service...')
+        self._node.get_logger().debug(
+            '[MOVEIT2] Target pose: '
+            f'{self.__cartesian_path_request.waypoints[0]}'
+        )
         res = self._plan_cartesian_path_service.call(self.__cartesian_path_request)
+        self._node.get_logger().debug(
+            '[MOVEIT2] Cartesian planning result: '
+            f'error_code={res.error_code.val}, '
+            f'fraction={res.fraction}'
+        )
 
         if MoveItErrorCodes.SUCCESS == res.error_code.val:
+            self._node.get_logger().debug(
+                '[MOVEIT2] Planning succeeded! Trajectory '
+                f'has {len(res.solution.joint_trajectory.points)} points'
+            )
             return res.solution.joint_trajectory
         else:
-            self._node.get_logger().warn(f'Planning failed! Error code: {res.error_code.val}.')
+            self._node.get_logger().warn(
+                '[MOVEIT2] Planning failed! '
+                f'Error code: {res.error_code.val}, '
+                f'fraction: {res.fraction}'
+            )
             return None
 
     def _send_goal_async_move_action(self, wait_for_server_timeout_sec: Optional[float] = 1.0):
@@ -1098,10 +1198,9 @@ class MoveIt2:
             feedback_callback=None,
         )
 
-        action_result.add_done_callback(self.__response_callback_follow_joint_trajectory)
-
         if wait_until_response:
             self.__future_done_event.clear()
+            action_result.add_done_callback(self.__response_callback_follow_joint_trajectory)
             action_result.add_done_callback(
                 self.__response_callback_with_event_set_follow_joint_trajectory
             )
@@ -1118,6 +1217,11 @@ class MoveIt2:
             self.__is_motion_requested = False
             return
 
+        self._node.get_logger().info(
+            "[MOVEIT2] Goal ACCEPTED by "
+            f"'{self.__follow_joint_trajectory_action_client._action_name}', "
+            f"goal_id={goal_handle.goal_id}"
+        )
         self.__is_executing = True
         self.__is_motion_requested = False
 
@@ -1131,9 +1235,24 @@ class MoveIt2:
         self.__future_done_event.set()
 
     def __result_callback_follow_joint_trajectory(self, res):
-        if res.result().status != GoalStatus.STATUS_SUCCEEDED:
+        status = res.result().status
+        status_names = {
+            0: 'UNKNOWN', 1: 'ACCEPTED', 2: 'EXECUTING',
+            3: 'CANCELING', 4: 'SUCCEEDED', 5: 'CANCELED',
+            6: 'ABORTED'
+        }
+        status_str = status_names.get(status, f'STATUS_{status}')
+        if status != GoalStatus.STATUS_SUCCEEDED:
             self._node.get_logger().error(
-                f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."  # noqa: E501
+                "[MOVEIT2] Action "
+                f"'{self.__follow_joint_trajectory_action_client._action_name}' "
+                f"RESULT: {status_str} (code={status})"
+            )
+        else:
+            self._node.get_logger().info(
+                "[MOVEIT2] Action "
+                f"'{self.__follow_joint_trajectory_action_client._action_name}' "
+                f"RESULT: {status_str} (code={status})"
             )
 
         self.__is_executing = False
@@ -1157,8 +1276,8 @@ class MoveIt2:
         move_action_goal.request.group_name = group_name
         move_action_goal.request.num_planning_attempts = 5
         move_action_goal.request.allowed_planning_time = 0.5
-        move_action_goal.request.max_velocity_scaling_factor = 0.0
-        move_action_goal.request.max_acceleration_scaling_factor = 0.0
+        move_action_goal.request.max_velocity_scaling_factor = 0.5
+        move_action_goal.request.max_acceleration_scaling_factor = 0.5
         move_action_goal.request.cartesian_speed_limited_link = end_effector
         move_action_goal.request.max_cartesian_speed = 0.0
 

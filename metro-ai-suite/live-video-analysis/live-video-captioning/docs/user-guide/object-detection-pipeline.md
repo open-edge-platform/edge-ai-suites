@@ -16,7 +16,7 @@ User can enable object detection in the pipeline by following the steps below:
      EVAM_PORT=8080
      DASHBOARD_PORT=4173
      WEBRTC_PEER_ID=stream
-     AGENT_MODE=False
+     ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=True  # Enable detection pipeline
      ```
 
@@ -43,7 +43,7 @@ User can enable object detection in the pipeline by following the steps below:
 
 ## Troubleshooting
 
-## No detection models in dropdown
+### No detection models in dropdown
 
 Symptoms:
 - Detection Model list is empty in the UI.
@@ -56,4 +56,4 @@ Checks:
 
 - [Get Started](./get-started.md) - Basic setup and configuration
 - [API Reference](./api-reference.md) - REST API documentation
-- [System Requirements](./system-requirements.md) - Hardware and software requirements
+- [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements

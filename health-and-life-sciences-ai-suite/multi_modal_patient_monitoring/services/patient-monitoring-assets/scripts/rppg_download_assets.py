@@ -19,6 +19,7 @@ from tqdm import tqdm
 import logging
 import argparse
 
+import yaml
 import tensorflow as tf
 from tensorflow import keras
 import openvino as ov
@@ -28,6 +29,64 @@ logging.basicConfig(
     format='%(levelname)s: %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+CONFIG_PATH = Path("/app/configs/model-config.yaml")
+
+
+def _load_rppg_model_config() -> tuple[str, str, str, str, str]:
+    """Load rPPG model and video settings from config.
+
+    This function expects /app/configs/model-config.yaml to exist and to
+    define rppg.models[0] with at least:
+
+      - name
+      - target_dir
+      - model_url
+      - video_dir
+      - video_url
+
+    If any of these are missing or the file is not readable, the script
+    will raise and fail fast instead of using hardcoded defaults.
+    """
+    if not CONFIG_PATH.exists():
+        raise FileNotFoundError(
+            f"rPPG config not found at {CONFIG_PATH}. Ensure model-config.yaml is mounted."
+        )
+
+    try:
+        with CONFIG_PATH.open("r") as f:
+            cfg = yaml.safe_load(f) or {}
+    except Exception as e:
+        raise RuntimeError(f"Failed to parse rPPG config {CONFIG_PATH}: {e}") from e
+
+    rppg_cfg = cfg.get("rppg", {})
+    models = rppg_cfg.get("models", [])
+    if not models:
+        raise ValueError(
+            "model-config.yaml has no rppg.models entries; please define at least one."
+        )
+
+    first = models[0] or {}
+    name = first.get("name")
+    target_dir = first.get("target_dir")
+    model_url = first.get("model_url")
+    video_dir = first.get("video_dir")
+    video_url = first.get("video_url")
+
+    if not name or not target_dir or not model_url or not video_dir or not video_url:
+        raise ValueError(
+            "rppg.models[0] must define name, target_dir, model_url, video_dir, "
+            "and video_url in model-config.yaml."
+        )
+
+    return (
+        str(name),
+        str(target_dir),
+        str(model_url),
+        str(video_dir),
+        str(video_url),
+    )
 
 
 @keras.utils.register_keras_serializable(package="Custom")
@@ -90,9 +149,14 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
 
 
 def download_model() -> None:
-    """Download MTTS-CAN model weights."""
-    MODEL_URL = "https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5"
-    model_path = Path("/models") / "rppg" / "mtts_can.hdf5"
+    """Download MTTS-CAN model weights.
+
+    The destination filename under /models/rppg is taken from
+    model-config.yaml (rppg.models[0].name) and the download URL from
+    rppg.models[0].model_url.
+    """
+    model_filename, target_dir, model_url, _, _ = _load_rppg_model_config()
+    model_path = Path(target_dir) / model_filename
 
     if model_path.exists():
         logger.info(f"Model already exists: {model_path}")
@@ -101,11 +165,11 @@ def download_model() -> None:
         return
 
     logger.info("Downloading MTTS-CAN model...")
-    logger.info(f"  Source: {MODEL_URL}")
+    logger.info(f"  Source: {model_url}")
     logger.info(f"  Destination: {model_path}")
 
     try:
-        download_file(MODEL_URL, model_path, "Model")
+        download_file(model_url, model_path, "Model")
         logger.info("✓ Model downloaded successfully")
         size_mb = model_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")
@@ -120,9 +184,10 @@ def convert_model_to_openvino() -> None:
     Produces /models/rppg/mtts_can.xml and .bin, which will be used by the
     rPPG service running on GPU.
     """
-
-    h5_path = Path("/models") / "rppg" / "mtts_can.hdf5"
-    xml_path = Path("/models") / "rppg" / "mtts_can.xml"
+    model_filename, target_dir, _, _, _ = _load_rppg_model_config()
+    h5_path = Path(target_dir) / model_filename
+    # Keep the IR filename stable; config controls input HDF5 name.
+    xml_path = Path(target_dir) / "mtts_can.xml"
 
     if not h5_path.exists():
         logger.error(f"Cannot convert to OpenVINO IR; HDF5 model missing: {h5_path}")
@@ -149,9 +214,13 @@ def convert_model_to_openvino() -> None:
 
 
 def download_video() -> None:
-    """Download sample video."""
-    VIDEO_URL = "https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi"
-    video_path = Path("/videos") / "rppg" / "sample.mp4"
+    """Download sample video.
+
+    The destination directory and download URL are taken from
+    model-config.yaml (rppg.models[0].video_dir and video_url).
+    """
+    _, _, _, video_dir, video_url = _load_rppg_model_config()
+    video_path = Path(video_dir) / "sample.mp4"
 
     if video_path.exists():
         logger.info(f"Video already exists: {video_path}")
@@ -160,11 +229,11 @@ def download_video() -> None:
         return
 
     logger.info("Downloading sample video...")
-    logger.info(f"  Source: {VIDEO_URL}")
+    logger.info(f"  Source: {video_url}")
     logger.info(f"  Destination: {video_path}")
 
     try:
-        download_file(VIDEO_URL, video_path, "Video")
+        download_file(video_url, video_path, "Video")
         logger.info("✓ Video downloaded successfully")
         size_mb = video_path.stat().st_size / (1024 * 1024)
         logger.info(f"  Size: {size_mb:.1f} MB")

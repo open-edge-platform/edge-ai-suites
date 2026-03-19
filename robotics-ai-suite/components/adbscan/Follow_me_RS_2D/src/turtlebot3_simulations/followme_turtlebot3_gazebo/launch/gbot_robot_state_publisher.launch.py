@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+# pylint: disable=duplicate-code
 
 # Copyright (C) 2025 Intel Corporation
 # Copyright 2019 Darby Lim ROBOTIS CO., LTD.
 #
 # SPDX-License-Identifier: Apache-2.0
+
+"""Launch file for guide robot state publisher."""
 
 import os
 
@@ -15,18 +18,17 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    TURTLEBOT3_MODEL = os.environ['TURTLEBOT3_MODEL']
-
+    """Generate launch description for guide robot state publisher."""
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
     urdf_file_name = 'guide_robot.urdf'
 
-    print('urdf_file_name : {}'.format(urdf_file_name))
+    print(f'urdf_file_name : {urdf_file_name}')
 
     urdf_path = os.path.join(
         get_package_share_directory('followme_turtlebot3_gazebo'), 'urdf', urdf_file_name
     )
 
-    with open(urdf_path, 'r') as infp:
+    with open(urdf_path, 'r', encoding='utf-8') as infp:
         robot_desc = infp.read()
 
     return LaunchDescription(

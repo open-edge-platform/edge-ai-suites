@@ -39,12 +39,6 @@ export function ResourceUtilizationAccordion() {
   useEffect(() => {
     if (resourceMetrics && lastUpdated) {
       setResourceData(resourceMetrics);
-      console.log('[ResourceUtilizationAccordion] Data updated:', {
-        cpu: resourceMetrics.cpu_utilization?.length || 0,
-        gpu: resourceMetrics.gpu_utilization?.length || 0,
-        memory: resourceMetrics.memory?.length || 0,
-        npu: resourceMetrics.npu_utilization?.length || 0,
-      });
     }
   }, [resourceMetrics, lastUpdated]);
 

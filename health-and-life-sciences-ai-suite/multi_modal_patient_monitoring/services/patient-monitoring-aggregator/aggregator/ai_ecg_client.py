@@ -1,11 +1,18 @@
 import time
+import os
 import requests
 import grpc
 from proto import vital_pb2, vital_pb2_grpc
 
 
-AI_ECG_URL = "http://localhost:8000/predict_stream_next"
-AGGREGATOR_GRPC = "localhost:50051"
+AI_ECG_URL = os.getenv(
+    "AI_ECG_URL",
+    "http://localhost:8000/predict_stream_next"
+)
+AGGREGATOR_GRPC = os.getenv(
+    "AGGREGATOR_GRPC",
+    "localhost:50051"
+)
 
 
 class AIECGClient:

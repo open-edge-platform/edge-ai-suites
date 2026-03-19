@@ -19,7 +19,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
 
-Install Ubuntu Ubuntu 24.04 (Noble Numat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
+Install Ubuntu 24.04 (Noble Numbat) or 22.04 (Jammy Jellyfish) based on your processor type. Your choice of OS version determines the compatible ROS distribution (Jazzy Jalisco or Humble Hawksbill, respectively).
 
 ::::{tab-set}
 :::{tab-item} **Ubuntu 24.04**
@@ -29,7 +29,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 |Processor type|Canonical Ubuntu 24.04 LTS variant|ROS2 Compatibility|
 |-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
 
 :::
 :::{tab-item}  **Ubuntu 22.04**
@@ -54,13 +54,13 @@ To install ROS 2 on your system, follow the **ROS 2 setup guide**:
 :::{tab-item} **Jazzy**
 :sync: jazzy
 
-[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 :::{tab-item} **Humble**
 :sync: humble
 
-[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html#ubuntu-deb-packages)
 
 :::
 ::::
@@ -197,29 +197,6 @@ This section explains the procedure to configure the APT package manager to use 
    echo -e "Package: intel-oneapi-runtime-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/oneapi > /dev/null
    ```
 
-7. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
-
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
-   ```
-
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
-
-   ```bash
-   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
-   ```
-
-   :::
-   ::::
-
-
 ## 4. Install OpenVINO™ Packages
 
 The following steps will add the OpenVINO™ APT repository to your package management.
@@ -300,33 +277,9 @@ The following steps will install the OpenVINO™ packages:
    on the integrated GPU device of Intel® processors. To enable this feature, install
    the Intel® Graphics Compute Runtime with the following command:
 
-   ::::{tab-set}
-   :::{tab-item} **Jazzy**
-   :sync: jazzy
-
    ```bash
    sudo apt install -y libze1 libze-intel-gpu1
    ```
-
-   :::
-   :::{tab-item}  **Humble**
-   :sync: humble
-
-   Download and install Intel® Graphics Compute Runtime and Level Zero packages:
-
-   ```bash
-   cd "${HOME}"
-   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-core-2_2.10.8+18926_amd64.deb
-   wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.10.8/intel-igc-opencl-2_2.10.8+18926_amd64.deb
-   wget https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb
-   sudo apt install -y libze-intel-gpu1
-   sudo apt install -y ./intel-igc-core-2_2.10.8+18926_amd64.deb
-   sudo apt install -y ./intel-igc-opencl-2_2.10.8+18926_amd64.deb
-   sudo apt install -y ./level-zero_1.22.4+u22.04_amd64.deb
-   ```
-
-   :::
-   ::::
 
 3. Install the ``debconf-utilities``:
 
@@ -365,7 +318,7 @@ The following steps will install the OpenVINO™ packages:
    sudo apt install openvino
    ```
 
-6. Install the the ROS 2 OpenVINO™ Toolkit:
+6. Install the ROS 2 OpenVINO™ Toolkit:
 
    ::::{tab-set}
    :::{tab-item} **Jazzy**
@@ -514,7 +467,11 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
    :::{tab-item} **Humble**
    :sync: humble
 
+   Intel oneAPI requires GCC >= 12, so upgrade GCC as well.
+
    ```bash
+   sudo apt install gcc-12 g++-12
+   sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
    sudo apt install ros-humble-robotics-sdk
    ```
 
@@ -697,55 +654,7 @@ access to commonly used robotic functionality with ease.
    > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
 
 
-## 7. Install Intel® GPU Driver on Intel® Core™ Ultra Processors
-
-If you want to run OpenVINO™ inferencing applications on the GPU device
-of Intel® Core™ Ultra processors, you need to install the Intel® GPU driver.
-If your system does not have an Intel® Core™ Ultra Processor, you should skip
-this step.
-
-1. Install mesa packages from ``kisak`` PPA:
-
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
-
-   ```bash
-   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
-   ```
-
-   ::::
-   :::::
-
-2. Install the latest Linux kernel:
-
-   ```bash
-   sudo apt install linux-intel-rt-experimental
-   ```
-
-3. Install the ``eci-customizations`` package to populate the GRUB menu
-   with the latest Linux kernel:
-
-   ```bash
-   sudo apt install eci-customizations
-   ```
-
-4. Install GuC and HuC Linux firmware package:
-
-   ```bash
-   sudo apt install linux-firmware
-   ```
-
-
-## 8. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
+## 7. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
 
 If you want to run OpenVINO™ inferencing applications on the NPU device
 of Intel® Core™ Ultra processors, you need to install the Intel® NPU driver.
@@ -827,18 +736,89 @@ To install the Intel® NPU driver, complete the following steps:
    ```
 
 
-## 9. Reboot to load latest Linux kernel and firmware
+## 8. Reboot to load latest Linux kernel and firmware
 
 ```bash
 sudo reboot
 ```
+
+## Optional - Enabling Intel® GPU
+
+If you are using Intel® silcon on an older OS distribution (Ex: Ubuntu 22)
+and are having trouble getting the Intel® GPU functioning, you may
+need to install a newer Linux kernel, firmware, and GPU drivers from
+development.
+
+1. For latest Intel silicon support, add the Canonical ``kisak`` and ``kobuk`` Private Package Archives (PPA):
+
+   ::::{tab-set}
+   :::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   sudo -E add-apt-repository -y ppa:kobuk-team/intel-graphics
+   ```
+
+   :::
+   :::{tab-item}  **Humble**
+   :sync: humble
+
+   ```bash
+   sudo -E add-apt-repository -y ppa:kisak/kisak-mesa
+   ```
+
+   :::
+   ::::
+
+2. Install mesa packages from ``kisak`` PPA:
+
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-libgallium mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
+   ```bash
+   sudo apt install libegl-mesa0 libgl1-mesa-dri libgbm1 libglx-mesa0 mesa-va-drivers mesa-va-drivers mesa-vdpau-drivers mesa-vulkan-drivers xwayland
+   ```
+
+   ::::
+   :::::
+
+3. Install the latest Linux kernel:
+
+   ```bash
+   sudo apt install linux-intel-rt-experimental
+   ```
+
+4. Install the ``eci-customizations`` package to populate the GRUB menu
+   with the latest Linux kernel:
+
+   ```bash
+   sudo apt install eci-customizations
+   ```
+
+5. Install GuC and HuC Linux firmware package:
+
+   ```bash
+   sudo apt install linux-firmware
+   ```
+
+6. Reboot the system to allow the latest Linux kernel to boot.
 
 
 ## Installation Troubleshooting
 
 ### Support Forum
 
-If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Intel-Edge-Software-Hub/bd-p/edge-software-hub) for assistance.
+If you encounter difficulties, visit the [Support Forum](https://community.intel.com/t5/Edge-Software-Catalog/bd-p/EdgeSoftwareCatalog) for assistance.
 
 ### APT Package Manager
 
@@ -867,4 +847,14 @@ If the APT package manager is unable to connect to the repositories, follow thes
 
     After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
     you will have to reboot the device, so these settings become effective.
+
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+../dev_guide/requirements
+
+:::
+hide_directive-->
 

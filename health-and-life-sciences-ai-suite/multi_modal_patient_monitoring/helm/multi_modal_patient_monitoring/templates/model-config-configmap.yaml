@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rppg-model-config
+data:
+  model-config.yaml: |-
+    ai-ecg:
+      models:
+        - name: hubert_ecg_small_fp16
+          type: ai-ecg
+          hub: hf
+          source: hubert-ecg
+          model_id: Edoardo-BS/hubert-ecg-small
+          target_dir: /models/ai-ecg
+          ir_file: hubert_ecg_small_fp16.xml
+          video_dir: /videos/ai-ecg
+
+    rppg:
+      models:
+        - name: mtts_can.hdf5
+          type: rppg
+          hub: hls
+          target_dir: /models/rppg
+          model_file: mtts_can.hdf5
+          model_url: https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5
+          video_dir: /videos/rppg
+          video_url: https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi
+
+    pose-3d:
+      models:
+        - name: human-pose-estimation-3d-0001
+          type: 3d-pose
+          hub: hls
+          target_dir: /models/3d-pose
+          model_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2022.1/human-pose-estimation-3d-0001/human-pose-estimation-3d.tar.gz
+          ir_file: human-pose-estimation-3d-0001.xml
+          video_dir: /videos/3d-pose
+          video_url: https://www.pexels.com/download/video/6130537

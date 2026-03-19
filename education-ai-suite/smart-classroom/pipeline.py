@@ -7,10 +7,17 @@ import logging, os
 from utils.session_manager import generate_session_id
 from components.summarizer_component import SummarizerComponent
 from components.mindmap_component import MindmapComponent
+from components.segmentation.content_segmentation import ContentSegmentationComponent
 from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
+from utils.topic_faiss_indexer import TopicFaissIndexer
+from pathlib import Path
+import json
+from utils.faiss_content_search import FaissContentSearcher
+from utils.media_validation_service import MediaValidationService
+from utils.session_state_manager import SessionState
 import time
 logger = logging.getLogger(__name__)
 
@@ -37,6 +44,14 @@ class Pipeline:
             )
         
         self.mindmap_component.model = self.summarizer_pipeline[0].summarizer
+
+        self.content_component = ContentSegmentationComponent(
+            self.session_id,
+            temperature=0.2
+        )
+
+        self.content_component.model = self.summarizer_pipeline[0].summarizer
+
 
     def run_transcription(self, input):
         project_config = RuntimeConfig.get_section("Project")
@@ -168,3 +183,108 @@ class Pipeline:
             )
         finally:
             pass
+
+    def run_content_segmentation(self):
+
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id
+        )
+
+        transcription_path = os.path.join(session_dir, "content_segmentation_transcription.txt")
+
+        session_state = SessionState.get_session_state(self.session_id)
+        # VALIDATION: Check media duration match before processing
+        is_valid, error_msg = MediaValidationService.validate_duration_match(self.session_id)
+        
+        if not is_valid:
+            SessionState.clear_session(self.session_id)
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_msg
+            )
+
+        logger.info(f"✅ Validation passed - proceeding with content segmentation")
+
+        try:
+            transcript_text = StorageManager.read_text_file(transcription_path)
+
+            if not transcript_text:
+                logger.error("Transcription is empty. Cannot generate topic segmentation.")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Transcription is empty. Cannot generate topic segmentation."
+                )
+
+        except FileNotFoundError:
+            logger.error(f"Invalid Session ID: {self.session_id}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid session id: {self.session_id}, transcription not found."
+            )
+
+        except Exception as e:
+            logger.error(f"Unexpected error while accessing transcription: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred while accessing the transcription."
+            )
+
+        try:
+            import json
+            from pathlib import Path
+
+            # 🔹 Generate topics (returns JSON string from LLM)
+            topic_json_str = self.content_component.generate_topics(transcript_text)
+
+            # 🔹 Save raw JSON string
+            topic_path = os.path.join(session_dir, "topics.json")
+            StorageManager.save(topic_path, topic_json_str, append=False)
+
+            # 🔥 Convert to Python object (CRITICAL FIX)
+            topics = json.loads(topic_json_str)
+
+            # -----------------------------
+            # Build FAISS topic embeddings
+            # -----------------------------
+
+            index_dir = Path(session_dir) / "faiss"
+            indexer = TopicFaissIndexer(index_dir)
+
+            vector_count = indexer.index_topics(
+                session_id=self.session_id,
+                topics=topics,
+                transcript_text=transcript_text
+            )
+
+            logger.info(f"FAISS index built with {vector_count} topic vectors.")
+
+            # ✅ Return parsed Python object (not string)
+            return topics
+
+        except Exception as e:
+            logger.error(f"Error during topic segmentation: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error during topic segmentation: {e}"
+            )
+        finally:
+            # Clean up session state after processing
+            SessionState.clear_session(self.session_id)
+
+
+    def search_content(self, query: str, top_k: int = 5):
+
+        project_config = RuntimeConfig.get_section("Project")
+        session_dir = Path(
+            project_config.get("location"),
+            project_config.get("name"),
+            self.session_id
+        )
+
+        faiss_dir = session_dir / "faiss"
+        searcher = FaissContentSearcher(faiss_dir)
+        results = searcher.search(query=query, top_k=top_k)
+        return results

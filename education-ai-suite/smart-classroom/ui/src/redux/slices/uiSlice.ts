@@ -3,7 +3,16 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 export type Tab = 'transcripts' | 'summary' | 'mindmap';
 export type ProcessingMode = 'audio' | 'video-only' | 'microphone' | null;
 export type AudioStatus = 'idle' | 'checking' | 'ready' | 'recording' | 'processing' | 'transcribing' | 'summarizing' | 'mindmapping' | 'complete' | 'error' | 'no-devices';
-export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config';
+export type VideoStatus = 'idle' | 'ready' | 'starting' | 'streaming' | 'stopping' | 'failed' | 'completed' | 'no-config'| 'playback';
+
+export interface SearchResult {
+  score: number;
+  session_id: string;
+  topic: string;
+  start_time: number;
+  end_time: number;
+  text: string;
+}
  
 export interface UIState {
   aiProcessing: boolean;
@@ -41,6 +50,25 @@ export interface UIState {
   hasUploadedVideoFiles: boolean;
   monitoringActive: boolean;
   videoPlaybackMode: boolean;
+  uploadedVideoFiles: {
+    front: File | null;
+    back: File | null;
+    board: File | null;
+  };
+  recordedVideoType: 'back' | 'board' | 'front' | null;
+  searchQuery: string;
+  searchResults: SearchResult[];
+  showSearchResults: boolean; 
+  contentSegmentationStatus: 'idle' | 'loading' | 'complete' | 'error';
+  contentSegmentationEnabled: boolean;
+  searchLoading: boolean;
+  searchError: string | null;
+  contentSegmentationError: string | null;
+  timelineHighlight: {
+    startTime: number;
+    endTime: number;
+    topic: string;
+  } | null;
 }
  
 const initialState: UIState = {
@@ -79,8 +107,23 @@ const initialState: UIState = {
   hasUploadedVideoFiles: false,
   monitoringActive: false,
   videoPlaybackMode: false,
+  uploadedVideoFiles: {
+    front: null,
+    back: null,
+    board: null,
+  },
+  recordedVideoType: null,
+  searchQuery: '',
+  searchResults: [],
+  showSearchResults: false, 
+  contentSegmentationStatus: 'idle',
+  contentSegmentationEnabled: false,
+  searchLoading: false,
+  searchError: null,
+  contentSegmentationError: null,
+  timelineHighlight: null,
 };
- 
+
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
@@ -101,6 +144,15 @@ const uiSlice = createSlice({
       state.shouldStartMindmap = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
+      state.searchLoading = false;
+      state.searchError = null;
+      state.searchQuery = '';
+      state.searchResults = [];
+      state.showSearchResults = false;
+      state.timelineHighlight = null;
     },
  
     processingFailed(state) {
@@ -115,6 +167,11 @@ const uiSlice = createSlice({
       state.videoStatus = 'failed';
       state.isRecording = false;
       state.videoAnalyticsStopping = false;
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
+      state.searchLoading = false;
+      state.searchError = null;
     },
  
     transcriptionComplete(state) {
@@ -275,15 +332,11 @@ const uiSlice = createSlice({
     },
 
     loadCameraSettingsFromStorage(state) {
-      const frontCamera = localStorage.getItem('frontCamera');
-      const backCamera = localStorage.getItem('backCamera');
-      const boardCamera = localStorage.getItem('boardCamera');
-      
-      if (frontCamera) state.frontCamera = frontCamera;
-      if (backCamera) state.backCamera = backCamera;
-      if (boardCamera) state.boardCamera = boardCamera;
-      
-      const hasVideoConfig = Boolean(frontCamera?.trim() || backCamera?.trim() || boardCamera?.trim());
+      const hasVideoConfig = Boolean(
+        state.frontCamera?.trim() ||
+        state.backCamera?.trim() ||
+        state.boardCamera?.trim()
+      );
       state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
     },
 
@@ -347,33 +400,113 @@ const uiSlice = createSlice({
     setMonitoringActive: (state, action) => {
       state.monitoringActive = action.payload;
     },
+    
+    setUploadedVideoFiles(state, action: PayloadAction<{
+      front?: File | null;
+      back?: File | null;
+      board?: File | null;
+    }>) {
+      if (action.payload.front !== undefined) {
+        state.uploadedVideoFiles.front = action.payload.front;
+      }
+      if (action.payload.back !== undefined) {
+        state.uploadedVideoFiles.back = action.payload.back;
+      }
+      if (action.payload.board !== undefined) {
+        state.uploadedVideoFiles.board = action.payload.board;
+      }
+    },
+
     setVideoPlaybackMode(state, action: PayloadAction<boolean>) {
       state.videoPlaybackMode = action.payload;
     },
+    
+    setRecordedVideoType(state, action: PayloadAction<'back' | 'board' | 'front' | null>) {
+      state.recordedVideoType = action.payload;
+    },
+    
+    setPlaybackFromUploads(state) {
+      const hasFiles =
+        state.uploadedVideoFiles.front ||
+        state.uploadedVideoFiles.back ||
+        state.uploadedVideoFiles.board;
+      if (hasFiles) {
+        state.videoStatus = "completed";
+      }
+    },
 
+    setContentSegmentationStatus(state, action: PayloadAction<'idle' | 'loading' | 'complete' | 'error' >) {
+      state.contentSegmentationStatus = action.payload;
+    },
+
+    setContentSegmentationEnabled(state, action: PayloadAction<boolean>) {
+      state.contentSegmentationEnabled = action.payload;
+    },
+
+    startContentSegmentation(state) {
+      state.contentSegmentationStatus = 'loading';
+      state.contentSegmentationEnabled = false;
+    },
+
+    contentSegmentationSuccess(state) {
+      state.contentSegmentationStatus = 'complete';
+      state.contentSegmentationEnabled = true;
+    },
+
+    contentSegmentationFailed(state, action: PayloadAction<string | undefined>) {
+      state.contentSegmentationStatus = 'error';
+      state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = action.payload || 'Content preparation failed. Please try again.';
+    },
+
+    setSearchLoading(state, action: PayloadAction<boolean>) {
+      state.searchLoading = action.payload;
+    },
+
+    setSearchError(state, action: PayloadAction<string | null>) {
+      state.searchError = action.payload;
+    },
+    
+    setSearchQuery(state, action: PayloadAction<string>) {
+      state.searchQuery = action.payload;
+    },
+
+    setSearchResults(state, action: PayloadAction<SearchResult[]>) {
+      state.searchResults = action.payload;
+      state.showSearchResults = action.payload.length > 0;
+    },
+
+    setShowSearchResults(state, action: PayloadAction<boolean>) {
+      state.showSearchResults = action.payload;
+    },
+
+    setTimelineHighlight(state, action: PayloadAction<{
+      startTime: number;
+      endTime: number;
+      topic: string;
+    } | null>) {
+      state.timelineHighlight = action.payload;
+    },
+
+    clearSearchResults(state) {
+      state.searchResults = [];
+      state.showSearchResults = false;
+      state.timelineHighlight = null;
+      state.searchQuery = '';
+    },
 
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
-      const preservedHasUploadedVideoFiles = state.hasUploadedVideoFiles;
-      const preservedCameras = {
-        frontCamera: state.frontCamera,
-        backCamera: state.backCamera,
-        boardCamera: state.boardCamera,
-      };
-      
       Object.assign(state, initialState);
-      
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
-      state.hasUploadedVideoFiles = preservedHasUploadedVideoFiles;
-      state.frontCamera = preservedCameras.frontCamera;
-      state.backCamera = preservedCameras.backCamera;
-      state.boardCamera = preservedCameras.boardCamera;
-      
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
-      const hasVideoConfig = Boolean(preservedCameras.frontCamera?.trim() || preservedCameras.backCamera?.trim() || preservedCameras.boardCamera?.trim() || preservedHasUploadedVideoFiles);
-      state.videoStatus = hasVideoConfig ? 'ready' : 'no-config';
+      state.contentSegmentationStatus = 'idle';
+      state.contentSegmentationEnabled = false;
+      state.contentSegmentationError = null;
+      state.searchLoading = false;
+      state.searchError = null;
     },
   },
 });
@@ -420,7 +553,22 @@ export const {
   startTranscription,
   setHasUploadedVideoFiles,
   setMonitoringActive,
-  setVideoPlaybackMode
+  setUploadedVideoFiles,
+  setVideoPlaybackMode,
+  setRecordedVideoType,
+  setPlaybackFromUploads,
+  setContentSegmentationStatus,
+  setContentSegmentationEnabled,
+  startContentSegmentation,
+  contentSegmentationSuccess,
+  contentSegmentationFailed,
+  setSearchLoading,
+  setSearchError,
+  setSearchQuery,
+  setSearchResults,
+  clearSearchResults,
+  setShowSearchResults,
+  setTimelineHighlight,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

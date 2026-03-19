@@ -40,7 +40,7 @@ Convert by Script
 
 .. code-block:: bash
 
-   $ python -m scripts.convert.ov_convert --pretrained <pretrained_rdt_model_path> --output_dir <output_dir>
+   python -m scripts.convert.ov_convert --pretrained <pretrained_rdt_model_path> --output_dir <output_dir>
 
 
 - ``<pretrained_rdt_model_path>``: The path to the pre-trained RDT-1B model.
@@ -65,16 +65,16 @@ You can find the notebook in the same directory as the conversion script. Open i
 
    .. code-block:: bash
 
-      $ pip install notebook ipywidgets
+      pip install notebook ipywidgets
 
 #. Add your environment in ipykernel:
 
    .. code-block:: bash
 
-      $ python -m ipykernel install --user --name <your_env_name> --display-name <name_displayed_in_jupyter>
+      python -m ipykernel install --user --name <your_env_name> --display-name <name_displayed_in_jupyter>
 
 #. Launch Jupyter Notebook:
 
    .. code-block:: bash
 
-      $ jupyter notebook --notebook-dir <path_to_your_project>/scripts/convert  --ip <your_ip_address> --port <your_port>
+      jupyter notebook --notebook-dir <path_to_your_project>/scripts/convert  --ip <your_ip_address> --port <your_port>

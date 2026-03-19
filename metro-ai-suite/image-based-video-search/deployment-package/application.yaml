@@ -6,12 +6,12 @@ schemaVersion: "0.1"
 $schema: "https://schema.intel.com/catalog.orchestrator/0.1/schema"
 
 name: ibvs-app
-version: 1.1.0
+version: 1.2.0-rc1
 description: "Image-Based Video Search Sample Application"
 
 helmRegistry: "docker-hub"
 chartName: "intel/image-based-video-search"
-chartVersion: "1.1.0"
+chartVersion: "1.2.0-rc1"
 
 profiles:
   - name: "default"
@@ -29,3 +29,15 @@ profiles:
         displayName: "No proxy"
         type: string
         default: "localhost,127.0.0.1"
+      - name: config.nginx.ext.http_port
+        displayName: "Nginx HTTP NodePort"
+        type: number
+        default: "30080"
+      - name: config.nginx.ext.https_port
+        displayName: "Nginx HTTPS NodePort"
+        type: number
+        default: "30443"
+      - name: config.nginx.ext.rtsp_port
+        displayName: "Nginx RTSP NodePort"
+        type: number
+        default: "30554"

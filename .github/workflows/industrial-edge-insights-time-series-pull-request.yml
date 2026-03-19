@@ -38,7 +38,7 @@ jobs:
         fi
         docker images --quiet --filter=dangling=true | xargs --no-run-if-empty docker rmi -f
     - name: Checkout edge-ai-libraries (main)
-      uses: actions/checkout@v4
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         repository: open-edge-platform/edge-ai-libraries
         ref: main
@@ -49,7 +49,7 @@ jobs:
         cd ./edge-ai-libraries/microservices/time-series-analytics/docker
         docker compose down -v 
         docker compose build
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
           path: timeseries
           persist-credentials: false

@@ -323,7 +323,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
         }
         
         logger.debug("VLM request built", 
-                   request)
+                   model=request.get("model"),
+                   max_tokens=request.get("max_completion_tokens"),
+                   content_items=len(content))
         
         return request
     
@@ -339,8 +341,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
         """
         try:
             url = f"{self.base_url}/v1/chat/completions"
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json=request_data) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -367,6 +370,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                         return None
         except aiohttp.ClientConnectorError as e:
             logger.warning("VLM service connection failed", error=str(e))
+            return None
+        except asyncio.TimeoutError:
+            logger.error("VLM service request timed out", timeout_seconds=self.timeout)
             return None
         except Exception as e:
             logger.error("VLM service call failed", error=str(e))
@@ -555,18 +561,10 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                 if weather_data:
                     weather_impact = True
                     
-                    # Handle both WeatherType enum and string (defensive programming)
-                    weather_type = weather_data.weather_type
-                    if isinstance(weather_type, str):
-                        weather_type = WeatherType(weather_type)
-                    
-                    CRITICAL_WEATHER = {WeatherType.FIRES, WeatherType.STORM, WeatherType.FLOOD}
-                    alert_level = AlertLevel.CRITICAL if weather_type in CRITICAL_WEATHER else AlertLevel.WARNING
-                    
                     alert = VLMAlert(
                         alert_type=AlertType.WEATHER_RELATED,
-                        level=alert_level,
-                        description=self.weather_service.get_current_weather_description(weather_type),
+                        level=AlertLevel.INFO,
+                        description=self.weather_service.get_current_weather_description(),
                         weather_related=weather_impact
                     )
                     alerts.append(alert)
