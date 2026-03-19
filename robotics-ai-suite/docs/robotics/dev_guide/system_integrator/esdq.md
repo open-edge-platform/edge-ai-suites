@@ -202,7 +202,7 @@ prerequisites by:
 - Installing the OpenVINO™ Runtime by executing these steps:
 
   1. Add the OpenVINO™ APT package sources as described in the
-     ["OpenVINO™ Installation Steps"](../../gsg_robot/install-openvino.md)
+     ["OpenVINO™ Installation Steps"](../../gsg_robot/index.md#4-install-openvino-packages)
      section.
 
   2. Make sure that your file `/etc/apt/preferences.d/intel-openvino`
@@ -217,9 +217,9 @@ prerequisites by:
      ```
 
   Additional information can be found in the
-  [OpenVINO™ documentation](https://docs.openvino.ai/2024/get-started/install-openvino/install-openvino-apt.html).
+  [OpenVINO™ documentation](https://docs.openvino.ai/2026/get-started/install-openvino/install-openvino-apt.html).
 
-- [Installing the Intel® NPU Driver](../../gsg_robot/install-npu-driver.rst).
+- [Installing the Intel® NPU Driver](../../gsg_robot/index.md#8-install-the-intel-npu-driver-on-intel-core-ultra-processors).
 
   Don't execute this step if your system does not have an Intel® Core™ Ultra
   Processor.

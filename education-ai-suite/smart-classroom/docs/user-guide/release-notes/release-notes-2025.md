@@ -22,4 +22,4 @@ In this release, the **Smart Classroom** application is added. It is an extensib
 
 ## Documentation and Source Code
 
-- [GitHub](https://github.com/open-edge-platform/edge-ai-suites/tree/main/education-ai-suite)
+- [GitHub](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/education-ai-suite)
