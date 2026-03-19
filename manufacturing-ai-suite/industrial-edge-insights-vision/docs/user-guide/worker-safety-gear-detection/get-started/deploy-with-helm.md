@@ -28,10 +28,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.2.0-rc2`
+        `helm pull oci://registry-1.docker.io/intel/worker-safety-gear-detection --version 1.2.0-rc3`
     - unzip the package using the following command
 
-        `tar -xvf worker-safety-gear-detection-1.2.0-rc2.tgz`
+        `tar -xvf worker-safety-gear-detection-1.2.0-rc3.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv worker-safety-gear-detection helm`
@@ -159,6 +159,21 @@
    > **Note:** This would start the pipeline. You can view the inference stream on WebRTC by
    > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/worker_safety/` for Worker Safety gear detection.
    > If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+   
+   ### Starting GPU and NPU based pipelines
+   For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
+
+      **For GPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p worker_safety_gear_detection_gpu
+      ```
+
+      **For NPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p worker_safety_gear_detection_npu
+      ```
 
 5. Get status of pipeline instance(s) running.
 

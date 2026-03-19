@@ -14,18 +14,24 @@ spec:
             - configMapRef:
                 name: device-config
           env:
+            {{- if .Values.http_proxy }}
             - name: HTTP_PROXY
-              value: "http://proxy-pilot.intel.com:912"
-            - name: HTTPS_PROXY
-              value: "http://proxy-pilot.intel.com:912"
+              value: {{ .Values.http_proxy | quote }}
             - name: http_proxy
-              value: "http://proxy-pilot.intel.com:912"
+              value: {{ .Values.http_proxy | quote }}
+            {{- end }}
+            {{- if .Values.https_proxy }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.https_proxy | quote }}
             - name: https_proxy
-              value: "http://proxy-pilot.intel.com:912"
+              value: {{ .Values.https_proxy | quote }}
+            {{- end }}
+            {{- if .Values.no_proxy }}
             - name: NO_PROXY
-              value: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
+              value: {{ .Values.no_proxy | quote }}
             - name: no_proxy
-              value: "intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,.local,127.0.0.0/8,134.134.0.0/16"
+              value: {{ .Values.no_proxy | quote }}
+            {{- end }}
           volumeMounts:
             - name: models
               mountPath: /models

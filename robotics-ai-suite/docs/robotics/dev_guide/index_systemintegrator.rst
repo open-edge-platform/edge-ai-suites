@@ -1,4 +1,4 @@
-.. |sys_integrator| image:: ../../images/icons/Integrate.png
+.. |sys_integrator| image:: ../images/icons/Integrate.png
    :width: 70
    :align: bottom
 
@@ -10,7 +10,7 @@ This chapter details information specifically for system integrators.
 .. toctree::
    :maxdepth: 1
 
-   benchmark_profiling/index
-   performance
-   security
+   system_integrator/benchmark_profiling/index
+   system_integrator/performance
+   system_integrator/security
 

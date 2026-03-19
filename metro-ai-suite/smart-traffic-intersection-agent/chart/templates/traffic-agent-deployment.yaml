@@ -1,0 +1,139 @@
+{{/*
+Copyright (C) 2025 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "stia.trafficAgent.fullname" . }}
+  labels:
+    {{- include "stia.labels" . | nindent 4 }}
+    app.kubernetes.io/component: traffic-agent
+spec:
+  replicas: {{ .Values.trafficAgent.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "stia.trafficAgent.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "stia.trafficAgent.fullname" . }}
+        {{- include "stia.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: traffic-agent
+    spec:
+      containers:
+        - name: {{ .Values.trafficAgent.name }}
+          image: "{{ .Values.trafficAgent.image.repository }}:{{ .Values.trafficAgent.image.tag }}"
+          imagePullPolicy: {{ .Values.trafficAgent.image.pullPolicy }}
+          ports:
+            - name: backend
+              containerPort: 8081
+              protocol: TCP
+            - name: ui
+              containerPort: 7860
+              protocol: TCP
+          env:
+            - name: LOG_LEVEL
+              value: {{ .Values.trafficAgent.env.logLevel | quote }}
+            - name: USE_API
+              value: "true"
+            - name: REFRESH_INTERVAL
+              value: {{ .Values.trafficAgent.env.refreshInterval | quote }}
+            # Proxy settings
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: HTTP_PROXY
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+            # MQTT configuration
+            - name: MQTT_HOST
+              value: {{ .Values.trafficAgent.mqtt.host | quote }}
+            - name: MQTT_PORT
+              value: {{ .Values.trafficAgent.mqtt.port | quote }}
+            # Intersection configuration
+            - name: INTERSECTION_NAME
+              value: {{ .Values.trafficAgent.intersection.name | quote }}
+            - name: INTERSECTION_LATITUDE
+              value: {{ .Values.trafficAgent.intersection.latitude | quote }}
+            - name: INTERSECTION_LONGITUDE
+              value: {{ .Values.trafficAgent.intersection.longitude | quote }}
+            # Weather configuration
+            - name: WEATHER_MOCK
+              value: {{ .Values.trafficAgent.env.weatherMock | quote }}
+            # VLM configuration - point to VLM K8s service
+            - name: VLM_MODEL_NAME
+              value: {{ .Values.vlmServing.env.modelName | quote }}
+            - name: VLM_MAX_COMPLETION_TOKENS
+              value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
+            - name: VLM_TIMEOUT_SECONDS
+              value: {{ .Values.trafficAgent.env.vlmTimeoutSeconds | quote }}
+            # Traffic analysis configuration
+            - name: HIGH_DENSITY_THRESHOLD
+              value: {{ .Values.trafficAgent.traffic.highDensityThreshold | quote }}
+            {{- if .Values.trafficAgent.traffic.moderateDensityThreshold }}
+            - name: MODERATE_DENSITY_THRESHOLD
+              value: {{ .Values.trafficAgent.traffic.moderateDensityThreshold | quote }}
+            {{- end }}
+            {{- if .Values.trafficAgent.traffic.bufferDuration }}
+            - name: TRAFFIC_BUFFER_DURATION
+              value: {{ .Values.trafficAgent.traffic.bufferDuration | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: agent-config
+              mountPath: /app/config
+              readOnly: true
+            - name: agent-data
+              mountPath: /app/data
+            {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
+            - name: ca-cert
+              mountPath: /app/secrets/certs
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: backend
+            initialDelaySeconds: {{ .Values.trafficAgent.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.trafficAgent.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.trafficAgent.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.trafficAgent.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: backend
+            initialDelaySeconds: {{ .Values.trafficAgent.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.trafficAgent.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.trafficAgent.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.trafficAgent.healthcheck.failureThreshold }}
+          resources:
+            {{- toYaml .Values.trafficAgent.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+      volumes:
+        - name: agent-config
+          configMap:
+            name: {{ include "stia.trafficAgent.fullname" . }}-config
+        - name: agent-data
+          {{- if .Values.trafficAgent.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "stia.trafficAgent.fullname" . }}-data
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
+        - name: ca-cert
+          secret:
+            secretName: {{ include "stia.caCertSecretName" . }}
+            {{- if and .Values.tls.caCertSecretName .Values.tls.caCertKey }}
+            items:
+              - key: {{ .Values.tls.caCertKey }}
+                path: scenescape-ca.pem
+            {{- end }}
+        {{- end }}
