@@ -124,23 +124,19 @@ Reboot the system and enter into the BIOS/UEFI settings. Navigate to the ACPI co
 Go into UEFI Advanced setting.
 
 .. image:: ../../images/gmsl/UEFI-Advanced.png
-    :width: 70
 
 
 Navigate to System Agent (SA)
 
 .. image:: ../../images/gmsl/UEFI-SA.png
-    :width: 70
 
 Navigate to MIPI Configuration
 
 .. image:: ../../images/gmsl/UEFI-MIPI-Config.png
-    :width: 70
 
 Ensure GMSL SerDes is enabled.
 
 .. image:: ../../images/gmsl/UEFI-Enable-Camera.png
-    :width: 70
 
 After enabling the GMSL SerDes device in the UEFI settings, click on 'link options' to adjust the settings for the GMSL SerDes link.
 
