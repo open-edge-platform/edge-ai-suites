@@ -66,6 +66,10 @@ see the [Environment Variables Guide](./get-started/environment-variables.md) fo
 See [Build from Source](./get-started/build-from-source.md) for instructions on building and
 running with the Docker Compose tool.
 
+### Helm Deployment
+
+See [Deploy with Helm](./get-started/deploy-with-helm.md) for a simple Kubernetes deployment flow.
+
 ## Multi-Node Deployment
 
 The Smart Route Planning Agent works in a multi-node setup with one central Route Planning
@@ -143,6 +147,7 @@ live traffic data for route optimization.
 get-started/system-requirements
 get-started/build-from-source
 get-started/environment-variables
+get-started/deploy-with-helm
 
 :::
 hide_directive-->
