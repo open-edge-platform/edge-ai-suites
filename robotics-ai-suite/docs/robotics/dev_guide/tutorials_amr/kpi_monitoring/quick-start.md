@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Quick Start Guide
 
 Complete the [installation](installation.md) before proceeding.
