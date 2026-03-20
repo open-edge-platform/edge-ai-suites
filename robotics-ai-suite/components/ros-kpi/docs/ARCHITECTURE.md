@@ -84,7 +84,7 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    CMD["./monitor_stack.py\n--node /target"]
+    CMD["uv run python src/monitor_stack.py\n--node /target"]
 
     subgraph Spawn["Spawn"]
         GM[ros2_graph_monitor.py]

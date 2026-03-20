@@ -12,13 +12,13 @@ Intel-operated generative artificial intelligence solutions.
 
 ### 1. Simple Monitoring (All Defaults)
 ```bash
-./monitor_stack.py
+uv run python src/monitor_stack.py
 ```
 Press `Ctrl+C` when done. Visualizations are auto-generated!
 
 ### 2. Monitor Specific Node
 ```bash
-./monitor_stack.py --node /your_node_name
+uv run python src/monitor_stack.py --node /your_node_name
 ```
 
 ### 3. Using Make (Even Easier!)
@@ -37,13 +37,13 @@ make quick-check
 
 ### Long-Term Monitoring of Specific Node
 ```bash
-./monitor_stack.py --node /controller_server --session long_term_test
+uv run python src/monitor_stack.py --node /controller_server --session long_term_test
 ```
 
 ### Debug Performance Issues
 ```bash
 # 1. Start monitoring
-./monitor_stack.py --node /problematic_node --session debug
+uv run python src/monitor_stack.py --node /problematic_node --session debug
 
 # 2. Let it run while reproducing the issue
 # 3. Press Ctrl+C to stop and auto-generate visualizations
@@ -53,7 +53,7 @@ make quick-check
 ### Monitor a Remote System
 ```bash
 # Monitor a ROS2 pipeline running on another machine
-./monitor_stack.py --remote-ip 192.168.1.100
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100
 
 # Or via make
 make monitor-remote REMOTE_IP=192.168.1.100
@@ -64,10 +64,10 @@ make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
 ### Compare Before/After Performance
 ```bash
 # Baseline
-./monitor_stack.py --session baseline --duration 120
+uv run python src/monitor_stack.py --session baseline --duration 120
 
 # After changes
-./monitor_stack.py --session after_optimization --duration 120
+uv run python src/monitor_stack.py --session after_optimization --duration 120
 
 # Compare visualizations in monitoring_sessions/*/visualizations/
 ```
@@ -135,32 +135,32 @@ monitoring_sessions/
 
 ### Custom Session Name
 ```bash
-./monitor_stack.py --session my_experiment_name
+uv run python src/monitor_stack.py --session my_experiment_name
 ```
 
 ### Custom Output Directory
 ```bash
-./monitor_stack.py --output-dir /path/to/results
+uv run python src/monitor_stack.py --output-dir /path/to/results
 ```
 
 ### Timed Monitoring (Auto-Stop)
 ```bash
-./monitor_stack.py --duration 300  # Stop after 5 minutes
+uv run python src/monitor_stack.py --duration 300  # Stop after 5 minutes
 ```
 
 ### Faster Updates
 ```bash
-./monitor_stack.py --interval 1  # Update every second
+uv run python src/monitor_stack.py --interval 1  # Update every second
 ```
 
 ### Disable Auto-Visualization
 ```bash
-./monitor_stack.py --no-visualize
+uv run python src/monitor_stack.py --no-visualize
 ```
 
 ### Monitor Only Timing (No CPU Overhead)
 ```bash
-./monitor_stack.py --graph-only --node /critical_node
+uv run python src/monitor_stack.py --graph-only --node /critical_node
 ```
 
 ---
@@ -184,7 +184,7 @@ monitoring_sessions/
 
 ### New Way (Single Command!)
 ```bash
-./monitor_stack.py --node /slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox
 # Press Ctrl+C when done - everything is automatic!
 ```
 
@@ -226,7 +226,7 @@ monitoring_sessions/
 - Check: `ros2 node list`
 
 ### Monitor exits immediately
-- Verify ROS2 environment is sourced: `source /opt/ros/humble/setup.bash`
+- Verify ROS2 environment is sourced: `source /opt/ros/humble/setup.bash` (or `jazzy`)
 - Check if the target node exists: `ros2 node list`
 
 ### Visualizations not generated
@@ -234,7 +234,8 @@ monitoring_sessions/
 - Run visualization manually: `make visualize-last`
 
 ### Permission denied
-- Make scripts executable: `chmod +x *.py`
+- Run `chmod +x quickstart auto-setup.sh` for shell scripts
+- Python scripts use `uv run python src/...` and do not need execute permission
 
 ---
 

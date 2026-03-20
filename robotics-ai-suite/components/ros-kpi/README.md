@@ -21,7 +21,6 @@ cd ~/Documents/ros2-kpi
 # Or use make shortcuts
 make start     # Interactive menu
 make quick     # Quick 30-second health check
-make test      # Quick latency test
 ```
 
 **That's it!** The interactive launcher handles ROS2 setup automatically and guides you through all features.
@@ -35,8 +34,6 @@ make test      # Quick latency test
 - [Quick Start](docs/QUICK_START.md) — Command-line quick start
 - [Command Reference](docs/COMMANDS.md) — All commands and options
 - [Examples](examples/) — Practical usage examples
-- [Latency Testing](docs/LATENCY_TESTING_QUICK_REF.md) — DDS/RTSP performance testing
-- [Remote Monitoring Test Report](REMOTE_MONITORING_TEST_REPORT.md) — Verify remote monitoring setup
 - [Improvements](docs/IMPROVEMENTS.md) — What's new
 
 ---
@@ -57,10 +54,10 @@ make test      # Quick latency test
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble+ | [docs.ros.org](https://docs.ros.org/) |
+| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
 | `pidstat` | `sudo apt-get install sysstat` |
-| `psutil`, `matplotlib`, `numpy` | `pip3 install psutil matplotlib numpy` |
+| `psutil`, `matplotlib`, `numpy` | `uv sync` |
 
 ---
 
@@ -81,7 +78,7 @@ chmod +x src/*.py monitor_stack.py
 Orchestrates graph + resource monitors, saves all output to a dated session folder, and auto-generates visualizations on exit.
 
 ```bash
-./monitor_stack.py [OPTIONS]
+uv run python src/monitor_stack.py [OPTIONS]
 ```
 
 | Option | Description |
@@ -314,7 +311,7 @@ Monitor a ROS2 pipeline running on a **separate machine**.
 ```bash
 make monitor-remote REMOTE_IP=192.168.1.100
 make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ros NODE=/slam_toolbox
-./monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
 > **Note:** CycloneDDS peer discovery over a LAN typically takes **30–60 seconds** before the remote graph is visible and topic messages start being logged. Use `DURATION=180` or longer for remote sessions to ensure meaningful data capture.
@@ -324,21 +321,6 @@ Results are stored and visualized locally on the monitoring machine.
 ### Remote Monitoring Verification
 
 Before starting remote monitoring, verify connectivity and prerequisites:
-
-```bash
-./verify_remote_monitoring.sh
-```
-
-This automated verification script checks:
-- ✅ SSH connectivity and key-based authentication
-- ✅ Remote system has ROS2 and pidstat installed
-- ✅ Remote ROS2 processes are running
-- ✅ Local prerequisites for graph monitoring (ROS2, Python packages)
-- ✅ Quick functional test of remote resource monitoring
-
-**Quick verification for specific remote system:**
-
-Edit `verify_remote_monitoring.sh` to set `REMOTE_IP` and `REMOTE_USER`, or test directly:
 
 ```bash
 # Test SSH connectivity
@@ -363,7 +345,7 @@ sysfs RC6 residency if PMU access is blocked.
 ### Why a custom build?
 
 The `intel-gpu-tools` package shipped with Ubuntu 24.04 (`1.28`) crashes with
-`get_num_gts: Assertion failed` on **kernel 6.17** (Meteor Lake / Arc GPUs).  
+`get_num_gts: Assertion failed` on **kernel 6.17** (Meteor Lake / Arc GPUs).
 Git master has the fix, so we build it once from source.
 
 ### One-time build on the remote machine
@@ -454,7 +436,7 @@ cp build/tools/intel_gpu_top ~/.local/bin/
 
 ### Enable PMU (richer metrics)
 
-`intel_gpu_top` needs `CAP_PERFMON` when `perf_event_paranoid > 0`.  
+`intel_gpu_top` needs `CAP_PERFMON` when `perf_event_paranoid > 0`.
 Run **once** (requires sudo on the remote):
 
 ```bash
@@ -466,7 +448,7 @@ sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top
 ```
 
 With CAP_PERFMON you get full data: per-engine busy%, actual/requested frequency,
-RC6 residency %, and GPU/Package power.  
+RC6 residency %, and GPU/Package power.
 Without it the monitor falls back to sysfs RC6 residency (busy% + frequency only).
 
 ### What gets collected
@@ -593,11 +575,8 @@ make grafana-start
 # 2. Run a monitoring session
 make monitor DURATION=120
 
-# 3. Export metrics to Prometheus (use the session name printed above)
-make grafana-export SESSION=20260306_154140
-
-# 4. Open browser
-make grafana-open   # → http://localhost:3000  (admin/admin)
+# 3. Check status and open http://localhost:30000 (admin/admin)
+make grafana-status
 ```
 
 > **Exporter port**: the metrics server runs on **port 9092** (Prometheus itself occupies port 9090 in host-network mode). Prometheus is pre-configured to scrape `localhost:9092`.
@@ -633,7 +612,7 @@ sudo apt-get install docker.io docker-compose
 sudo usermod -aG docker $USER  # Logout/login required
 
 # Install Python prometheus client
-pip3 install prometheus-client
+uv sync
 ```
 
 ### Documentation
@@ -661,7 +640,7 @@ See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 | `pidstat` not found | `sudo apt-get install sysstat` |
 | Matplotlib display error | `export MPLBACKEND=Agg` for headless systems |
 | Permission denied | `chmod +x src/*.py monitor_stack.py` |
-| Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; run `./verify_remote_monitoring.sh` |
+| Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; verify with `make check-domain REMOTE_IP=<ip>` |
 | Visualizations not generated | Run `make visualize-last` manually |
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 full core. See the **Avg Cores** column in the summary report. |
 | `grafana-export` port in use | Port 9092 conflict: `fuser -k 9092/tcp && make grafana-export SESSION=...` |

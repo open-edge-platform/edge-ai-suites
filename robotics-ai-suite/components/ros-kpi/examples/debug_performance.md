@@ -29,7 +29,7 @@ Look for processes with high CPU usage.
 
 ```bash
 # Start detailed monitoring of the problematic node
-make monitor NODE=/problematic_node SESSION=debug_session_1
+uv run python src/monitor_stack.py --node /problematic_node --session debug_session_1
 ```
 
 ### Step 3: Reproduce the Issue
@@ -111,7 +111,7 @@ After making changes, run another session:
 
 ```bash
 # After optimization
-make monitor NODE=/problematic_node SESSION=debug_session_2 DURATION=60
+uv run python src/monitor_stack.py --node /problematic_node --session debug_session_2 --duration 60
 
 # Compare results
 diff -r monitoring_sessions/debug_session_1/visualizations/ \
@@ -124,7 +124,7 @@ For long-running systems:
 
 ```bash
 # Start monitoring in background
-nohup ./src/monitor_stack.py --node /production_node \
+nohup uv run python src/monitor_stack.py --node /production_node \
     --session production_monitoring > /dev/null 2>&1 &
 
 # Save the PID

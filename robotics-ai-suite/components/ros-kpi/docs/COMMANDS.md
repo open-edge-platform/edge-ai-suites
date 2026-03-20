@@ -26,7 +26,6 @@ Intel-operated generative artificial intelligence solutions.
 | Full monitor, PID mode | `make monitor-pid` | 60s |
 | Monitor specific node | `make monitor NODE=/my_node` | 60s |
 | Extended session | `make monitor-long` | 5 min |
-| Benchmark | `make benchmark` | 10 min |
 | Graph only | `make graph-only` | 60s |
 | Resources only (threads) | `make resources-threads` | 60s |
 | Resources only (PIDs) | `make resources-pid` | 60s |
@@ -34,9 +33,6 @@ Intel-operated generative artificial intelligence solutions.
 | Remote system, PID mode | `make monitor-remote-pid REMOTE_IP=<ip>` | 60s |
 | Pipeline graph (PNG) | `make pipeline-graph` | — |
 | Pipeline graph (specific) | `make pipeline-graph SESSION=<name>` | — |
-| Export to Grafana | `make grafana-export SESSION=<name>` | — |
-| Export latest to Grafana | `make grafana-export` | — |
-| Live Grafana export | `make grafana-export-live` | — |
 | List sessions | `make list-sessions` | — |
 | Re-visualize last session | `make visualize-last` | — |
 | Clean all data | `make clean` | — |
@@ -46,7 +42,7 @@ Intel-operated generative artificial intelligence solutions.
 ## monitor_stack.py Options
 
 ```bash
-./monitor_stack.py [OPTIONS]
+uv run python src/monitor_stack.py [OPTIONS]
 ```
 
 | Option | Description |
@@ -67,9 +63,9 @@ Intel-operated generative artificial intelligence solutions.
 **Examples:**
 
 ```bash
-./monitor_stack.py --node /slam_toolbox --session my_test --duration 120
-./monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox
-./monitor_stack.py --resources-only --pid-only --duration 60
+uv run python src/monitor_stack.py --node /slam_toolbox --session my_test --duration 120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox
+uv run python src/monitor_stack.py --resources-only --pid-only --duration 60
 ```
 
 ---
@@ -91,34 +87,34 @@ make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox REMOTE_USER=ros
 ### ros2_graph_monitor.py
 
 ```bash
-./ros2_graph_monitor.py                           # All nodes, proc delay for each
-./ros2_graph_monitor.py --node /slam_toolbox      # Scope discovery to one node
-./ros2_graph_monitor.py --node /ctrl --log t.csv  # With CSV logging
-./ros2_graph_monitor.py --interval 2              # Custom interval
-./ros2_graph_monitor.py --remote-ip 192.168.1.100
+uv run python src/ros2_graph_monitor.py                           # All nodes, proc delay for each
+uv run python src/ros2_graph_monitor.py --node /slam_toolbox      # Scope discovery to one node
+uv run python src/ros2_graph_monitor.py --node /ctrl --log t.csv  # With CSV logging
+uv run python src/ros2_graph_monitor.py --interval 2              # Custom interval
+uv run python src/ros2_graph_monitor.py --remote-ip 192.168.1.100
 ```
 
 ### monitor_resources.py
 
 ```bash
-./monitor_resources.py                            # CPU only
-./monitor_resources.py --memory --threads         # CPU + memory + threads
-./monitor_resources.py --memory --log out.log     # With logging
-./monitor_resources.py --list                     # List ROS2 processes
-./monitor_resources.py --remote-ip 192.168.1.100 --memory
+uv run python src/monitor_resources.py                            # CPU only
+uv run python src/monitor_resources.py --memory --threads         # CPU + memory + threads
+uv run python src/monitor_resources.py --memory --log out.log     # With logging
+uv run python src/monitor_resources.py --list                     # List ROS2 processes
+uv run python src/monitor_resources.py --remote-ip 192.168.1.100 --memory
 ```
 
 ### visualize_timing.py
 
 ```bash
-./visualize_timing.py timing.csv --delays --frequencies --output-dir ./plots/
+uv run python src/visualize_timing.py timing.csv --delays --frequencies --output-dir ./plots/
 ```
 
 ### visualize_resources.py
 
 ```bash
-./visualize_resources.py resource.log --cores --heatmap --top 10 --output-dir ./plots/
-./visualize_resources.py resource.log --summary   # text table only
+uv run python src/visualize_resources.py resource.log --cores --heatmap --top 10 --output-dir ./plots/
+uv run python src/visualize_resources.py resource.log --summary   # text table only
 ```
 
 > CPU% scale: 100% = 1 full core. Use the **Avg Cores** column in `--summary` output for a human-readable reading.
@@ -149,11 +145,7 @@ make pipeline-graph SESSION=20260306_154140
 |---------|-------------|
 | `make grafana-start` | Start Grafana + Prometheus (Docker) |
 | `make grafana-stop` | Stop stack |
-| `make grafana-status` | Check running services |
-| `make grafana-open` | Open `http://localhost:3000` in browser |
-| `make grafana-export SESSION=<name>` | Serve a session's metrics on port 9092 |
-| `make grafana-export` | Same, using the latest session |
-| `make grafana-export-live` | Live mode (updates as monitoring runs) |
+| `make grafana-status` | Check running services — shows URL `http://localhost:30000` (admin/admin) |
 
 Metrics are exposed on **port 9092** (Prometheus occupies 9090 in host-network mode). Prometheus is pre-configured to scrape `localhost:9092`.
 
@@ -169,7 +161,7 @@ Monitor a ROS2 pipeline running on a **separate machine**.
 ```bash
 make monitor-remote REMOTE_IP=192.168.1.100
 make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ros NODE=/slam_toolbox
-./monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
 | Component | How it works |
@@ -201,7 +193,7 @@ monitoring_sessions/
 | No ROS2 processes found | Run `ros2 node list` to verify nodes are up |
 | Monitor exits immediately | Source ROS2: `source /opt/ros/humble/setup.bash` |
 | Visualizations not generated | Run `make visualize-last` manually |
-| Permission denied | Run `chmod +x src/*.py` |
+| Permission denied | Scripts invoke via `uv run python src/...` — run `uv sync` if modules are missing |
 | Remote: no data | Check SSH auth and matching `ROS_DOMAIN_ID` |
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 core. Check **Avg Cores** column. |
 | `grafana-export` port in use | `fuser -k 9092/tcp && make grafana-export SESSION=<name>` |

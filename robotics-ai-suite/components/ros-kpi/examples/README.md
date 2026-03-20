@@ -39,8 +39,8 @@ make quick-check
 # Monitor specific node
 make monitor NODE=/your_node
 
-# Debug with custom session name
-make monitor NODE=/node SESSION=debug_test
+# Debug with a named session
+uv run python src/monitor_stack.py --node /your_node --session debug_test
 
 # List all previous monitoring sessions
 make list-sessions

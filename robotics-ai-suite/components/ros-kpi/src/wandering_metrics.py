@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-wandering_metrics.py — helper for wandering_run.sh / compare_runs.sh
+wandering_metrics.py — helper for wandering_run.sh
 
 Subcommands
 -----------

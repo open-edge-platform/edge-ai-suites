@@ -50,7 +50,7 @@ make grafana-stop
 ./start_grafana.sh
 
 # Run monitoring
-./monitor_stack.py --session my_session
+uv run python src/monitor_stack.py --session my_session
 
 # Export metrics
 ./src/prometheus_exporter.py --session-dir monitoring_sessions/my_session
@@ -58,15 +58,15 @@ make grafana-stop
 
 ## Access Points
 
-- **Grafana**: http://localhost:3000 (admin/admin)
-- **Prometheus**: http://localhost:9091
-- **Metrics Endpoint**: http://localhost:9090/metrics
+- **Grafana**: http://localhost:30000 (admin/admin)
+- **Prometheus**: http://localhost:9090
+- **Metrics Endpoint**: http://localhost:9092/metrics
 
 ## Troubleshooting
 
 **No data in Grafana?**
-1. Check exporter is running: `curl http://localhost:9090/metrics`
-2. Check Prometheus targets: http://localhost:9091/targets
+1. Check exporter is running: `curl http://localhost:9092/metrics`
+2. Check Prometheus targets: http://localhost:9090/targets
 3. Verify monitoring session has data: `ls monitoring_sessions/*/`
 
 **Port conflicts?**

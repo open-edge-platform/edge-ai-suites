@@ -50,12 +50,12 @@ make interactive-heatmap
 
 ### Via Python Script
 ```bash
-python3 demo_interactive_heatmap.py
+uv run python demo_interactive_heatmap.py
 ```
 
 ### Via Visualization Tool
 ```bash
-python3 src/visualize_resources.py monitoring_sessions/<session_name>/resource_usage.log \
+uv run python src/visualize_resources.py monitoring_sessions/<session_name>/resource_usage.log \
     --output-dir monitoring_sessions/<session_name>/visualizations \
     --heatmap --show
 ```

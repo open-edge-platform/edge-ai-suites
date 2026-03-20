@@ -11,22 +11,13 @@
 if [ -f "/opt/ros/humble/setup.bash" ]; then
     source /opt/ros/humble/setup.bash
     echo "✅ ROS2 Humble sourced"
-elif [ -f "/opt/ros/foxy/setup.bash" ]; then
-    source /opt/ros/foxy/setup.bash
-    echo "✅ ROS2 Foxy sourced"
-elif [ -f "/opt/ros/galactic/setup.bash" ]; then
-    source /opt/ros/galactic/setup.bash
-    echo "✅ ROS2 Galactic sourced"
-elif [ -f "/opt/ros/iron/setup.bash" ]; then
-    source /opt/ros/iron/setup.bash
-    echo "✅ ROS2 Iron sourced"
 elif [ -f "/opt/ros/jazzy/setup.bash" ]; then
     source /opt/ros/jazzy/setup.bash
     echo "✅ ROS2 Jazzy sourced"
 else
     echo "⚠️  ROS2 not found in /opt/ros/"
-    echo "Please install ROS2 first:"
-    echo "  https://docs.ros.org/en/humble/Installation.html"
+    echo "Please follow the Intel Robotics AI Suite getting started guide:"
+    echo "  https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html"
     exit 1
 fi
 

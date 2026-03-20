@@ -15,8 +15,7 @@ Intel-operated generative artificial intelligence solutions.
 
 ./quickstart              Interactive menu (recommended for beginners)
 make start                Same as ./quickstart
-make quick                Quick 30-second health check
-make test                 Quick latency test
+make quick-check          Quick 30-second health check
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 MONITORING
@@ -27,29 +26,34 @@ make monitor NODE=/my_node                Monitor specific node
 make monitor NODE=/my_node DURATION=120   Custom duration
 make quick-check                          Quick 30s check
 make monitor-long                         Extended 5-minute session
-make benchmark                            High-frequency 10-min test
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚡ LATENCY TESTING (like Intel performance_test)
+🤖 SIMULATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Terminal 1:
-  make latency-test-relay                 Start relay node
+Wandering:
+  make wandering                          Run simulation
+  make wandering-record                   Run + record rosbag
+  make wandering-record-plot              Run + record + auto-plot
+  make wandering-benchmark                Benchmark run
+  make analyze-last-wandering             Analyze most recent session
 
-Terminal 2:
-  make latency-test-main                  Run latency test (1000 Hz, 60s)
-  make latency-quick                      Quick 30s test
-  make latency-test-main RATE=2000        Custom rate
+Pick-n-Place:
+  make picknplace-run                     Run simulation
+  make picknplace-record                  Run + record rosbag
+  make picknplace-record-plot             Run + record + auto-plot
+  make picknplace-benchmark               Benchmark run
+  make analyze-last-picknplace            Analyze most recent session
 
-With parameters:
-  make latency-test-main RATE=2000 DURATION=60 RELIABILITY=RELIABLE
+Analyze:
+  make analyze-bag BAG=<path>             Analyze a specific rosbag
+  make analyze-benchmark                  Analyze benchmark results
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 REMOTE MONITORING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 make monitor-remote REMOTE_IP=192.168.1.100
-make latency-remote-main REMOTE_IP=192.168.1.100
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📈 DASHBOARDS (Grafana)
@@ -64,7 +68,8 @@ Export a session to Grafana:
   make grafana-export                      # uses latest session
   make grafana-export-live                 # live mode
 
-Metrics served on port 9092 (Prometheus occupies 9090)Access: http://localhost:3000 (admin/admin)
+Metrics served on port 9092 (Prometheus occupies 9090)
+Access: http://localhost:30000 (admin/admin)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📁 RESULTS
@@ -99,20 +104,24 @@ make check-deps                           Verify installation
 💡 EXAMPLES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Monitor navigation stack
+# Wandering simulation with bag recording
+make wandering-record                              # Record session
+make analyze-last-wandering                        # Analyze results
+
+# Pick-n-Place simulation with bag recording
+make picknplace-record                             # Record session
+make analyze-last-picknplace                       # Analyze results
+
+# Monitor a specific node
 ros2 launch nav2_bringup tb3_simulation_launch.py  # Terminal 1
 make monitor NODE=/controller_server DURATION=120  # Terminal 2
-
-# Benchmark DDS latency
-make latency-test-relay                            # Terminal 1
-make latency-test-main RATE=2000 DURATION=30       # Terminal 2
 
 # Remote monitoring
 make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
 
 # Export to Grafana
 make grafana-start
-make monitor DURATION=120
+make wandering-record
 make grafana-export
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -120,8 +129,8 @@ make grafana-export
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 QUICKSTART.md                             Complete beginner's guide
-docs/LATENCY_TESTING_QUICK_REF.md        Latency testing guide
 docs/COMMANDS.md                          All commands
+docs/GRAFANA_SETUP.md                     Grafana/Prometheus setup
 make help                                 Show all make targets
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

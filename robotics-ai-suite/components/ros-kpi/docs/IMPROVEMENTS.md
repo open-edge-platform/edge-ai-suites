@@ -44,7 +44,7 @@ Your ROS2 monitoring stack now has **3 cleaner ways to run**:
 ### 1. 🐍 Python Orchestrator (`monitor_stack.py`)
 Single Python script that manages everything:
 ```bash
-./monitor_stack.py --node /your_node
+uv run python src/monitor_stack.py --node /your_node
 ```
 
 ### 2. 🔨 Makefile Commands
@@ -64,18 +64,18 @@ Required **4 separate terminals** and manual coordination:
 
 ```bash
 # Terminal 1: Start graph monitor
-./ros2_graph_monitor.py --node /slam_toolbox --log timing.csv
+uv run python src/ros2_graph_monitor.py --node /slam_toolbox --log timing.csv
 
 # Terminal 2: Start resource monitor
-./monitor_resources.py --memory --threads --log resources.log
+uv run python src/monitor_resources.py --memory --threads --log resources.log
 
 # Wait... monitor... Ctrl+C on both terminals
 
 # Terminal 3: Manually visualize timing
-./visualize_timing.py timing.csv --output-dir ./plots/ --delays --frequencies
+uv run python src/visualize_timing.py timing.csv --output-dir ./plots/ --delays --frequencies
 
 # Terminal 4: Manually visualize resources
-./visualize_resources.py resources.log --output-dir ./plots/ --cores --heatmap
+uv run python src/visualize_resources.py resources.log --output-dir ./plots/ --cores --heatmap
 
 # Manually organize files, create directories, etc.
 ```
@@ -95,7 +95,7 @@ Required **4 separate terminals** and manual coordination:
 **Single command in one terminal:**
 
 ```bash
-./monitor_stack.py --node /slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox
 # Press Ctrl+C when done - everything is automatic!
 ```
 
@@ -141,7 +141,7 @@ monitoring_sessions/
 ### 4. Session History
 ```bash
 # See all past monitoring sessions
-./monitor_stack.py --list-sessions
+uv run python src/monitor_stack.py --list-sessions
 
 # Or with make
 make list-sessions
@@ -150,22 +150,22 @@ make list-sessions
 ### 5. Flexible Control
 ```bash
 # Monitor for specific duration
-./monitor_stack.py --duration 60
+uv run python src/monitor_stack.py --duration 60
 
 # Custom update interval
-./monitor_stack.py --interval 2
+uv run python src/monitor_stack.py --interval 2
 
 # Graph only (lightweight)
-./monitor_stack.py --graph-only
+uv run python src/monitor_stack.py --graph-only
 
 # Resources only (with threads)
-./monitor_stack.py --resources-only
+uv run python src/monitor_stack.py --resources-only
 
 # Resources only (PIDs only)
-./monitor_stack.py --resources-only --pid-only
+uv run python src/monitor_stack.py --resources-only --pid-only
 
 # Named sessions for experiments
-./monitor_stack.py --session my_experiment
+uv run python src/monitor_stack.py --session my_experiment
 ```
 
 ---
@@ -188,7 +188,7 @@ make monitor NODE=/problematic_node
 
 ### Example 3: Long-term Monitoring
 ```bash
-./monitor_stack.py --node /critical_node --session production_test
+uv run python src/monitor_stack.py --node /critical_node --session production_test
 # Run for hours or days
 # All data is properly logged and organized
 ```
@@ -208,20 +208,21 @@ make monitor NODE=/controller_server SESSION=after
 
 ## 📁 File Structure
 
-### New Files Added:
+### Current File Structure:
 ```
 ros2-kpi/
-├── monitor_stack.py      # Main orchestrator (NEW!)
-├── Makefile              # Make targets (NEW!)
-├── QUICK_START.md        # Quick reference (NEW!)
-├── IMPROVEMENTS.md       # This file (NEW!)
+├── Makefile              # Make targets
+├── quickstart            # Interactive menu
 │
-├── ros2_graph_monitor.py     # Original (still works standalone)
-├── monitor_resources.py      # Original (still works standalone)
-├── visualize_timing.py       # Original (still works standalone)
-├── visualize_resources.py    # Original (still works standalone)
-├── analyze_rosbag.py         # Original (still works standalone)
-└── README.md                 # Updated with new info
+├── src/
+│   ├── monitor_stack.py      # Main orchestrator
+│   ├── ros2_graph_monitor.py # Graph monitor
+│   ├── monitor_resources.py  # Resource monitor
+│   ├── visualize_timing.py   # Timing visualizer
+│   ├── visualize_resources.py# Resource visualizer
+│   ├── analyze_rosbag.py     # Rosbag analysis
+│   └── prometheus_exporter.py# Grafana/Prometheus export
+└── README.md                 # Full documentation
 ```
 
 ### Output Structure:
@@ -253,19 +254,19 @@ Just remember: `make monitor`
 `make monitor NODE=/node_name`
 
 ### For Everything Else:
-Check `./monitor_stack.py --help` or `make help`
+Check `uv run python src/monitor_stack.py --help` or `make help`
 
 ---
 
 ## 🔧 Backward Compatibility
 
-**All original scripts still work!** You can use them individually if needed:
+All scripts are in `src/` and invoked via `uv`:
 ```bash
-./ros2_graph_monitor.py --node /my_node --log my_timing.csv
-./monitor_resources.py --memory --log my_resources.log
+uv run python src/ros2_graph_monitor.py --node /my_node --log my_timing.csv
+uv run python src/monitor_resources.py --memory --log my_resources.log
 ```
 
-The new stack is just a convenience layer on top.
+The `make monitor` stack is a convenience layer on top.
 
 ---
 
@@ -279,7 +280,7 @@ The new stack is just a convenience layer on top.
 2. **Start monitoring (pick one):**
    ```bash
    # Option 1: Python
-   ./monitor_stack.py --node /my_critical_node
+   uv run python src/monitor_stack.py --node /my_critical_node
 
    # Option 2: Make
    make monitor NODE=/my_critical_node
@@ -318,7 +319,7 @@ The new stack is just a convenience layer on top.
 
 - **Quick Start:** See [QUICK_START.md](QUICK_START.md)
 - **Full Details:** See updated [README.md](README.md)
-- **Help:** Run `./monitor_stack.py --help` or `make help`
+- **Help:** Run `uv run python src/monitor_stack.py --help` or `make help`
 
 ---
 

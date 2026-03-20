@@ -75,13 +75,6 @@ sudo rosdep init
 rosdep update
 ```
 
-#### Ubuntu 20.04 (Foxy)
-
-```bash
-# Similar steps but install ros-foxy-ros-base instead
-sudo apt install -y ros-foxy-ros-base python3-rosdep
-```
-
 ### 4. Source ROS2 Environment
 
 Add to your `~/.bashrc` to automatically source ROS2:

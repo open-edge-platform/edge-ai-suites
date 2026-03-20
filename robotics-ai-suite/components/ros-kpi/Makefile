@@ -4,14 +4,13 @@
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
 .PHONY: help monitor monitor-node monitor-pid monitor-remote monitor-remote-pid monitor-remote-grafana monitor-remote-pid-grafana monitor-remote-repeat monitor-long monitor-long-pid quick-check \
-        benchmark benchmark-pid graph-only resources-threads resources-pid \
-        latency-test-main latency-test-relay latency-quick latency-remote-main latency-remote-relay \
+        graph-only resources-threads resources-pid \
         list-sessions visualize-last visualize-all visualize-gpu visualize-gpu-pid-bar visualize-npu pipeline-graph interactive-heatmap analyze-session compare-sessions \
         view-average view-average-timing view-average-resources view-average-plot \
         clean clean-last clean-session install check-deps check-domain docs setup-remote-gpu \
         monitor-gpu \
         gpu-pids gpu-pids-watch gpu-pids-remote gpu-pids-csv \
-        grafana-start grafana-stop grafana-pull grafana-export grafana-export-live grafana-demo grafana-status grafana-logs grafana-open \
+        grafana-start grafana-stop grafana-pull grafana-export grafana-export-live grafana-status grafana-logs grafana-open \
         wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
         picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
         analyze-benchmark
@@ -30,14 +29,12 @@ help:
 	@echo "  make monitor-node NODE=<name> - Narrow discovery to one node (proc delay works for all nodes)"
 	@echo "  make quick-check          - Quick 30-second monitoring session"
 	@echo "  make monitor-long         - Extended 5-minute monitoring session"
-	@echo "  make benchmark            - Benchmark monitoring (10 min, 1s interval)"
 	@echo "  make graph-only           - Monitor only graph/timing"
 	@echo "  make resources-threads    - Monitor only system resources (with threads)"
 	@echo ""
 	@echo "MONITORING (PID Mode - process-level only):"
 	@echo "  make monitor-pid          - Full monitoring with PIDs only"
 	@echo "  make monitor-long-pid     - Extended monitoring with PIDs only (5 min)"
-	@echo "  make benchmark-pid        - Benchmark with PID-only monitoring (10 min)"
 	@echo "  make resources-pid        - Monitor system resources (PIDs only)"
 	@echo ""
 	@echo "REMOTE MONITORING (from a second machine):"
@@ -68,15 +65,6 @@ help:
 	@echo "  make analyze-benchmark BENCH=<path>  - Re-aggregate KPIs from a bench dir"
 	@echo "  Params: RUNS=25  TIMEOUT=120  PN_TIMEOUT=300  PAUSE=30  NODE=<filter>"
 	@echo "  Full target list: make -f src/Makefile help"
-	@echo ""
-	@echo "LATENCY TESTING (performance_test-style roundtrip measurement):"
-	@echo "  make latency-test-main    - Run roundtrip latency test (Main node)"
-	@echo "  make latency-test-relay   - Run relay node (echoes messages back)"
-	@echo "  make latency-quick        - Quick 30s latency test"
-	@echo "  make latency-remote-main REMOTE_IP=<ip> - Remote roundtrip test (Main)"
-	@echo "  make latency-remote-relay REMOTE_IP=<ip> - Remote relay node"
-	@echo "  Params: RATE=<hz> DURATION=<sec> LOGFILE=<path> RELIABILITY=<RELIABLE|BEST_EFFORT>"
-	@echo "  Example: make latency-test-main RATE=2000 DURATION=60 LOGFILE=2khz_test.csv"
 	@echo ""
 	@echo "VISUALIZATION & ANALYSIS:"
 	@echo "  make list-sessions        - List all previous monitoring sessions"
@@ -114,13 +102,8 @@ help:
 	@echo ""
 	@echo "GRAFANA DASHBOARDS:"
 	@echo "  make grafana-start        - Start Grafana/Prometheus stack"
-	@echo "  make grafana-stop         - Stop dashboard stack"
-	@echo "  make grafana-pull         - Pull latest Grafana/Prometheus images"
-	@echo "  make grafana-export       - Export metrics from latest session"
-	@echo "  make grafana-export SESSION=<name> - Export from specific session"
-	@echo "  make grafana-demo         - Full demo: start stack + monitor + export"
+	@echo "  make grafana-stop         - Stop Grafana/Prometheus stack"
 	@echo "  make grafana-status       - Check dashboard stack status"
-	@echo "  make grafana-open         - Open Grafana in browser"
 	@echo ""
 	@echo "UTILITIES:"
 	@echo "  make clean                - Remove all monitoring session data"
@@ -152,8 +135,6 @@ help:
 	@echo "  make wandering-benchmark RUNS=5 TIMEOUT=180"
 	@echo "  make picknplace-benchmark RUNS=5"
 	@echo "  make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421"
-	@echo "  make latency-test-main RATE=2000 DURATION=60"
-	@echo "  make latency-remote-main REMOTE_IP=192.168.1.100 RATE=1000"
 	@echo "  make analyze-session SESSION=20260211_202949"
 
 # Full monitoring with optional parameters (defaults to 60 seconds)
@@ -233,16 +214,6 @@ monitor-long-pid:
 	@echo "Running extended monitoring session (5 minutes, PID-only)..."
 	@uv run python src/monitor_stack.py --duration 300 --interval 5 --pid-only $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
 
-# Benchmark mode (10 minutes, 1 second interval)
-benchmark:
-	@echo "Running benchmark monitoring (10 minutes, high frequency)..."
-	@uv run python src/monitor_stack.py --duration 600 --interval 1 $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# Benchmark mode with PID-only monitoring
-benchmark-pid:
-	@echo "Running benchmark monitoring (PID-only, 10 minutes, high frequency)..."
-	@uv run python src/monitor_stack.py --duration 600 --interval 1 --pid-only $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
 # Graph monitoring only
 graph-only:
 	@uv run python src/monitor_stack.py --graph-only $(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
@@ -254,87 +225,6 @@ resources-threads:
 # Resource monitoring only (PIDs, no threads)
 resources-pid:
 	@uv run python src/monitor_stack.py --resources-only --pid-only $(if $(DURATION),--duration $(DURATION)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# ============================================================================
-# LATENCY TESTING (performance_test-style roundtrip measurement)
-# ============================================================================
-
-# Roundtrip latency test - Main node (publishes and measures)
-latency-test-main:
-	@echo "Starting roundtrip latency test (Main node)..."
-	@echo "⚠️  Make sure Relay node is running in another terminal:"
-	@echo "   make latency-test-relay"
-	@echo ""
-	@uv run latency-tester \
-		--mode Main \
-		--rate $(if $(RATE),$(RATE),1000) \
-		--max-runtime $(if $(DURATION),$(DURATION),60) \
-		--msg-size $(if $(MSGSIZE),$(MSGSIZE),1024) \
-		--reliability $(if $(RELIABILITY),$(RELIABILITY),BEST_EFFORT) \
-		--durability $(if $(DURABILITY),$(DURABILITY),VOLATILE) \
-		$(if $(LOGFILE),--logfile $(LOGFILE),--logfile latency_test_$$(date +%Y%m%d_%H%M%S).csv) \
-		--print-console
-
-# Roundtrip latency test - Relay node (echoes messages back)
-latency-test-relay:
-	@echo "Starting relay node (echoes messages back to Main)..."
-	@uv run latency-tester \
-		--mode Relay \
-		--reliability $(if $(RELIABILITY),$(RELIABILITY),BEST_EFFORT) \
-		--durability $(if $(DURABILITY),$(DURABILITY),VOLATILE)
-
-# Quick latency check (30 seconds)
-latency-quick:
-	@echo "Running quick 30-second latency test..."
-	@echo "⚠️  Make sure Relay node is running: make latency-test-relay"
-	@echo ""
-	@uv run latency-tester \
-		--mode Main \
-		--rate 1000 \
-		--max-runtime 30 \
-		--msg-size 1024 \
-		--logfile latency_quick_$$(date +%Y%m%d_%H%M%S).csv \
-		--print-console
-
-# Remote roundtrip latency test - Main node
-latency-remote-main:
-	@if [ -z "$(REMOTE_IP)" ]; then \
-		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make latency-remote-main REMOTE_IP=192.168.1.100"; \
-		exit 1; \
-	fi
-	@echo "Starting remote roundtrip latency test on $(REMOTE_IP)..."
-	@echo "⚠️  Make sure remote Relay node is running:"
-	@echo "   ssh $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP) 'cd ~/Documents/ros2-kpi && source /opt/ros/humble/setup.bash && make latency-test-relay'"
-	@echo ""
-	@ssh $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP) \
-		'source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=$(if $(ROS_DOMAIN_ID),$(ROS_DOMAIN_ID),0) && \
-		cd ~/Documents/ros2-kpi && \
-		uv run latency-tester \
-			--mode Main \
-			--rate $(if $(RATE),$(RATE),1000) \
-			--max-runtime $(if $(DURATION),$(DURATION),60) \
-			--msg-size $(if $(MSGSIZE),$(MSGSIZE),1024) \
-			--reliability $(if $(RELIABILITY),$(RELIABILITY),BEST_EFFORT) \
-			$(if $(LOGFILE),--logfile $(LOGFILE),--logfile latency_test_$$(date +%Y%m%d_%H%M%S).csv) \
-			--print-console'
-
-# Remote roundtrip latency test - Relay node
-latency-remote-relay:
-	@if [ -z "$(REMOTE_IP)" ]; then \
-		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make latency-remote-relay REMOTE_IP=192.168.1.100"; \
-		exit 1; \
-	fi
-	@echo "Starting remote relay node on $(REMOTE_IP)..."
-	@ssh $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP) \
-		'source /opt/ros/humble/setup.bash && export ROS_DOMAIN_ID=$(if $(ROS_DOMAIN_ID),$(ROS_DOMAIN_ID),0) && \
-		cd ~/Documents/ros2-kpi && \
-		uv run latency-tester \
-			--mode Relay \
-			--reliability $(if $(RELIABILITY),$(RELIABILITY),BEST_EFFORT)'
-
-# ============================================================================
 
 # List all previous sessions
 list-sessions:
@@ -988,7 +878,7 @@ monitor-remote-grafana:
 	@echo "🚀 Starting remote monitoring + live Grafana export..."
 	@echo "   Remote host : $(REMOTE_IP)"
 	@echo "   Metrics     : http://localhost:9092/metrics"
-	@echo "   Grafana      : http://localhost:3000"
+	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
 	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
@@ -1027,7 +917,7 @@ monitor-remote-pid-grafana:
 	@echo "🚀 Starting remote PID monitoring + live Grafana export..."
 	@echo "   Remote host : $(REMOTE_IP)"
 	@echo "   Metrics     : http://localhost:9092/metrics"
-	@echo "   Grafana      : http://localhost:3000"
+	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
 	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
@@ -1091,7 +981,7 @@ monitor-remote-repeat:
 	trap _stop INT TERM; \
 	echo "🔁 Running $$REPEAT monitoring session(s) × $${DURATION}s each (pause=$${PAUSE}s)"; \
 	echo "   Remote: $(if $(REMOTE_USER),$(REMOTE_USER)@,)$(REMOTE_IP)"; \
-	echo "   Grafana: http://localhost:3000"; \
+	echo "   Grafana: http://localhost:30000"; \
 	echo ""; \
 	for i in $$(seq 1 $$REPEAT); do \
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
@@ -1140,26 +1030,8 @@ picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknpla
 analyze-benchmark:
 	$(MAKE) -f src/Makefile $@ $(_SRC_FWD)
 
-# Quick start: start stack + monitor + export
-grafana-demo:
-	@echo "🎬 Starting Grafana Demo..."
-	@echo "This will:"
-	@echo "  1. Start Grafana/Prometheus stack"
-	@echo "  2. Start monitoring (60s)"
-	@echo "  3. Start metrics exporter"
-	@echo ""
-	@./start_grafana.sh
-	@sleep 5
-	@echo ""
-	@echo "📡 Starting monitoring (60s)..."
-	@echo "Open http://localhost:3000 in your browser (admin/admin)"
-	@echo ""
-	@./monitor_stack.py --session grafana_demo --duration 60 &
-	@sleep 2
-	@./src/prometheus_exporter.py --session-dir monitoring_sessions/grafana_demo
-
-# Check Grafana stack status
-grafana-status:
+# ─────────────────────────────────────────────────────────────────────────────
+# Simulation benchmarking — delegate to src/Makefile
 	@echo "📊 Grafana Dashboard Stack Status"
 	@echo "=================================="
 	@if docker compose ps 2>/dev/null | grep -q "Up"; then \
@@ -1167,8 +1039,8 @@ grafana-status:
 		docker compose ps; \
 		echo ""; \
 		echo "🌐 Access Points:"; \
-		echo "   Grafana:    http://localhost:3000 (admin/admin)"; \
-		echo "   Prometheus: http://localhost:9091"; \
+		echo "   Grafana:    http://localhost:30000 (admin/admin)"; \
+		echo "   Prometheus: http://localhost:9090"; \
 		echo ""; \
 		if curl -s http://localhost:9092/metrics > /dev/null 2>&1; then \
 			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
@@ -1189,12 +1061,11 @@ grafana-logs:
 grafana-open:
 	@echo "🌐 Opening Grafana dashboard..."
 	@if command -v xdg-open >/dev/null 2>&1; then \
-		xdg-open http://localhost:3000; \
+		xdg-open http://localhost:30000; \
 	elif command -v firefox >/dev/null 2>&1; then \
-		firefox http://localhost:3000; \
+		firefox http://localhost:30000; \
 	else \
-		echo "Open http://localhost:3000 in your browser"; \
+		echo "Open http://localhost:30000 in your browser"; \
 	fi
 
-.PHONY: grafana-start grafana-stop grafana-export grafana-export-live grafana-demo \
-        grafana-status grafana-logs grafana-open
+
