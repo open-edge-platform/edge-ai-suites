@@ -8,7 +8,7 @@ import pytest
 
 SOURCE = "src"
 VIDEO_DIR = os.path.join(SOURCE, "dlstreamer-pipeline-server/videos")
-VIDEOS = ["1122east.ts", "1122west.ts", "1122north.ts", "1122south.ts"]
+VIDEOS = ["1122east_h264.ts", "1122west_h264.ts", "1122north_h264.ts", "1122south_h264.ts"]
 SECRETS_DIR = os.path.join(SOURCE, "secrets")
 
 def setup_functionality_check():

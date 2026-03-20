@@ -8,8 +8,8 @@ spec:
     app: aggregator
   ports:
     - name: http
-      port: 8001
-      targetPort: 8001
+      port: 80           # Expose standard HTTP port for ingress
+      targetPort: 8001   # Container port remains 8001
       protocol: TCP
     - name: grpc
       port: 50051
@@ -121,6 +121,6 @@ spec:
     app: ui
   ports:
     - name: http
-      port: 80
-      targetPort: 3000
+      port: 80           # UI is exposed on 80 for ingress
+      targetPort: 3000   # Container port remains 3000
       protocol: TCP

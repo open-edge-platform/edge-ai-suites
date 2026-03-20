@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 import shutil
 import time
-from inference.engine import ECGInferenceEngine
+from inference.embedding_engine import HubertECGInferenceEngine
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
@@ -18,7 +18,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-engine = ECGInferenceEngine()
+hubert_engine = HubertECGInferenceEngine()
 
 # ---- STREAM STATE (VERY IMPORTANT) ----
 stream_files = []
@@ -52,13 +52,17 @@ def predict_ecg(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
 
     try:
-        pred = engine.predict(filename)
+        # HuBERT-ECG is now the primary inference path.
+        h_pred = hubert_engine.predict(filename)
         return {
-            "file": filename, 
-            "signal": pred["signal"],
-            "result": pred["result"],
-            "inference_ms": pred["inference_ms"],
-            "length": len(pred["signal"]),
+            "file": filename,
+            "signal": h_pred["signal"],
+            # No AF classifier is attached; expose embedding only.
+            "result": "N/A",
+            "inference_ms": h_pred["inference_ms"],
+            "length": h_pred["length"],
+            "hubert_embedding": h_pred["embedding"],
+            "hubert_inference_ms": h_pred["inference_ms"],
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -85,12 +89,44 @@ def predict_stream_next():
     filename = stream_files[stream_index]
     stream_index = (stream_index + 1) % len(stream_files)
 
-    pred = engine.predict(filename)
+    try:
+        h_pred = hubert_engine.predict(filename)
+        return {
+            "file": filename,
+            "signal": h_pred["signal"],
+            "result": "N/A",
+            "inference_ms": h_pred["inference_ms"],
+            "length": h_pred["length"],
+            "hubert_embedding": h_pred["embedding"],
+            "hubert_inference_ms": h_pred["inference_ms"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    return {
-        "file": filename,
-        "signal": pred["signal"],
-        "result": pred["result"],
-        "inference_ms": pred["inference_ms"],
-        "length": len(pred["signal"]),
-    }
+
+@app.get("/predict_hubert/{filename}")
+def predict_hubert(filename: str):
+    """Run inference with the HuBERT-ECG backbone and return an embedding.
+
+    This does not perform AF/arrhythmia classification; it exposes the
+    pooled feature vector, which can be used by downstream components
+    or for experimentation.
+    """
+
+    file_path = os.path.join(DATA_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    try:
+        pred = hubert_engine.predict(filename)
+        return {
+            "file": filename,
+            "signal": pred["signal"],
+            "embedding": pred["embedding"],
+            "inference_ms": pred["inference_ms"],
+            "length": pred["length"],
+        }
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="File not found")
+    except Exception as e:  # pragma: no cover - runtime path
+        raise HTTPException(status_code=500, detail=str(e))

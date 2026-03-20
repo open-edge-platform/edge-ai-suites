@@ -55,7 +55,7 @@ After downloading, extract the model using the following command:
 
 .. code-block:: bash
 
-   $ tar -xvzf sp_v6.tgz
+   tar -xvzf sp_v6.tgz
 
 Convert TensorFlow Model to OpenVINO IR
 ---------------------------------------
@@ -74,8 +74,8 @@ Run the following command to perform the conversion:
 
 .. code-block:: bash
 
-   $ cd sp_v6
-   $ ovc ./ --input [1,1280,720,1]
+   cd sp_v6
+   ovc ./ --input [1,1280,720,1]
 
 - **\--input [1,1280,720,1]**: Specifies the input dimensions of the model. The parameters represent:
 
@@ -93,7 +93,7 @@ If you need an FP32 precision model, add the following parameter to the ``ovc`` 
 
 .. code-block:: bash
 
-   $ ovc ./ --input [1,1280,720,1] --compress_to_fp16=False
+   ovc ./ --input [1,1280,720,1] --compress_to_fp16=False
 
 Additional Notes
 ----------------

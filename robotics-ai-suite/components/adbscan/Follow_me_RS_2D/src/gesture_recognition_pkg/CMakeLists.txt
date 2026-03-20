@@ -26,11 +26,5 @@ install(PROGRAMS gesture_recognition_pkg/gesture_recognition_node.py
 install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node.py
         DESTINATION lib/${PROJECT_NAME})
 
-install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node_v2.py
-        DESTINATION lib/${PROJECT_NAME})
-
-install(PROGRAMS gesture_recognition_pkg/traj_and_img_publisher_node_v3.py
-        DESTINATION lib/${PROJECT_NAME})
-
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME}/)
 ament_package()

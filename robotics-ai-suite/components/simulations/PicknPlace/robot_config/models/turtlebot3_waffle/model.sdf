@@ -503,7 +503,7 @@
 
       <ros>
         <!-- <namespace>/robot0</namespace> -->
-        <remapping>/tf:=tf</remapping>
+        <!-- <remapping>/tf:=tf</remapping> Removed for world TF system -->
       </ros>
 
       <update_rate>10</update_rate>

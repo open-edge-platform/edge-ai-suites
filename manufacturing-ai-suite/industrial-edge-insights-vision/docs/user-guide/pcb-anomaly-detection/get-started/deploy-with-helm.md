@@ -23,17 +23,17 @@
    ```sh
    cp helm/values_pcb-anomaly-detection.yaml helm/values.yaml
    ```
-
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
    - Download helm chart with the following command
 
-       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc1`
+       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0-rc3`
    - unzip the package using the following command
 
-       `tar -xvf pcb-anomaly-detection-1.2.0-rc1.tgz`
+       `tar -xvf pcb-anomaly-detection-1.2.0-rc3.tgz`
    - Replace the helm directory
 
        `rm -rf helm && mv pcb-anomaly-detection helm`
@@ -163,6 +163,21 @@
    > **Note:** This would start the pipeline. You can view the inference stream on WebRTC by
    > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/anomaly/` for PCB Anomaly Detection.
    > If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+   
+   ### Starting GPU and NPU based pipelines
+   For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
+   
+      **For GPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p pcb_anomaly_detection_gpu
+      ```
+
+      **For NPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p pcb_anomaly_detection_npu
+      ```
 
 5. Get status of pipeline instance(s) running.
 
@@ -400,7 +415,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/pcb-anomaly-detection.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/6bde8bb1d2317cf16824b8812b845fff34cb0f76/models/FP16/pcb-anomaly-detection.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 

@@ -1,4 +1,4 @@
-The **Education AI Suite** is a preview collection of education-focused AI applications, libraries, and benchmarking tools to help developers build intelligent classroom solutions faster. It provides audio and video pipelines accelerated with the OpenVINO™ toolkit, enabling high-performance deployment on **Intel® CPUs, integrated GPUs, and NPUs**.
+The **Education AI Suite** is a collection of education-focused AI applications, libraries, and benchmarking tools to help developers build intelligent classroom solutions faster. It provides audio and video pipelines accelerated with the OpenVINO™ toolkit, enabling high-performance deployment on **Intel® CPUs, integrated GPUs, and NPUs**.
 
 This suite organizes workflows tailored for the education sector, with initial support for the **Smart Classroom** application—an extensible framework for processing, analyzing, and summarizing classroom sessions using advanced multimodal AI.
 

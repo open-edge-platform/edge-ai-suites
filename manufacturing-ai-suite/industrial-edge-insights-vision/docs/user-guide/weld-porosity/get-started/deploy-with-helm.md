@@ -23,16 +23,17 @@
    ```sh
    cp helm/values_weld-porosity.yaml helm/values.yaml
    ```
+      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
     - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc1`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0-rc3`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.4.0-rc1.tgz`
+        `tar -xvf weld-porosity-sample-application-1.4.0-rc3.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`
@@ -160,6 +161,21 @@
 
    > **Note:**- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
    >If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   
+   ### Starting GPU and NPU based pipelines
+   For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
+
+      **For GPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p weld_porosity_classification_gpu
+      ```
+
+      **For NPU-based pipelines:**
+
+      ```sh
+      ./sample_start.sh helm -p weld_porosity_classification_npu
+      ```
 
 5. Get status of pipeline instance(s) running.
 
@@ -395,7 +411,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/weld_porosity_classification.zip'
+   export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification.zip'
 
    curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 

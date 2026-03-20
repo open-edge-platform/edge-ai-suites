@@ -13,3 +13,12 @@ chunks/
 
 #Ignore logs
 monitoring/executionlogs/
+
+*.exe
+*.whl
+
+*venv*
+
+chroma_data/
+minio_data/
+extracted_images/
