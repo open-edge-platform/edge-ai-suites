@@ -197,10 +197,6 @@ def launch_setup(context: LaunchContext):
                 ]
                 }"""
 
-        controller_run_state = 'active'
-        if os.environ.get('ROS_DISTRO') == 'foxy':
-            controller_run_state = 'start'
-
         # Set initial joint position for robot - needed for all ROS distros
         set_initial_pose = ExecuteProcess(
             cmd=[

@@ -212,6 +212,9 @@ Here are the example prompts that we used:
 
 - **Prompt for Vehicle Position Extractor**: The code output from co-pilot after vibe coding with this prompt is used in step #7.7 below
     - Here is the metadata output from DL Streamer Pipeline Server (Video Analytics pipeline) that does object detection. [PASTE METADATA HERE]. Provide a node red function that parses bounding box coordinates (x, y, w, h format) to calculate centroids, only include objects that are vehicles and return output message with vehicle positions.
+        > Note: After completing step #7.6 and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
+        ![Crowd Analytics Node-RED Debug Panel](_images/crowd-analytics-debug-panel.png)
+
 - **Prompt for Hotspot Detector**: The code output from co-pilot after vibe coding with this prompt is used in step #7.8 below
     - Based on the output of the previous function node, compute hotspots of vehicles. Include configurable parameters for the below in the code:
         - Maximum distance (pixels) to consider vehicles part of same hotspot
@@ -274,6 +277,7 @@ Create a debug node to monitor incoming vehicle detection data:
 3. **Deploy and Test**:
    - Click **Deploy**
    - Check the debug panel (bug icon in the right sidebar) for incoming vehicle detection messages
+   - The debug messages from this node is being used to generate the code for extracting vehicle positions in step #7.7 using prompt engineering.
 
 #### 7.7 **Implement Vehicle Position Extraction Function**
 
@@ -787,6 +791,14 @@ Create debug nodes to monitor the hotspot analytics pipeline:
 
 ![Crowd Analytics Node-RED Flow](_images/crowd-analytics-node-red-flow.png)
 
+### **Appendix: Fine-tuning Node-RED Functions with Claude Sonnet 4.5**
+
+When developing Node-RED function nodes for advanced analytics, you can leverage prompt engineering with Claude Sonnet 4.5 to iteratively refine your code. Here’s how you can approach fine-tuning:
+
+![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-1.png)
+![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-2.png)
+![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-3.png)
+![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-4.png)
 
 ### 8. **Visualizing Hotspot Analytics in Grafana**
 

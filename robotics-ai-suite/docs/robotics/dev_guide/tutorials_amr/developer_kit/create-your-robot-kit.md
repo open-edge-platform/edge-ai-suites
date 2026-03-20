@@ -1,6 +1,6 @@
 # Create Your Own Robot Kit
 
-This tutorial guides guides you through creating an autonomous mobile robot capable of
+This tutorial guides you through creating an autonomous mobile robot capable of
 exploring and mapping an area. It involves adding an Intel® compute system, placing a
 Intel® RealSense™ camera on top of any robot base, and using the Autonomous Mobile Robot software.
 
@@ -62,10 +62,10 @@ The standard assembly involves the following steps:
 1. Mount the motors onto the lower chassis board and then assemble the wheels.
 2. Fix the motor controller on the chassis board and establish connections with the motors.
 3. Attach the Intel® RealSense™ camera and the SSD drive to the upper chassis board.
-4. Mount the Intel® compute system to the the upper chassis board.
+4. Mount the Intel® compute system to the upper chassis board.
 5. Connect the two chassis boards.
 6. Establish a connection between the Intel® compute system and both Intel® RealSense™ camera and motor controller via USB.
-7. Connect both the the Intel® compute system and the motor controller to a power source.
+7. Connect both the Intel® compute system and the motor controller to a power source.
 8. Power the Intel® compute system using a power source.
 
 ### Step 2: Integration into Autonomous Mobile Robot

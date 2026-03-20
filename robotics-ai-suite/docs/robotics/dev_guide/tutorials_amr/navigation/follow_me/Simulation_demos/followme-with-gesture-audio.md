@@ -55,11 +55,8 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo ros-humble-text-to-speech
 ### Activate Python Virtual Environment
 
 ```bash
-sudo apt install pipx
-pipx install virtualenv
-pipx ensurepath
-source ~/.bashrc
-virtualenv venv_followme_audio
+sudo apt install python3-venv
+python3 -m venv venv_followme_audio
 cd venv_followme_audio
 source bin/activate
 ```
@@ -98,7 +95,7 @@ pip3 install -r /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/require
 
 Please make sure to source the `/opt/ros/jazzy/setup.bash` file at first before
 executing any command in a new terminal. You can get more details in
-[Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
+[Prepare the Target System](../../../../../gsg_robot/index.md) page.
 
 Run the following script to launch Gazebo simulator and ROS 2 rviz2.
 
@@ -182,7 +179,7 @@ the `start` and `stop` activity of the TurtleBot3 robot.
 
 Please make sure to source the `/opt/ros/jazzy/setup.bash` file (or `/opt/ros/humble/setup.bash`)
 at first before executing any command in a new terminal.
-You can get more details in [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
+You can get more details in [Prepare the Target System](../../../../../gsg_robot/index.md) page.
 
 Run the following script to launch Gazebo simulator and ROS 2 rviz2.
 
@@ -311,7 +308,7 @@ Find a brief description of the parameters in the following list:
 
 - Please make sure to prepare your environment before executing ROS 2 commands in
   a new terminal. You can find the instructions in the
-  [Prepare the Target System](../../../../../gsg_robot/prepare-system.md) page.
+  [Prepare the Target System](../../../../../gsg_robot/index.md) page.
 
 - You can stop the demo anytime by pressing `ctrl-C`. If the `Gazebo` simulator
   freezes or does not stop, please use the following command in a terminal:
