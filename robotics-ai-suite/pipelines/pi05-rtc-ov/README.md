@@ -1,12 +1,12 @@
 # Pi0.5 with Real-Time Chunking
 π₀.₅ (Pi0.5) is a Vision-Language-Action (VLA) model architecture designed by [Physical Intelligence](https://www.pi.website/). It is built upon the PaliGemma VLM backbone, integrating a SigLIP vision encoder (So400m) with a Gemma language model base (e.g., 2.6B parameters) to process multimodal inputs.
 
-Architecturally, π₀.₅ distinguishes itself through a specialized "Action Expert" head—a smaller parameter model (e.g., Gemma 300M)—that generates continuous actions using Flow Matching. Unlike traditional policy heads, this design solves an Ordinary Differential Equation (ODE) from noise to actions, enabling high-precision control.
+Architecturally, π₀.₅ distinguishes itself through a specialized "Action Expert" head — a smaller parameter model (e.g., Gemma 300M) — that generates continuous actions using Flow Matching. Unlike traditional policy heads, this design solves an Ordinary Differential Equation (ODE) from noise to actions, enabling high-precision control.
 
 Key structural features of π₀.₅ include:
-*   **AdaRMSNorm Conditioning**: The flow timestep $t$ is injected directly into the normalization layers of the Action Expert via Adaptive RMS Normalization, providing more effective conditioning than standard concatenation.
-*   **Discretized State Tokenization**: Robot proprioceptive state is discretized and treated as text tokens within the input prefix, allowing the model to "read" its physical state using the same attention mechanisms as natural language.
-*   **Unified Prefix Processing**: Visual patch tokens from SigLIP and text tokens are concatenated into a single sequence, which the transformer processes holistically before passing context to the Action Expert.
+-   **AdaRMSNorm Conditioning**: The flow timestep $t$ is injected directly into the normalization layers of the Action Expert via Adaptive RMS Normalization, providing more effective conditioning than standard concatenation.
+-   **Discretized State Tokenization**: Robot proprioceptive state is discretized and treated as text tokens within the input prefix, allowing the model to "read" its physical state using the same attention mechanisms as natural language.
+-   **Unified Prefix Processing**: Visual patch tokens from SigLIP and text tokens are concatenated into a single sequence, which the transformer processes holistically before passing context to the Action Expert.
 
 <p align="center">
   <img src="README.assets/pi05-overview.png" alt="Pi0.5 Overview"><br>
@@ -28,7 +28,7 @@ This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO to
 
 ## Installation
 
-This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. To set up the environment, please initialize and patch the submodule:
+This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. To set up the environment, you need to initialize and patch the submodule:
 
 ```bash
 git submodule update --init lerobot
@@ -50,7 +50,7 @@ If you would like to use `uv`, you can set up the environment and install depend
 uv sync --extra pi-ov
 ```
 
-> **Usage:** You can run a Python file by:
+> **Usage:** You can run a Python file by using:
 > `uv run --extra pi-ov <your_python_file>`.
 
 Alternatively, you can create a Python environment:
@@ -62,26 +62,26 @@ pip install -e .[pi-ov] --extra-index https://download.pytorch.org/whl/cpu
 
 ## Model Preparation
 Running model inference with the OpenVINO toolkit requires converting the model to the OpenVINO IR format.
-Here we provide a checkpoint finetuned on a simulation task for convenience. Please click [here](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) to start downloading. 
+You can use the [checkpoint](https://eci.intel.com/embodied-sdk-docs/_downloads/checkpoint.tar.gz) finetuned on a simulation task for convenience. 
 Alternatively, you can convert your own checkpoints trained using the LeRobot framework.
 ```bash
 cd examples/pi05_with_openvino
 ```
 
 ### Convert Pi0.5 model without RTC
-Please use the `convert_ov.py` script to convert the standard Pi05 model to OpenVINO IR (without RTC support).
+To convert the standard Pi05 model to OpenVINO IR (without RTC support), use the `convert_ov.py` script.
 
 **Arguments:**
-- `--torch_dir`: Path to the pretrained PyTorch model checkpoint or huggingface repo. Default: "lerobot/pi05_base"
-- `--ov_output_dir`: Directory where the OpenVINO IR model will be saved.
+- `--torch_dir`: Path to the pretrained PyTorch model checkpoint or the Hugging Face repo. Default: "lerobot/pi05_base"
+- `--ov_output_dir`: Directory for saving the OpenVINO IR model.
 - `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs).
 - `--compress_int8`: (Optional) Compress weights to INT8. `nncf` is required.
-- `--save_fp32`: (Optional) Save OpenVINO model in FP32 format (FP16 by default).
+- `--save_fp32`: (Optional) Save an OpenVINO model in FP32 format (FP16 by default).
 - `--override`: (Optional) Overwrite existing files.
 - `--camera_num`, `-c`: (Optional) Number of cameras (batch size for image input). Default: 4.
 
-> **Notice**: Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Downloading this model requires logging into your Hugging Face account due to author restrictions. 
-> If you encounter download errors, please follow the instructions [here](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) to log in and authorize your account.
+> **Notice**: Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. 
+> If you encounter download errors, follow the [instructions](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) on how to log in and authorize your account.
 
 Examples (`uv`):
 ```bash
@@ -91,7 +91,7 @@ uv run --extra pi-ov scripts/convert_ov.py \
     --override
 ```
 
-If `--compress_int8`, `nncf` is required.
+For using `--compress_int8`, `nncf` is required.
 ```bash
 uv run --extra pi-ov --with nncf scripts/convert_ov.py \
     --torch_dir <path_to_pytorch_checkpoint> \
@@ -111,7 +111,7 @@ uv run --extra pi-ov --with nncf scripts/convert_ov.py \
 ```
 
 ### Convert Pi0.5 model with RTC
-Please use the `convert_ov_rtc.py` script to convert the Pi05 model to OpenVINO IR with RTC support. The arguments are the same as above.
+To convert the Pi05 model to OpenVINO IR with RTC support, use the `convert_ov_rtc.py` script. The arguments are the same as above.
 
 Examples (`uv`):
 ```bash
@@ -124,7 +124,7 @@ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
 ```
 
 Exported OpenVINO models with RTC require two extra inputs: `prev_chunk_left_over` and `prefix_weights` during inference. 
-> In some cases where it is unnecessary to enable the RTC function (e.g., the first inference step that doesn't have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
+> **Note**: When it is unnecessary to enable the RTC function (e.g., the first inference step that doesn't have a previous chunk to follow), you can disable RTC by passing zero-tensors to these extra inputs.
 
 ## Run Pipeline
 ### Environment Configuration
@@ -135,7 +135,7 @@ Bind the `xe` driver to the iGPU, as it provides better performance than `i915` 
     lspci -s 00:02.0 -vvv
     ```
 
-- If it shows "Kernel driver in use: xe", the `xe` driver has been successfully bound. Otherwise, run the following script to bind the `xe` driver:
+- If it does not show "Kernel driver in use: xe", run the following script to bind the `xe` driver:
     ```
     #!/bin/bash
     set -e
@@ -161,7 +161,7 @@ Bind the `xe` driver to the iGPU, as it provides better performance than `i915` 
 
 
 ### Inference Benchmarking
-Run the `benchmark_pi05_ov_rtc.py` script to benchmark the policy inference pipeline, which includes preprocessing, model inference, and postprocessing. You can find usage examples of the `PI05Policy` with OpenVINO support in this script.
+Run the `benchmark_pi05_ov_rtc.py` script to benchmark the policy inference pipeline, which includes preprocessing, model inference, and postprocessing. You can find usage examples of the `PI05Policy` with OpenVINO support in the script.
 
 ```bash
 uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
@@ -172,15 +172,14 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 ```
 
 **Arguments:**
-- `--model_dir`: Directory containing the OpenVINO model (.xml and .bin files).
+- `--model_dir`: Directory containing an OpenVINO model (.xml and .bin files).
 - `--device`: Target device for inference (e.g., "CPU", "GPU"). Default: "CPU".
 - `-n`, `--num_runs`: Number of inference runs to average for benchmarking. Default: 10.
 - `--camera_num`, `-c`: Number of cameras used in the model. **This should be the same as the setting used during model conversion**. Default: 4.
 - `--chunk_size`: Override the model's chunk_size (and n_action_steps). **This should be the same as the setting of the pretrained checkpoint**. Default: 50.
 - `--run_torch`: (Optional) Run the original PyTorch model for output comparison.
-- `--torch_dir`: (Optional) Path to PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
-- `--disable_rtc`: (Optional) Disable RTC functionality when loading model with RTC. Would be invalid when loading model without RTC support.
-
+- `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
+- `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
 
 ### Evaluation Script Overview
 
@@ -191,7 +190,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 #### Arguments:
 
-- `--pretrained_model_path`: Path to the pretrained model checkpoint or Hugging Face repo id. Default: `lerobot/pi05_base`.
+- `--pretrained_model_path`: Path to the pretrained model checkpoint or the Hugging Face repo ID. Default: `lerobot/pi05_base`.
 - `--dataset_path`: (Optional) Local dataset directory used to load metadata (e.g. task language) and, if needed, dataset statistics.
 - `--stats_path`: (Optional) Path to `stats.json` used for normalization. If omitted, the script attempts to load `<pretrained_model_path>/stats.json`, falling back to `--dataset_path` if available.
 - `--robot_type`: `mujoco_aloha` or `real_aloha`.
@@ -202,16 +201,16 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 **OpenVINO:**
 
-- `--use_ov`: Use OpenVINO model for inference.
+- `--use_ov`: Use an OpenVINO model for inference.
 - `--ov_model_path`: Path to the OpenVINO IR model directory (containing `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
-- `--ov_device`: OpenVINO device string (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
+- `--ov_device`: String with an OpenVINO device name (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
 
 > **Note**: OpenVINO inference still requires `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO model.
-> **Note**: Dataset statistics are required for normalization; please provide them via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
+> Since dataset statistics are required for normalization, you need to provide them via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
 
 **RTC (Real-Time Chunking):**
 
-- `--rtc_enabled`: Enable RTC algorithm.
+- `--rtc_enabled`: Enable the RTC algorithm.
 - `--rtc_horizon`: Execution horizon for RTC. Default: `45`.
 
 **Visualization/Logging:**
@@ -223,7 +222,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 ### Simulation Pipeline
 
-> **Note**: If you encountered MESA warnings, please try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
+> **Note**: If you encounter MESA warnings, try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
 
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
@@ -236,7 +235,7 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO + RTC
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model with RTC
 
 ```bash
 MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -265,7 +264,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-#### Run `transfer_cube` on a real ALOHA robot using OpenVINO + RTC
+#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO model with RTC
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
