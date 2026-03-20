@@ -30,8 +30,6 @@ You can automate the software setup flow on this page with:
 
 `os_setup_install.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/prerequisites/os_setup_install.sh>`_
 
-.. download:: os_setup_install.sh
-
 Default OS setup automation (locale + APT repositories):
 
 .. code-block:: bash
