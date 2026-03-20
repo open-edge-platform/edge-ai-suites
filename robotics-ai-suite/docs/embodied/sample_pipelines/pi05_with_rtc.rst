@@ -3,7 +3,7 @@
 Pi0.5 with Real-Time Chunking
 #############################
 
-π₀.₅ (Pi0.5) is a Vision-Language-Action (VLA) model architecture designed by `Physical Intelligence <https://www.pi.website/>`_. It is built upon the PaliGemma VLM backbone, integrating a SigLIP vision encoder (So400m) with a Gemma language model base (e.g., 2.6B parameters) to process multimodal inputs.
+π₀.₅ (Pi0.5) is a Vision-Language-Action (VLA) model architecture designed by `Physical Intelligence <https://www.pi.website/>`__. It is built upon the PaliGemma VLM backbone, integrating a SigLIP vision encoder (So400m) with a Gemma language model base (e.g., 2.6B parameters) to process multimodal inputs.
 
 Architecturally, π₀.₅ distinguishes itself through a specialized "Action Expert" head — a smaller parameter model (e.g., Gemma 300M) — that generates continuous actions using Flow Matching. Unlike traditional policy heads, this design solves an Ordinary Differential Equation (ODE) from noise to actions, enabling high-precision control.
 
@@ -17,7 +17,7 @@ Key structural features of π₀.₅ include:
    :width: 85%
    :align: center
 
-*(Figure source:* `Pi0.5 Paper <https://arxiv.org/abs/2504.16054>`_ *π₀.₅: a Vision-Language-Action Model with Open-World Generalization)*
+*(Figure source:* `Pi0.5 Paper <https://arxiv.org/abs/2504.16054>`__ *π₀.₅: a Vision-Language-Action Model with Open-World Generalization)*
 
 Real-Time Chunking (RTC) is an inference strategy designed to enable high-frequency robotic control with high-latency flow-matching policies (e.g., Pi0, Pi0.5). Based on the application of asynchronous inference execution, RTC employs a unique **Prefix Guidance** mechanism during inference. Instead of blending overlapping chunks after generation (temporal ensembling), RTC uses the unexecuted portion of the previous chunk as a constraint during the flow-matching process. By treating the transition as an inpainting problem, the model is guided to generate new trajectories that seamlessly extend the current motion, ensuring continuous control.
 
@@ -30,14 +30,14 @@ The synergy between Pi0.5 and RTC enables sophisticated generalist control on st
    :width: 85%
    :align: center
 
-*(Figure source:* `RTC Paper <https://arxiv.org/abs/2506.07339>`_ *Real-Time Execution of Action Chunking Flow Policies)*
+*(Figure source:* `RTC Paper <https://arxiv.org/abs/2506.07339>`__ *Real-Time Execution of Action Chunking Flow Policies)*
 
 This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO toolkit, specifically accelerating inference on Intel platforms. It provides a comprehensive end-to-end pipeline, covering both MuJoCo simulation for policy validation and a modular workflow for deployment on real ALOHA robots.
 
 Installation
 ============
 
-This project extends the open-source project `LeRobot <https://github.com/huggingface/lerobot>`_ to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. To set up the environment, you need to initialize and patch the submodule:
+This project extends the open-source project `LeRobot <https://github.com/huggingface/lerobot>`__ to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. To set up the environment, you need to initialize and patch the submodule:
 
 .. code-block:: bash
 
@@ -101,7 +101,7 @@ To convert the standard Pi05 model to OpenVINO IR (without RTC support), use the
 
 .. attention::
 
-   Using the Pi0.5 model in LeRobot will automatically download the `google/paligemma-3b-pt-224 <https://huggingface.co/google/paligemma-3b-pt-224>`_ from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. 
+   Using the Pi0.5 model in LeRobot will automatically download the `google/paligemma-3b-pt-224 <https://huggingface.co/google/paligemma-3b-pt-224>`__ from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. 
    If you encounter download errors, follow the `instructions <https://huggingface.co/docs/huggingface_hub/quick-start#authentication>`__ on how to log in and authorize your account.
 
 Examples (``uv``):
