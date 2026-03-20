@@ -112,7 +112,7 @@ sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lida
 You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 rviz
 display on the right.
 
-![screenshot_followme_w_gesture_demo](../../../../../images/screenshot_followme_w_gesture_demo.jpg)
+![screenshot_followme_w_gesture_demo](../../../../../images/follow_me_demo_gazebo_rviz.png)
 
 - The green square robot is a guide robot (namely, the target), which will
   follow a pre-defined trajectory.
