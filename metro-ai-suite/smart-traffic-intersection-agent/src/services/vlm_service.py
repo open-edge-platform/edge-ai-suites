@@ -341,8 +341,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
         """
         try:
             url = f"{self.base_url}/v1/chat/completions"
+            timeout = aiohttp.ClientTimeout(total=self.timeout)
             
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(timeout=timeout) as session:
                 async with session.post(url, json=request_data) as response:
                     if response.status == 200:
                         result = await response.json()
@@ -369,6 +370,9 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                         return None
         except aiohttp.ClientConnectorError as e:
             logger.warning("VLM service connection failed", error=str(e))
+            return None
+        except asyncio.TimeoutError:
+            logger.error("VLM service request timed out", timeout_seconds=self.timeout)
             return None
         except Exception as e:
             logger.error("VLM service call failed", error=str(e))

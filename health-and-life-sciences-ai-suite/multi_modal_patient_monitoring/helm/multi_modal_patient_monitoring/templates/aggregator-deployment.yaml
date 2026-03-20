@@ -18,6 +18,8 @@ spec:
           imagePullPolicy: {{ .Values.aggregator.image.pullPolicy }}
           ports:
             - containerPort: 8001
+              hostPort: 8001
+              protocol: TCP
             - containerPort: 50051
           env:
             - name: METRICS_SERVICE_URL

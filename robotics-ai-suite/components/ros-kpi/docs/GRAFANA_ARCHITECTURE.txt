@@ -1,0 +1,153 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+
+These contents may have been developed with support from one or more
+Intel-operated generative artificial intelligence solutions.
+-->
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   ROS2 KPI Grafana Integration Architecture                ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            ROS2 System (Running)                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐                   │
+│  │  Node 1  │  │  Node 2  │  │  Node 3  │  │  Node N  │                   │
+│  │  /slam   │  │ /mapping │  │  /nav    │  │   ...    │                   │
+│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘                   │
+│       │             │             │             │                           │
+│       └─────────────┴─────────────┴─────────────┘                           │
+│                          │                                                   │
+└──────────────────────────┼───────────────────────────────────────────────────┘
+                           │
+                           ▼
+           ┌───────────────────────────────┐
+           │    monitor_stack.py           │
+           │  (ROS2 Graph + Resources)     │
+           │                               │
+           │  • Subscribes to topics       │
+           │  • Measures latencies         │
+           │  • Monitors CPU/memory        │
+           │  • Logs to CSV/files          │
+           └───────┬───────────────────────┘
+                   │
+                   │ Writes to
+                   ▼
+      ┌────────────────────────────┐
+      │  monitoring_sessions/      │
+      │  └── session_name/         │
+      │      ├── graph_timing.csv  │──┐
+      │      └── resource_usage.log│  │
+      └────────────────────────────┘  │
+                                      │ Reads from
+                                      ▼
+                   ┌──────────────────────────────┐
+                   │  prometheus_exporter.py      │
+                   │  (Metrics Exporter)          │
+                   │                              │
+                   │  • Parses CSV/log files      │
+                   │  • Exposes Prometheus metrics│
+                   │  • Serves HTTP endpoint      │
+                   │    :9092/metrics             │
+                   └───────┬──────────────────────┘
+                           │
+                           │ HTTP scrape
+                           ▼
+          ┌────────────────────────────────┐        Docker Container
+          │      Prometheus :9090          │        ┌─────────────────┐
+          │   (Metrics Database)           │◄───────┤ prometheus:latest│
+          │                                │        └─────────────────┘
+          │  • Scrapes exporter every 5s   │
+          │  • Stores time-series data     │
+          │  • Provides PromQL queries     │
+          └────────┬───────────────────────┘
+                   │
+                   │ PromQL queries
+                   ▼
+          ┌────────────────────────────────┐        Docker Container
+          │       Grafana :30000           │        ┌─────────────────┐
+          │    (Visualization UI)          │◄───────┤ grafana:latest  │
+          │                                │        └─────────────────┘
+          │  • Queries Prometheus          │
+          │  • Renders dashboards          │
+          │  • 10+ visualization panels    │
+          │  • Auto-refresh every 5s       │
+          └────────┬───────────────────────┘
+                   │
+                   │ HTTPS
+                   ▼
+              ┌──────────┐
+              │ Browser  │
+              │ :30000   │
+              │          │
+              │ admin/   │
+              │ admin    │
+              └──────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              Metrics Flow                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ROS2 Topics → monitor_stack.py → CSV Files → prometheus_exporter.py →     │
+│  → Prometheus → Grafana → User's Browser                                    │
+│                                                                              │
+│  Latency: ~5-10 seconds from ROS2 event to Grafana display                 │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          Key Metrics Exported                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  📊 Topic Metrics                                                            │
+│     • ros2_topic_frequency_hz              - Message rate per topic         │
+│     • ros2_topic_message_count             - Total messages                 │
+│     • ros2_topic_delta_time_ms             - Inter-message timing           │
+│     • ros2_processing_delay_ms             - Input→output latency           │
+│                                                                              │
+│  📊 Node Metrics                                                             │
+│     • ros2_node_avg_latency_ms             - Average node latency           │
+│     • ros2_node_avg_frequency_hz           - Average node frequency         │
+│                                                                              │
+│  💻 Resource Metrics                                                         │
+│     • ros2_process_cpu_percent             - CPU usage per process/thread   │
+│     • ros2_process_memory_mb               - Memory usage                   │
+│     • ros2_process_io_read_kb_per_sec      - I/O read rate                  │
+│     • ros2_process_io_write_kb_per_sec     - I/O write rate                 │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        Dashboard Panels (10+)                                │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  1. Topic Message Frequencies      - Line chart, Hz over time               │
+│  2. Processing Delays              - Line chart with thresholds             │
+│  3. Inter-Message Timing           - Jitter analysis                        │
+│  4. CPU Usage Gauge                - Real-time % utilization                │
+│  5. Memory Usage                   - Stacked area chart                     │
+│  6. I/O Throughput                 - Bidirectional bar chart                │
+│  7. Topic Statistics Table         - Sortable overview                      │
+│  8. Node Activity Distribution     - Pie chart by frequency                 │
+│  9. Node Latency Distribution      - Pie chart by latency                   │
+│  10. [Customizable]                - Add your own panels!                   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+────────────────────────────────────────────────────────────────────────────────
+                           Quick Start Commands
+────────────────────────────────────────────────────────────────────────────────
+
+# Manual 3-step process:
+make grafana-start                    # Terminal 1: Start Grafana/Prometheus
+make monitor                          # Terminal 2: Start monitoring
+make grafana-export                   # Terminal 3: Export metrics
+make grafana-open                     # Open browser
+
+# Check everything is working
+make grafana-status
+
+────────────────────────────────────────────────────────────────────────────────
+```

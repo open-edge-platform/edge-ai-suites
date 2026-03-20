@@ -1,0 +1,157 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+
+These contents may have been developed with support from one or more
+Intel-operated generative artificial intelligence solutions.
+-->
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ROS2 KPI Toolkit - One-Page Cheat Sheet
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 EASIEST START
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+./quickstart              Interactive menu (recommended for beginners)
+make start                Same as ./quickstart
+make quick-check          Quick 30-second health check
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 MONITORING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+make monitor                              Monitor all nodes (60s)
+make monitor NODE=/my_node                Monitor specific node
+make monitor NODE=/my_node DURATION=120   Custom duration
+make quick-check                          Quick 30s check
+make monitor-long                         Extended 5-minute session
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🤖 SIMULATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Wandering:
+  make wandering                          Run simulation
+  make wandering-record                   Run + record rosbag
+  make wandering-record-plot              Run + record + auto-plot
+  make wandering-benchmark                Benchmark run
+  make analyze-last-wandering             Analyze most recent session
+
+Pick-n-Place:
+  make picknplace-run                     Run simulation
+  make picknplace-record                  Run + record rosbag
+  make picknplace-record-plot             Run + record + auto-plot
+  make picknplace-benchmark               Benchmark run
+  make analyze-last-picknplace            Analyze most recent session
+
+Analyze:
+  make analyze-bag BAG=<path>             Analyze a specific rosbag
+  make analyze-benchmark                  Analyze benchmark results
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 REMOTE MONITORING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+make monitor-remote REMOTE_IP=192.168.1.100
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📈 DASHBOARDS (Grafana)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+make grafana-start                        Start Grafana/Prometheus
+make grafana-open                         Open in browser
+make grafana-status                       Check status
+make grafana-stop                         Stop services
+Export a session to Grafana:
+  make grafana-export SESSION=20260306_154140
+  make grafana-export                      # uses latest session
+  make grafana-export-live                 # live mode
+
+Metrics served on port 9092 (Prometheus occupies 9090)
+Access: http://localhost:30000 (admin/admin)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+make list-sessions                        List all sessions
+make visualize-last                       Visualize last session
+make pipeline-graph                       Render pipeline graph (PNG)
+make pipeline-graph SESSION=<name>        Specific session graph
+make analyze-session SESSION=20260305_123456
+
+Interactive graph (click nodes for topic detail):
+  uv run python src/visualize_graph.py monitoring_sessions/<name> --show
+
+Results saved in: monitoring_sessions/YYYYMMDD_HHMMSS/
+  ├── graph_timing.csv         (topic timing data)
+  ├── resource_usage.log        (CPU/memory)
+  └── visualizations/           (auto-generated plots)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔧 SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+source /opt/ros/humble/setup.bash         Source ROS2 (manual)
+export ROS_DOMAIN_ID=0                    Set domain ID
+source ./auto-setup.sh                    Auto-setup (does both)
+
+make install                              Install dependencies
+make check-deps                           Verify installation
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 EXAMPLES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+# Wandering simulation with bag recording
+make wandering-record                              # Record session
+make analyze-last-wandering                        # Analyze results
+
+# Pick-n-Place simulation with bag recording
+make picknplace-record                             # Record session
+make analyze-last-picknplace                       # Analyze results
+
+# Monitor a specific node
+ros2 launch nav2_bringup tb3_simulation_launch.py  # Terminal 1
+make monitor NODE=/controller_server DURATION=120  # Terminal 2
+
+# Remote monitoring
+make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
+
+# Export to Grafana
+make grafana-start
+make wandering-record
+make grafana-export
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📚 DOCUMENTATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+QUICKSTART.md                             Complete beginner's guide
+docs/COMMANDS.md                          All commands
+docs/GRAFANA_SETUP.md                     Grafana/Prometheus setup
+make help                                 Show all make targets
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 QUICK TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+No ROS2 nodes found:
+  → Start your ROS2 app first, then run monitoring
+
+Permission denied:
+  → chmod +x quickstart auto-setup.sh
+
+ROS2 not sourced:
+  → source ./auto-setup.sh  (auto-sources ROS2)
+
+UV not found:
+  → curl -LsSf https://astral.sh/uv/install.sh | sh
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 TIP: Use './quickstart' for the easiest experience!
+       It provides an interactive menu for all features.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

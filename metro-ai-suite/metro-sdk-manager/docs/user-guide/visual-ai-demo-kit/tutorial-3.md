@@ -121,4 +121,4 @@ After completing this tutorial, you should have:
 
 - [Grafana HTML Panel Documentation](https://grafana.com/docs/grafana/latest/visualizations/panels-visualizations/visualizations/)
 - [MQTT Data Source Configuration](https://grafana.com/docs/grafana/latest/datasources/)
-- [Dashboard Best Practices](https://grafana.com/docs/grafana/latest/best-practices/)
+- [Grafana Dashboard Best Practices](https://grafana.com/docs/grafana/latest/visualizations/dashboards/build-dashboards/best-practices/)
