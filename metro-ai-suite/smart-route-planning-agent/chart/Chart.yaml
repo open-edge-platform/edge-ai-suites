@@ -7,13 +7,3 @@ description: A chart for deploying Smart Route Planning Agent Application
 type: application
 version: 1.0.0-rc2-helm
 appVersion: "1.0.0"
-keywords:
-  - route-planning
-  - ai-agent
-  - traffic
-  - traffic-intersection
-  - smart-city
-  - intel
-home: https://github.com/open-edge-platform/edge-ai-suites
-sources:
-  - https://github.com/open-edge-platform/edge-ai-suites
