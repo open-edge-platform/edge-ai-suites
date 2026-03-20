@@ -5,8 +5,8 @@ apiVersion: v2
 name: smart-route-planning-agent
 description: A chart for deploying Smart Route Planning Agent Application
 type: application
-version: 1.0.0
-appVersion: "1.0.0-rc2-helm"
+version: 1.0.0-rc2-helm
+appVersion: "1.0.0"
 keywords:
   - route-planning
   - ai-agent
