@@ -22,27 +22,17 @@ This guide explains a simple Helm deployment for Smart Route Planning Agent.
 #### Option A: From Source Code
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone -b release-2026.0.0 --single-branch https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent/chart
 ```
 
 #### Option B: From Public Registry
 
-Follow these 2 simple steps:
-
-1. Set the version of the helm chart required. Check different versions available here: https://hub.docker.com/r/intel/smart-route-planning-agent
-
-    ```bash
-    helm_version=<version>
-    ```
-
-2. Pull the helm chart and extract its content:
-
-    ```bash
-    helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version ${helm_version}
-    tar -xvf smart-route-planning-agent-${helm_version}.tgz
-    cd smart-route-planning-agent
-    ```
+```bash
+helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version 1.0.0-rc2-helm
+tar -xvf smart-route-planning-agent-1.0.0-rc2-helm.tgz
+cd smart-route-planning-agent
+```
 
 ### Step 2: Override the default values
 
@@ -88,7 +78,7 @@ namespace=<namespace_name>
 helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_override.yaml
 ```
 
-> __**Note:**__ If you do not have permission to create a namespace and your cluster admin has already provided one, use this command instead (assuming you have already set the namespace variable to the actual namespace provided to you by cluster admin in step 3): `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`
+> __**Note:**__ If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace veriable to required value in step 3.)
 
 
 ### Step 5: Wait for Ready Pods
