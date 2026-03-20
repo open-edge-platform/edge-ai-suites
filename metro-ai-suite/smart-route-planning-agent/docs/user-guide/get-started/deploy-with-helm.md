@@ -29,8 +29,8 @@ cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent/chart
 #### Option B: From Public Registry
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version 1.0.0-rc1-helm
-tar -xvf smart-route-planning-agent-1.0.0-rc1-helm.tgz
+helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version 1.0.0-rc2-helm
+tar -xvf smart-route-planning-agent-1.0.0-rc2-helm.tgz
 cd smart-route-planning-agent
 ```
 
