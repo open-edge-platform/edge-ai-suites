@@ -140,6 +140,7 @@ services:
       - "./${SAMPLE_APP}/src/node-red:/data"
       - "./${SAMPLE_APP}/src/dlstreamer-pipeline-server/videos:/data/public/videos"
       - node-red-node-modules:/usr/src/node-red/node_modules
+      - /etc/localtime:/etc/localtime:ro
     ipc: "none"
     entrypoint:
       [
