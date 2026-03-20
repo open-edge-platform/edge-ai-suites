@@ -5,13 +5,10 @@ Real-Time Linux
 
 The Embodied Intelligence SDK provides real-time capabilities to the kernel with PREEMPT_RT patch and boot parameters for real-time optimization, which aims to increase predictability and reduce scheduler latencies.
 
-Installation
-================
+Automated Installation
+=======================
 
 .. _rt_linux_automated_setup:
-
-Automated Setup Script
-^^^^^^^^^^^^^^^^^^^^^^^
 
 You can automate the software setup flow on this page with:
 
@@ -49,8 +46,8 @@ The following three sections are always skipped because they require manual, pla
 - ``Use Cache Allocation Technology``
 - ``Use Dynamic Voltage and Frequency``
 
-Manual Setup
-^^^^^^^^^^^^^
+Manual Installation
+====================
 
 1. Install GRUB customizations
 
