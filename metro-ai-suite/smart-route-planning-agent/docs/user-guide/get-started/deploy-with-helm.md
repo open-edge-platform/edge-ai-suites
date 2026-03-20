@@ -34,7 +34,7 @@ tar -xvf smart-route-planning-agent-1.0.0-rc2-helm.tgz
 cd smart-route-planning-agent
 ```
 
-### Step 2: Override the default values
+### Step 2: Override the Default Values
 
 Before installing, edit `values_override.yaml` file in the current directory.
 
@@ -66,13 +66,15 @@ trafficIntersections:
     - "http://10.1.2.4:8081"
 ```
 
-### Step 3: Set a namespace variable. Set it to a namespace you want to use (even if it is already created).
+### Step 3: Set a Namespace Variable
+
+Set it to a namespace you want to use (even if it is already created).
 
 ```bash
 namespace=<namespace_name>
 ```
 
-### Step 4: Common Step - Install the Chart
+### Step 4: Install the Chart
 
 ```bash
 helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_override.yaml
@@ -87,9 +89,9 @@ helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_overr
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=srpa -n ${namespace} --timeout=300s
 ```
 
-### Step 6: Get Node IP and NodePort
+### Step 6: Access the Application
 
-Get the node IP and Port where the pod is running:
+To access the application, get the IP of the node where the pod is running and the port which is exposed:
 
 ```bash
 NODE_NAME=$(kubectl get pod -n ${namespace} -l app.kubernetes.io/instance=srpa -o jsonpath='{.items[0].spec.nodeName}')
