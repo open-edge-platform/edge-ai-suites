@@ -142,27 +142,21 @@ Run the below commands to start the tutorial.
 source /opt/ros/jazzy/setup.bash
 ```
 
-:::::{tab-set}
-::::{tab-item} **D457**
-:sync: d457
+**D457:**
 
 ```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
 python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-:::::{tab-set}
-::::{tab-item} **D3CMCXXX-115-084**
-:sync: D3CMCXXX-115-084
+**D3CMCXXX-115-084:**
 
 ```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
 python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_isx031_4cameras.js
+```
 
-::::
-:::::
-
-::: {tab-set}
+:::
 :::{tab-item} **Humble**
 :sync: humble
 
