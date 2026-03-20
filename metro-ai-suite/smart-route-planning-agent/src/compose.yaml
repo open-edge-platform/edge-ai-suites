@@ -23,11 +23,8 @@ services:
       - NO_PROXY=${no_proxy},${HOST_IP}
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - GRADIO_SERVER_NAME=0.0.0.0
-      - GRADIO_SERVER_PORT=7860
-      - PYTHONPATH=/app
     volumes:
-      - ./data/config.json:/app/config.json:ro
+      - ./data/config.json:/app/data/config.json:ro
     networks:
       - routeplanner
     healthcheck:
