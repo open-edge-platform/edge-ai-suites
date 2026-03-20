@@ -33,15 +33,15 @@ Run the commands to build images for the microservices:
 git clone https://github.com/open-edge-platform/edge-ai-libraries.git
 cd edge-ai-libraries/microservices
 
-docker build -t dataprep-visualdata-milvus:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
+docker build -t dataprep-visualdata-milvus:2025.2.0 --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
 
-docker build -t retriever-milvus:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f vector-retriever/milvus/src/Dockerfile .
+docker build -t retriever-milvus:2025.2.0 --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f vector-retriever/milvus/src/Dockerfile .
 
 cd vlm-openvino-serving
-docker build -t vlm-openvino-serving:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
+docker build -t vlm-openvino-serving:2025.2.0 --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
 
 cd ../multimodal-embedding-serving
-docker build -t multimodal-embedding-serving:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
+docker build -t multimodal-embedding-serving:2025.2.0 --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f docker/Dockerfile .
 
 cd ../../..
 ```
@@ -49,7 +49,7 @@ cd ../../..
 Run the command to build image for the application:
 
 ```bash
-docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f visual-search-question-and-answering/src/Dockerfile .
+docker build -t visual-search-qa-app:2025.2.0 --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f visual-search-question-and-answering/src/Dockerfile .
 ```
 
 #### Option 2: use remote prebuilt images
@@ -57,7 +57,7 @@ Set a remote registry by exporting environment variables:
 
 ```bash
 export REGISTRY="intel/"
-export TAG="latest"
+export TAG="2025.2.0"
 ```
 
 ### Step 2: Prepare host directories for models and data
