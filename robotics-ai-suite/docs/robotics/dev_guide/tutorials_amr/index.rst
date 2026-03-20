@@ -20,4 +20,5 @@ these tutorials provide a learning path for developers to use and configure Auto
    perception/index
    navigation/index
    simulation/index
+   kpi_monitoring/index
    robot-tutorials-troubleshooting
