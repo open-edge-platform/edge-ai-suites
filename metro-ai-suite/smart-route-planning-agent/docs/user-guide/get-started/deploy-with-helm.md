@@ -28,11 +28,21 @@ cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent/chart
 
 #### Option B: From Public Registry
 
-```bash
-helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version 1.0.0-rc2-helm
-tar -xvf smart-route-planning-agent-1.0.0-rc2-helm.tgz
-cd smart-route-planning-agent
-```
+Follow these 2 simple steps:
+
+1. Set the version of the helm chart required. Check different versions available here: https://hub.docker.com/r/intel/smart-route-planning-agent
+
+    ```bash
+    helm_version=<version>
+    ```
+
+2. Pull the helm chart and extract its content:
+
+    ```bash
+    helm pull oci://registry-1.docker.io/intel/smart-route-planning-agent --version ${helm_version}
+    tar -xvf smart-route-planning-agent-${helm_version}.tgz
+    cd smart-route-planning-agent
+    ```
 
 ### Step 2: Override the Default Values
 
