@@ -15,7 +15,7 @@ Automated Setup Script
 
 You can automate the software setup flow on this page with:
 
-.. download:: rt_linux_setup.sh
+`rt_linux_setup.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/installation/rt_linux_setup.sh>`_
 
 Default real-time kernel setup (includes OS setup prerequisites):
 
