@@ -6,11 +6,16 @@ This guide walks you through installing dependencies, configuring defaults, and 
 
 To install dependencies, do the following:
 
-### A. Install FFmpeg (required for audio processing)
+### A. Install Python and Node.js dependencies
+> [!WARNING]
+> Python: The current release has a hard dependency on Python Version 3.12, please follow installation instructions in https://www.python.org/downloads/release/python-3120/.
+> Node.js: In our testing, we found that node-v24.14.0-x64.msi from https://nodejs.org/en/download worked well. 
+
+### B. Install FFmpeg (required for audio processing)
 
 Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html), and add the `ffmpeg/bin` folder to your system `PATH`.
 
-### B. Install DL Streamer
+### C. Install DL Streamer
 
 Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
