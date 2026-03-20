@@ -39,7 +39,7 @@ ls monitoring_sessions/*/visualizations/
 
 ### Using Python directly:
 ```bash
-./src/monitor_stack.py --node /slam_toolbox --session slam_analysis
+uv run python src/monitor_stack.py --node /slam_toolbox --session slam_analysis
 ```
 
 ### Using the bash wrapper:

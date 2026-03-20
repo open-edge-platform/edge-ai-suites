@@ -29,10 +29,10 @@ make install
 
 This interactive menu guides you through:
 - Monitoring your ROS2 application
-- Testing DDS/RTSP latency
+- Running Wandering and Pick-n-Place simulations with rosbag recording
+- Analyzing rosbag results
 - Quick health checks
 - Starting Grafana dashboards
-- Viewing results
 
 ### Option 2: Make Shortcuts
 ```bash
@@ -41,9 +41,6 @@ make start          # Same as ./quickstart
 
 # Quick health check (30 seconds)
 make quick
-
-# Quick latency test
-make test
 ```
 
 ## Common Tasks
@@ -67,28 +64,14 @@ make monitor NODE=/your_node_name DURATION=120
 make quick
 ```
 
-### Test DDS/RTSP Latency
-
-**Terminal 1:**
-```bash
-./quickstart         # Choose option 7 (hidden relay option)
-# Or: make latency-test-relay
-```
-
-**Terminal 2:**
-```bash
-./quickstart         # Choose option 2
-# Or: make latency-test-main RATE=1000 DURATION=60
-```
-
 ### View Dashboards
 
 ```bash
 # Start Grafana/Prometheus
 make grafana-start
 
-# Open in browser (http://localhost:3000)
-make grafana-open
+# Check status / open http://localhost:30000 (admin/admin)
+make grafana-status
 
 # Stop when done
 make grafana-stop
@@ -132,9 +115,6 @@ make analyze-session SESSION=20260305_123456
 ```bash
 # Monitor remote system
 make monitor-remote REMOTE_IP=192.168.1.100
-
-# Remote latency test
-make latency-remote-main REMOTE_IP=192.168.1.100
 ```
 
 ### Custom Parameters
@@ -142,14 +122,11 @@ make latency-remote-main REMOTE_IP=192.168.1.100
 # Extended monitoring (5 minutes)
 make monitor-long DURATION=300
 
-# High-frequency benchmark (10 minutes)
-make benchmark NODE=/critical_node
+# Wandering benchmark (5 runs)
+make wandering-benchmark RUNS=5 TIMEOUT=180
 
-# Custom latency test
-make latency-test-main RATE=2000 DURATION=60 RELIABILITY=RELIABLE
-
-# Export to Grafana
-make grafana-export SESSION=20260305_123456
+# Pick-n-Place benchmark (5 runs)
+make picknplace-benchmark RUNS=5
 ```
 
 ### All Available Commands
@@ -161,9 +138,12 @@ make help           # Show all commands
 
 ### ROS2 Not Found
 ```bash
-source /opt/ros/humble/setup.bash
+# Source ROS2 (Humble or Jazzy)
+source /opt/ros/humble/setup.bash   # or /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=0
 ```
+
+See the [Intel Robotics AI Suite Getting Started Guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) for installation instructions.
 
 Or use the auto-setup script:
 ```bash
@@ -181,7 +161,7 @@ Then run the monitoring in another terminal.
 
 ### Permission Denied
 ```bash
-chmod +x quickstart auto-setup.sh test_latency_improvements.sh
+chmod +x quickstart auto-setup.sh
 ```
 
 ### UV Not Found
@@ -203,16 +183,7 @@ ros2 launch nav2_bringup tb3_simulation_launch.py
 # Select the node you want to monitor
 ```
 
-### Example 2: Benchmark DDS Performance
-```bash
-# Terminal 1: Start relay
-make latency-test-relay
-
-# Terminal 2: Test at 2000 Hz (like Intel ECI benchmark)
-make latency-test-main RATE=2000 DURATION=30 RELIABILITY=RELIABLE
-```
-
-### Example 3: Compare Before/After Optimization
+### Example 2: Compare Before/After Optimization
 ```bash
 # Before optimization
 make monitor NODE=/my_node DURATION=120
@@ -229,8 +200,6 @@ make compare-sessions
 ## Documentation
 
 - **Full documentation**: See `docs/` folder
-- **Latency improvements**: [docs/LATENCY_IMPROVEMENTS.md](docs/LATENCY_IMPROVEMENTS.md)
-- **Quick reference**: [docs/LATENCY_TESTING_QUICK_REF.md](docs/LATENCY_TESTING_QUICK_REF.md)
 - **Architecture**: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ## Support

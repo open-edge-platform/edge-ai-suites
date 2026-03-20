@@ -50,13 +50,13 @@ Intel-operated generative artificial intelligence solutions.
                    │  • Parses CSV/log files      │
                    │  • Exposes Prometheus metrics│
                    │  • Serves HTTP endpoint      │
-                   │    :9090/metrics             │
+                   │    :9092/metrics             │
                    └───────┬──────────────────────┘
                            │
                            │ HTTP scrape
                            ▼
           ┌────────────────────────────────┐        Docker Container
-          │      Prometheus :9091          │        ┌─────────────────┐
+          │      Prometheus :9090          │        ┌─────────────────┐
           │   (Metrics Database)           │◄───────┤ prometheus:latest│
           │                                │        └─────────────────┘
           │  • Scrapes exporter every 5s   │
@@ -67,7 +67,7 @@ Intel-operated generative artificial intelligence solutions.
                    │ PromQL queries
                    ▼
           ┌────────────────────────────────┐        Docker Container
-          │       Grafana :3000            │        ┌─────────────────┐
+          │       Grafana :30000           │        ┌─────────────────┐
           │    (Visualization UI)          │◄───────┤ grafana:latest  │
           │                                │        └─────────────────┘
           │  • Queries Prometheus          │
@@ -80,7 +80,7 @@ Intel-operated generative artificial intelligence solutions.
                    ▼
               ┌──────────┐
               │ Browser  │
-              │ :3000    │
+              │ :30000   │
               │          │
               │ admin/   │
               │ admin    │
@@ -140,10 +140,7 @@ Intel-operated generative artificial intelligence solutions.
                            Quick Start Commands
 ────────────────────────────────────────────────────────────────────────────────
 
-# One-command demo (recommended for first time)
-make grafana-demo
-
-# Or manual 3-step process:
+# Manual 3-step process:
 make grafana-start                    # Terminal 1: Start Grafana/Prometheus
 make monitor                          # Terminal 2: Start monitoring
 make grafana-export                   # Terminal 3: Export metrics

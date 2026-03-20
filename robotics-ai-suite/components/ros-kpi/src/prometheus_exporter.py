@@ -27,7 +27,7 @@ try:
     from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily, REGISTRY
 except ImportError:
     print("Error: prometheus_client not installed")
-    print("Install with: pip3 install prometheus-client")
+    print("Install with: uv sync")
     sys.exit(1)
 
 
@@ -58,25 +58,25 @@ def _start_http_server_reuse(port: int, addr: str = ''):
 
 class ROS2MetricsCollector:
     """Collects ROS2 KPI metrics from monitoring data and exposes them for Prometheus."""
-    
+
     def __init__(self, session_dir: Optional[Path] = None):
         """
         Initialize the metrics collector.
-        
+
         Args:
             session_dir: Path to monitoring session directory containing CSV/log files
         """
         self.session_dir = session_dir
         self.graph_log = None
         self.resource_log = None
-        
+
         if session_dir:
             self.graph_log = session_dir / "graph_timing.csv"
             self.resource_log = session_dir / "resource_usage.log"
-        
+
         # Initialize Prometheus metrics
         self._init_metrics()
-        
+
     def _init_metrics(self):
         """Initialize Prometheus metric objects."""
         # Topic metrics
@@ -85,32 +85,32 @@ class ROS2MetricsCollector:
             'Total messages received on topic',
             ['topic', 'msg_type', 'io_direction']
         )
-        
+
         self.topic_frequency = Gauge(
             'ros2_topic_frequency_hz',
             'Message frequency in Hz',
             ['topic', 'msg_type', 'io_direction']
         )
-        
+
         self.topic_delta_time = Gauge(
             'ros2_topic_delta_time_ms',
             'Time between messages in milliseconds',
             ['topic', 'msg_type', 'io_direction']
         )
-        
+
         self.processing_delay = Gauge(
             'ros2_processing_delay_ms',
             'Input to output processing delay in milliseconds',
             ['topic', 'msg_type']
         )
-        
+
         # Node metrics
         self.node_avg_latency = Gauge(
             'ros2_node_avg_latency_ms',
             'Average processing latency per node',
             ['node']
         )
-        
+
         self.node_avg_frequency = Gauge(
             'ros2_node_avg_frequency_hz',
             'Average message frequency per node',
@@ -142,32 +142,32 @@ class ROS2MetricsCollector:
             'Processing delay (input→output) for a node',
             ['node']
         )
-        
+
         # Resource metrics
         self.cpu_usage = Gauge(
             'ros2_process_cpu_percent',
             'CPU usage percentage',
             ['process', 'pid', 'thread']
         )
-        
+
         self.memory_usage = Gauge(
             'ros2_process_memory_mb',
             'Memory usage in megabytes',
             ['process', 'pid']
         )
-        
+
         self.io_read = Gauge(
             'ros2_process_io_read_kb_per_sec',
             'I/O read rate in KB/s',
             ['process', 'pid']
         )
-        
+
         self.io_write = Gauge(
             'ros2_process_io_write_kb_per_sec',
             'I/O write rate in KB/s',
             ['process', 'pid']
         )
-        
+
         # System info
         self.exporter_info = Info('ros2_kpi_exporter', 'ROS2 KPI Exporter Information')
         self.exporter_info.info({
@@ -284,36 +284,36 @@ class ROS2MetricsCollector:
         """Read graph timing CSV and update metrics."""
         if not self.graph_log or not self.graph_log.exists():
             return
-        
+
         try:
             # Read the last N entries from CSV (keep a sliding window)
             with open(self.graph_log, 'r') as f:
                 reader = csv.DictReader(f)
                 rows = list(reader)
-                
+
                 if not rows:
                     return
-                
+
                 # Process recent data (last 100 entries or all if fewer)
                 recent_rows = rows[-100:]
-                
+
                 # Group by topic and update metrics
                 topic_data = defaultdict(list)
                 for row in recent_rows:
                     topic = row['topic_name']
                     topic_data[topic].append(row)
-                
+
                 # Update metrics for each topic
                 for topic, topic_rows in topic_data.items():
                     # Get most recent row for this topic
                     latest = topic_rows[-1]
-                    
+
                     msg_type = latest.get('msg_type', 'unknown')
                     is_input = latest.get('is_input', 'False') == 'True'
                     is_output = latest.get('is_output', 'False') == 'True'
-                    
+
                     io_direction = 'input' if is_input else ('output' if is_output else 'unknown')
-                    
+
                     # Update metrics
                     if latest.get('message_count'):
                         self.topic_message_count.labels(
@@ -321,30 +321,30 @@ class ROS2MetricsCollector:
                             msg_type=msg_type,
                             io_direction=io_direction
                         ).set(float(latest['message_count']))
-                    
+
                     if latest.get('frequency_hz'):
                         self.topic_frequency.labels(
                             topic=topic,
                             msg_type=msg_type,
                             io_direction=io_direction
                         ).set(float(latest['frequency_hz']))
-                    
+
                     if latest.get('delta_time_ms') and latest['delta_time_ms']:
                         self.topic_delta_time.labels(
                             topic=topic,
                             msg_type=msg_type,
                             io_direction=io_direction
                         ).set(float(latest['delta_time_ms']))
-                    
+
                     if latest.get('processing_delay_ms') and latest['processing_delay_ms']:
                         self.processing_delay.labels(
                             topic=topic,
                             msg_type=msg_type
                         ).set(float(latest['processing_delay_ms']))
-                        
+
         except Exception as e:
             print(f"Error reading graph CSV: {e}")
-    
+
     def update_from_resource_log(self):
         """Read resource usage log and update metrics."""
         if not self.resource_log or not self.resource_log.exists():
@@ -410,16 +410,16 @@ class ROS2MetricsCollector:
 
         except Exception as e:
             print(f"Error reading resource log: {e}")
-    
+
     def start_live_monitoring(self, interval: int = 5):
         """
         Start live monitoring mode - continuously update metrics from data files.
-        
+
         Args:
             interval: Update interval in seconds
         """
         print(f"Starting live metric collection (update interval: {interval}s)")
-        
+
         while True:
             try:
                 self.update_from_graph_csv()
@@ -439,12 +439,12 @@ class LiveMetricsExporter:
     Direct live metrics exporter that integrates with monitor_stack.
     This version receives metrics directly rather than reading from files.
     """
-    
+
     def __init__(self):
         """Initialize live metrics exporter."""
         self._init_metrics()
         self.lock = threading.Lock()
-        
+
     def _init_metrics(self):
         """Initialize Prometheus metric objects."""
         # Topic metrics
@@ -453,38 +453,38 @@ class LiveMetricsExporter:
             'Live message frequency in Hz',
             ['topic', 'node']
         )
-        
+
         self.topic_rate = Gauge(
             'ros2_live_topic_rate',
             'Live message rate',
             ['topic', 'node']
         )
-        
+
         self.processing_delay = Gauge(
             'ros2_live_processing_delay_ms',
             'Live processing delay in milliseconds',
             ['node', 'input_topic', 'output_topic']
         )
-        
+
         # Resource metrics
         self.cpu_percent = Gauge(
             'ros2_live_cpu_percent',
             'Live CPU usage percentage',
             ['process', 'pid', 'thread']
         )
-        
+
         self.memory_mb = Gauge(
             'ros2_live_memory_mb',
             'Live memory usage in MB',
             ['process', 'pid']
         )
-        
+
     def update_topic_metrics(self, topic: str, node: str, frequency: float, rate: float):
         """Update topic metrics."""
         with self.lock:
             self.topic_frequency.labels(topic=topic, node=node).set(frequency)
             self.topic_rate.labels(topic=topic, node=node).set(rate)
-    
+
     def update_processing_delay(self, node: str, input_topic: str, output_topic: str, delay_ms: float):
         """Update processing delay metric."""
         with self.lock:
@@ -493,12 +493,12 @@ class LiveMetricsExporter:
                 input_topic=input_topic,
                 output_topic=output_topic
             ).set(delay_ms)
-    
+
     def update_cpu_metric(self, process: str, pid: str, thread: str, cpu_percent: float):
         """Update CPU usage metric."""
         with self.lock:
             self.cpu_percent.labels(process=process, pid=pid, thread=thread).set(cpu_percent)
-    
+
     def update_memory_metric(self, process: str, pid: str, memory_mb: float):
         """Update memory usage metric."""
         with self.lock:
@@ -539,7 +539,7 @@ def main():
         default='file',
         help='Exporter mode: file (read from --session-dir) or live (auto-watch latest session)'
     )
-    
+
     args = parser.parse_args()
 
     # Free the port if a previous exporter is still bound to it
@@ -559,24 +559,24 @@ def main():
         print(f"Error: cannot bind port {args.port}: {e}")
         print(f"Try: fuser -k {args.port}/tcp   then retry.")
         sys.exit(1)
-    
+
     if args.mode == 'file':
         # File-based mode: read from monitoring session files
         if not args.session_dir:
             print("Error: --session-dir required for file mode")
             sys.exit(1)
-        
+
         session_path = Path(args.session_dir)
         if not session_path.exists():
             print(f"Error: Session directory not found: {session_path}")
             sys.exit(1)
-        
+
         collector = ROS2MetricsCollector(session_path)
-        
+
         print(f"Monitoring session: {session_path}")
         print(f"Metrics available at http://localhost:{args.port}/metrics")
         print("Press Ctrl+C to stop\n")
-        
+
         collector.start_live_monitoring(interval=args.interval)
     else:
         # Live mode: auto-watch the latest monitoring session dir.

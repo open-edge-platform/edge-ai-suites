@@ -21,7 +21,7 @@ setup_ros2() {
         echo -e "${GREEN}✅ ROS2 $ROS_DISTRO already sourced${NC}"
         return 0
     fi
-    
+
     # Try to source ROS2
     if [ -f "/opt/ros/humble/setup.bash" ]; then
         source /opt/ros/humble/setup.bash
@@ -29,14 +29,11 @@ setup_ros2() {
     elif [ -f "/opt/ros/jazzy/setup.bash" ]; then
         source /opt/ros/jazzy/setup.bash
         echo -e "${GREEN}✅ ROS2 Jazzy sourced${NC}"
-    elif [ -f "/opt/ros/iron/setup.bash" ]; then
-        source /opt/ros/iron/setup.bash
-        echo -e "${GREEN}✅ ROS2 Iron sourced${NC}"
     else
         echo -e "${RED}❌ ROS2 not found. Please install ROS2.${NC}"
         return 1
     fi
-    
+
     # Set ROS_DOMAIN_ID if not set
     if [ -z "$ROS_DOMAIN_ID" ]; then
         export ROS_DOMAIN_ID=0
@@ -44,7 +41,7 @@ setup_ros2() {
     else
         echo -e "${GREEN}✅ ROS_DOMAIN_ID=$ROS_DOMAIN_ID${NC}"
     fi
-    
+
     return 0
 }
 
@@ -65,17 +62,17 @@ main() {
     echo "ROS2 KPI Toolkit - Auto Setup"
     echo "=========================================="
     echo ""
-    
+
     setup_ros2 || exit 1
     check_uv
-    
+
     # Change to script directory
     cd "$SCRIPT_DIR"
-    
+
     echo ""
     echo -e "${GREEN}Ready!${NC}"
     echo ""
-    
+
     # Execute the command if provided
     if [ $# -gt 0 ]; then
         exec "$@"
