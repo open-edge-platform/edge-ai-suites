@@ -49,4 +49,5 @@ Click each icon to learn more.
    dev_guide/index_howitworks
    dev_guide/index_tutorials
    dev_guide/index_systemintegrator
+   dev_guide/index_gmslguide
    Release Notes <release-notes>
