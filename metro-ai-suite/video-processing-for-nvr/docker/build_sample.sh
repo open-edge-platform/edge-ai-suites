@@ -1,6 +1,6 @@
 set -e
 
-IMAGE_TAG=${1-vppsample:latest}
+IMAGE_TAG=${1-vppsample:2025.2.0}
 DOCKERFILE=${2-Dockerfile.sample}
 
 docker build \

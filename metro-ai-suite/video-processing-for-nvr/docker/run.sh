@@ -1,5 +1,5 @@
 MODEL_PATH=${1-/home/vpp/yolov8n_int8/yolov8n_with_preprocess.xml}
-DOCKER_IMAGE=${2-vppsample:latest}
+DOCKER_IMAGE=${2-vppsample:2025.2.0}
 NPU_ON=${3-false}
 
 EXTRA_PARAMS=""
