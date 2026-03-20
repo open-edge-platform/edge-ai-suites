@@ -109,7 +109,7 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 - In Grafana UI, the dashboard displays detected people and cars
       ![Grafana Dashboard](./_assets/grafana.png)
 
-    > **Note:**  In the default pipeline, we use `gvatrack tracking-type=short-term-imageless` element. `gvatrack` supports two imageless tracking modes: `zero-term-imageless` and `short-term-imageless`. Zero-term assigns IDs to each object per frame and requires detection on every frame. Short-term assigns unique IDs to each object and tracks objects across frames using motion and shape, reducing the need for continuous detection and improving FPS. Since it does not use image features, the same object may receive different IDs over time due to lack of re-identification.
+    > **Note:**  In the default pipeline, we use `gvatrack tracking-type=short-term-imageless` element. `gvatrack` supports two imageless tracking modes: `zero-term-imageless` and `short-term-imageless`. Zero-term assigns IDs to each object per frame and requires detection on every frame. Short-term assigns unique IDs to each object and tracks objects across frames using motion and shape, reducing the need for continuous detection and improving FPS. Imageless tracking forms object associations based on the movement and shape of objects, and it does not use image data. Since it does not use image features, the same object may receive different IDs over time due to lack of re-identification.
 
 ### **NodeRED UI** ###
 - **URL**: `https://localhost/nodered/`
