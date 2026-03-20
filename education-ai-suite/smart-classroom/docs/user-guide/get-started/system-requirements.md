@@ -5,7 +5,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 ## Software and Hardware Requirements
 
 - **OS**: Windows 11
-- **Processor**: Intel® Core Ultra Series 1, 2, and 3 Processors (with integrated GPU support)
+- **Recommended processor**: Intel® Core Ultra Series 1, 2, and 3 Processors (with integrated GPU support)
 - **Memory**: 32 GB RAM (minimum recommended)
 - **Storage**: At least 50 GB free (for models and logs)
 - **GPU/Accelerator**: Intel® iGPU (Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
