@@ -92,7 +92,7 @@ Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
    Expected output:
 
-   <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
+   <https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/robotics-ai-suite/docs/robotics/videos/fast_mapping.mp4>
 
 5. Run the FastMapping sample application using Intel® RealSense™ camera
    input with RTAB-Map:
