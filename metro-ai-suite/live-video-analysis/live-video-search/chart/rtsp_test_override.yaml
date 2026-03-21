@@ -1,0 +1,18 @@
+frigate:
+  mode: rtsp
+rtspTest:
+  enabled: true
+
+frigate-vms:
+  frigate:
+    mode: rtsp
+
+rtsp-test:
+  frigate:
+    mode: rtsp
+  rtspTest:
+    enabled: true
+
+vss-collector:
+  telemetry:
+    enabled: false

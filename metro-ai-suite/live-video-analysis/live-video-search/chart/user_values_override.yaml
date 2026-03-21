@@ -1,0 +1,51 @@
+# DO NOT COMMIT/PUSH THIS FILE TO ANY REPO WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
+# RESET ALL THE VALUES HERE TO DEFAULT, BEFORE COMMITING/PUSHING.
+
+global:
+  # Image registry and tags
+  registry: ""
+  tag: "latest"
+  vssStackTag: ""
+  smartNvrStackTag: ""
+
+  usePvc: true
+  keepPvc: false
+
+  # Proxy settings
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+
+  # Credentials required by services (LVS canonical)
+  credentials:
+    minioRootUser: ""
+    minioRootPassword: ""
+    postgresUser: ""
+    postgresPassword: ""
+    mqttUser: ""
+    mqttPassword: ""
+
+  # Environment values
+  env:
+    embeddingModelName: ""
+    frameInterval: "15"
+    enableObjectDetection: "true"
+    detectionConfidence: "0.85"
+    ovPerformanceMode: "THROUGHPUT"
+
+  # GPU controls
+  gpu:
+    multimodalEmbeddingEnabled: false
+    vdmsDataprepEnabled: false
+
+    # Set `key` and `device` if GPU is enabled.
+    # Update as per the cluster node label key for GPU assigned by the device plugin.
+    key: ""
+
+    # Set `device` when GPU mode is enabled.
+    # Set value to `GPU` to deploy on GPU.
+    device: ""
+
+# Optional USB camera override (used with usb_camera_override.yaml profile)
+frigate:
+  usbCameraDevice: ""

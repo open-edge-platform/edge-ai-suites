@@ -1,0 +1,5 @@
+frigate:
+  mode: usb
+  usbCameraDevice: /dev/video0
+rtspTest:
+  enabled: false

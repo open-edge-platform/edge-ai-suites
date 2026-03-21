@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-service
+  labels:
+    {{- include "lvs.minio.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.minioApi.type }}
+  ports:
+    - port: {{ .Values.service.minioApi.port }}
+      targetPort: api
+      protocol: TCP
+      name: api
+      {{- if and (eq .Values.service.minioApi.type "NodePort") .Values.service.minioApi.nodePort }}
+      nodePort: {{ .Values.service.minioApi.nodePort }}
+      {{- end }}
+    - port: {{ .Values.service.minioConsole.port }}
+      targetPort: console
+      protocol: TCP
+      name: console
+      {{- if and (eq .Values.service.minioConsole.type "NodePort") .Values.service.minioConsole.nodePort }}
+      nodePort: {{ .Values.service.minioConsole.nodePort }}
+      {{- end }}
+  selector:
+    app: minio-service

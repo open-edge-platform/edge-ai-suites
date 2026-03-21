@@ -1,0 +1,7 @@
+frigate:
+  mode: default
+rtspTest:
+  enabled: false
+telemetry:
+  enabled: true
+  hostPathMounts: true

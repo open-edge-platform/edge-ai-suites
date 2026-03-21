@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lvs.mqtt.fullname" . }}-mqtt
+  labels:
+    {{- include "lvs.mqtt.labels" . | nindent 4 }}
+data:
+  mosquitto.conf: |
+{{ .Values.mqtt.config | nindent 4 }}
