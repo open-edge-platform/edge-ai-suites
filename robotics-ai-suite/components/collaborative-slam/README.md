@@ -51,6 +51,12 @@ Collaborative SLAM requires Intel oneAPI 2025.x with SYCL 8 (`libsycl.so.8`) for
 If you have a locally built ORB extractor with SYCL 8 support, you can use it during the build:
 
 ```bash
+export LOCAL_ORB_PATH=/path/to/orb-extractor
+ROS_DISTRO=jazzy make safe-package
+```
+
+This ensures your local SYCL 8 ORB extractor packages are used instead of repository versions.
+
 #### Safe Build (Recommended for <32GB RAM)
 
 For systems with limited memory (16-24GB), use the safe build option that automatically calculates optimal parallel job count:

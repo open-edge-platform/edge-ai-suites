@@ -45,7 +45,7 @@ and a follow path.
     path. The generated smooth path is in the form of a ROS 2 navigation
     message type (`nav_msgs::msg`).
 
-For customization options, see [ITS Path Planner Plugin Customization](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html#its-path-planner-plugin-customization)
+For customization options, see [ITS Path Planner Plugin Customization](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-customization.html)
 
 ## Source Code
 
