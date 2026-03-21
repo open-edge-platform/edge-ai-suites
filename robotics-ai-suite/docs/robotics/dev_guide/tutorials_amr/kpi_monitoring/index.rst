@@ -1,3 +1,6 @@
+.. Copyright (C) 2026 Intel Corporation
+   SPDX-License-Identifier: Apache-2.0
+
 ROS2 KPI Monitoring
 ===================
 
@@ -22,4 +25,4 @@ Source Code
 -----------
 
 The source code for this component is in
-`ros-kpi <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/ros-kpi>`_.
+`ros-kpi <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/ros-kpi>`_.

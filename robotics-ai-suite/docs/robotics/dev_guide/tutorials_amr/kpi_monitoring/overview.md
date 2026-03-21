@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # ROS2 KPI Monitoring Overview
 
 Monitor, analyze, and visualize Key Performance Indicators in ROS2 systems —

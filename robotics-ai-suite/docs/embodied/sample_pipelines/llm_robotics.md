@@ -208,7 +208,7 @@ This section shows how to set up a virtual Python environment to run the LLM dem
 
 See the following OpenVINO documentation to export and save the ``SAM`` model:
 
-- SAM: https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/segment-anything
+- SAM: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/segment-anything
 
 Modify the loading PATH of models to the exported model path, the default path is:
 
@@ -222,7 +222,7 @@ Modify the loading PATH of models to the exported model path, the default path i
 
 See the following OpenVINO documentation to export and save ``CLIP (ViT-B)`` model:
 
-- CLIP: https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.0/notebooks/clip-zero-shot-image-classification
+- CLIP: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/clip-zero-shot-image-classification
 
 Modify the loading PATH of models to the exported model path, the default path is:
 

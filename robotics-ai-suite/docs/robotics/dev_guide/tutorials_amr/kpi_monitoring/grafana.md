@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Grafana Dashboard
 
 The ROS2 KPI toolkit integrates with **Grafana** and **Prometheus** to provide

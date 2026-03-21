@@ -21,7 +21,7 @@ For details, see `Model Zoo
 ADBSCAN
 ++++++++
 
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/adbscan/index`
+**Tutorial**: :doc:` ADBSCAN Algorithm <../tutorials_amr/navigation/adbscan/index>`
 
 
 DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is an
@@ -35,22 +35,11 @@ average.
 3D Pointcloud Groundfloor Segmentation
 ++++++++++++++++++++++++++++++++++++++
 
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation`
+**Tutorial**: :doc:` 3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR <../tutorials_amr/perception/pointcloud-groundfloor-segmentation>`
 
 An algorithm, along with a demo application, that transforms (Intel® RealSense™) Depth Camera images to 3D
 pointclouds. This algorithm further assigns classification labels such as 'ground floor' or
 'obstacle' to each point, delivering both the resulting and filtered pointclouds as output.
-
-
-Point Cloud Library (PCL)
-++++++++++++++++++++++++++
-
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/perception/one-api/index`
-
-The Point Cloud Library (PCL), a standalone, large scale, open project for
-2D/3D image and point cloud processing (see also https://pointclouds.org/).
-The Autonomous Mobile Robot SDK version of PCL adds optimized implementations of several PCL
-modules which allow you to offload computation to a GPU.
 
 
 ROS 2 Depth Image to Laser Scan
@@ -82,7 +71,7 @@ https://github.com/CCNYRoboticsLab/imu_tools:
 FastMapping
 ++++++++++++
 
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/run-fastmapping-algorithm`
+**Tutorial**: :doc:` FastMapping Algorithm <../tutorials_amr/navigation/run-fastmapping-algorithm>`
 
 FastMapping, is an algorithm to create a 3D voxel map of a robot's
 surrounding, based on Intel® RealSense™ Depth Camera sensor data.
@@ -91,7 +80,7 @@ surrounding, based on Intel® RealSense™ Depth Camera sensor data.
 Collaborative Visual SLAM
 ++++++++++++++++++++++++++
 
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/collaborative-slam`
+**Tutorial**: :doc:` Collaborative Visual SLAM <../tutorials_amr/navigation/collaborative-slam>`
 
 Collaborative visual SLAM is a framework for service robots which utilizes simultaneous localization
 and mapping (SLAM). An edge server maintains a map database and handles global optimization. Each robot can
@@ -176,7 +165,7 @@ The SLAM toolbox is a set of tools and capabilities for 2D SLAM that includes th
 ITS Global Path Planner
 ++++++++++++++++++++++++
 
-**Tutorial**: :doc:`../../dev_guide/tutorials_amr/navigation/its-path-planner-plugin`
+**Tutorial**: :doc:` ITS Path Planner ROS 2 Navigation Plugin <../tutorials_amr/navigation/its-path-planner-plugin>`
 
 The Intelligent Sampling and Two-Way Search (ITS) Global Path Planner is a plugin for the ROS 2 Navigation package.
 It performs a path planning search on a roadmap from two directions
@@ -214,7 +203,7 @@ the integration of GPS data.
 Navigation 2
 +++++++++++++
 
-**Tutorials**: :doc:`../../dev_guide/tutorials_amr/navigation/index`
+**Tutorials**: :doc:` Navigation <../tutorials_amr/navigation/index>`
 
 ROS 2 Navigation stack, which seeks a safe way to have a mobile robot move
 from point A to point B. This completes dynamic path planning, computes

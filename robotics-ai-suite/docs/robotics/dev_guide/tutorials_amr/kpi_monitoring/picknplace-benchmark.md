@@ -1,3 +1,9 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
 # Pick & Place Pipeline Benchmark
 
 This benchmark measures KPI performance of the
