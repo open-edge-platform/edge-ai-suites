@@ -21,7 +21,8 @@ TSN setup. It is a Dash application that:
 Before running the script, ensure you have Python 3 and the required libraries installed.
 
 ```bash
-pip install dash paho-mqtt plotly
+cd deterministic-threat-detection/mqtt_data_aggregator
+pip install -r requirements.txt
 ```
 
 ## Running the Script

@@ -14,4 +14,5 @@ These pipelines are designed to showcase some core features of the SDK, includin
     sample_pipelines/ORB_VSLAM
     sample_pipelines/llm_robotics
     sample_pipelines/robotics_diffusion_transformer
+    sample_pipelines/pi05_with_rtc
 

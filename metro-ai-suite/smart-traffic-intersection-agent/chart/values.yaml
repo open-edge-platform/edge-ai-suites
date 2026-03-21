@@ -61,12 +61,6 @@ trafficAgent:
     timeoutSeconds: 10
     failureThreshold: 3
   resources:
-    limits:
-      cpu: "2"
-      memory: "2Gi"
-    requests:
-      cpu: "500m"
-      memory: "512Mi"
   # Volume for persistent agent data
   persistence:
     enabled: true
@@ -129,12 +123,8 @@ vlmServing:
     timeoutSeconds: 10
     failureThreshold: 180
   resources:
-    limits:
-      cpu: "32"
-      memory: "32Gi"
     requests:
-      cpu: "16"
-      memory: "16Gi"
+      memory: "12Gi"
   # Volume for model cache
   persistence:
     enabled: true
