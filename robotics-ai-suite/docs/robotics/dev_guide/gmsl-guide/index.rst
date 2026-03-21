@@ -1,6 +1,6 @@
 .. _gmsl-guide:
 
-GMSL Sensoer Guide
+GMSL Sensor Guide
 ===============================
 
 GMSL (Gigabit Multimedia Serial Link) is a high-speed serial interface designed for transmitting uncompressed video, audio, and control data over long distances. It is commonly used in automotive applications for connecting cameras and other multimedia devices to the central processing unit.
