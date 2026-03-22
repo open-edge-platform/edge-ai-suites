@@ -29,4 +29,7 @@ pose-3d:
       model_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2022.1/human-pose-estimation-3d-0001/human-pose-estimation-3d.tar.gz
       ir_file: human-pose-estimation-3d-0001.xml
       video_dir: /videos/3d-pose
-      video_url: https://www.pexels.com/download/video/6130537
+      video_url: https://www.pexels.com/download/video/30141958
+      
+# https://www.pexels.com/download/video/30141930
+# https://www.pexels.com/download/video/7089372
