@@ -25,4 +25,17 @@ Provides a single interface to manage installation and updates for:
     - Easy binary installs and direct GitHub sourcing for flexibility.
     - Clear roadmap outlining future enhancements and SDK updates to keep developers ahead.
  
+## Intel® Metro SDK Manager EAS-2026.0.0 Release
+
+### New 
+
+- **Updated Documentation**
+    - Enhanced guides and tutorials for improved clarity and usability.
+    - Latest best practices integrated across all learning materials.
+- **Component Version Updates**
+    - OpenVINO™ upgraded to latest version for improved performance and features.
+    - DL Streamer updated with latest enhancements for optimized media processing.
+- **Gen AI Tutorials**
+    - Updated to leverage latest Gen AI SDK capabilities and workflows.
+    - Improved examples demonstrating current best practices and advanced techniques.
 
