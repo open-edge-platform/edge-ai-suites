@@ -35,7 +35,7 @@ env:
   # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
   # To ingest the simulator data only once (without looping), set this variable to false.
   CONTINUOUS_SIMULATOR_INGESTION: true
-  SAMPLE_APP: weld-anomaly-detection
+  SAMPLE_APP: wind-turbine-anomaly-detection
   TELEGRAF_INPUT_PLUGIN: mqtt_consumer
   TIMESERIES_USER_NAME: timeseries_user
   TIMESERIES_UID: 1999
