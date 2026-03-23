@@ -132,6 +132,10 @@ echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 
 **Note**: This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
+**Expected Console Output:**
+
+![Tutorial 5 Output](images/tutorial-5-dlstreamer-output.png)
+
 ## Step 4: Monitor Overall System Performance with htop
 
 Launch htop to monitor real-time system performance:
@@ -154,6 +158,10 @@ htop
 - `F4` - Filter processes by name
 - `q` - Quit htop
 
+**Expected Console Output:**
+
+![Tutorial 5 Top Output](images/tutorial-5-top.png)
+
 ## Step 5: Monitor Intel GPU Performance
 
 Use intel_gpu_top to monitor GPU usage during AI inference:
@@ -169,6 +177,9 @@ sudo intel_gpu_top
 - Video engine usage (shows video decode/encode)
 - GPU frequency and power consumption
 - Memory usage and bandwidth
+
+![Tutorial 5 GPU Top Output](images/tutorial-5-gpu-top.png)
+
 
 ## Step 6: Stop the Running Pipeline
 
