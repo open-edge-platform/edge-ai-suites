@@ -1,36 +1,34 @@
-# Release Notes
+# Release Notes: Embodied Intelligence SDK 2025
 
-Click each tab to learn about the new and updated features in each release of Embodied Intelligence SDK.
-
-<!--hide_directive::::{tab-set}
-:::{tab-item}hide_directive--> Embodied Intelligence SDK v25.36
-<!--hide_directive:sync: jazzyhide_directive-->
+## Version 25.36
 
 Embodied Intelligence SDK v25.36 enhances model optimization capabilities with OpenVINO™ toolkit and provides typical workflows and examples, including Diffusion Policy (DP), Robotic Diffusion Transformer (RDT), Improved 3D Diffusion Policy (IDP3), Visual Servoing (CNS) and LLM Robotic Demo. This release has also updated the real-time optimized best-known configuration (BKC) on improving AI and control performance, and supporting the Intel® Arc™ B-series graphics card (B570).
 
-**New Features:**
+**New**
 
-* Updated real-time optimization BKC, including BIOS and runtime optimization, balancing performance with AI and control consolidation.
-* Added support for Intel® Arc™ B-series (Battlemage) graphics card (B570).
-* Fixed deadlock issue when reading i915 perf event in Preempt-RT kernel.
-* New EtherCAT Master stack features supporting user-space EtherCAT Master and multiple EtherCAT masters.
-* Added Diffusion Policy pipeline with OpenVINO™ toolkit optimization.
-* Added Robotics Diffusion Transformer (RDT) pipeline with OpenVINO toolkit optimization.
-* Added Improved 3D Diffusion Policy (IDP3) model with OpenVINO toolkit optimization.
-* Added Visual Servoing (CNS) model with OpenVINO toolkit optimization.
-* Provided new tutorials for typical AI model optimization with OpenVINO toolkit.
-* ACRN hypervisor's initial enablement on Arrow Lake platform.
-* Added new Dockerfile to build containerized Robotics Development Toolkit (RDT) pipeline.
+- Updated real-time optimization BKC, including BIOS and runtime optimization, balancing performance with AI and control consolidation.
+- Added support for Intel® Arc™ B-series (Battlemage) graphics card (B570).
+- Fixed deadlock issue when reading i915 perf event in Preempt-RT kernel.
+- New EtherCAT Master stack features supporting user-space EtherCAT Master and multiple EtherCAT masters.
+- Added Diffusion Policy pipeline with OpenVINO™ toolkit optimization.
+- Added Robotics Diffusion Transformer (RDT) pipeline with OpenVINO toolkit optimization.
+- Added Improved 3D Diffusion Policy (IDP3) model with OpenVINO toolkit optimization.
+- Added Visual Servoing (CNS) model with OpenVINO toolkit optimization.
+- Provided new tutorials for typical AI model optimization with OpenVINO toolkit.
+- ACRN hypervisor's initial enablement on Arrow Lake platform.
+- Added new Dockerfile to build containerized Robotics Development Toolkit (RDT) pipeline.
+- Added pipelines:
 
-**Known Issues and Limitations**
+  | Pipeline Name                                                               |   Description                                                                                                                                                     |
+  |-----------------------------------------------------------------------------|  -----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | Diffusion Policy ****diffusion_policy****                                   | An innovative method for generating robot actions by conceptualizing visuomotor policy   learning as a conditional denoising diffusion process                    |
+  | Robotics Diffusion Transformer (RDT) ****robotics_diffusion_transformer**** | A RDT pipeline provided for evaluating the VLA model on the simulation   task                                                                                     |
+  | LLM Robotics Demo ****llm_robotics_demo****                                 | A code generation demo for robotics, interacting with a chatbot utilizing AI   technologies such as large language models (Phi-4) and computer vision (SAM, CLIP) |
 
-* ACRN hypervisor feature and performance
 
-   #. iGPU performance degradation observed when using passthrough iGPU to VM on ACRN hypervisor.
+**Improved**
 
-   #. Display becomes unresponsive in VMs when running concurrent AI workloads with iGPU SR-IOV enabled on ACRN hypervisor.
-
-**The following model algorithms were added and optimized by OpenVINO™ toolkit:**
+The following model algorithms were added and optimized by OpenVINO™ toolkit:
 
 | Algorithm                                                | Description                                                                                                                                                   |
 |----------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -42,35 +40,36 @@ Embodied Intelligence SDK v25.36 enhances model optimization capabilities with O
 | Improved 3D Diffusion Policy (iDP3) ****model_idp3****   | A diffusion policy model enhancing capabilities for 3D robotic manipulation tasks                                                                             |
 | Robotic Diffusion Transformer (RDT-1B) ****model_rdt**** | A diffusion-based foundation model for robotic manipulation                                                                                                   |
 
-**The following pipelines were added:**
+**Known Issues**
 
-| Pipeline Name                                                               | Description                                                                                                                                                     |
-|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Diffusion Policy ****diffusion_policy****                                   | An innovative method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process                    |
-| Robotics Diffusion Transformer (RDT) ****robotics_diffusion_transformer**** | A RDT pipeline provided for evaluating the VLA model on the simulation task                                                                                     |
-| LLM Robotics Demo ****llm_robotics_demo****                                 | A code generation demo for robotics, interacting with a chatbot utilizing AI technologies such as large language models (Phi-4) and computer vision (SAM, CLIP) |
+- ACRN hypervisor feature and performance
 
+  - iGPU performance degradation observed when using passthrough iGPU to VM on ACRN hypervisor.
+  - Display becomes unresponsive in VMs when running concurrent AI workloads with iGPU SR-IOV enabled on ACRN hypervisor.
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> Embodied Intelligence SDK v25.15
-<!--hide_directive:sync: humblehide_directive-->
+## Version 25.15
 
 Embodied Intelligence SDK v25.15 provides necessary software framework, libraries, tools, BKC, tutorials and example codes to facilitate embodied intelligence solution development on Intel® Core™ Ultra Series 2 processors (Arrow Lake-H), It provides Intel Linux LTS kernel v6.12.8 with Preempt-RT, and supports for Canonical Ubuntu OS 22.04, introduces initial support for ROS2 Humble software libraries and tools. It supports many models optimization with OpenVINO™ toolkit, and provides typical workflows and examples including ACT manipulation, ORB-SLAM3, etc.
 
-**New Features:**
+**New**
 
-* Provided Linux OS 6.12.8 BSP with Preempt-RT
-* Provided Real-time optimization BKC
-* Optimized IgH EtherCAT master with Linux kernel v6.12
-* Added ACT manipulation pipeline with OpenVINO™ and Intel® Extension for PyTorch framework optimization
-* Added ORB-SLAM3 pipeline focuses on real-time simultaneous localization and mapping
-* Provided typical AI models optimization tutorials with OpenVINO™ toolkit
+- Provided Linux OS 6.12.8 BSP with Preempt-RT
+- Provided Real-time optimization BKC
+- Optimized IgH EtherCAT master with Linux kernel v6.12
+- Added ACT manipulation pipeline with OpenVINO™ and Intel® Extension for PyTorch framework optimization
+- Added ORB-SLAM3 pipeline focuses on real-time simultaneous localization and mapping
+- Provided typical AI models optimization tutorials with OpenVINO™ toolkit
+- Added pipelines:
 
-**Known Issues and Limitations**
+  | Pipeline Name                                                               |   Description                                                                                                                                                     |
+  |-----------------------------------------------------------------------------|  -----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+  | [Imitation Learning - ACT](../sample_pipelines/imitation_learning_act.rst)  | Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel optimization                    |
+  | [VSLAM: ORB-SLAM3](../sample_pipelines/ORB_VSLAM.rst)                       | One of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models |
 
-* There is a known deadlock risk and limitation to use ``intel_gpu_top`` to read i915 perf event in Preempt-RT kernel, it will be fixed with next release.
 
-**The following model algorithms were optimized by OpenVINO™ toolkit:**
+**Improved**
+
+The following model algorithms were optimized by OpenVINO™ toolkit:
 
 | Algorithm                                                                   | Description                                                                                                                                                           |
 |-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -91,13 +90,6 @@ Embodied Intelligence SDK v25.15 provides necessary software framework, librarie
 | Bird's Eye View Perception: Fast-BEV ****model_fastbev****                  | Obtaining a BEV perception is to gain a comprehensive understanding of the spatial layout and relationships between objects in a scene                                |
 | Monocular Depth Estimation: Depth Anything V2 ****model_depthanythingv2**** | A powerful tool that leverages deep learning to infer 3D information from 2D images                                                                                   |
 
-**The following pipelines were added:**
+**Known Issues**
 
-| Pipeline Name                                                               | Description                                                                                                                                                     |
-|-----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Diffusion Policy ****diffusion_policy****                                   | An innovative method for generating robot actions by conceptualizing visuomotor policy learning as a conditional denoising diffusion process                    |
-| Robotics Diffusion Transformer (RDT) ****robotics_diffusion_transformer**** | A RDT pipeline provided for evaluating the VLA model on the simulation task                                                                                     |
-| LLM Robotics Demo ****llm_robotics_demo****                                 | A code generation demo for robotics, interacting with a chatbot utilizing AI technologies such as large language models (Phi-4) and computer vision (SAM, CLIP) |
-
-<!--hide_directive:::
-::::hide_directive-->
+- There is a known deadlock risk and limitation to use ``intel_gpu_top`` to read i915 perf event in Preempt-RT kernel, it will be fixed with next release.

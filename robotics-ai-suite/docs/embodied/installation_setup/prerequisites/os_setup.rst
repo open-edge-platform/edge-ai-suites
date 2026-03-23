@@ -23,6 +23,41 @@ Do the following to prepare the target system:
 
    .. include:: bios-generic.rst
 
+Automated Setup Script
+-----------------------
+
+You can automate the software setup flow on this page with:
+
+`os_setup_install.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/prerequisites/os_setup_install.sh>`_
+
+Default OS setup automation (locale + APT repositories):
+
+.. code-block:: bash
+
+   sudo ./os_setup_install.sh
+
+Set date/time during setup:
+
+.. code-block:: bash
+
+   sudo ./os_setup_install.sh --set-date "2026-03-17 12:00"
+
+Enable additional options:
+
+.. code-block:: bash
+
+   sudo ./os_setup_install.sh --disable-auto-upgrades --fix-raw-github-host
+
+For all available options:
+
+.. code-block:: bash
+
+   ./os_setup_install.sh --help
+
+This script only automates software configuration. Ubuntu installation and BIOS setup remain manual.
+
+If you prefer, you can skip this script and run the real-time setup script directly from :ref:`Real-Time Linux automated setup <rt_linux_automated_setup>`.
+
 Set locale
 -----------
 
