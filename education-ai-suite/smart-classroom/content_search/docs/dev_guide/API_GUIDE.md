@@ -11,6 +11,7 @@ Base URL: `http://<host>:9990`
 3. [Ingest Files](#ingest-files)
    - [Ingest a single file from MinIO](#ingest-a-single-file-from-minio)
    - [Ingest a directory from MinIO](#ingest-a-directory-from-minio)
+   - [Ingest raw text](#ingest-raw-text)
 4. [Query Indexed Files](#query-indexed-files)
 5. [Delete Files from Index](#delete-files-from-index)
 6. [Clear the Entire Index](#clear-the-entire-index)
@@ -150,6 +151,7 @@ Ingests all supported files found under a given folder prefix in MinIO.
 |-------|------|----------|---------|-------------|
 | `bucket_name` | string | Yes | — | MinIO bucket name |
 | `folder_path` | string | Yes | — | Folder prefix inside the bucket |
+| `meta` | object | No | `{}` | Extra metadata applied to every file ingested from the directory |
 | `frame_extract_interval` | integer | No | `15` | For video files: extract a frame every N frames |
 | `do_detect_and_crop` | boolean | No | `false` | Run object detection and crop detected regions before embedding |
 
@@ -171,6 +173,59 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest \
 ```
 
 > **Tip:** The service distinguishes between a single-file request and a directory request based on the presence of `file_path` vs `folder_path`.
+
+---
+
+#### Ingest raw text
+
+### `POST /v1/dataprep/ingest_text`
+
+Embeds a raw text string as a **single node** (no chunking) and stores it in the document collection. Use this when you already have clean, pre-processed text and want to skip file parsing entirely.
+
+**Request body**
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `text` | string | Yes | — | Raw text content to embed and store |
+| `bucket_name` | string | No | — | MinIO bucket name (used to build the `file_path` identifier) |
+| `file_path` | string | No | — | Logical path inside the bucket (used to build the `file_path` identifier) |
+| `meta` | object | No | `{}` | Extra metadata to store alongside the text |
+
+**Example**
+
+```bash
+curl -X POST http://localhost:9990/v1/dataprep/ingest_text \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bucket_name": "my-bucket",
+    "file_path": "summaries/lecture1.txt",
+    "text": "Photosynthesis is the process by which plants convert light into energy.",
+    "meta": { "course": "CS101", "source": "summary" }
+  }'
+```
+
+Below metadatas shall be automatically appended
+```json
+"meta": {
+  "chunk_index": 0,
+  "chunk_text": "text",
+  "type": "document",
+  "doc_filetype": "text/plain",
+}
+```
+
+**Response**
+
+```json
+{ "message": "Text successfully ingested. db returns ..." }
+```
+
+**Error responses**
+
+| Code | Condition |
+|------|-----------|
+| `400` | `text` is empty or missing |
+| `500` | Embedding or database error |
 
 ---
 
