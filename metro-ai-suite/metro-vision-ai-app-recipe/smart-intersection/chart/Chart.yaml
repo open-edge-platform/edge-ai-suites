@@ -4,5 +4,5 @@ description: A Helm chart for Smart Intersection application
 
 type: application
 
-version: 1.18.0-rc3
-appVersion: "1.18.0-rc3"
+version: 1.18.0
+appVersion: "1.18.0"
