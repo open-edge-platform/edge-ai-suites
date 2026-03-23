@@ -13,7 +13,10 @@ from core.models import AITask
 
 @pytest.fixture(scope="session")
 def engine():
-    # 使用 StaticPool 确保所有连接共享同一个内存数据库
+    """
+    Create a database engine.
+    Uses StaticPool to ensure all connections share the same in-memory SQLite database.
+    """
     return create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -22,47 +25,57 @@ def engine():
 
 @pytest.fixture
 def mock_db_session(engine):
-    # 1. 每次测试前重置数据库表
+    """
+    Mock the database session.
+    1. Reset database tables before each test.
+    2. Create an isolated session.
+    3. Override the FastAPI get_db dependency.
+    4. Clean up after the test.
+    """
+    # 1. Reset database tables
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     
-    # 2. 创建独立 Session
+    # 2. Create an independent Session
     TestingSessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     session = TestingSessionLocal()
 
-    # 3. 注入 FastAPI 依赖
+    # 3. Inject dependency override into FastAPI
     app.dependency_overrides[get_db] = lambda: session
     
     yield session
     
-    # 4. 清理
+    # 4. Cleanup: Close session and clear overrides
     session.close()
     app.dependency_overrides.clear()
 
 @pytest.fixture
 def client(mock_db_session):
+    """
+    Provide a TestClient with the mocked database session injected.
+    """
     return TestClient(app)
 
-# --- NEW: Infrastructure Mocks (重构核心) ---
+# --- Infrastructure Mocks ---
 
 @pytest.fixture
 def mock_redis():
     """
-    全局 Mock Redis 客户端。
-    路径指向 core.redis_client，因为所有 service 都从这里导入。
+    Global Mock for Redis client.
+    The path points to services.task_service because that's where it is imported.
     """
     with patch("services.task_service.redis_client") as m:
-        # 默认让 ping 返回 True
+        # Default ping to return True to simulate a healthy connection
         m.ping.return_value = True
         yield m
 
 @pytest.fixture
 def mock_ai_processor():
     """
-    全局 Mock 同步 AI 逻辑。
-    路径指向 services.task_service，因为这是它被调用的地方。
+    Global Mock for synchronous AI logic.
+    The path points to services.task_service where the logic is invoked.
     """
     with patch("services.task_service.run_dummy_ai_logic", new_callable=AsyncMock) as m:
-        # 设置一个默认的模拟返回结果
+        # Set a default mock result for successful AI processing
         m.return_value = {"summary": "Mocked AI Result", "status": "success"}
         yield m
