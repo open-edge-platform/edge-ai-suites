@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       
       - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@d64efeaffbf1cd2d2ac98696782a4888cde0e9f9
         id: trivy-fs
         with:
           scan_type: "fs"  
@@ -41,7 +41,7 @@ jobs:
           report_suffix: "-fs-education-ai-suite-trivy"
 
       - name: Run trivy Scan - education-suite (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@d64efeaffbf1cd2d2ac98696782a4888cde0e9f9
         id: videosummary-frontend-spdx
         with:
           scan_type: "fs"  
