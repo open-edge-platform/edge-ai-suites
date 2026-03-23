@@ -250,3 +250,33 @@ docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 > This container image is intended for demo purposes only and not intended for production use.
 >
 > To receive expanded security maintenance from Canonical on the Ubuntu base layer, you may follow the [how-to guide to enable Ubuntu Pro in a Dockerfile](https://documentation.ubuntu.com/pro-client/en/docs/howtoguides/enable_in_dockerfile), which will require the image to be rebuilt.
+
+### Run automated test in Docker
+
+The project provides a Docker-based automated test entry script that validates prerequisites and runs `test/autotest.sh` inside the `intel/tfcc:latest` container.
+
+From the Sensor Fusion project directory:
+
+```bash
+cd $PROJ_DIR
+bash test/autotest_docker.sh
+```
+
+What it does:
+
+1. Checks that Docker is installed and the daemon is reachable.
+2. Checks that Intel GPU device nodes exist on the host (e.g., `/dev/dri/renderD*`).
+3. Pulls the image: `docker pull intel/tfcc:latest`.
+4. Starts a container by calling `docker/run_docker.sh` (same settings as manual docker run), verifies build outputs exist under `build/bin`, then runs `test/autotest.sh` inside the container.
+
+Note: The script adds `video`/`render` access by passing numeric group IDs (`--group-add <gid>`), so it does not depend on the container image having `video` or `render` group names defined.
+
+Outputs:
+
+- Logs and CSV results are persisted on the host under `./test/autotest_logs/` by default.
+
+You can override some settings via environment variables (examples):
+
+```bash
+RUNS=3 TIMEOUT_SECONDS=600 bash test/autotest_docker.sh
+```

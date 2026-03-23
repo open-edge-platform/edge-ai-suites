@@ -218,7 +218,7 @@ function stop_all_pipelines() {
   echo "Found ${#pipelines[@]} running pipelines to stop." >&2
 
   for pipeline_id in "${pipelines[@]}"; do
-    curl -k -s --location -X DELETE "https://$DLSPS_NODE_IP/api/pipelines/${pipeline_id}" &
+    curl -k -s --location -X DELETE "https://$DLSPS_NODE_IP/api/pipelines/${pipeline_id}" > /dev/null &
   done
   
   wait

@@ -64,7 +64,7 @@ mkdir -p ~/metro/metro-vision-tutorial-3
 cd ~/metro/metro-vision-tutorial-3
 
 # Download sample city intersection video for object detection
-wget -O intersection.mp4 https://www.pexels.com/download/video/34505889/?fps=29.97&h=360&w=640
+wget -O intersection.mp4 https://www.pexels.com/download/video/34505889?fps=29.97&h=360&w=640
 
 ```
 
@@ -100,7 +100,7 @@ cat > inference.py << 'EOF'
 
 import cv2
 import numpy as np
-from openvino.runtime import Core
+from openvino import Core
 
 # --- Configuration ---
 model_path = "/home/openvino/public/yolov10s/FP16/yolov10s.xml"
@@ -128,6 +128,11 @@ class_names = [
 # --- Initialize OpenVINO Core and Load Model ---
 ie = Core()
 model = ie.read_model(model=model_path)
+
+# Reshape model to static input shape if dynamic (YOLOv10s expects 640x640)
+if model.inputs[0].partial_shape.is_dynamic:
+    model.reshape({model.inputs[0].any_name: [1, 3, 640, 640]})
+
 compiled_model = ie.compile_model(model=model, device_name="CPU")
 
 # Get model input and output information

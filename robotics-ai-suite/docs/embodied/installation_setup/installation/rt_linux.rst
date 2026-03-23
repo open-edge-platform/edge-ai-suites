@@ -5,8 +5,49 @@ Real-Time Linux
 
 The Embodied Intelligence SDK provides real-time capabilities to the kernel with PREEMPT_RT patch and boot parameters for real-time optimization, which aims to increase predictability and reduce scheduler latencies.
 
-Installation
-================
+Automated Installation
+=======================
+
+.. _rt_linux_automated_setup:
+
+You can automate the software setup flow on this page with:
+
+`rt_linux_setup.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/installation/rt_linux_setup.sh>`_
+
+Default real-time kernel setup (includes OS setup prerequisites):
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh
+
+Skip OS setup prerequisites (run RT setup steps only):
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh --skip-os-setup
+
+Real-time setup with GRUB tuning and runtime options:
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh --apply-rt-grub-tuning --disable-timer-migration --disable-swap --disable-cstate-cpus 13-13
+
+For all available options:
+
+.. code-block:: bash
+
+  ./rt_linux_setup.sh --help
+
+When using the automated script, it logs which sections from this page are skipped for the selected options.
+
+The following three sections are always skipped because they require manual, platform-specific actions:
+
+- ``Select [Experimental] ECI Ubuntu`` boot entry after reboot
+- ``Use Cache Allocation Technology``
+- ``Use Dynamic Voltage and Frequency``
+
+Manual Installation
+====================
 
 1. Install GRUB customizations
 

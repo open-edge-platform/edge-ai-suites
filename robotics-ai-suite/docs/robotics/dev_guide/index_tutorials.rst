@@ -20,4 +20,5 @@ these tutorials provide a learning path for developers to use and configure Auto
    tutorials_amr/perception/index
    tutorials_amr/navigation/index
    tutorials_amr/simulation/index
+   tutorials_amr/kpi_monitoring/index
    tutorials_amr/robot-tutorials-troubleshooting
