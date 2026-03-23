@@ -643,7 +643,7 @@ def update_env_file(file_path=None, values=None):
             if not values["S3_STORAGE_USERNAME"]:
                 logger.error("S3_STORAGE_USERNAME is empty in values dictionary")
                 return False
-            logger.info(f"Updating S3_STORAGE_USERNAME with value: {values['S3_STORAGE_USERNAME']}")
+            logger.info(f"Updating S3_STORAGE_USERNAME with value: REDACTED for security")
         
         if "S3_STORAGE_PASSWORD" in values:
             if not values["S3_STORAGE_PASSWORD"]:
@@ -2761,13 +2761,7 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
     # Combine basic and multimodal credentials
     basic_credentials.update(multimodal_vars)
     
-    # Log the generated credentials for debugging (without sensitive values)
-    logger.info(f"Generated multimodal credentials for case '{case_type}':")
-    for key in basic_credentials.keys():
-        if 'PASSWORD' in key or 'SECRET' in key:
-            logger.info(f"  {key}: [REDACTED]")
-        else:
-            logger.info(f"  {key}: {basic_credentials[key]}")
+    logger.info(f"Generated {len(basic_credentials)} multimodal credentials for case '{case_type}'")
     
     return basic_credentials
 

@@ -690,7 +690,7 @@ def fetch_influxdb_credentials(chart_path):
         logger.info("Yaml file values: %s", values)
         # Print or return the values
         logger.info(f"INFLUXDB_USERNAME: {influxdb_username}")
-        logger.info(f"INFLUXDB_PASSWORD: {influxdb_password}")
+        logger.info(f"INFLUXDB_PASSWORD: REDACTED")
         logger.info(f"INFLUXDB_RETENTION_DURATION: {influxdb_retention_duration}")
         if not influxdb_username or not influxdb_password or not influxdb_retention_duration:
             logger.error("InfluxDB credentials not found in values.yaml.")
