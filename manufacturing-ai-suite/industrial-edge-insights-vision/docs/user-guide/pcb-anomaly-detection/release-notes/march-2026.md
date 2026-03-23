@@ -10,3 +10,4 @@
 - NGINX,COTURN and MINIO ports made configurable as environment variables
 - Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
 - Model retrained with Geti v2.13.1
+- Added support for NPU and iGPU for Intel Core Ultra Series 3 processors
