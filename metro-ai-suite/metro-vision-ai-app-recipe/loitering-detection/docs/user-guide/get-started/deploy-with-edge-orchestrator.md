@@ -38,7 +38,7 @@ the steps in this document.
 1. Clone the **Loitering Detection** repository:
 
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites
+    git clone https://github.com/open-edge-platform/edge-ai-suites -b release-2026.0.0
     cd metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
     ```
 
