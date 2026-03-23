@@ -1391,7 +1391,7 @@ def verify_influxdb_retention(namespace, chart_path, response):
         )
 
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluxDB query inside pod '{pod_name}': 'SELECT time, wind_speed FROM {constants.WIND_TURBINE_INGESTED_TOPIC} ORDER BY time ASC LIMIT 1;' with redacted credentials.")
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
         response = result.stdout.strip()
 

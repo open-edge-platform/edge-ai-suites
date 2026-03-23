@@ -1723,7 +1723,7 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
         )
 
         exec_command = f"docker exec {container_name} {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing command: 'SHOW MEASUREMENTS; {query_part}' inside {container_name} container with redacted credentials.")
         
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
         
@@ -1779,7 +1779,7 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             "-execute 'SELECT time, wind_speed FROM wind_turbine_data ORDER BY time ASC LIMIT 1' | awk 'NR==4 {print $1}'"
         )
         exec_command = f"docker exec {container_name} {influx_query}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluxDB query inside container '{container_name}': 'SELECT time, wind_speed FROM wind_turbine_data ORDER BY time ASC LIMIT 1;' with redacted credentials.")
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
 
         if result.returncode != 0:

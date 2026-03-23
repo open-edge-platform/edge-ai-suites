@@ -151,7 +151,10 @@ def influxdb_login(namespace, chart_path):
             "-execute 'SHOW MEASUREMENTS';"
         )
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluXDB measurement query 'SHOW MEASUREMENTS' in namespace '%s' on pod '%s' with redacted credentials.",
+            namespace,
+            pod_name,
+        )
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
         response = result.stdout.strip()
         logger.info(f"InfluxDB response: {response}")
@@ -476,7 +479,8 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
             f"-execute 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;'"
         )
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time ASC LIMIT 1;' "
+                    f"with redacted credentials.")
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
         first_record_response = result.stdout.strip()
         logger.info(f"First record response: {first_record_response}")
@@ -489,7 +493,8 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
             f"-execute 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;'"
         )
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluxDB query inside pod: 'SELECT wind_speed FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\" ORDER BY time DESC LIMIT 1;' "
+                    f"with redacted credentials.")
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
         last_record_response = result.stdout.strip()
         logger.info(f"Last record response: {last_record_response}")
@@ -502,7 +507,8 @@ def verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last
             f"-execute 'SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";'"
         )
         exec_command = f"kubectl exec -n {namespace} {pod_name} -- {influx_commands}"
-        logger.info(f"Executing command: {exec_command}")
+        logger.info(f"Executing InfluxDB query inside pod: 'SELECT COUNT(wind_speed) FROM \"{constants.WIND_TURBINE_INGESTED_TOPIC}\";' "
+                    f"with redacted credentials.")
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True, check=True)
         count_response = result.stdout.strip()
         logger.info(f"Count response: {count_response}")
@@ -788,7 +794,7 @@ def influxdb_login_docker(container_name="ia-influxdb"):
             "-execute 'SHOW MEASUREMENTS'"
         )
         exec_command = f"docker exec -e INFLUX_PASSWORD={influxdb_password} {container_name} {influx_commands}"
-        logger.info(f"Executing InfluxDB command in container '{container_name}' as user '{influxdb_username}' (password not shown)")
+        logger.info(f"Executing InfluxDB command - 'SHOW MEASUREMENTS'  in container '{container_name}' with configured credentials (credentials not shown)")
         
         result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
         response = result.stdout.strip()

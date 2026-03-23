@@ -146,7 +146,7 @@ def setup_multimodal_environment(request):
             logger.error("S3_STORAGE_PASSWORD is missing or empty in generated credentials")
             pytest.fail("S3_STORAGE_PASSWORD missing during multimodal setup")
             
-        logger.info(f"Generated S3_STORAGE_USERNAME: {case['S3_STORAGE_USERNAME']}")
+        logger.info(f"Generated S3_STORAGE_USERNAME: [REDACTED]")
         
         env_file_path = os.path.join(multimodal_dir, ".env")
         if not docker_utils.update_env_file(env_file_path, case):

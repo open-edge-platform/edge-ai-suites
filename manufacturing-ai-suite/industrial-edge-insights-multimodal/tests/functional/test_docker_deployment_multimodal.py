@@ -63,7 +63,7 @@ def test_valid_values():
     if "S3_STORAGE_PASSWORD" not in case or not case["S3_STORAGE_PASSWORD"]:
         pytest.fail("S3_STORAGE_PASSWORD is missing or empty in generated credentials")
         
-    logger.info(f"Generated S3_STORAGE_USERNAME: {case['S3_STORAGE_USERNAME']}")
+    logger.info(f"Generated S3_STORAGE_USERNAME: [REDACTED]")
     logger.info("Generated S3_STORAGE_PASSWORD: [REDACTED]")
     
     env_file_path = os.path.join(constants.MULTIMODAL_APPLICATION_DIRECTORY, ".env")
