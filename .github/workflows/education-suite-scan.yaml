@@ -48,7 +48,7 @@ jobs:
           scan-scope: "all"
           scan_target: "education-ai-suite/"  
           severity: "HIGH,CRITICAL"  
-          format: "spdx-json"
+          sbom_format: "spdx-json"
           scanners: "vuln"
           report_suffix: "-education-ai-suite-spdx-trivy"
           generate_sbom: "true"
