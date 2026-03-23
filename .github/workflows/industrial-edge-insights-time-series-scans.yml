@@ -969,6 +969,8 @@ jobs:
 
       - name: Run Pylint
         run: |
+          pwd
+          ls
           pylint manufacturing-ai-suite/industrial-edge-insights-time-series/*.py > manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt || true
       
       - name: Upload Pylint report
