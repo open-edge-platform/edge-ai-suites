@@ -10,4 +10,4 @@ For full setup, usage, and contribution guide, see [**Read the Detailed Document
 
 ## Disclaimer
 
-This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**.
+This software is provided for **development and evaluation purposes only** and is **not intended for clinical or diagnostic use**
