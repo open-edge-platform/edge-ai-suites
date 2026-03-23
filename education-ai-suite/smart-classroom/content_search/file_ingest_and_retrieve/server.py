@@ -21,13 +21,12 @@ from content_search.file_ingest_and_retrieve.indexer import Indexer
 from content_search.file_ingest_and_retrieve.retriever import ChromaRetriever
 from utils.config_loader import config
 
-logger = logging.getLogger("visual_data_service")
 logging.basicConfig(
     level=logging.INFO,
     format="[%(levelname)s] %(asctime)s.%(msecs)03d [%(name)s]: %(message)s",
     datefmt='%Y-%m-%d %H:%M:%S'
 )
-logger.addHandler(logging.StreamHandler())
+logger = logging.getLogger("visual_data_service")
 
 # Suppress noisy third-party loggers
 for _noisy in [
@@ -49,6 +48,7 @@ class RetrievalRequest(BaseModel):
 class IngestMinioDirRequest(BaseModel):
     bucket_name: str
     folder_path: str
+    meta: dict = {}
     frame_extract_interval: int = 15
     do_detect_and_crop: bool = False
 
@@ -58,6 +58,12 @@ class IngestMinioFileRequest(BaseModel):
     meta: dict = {}
     frame_extract_interval: int = 15
     do_detect_and_crop: bool = False
+
+class IngestTextRequest(BaseModel):
+    bucket_name: Optional[str] = None
+    file_path: Optional[str] = None
+    text: str
+    meta: dict = {}
 
 app = FastAPI()
 
@@ -124,6 +130,7 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
     try:
         bucket_name = request.bucket_name
         folder_path = request.folder_path
+        meta = request.meta
         frame_extract_interval = request.frame_extract_interval
         do_detect_and_crop = request.do_detect_and_crop
 
@@ -148,9 +155,9 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
                 local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
                 store.get_file(object_name, local_file_path)
                 
-                meta = {"file_path": f"minio://{bucket_name}/{object_name}"}
+                file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
                 proc_files.append(local_file_path)
-                metas.append(meta)
+                metas.append(file_meta)
 
             if not proc_files:
                 return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
@@ -194,6 +201,27 @@ async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file from MinIO: {str(e)}")
+
+@app.post("/v1/dataprep/ingest_text")
+async def ingest_text(request: IngestTextRequest):
+    """
+    Ingest a raw text string as a single node (no chunking) into the document collection.
+    """
+    try:
+        if not request.text:
+            raise HTTPException(status_code=400, detail="'text' must be a non-empty string.")
+        meta = dict(request.meta)
+        if request.bucket_name and request.file_path:
+            meta["file_path"] = f"minio://{request.bucket_name}/{request.file_path}"
+        else:
+            logger.info("'bucket_name' and 'file_path' not provided, will ingest as independent text")
+        res = indexer.ingest_text(request.text, meta)
+        return JSONResponse(content={"message": f"Text successfully ingested. db returns {res}"}, status_code=200)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error ingesting text: {str(e)}")
+
 
 @app.get("/v1/dataprep/get")
 def get_file_info(file_path: str):
