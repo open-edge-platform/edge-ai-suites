@@ -62,9 +62,9 @@ README.md          @xwu2intel
 /metro-ai-suite/                                                 @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard
 /metro-ai-suite/README.md                                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/deterministic-threat-detection/                  @rrajore @sugnanprabhu @xwu2intel
-/metro-ai-suite/deterministic-threat-detection/docs/             @rrajore @sugnanprabhu @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/deterministic-threat-detection/README.md         @rrajore @sugnanprabhu @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/deterministic-threat-detection/                  @rrajore @sugnanprabhu @xwu2intel @ajagadi1
+/metro-ai-suite/deterministic-threat-detection/docs/             @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/deterministic-threat-detection/README.md         @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
 
 
 /metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol
