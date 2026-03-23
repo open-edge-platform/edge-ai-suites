@@ -9,7 +9,7 @@ The main features are as follows:
 -	Summarization using powerful LLMs (e.g., Qwen, LLaMA)
 -	Plug-and-play architecture for integrating new ASR and LLM models
 -	API-first design ready for frontend integration
-- Extensible roadmap for real-time streaming, diarization, translation, and video analysis
+-   Extensible roadmap for real-time streaming, diarization, translation, and video analysis
   
 **Video Intelligence**
 - Front Camera Pipeline: Student **pose detection**: sitting, standing, hand raise, leaning
