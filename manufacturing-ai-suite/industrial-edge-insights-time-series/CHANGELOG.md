@@ -7,27 +7,65 @@ All notable changes to this project are documented in this file.
 ### Added
 - Added a new guide for writing UDFs with architecture, implementation steps, and examples. ([#1565])
 - Added wind turbine model selection and integration guidelines documentation. ([#1680])
+- Added troubleshooting step for `docker exec` failures on EMT OS with Alpine-based images. ([#2032])
+- Added Make target to package and push Helm charts to an OCI registry. ([#1842])
+- Added virtual environment creation steps for OPC-UA subscriber Python package installation. ([#1880])
 
 ### Changed
-- Updated image tags/versioning to `2026.0-weekly` and aligned deployment/documentation examples. ([#1616])
-- Updated third-party service image versions used by time-series (Telegraf, Grafana, Eclipse Mosquitto). ([#1857])
+- Updated image tags/versioning to `2026.0` and aligned deployment/documentation examples. ([#1616])
+- Updated third-party service image versions: Telegraf (1.38.0), Grafana (12.3.3-ubuntu), Eclipse Mosquitto (2.0.22), nginx (1.29.5-trixie-perl). ([#1857], [#2050], [#2114], [#2029])
+- Added `--non-strict-env-handling` flag to Telegraf entrypoints. ([#2114])
+- Applied stricter permissions (`chmod 600`) to `.env` and `helm/values.yaml` config files in Makefile. ([#2071])
+- Bumped catboost from 1.2.8 to 1.2.10 in UDF requirements. ([#2025])
+- Added supplemental/group ID (993) for time-series analytics microservice for WSF benchmarking. ([#2025])
+- Updated third-party program notices to reflect new dependency versions. ([#1975])
+- Removed Weld Anomaly Detection examples from OPC-UA alert configuration docs; added venv steps. ([#1880])
 - Reorganized IEI Time Series how-to guides for better navigation. ([#1674])
 - Updated IEI Time documentation toctree structure. ([#1563])
 - Updated IEI MM/Time shared documentation link blocks. ([#1557])
 
-### Fixed
-- Fixed failing code blocks in IEI Time Series documentation. ([#1749])
-- Fixed formatting issues in Wind Turbine Anomaly documentation. ([#1750])
+### Security
+- Updated cryptography package from 44.0.1 to 46.0.5 to address security vulnerabilities. ([#1867])
+- Updated InfluxDB image from 1.11.8 to 1.12.2. ([#1867])
+- Added comprehensive pod-level and container-level security contexts (runAsNonRoot, seccompProfile) to 11 Helm templates. ([#1867])
 
-[#1557]: https://github.com/open-edge-platform/edge-ai-suites/commit/e63b15a2cd239b2790e9a8f65701d707ba52c59f
-[#1563]: https://github.com/open-edge-platform/edge-ai-suites/commit/baa60034349183af336b2b59a74ad23201f97886
-[#1565]: https://github.com/open-edge-platform/edge-ai-suites/commit/d87d601baa7f0e3a700bacb0697914ef74e85716
-[#1616]: https://github.com/open-edge-platform/edge-ai-suites/commit/de0e80fe4207c460992fad6b9c83bd0bad77e101
-[#1674]: https://github.com/open-edge-platform/edge-ai-suites/commit/9263a3ec62d2a74388d7dc98a3ea17d3e9dacba1
-[#1680]: https://github.com/open-edge-platform/edge-ai-suites/commit/0645cae4adf850bab4a298c1eb5b5274570ec699
-[#1749]: https://github.com/open-edge-platform/edge-ai-suites/commit/f94a2229d41d24d70605c35584c8dd965ce4175a
-[#1750]: https://github.com/open-edge-platform/edge-ai-suites/commit/cdd1c24f176afe325738430442529ecb02602f9d
-[#1857]: https://github.com/open-edge-platform/edge-ai-suites/commit/063dc25fbfad836e9f8aa72ff7db797edf5e7cc9
+### Fixed
+- Fixed system metrics dashboard deployment for wind-turbine app by removing problematic Telegraf docker input options. ([#1931])
+- Fixed broken link in documentation. ([#1964])
+- Fixed failing code blocks in Time Series documentation. ([#1749])
+- Fixed formatting issues in Wind Turbine Anomaly documentation. ([#1750])
+- Fixed release notes to reflect correct scope for 2026.0. ([#2030])
+
+### Documentation
+- Updated documentation references for 2026.0 release branch. ([#1957], [#2090])
+
+---
+
+[#1557]: https://github.com/open-edge-platform/edge-ai-suites/pull/1557
+[#1563]: https://github.com/open-edge-platform/edge-ai-suites/pull/1563
+[#1565]: https://github.com/open-edge-platform/edge-ai-suites/pull/1565
+[#1616]: https://github.com/open-edge-platform/edge-ai-suites/pull/1616
+[#1674]: https://github.com/open-edge-platform/edge-ai-suites/pull/1674
+[#1680]: https://github.com/open-edge-platform/edge-ai-suites/pull/1680
+[#1749]: https://github.com/open-edge-platform/edge-ai-suites/pull/1749
+[#1750]: https://github.com/open-edge-platform/edge-ai-suites/pull/1750
+[#1842]: https://github.com/open-edge-platform/edge-ai-suites/pull/1842
+[#1857]: https://github.com/open-edge-platform/edge-ai-suites/pull/1857
+[#1867]: https://github.com/open-edge-platform/edge-ai-suites/pull/1867
+[#1880]: https://github.com/open-edge-platform/edge-ai-suites/pull/1880
+[#1931]: https://github.com/open-edge-platform/edge-ai-suites/pull/1931
+[#1957]: https://github.com/open-edge-platform/edge-ai-suites/pull/1957
+[#1964]: https://github.com/open-edge-platform/edge-ai-suites/pull/1964
+[#1975]: https://github.com/open-edge-platform/edge-ai-suites/pull/1975
+[#2025]: https://github.com/open-edge-platform/edge-ai-suites/pull/2025
+[#2029]: https://github.com/open-edge-platform/edge-ai-suites/pull/2029
+[#2030]: https://github.com/open-edge-platform/edge-ai-suites/pull/2030
+[#2032]: https://github.com/open-edge-platform/edge-ai-suites/pull/2032
+[#2050]: https://github.com/open-edge-platform/edge-ai-suites/pull/2050
+[#2071]: https://github.com/open-edge-platform/edge-ai-suites/pull/2071
+[#2083]: https://github.com/open-edge-platform/edge-ai-suites/pull/2083
+[#2090]: https://github.com/open-edge-platform/edge-ai-suites/pull/2090
+[#2114]: https://github.com/open-edge-platform/edge-ai-suites/pull/2114
 
 ## [2025.2] - December 2025
 
