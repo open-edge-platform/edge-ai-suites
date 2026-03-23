@@ -8,6 +8,17 @@ Symptoms:
 Hardware:
 - Issue observed on BMG-580 discrete GPU.
 
+## RTSP Stream not reachable from Live Video Captioning Application
+
+Symptoms:
+- Stream not able to play or pipline not able to start
+- DLSPS container shows logs as below:
+     ```
+     dlstreamer-pipeline-server  | 0:01:06.194223369     8 0x7060180012c0 ERROR           default gstrtspconnection.c:1291:gst_rtsp_connection_connect_with_response_usec: failed to connect: Could not connect to 10.102.14.14: Socket I/O timed out
+     ```
+Checks:
+- Include rtsp stream ip in no_proxy environment variable.
+
 ## WebRTC connectivity issues
 
 Symptoms:
