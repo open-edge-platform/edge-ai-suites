@@ -948,21 +948,19 @@ jobs:
   pylint-time-series-job:
     name: Pylint Scan - Time Series Python
     if: ${{ ((inputs.target == 'pylint-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'time-series') || (inputs.application == 'both')) }}
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ubuntu_version: ubuntu24
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.3.0
         with:
-          python-version: '3.11'  # or any version you need
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -971,32 +969,30 @@ jobs:
 
       - name: Run Pylint
         run: |
-          pylint manufacturing-ai-suite/industrial-edge-insights-time-series/*  .py > manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt || true
+          pylint manufacturing-ai-suite/industrial-edge-insights-time-series/*.py > manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt || true
       
       - name: Upload Pylint report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
         with:
-          name: pylint-report
+          name: pylint-timeseries-report
           path: manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt
   
   pylint-multimodal-job:
     name: Pylint Scan - Multimodal Python
     if: ${{ ((inputs.target == 'pylint-scan') || (inputs.target == 'all-scans')) && ((inputs.application == 'multimodal') || (inputs.application == 'both')) }}
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ubuntu_version: ubuntu24
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.3.0
         with:
-          python-version: '3.11'  # or any version you need
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
@@ -1008,8 +1004,8 @@ jobs:
           pylint manufacturing-ai-suite/industrial-edge-insights-multimodal/*.py > manufacturing-ai-suite/industrial-edge-insights-multimodal/pylint-report.txt || true
       
       - name: Upload Pylint report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
         with:
-          name: pylint-report
+          name: pylint-multimodal-report
           path: manufacturing-ai-suite/industrial-edge-insights-multimodal/pylint-report.txt
 
