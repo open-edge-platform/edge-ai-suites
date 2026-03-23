@@ -6,7 +6,7 @@ This tutorial will guide you through profiling and monitoring performance of Met
 
 - Ubuntu 22.04 or later
 - Docker installed and configured
-- Intel hardware with CPU and/or GPU
+- Intel® Core™, Intel® Core™ Ultra and Intel integrated graphics card
 - Administrative privileges for performance monitoring
 - Internet connection for downloading model and video files
 
@@ -68,6 +68,7 @@ CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
 DEVICE=GPU
+RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
 echo "Starting Metro Vision AI Pipeline with Docker DLStreamer..."
@@ -94,6 +95,7 @@ while true; do
     # Run DLStreamer pipeline in Docker container with object detection
     docker run --rm \
         --device /dev/dri:/dev/dri \
+        --group-add $RENDER_GROUP_ID \
         -v "$CURRENT_DIR:/workspace" \
         -v $HOME/.Xauthority:/root/.Xauthority:rw \
         -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
