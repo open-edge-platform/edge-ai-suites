@@ -25,13 +25,13 @@ Choose **one** of the following approaches to get the Helm charts:
 1. Download Helm chart:
 
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0-rc2
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.0.0
     ```
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.0.0-rc2.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.0.0.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
@@ -61,13 +61,13 @@ Choose **one** of the following approaches to get the Helm charts:
 1. Download Helm chart:
 
    ```bash
-   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0-rc2
+   helm pull oci://registry-1.docker.io/intel/weld-anomaly-detection-sample-app --version 2026.0.0
    ```
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf weld-anomaly-detection-sample-app-2026.0.0-rc2.tgz
+   tar -xvzf weld-anomaly-detection-sample-app-2026.0.0.tgz
    cd weld-anomaly-detection-sample-app
    ```
 
