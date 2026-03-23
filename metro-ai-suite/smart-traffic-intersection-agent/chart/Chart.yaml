@@ -5,5 +5,5 @@ apiVersion: v2
 name: smart-traffic-intersection-agent
 description: A Helm chart for deploying the Smart Traffic Intersection Agent application
 type: application
-version: 1.0.0-rc2-helm
+version: 1.0.0-helm
 appVersion: "1.0.0"
