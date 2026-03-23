@@ -969,9 +969,7 @@ jobs:
 
       - name: Run Pylint
         run: |
-          pwd
-          ls
-          pylint manufacturing-ai-suite/industrial-edge-insights-time-series/*.py > manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt || true
+          pylint manufacturing-ai-suite/industrial-edge-insights-time-series/ > manufacturing-ai-suite/industrial-edge-insights-time-series/pylint-report.txt || true
       
       - name: Upload Pylint report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
@@ -1003,7 +1001,7 @@ jobs:
 
       - name: Run Pylint
         run: |
-          pylint manufacturing-ai-suite/industrial-edge-insights-multimodal/*.py > manufacturing-ai-suite/industrial-edge-insights-multimodal/pylint-report.txt || true
+          pylint manufacturing-ai-suite/industrial-edge-insights-multimodal/ > manufacturing-ai-suite/industrial-edge-insights-multimodal/pylint-report.txt || true
       
       - name: Upload Pylint report
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
