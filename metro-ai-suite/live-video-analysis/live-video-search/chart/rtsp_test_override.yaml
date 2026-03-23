@@ -6,6 +6,9 @@ rtspTest:
 frigate-vms:
   frigate:
     mode: rtsp
+  service:
+    frigate:
+      nodePort: null
 
 rtsp-test:
   frigate:
@@ -13,6 +16,23 @@ rtsp-test:
   rtspTest:
     enabled: true
 
+nginx:
+  service:
+    app:
+      nodePort: null
+
+minio-service:
+  service:
+    minioApi:
+      nodePort: null
+    minioConsole:
+      nodePort: null
+
+nvr-event-router:
+  service:
+    nvrEventRouter:
+      nodePort: null
+
 vss-collector:
   telemetry:
-    enabled: false
+    enabled: true
