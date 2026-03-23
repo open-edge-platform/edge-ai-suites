@@ -14,7 +14,7 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 | Component | Minimum | Recommended |
 |---|---|---|
 | CPU | Intel® Core™ i5 or equivalent | Intel® Core™ Ultra or Intel® Xeon® processor |
-| RAM | 32 GB | 64 GB or more |
+| RAM | 16 GB free | 32 GB or more free |
 | Disk Space | 50 GB free | 100 GB free |
 | GPU (optional) | — | Intel® integrated GPU (iGPU) for accelerated VLM inference |
 | Network | Internet access for weather API and model downloads | — |
