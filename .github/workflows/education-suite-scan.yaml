@@ -41,7 +41,7 @@ jobs:
           report_suffix: "-fs-education-ai-suite-trivy"
 
       - name: Run trivy Scan - education-suite (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@d64efeaffbf1cd2d2ac98696782a4888cde0e9f9
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@eb290d9bd748faae3ee425c625ccadc8af0ed377
         id: videosummary-frontend-spdx
         with:
           scan_type: "fs"  
