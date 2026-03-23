@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       
       - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@d64efeaffbf1cd2d2ac98696782a4888cde0e9f9
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-fs
         with:
           scan_type: "fs"  
@@ -41,14 +41,14 @@ jobs:
           report_suffix: "-fs-education-ai-suite-trivy"
 
       - name: Run trivy Scan - education-suite (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@d64efeaffbf1cd2d2ac98696782a4888cde0e9f9
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: videosummary-frontend-spdx
         with:
           scan_type: "fs"  
           scan-scope: "all"
           scan_target: "education-ai-suite/"  
           severity: "HIGH,CRITICAL"  
-          sbom_format: "spdx-json"
+          format: "spdx-json"
           scanners: "vuln"
           report_suffix: "-education-ai-suite-spdx-trivy"
           generate_sbom: "true"
