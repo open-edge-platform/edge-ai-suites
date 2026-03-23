@@ -67,7 +67,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
+  intel/dlstreamer:2026.0.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -109,7 +109,7 @@ while true; do
         --group-add $RENDER_GROUP_ID \
         -v "$CURRENT_DIR:/workspace" \
         -w /workspace \
-        intel/dlstreamer:2026.0.0-ubuntu24-rc3  \
+        intel/dlstreamer:2026.0.0-ubuntu24  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
