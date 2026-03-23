@@ -1,17 +1,18 @@
 # Content Search Feature
 
+## File Ingest and Retrieve
 This file shows steps to set up and run content search feature.
 For full develop guide and API Reference, please see the [Dev Guide](docs/dev_guide/).
 
-## Setup
+### Setup
 
-### Prerequisites
+#### Prerequisites
 
 - **Python 3.10** — only this version is verified on Windows: https://www.python.org/downloads/
 - **Rust compiler** — required by some dependencies: https://rust-lang.org/tools/install
 - **`multimodal_embedding_serving` wheel** — obtain from [this guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/wheel-installation.md) (use verified commit `77b812f`). Place the `.whl` file in the `content_search/` folder before running `install.ps1`.
 
-### Install System Dependencies
+#### Install System Dependencies
 
 Run `install.ps1` once to set up the environment (requires admin):
 - Creates the Python 3.10 venv
@@ -27,7 +28,7 @@ cd content_search
 
 > **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
 
-#### LibreOffice (Optional)
+##### LibreOffice (Optional)
 
 This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
 
@@ -44,7 +45,7 @@ This is for legacy **.doc/.ppt/.xls** support, only install if such formats requ
    shutil.which("soffice") is not None
    ```
 
-## Start service
+### Start service
 
 ```powershell
 # 1. Optional: set proxy if needed
@@ -63,3 +64,16 @@ $env:http_proxy="<your_http_proxy>"
 All settings (ports, credentials, paths) are read from `../config.yaml`.
 
 ---
+## Backend and other components
+
+### Prerequisites
+- **Python 3.12.x**
+- **Conda**
+
+For conda installation please refers to [Backend Setup](./backend/README.md#environment-setup)
+### Env Setup
+```powershell
+conda env create -f conda_env.yml
+# if conda env not exist
+conda env update -n edu-ai -f conda_env.yml
+```
