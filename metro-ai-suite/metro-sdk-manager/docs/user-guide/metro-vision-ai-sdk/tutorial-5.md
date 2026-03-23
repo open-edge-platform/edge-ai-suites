@@ -178,8 +178,9 @@ sudo intel_gpu_top
 - GPU frequency and power consumption
 - Memory usage and bandwidth
 
-![Tutorial 5 GPU Top Output](images/tutorial-5-gpu-top.png)
+**Expected Console Output:**
 
+![Tutorial 5 GPU Top Output](images/tutorial-5-gpu-top.png)
 
 ## Step 6: Stop the Running Pipeline
 
