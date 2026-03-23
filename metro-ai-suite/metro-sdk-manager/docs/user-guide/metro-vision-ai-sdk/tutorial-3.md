@@ -302,10 +302,10 @@ python3 /home/openvino/inference.py
 
 ```bash
 # High precision detection (lower false positives)
-python3 inference.py --conf 0.6 --iou 0.3
+python3 /home/openvino/inference.py --conf 0.6 --iou 0.3
 
 # High recall detection (catch more objects)
-python3 inference.py --conf 0.3 --iou 0.5
+python3 /home/openvino/inference.py --conf 0.3 --iou 0.5
 ```
 
 ## Understanding the Application
