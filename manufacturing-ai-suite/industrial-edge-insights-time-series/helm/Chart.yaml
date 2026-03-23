@@ -5,8 +5,8 @@
 #
 
 apiVersion: v2
-name: weld-anomaly-detection-sample-app
-description: Helm charts for weld-anomaly-detection sample app
+name: wind-turbine-anomaly-detection-sample-app
+description: Helm charts for wind-turbine-anomaly-detection sample app
 
 # A chart can be either an 'application' or a 'library' chart.
 #
