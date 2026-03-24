@@ -170,6 +170,11 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 * Pattern: SYNC
 
+Request:
+```
+curl --location 'http://127.0.0.1:8000/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+```
+
 Response (200 OK):
 ```json
 {
@@ -200,7 +205,7 @@ Used to upload a video file and initiate an asynchronous background task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/file-upload' \
+curl --location 'http://127.0.0.1:8000/api/v1/media/upload' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
@@ -220,14 +225,27 @@ Response (200 OK):
 * URL: /api/v1/media/ingest
 * Method: POST
 * Pattern: ASYNC
-
+Request:
+```
+// todo
+```
+Response:
+```json
+// todo
+```
 
 ### File upload ana ingestion
 * URL: /api/v1/media/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
 * Pattern: ASYNC
-  
+
+Request:
+```
+curl --location 'http://127.0.0.1:8000/api/v1/media/upload-ingest' \
+--form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
+```
+Response (200 OK):
 ```json
 {
     "code": 20000,
