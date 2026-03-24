@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -30,18 +30,11 @@ async def upload_video(file: UploadFile = File(...), db: Session = Depends(get_d
 
 @router.post("/upload-ingest")
 async def upload_file_with_ingest(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...), 
     db: Session = Depends(get_db)
 ):
     minio_payload = await storage_service.upload_and_prepare_payload(file)
-
     result = await task_service.handle_file_upload(db, minio_payload)
-
-    background_tasks.add_task(
-        search_service.trigger_ingest, 
-        minio_payload["file_key"]
-    )
     return resp_200(
         data={
             "task_id": str(result["task_id"]),
@@ -55,11 +48,11 @@ async def upload_file_with_ingest(
 async def file_search(payload: dict):
     query = payload.get("query")
     limit = payload.get("max_num_results", 3)
-    
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    return await search_service.semantic_search(query, limit)
+    search_data = await search_service.semantic_search(query, limit)
+    return resp_200(data=search_data, message="Resource found")
 
 @router.get("/download")
 async def download_file(file_key: str):

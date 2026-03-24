@@ -15,7 +15,6 @@ class SearchService:
     async def trigger_ingest(self, file_path: str, bucket_name: str = None):
         target_bucket = bucket_name or self.default_bucket
         payload = {"bucket_name": target_bucket, "file_path": file_path}
-        
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(self.ingest_url, json=payload, timeout=120.0)

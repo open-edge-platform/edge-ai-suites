@@ -7,16 +7,9 @@ from sqlalchemy.pool import StaticPool
 
 from database import Base, get_db
 from main import app
-from core.models import AITask 
-
-# --- Database Fixtures ---
 
 @pytest.fixture(scope="session")
 def engine():
-    """
-    Create a database engine.
-    Uses StaticPool to ensure all connections share the same in-memory SQLite database.
-    """
     return create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
@@ -25,57 +18,50 @@ def engine():
 
 @pytest.fixture
 def mock_db_session(engine):
-    """
-    Mock the database session.
-    1. Reset database tables before each test.
-    2. Create an isolated session.
-    3. Override the FastAPI get_db dependency.
-    4. Clean up after the test.
-    """
-    # 1. Reset database tables
-    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
-    
-    # 2. Create an independent Session
     TestingSessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
     session = TestingSessionLocal()
 
-    # 3. Inject dependency override into FastAPI
     app.dependency_overrides[get_db] = lambda: session
-    
     yield session
     
-    # 4. Cleanup: Close session and clear overrides
     session.close()
+    Base.metadata.drop_all(bind=engine)
     app.dependency_overrides.clear()
 
 @pytest.fixture
 def client(mock_db_session):
-    """
-    Provide a TestClient with the mocked database session injected.
-    """
     return TestClient(app)
 
-# --- Infrastructure Mocks ---
-
+TARGET_ROUTER = "api.v1.endpoints.media" 
 @pytest.fixture
-def mock_redis():
-    """
-    Global Mock for Redis client.
-    The path points to services.task_service because that's where it is imported.
-    """
-    with patch("services.task_service.redis_client") as m:
-        # Default ping to return True to simulate a healthy connection
-        m.ping.return_value = True
+def mock_storage():
+    with patch(f"{TARGET_ROUTER}.storage_service", new_callable=AsyncMock) as m:
+        m.upload_and_prepare_payload.return_value = {
+            "file_key": "runs/5a477a66-bf88-4ebb-8cb6-0058811f5836/raw/video/default/car-detection-2min.mp4",
+            "run_id": "5a477a66-bf88-4ebb-8cb6-0058811f5836"
+        }
         yield m
 
 @pytest.fixture
-def mock_ai_processor():
-    """
-    Global Mock for synchronous AI logic.
-    The path points to services.task_service where the logic is invoked.
-    """
-    with patch("services.task_service.run_dummy_ai_logic", new_callable=AsyncMock) as m:
-        # Set a default mock result for successful AI processing
-        m.return_value = {"summary": "Mocked AI Result", "status": "success"}
+def mock_task_service():
+    with patch(f"{TARGET_ROUTER}.task_service", new_callable=AsyncMock) as m:
+        m.handle_file_upload.return_value = {
+            "task_id": "c68211de-2187-4f52-b47d-f3a51a52b9ca",
+            "status": "QUEUED"
+        }
+        yield m
+
+@pytest.fixture
+def mock_search_service():
+    with patch(f"{TARGET_ROUTER}.search_service", new_callable=AsyncMock) as m:
+        m.semantic_search.return_value = {
+            "resource_id": "res-999",
+            "type": "video",
+            "name": "tutorial_01.mp4",
+            "url": "https://cdn.example.com/files/tutorial_01.mp4",
+            "created_at": 1709184000
+        }
+
+        m.trigger_ingest.return_value = {"status": "success"}
         yield m
