@@ -285,6 +285,30 @@ class Indexer:
         
         return entities
 
+    def process_text(self, text: str, meta: dict) -> list:
+        """Embed a raw text string as a single node (no chunking)."""
+        meta_data = copy.deepcopy(meta)
+        meta_data["chunk_text"] = text
+        meta_data["chunk_index"] = 0
+
+        embedding = self.get_document_embedding(text)
+
+        if not self.document_db_inited:
+            self.init_document_db_client(len(embedding))
+
+        node = create_chroma_data(embedding, meta_data)
+        self._update_id_map(self.document_id_map, meta_data["file_path"], node["id"])
+        return [node]
+
+    def ingest_text(self, text: str, meta: dict) -> dict:
+        """Ingest a single text string into the document collection without chunking."""
+        if not text or not isinstance(text, str):
+            raise ValueError("text must be a non-empty string.")
+
+        meta = {**meta, "type": "document", "doc_filetype": "text/plain"}
+        entities = self.process_text(text, meta)
+        return self.client.insert(collection_name=self.document_collection_name, data=entities)
+
     def add_embedding(self, files, metas, **kwargs):
         if len(files) != len(metas):
             raise ValueError(f"Number of files and metas must be the same. files: {len(files)}, metas: {len(metas)}")
