@@ -84,8 +84,8 @@ stateDiagram-v2
 | Endpoint | Method | Pattern | Description | Status |
 | :--- | :---: | :---: | :--- | :---: |
 | `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
-| `/api/v1/task/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
-| `/api/v1/task/tasks` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | WIP |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
+| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
 | `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
 | `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
 | `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
@@ -97,10 +97,74 @@ stateDiagram-v2
 | `/api/v1/media/download` | **POST** | STREAM | Download file from MinIO | DONE |
 | `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
 
+### Get Task List
+
+* URL: /api/v1/task/list
+
+* Method: GET
+
+* Pattern: SYNC
+
+Query Parameters:
+| Parameter | Type    | Required | Default | Description                                         |
+| :-------- | :------ | :------- | :------ | :-------------------------------------------------- |
+| `status`  | string  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `limit`   | integer | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
+
+Request:
+```
+curl --location 'http://127.0.0.1:8000/api/v1/task/list?status=COMPLETED&limit=2'
+```
+Response (200 OK)
+```json
+{
+    "code": 20000,
+    "data": [
+        {
+            "status": "COMPLETED",
+            "payload": {
+                "source": "minio",
+                "file_key": "runs/f52c2905-fb78-4ddd-a89e-9fb673546740/raw/application/default/apple_loop100.h265",
+                "bucket": "content-search",
+                "filename": "apple_loop100.h265",
+                "run_id": "f52c2905-fb78-4ddd-a89e-9fb673546740"
+            },
+            "result": {
+                "message": "File from MinIO successfully processed. db returns {}"
+            },
+            "progress": 0,
+            "task_type": "file_search",
+            "id": "56cc417c-9524-41a9-a500-9f0c44a05eac",
+            "user_id": "admin",
+            "created_at": "2026-03-24T12:50:34.281421"
+        },
+        {
+            "status": "COMPLETED",
+            "payload": {
+                "source": "minio",
+                "file_key": "runs/2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c/raw/application/default/apple_loop100.h265",
+                "bucket": "content-search",
+                "filename": "apple_loop100.h265",
+                "run_id": "2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c"
+            },
+            "result": {
+                "message": "File from MinIO successfully processed. db returns {}"
+            },
+            "progress": 0,
+            "task_type": "file_search",
+            "id": "8032db45-129b-4474-8d58-122f33661f19",
+            "user_id": "admin",
+            "created_at": "2026-03-24T12:48:13.301178"
+        }
+    ],
+    "message": "Success",
+    "timestamp": 1774330753
+}
+```
 ### Task Status Polling
 Used to track the progress and retrieve the final result of a submitted task.
 
-* URL: /api/v1/task/{task_id}
+* URL: /api/v1/task/query/{task_id}
 
 * Method: GET
 
