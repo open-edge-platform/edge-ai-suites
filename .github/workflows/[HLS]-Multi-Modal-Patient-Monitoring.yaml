@@ -49,6 +49,11 @@ jobs:
           scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
           report_suffix: "-CT7-spdx"
       
+      - name: Update submodule
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/
+          git submodule update --init services/mdpnp/mdpnp
+          
       - name: Build Docker image - 3d-pose-estimation
         run: |
           cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/3d-pose-estimation/
@@ -95,7 +100,7 @@ jobs:
           docker build -t multi-modal-ui:latest -f Dockerfile .
 
       - name: Run trivy Scan - 3d-pose-estimation
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-3d-pose-estimation
         with:
           scan_type: "image"  
@@ -106,7 +111,7 @@ jobs:
           report_suffix: "-CT248-3d-pose-estimation"
 
       - name: Run trivy Scan (SPDX) - 3d-pose-estimation
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-3d-pose-estimation-spdx
         with:
           scan_type: "image"  
@@ -117,7 +122,7 @@ jobs:
           report_suffix: "-CT248-3d-pose-estimation-spdx"
 
       - name: Run trivy Scan - ai-ecg-backend
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-ai-ecg-backend
         with:
           scan_type: "image"  
@@ -128,7 +133,7 @@ jobs:
           report_suffix: "-CT248-ai-ecg-backend"
 
       - name: Run trivy Scan (SPDX) - ai-ecg-backend
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-ai-ecg-backend-spdx
         with:
           scan_type: "image"  
@@ -139,7 +144,7 @@ jobs:
           report_suffix: "-CT248-ai-ecg-backend-spdx"
 
       - name: Run trivy Scan - dds-bridge
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-dds-bridge
         with:
           scan_type: "image"  
@@ -150,7 +155,7 @@ jobs:
           report_suffix: "-CT248-dds-bridge"
 
       - name: Run trivy Scan (SPDX) - dds-bridge
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-dds-bridge-spdx
         with:
           scan_type: "image"  
@@ -161,7 +166,7 @@ jobs:
           report_suffix: "-CT248-dds-bridge-spdx"
 
       - name: Run trivy Scan - mdpnp
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-mdpnp
         with:
           scan_type: "image"  
@@ -172,7 +177,7 @@ jobs:
           report_suffix: "-CT248-mdpnp"
 
       - name: Run trivy Scan (SPDX) - mdpnp
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-mdpnp-spdx
         with:
           scan_type: "image"  
@@ -183,7 +188,7 @@ jobs:
           report_suffix: "-CT248-mdpnp-spdx"
 
       - name: Run trivy Scan - metrics-collector
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-metrics-collector
         with:
           scan_type: "image"  
@@ -194,7 +199,7 @@ jobs:
           report_suffix: "-CT248-metrics-collector"
 
       - name: Run trivy Scan (SPDX) - metrics-collector
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-metrics-collector-spdx
         with:
           scan_type: "image"  
@@ -205,7 +210,7 @@ jobs:
           report_suffix: "-CT248-metrics-collector-spdx"
 
       - name: Run trivy Scan - patient-monitoring-aggregator
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-patient-monitoring-aggregator
         with:
           scan_type: "image"  
@@ -216,7 +221,7 @@ jobs:
           report_suffix: "-CT248-patient-monitoring-aggregator"
 
       - name: Run trivy Scan (SPDX) - patient-monitoring-aggregator
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-patient-monitoring-aggregator-spdx
         with:
           scan_type: "image"  
@@ -227,7 +232,7 @@ jobs:
           report_suffix: "-CT248-patient-monitoring-aggregator-spdx"
 
       - name: Run trivy Scan - patient-monitoring-assets
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-patient-monitoring-assets
         with:
           scan_type: "image"  
@@ -238,7 +243,7 @@ jobs:
           report_suffix: "-CT248-patient-monitoring-assets"
 
       - name: Run trivy Scan (SPDX) - patient-monitoring-assets
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-patient-monitoring-assets-spdx
         with:
           scan_type: "image"  
@@ -249,7 +254,7 @@ jobs:
           report_suffix: "-CT248-patient-monitoring-assets-spdx"
 
       - name: Run trivy Scan - rppg
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-rppg
         with:
           scan_type: "image"  
@@ -260,7 +265,7 @@ jobs:
           report_suffix: "-CT248-rppg"
 
       - name: Run trivy Scan (SPDX) - rppg
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-rppg-spdx
         with:
           scan_type: "image"  
@@ -271,7 +276,7 @@ jobs:
           report_suffix: "-CT248-rppg-spdx"
 
       - name: Run trivy Scan - ui
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-ui
         with:
           scan_type: "image"  
@@ -282,7 +287,7 @@ jobs:
           report_suffix: "-CT248-ui"
 
       - name: Run trivy Scan (SPDX) - ui
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-ui-spdx
         with:
           scan_type: "image"  
@@ -293,7 +298,7 @@ jobs:
           report_suffix: "-CT248-ui-spdx"
       
       - name: Scan Dockerfiles with Trivy
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         with:
           scan_type: "config"
           scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services"
