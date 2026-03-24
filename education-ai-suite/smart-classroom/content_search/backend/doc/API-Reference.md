@@ -29,7 +29,7 @@ Content-Type: application/json
 ```
 ---
 
-## Status Codes
+## Status Codes and Task
 
 ### HTTP Status Codes (Network Layer)
 | Code | Meaning | Frontend Handling Suggestion |
@@ -52,11 +52,6 @@ Content-Type: application/json
 | 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
 
 ---
-
-## Core Endpoints
-### Architecture Note
-All endpoints listed below are implemented using a **Synchronous (Sync)** blocking pattern on the server side. To handle long-running background tasks (such as video processing), the system utilizes a **Client-side Polling** mechanism. The backend will immediately return a `task_id` upon submission, and the Frontend is responsible for initiating subsequent status queries.
-
 ### Task Lifecycle & Status Enum
 The `status` field in the response follow this lifecycle:
 
@@ -67,7 +62,8 @@ The `status` field in the response follow this lifecycle:
 | PROCESSING | Task is currently being handled (e.g., transcoding). | Continue Polling (Show progress if available). |
 | COMPLETED | Task finished successfully. | Stop Polling & Show Result. |
 | FAILED | Task encountered an error. | Stop Polling & Show Error Message. |
-#### State Transition Diagram
+
+### State Transition Diagram
 ```mermaid
 stateDiagram-v2
     direction LR
@@ -79,6 +75,9 @@ stateDiagram-v2
     FAILED --> [*]
     COMPLETED --> [*]
 ```
+
+## Core Endpoints
+
 ### Endponts table
 
 | Endpoint | Method | Pattern | Description | Status |
@@ -170,6 +169,11 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 * Pattern: SYNC
 
+Request:
+```
+curl --location 'http://127.0.0.1:8000/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+```
+
 Response (200 OK):
 ```json
 {
@@ -200,7 +204,7 @@ Used to upload a video file and initiate an asynchronous background task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/file-upload' \
+curl --location 'http://127.0.0.1:8000/api/v1/media/upload' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
@@ -220,14 +224,27 @@ Response (200 OK):
 * URL: /api/v1/media/ingest
 * Method: POST
 * Pattern: ASYNC
-
+Request:
+```
+// todo
+```
+Response:
+```json
+// todo
+```
 
 ### File upload ana ingestion
 * URL: /api/v1/media/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
 * Pattern: ASYNC
-  
+
+Request:
+```
+curl --location 'http://127.0.0.1:8000/api/v1/media/upload-ingest' \
+--form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
+```
+Response (200 OK):
 ```json
 {
     "code": 20000,
