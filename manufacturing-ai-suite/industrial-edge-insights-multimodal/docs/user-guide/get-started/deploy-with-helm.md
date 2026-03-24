@@ -31,7 +31,7 @@ You can either generate or download the Helm charts.
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.0.0.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.0.0-<date>-weekly.tgz
      ```
 
 - Get into the Helm directory:
