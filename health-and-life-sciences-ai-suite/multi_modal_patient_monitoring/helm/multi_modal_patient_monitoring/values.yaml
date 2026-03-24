@@ -1,7 +1,7 @@
 namespace: ""
 replicaCount: 1
-http_proxy: "http://proxy-mu.intel.com:912"
-https_proxy: "http://proxy-mu.intel.com:912"
+http_proxy:
+https_proxy: 
 no_proxy: "localhost,127.0.0.1,.svc,.cluster.local"
  
  
