@@ -1,6 +1,6 @@
 # Multi-Modal Patient Monitoring
 
-The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU
+The Multi-Modal Patient Monitoring application helps medical AI developers and systems engineers at medical OEMs/ODMs evaluate Intel® Core™ Ultra processors for AI‑enabled patient monitoring. It demonstrates that you can run **multiple AI workloads concurrently on a single Intel‑powered edge device** without a discrete GPU.
 
 You can view four key patient monitoring workloads side‑by‑side through a GUI dashboard. Each workload displays:
 
@@ -9,7 +9,7 @@ You can view four key patient monitoring workloads side‑by‑side through a GU
 - AI‑ECG analysis
 - Remote PPG (rPPG) for contactless vital sign estimation
 
-Outputs from these workloads are consolidated into a 2×2 layout, showing each stream in its own quadrant while sharing a single Intel Core Ultra CPU + iGPU + NPU platform. This helps validate BOM reduction and deployment simplification by consolidating multi‑modal AI on one edge system
+Outputs from these workloads are consolidated into a 2×2 layout, showing each stream in its own quadrant while sharing a single Intel Core Ultra CPU + iGPU + NPU platform. This helps validate BOM reduction and deployment simplification by consolidating multi‑modal AI on one edge system.
 
 The solution is intended to:
 
