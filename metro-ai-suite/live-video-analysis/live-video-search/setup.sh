@@ -109,13 +109,13 @@ export TAG=${TAG:-latest}
 export VSS_STACK_TAG=${VSS_STACK_TAG:-$TAG}
 export SMART_NVR_STACK_TAG=${SMART_NVR_STACK_TAG:-$TAG}
 
-# Release-specific tag mapping for Live Video Search 1.0.0-rc1
-if [ "$TAG" = "1.0.0-rc1" ]; then
+# Release-specific tag mapping for Live Video Search 1.0.0
+if [ "$TAG" = "1.0.0" ]; then
     if [ -z "$VSS_STACK_TAG" ] || [ "$VSS_STACK_TAG" = "$TAG" ]; then
-        export VSS_STACK_TAG="1.3.2-rc1"
+        export VSS_STACK_TAG="1.3.2"
     fi
     if [ -z "$SMART_NVR_STACK_TAG" ] || [ "$SMART_NVR_STACK_TAG" = "$TAG" ]; then
-        export SMART_NVR_STACK_TAG="1.2.4-rc1"
+        export SMART_NVR_STACK_TAG="1.2.4"
     fi
 fi
 

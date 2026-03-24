@@ -1,6 +1,6 @@
 # Release Notes
 
-- [Version 1.2.4-rc1](#version-124-rc1)
+- [Version 1.2.4](#version-124)
 - [Version 1.2.3](#version-123)
 - [Version 1.2.2](#version-122)
 - [Version 1.2.1](#version-121)
@@ -9,9 +9,9 @@
 
 ## Current Release
 
-### Version 1.2.4-rc1
+### Version 1.2.4
 
-**Release Date**: 17 Feb 2026  
+**Release Date**: 23 Mar 2026  
 
 **New Features**:
 
