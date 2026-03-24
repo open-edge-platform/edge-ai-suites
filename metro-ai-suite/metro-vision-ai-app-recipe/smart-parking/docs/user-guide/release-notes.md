@@ -4,7 +4,7 @@
 
 **New**
 
--	Qualified on the Intel® Core™ Ultra Series 3 processor.
+- Qualified on the Intel® Core™ Ultra Series 3 processor.
 
 **Improved**
 
