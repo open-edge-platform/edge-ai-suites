@@ -49,6 +49,11 @@ jobs:
           scan_target: "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/"
           report_suffix: "-CT7-spdx"
       
+      - name: Update submodule
+        run: |
+          cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/
+          git submodule update --init services/mdpnp/mdpnp
+          
       - name: Build Docker image - 3d-pose-estimation
         run: |
           cd health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/3d-pose-estimation/
