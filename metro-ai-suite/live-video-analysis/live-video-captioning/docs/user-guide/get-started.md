@@ -12,7 +12,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- RTSP stream source (live camera or test feed). Please refer to this [guide](https://github.com/open-edge-platform/scenescape/tree/release-2026.0/tools/streamer) to create simulated RTSP test feed stram using exisiting video files.
+- RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
 - OpenVINO-compatible VLM in `ov_models/`. User may use the [script](../../download_models.sh) provided to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
 when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.
@@ -35,7 +35,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 3. **Configure Image Registry and Tag**:
      ```bash
         export REGISTRY="intel/"
-        export TAG="1.0.0-rc.1"
+        export TAG="1.0.0-rc.2"
      ```
     Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
 

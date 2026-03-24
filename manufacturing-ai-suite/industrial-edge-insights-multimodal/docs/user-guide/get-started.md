@@ -51,7 +51,7 @@ To configure Docker:
 ## Clone source code
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 
