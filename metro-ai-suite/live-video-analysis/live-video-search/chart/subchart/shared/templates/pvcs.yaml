@@ -87,9 +87,15 @@ metadata:
   labels:
     {{- include "lvs.shared.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.persistence.collectorSignals.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.collectorSignals.accessModes | nindent 4 }}
+  {{- else }}
   accessModes: ["ReadWriteOnce"]
-  {{- if .Values.persistence.storageClassName }}
-  storageClassName: {{ .Values.persistence.storageClassName }}
+  {{- end }}
+  {{- $collectorSignalsStorageClass := .Values.persistence.collectorSignals.storageClassName | default .Values.persistence.storageClassName }}
+  {{- if $collectorSignalsStorageClass }}
+  storageClassName: {{ $collectorSignalsStorageClass }}
   {{- end }}
   resources:
     requests:

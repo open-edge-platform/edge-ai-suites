@@ -36,3 +36,12 @@ nvr-event-router:
 vss-collector:
   telemetry:
     enabled: true
+  collectorSignals:
+    usePvc: true
+
+shared:
+  persistence:
+    collectorSignals:
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteMany

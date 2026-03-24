@@ -27,3 +27,14 @@ nvr-event-router:
   service:
     nvrEventRouter:
       nodePort: null
+
+vss-collector:
+  collectorSignals:
+    usePvc: true
+
+shared:
+  persistence:
+    collectorSignals:
+      storageClassName: longhorn
+      accessModes:
+        - ReadWriteMany

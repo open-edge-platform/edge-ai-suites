@@ -86,8 +86,12 @@ spec:
           configMap:
             name: {{ include "lvs.collector.fullname" . }}-telegraf
         - name: collector-signals
+          {{- if .Values.collectorSignals.usePvc }}
           persistentVolumeClaim:
             claimName: {{ include "lvs.collector.fullname" . }}-collector-signals
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
         {{- if .Values.telemetry.hostPathMounts }}
         - name: host-sys
           hostPath:

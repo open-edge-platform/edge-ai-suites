@@ -42,6 +42,9 @@ startupProbe:
   timeoutSeconds: 5
   failureThreshold: 120
 
+collectorSignals:
+  usePvc: true
+
 service:
   telemetry:
     type: ClusterIP
