@@ -25,8 +25,8 @@ repositories=(
 images=(
   "openvino/model_server:2026.0"
   "openvino/ubuntu24_dev:2026.0.0"
-  "intel/dlstreamer:2026.0.0-ubuntu24-rc3"
-  "intel/dlstreamer-pipeline-server:2026.0.0-extended-ubuntu24-rc3"
+  "intel/dlstreamer:2026.0.0-ubuntu24"
+  "intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24"
 )
 
 NAME="Metro Vision AI SDK"
