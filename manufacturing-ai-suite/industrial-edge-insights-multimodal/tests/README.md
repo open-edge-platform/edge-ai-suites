@@ -1,31 +1,33 @@
-## Functional tests steps
-   
-1. Pre-requisite script for git clone sub modules:
+## Functional Test Steps
+
+1. Run the prerequisite script to clone git submodules:
 
     ```sh
-	cd ./utils/
-	./github_clone.sh
-	```
-   
-2. Install tests dependencies
-   
+    # From the repository root
+    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/utils/
+    ./github_clone.sh
+    cd ../../../../industrial-edge-insights-multimodal/tests/
+    ```
+
+2. Install test dependencies:
+
+    ```sh
+    cd ./functional/
+    pip3 install -r ../requirements.txt
+    ```
+
+3. For Docker-related test cases, run the following commands:
+
+   > **Note**: Docker and Docker Compose must be installed as prerequisites.
+
    ```sh
-   cd ./functional/
-   pip3 install -r ../requirements.txt
+   pytest -v -s --html=docker_multimodal_report.html test_docker_deployment_multimodal.py
    ```
 
-3. For docker related test cases, run the below commands:
+4. For Helm-related test cases, run the following commands:
 
-   > **Note**: As a prerequisite, have docker and docker compose installed
-
-   ```sh
-   pytest -v -s --html=report.html test_docker_deployment.py
-   ```
-
-4. For helm related test cases, run the below commands:
-
-   > **Note**: As a prerequisite, have the k8s cluster setup and helm installed
+   > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites.
 
    ```sh
-   pytest -v -s --html=report.html test_helm_release.py
+   pytest -v -s --html=helm_multimodal_report.html test_helm_deployment_multimodal.py
    ```
