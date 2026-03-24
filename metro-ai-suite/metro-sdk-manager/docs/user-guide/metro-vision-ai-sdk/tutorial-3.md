@@ -79,7 +79,7 @@ Download the YOLOv10s object detection model and convert it to OpenVINO format:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
+  intel/dlstreamer:2026.0.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 ```
 
@@ -302,10 +302,10 @@ python3 /home/openvino/inference.py
 
 ```bash
 # High precision detection (lower false positives)
-python3 inference.py --conf 0.6 --iou 0.3
+python3 /home/openvino/inference.py --conf 0.6 --iou 0.3
 
 # High recall detection (catch more objects)
-python3 inference.py --conf 0.3 --iou 0.5
+python3 /home/openvino/inference.py --conf 0.3 --iou 0.5
 ```
 
 ## Understanding the Application

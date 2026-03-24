@@ -10,25 +10,56 @@ All notable changes to this project are documented in this file.
 - Added Helm templates for SeaweedFS components (master, volume, filer, s3). ([#1669])
 - Added S3 image storage access documentation and credential setup guidance. ([#1643], [#1662])
 - Added persistence of DL pipeline vision metadata to InfluxDB in fusion analytics. ([#1547])
+- Added S3 bucket TTL support for automatic image cleanup in SeaweedFS. ([#2039])
+- Added explicit Docker bridge network subnet (172.30.0.0/24) for the compose stack with troubleshooting for network pool overlap conflicts. ([#2184])
+- Added troubleshooting step for `docker exec` failures on EMT OS with Alpine-based images. ([#2032])
+- Added Make target to package and push Helm charts to an OCI registry. ([#1842])
 
 ### Changed
-- Updated image versions for third-party services: Telegraf, Grafana, Eclipse Mosquitto, MediaMTX, Coturn, and SeaweedFS. ([#1857])
-- Updated multimodal architecture/configuration to include S3 frame storage flow. ([#1720])
+- Updated third-party service image versions: Telegraf (1.38.0), Grafana (12.3.3-ubuntu), Eclipse Mosquitto (2.0.22), MediaMTX (1.16.2), Coturn (4.8.0), SeaweedFS (4.15), nginx (1.29.5-trixie-perl). ([#1857], [#2050], [#2114], [#2029])
+- Updated multimodal architecture/configuration to include S3 frame storage flow with `gvawatermark` element. ([#1720])
 - Embedded `simulation-data` into weld-data-simulator image; removed external volume/WORK_DIR PV-PVC dependency. ([#1582])
 - Updated system requirements to CPU-only validated configuration. ([#1632])
+- Updated fusion analytics to align vision timestamps with RTSP source time using RTP timestamp metadata. ([#1968])
+- Updated version numbering scheme from 1.x.x to 2026.0 date-based format across Helm charts, docker-compose, and environment files. ([#1616])
+- Bumped catboost from 1.2.8 to 1.2.10 in UDF requirements. ([#2025])
+- Applied stricter permissions (`chmod 600`) to `.env` and `helm/values.yaml` config files in Makefile. ([#2071])
+- Added memory and tmpfs size limits for SeaweedFS volume and S3 containers. ([#2039])
+- Added `--non-strict-env-handling` flag to Telegraf entrypoints. ([#2114])
+- Updated third-party program notices to reflect new dependency versions. ([#1975], [#2050])
 
 ### Security
-- Hardened SeaweedFS container runtime: read-only root filesystem, non-root execution, seccomp profile, and no privilege escalation. ([#1691])
+- Hardened SeaweedFS container runtime: read-only root filesystem, non-root UID/GID, seccomp profile, and no privilege escalation. ([#1691])
+
+### Fixed
+- Fixed SeaweedFS access path and proxy bypass configuration for non-default Docker network subnets. ([#2022])
 
 ### Documentation
-- Reorganized IEI Multimodal how-to guides and docs navigation/toctree. ([#1687], [#1562])
-- Updated IEI MM/Time link blocks and product-name alignment content. ([#1557], [#1492])
+- Reorganized Multimodal how-to guides and docs navigation/toctree. ([#1687], [#1562])
+- Updated Multimodal/Time Series link blocks and product-name alignment content. ([#1557], [#1492])
 - Updated Deploy-with-Helm documentation and related guidance. ([#1518], [#1538])
 - Fixed duplicated heading and TOC build issues. ([#1789], [#1655])
+- Added 2026.0 release notes. ([#2077])
+- Updated documentation references for 2026.0 release branch. ([#2006], [#1957])
 
 ---
 
+[#2184]: https://github.com/open-edge-platform/edge-ai-suites/pull/2184
+[#2114]: https://github.com/open-edge-platform/edge-ai-suites/pull/2114
+[#2077]: https://github.com/open-edge-platform/edge-ai-suites/pull/2077
+[#2071]: https://github.com/open-edge-platform/edge-ai-suites/pull/2071
+[#2050]: https://github.com/open-edge-platform/edge-ai-suites/pull/2050
+[#2039]: https://github.com/open-edge-platform/edge-ai-suites/pull/2039
+[#2032]: https://github.com/open-edge-platform/edge-ai-suites/pull/2032
+[#2029]: https://github.com/open-edge-platform/edge-ai-suites/pull/2029
+[#2025]: https://github.com/open-edge-platform/edge-ai-suites/pull/2025
+[#2022]: https://github.com/open-edge-platform/edge-ai-suites/pull/2022
+[#2006]: https://github.com/open-edge-platform/edge-ai-suites/pull/2006
+[#1975]: https://github.com/open-edge-platform/edge-ai-suites/pull/1975
+[#1968]: https://github.com/open-edge-platform/edge-ai-suites/pull/1968
+[#1957]: https://github.com/open-edge-platform/edge-ai-suites/pull/1957
 [#1857]: https://github.com/open-edge-platform/edge-ai-suites/pull/1857
+[#1842]: https://github.com/open-edge-platform/edge-ai-suites/pull/1842
 [#1789]: https://github.com/open-edge-platform/edge-ai-suites/pull/1789
 [#1720]: https://github.com/open-edge-platform/edge-ai-suites/pull/1720
 [#1691]: https://github.com/open-edge-platform/edge-ai-suites/pull/1691
@@ -38,11 +69,16 @@ All notable changes to this project are documented in this file.
 [#1655]: https://github.com/open-edge-platform/edge-ai-suites/pull/1655
 [#1643]: https://github.com/open-edge-platform/edge-ai-suites/pull/1643
 [#1632]: https://github.com/open-edge-platform/edge-ai-suites/pull/1632
+[#1616]: https://github.com/open-edge-platform/edge-ai-suites/pull/1616
 [#1582]: https://github.com/open-edge-platform/edge-ai-suites/pull/1582
 [#1576]: https://github.com/open-edge-platform/edge-ai-suites/pull/1576
 [#1562]: https://github.com/open-edge-platform/edge-ai-suites/pull/1562
 [#1557]: https://github.com/open-edge-platform/edge-ai-suites/pull/1557
 [#1547]: https://github.com/open-edge-platform/edge-ai-suites/pull/1547
+[#1538]: https://github.com/open-edge-platform/edge-ai-suites/pull/1538
+[#1518]: https://github.com/open-edge-platform/edge-ai-suites/pull/1518
+[#1494]: https://github.com/open-edge-platform/edge-ai-suites/pull/1494
+[#1492]: https://github.com/open-edge-platform/edge-ai-suites/pull/1492
 
 ## [2025.2] - December 2025
 
