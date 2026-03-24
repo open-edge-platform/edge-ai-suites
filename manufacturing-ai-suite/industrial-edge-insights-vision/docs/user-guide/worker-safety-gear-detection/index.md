@@ -91,7 +91,7 @@ get-started
 how-to-guides
 api-reference
 troubleshooting
-release-notes
+Release Notes <release-notes>
 
 :::
 hide_directive-->

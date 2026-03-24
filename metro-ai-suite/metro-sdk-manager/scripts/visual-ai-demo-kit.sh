@@ -23,7 +23,7 @@ repositories=(
 
 images=(
   eclipse-mosquitto:2.0.21
-  intel/dlstreamer-pipeline-server:2026.0.0-extended-ubuntu24-rc3
+  intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
   bluenviron/mediamtx:1.11.3
   coturn/coturn:4.7
   grafana/grafana:11.5.4
