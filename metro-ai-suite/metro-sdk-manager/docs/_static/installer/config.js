@@ -137,6 +137,8 @@ const CONFIG = {
             "Multimodal Embedding Serving",
             "Visual Data Preparation For Retrieval",
             "VLM OpenVINO Serving",
+            "Chat Q&A",
+            "Chat Q&A Core",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo"
           ]
@@ -183,6 +185,8 @@ const CONFIG = {
             "Multimodal Embedding Serving",
             "Visual Data Preparation For Retrieval",
             "VLM OpenVINO Serving",
+            "Chat Q&A",
+            "Chat Q&A Core",
             "Edge AI Libraries - Repo",
             "Edge AI Suites - Repo"
           ]
@@ -454,6 +458,8 @@ const CONFIG = {
             { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
+            { text: "Chat Q&A", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html" },
+            { text: "Chat Q&A Core", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]
@@ -498,6 +504,8 @@ const CONFIG = {
             { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
+            { text: "Chat Q&A", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html" },
+            { text: "Chat Q&A Core", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]
