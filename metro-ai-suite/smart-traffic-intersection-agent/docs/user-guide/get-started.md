@@ -23,7 +23,7 @@ an introduction.
 - **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. Following is the recommended default setting.
   ```bash
   export REGISTRY="intel"
-  export TAG="1.0.0-rc2"
+  export TAG="1.0.0"
   ```
 
 
