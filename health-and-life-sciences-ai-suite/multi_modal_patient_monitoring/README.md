@@ -9,7 +9,7 @@ You can view four key patient monitoring workloads side‑by‑side through a GU
 - AI‑ECG analysis
 - Remote PPG (rPPG) for contactless vital sign estimation
 
-Outputs from these workloads are consolidated into a 2×2 layout, showing each stream in its own quadrant while sharing a single Intel Core Ultra CPU + iGPU + NPU platform. This helps validate BOM reduction and deployment simplification by consolidating multi‑modal AI on one edge system.
+Outputs from these workloads are consolidated into a 2×2 layout, showing each stream in its own quadrant while sharing a single Intel Core Ultra CPU + iGPU + NPU platform. This helps validate BOM reduction and deployment simplification by consolidating multi‑modal AI on one edge system
 
 The solution is intended to:
 
