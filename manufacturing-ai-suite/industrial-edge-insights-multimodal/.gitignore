@@ -7,3 +7,7 @@ helm/*.sh
 helm/*.csv
 helm/*.template
 .venv/
+
+# Python cache
+tests/**/__pycache__/
+tests/__pycache__/

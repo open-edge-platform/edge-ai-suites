@@ -692,8 +692,6 @@ def update_env_file(file_path=None, values=None):
         # Write the updated content back to the file
         with open(expanded_path, 'w') as file:
             file.writelines(updated_lines)
-        # Restrict permissions to owner read/write only (rw-------) to protect credentials at rest
-        os.chmod(expanded_path, 0o600)
             
         logger.info(f"Successfully updated .env file with {len(values)} environment variables")
         

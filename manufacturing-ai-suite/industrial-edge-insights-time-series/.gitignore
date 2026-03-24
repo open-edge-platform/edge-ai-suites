@@ -11,3 +11,6 @@ helm/*.sh
 helm/*.csv
 
 venv/
+# Python cache
+tests/**/__pycache__/
+tests/__pycache__/

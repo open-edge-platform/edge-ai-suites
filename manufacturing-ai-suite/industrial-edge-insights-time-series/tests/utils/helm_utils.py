@@ -319,11 +319,11 @@ def update_values_yaml(file_path, values):
         # Expand environment variables in the file path
         expanded_path = os.path.expandvars(file_path)
 
-        yaml = YAML()
-        yaml.preserve_quotes = True
+        ryaml = YAML()
+        ryaml.preserve_quotes = True
 
         with open(expanded_path, 'r') as file:
-            data = yaml.load(file)
+            data = ryaml.load(file)
 
         # Ensure the env section exists
         if 'env' not in data:
@@ -334,7 +334,7 @@ def update_values_yaml(file_path, values):
 
         # Write the updated data back to the file
         with open(expanded_path, 'w') as file:
-            yaml.dump(data, file)
+            ryaml.dump(data, file)
 
         # Return True to indicate success
         return True
