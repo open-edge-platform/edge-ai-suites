@@ -66,10 +66,12 @@ def container_exists(name):
     return name in result.stdout
 
 def stop_container(name):
-    return run_command(f"docker stop {name}")
+    result = subprocess.run(["docker", "stop", name])
+    return result.returncode
 
 def remove_container(name):
-    return run_command(f"docker rm {name}")
+    result = subprocess.run(["docker", "rm", name])
+    return result.returncode
 
 def get_docker_env_values():
     """Load Docker-specific configuration and extract values."""
@@ -219,11 +221,12 @@ def deploy_containers(context, deploy_type="opcua"):
         raise ValueError(f"Unsupported deploy_type: {deploy_type}. Use 'opcua' or 'mqtt'.")
 
 def start_container(name):
-    return run_command(f"docker start {name}")
+    result = subprocess.run(["docker", "start", name])
+    return result.returncode
 
 def restart_container(name):
-    exit_code = run_command(f"docker restart {name}")
-    return exit_code
+    result = subprocess.run(["docker", "restart", name])
+    return result.returncode
 
 def get_images_from_docker_compose(compose_file_path=None):
     """
@@ -278,8 +281,8 @@ def get_images_from_docker_compose(compose_file_path=None):
     return unique_images
 
 def build_image(dockerfile_path, image_name):
-    cmd = f"docker build -t {image_name} -f {dockerfile_path} ."
-    return run_command(cmd)
+    result = subprocess.run(["docker", "build", "-t", image_name, "-f", dockerfile_path, "."])
+    return result.returncode
 
 def get_image_id(image):
     result = subprocess.run(["docker", "images", "--filter", f"reference={image}", "--format", "{{.ID}}"], capture_output=True, text=True)
@@ -629,7 +632,7 @@ def invoke_make_check_env_variables():
 
 
 def update_env_file(file_path=None, values=None):
-    """Update existing .env file with specific environment variable values using sed."""
+    """Update existing .env file with specific environment variable values."""
 
     # Set default file path if not provided
     if file_path is None:
@@ -658,32 +661,33 @@ def update_env_file(file_path=None, values=None):
             logger.error(f".env file not found: {expanded_path}")
             return False
 
+        # Read the existing file
+        with open(expanded_path, 'r') as env_file:
+            lines = env_file.readlines()
+
+        # Update existing keys and track which ones were found
+        updated_vars = set()
+        updated_lines = []
+        for line in lines:
+            updated = False
+            for key, value in values.items():
+                if line.strip().startswith(f"{key}="):
+                    updated_lines.append(f"{key}={value}\n")
+                    updated_vars.add(key)
+                    updated = True
+                    break
+            if not updated:
+                updated_lines.append(line)
+
+        # Append any missing variables
         for key, value in values.items():
-            # Check whether the key already exists in the file
-            grep_result = subprocess.run(
-                ["grep", "-q", f"^{key}=", expanded_path],
-                capture_output=True
-            )
-            if grep_result.returncode == 0:
-                # Key exists — update it with sed
-                sed_result = subprocess.run(
-                    ["sed", "-i", f"s|^{key}=.*|{key}={value}|g", expanded_path],
-                    capture_output=True, text=True
-                )
-                if sed_result.returncode != 0:
-                    logger.error(f"sed failed for {key}: {sed_result.stderr}")
-                    return False
-                logger.info(f"Updated {key} in .env file")
-            else:
-                # Key missing — append it using printf via shell
-                append_result = subprocess.run(
-                    ["bash", "-c", f"printf '%s\\n' '{key}={value}' >> {expanded_path}"],
-                    capture_output=True, text=True
-                )
-                if append_result.returncode != 0:
-                    logger.error(f"Failed to append {key}: {append_result.stderr}")
-                    return False
+            if key not in updated_vars:
+                updated_lines.append(f"{key}={value}\n")
                 logger.info(f"Added missing variable {key} to .env file")
+
+        # Write the updated content back to the file
+        with open(expanded_path, 'w') as env_file:
+            env_file.writelines(updated_lines)
 
         logger.info(f"Successfully updated .env file with {len(values)} environment variables")
         return True
@@ -1068,8 +1072,7 @@ def collect_live_logs(container_name, monitor_duration, search_pattern=None):
     try:
         # Run docker logs -f command
         process = subprocess.Popen(
-            f"docker logs -f {container_name}",
-            shell=True,
+            ["docker", "logs", "-f", container_name],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -1358,10 +1361,11 @@ def update_config_file(ingestion_type="opcua"):
         for attempt in range(max_retries):
             try:
                 test_result = subprocess.run(
-                    "curl -s -k -o /dev/null -w '%{http_code}' https://localhost:3000/ts-api/health || echo '000'",
-                    shell=True, capture_output=True, text=True, timeout=10
+                    ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
+                     "https://localhost:3000/ts-api/health"],
+                    capture_output=True, text=True, timeout=10
                 )
-                status_code = test_result.stdout.strip()
+                status_code = test_result.stdout.strip() if test_result.returncode == 0 else "000"
                 if status_code in ['200', '503']:  # 200 = OK, 503 = Service Unavailable (but responding)
                     logger.info(f"✓ Service is responding (HTTP {status_code})")
                     break
@@ -1407,47 +1411,45 @@ def update_config_file(ingestion_type="opcua"):
 
         # Step 5: Send configuration update using curl to Docker-based service with retries
         if ingestion_type == "opcua":
-            curl_command = (
-                "curl -X POST "
-                "'https://localhost:3000/ts-api/config' "
-                "-k "  # Allow self-signed certificates
-                "-H 'accept: application/json' "
-                "-H 'Content-Type: application/json' "
-                "-d '{"
-                "\"udfs\": {"
-                "\"name\": \"windturbine_anomaly_detector\","
-                "\"models\": \"windturbine_anomaly_detector.pkl\""
-                "},"
-                "\"alerts\": {"
-                "\"opcua\": {"
-                "\"opcua_server\": \"opc.tcp://ia-opcua-server:4840/freeopcua/server/\","
-                "\"namespace\": 1,"
-                "\"node_id\": 2004"
-                "}"
-                "}"
-                "}'"
-            )
+            curl_command = [
+                "curl", "-X", "POST", "https://localhost:3000/ts-api/config",
+                "-k",
+                "-H", "accept: application/json",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps({
+                    "udfs": {
+                        "name": "windturbine_anomaly_detector",
+                        "models": "windturbine_anomaly_detector.pkl"
+                    },
+                    "alerts": {
+                        "opcua": {
+                            "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
+                            "namespace": 1,
+                            "node_id": 2004
+                        }
+                    }
+                })
+            ]
         elif ingestion_type == "mqtt":
-            curl_command = (
-                "curl -X POST "
-                "'https://localhost:3000/ts-api/config' "
-                "-k "  # Allow self-signed certificates
-                "-H 'accept: application/json' "
-                "-H 'Content-Type: application/json' "
-                "-d '{"
-                "\"udfs\": {"
-                "\"name\": \"windturbine_anomaly_detector\","
-                "\"models\": \"windturbine_anomaly_detector.pkl\""
-                "},"
-                "\"alerts\": {"
-                "\"mqtt\": {"
-                "\"mqtt_broker_host\": \"ia-mqtt-broker\","
-                "\"mqtt_broker_port\": 1883,"
-                "\"name\": \"my_mqtt_broker\""
-                "}"
-                "}"
-                "}'"
-            )
+            curl_command = [
+                "curl", "-X", "POST", "https://localhost:3000/ts-api/config",
+                "-k",
+                "-H", "accept: application/json",
+                "-H", "Content-Type: application/json",
+                "-d", json.dumps({
+                    "udfs": {
+                        "name": "windturbine_anomaly_detector",
+                        "models": "windturbine_anomaly_detector.pkl"
+                    },
+                    "alerts": {
+                        "mqtt": {
+                            "mqtt_broker_host": "ia-mqtt-broker",
+                            "mqtt_broker_port": 1883,
+                            "name": "my_mqtt_broker"
+                        }
+                    }
+                })
+            ]
         else:
             logger.error(f"Unknown ingestion_type: {ingestion_type}")
             return False
@@ -1456,7 +1458,7 @@ def update_config_file(ingestion_type="opcua"):
         for retry in range(max_curl_retries):
             try:
                 logger.info(f"Attempting curl command (attempt {retry + 1}/{max_curl_retries})...")
-                result = subprocess.run(curl_command, shell=True, capture_output=True, text=True, timeout=30)
+                result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
                 if result.returncode == 0:
                     logger.info("Curl command executed successfully. Response:")
                     logger.info(result.stdout)
@@ -1521,17 +1523,17 @@ def execute_gpu_config_curl(device="gpu"):
         
         # Convert config to JSON string for curl command
         gpu_config_json = json.dumps(gpu_config)
-        
+
         # Post configuration to the time-series analytics API
-        curl_command = (
-            "curl -k -X 'POST' "
-            "'https://localhost:3000/ts-api/config' "
-            "-H 'accept: application/json' "
-            "-H 'Content-Type: application/json' "
-            f"-d '{gpu_config_json}'"
-        )
-        
-        result = subprocess.run(curl_command, shell=True, capture_output=True, text=True, timeout=30)
+        curl_command = [
+            "curl", "-k", "-X", "POST",
+            "https://localhost:3000/ts-api/config",
+            "-H", "accept: application/json",
+            "-H", "Content-Type: application/json",
+            "-d", gpu_config_json
+        ]
+
+        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
         
         if result.returncode == 0:
             logger.info(f"{device.upper()} configuration POST via curl command succeeded")
@@ -1704,15 +1706,16 @@ def execute_influxdb_commands(container_name="ia-influxdb", measurement=None):
             query_part = "SELECT * FROM wind_turbine_data LIMIT 5; SELECT * FROM wind_turbine_anomaly_data LIMIT 5"
             verify_tables = ["wind_turbine_data", "wind_turbine_anomaly_data"]
         
-        influx_commands = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            f"-execute 'SHOW MEASUREMENTS; {query_part}'"
-        )
+        influx_execute = f"SHOW MEASUREMENTS; {query_part}"
 
-        exec_command = f"docker exec {container_name} {influx_commands}"
+        exec_command = [
+            "docker", "exec", container_name,
+            "influx", "-username", influxdb_username, "-password", influxdb_password,
+            "-database", "datain", "-execute", influx_execute
+        ]
         logger.info(f"Executing command: 'SHOW MEASUREMENTS; {query_part}' inside {container_name} container with redacted credentials.")
-        
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
+
+        result = subprocess.run(exec_command, capture_output=True, text=True)
         
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
@@ -1761,20 +1764,23 @@ def verify_influxdb_retention_docker(response=None, container_name=constants.CON
             return None, False
 
         # Step 3: Execute InfluxDB query to get the earliest time value
-        influx_query = (
-            f"influx -username {influxdb_username} -password {influxdb_password} -database datain "
-            "-execute 'SELECT time, wind_speed FROM wind_turbine_data ORDER BY time ASC LIMIT 1' | awk 'NR==4 {print $1}'"
-        )
-        exec_command = f"docker exec {container_name} {influx_query}"
-        logger.info(f"Executing InfluxDB query inside container '{container_name}': 'SELECT time, wind_speed FROM wind_turbine_data ORDER BY time ASC LIMIT 1;' with redacted credentials.")
-        result = subprocess.run(exec_command, shell=True, capture_output=True, text=True)
+        influx_execute = "SELECT time, wind_speed FROM wind_turbine_data ORDER BY time ASC LIMIT 1"
+        exec_command = [
+            "docker", "exec", container_name,
+            "influx", "-username", influxdb_username, "-password", influxdb_password,
+            "-database", "datain", "-execute", influx_execute
+        ]
+        logger.info(f"Executing InfluxDB query inside container '{container_name}': '{influx_execute}' with redacted credentials.")
+        result = subprocess.run(exec_command, capture_output=True, text=True)
 
         if result.returncode != 0:
             logger.info(f"Command failed with return code {result.returncode}")
             logger.info(f"Error: {result.stderr}")
             return None, False
 
-        time_value = result.stdout.strip()
+        # Parse the time value from line 4 of the output (equivalent to awk 'NR==4 {print $1}')
+        output_lines = result.stdout.strip().split('\n')
+        time_value = output_lines[3].split()[0] if len(output_lines) >= 4 else ""
         if time_value:
             logger.info(f"First time value in 'wind_turbine_data': {time_value}")
             return time_value, True
@@ -3844,10 +3850,9 @@ def check_system_gpu_devices():
         # Method 1: Check for Intel GPU devices
         try:
             result = subprocess.run(
-                ["lspci", "|", "grep", "-i", "vga"], 
-                shell=True,
-                capture_output=True, 
-                text=True, 
+                ["lspci"],
+                capture_output=True,
+                text=True,
                 timeout=10
             )
             if result.returncode == 0 and "intel" in result.stdout.lower():
@@ -4742,10 +4747,13 @@ def extract_img_handles_from_influxdb(measurement, database, container_name, use
         # Query to extract img_handle values from vision metadata
         query = f'SELECT img_handle FROM "{measurement}" WHERE time > now() - 1h'
         
-        # Execute InfluxDB query with authentication (escape quotes properly)
-        escaped_query = query.replace('"', '\\"')
-        cmd = f'docker exec {container_name} influx -username {username} -password {password} -database {database} -execute "{escaped_query}" -format csv'
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        # Execute InfluxDB query with authentication
+        cmd = [
+            "docker", "exec", container_name,
+            "influx", "-username", username, "-password", password,
+            "-database", database, "-execute", query, "-format", "csv"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True)
         
         if result.returncode != 0:
             logger.error(f"InfluxDB query failed: {result.stderr}")
