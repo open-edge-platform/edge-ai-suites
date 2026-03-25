@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.2
+    image: telegraf:1.38.0
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -62,9 +62,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      # The InfluxDB retention policy durations can be configured using a combination 
-      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
-      RETENTION_DURATION: 1h0m0s
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
@@ -125,15 +123,16 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group ID for ubuntu 24.04 host OS
+    # render group IDs for ubuntu 24.04 host OS
     - "992"
+    - "993"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.3.3-ubuntu
+    image: grafana/grafana-oss:12.4.0-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -232,7 +231,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.29.1-bookworm-perl
+    image: nginx:1.29.5-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -359,7 +358,7 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -384,10 +383,10 @@ services:
       # dri - GPU
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
-    - "/dev:/dev"
+    - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.2
+    image: bluenviron/mediamtx:1.16.3
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -431,8 +430,8 @@ services:
     volumes:
       - seaweed_master_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: master -ip=seaweedfs-master -ip.bind=0.0.0.0
 
   seaweedfs-volume:
@@ -441,6 +440,8 @@ services:
     container_name: seaweedfs-volume
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
+    memswap_limit: ${SEAWEEDFS_VOLUME_MEM_LIMIT:-4g}
     security_opt:
     - no-new-privileges
     networks:
@@ -448,8 +449,8 @@ services:
     volumes:
       - seaweed_volume_data:/data
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080
     depends_on:
       - seaweedfs-master
@@ -468,8 +469,8 @@ services:
       - seaweed_filer_data:/data
       - "vol_temp_seaweed_filer:/tmp"
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
     command: filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0
     depends_on:
       - seaweedfs-master
@@ -487,18 +488,21 @@ services:
     container_name: seaweedfs-s3
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
+    mem_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
+    memswap_limit: ${SEAWEEDFS_S3_MEM_LIMIT:-512m}
     security_opt:
     - no-new-privileges
     networks:
       - timeseries_network
     environment:
-      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
-      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.18.0.0/16
+      - NO_PROXY=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
+      - no_proxy=localhost,127.0.0.1,seaweedfs-master,seaweedfs-volume,seaweedfs-filer,seaweedfs-s3,172.16.0.0/12
       # Comma-separated list of default buckets to create
       - DEFAULT_S3_BUCKETS=dlstreamer-pipeline-results
       # S3 credentials from .env file
       - S3_STORAGE_USER=${S3_STORAGE_USERNAME}
       - S3_STORAGE_PASS=${S3_STORAGE_PASSWORD}
+      - S3_BUCKET_TTL=${S3_BUCKET_TTL:-30m}
     entrypoint: ["/s3-init-buckets.sh"]
     command: s3 -filer=seaweedfs-filer:8888 -ip.bind=0.0.0.0 -config=/tmp/s3_config.json
     depends_on:
@@ -520,7 +524,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.8.0
+    image: coturn/coturn:4.9.0
     container_name: coturn
     read_only: true
     security_opt:
@@ -579,6 +583,7 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+      o: size=${SEAWEEDFS_VOLUME_TMPFS_SIZE:-2g}
   seaweed_filer_data:
     driver: local
     driver_opts:
@@ -596,3 +601,4 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
+      o: size=${SEAWEEDFS_S3_TMPFS_SIZE:-128m}

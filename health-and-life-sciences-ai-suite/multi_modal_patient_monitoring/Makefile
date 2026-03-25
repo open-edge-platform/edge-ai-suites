@@ -17,10 +17,10 @@ DOCKER_COMPOSE := docker-compose.yaml
 REGISTRY ?= true
 
 # Detect host IP for UI/backend communication (first non-loopback address)
-HOST_IP ?= $(shell hostname -I | awk '{print $$1}')
+HOST_IP ?= $(shell ip route get 1 2>/dev/null | awk '{print $$7}' | head -1)
 export HOST_IP
 
-TAG ?= 2026.0-rc1
+TAG ?= 2026.0.0
 export TAG
 
 init-mdpnp:

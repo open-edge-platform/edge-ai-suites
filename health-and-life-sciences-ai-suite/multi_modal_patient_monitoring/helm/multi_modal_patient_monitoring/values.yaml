@@ -1,6 +1,6 @@
 namespace: ""
 replicaCount: 1
-http_proxy: 
+http_proxy:
 https_proxy: 
 no_proxy: "localhost,127.0.0.1,.svc,.cluster.local"
  
@@ -62,63 +62,63 @@ ui:
   image:
     repository: intel
     name: hl-ai-ui
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 aggregator:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-aggregator
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 aiEcg:
   image:
     repository: intel
     name: hl-ai-ecg
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 rppg:
   image:
     repository: intel
     name: hl-ai-rppg
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 pose:
   image:
     repository: intel
     name: hl-ai-3dpose
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 metrics:
   image:
     repository: intel
     name: hl-ai-metrics-collector
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 ddsBridge:
   image:
     repository: intel
     name: hl-ai-dds-bridge
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 mdpnp:
   image:
     repository: intel
     name: hl-ai-mdpnp
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 assets:
   image:
     repository: intel
     name: hl-ai-patient-monitoring-assets
-    tag: "2026.0-rc1"
+    tag: "2026.0.0"
     pullPolicy: IfNotPresent
  
 # Devices

@@ -56,11 +56,13 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
      WEBRTC_BITRATE=5000
      ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=False
+     CAPTION_HISTORY=3
      ```
     Notes:
     - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
     - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
     - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
+    - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows current + `CAPTION_HISTORY` previous entries (`0` means only current). This value can be changed from the UI also.
 
 5. **Download/Export Models**:
     Run the following scripts to download and convert VLM models.

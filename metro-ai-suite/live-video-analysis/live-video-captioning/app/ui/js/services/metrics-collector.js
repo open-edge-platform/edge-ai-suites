@@ -164,10 +164,12 @@ const MetricsCollectorService = (function() {
     }
 
     function init(elements) {
-        // Initialize charts
-        ChartManager.createStatChart('cpuChart', 'CPU %', '#1ad0ff');
-        ChartManager.createStatChart('ramChart', 'RAM %', '#8ca0c2');
-        ChartManager.createStatChart('gpuChart', 'GPU %', '#ffb347');
+        // Initialize consolidated chart
+        ChartManager.createConsolidatedChart('statsChart', [
+            { label: 'CPU %', color: '#1ad0ff' },
+            { label: 'RAM %', color: '#8ca0c2' },
+            { label: 'GPU %', color: '#ffb347' },
+        ]);
 
         // WebSocket connection to external metrics service
         const wsUrl = getMetricsServiceUrl();

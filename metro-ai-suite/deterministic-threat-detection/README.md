@@ -35,13 +35,12 @@ An aggregation node collects the MQTT messages and calculates the end-to-end lat
 
 ### Components
 
-- **DL Streamer Pipeline Server (VA Pipeline):** Processes video frames, extracts metadata, and integrates AI inference results.
-- **Live Camera Streaming:** A network camera streams video to the edge compute node.
-- **Camera Frame Capture + AI Inference:** Captures video frames, performs AI inference, and publishes results with PTP timestamps.
-- **TSN Switch:** A TSN switch that supports IEEE 802.1AS (PTP) and IEEE 802.1Qbv (Time-Aware Shaper).
+- **Live Camera Streams:** A network camera streams video to the edge compute node.
 - **Sensor Data:** A sensor data producer that generates telemetry data and publishes it over MQTT with PTP timestamps.
-- **MQTT Aggregator:** Subscribes to MQTT topics, collects data, and visualizes end-to-end latency.
-- **Traffic Injector:** A machine that generates best-effort background traffic using iperf to demonstrate the impact of congestion on latency-sensitive workloads.
+- **DL Streamer Pipeline Server (VA Pipeline):** Captures and processes video frames, performs AI inference, and publishes the results with PTP timestamps over MQTT.
+- **Time-Sensitive Networking Switch:** A TSN switch that supports IEEE 802.1AS (PTP) and IEEE 802.1Qbv (Time-Aware Shaper).
+- **Electrical / Ethernet Noise:** A machine that generates best-effort background traffic using iperf to demonstrate the impact of congestion on latency-sensitive workloads.
+- **Post-processing and Data Visualization:** Subscribes to MQTT topics, collects data, and visualizes end-to-end latency.
 
 ## Learn More
 

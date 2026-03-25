@@ -7,7 +7,7 @@ To build the Docker image for `Live Video Alert` application, follow these steps
 
 1. Ensure you are in the project directory:
      ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert
+     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
      ```
 
 2. Run the following `docker compose` command:
@@ -35,5 +35,4 @@ To build the Docker image for `Live Video Alert` application, follow these steps
 
 
 Notes:
-- Ensure your environment variables are configured, especially `RTSP_URL`.
 - The default port is `9000`, but can be changed using the `PORT` environment variable.

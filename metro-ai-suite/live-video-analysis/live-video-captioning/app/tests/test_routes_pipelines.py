@@ -47,3 +47,13 @@ class TestListPipelines:
             resp = client.get("/api/pipelines")
         assert resp.status_code == 200
         assert resp.json()["pipelines"] == []
+
+    def test_returns_502_when_pipeline_server_unreachable(self, client):
+        """Returns 502 when the pipeline server is not reachable."""
+        from fastapi import HTTPException
+        with patch(
+            "backend.routes.pipelines.discover_pipelines_remote",
+            side_effect=HTTPException(status_code=502, detail="Pipeline server unreachable"),
+        ):
+            resp = client.get("/api/pipelines")
+        assert resp.status_code == 502
