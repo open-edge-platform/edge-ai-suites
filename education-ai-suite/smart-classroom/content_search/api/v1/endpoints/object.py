@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from database import get_db
@@ -14,10 +14,10 @@ router = APIRouter()
 # @router.get("/files")
 
 @router.post("/upload")
-async def upload_video(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db)):
     minio_payload = await storage_service.upload_and_prepare_payload(file)
 
-    result = await task_service.handle_file_upload(db, minio_payload)
+    result = await task_service.handle_file_upload(db, minio_payload, background_tasks, should_ingest=False)
     return resp_200(
         data={
             "task_id": str(result["task_id"]),
@@ -30,11 +30,12 @@ async def upload_video(file: UploadFile = File(...), db: Session = Depends(get_d
 
 @router.post("/upload-ingest")
 async def upload_file_with_ingest(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...), 
     db: Session = Depends(get_db)
 ):
     minio_payload = await storage_service.upload_and_prepare_payload(file)
-    result = await task_service.handle_file_upload(db, minio_payload)
+    result = await task_service.handle_file_upload(db, minio_payload, background_tasks, should_ingest=True)
     return resp_200(
         data={
             "task_id": str(result["task_id"]),

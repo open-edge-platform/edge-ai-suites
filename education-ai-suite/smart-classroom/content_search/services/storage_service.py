@@ -13,7 +13,7 @@ class StorageService:
 
     def _try_initialize(self):
         try:
-            from ext_components.content_search_minio.minio_client import MinioStore
+            from providers.content_search_minio.minio_client import MinioStore
             self._store = MinioStore.from_config()
             self._store.ensure_bucket()
             self._error_msg = None

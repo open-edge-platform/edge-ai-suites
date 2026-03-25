@@ -1,0 +1,13 @@
+{
+  "minio": {
+    "address": ":9000",
+    "console_address": ":9001",
+    "server": "127.0.0.1:9000",
+    "minio_exe": "C:\\Users\\Intel\\Downloads\\minio.exe",
+    "data_dir": "C:\\Users\\user\\jianfeng\\EDU-AI\\minio",
+    "root_user": "minioadmin",
+    "root_password": "minioadmin",
+    "bucket": "content-search",
+    "secure": false
+  }
+}

@@ -88,12 +88,13 @@ stateDiagram-v2
 | `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
 | `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
 | `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
-| `/api/v1/media/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
-| `/api/v1/media/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/media/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
-| `/api/v1/media/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
-| `/api/v1/media/search` | **POST** | ASYNC | Search for files based on description | DONE |
-| `/api/v1/media/download` | **POST** | STREAM | Download file from MinIO | DONE |
+| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
+| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
+| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
+| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
+| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
 | `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
 
 ### Get Task List
@@ -196,7 +197,7 @@ Response (200 OK):
 ### File Upload
 Used to upload a video file and initiate an asynchronous background task.
 
-* URL: /api/v1/media/upload
+* URL: /api/v1/object/upload
 * Method: POST
 * Content-Type: multipart/form-data
 * Payload: file (Binary)
@@ -204,7 +205,7 @@ Used to upload a video file and initiate an asynchronous background task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/media/upload' \
+curl --location 'http://127.0.0.1:8000/api/v1/object/upload' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
@@ -221,7 +222,7 @@ Response (200 OK):
 ```
 
 ### File ingestion
-* URL: /api/v1/media/ingest
+* URL: /api/v1/object/ingest
 * Method: POST
 * Pattern: ASYNC
 Request:
@@ -234,14 +235,14 @@ Response:
 ```
 
 ### File upload ana ingestion
-* URL: /api/v1/media/upload-ingest
+* URL: /api/v1/object/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
 * Pattern: ASYNC
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/media/upload-ingest' \
+curl --location 'http://127.0.0.1:8000/api/v1/object/upload-ingest' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
@@ -260,7 +261,7 @@ Response (200 OK):
 ### Resource Lookup (Video/Image/Document)
 Retrieve file metadata or direct access links for existing resources.
 
-* URL: /api/v1/media/files/{resource_id}
+* URL: /api/v1/object/files/{resource_id}
 * Method: GET
 * Pattern: SYNC
 

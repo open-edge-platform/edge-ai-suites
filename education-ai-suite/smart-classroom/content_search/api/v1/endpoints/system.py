@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import get_db
-from core.redis_client import redis_client
 from services.storage_service import storage_service
 import time
 
@@ -15,7 +14,6 @@ async def health_check(db: Session = Depends(get_db)):
         "timestamp": time.time(),
         "services": {
             "postgres": "unknown",
-            "redis": "unknown",
             "minio": "unknown"
         }
     }
@@ -26,14 +24,6 @@ async def health_check(db: Session = Depends(get_db)):
         status["services"]["postgres"] = "online"
     except Exception as e:
         status["services"]["postgres"] = f"offline: {str(e)}"
-        status["status"] = "unhealthy"
-
-    # Redis
-    try:
-        if redis_client.ping():
-            status["services"]["redis"] = "online"
-    except Exception as e:
-        status["services"]["redis"] = f"offline: {str(e)}"
         status["status"] = "unhealthy"
 
     # minIO
