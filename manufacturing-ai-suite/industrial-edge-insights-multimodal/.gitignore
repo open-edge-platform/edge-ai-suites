@@ -6,6 +6,8 @@ helm/*.conf
 helm/*.sh
 helm/*.csv
 helm/*.template
+helm-packages/
+
 .venv/
 
 # Python cache

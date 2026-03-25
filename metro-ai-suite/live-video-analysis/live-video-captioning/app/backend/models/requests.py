@@ -25,6 +25,10 @@ class StartRunRequest(BaseModel):
     maxNewTokens: int = Field(default=70, ge=1, le=4096)
     pipelineName: Optional[str] = Field(default=None)
     runName: Optional[str] = Field(default=None)
+    frameRate: Optional[int] = Field(default=None, ge=0)
+    chunkSize: Optional[int] = Field(default=None, ge=1)
+    frameWidth: Optional[int] = Field(default=None, ge=1)
+    frameHeight: Optional[int] = Field(default=None, ge=1)
 
     @field_validator("rtspUrl")
     @classmethod
