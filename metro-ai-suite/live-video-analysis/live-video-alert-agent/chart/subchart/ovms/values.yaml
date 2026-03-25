@@ -1,0 +1,34 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  registry: ""  # Leave empty to pull from public docker.io; set to override (e.g. if mirroring openvino/model_server)
+
+sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+task: "text_generation"
+pipelineType: "VLM"
+runAsUser: 5000
+
+modelStorage:
+  storageClassName: ""
+  size: "10Gi"
+
+# Startup probe: allows up to startupFailureThreshold × startupPeriodSeconds
+# seconds for OVMS to download and load the model before liveness kicks in.
+# Default: 60 × 10s = 10 minutes.
+healthcheck:
+  startupFailureThreshold: 60
+  startupPeriodSeconds: 10
+  startupTimeoutSeconds: 5
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

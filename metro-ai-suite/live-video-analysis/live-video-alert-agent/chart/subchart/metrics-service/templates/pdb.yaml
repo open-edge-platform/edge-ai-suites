@@ -1,0 +1,16 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{- if .Values.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "metrics-service.fullname" . }}-pdb
+  labels:
+    {{- include "metrics-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+spec:
+  maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ include "metrics-service.fullname" . }}
+{{- end }}

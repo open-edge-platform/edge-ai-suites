@@ -1,0 +1,23 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "metrics-service.fullname" . }}
+  labels:
+    {{- include "metrics-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  selector:
+    app: {{ include "metrics-service.fullname" . }}
+  ports:
+    - name: ws
+      port: {{ .Values.global.metricsPort }}
+      targetPort: ws
+      protocol: TCP
+      {{- if and (eq (.Values.service.type | default "ClusterIP") "NodePort") .Values.global.metricsNodePort }}
+      nodePort: {{ .Values.global.metricsNodePort | int }}
+      {{- end }}
+{{- end }}

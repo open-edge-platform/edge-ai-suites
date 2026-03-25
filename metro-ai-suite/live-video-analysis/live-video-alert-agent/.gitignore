@@ -28,3 +28,6 @@ Thumbs.db
 resources/streams.json
 resources/agents.json
 models/
+
+# Helm
+chart/charts/*.tgz

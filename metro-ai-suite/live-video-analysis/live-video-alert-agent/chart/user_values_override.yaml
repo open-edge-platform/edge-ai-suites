@@ -1,0 +1,37 @@
+# DO NOT COMMIT/PUSH THIS FILE WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
+# RESET ALL VALUES TO THEIR DEFAULTS BEFORE COMMITTING OR PUSHING.
+
+global:
+  externalIP: ""  # Required: IP of a cluster node reachable from your browser
+  keepPvc: false
+
+  # Hugging Face token — required only for initial download of gated models.
+  huggingfaceToken: ""
+
+  # Proxy settings
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: "localhost,127.0.0.1,.svc.cluster.local"
+
+  # GPU controls
+  gpu:
+    enabled: false
+    # Set `key` based on device plugin label on the GPU node (e.g. gpu.intel.com/i915 or gpu.intel.com/xe).
+    key: ""
+    # Set `device` to GPU when enabled is true.
+    device: "CPU"
+    # GIDs for GPU device access. Verify on your node: getent group render video | cut -d: -f3
+    # supplementalGroups: [109, 110, 992]
+
+app:
+  # Set registry to override global.registry for the app image only.
+  # Use this when the app image is in a different registry than other components.
+  image:
+    registry: ""
+    # repository: ""
+    # tag: ""
+  # rtspUrl: "rtsp://<host>:<port>/<stream>"
+  # nodeSelector:
+  #   kubernetes.io/hostname: <your-node-name>
+

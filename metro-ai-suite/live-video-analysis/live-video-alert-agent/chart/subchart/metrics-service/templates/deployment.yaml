@@ -1,0 +1,98 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{- if .Values.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "metrics-service.fullname" . }}
+  labels:
+    {{- include "metrics-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "metrics-service.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "metrics-service.fullname" . }}
+        app.kubernetes.io/component: metrics
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "metrics-service.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: live-metrics-service
+          image: {{ include "metrics-service.image" (dict "registry" .Values.global.registry "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "metrics-service.proxyEnv" . | nindent 12 }}
+            - name: METRICS_PORT
+              value: {{ .Values.global.metricsPort | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            - name: CORS_ORIGINS
+              {{- if .Values.corsOrigins }}
+              value: {{ .Values.corsOrigins | quote }}
+              {{- else }}
+              value: {{ printf "http://%s:%d" (required "global.externalIP is required when metrics-service.corsOrigins is not set" .Values.global.externalIP) (.Values.global.appNodePort | int) | quote }}
+              {{- end }}
+          ports:
+            - name: ws
+              containerPort: {{ .Values.global.metricsPort }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /health
+              port: ws
+            initialDelaySeconds: {{ .Values.healthcheck.startupInitialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.startupPeriodSeconds }}
+            failureThreshold: {{ .Values.healthcheck.startupFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: ws
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: ws
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            seccompProfile:
+              type: RuntimeDefault
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

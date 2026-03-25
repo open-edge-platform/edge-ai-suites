@@ -1,0 +1,118 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "app.fullname" . }}
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+    app.kubernetes.io/component: app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "app.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "app.fullname" . }}
+        app.kubernetes.io/component: app
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "app.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      initContainers:
+        - name: wait-for-ovms
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-ovms" .Release.Name }}:{{ .Values.global.ovmsPort }}/v1/config; do
+                echo "waiting for OVMS..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+      containers:
+        - name: live-video-alert-agent
+          image: {{ include "app.image" (dict "registry" (coalesce .Values.image.registry .Values.global.registry) "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "app.proxyEnv" . | nindent 12 }}
+            - name: VLM_URL
+              value: "http://{{ printf "%s-ovms.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
+            - name: MODEL_NAME
+              value: {{ .Values.global.ovmsModelName | quote }}
+            - name: METRICS_SERVICE_URL
+              value: "ws://{{ printf "%s-metrics-service.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (.Values.global.metricsPort | int) }}"
+            - name: METRICS_NODEPORT
+              value: {{ .Values.global.metricsNodePort | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
+            {{- if .Values.rtspUrl }}
+            - name: RTSP_URL
+              value: {{ .Values.rtspUrl | quote }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.startupInitialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.startupPeriodSeconds }}
+            failureThreshold: {{ .Values.healthcheck.startupFailureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false  # Application writes session state and temp files at runtime
+            seccompProfile:
+              type: RuntimeDefault
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
