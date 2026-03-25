@@ -35,6 +35,18 @@ For **Minikube**, enable the built-in ingress addon instead:
 minikube addons enable ingress
 ```
 
+If your ingress controller `EXTERNAL-IP` stays `pending` (common on bare-metal clusters),
+you have two supported options:
+
+1. Install a LoadBalancer implementation such as MetalLB.
+2. Expose the ingress controller via NodePort.
+
+Example for existing ingress-nginx install:
+```bash
+kubectl patch svc ingress-nginx-controller -n ingress-nginx \
+  -p '{"spec":{"type":"NodePort"}}'
+```
+
 If you do not have an ingress controller and do not wish to install one, set
 `ingress.enabled: false` in `values.yaml` and use port-forwarding to access the
 application (see [Access without Ingress](#access-without-ingress-controller) below).
@@ -239,27 +251,52 @@ From here you can access:
 If you deployed with `ingress.enabled: false` or do not have an NGINX Ingress Controller,
 you can access the application using `kubectl port-forward`.
 
-#### Forward the UI service
+#### Step 1: Forward the UI service (primary access point)
 ```bash
 kubectl port-forward -n multi-modal-patient-monitoring svc/ui 8080:80
 ```
 Then open http://localhost:8080 in your browser.
 
-#### Forward the Aggregator API (video streams and API)
-```bash
-kubectl port-forward -n multi-modal-patient-monitoring svc/aggregator 8081:80
-```
-The aggregator API is then available at http://localhost:8081.
+#### Step 2: Forward the Pose Estimation stream (for video feed in GUI)
+The UI includes a Live Video Feed widget for the 3D Pose Estimation workload. When deploying 
+without an ingress controller, the application automatically detects this and configures 
+the UI to access the pose video feed on a separate port. 
 
-#### Forward the Pose Estimation stream
+Forward the pose service in a **separate terminal**:
 ```bash
 kubectl port-forward -n multi-modal-patient-monitoring svc/pose 8085:8085
 ```
-The pose video feed is then available at http://localhost:8085/video_feed and
-http://localhost:8085/pose-video.
 
-> **Tip:** You can run all three `port-forward` commands in separate terminal windows
-> to access the full application simultaneously.
+The pose video feed is then available at http://localhost:8085/video_feed and will be 
+automatically rendered within the UI's 3D Pose Estimation card.
+
+> **Required for 3D Pose streaming:** Keep this `svc/pose 8085:8085` port-forward running.
+> Without it, the Live Video Feed cannot be displayed in the UI.
+
+#### Step 3: Forward the Aggregator API (required for UI health and workload controls)
+```bash
+kubectl port-forward -n multi-modal-patient-monitoring svc/aggregator 8001:80
+```
+The aggregator API is then available at http://localhost:8001.
+
+#### Step 4: Start workloads (required to generate live frames)
+If the video panel is visible but no live motion appears, start the workloads:
+```bash
+curl -X POST "http://localhost:8001/start?target=all"
+```
+
+> **Important:** When using port-forward without ingress, ensure all three `port-forward` 
+> commands are running in separate terminal windows for the full application to function 
+> correctly, especially to display the Live Video Feed in the GUI.
+
+#### How it works
+
+When `ingress.enabled: false` is set in the Helm values:
+- The UI reads the aggregator API on `http://localhost:8001`
+- The UI service is configured with `VITE_POSE_STREAM_URL=http://localhost:8085/video_feed`
+- The frontend automatically uses this URL to access the pose video feed
+- This allows the Live Video Feed widget to display correctly when accessed via 
+  `localhost:8080`, even though the pose service is on `localhost:8085`
 
 #### Alternative: NodePort access
 
