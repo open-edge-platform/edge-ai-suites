@@ -629,84 +629,65 @@ def invoke_make_check_env_variables():
 
 
 def update_env_file(file_path=None, values=None):
-    """Update existing .env file with specific environment variable values"""
-    
+    """Update existing .env file with specific environment variable values using sed."""
+
     # Set default file path if not provided
     if file_path is None:
         file_path = os.path.join(os.getcwd(), ".env")
-    
-    # Expand environment variables in the file path
+
     expanded_path = os.path.expandvars(file_path)
 
     try:
-        # Validate that values dictionary is not None or empty
         if not values:
             logger.warning("No values provided to update_env_file")
             return False
-            
-        # Check if S3 credentials are present and valid for multimodal scenarios
+
         if "S3_STORAGE_USERNAME" in values:
             if not values["S3_STORAGE_USERNAME"]:
                 logger.error("S3_STORAGE_USERNAME is empty in values dictionary")
                 return False
-            logger.info(f"Updating S3_STORAGE_USERNAME with value: REDACTED for security")
-        
+            logger.info("Updating S3_STORAGE_USERNAME with value: REDACTED for security")
+
         if "S3_STORAGE_PASSWORD" in values:
             if not values["S3_STORAGE_PASSWORD"]:
                 logger.error("S3_STORAGE_PASSWORD is empty in values dictionary")
                 return False
             logger.info("Updating S3_STORAGE_PASSWORD with new value")
 
-        # Read the existing file
-        with open(expanded_path, 'r') as file:
-            lines = file.readlines()
+        if not os.path.exists(expanded_path):
+            logger.error(f".env file not found: {expanded_path}")
+            return False
 
-        # Track which variables were updated
-        updated_vars = set()
-        
-        # Update the lines with new values
-        updated_lines = []
-        for line in lines:
-            line_updated = False
-            for key, value in values.items():
-                # Check if this line contains the environment variable (handle empty assignments)
-                if line.strip().startswith(f"{key}="):
-                    updated_lines.append(f"{key}={value}\n")
-                    updated_vars.add(key)
-                    line_updated = True
-                    break
-            
-            # If line wasn't updated, keep the original
-            if not line_updated:
-                updated_lines.append(line)
-
-        # Check if all expected variables were found and updated
-        missing_vars = set(values.keys()) - updated_vars
-        if missing_vars:
-            logger.warning(f"Variables not found in .env file: {missing_vars}")
-            # Append missing variables to the end of the file
-            for var in missing_vars:
-                updated_lines.append(f"{var}={values[var]}\n")
-                logger.info(f"Added missing variable {var} to .env file")
-
-        # Write the updated content back to the file
-        with open(expanded_path, 'w') as file:
-            file.writelines(updated_lines)
-            
-        logger.info(f"Successfully updated .env file with {len(values)} environment variables")
-        
-        # Verify S3 credentials were actually written (for multimodal scenarios)
-        if "S3_STORAGE_USERNAME" in values:
-            with open(expanded_path, 'r') as file:
-                content = file.read()
-                if f"S3_STORAGE_USERNAME={values['S3_STORAGE_USERNAME']}" not in content:
-                    logger.error("S3_STORAGE_USERNAME was not properly written to .env file")
+        for key, value in values.items():
+            # Check whether the key already exists in the file
+            grep_result = subprocess.run(
+                ["grep", "-q", f"^{key}=", expanded_path],
+                capture_output=True
+            )
+            if grep_result.returncode == 0:
+                # Key exists — update it with sed
+                sed_result = subprocess.run(
+                    ["sed", "-i", f"s|^{key}=.*|{key}={value}|g", expanded_path],
+                    capture_output=True, text=True
+                )
+                if sed_result.returncode != 0:
+                    logger.error(f"sed failed for {key}: {sed_result.stderr}")
                     return False
-                else:
-                    logger.info("✓ S3_STORAGE_USERNAME successfully written to .env file")
-                    
+                logger.info(f"Updated {key} in .env file")
+            else:
+                # Key missing — append it using printf via shell
+                append_result = subprocess.run(
+                    ["bash", "-c", f"printf '%s\\n' '{key}={value}' >> {expanded_path}"],
+                    capture_output=True, text=True
+                )
+                if append_result.returncode != 0:
+                    logger.error(f"Failed to append {key}: {append_result.stderr}")
+                    return False
+                logger.info(f"Added missing variable {key} to .env file")
+
+        logger.info(f"Successfully updated .env file with {len(values)} environment variables")
         return True
-    
+
     except Exception as e:
         logger.error(f"Failed to update .env file: {str(e)}")
         return False

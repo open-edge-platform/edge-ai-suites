@@ -100,7 +100,7 @@ jobs:
         name: timeseries-test-report
         path: /tmp/test_timeseries_report
 
-    - name: Run Weld Defect Detection Sample Apps functional tests
+    - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
       run: |
         cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/tests/functional"
         echo "Running Multimodal Weld Defect Detection Sample Apps functional tests"
