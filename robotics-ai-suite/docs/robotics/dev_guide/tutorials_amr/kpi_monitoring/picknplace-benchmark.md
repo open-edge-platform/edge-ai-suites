@@ -60,7 +60,7 @@ make analyze-benchmark BENCH=monitoring_sessions/picknplace/bench_20260319_16452
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `RUNS` | Number of simulation runs | 5 |
+| `RUNS` | Number of simulation runs | 25 |
 | `PN_TIMEOUT` | Max duration per run (seconds) | 300 |
 | `PAUSE` | Pause between runs (seconds) | 30 |
 | `NODE` | Narrow graph discovery to a specific node | — |
