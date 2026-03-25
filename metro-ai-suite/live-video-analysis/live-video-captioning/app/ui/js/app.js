@@ -18,6 +18,7 @@
         pipelineInfo: document.getElementById('pipelineInfo'),
         runsContainer: document.getElementById('runsContainer'),
         themeToggle: document.getElementById('themeToggle'),
+        chatToggle: document.getElementById('chatToggle'),
         detectionModelField: document.getElementById('detectionModelField'),
         detectionThresholdField: document.getElementById('detectionThresholdField'),
         detectionModelNameSelect: document.getElementById('detectionModelNameSelect'),
@@ -35,12 +36,27 @@
     };
 
     const state = { selectedRunId: null, runs: new Map() };
+    const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
 
     (function initDetectionVisibility() {
         const enabledByFlag = cfg.enableDetectionPipeline === true;
         const detectionSection = document.getElementById('detectionSection');
         if (!enabledByFlag) {
             setSectionVisible(detectionSection, false);
+        }
+    })();
+
+    (function initChatToggleVisibility() {
+        if (cfg.enableEmbedding !== true) {
+            setSectionVisible(els.chatToggle, false);
+        } else if (els.chatToggle) {
+            els.chatToggle.addEventListener('click', () => {
+                const chatUrl = `http://${window.location.hostname}:${cfg.liveVideoRagHostPort}`;
+                const chatWindow = window.open(chatUrl, CHAT_TAB_NAME);
+                if (chatWindow) {
+                    chatWindow.focus();
+                }
+            });
         }
     })();
 

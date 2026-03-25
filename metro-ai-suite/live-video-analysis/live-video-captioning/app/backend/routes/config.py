@@ -10,8 +10,10 @@ from ..config import (
     PEER_ID,
     SIGNALING_URL,
     ENABLE_DETECTION_PIPELINE,
+    ENABLE_EMBEDDING,
     MQTT_TOPIC_PREFIX,
     METRICS_SERVICE_PORT,
+    LIVE_VIDEO_RAG_HOST_PORT,
 )
 from ..models.requests import DEFAULT_PROMPT
 
@@ -29,8 +31,10 @@ async def runtime_config() -> Response:
         "defaultPrompt": DEFAULT_PROMPT,
         "defaultRtspUrl": DEFAULT_RTSP_URL,
         "enableDetectionPipeline": ENABLE_DETECTION_PIPELINE,
+        "enableEmbedding": ENABLE_EMBEDDING,
         "captionHistory": CAPTION_HISTORY,
         "metricsServicePort": METRICS_SERVICE_PORT,
+        "liveVideoRagHostPort": LIVE_VIDEO_RAG_HOST_PORT,
     }
     body = f"window.RUNTIME_CONFIG = {json.dumps(payload)};"
     return Response(content=body, media_type="application/javascript")

@@ -14,6 +14,7 @@ from ..config import (
     PIPELINE_SERVER_URL,
     MQTT_TOPIC_PREFIX,
     WEBRTC_BITRATE,
+    ENABLE_EMBEDDING,
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
@@ -73,7 +74,7 @@ def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
         "detection_threshold": req.detectionThreshold,
         "mqtt_publisher": {
             "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-            "publish_frame": False,
+            "publish_frame": bool(ENABLE_EMBEDDING),  # Only publish frames if embedding is enabled
         },
     }
 
