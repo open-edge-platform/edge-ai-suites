@@ -67,9 +67,8 @@ const ApiService = (function () {
                 : [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
 
             return pipelineCache;
-        } catch (_err) {
-            pipelineCache = [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
-            return pipelineCache;
+        } catch (err) {
+            throw err;
         }
     }
 

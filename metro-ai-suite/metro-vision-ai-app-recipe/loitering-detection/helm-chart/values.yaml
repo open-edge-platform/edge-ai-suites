@@ -16,7 +16,7 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 2026.0.0-ubuntu24-rc3
+  imageTag: 2026.0.0-ubuntu24
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4

@@ -55,11 +55,8 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo ros-humble-text-to-speech
 ### Activate Python Virtual Environment
 
 ```bash
-sudo apt install pipx
-pipx install virtualenv
-pipx ensurepath
-source ~/.bashrc
-virtualenv venv_followme_audio
+sudo apt install python3-venv
+python3 -m venv venv_followme_audio
 cd venv_followme_audio
 source bin/activate
 ```

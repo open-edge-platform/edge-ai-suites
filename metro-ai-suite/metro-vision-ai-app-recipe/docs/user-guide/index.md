@@ -71,6 +71,5 @@ tutorial-1.md
 tutorial-2.md
 tutorial-3.md
 tutorial-4.md
-support.md
 :::
 hide_directive-->

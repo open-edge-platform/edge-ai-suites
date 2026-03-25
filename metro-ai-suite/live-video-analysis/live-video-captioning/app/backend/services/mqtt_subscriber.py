@@ -179,6 +179,10 @@ class MQTTSubscriber:
                 else:
                     data = raw_data
 
+                # Only forward messages that contain inference results
+                if not isinstance(data, dict) or "result" not in data:
+                    continue
+
                 # Extract run_id from topic
                 # Topic format: {prefix}/{run_id}
                 parts = topic.split("/")

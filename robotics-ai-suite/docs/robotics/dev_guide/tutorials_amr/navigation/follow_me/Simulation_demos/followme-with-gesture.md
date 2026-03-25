@@ -48,11 +48,8 @@ sudo apt install ros-humble-followme-turtlebot3-gazebo
 ### Activate Python Virtual Environment
 
 ```bash
-sudo apt install pipx
-pipx install virtualenv
-pipx ensurepath
-source ~/.bashrc
-virtualenv venv_followme
+sudo apt install python3-venv
+python3 -m venv venv_followme
 cd venv_followme
 source bin/activate
 ```
@@ -115,7 +112,7 @@ sudo chmod +x /opt/ros/humble/share/followme_turtlebot3_gazebo/scripts/demo_lida
 You will see two panels side-by-side: `Gazebo` GUI on the left and ROS 2 rviz
 display on the right.
 
-![screenshot_followme_w_gesture_demo](../../../../../images/screenshot_followme_w_gesture_demo.jpg)
+![screenshot_followme_w_gesture_demo](../../../../../images/follow_me_demo_gazebo_rviz.png)
 
 - The green square robot is a guide robot (namely, the target), which will
   follow a pre-defined trajectory.
