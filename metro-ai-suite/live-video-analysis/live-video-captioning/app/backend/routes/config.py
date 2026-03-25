@@ -5,6 +5,7 @@ import json
 from fastapi import APIRouter, Response
 from ..config import (
     ALERT_MODE,
+    CAPTION_HISTORY,
     DEFAULT_RTSP_URL,
     PEER_ID,
     SIGNALING_URL,
@@ -28,6 +29,7 @@ async def runtime_config() -> Response:
         "defaultPrompt": DEFAULT_PROMPT,
         "defaultRtspUrl": DEFAULT_RTSP_URL,
         "enableDetectionPipeline": ENABLE_DETECTION_PIPELINE,
+        "captionHistory": CAPTION_HISTORY,
         "metricsServicePort": METRICS_SERVICE_PORT,
     }
     body = f"window.RUNTIME_CONFIG = {json.dumps(payload)};"

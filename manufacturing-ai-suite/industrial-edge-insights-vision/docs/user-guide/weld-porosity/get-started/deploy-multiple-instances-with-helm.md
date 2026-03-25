@@ -58,7 +58,7 @@
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
-    > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
+    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
 4. Install pre-requisites for all instances
 
@@ -641,6 +641,7 @@
 ```sh
 ./run.sh helm_uninstall
 ```
+Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## Storing frames to S3 storage
 
@@ -749,6 +750,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+9. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## MLOps using Model Download
 
@@ -807,7 +809,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
-    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/FP16/weld_porosity_classification.zip'
+    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification.zip'
 
     curl -L "$MODEL_URL" -o "$(basename $MODEL_URL)"
 

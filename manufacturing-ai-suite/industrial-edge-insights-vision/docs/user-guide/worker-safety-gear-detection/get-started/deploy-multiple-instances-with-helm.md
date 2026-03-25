@@ -58,7 +58,7 @@
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
-    > **Note:** For GPU-based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
+    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
 4. Install pre-requisites for all instances
 
@@ -647,6 +647,7 @@
 ```sh
 ./run.sh helm_uninstall
 ```
+Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## Storing frames to S3 storage
 
@@ -755,6 +756,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+9. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## MLOps using Model Download
 

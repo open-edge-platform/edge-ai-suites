@@ -21,13 +21,13 @@ interface with ROS 1 components.
 Autonomous Mobile Robot includes:
 
 
--  `rqt <http://wiki.ros.org/rqt>`__, a software framework of ROS 2 that
+-  `rqt <https://wiki.ros.org/rqt>`__, a software framework of ROS 2 that
    implements the various GUI tools in the form of plugins.
 
 -  `rviz2 <https://github.com/ros2/rviz>`__, a tool used to visualize ROS 2
    topics.
 
--  `colcon <https://colcon.readthedocs.io/>`__ (collective construction), a
+-  `colcon <https://colcon.readthedocs.io/en/released/>`__ (collective construction), a
    command line tool to improve the workflow of building, testing, and using
    multiple software packages (It automates the process, handles the ordering,
    and sets up the environment to use the packages.)

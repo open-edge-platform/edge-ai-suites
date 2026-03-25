@@ -64,7 +64,7 @@ mkdir -p ~/metro/metro-vision-tutorial-3
 cd ~/metro/metro-vision-tutorial-3
 
 # Download sample city intersection video for object detection
-wget -O intersection.mp4 https://www.pexels.com/download/video/34505889/?fps=29.97&h=360&w=640
+wget -O intersection.mp4 https://www.pexels.com/download/video/34505889?fps=29.97&h=360&w=640
 
 ```
 
@@ -79,7 +79,7 @@ Download the YOLOv10s object detection model and convert it to OpenVINO format:
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc1 \
+  intel/dlstreamer:2026.0.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 ```
 
@@ -100,7 +100,7 @@ cat > inference.py << 'EOF'
 
 import cv2
 import numpy as np
-from openvino.runtime import Core
+from openvino import Core
 
 # --- Configuration ---
 model_path = "/home/openvino/public/yolov10s/FP16/yolov10s.xml"
@@ -128,6 +128,11 @@ class_names = [
 # --- Initialize OpenVINO Core and Load Model ---
 ie = Core()
 model = ie.read_model(model=model_path)
+
+# Reshape model to static input shape if dynamic (YOLOv10s expects 640x640)
+if model.inputs[0].partial_shape.is_dynamic:
+    model.reshape({model.inputs[0].any_name: [1, 3, 640, 640]})
+
 compiled_model = ie.compile_model(model=model, device_name="CPU")
 
 # Get model input and output information
@@ -297,10 +302,10 @@ python3 /home/openvino/inference.py
 
 ```bash
 # High precision detection (lower false positives)
-python3 inference.py --conf 0.6 --iou 0.3
+python3 /home/openvino/inference.py --conf 0.6 --iou 0.3
 
 # High recall detection (catch more objects)
-python3 inference.py --conf 0.3 --iou 0.5
+python3 /home/openvino/inference.py --conf 0.3 --iou 0.5
 ```
 
 ## Understanding the Application

@@ -108,6 +108,42 @@ class TestDetectionPipelineFlag:
         assert cfg.ENABLE_DETECTION_PIPELINE is True
 
 
+class TestCaptionHistoryConfig:
+    """CAPTION_HISTORY integer parsing and normalization."""
+
+    def test_caption_history_default(self, monkeypatch):
+        """CAPTION_HISTORY defaults to 3 when unset."""
+        monkeypatch.delenv("CAPTION_HISTORY", raising=False)
+        import backend.config as cfg
+
+        importlib.reload(cfg)
+        assert cfg.CAPTION_HISTORY == 3
+
+    def test_caption_history_from_env(self, monkeypatch):
+        """CAPTION_HISTORY reads positive integers from env."""
+        monkeypatch.setenv("CAPTION_HISTORY", "8")
+        import backend.config as cfg
+
+        importlib.reload(cfg)
+        assert cfg.CAPTION_HISTORY == 8
+
+    def test_caption_history_negative_clamped_to_zero(self, monkeypatch):
+        """CAPTION_HISTORY is clamped to zero for negative values."""
+        monkeypatch.setenv("CAPTION_HISTORY", "-5")
+        import backend.config as cfg
+
+        importlib.reload(cfg)
+        assert cfg.CAPTION_HISTORY == 0
+
+    def test_caption_history_invalid_falls_back_to_default(self, monkeypatch):
+        """CAPTION_HISTORY falls back to default for invalid values."""
+        monkeypatch.setenv("CAPTION_HISTORY", "not-a-number")
+        import backend.config as cfg
+
+        importlib.reload(cfg)
+        assert cfg.CAPTION_HISTORY == 3
+
+
 class TestMQTTConfig:
     """MQTT configuration defaults."""
 

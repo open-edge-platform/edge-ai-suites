@@ -47,7 +47,7 @@ alert-mode
 object-detection-pipeline
 api-reference
 known-issues
-release-notes
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->
