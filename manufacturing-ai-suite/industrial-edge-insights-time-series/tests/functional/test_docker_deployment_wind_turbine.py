@@ -637,7 +637,7 @@ def test_nginx_proxy_integration_wind_turbine(setup_docker_environment):
     else:
         logger.info("✓ Direct service access validated successfully")
 
-
+@pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
 @pytest.mark.parametrize("protocol,test_case,deploy_func", [
     ("opcua", "TC_031", "deploy_opcua"),
     ("mqtt", "TC_032", "deploy_mqtt")

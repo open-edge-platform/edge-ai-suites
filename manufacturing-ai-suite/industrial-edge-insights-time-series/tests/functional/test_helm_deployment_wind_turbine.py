@@ -381,7 +381,7 @@ def test_opcua_time_kpi():
     assert avg_time <= constants.KPI_BUILD_TIME_THRESHOLD, \
         f"Average build time {avg_time:.2f}s exceeds threshold of {constants.KPI_BUILD_TIME_THRESHOLD}s"
     
-
+@pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
 def test_gpu_opcua_helm(setup_helm_environment, request, telegraf_input_plugin):
     """TC_019: Testing GPU device configuration in time-series analytics helm config with OPC-UA"""
@@ -409,6 +409,7 @@ def test_gpu_opcua_helm(setup_helm_environment, request, telegraf_input_plugin):
     logger.info("Verifying GPU configuration test completed successfully")
     assert curl_result, "GPU configuration test via REST API failed"
 
+@pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_MQTT_PLUGIN])
 def test_gpu_mqtt_helm(setup_helm_environment, request, telegraf_input_plugin):
     """TC_020: Testing GPU device configuration in time-series analytics helm config with MQTT"""

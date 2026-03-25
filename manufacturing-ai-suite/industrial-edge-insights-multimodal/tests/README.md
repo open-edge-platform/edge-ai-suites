@@ -1,22 +1,15 @@
 ## Functional Test Steps
 
-1. Run the prerequisite script to clone git submodules:
+1. Install test dependencies:
 
     ```sh
-    # From the repository root
-    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/utils/
-    ./github_clone.sh
-    cd ../../../../industrial-edge-insights-multimodal/tests/
-    ```
-
-2. Install test dependencies:
-
-    ```sh
-    cd ./functional/
+    cd ./tests/functional/
+    python3 -m venv env
+    source env/bin/activate
     pip3 install -r ../requirements.txt
     ```
 
-3. For Docker-related test cases, run the following commands:
+2. For Docker-related test cases, run the following commands:
 
    > **Note**: Docker and Docker Compose must be installed as prerequisites.
 
@@ -24,7 +17,7 @@
    pytest -v -s --html=docker_multimodal_report.html test_docker_deployment_multimodal.py
    ```
 
-4. For Helm-related test cases, run the following commands:
+3. For Helm-related test cases, run the following commands:
 
    > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites.
 

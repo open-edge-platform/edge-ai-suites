@@ -1,20 +1,15 @@
 ## Functional Test Steps
 
-1. Run the prerequisite script to clone git submodules:
+1. Install test dependencies:
 
     ```sh
-    cd ./utils/
-    ./github_clone.sh
-    ```
-
-2. Install test dependencies:
-
-    ```sh
-    cd ./functional/
+    cd ./tests/functional/
+    python3 -m venv env
+    source env/bin/activate
     pip3 install -r ../requirements.txt
     ```
 
-3. For Docker-related test cases, run the following commands:
+2. For Docker-related test cases, run the following commands:
 
    > **Note**: Docker and Docker Compose must be installed as prerequisites.
 
@@ -36,7 +31,7 @@
       pytest -v -s --html=docker_weld_anomaly_report.html test_docker_deployment_weld_anomaly.py
       ```
 
-4. For Helm-related test cases, run the following commands:
+3. For Helm-related test cases, run the following commands:
 
    > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites.
 
@@ -55,7 +50,7 @@
       pytest -v -s --html=helm_weld_anomaly_report.html test_helm_deployment_weld_anomaly.py
       ```
 
-5. Security tests:
+4. Security tests:
 
     ```sh
     pytest -v -s --html=report.html test_docker_helm_deployment_security.py
