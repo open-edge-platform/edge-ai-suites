@@ -670,20 +670,20 @@ def update_env_file(file_path=None, values=None):
         updated_lines = []
         for line in lines:
             updated = False
-            for key, value in values.items():
-                if line.strip().startswith(f"{key}="):
-                    updated_lines.append(f"{key}={value}\n")
-                    updated_vars.add(key)
+            for env_var_name, env_var_val in values.items():
+                if line.strip().startswith(f"{env_var_name}="):
+                    updated_lines.append(f"{env_var_name}={env_var_val}\n")
+                    updated_vars.add(env_var_name)
                     updated = True
                     break
             if not updated:
                 updated_lines.append(line)
 
-        # Append any missing variables
-        for key, value in values.items():
-            if key not in updated_vars:
-                updated_lines.append(f"{key}={value}\n")
-                logger.info(f"Added missing variable {key} to .env file")
+        # Append any missing variables (log only the variable name, not its value)
+        for env_var_name, env_var_val in values.items():
+            if env_var_name not in updated_vars:
+                updated_lines.append(f"{env_var_name}={env_var_val}\n")
+                logger.info(f"Added missing variable {env_var_name} to .env file")
 
         # Write the updated content back to the file
         with open(expanded_path, 'w') as env_file:
@@ -2255,9 +2255,9 @@ def verify_deployment_with_credentials(ingestion_type="mqtt"):
                 logs = get_container_logs(container)
                 
                 # Check for each credential in the logs
-                for key, value in credentials_to_check.items():
-                    if value in logs:
-                        logger.info(f"Found {key}={value} in logs of container {container}")
+                for cred_key, cred_value in credentials_to_check.items():
+                    if cred_value in logs:
+                        logger.info(f"Found credential '{cred_key}' in logs of container {container}")
                         credential_found = True
                         break
                         
