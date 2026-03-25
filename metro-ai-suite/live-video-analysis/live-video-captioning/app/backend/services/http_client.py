@@ -39,3 +39,8 @@ def http_json(method: str, url: str, payload: Optional[dict[str, Any]] = None) -
             status_code=502,
             detail={"message": "Pipeline server unreachable", "error": str(err)},
         )
+    except OSError as err:
+        raise HTTPException(
+            status_code=502,
+            detail={"message": "Pipeline server connection failed", "error": str(err)},
+        )

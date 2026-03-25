@@ -90,8 +90,8 @@ main {
 
 .panels {
     display: grid;
-    gap: 8px;
-    grid-template-columns: minmax(300px, 30%) minmax(0, 1fr);
+    gap: 6px;
+    grid-template-columns: minmax(300px, 27%) minmax(0, 1fr);
     align-items: stretch;
     flex: 1;
     overflow: hidden;
@@ -127,13 +127,6 @@ main {
 
 /* Make System Stats card fill remaining space */
 .panels>.card:first-child>.card {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-.panels>.card:first-child>.card .chart-grid {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -241,7 +234,7 @@ main {
 #runsContainer .card > div:last-child,
 .run-grid {
     display: grid;
-    grid-template-rows: 60% 40%;
+    grid-template-rows: 50% 50%;
     gap: 2px;
     min-height: 0;
     overflow: hidden;
@@ -269,7 +262,6 @@ main {
 .caption-content {
     flex: 1;
     min-height: 0;
-    position: relative;
     overflow: hidden;
 }
 
@@ -294,11 +286,7 @@ iframe {
     background: #000;
 }
 
-.run-video {
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-}
+
 
 .status {
     display: flex;
@@ -332,20 +320,43 @@ iframe {
     font-weight: 400;
 }
 
-.caption-text {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    line-height: 1.5;
-    margin: 0;
-    font-weight: 300;
-    color: var(--text);
-    overflow-y: scroll;
-    font-size: 0.9rem;
-    word-wrap: break-word;
+.caption-timeline {
+    height: 100%;
+    overflow-y: auto;
     scrollbar-gutter: stable;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-right: 2px;
+}
+
+.caption-entry {
+    margin: 0;
+    padding: 6px 8px;
+    border-radius: 8px;
+    background: var(--panel);
+    border: 1px solid var(--input-border);
+}
+
+.caption-entry-meta {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+    line-height: 1.2;
+}
+
+.caption-entry-text {
+    margin: 0;
+    line-height: 1.35;
+    font-weight: 400;
+    color: var(--text);
+    font-size: 0.84rem;
+    word-break: break-word;
+}
+
+.caption-entry-placeholder {
+    font-size: 0.82rem;
+    color: var(--muted);
 }
 
 .chips {
@@ -380,44 +391,22 @@ iframe {
     padding: 20px;
 }
 
-/* Alert Mode Alert Styling */
-.card.alert-active {
-    border-color: #ff4444;
-    box-shadow: 0 0 30px rgba(255, 68, 68, 0.4), var(--shadow);
+/* Alert Mode Alert Styling — numbered by rule index (alert-1, alert-2, alert-3) */
+.card.alert-1,
+.card.alert-2,
+.card.alert-3 {
+    border-color: var(--alert-color, #ff4444);
+    box-shadow: 0 0 30px rgba(var(--alert-color-rgb, 255, 68, 68), 0.4), var(--shadow);
     animation: alert-pulse 1.5s ease-in-out infinite;
 }
 
-.card.safe-active {
-    border-color: #44ff88;
-    box-shadow: 0 0 30px rgba(68, 255, 136, 0.4), var(--shadow);
-    animation: safe-pulse 1.5s ease-in-out infinite;
-}
-
 @keyframes alert-pulse {
-
-    0%,
-    100% {
-        border-color: #ff4444;
-        box-shadow: 0 0 30px rgba(255, 68, 68, 0.4), var(--shadow);
+    0%, 100% {
+        border-color: var(--alert-color, #ff4444);
+        box-shadow: 0 0 30px rgba(var(--alert-color-rgb, 255, 68, 68), 0.4), var(--shadow);
     }
-
     50% {
-        border-color: #ff6b6b;
-        box-shadow: 0 0 40px rgba(255, 68, 68, 0.6), var(--shadow);
-    }
-}
-
-@keyframes safe-pulse {
-
-    0%,
-    100% {
-        border-color: #44ff88;
-        box-shadow: 0 0 30px rgba(68, 255, 136, 0.4), var(--shadow);
-    }
-
-    50% {
-        border-color: #66ffaa;
-        box-shadow: 0 0 40px rgba(68, 255, 136, 0.6), var(--shadow);
+        box-shadow: 0 0 40px rgba(var(--alert-color-rgb, 255, 68, 68), 0.6), var(--shadow);
     }
 }
 
@@ -467,34 +456,35 @@ iframe {
 .field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
 }
 
 /* Keep Start/Stop buttons on one row */
 .button-row {
     display: flex;
     gap: 10px;
-    margin: 0;
+    margin-top: 4px;
 }
 
 /* Textarea sizing: compact but readable */
 .input.textarea {
-    min-height: 56px;
+    min-height: 64px;
     resize: vertical;
 }
 
 .label {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--muted);
 }
 
 .input {
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 6px 10px;
+    border-radius: 8px;
     border: 1px solid var(--input-border);
     background: var(--input-bg);
     color: var(--text);
     width: 100%;
+    font-size: 0.875rem;
 }
 
 /* Make keyboard focus visible without changing theme colors */
@@ -518,10 +508,11 @@ iframe {
 }
 
 .btn {
-    padding: 10px 16px;
+    padding: 10px 15px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-weight: 700;
+    font-size: 0.875rem;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
@@ -553,13 +544,10 @@ iframe {
     gap: 12px;
 }
 
-.chart-grid {
+.chart-values {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 1;
-    min-height: 0;
-    padding-bottom: 16px;
+    gap: 12px;
+    font-size: 0.8rem;
 }
 
 .chart-card {
@@ -669,6 +657,146 @@ iframe {
 .run-video {
     width: 100%;
     max-width: 100%;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+}
+
+/* Alert rules sub-box */
+.alert-rules-box {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px 8px;
+}
+
+.alert-rules-box-header {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Alert rule row (compact pill design) */
+.alert-rule-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 6px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 3px 3px 4px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.alert-rule-row:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(26, 208, 255, 0.12);
+}
+
+/* Circular color swatch — wraps the hidden <input type=color> */
+.alert-rule-swatch {
+    position: relative;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.18);
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0;
+    overflow: hidden;
+    transition: transform 0.15s, border-color 0.15s;
+    margin-right: 8px;
+}
+
+.alert-rule-swatch:hover {
+    transform: scale(1.15);
+    border-color: rgba(255,255,255,0.45);
+}
+
+/* Hide the native colour picker but keep it clickable */
+.alert-rule-color-picker {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.alert-rule-substring {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 0.82rem;
+    padding: 2px 4px;
+}
+
+.alert-rule-substring::placeholder {
+    color: var(--muted);
+}
+
+.alert-rule-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.alert-rule-remove:hover {
+    background: rgba(255, 80, 80, 0.18);
+    color: #ff5050;
+}
+
+.alert-rules-empty {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-style: italic;
+    padding: 4px 2px;
+    margin: 0;
+}
+
+/* Add Rule button — dashed pill */
+.btn.btn-secondary.btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.78rem;
+    padding: 4px 12px;
+    background: transparent;
+    border: 1.5px dashed var(--border);
+    color: var(--muted);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+}
+
+.btn.btn-secondary.btn-sm:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 /* Info Button Styles */
@@ -711,11 +839,7 @@ iframe {
 
 /* Info Tooltip Styles */
 .info-tooltip {
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-top: 8px;
+    position: fixed;
     min-width: 360px;
     max-width: 480px;
     background: var(--panel-strong);
@@ -794,148 +918,24 @@ iframe {
 
 /* Provide positioning context and avoid clipping */
 .field,
-.label,
-.tooltip-wrap {
+.label {
     position: relative;
     overflow: visible;
-    /* do NOT clip the tooltip box */
 }
 
-.tooltip-wrap {
-    display: inline-block;
-    /* predictable absolute positioning */
-}
 
-/* Reset button styles for the icon */
-.tooltip-icon {
-    border: none;
-    background: none;
-    padding: 0;
-    margin: 0;
-    cursor: help;
-    /* indicates it's informational */
-    color: #2c3e50;
-    /* icon color */
-    line-height: 0;
-}
-
-.tooltip-icon:focus-visible {
-    outline: 2px solid #1e90ff;
-    outline-offset: 2px;
-    border-radius: 4px;
-}
-
-/* Base tooltip styles */
-.tooltip {
-    position: absolute;
-    box-sizing: border-box;
-
-    /* Base position (will be overridden by variant class) */
-    top: 120%;
-    left: 50%;
-    transform: translateX(-50%);
-
-    background: #1f2937;
-    /* dark background */
-    color: #fff;
-    padding: 8px 10px;
-    font-size: 13px;
-    line-height: 1.35;
-    border-radius: 6px;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
-
-    /* Wrap text cleanly */
-    white-space: normal;
-    word-break: normal;
-    /* reset any global break-all */
-    overflow-wrap: normal;
-    /* do not break anywhere by default */
-    hyphens: auto;
-
-    /* Avoid collapsing in flex contexts, constrain width */
-    flex: 0 0 auto;
-    min-width: 220px;
-    /* sensible minimum */
-    max-width: 320px;
-    /* keep it from getting too wide */
-    width: max-content;
-    /* grow to fit content up to max-width */
-
-    z-index: 9999;
-    display: none;
-    /* default hidden */
-}
-
-/* Arrow (base). Will be repositioned by variant class */
-.tooltip::after {
-    content: "";
-    position: absolute;
-    top: -6px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-width: 6px;
-    border-style: solid;
-    border-color: transparent transparent #1f2937 transparent;
-}
-
-/* Variant: Top-right float (above the icon, nudged to the right) */
-.tooltip.top-right-float {
-    top: auto;
-    bottom: calc(100% + 8px);
-    /* above the icon with an 8px gap */
-    left: 50%;
-    transform: translateX(8px);
-    /* nudge ~8px to the right from center */
-}
-
-.tooltip.top-right {
-    top: auto;
-    /* above the icon */
-    bottom: calc(100% + 8px);
-    /* 8px gap; adjust as needed */
-    left: auto;
-    right: 0;
-    /* align the tooltip box to the icon's right edge */
-    transform: none;
-    /* no centering translate */
-
-}
-
-/* Arrow under the tooltip body, slightly right of center */
-.tooltip.top-right-float::after {
-    top: auto;
-    bottom: -6px;
-    left: 40%;
-    /* move arrow slightly right; adjust 35–60% */
-    transform: translateX(-50%);
-    border-color: #1f2937 transparent transparent transparent;
-    /* arrow pointing DOWN */
-}
-
-.tooltip.top-right::after {
-    top: auto;
-    bottom: -6px;
-    left: auto;
-    right: 10px;
-    /* tweak this to align the arrow tip with the icon */
-    transform: none;
-    border-width: 6px;
-    border-style: solid;
-    border-color: #1f2937 transparent transparent transparent;
-}
-
-/* Show tooltip ONLY when icon is hovered or focused */
-.tooltip-icon:hover+.tooltip,
-.tooltip-icon:focus+.tooltip {
-    display: block;
-}
-
-/* Keep hidden unless shown via hover/focus */
-.tooltip[hidden] {
-    display: none;
-}
 
 /* Optional: tweak the SVG color */
 .info-svg {
     color: #1e90ff;
+}
+
+.pipeline-error-banner {
+    padding: 8px 16px;
+    background: rgba(220, 53, 69, 0.12);
+    border-left: 3px solid #dc3545;
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 0.9rem;
+    margin: 0 0 8px;
 }

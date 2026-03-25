@@ -18,6 +18,7 @@ User can enable object detection in the pipeline by following the steps below:
      WEBRTC_PEER_ID=stream
      ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=True  # Enable detection pipeline
+     CAPTION_HISTORY=3
      ```
 
 2. Prepare the object-detection models by using this [script](https://github.com/open-edge-platform/dlstreamer/blob/master/samples/download_public_models.sh).

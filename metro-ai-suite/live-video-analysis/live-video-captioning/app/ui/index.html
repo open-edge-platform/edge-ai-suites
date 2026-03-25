@@ -37,6 +37,7 @@
         </button>
     </header>
     <main>
+        <div id="pipelineServerError" class="pipeline-error-banner" style="display:none;"></div>
         <section class="panels">
             <article class="card">
                 <form id="pipelineForm" class="controls">
@@ -61,6 +62,42 @@
                     </div>
                     <div class="field-row">
                         <label class="field">
+                            <span class="label">Frame Rate</span>
+                            <input id="frameRateInput" class="input" type="number" min="0" step="1" value="1" />
+                        </label>
+                        <label class="field">
+                            <span class="label">Chunk Size</span>
+                            <input id="chunkSizeInput" class="input" type="number" min="1" step="1" value="1" />
+                        </label>
+                        <label class="field">
+                            <span class="label">Caption History</span>
+                            <input id="captionHistoryInput" class="input" type="number" min="0" step="1" value="3" />
+                        </label>
+                    </div>
+                    <div class="field-row">
+                        <label class="field">
+                            <span class="label">Frame Resolution</span>
+                            <select id="frameQualitySelect" class="input">
+                                <option value="default" selected>Default</option>
+                                <option value="1280x720">1280 × 720</option>
+                                <option value="640x480">640 × 480</option>
+                                <option value="480x360">480 × 360</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="field-row" id="customDimensionsRow" style="display: none;">
+                        <label class="field">
+                            <span class="label">Custom Width (px)</span>
+                            <input id="customWidthInput" class="input" type="number" min="1" step="1" placeholder="e.g. 1920" />
+                        </label>
+                        <label class="field">
+                            <span class="label">Custom Height (px)</span>
+                            <input id="customHeightInput" class="input" type="number" min="1" step="1" placeholder="e.g. 1080" />
+                        </label>
+                    </div>
+                    <div class="field-row">
+                        <label class="field">
                             <span class="label">Select Pipeline</span>
                             <select id="pipelineSelect" class="input"></select>
                         </label>
@@ -74,70 +111,30 @@
                         <div class="field">
                             <span class="label">
                                 <label class="text-label">Detection Properties</label>
-                                <span class="tooltip-wrap">
-                                    <button type="button" class="tooltip-icon"
-                                        aria-label="More info about Detection Properties"
-                                        aria-describedby="detection-tooltip">
-                                        <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
-                                            aria-hidden="true" focusable="false">
-                                            <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15"></circle>
-                                            <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
-                                        </svg>
-                                    </button>
-                                    <div id="detection-tooltip" role="tooltip" class="tooltip top-right-float" hidden>
-                                        Configuration for gvadetect detection element.
-                                    </div>
-                                </span>
                             </span>
                         </div>
 
                         <div class="field-row">
                             <label class="field" id="detectionModelField">
-                                <span class="label">
-                                    Detection Model
-                                    <span class="tooltip-wrap">
-                                        <button type="button" class="tooltip-icon"
-                                            aria-label="More info about Detection Model"
-                                            aria-describedby="detection-model-tooltip">
-                                            <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
-                                                aria-hidden="true" focusable="false">
-                                                <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15">
-                                                </circle>
-                                                <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
-                                            </svg>
-                                        </button>
-                                        <div id="detection-model-tooltip" role="tooltip" class="tooltip top-right-float"
-                                            hidden>
-                                            Model used for object detection.
-                                        </div>
-                                    </span>
-                                </span>
+                                <span class="label">Detection Model</span>
                                 <select id="detectionModelNameSelect" class="input"></select>
                             </label>
 
                             <label class="field" id="detectionThresholdField">
-                                <span class="label">
-                                    Detection Threshold
-                                    <span class="tooltip-wrap">
-                                        <button type="button" class="tooltip-icon"
-                                            aria-label="More info about Detection Threshold"
-                                            aria-describedby="detection-threshold-tooltip">
-                                            <svg class="info-svg" width="16" height="16" viewBox="0 0 24 24"
-                                                aria-hidden="true" focusable="false">
-                                                <circle cx="12" cy="12" r="10" fill="currentColor" opacity="0.15">
-                                                </circle>
-                                                <path d="M11 10h2v7h-2zM11 7h2v2h-2z" fill="currentColor"></path>
-                                            </svg>
-                                        </button>
-                                        <div id="detection-threshold-tooltip" role="tooltip" class="tooltip top-right"
-                                            hidden>
-                                            Threshold for detection results. Value between 0 and 1.
-                                        </div>
-                                    </span>
-                                </span>
+                                <span class="label">Detection Threshold</span>
                                 <input id="detectionThresholdInput" class="input" type="number" min="0" max="1"
                                     step="0.1" value="0.5" />
                             </label>
+                        </div>
+                    </div>
+
+                    <div id="alertRulesSection" class="field-group" style="display: none;">
+                        <div class="alert-rules-box">
+                            <div class="alert-rules-box-header">
+                                🔔 Alert Rules
+                            </div>
+                            <div id="alertRulesList"></div>
+                                <button id="addAlertRuleBtn" type="button" class="btn btn-secondary btn-sm">+ Add Rule</button>
                         </div>
                     </div>
 
@@ -155,24 +152,18 @@
                     </div>
                 </form>
                 <div class="card system-stats-card" style="margin-top:2px; background: var(--panel-strong);">
-                    <div class="chart-grid">
-                        <div class="chart-card">
-                            <div class="chart-header"><span>CPU</span><span class="chart-value" id="cpuVal">—</span>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <span>System Metrics</span>
+                            <div class="chart-values">
+                                <span class="chart-value" style="color:#1ad0ff">CPU <span id="cpuVal">—</span></span>
+                                <span class="chart-value" style="color:#8ca0c2">RAM <span id="ramVal">—</span></span>
+                                <span class="chart-value" style="color:#ffb347">GPU <span id="gpuVal">—</span></span>
                             </div>
-                            <div class="chart-wrap"><canvas id="cpuChart"></canvas></div>
                         </div>
-                        <div class="chart-card">
-                            <div class="chart-header"><span>RAM</span><span class="chart-value" id="ramVal">—</span>
-                            </div>
-                            <div class="chart-wrap"><canvas id="ramChart"></canvas></div>
-                        </div>
-                        <div class="chart-card">
-                            <div class="chart-header"><span>GPU</span><span class="chart-value" id="gpuVal">—</span>
-                            </div>
-                            <div class="gpu-error" id="gpuError"
-                                style="font-size: 0.7rem; color: var(--text-muted); display: none;"></div>
-                            <div class="chart-wrap"><canvas id="gpuChart"></canvas></div>
-                        </div>
+                        <div class="gpu-error" id="gpuError"
+                            style="font-size: 0.7rem; color: var(--text-muted); display: none;"></div>
+                        <div class="chart-wrap"><canvas id="statsChart"></canvas></div>
                     </div>
                 </div>
             </article>
@@ -192,6 +183,7 @@
     <script src="/js/services/metrics-collector.js"></script>
     <script src="/js/components/run-card.js"></script>
     <script src="/js/app.js"></script>
+
 </body>
 
 </html>
