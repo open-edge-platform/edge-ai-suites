@@ -90,7 +90,7 @@ jobs:
         pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html ${TEST_PATTERN}
 
     - name: Upload TimeSeries HTML test report to GitHub
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       with:
         name: timeseries-test-report
         path: /tmp/test_timeseries_report
@@ -106,7 +106,7 @@ jobs:
         pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html ${TEST_PATTERN}
 
     - name: Upload Multimodal HTML test report to GitHub
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
       with:
         name: multimodal-test-report
         path: /tmp/test_multimodal_report
