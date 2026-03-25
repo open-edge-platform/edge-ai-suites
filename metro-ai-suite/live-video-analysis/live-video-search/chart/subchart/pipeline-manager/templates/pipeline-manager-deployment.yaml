@@ -32,7 +32,7 @@ spec:
               done
       containers:
         - name: pipeline-manager
-          image: {{ include "lvs.pipeline.image" (dict "registry" .Values.global.registry "repository" .Values.images.pipelineManager.repository "tag" (include "lvs.pipeline.vssTag" .)) }}
+          image: {{ include "lvs.pipeline.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.pipelineManager.repository .Values.imageOverride.repository) "tag" (default (include "lvs.pipeline.vssTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:

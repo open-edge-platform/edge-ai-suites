@@ -15,10 +15,14 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
-  smartNvrStackTag: ''
 images:
   videoSearch:
-    repository: video-search
+    repository: intel/video-search
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 

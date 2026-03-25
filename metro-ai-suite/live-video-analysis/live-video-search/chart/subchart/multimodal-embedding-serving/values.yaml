@@ -25,10 +25,14 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
-  smartNvrStackTag: ''
 images:
   multimodalEmbeddingServing:
-    repository: multimodal-embedding-serving
+    repository: intel/multimodal-embedding-serving
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 

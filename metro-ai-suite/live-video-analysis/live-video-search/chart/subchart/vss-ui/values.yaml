@@ -12,7 +12,15 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
-  smartNvrStackTag: ''
+
+images:
+  vssUi:
+    repository: intel/vss-ui
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 
@@ -57,7 +65,3 @@ startupProbe:
   periodSeconds: 10
   timeoutSeconds: 5
   failureThreshold: 60
-
-images:
-  vssUi:
-    repository: vss-ui

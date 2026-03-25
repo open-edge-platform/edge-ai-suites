@@ -32,10 +32,14 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
-  smartNvrStackTag: ''
 images:
   vdmsDataprep:
-    repository: vdms-dataprep
+    repository: intel/vdms-dataprep
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 

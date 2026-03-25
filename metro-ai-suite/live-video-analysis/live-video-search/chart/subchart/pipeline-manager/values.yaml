@@ -12,10 +12,14 @@ global:
   registry: ''
   tag: latest
   vssStackTag: ''
-  smartNvrStackTag: ''
 images:
   pipelineManager:
-    repository: pipeline-manager
+    repository: intel/pipeline-manager
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 

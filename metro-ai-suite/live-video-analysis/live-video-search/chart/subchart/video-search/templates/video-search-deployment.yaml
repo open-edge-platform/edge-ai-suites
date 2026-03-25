@@ -44,7 +44,7 @@ spec:
               done
       containers:
         - name: video-search
-          image: {{ include "lvs.videosearch.image" (dict "registry" .Values.global.registry "repository" .Values.images.videoSearch.repository "tag" (include "lvs.videosearch.vssTag" .)) }}
+          image: {{ include "lvs.videosearch.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.videoSearch.repository .Values.imageOverride.repository) "tag" (default (include "lvs.videosearch.vssTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:

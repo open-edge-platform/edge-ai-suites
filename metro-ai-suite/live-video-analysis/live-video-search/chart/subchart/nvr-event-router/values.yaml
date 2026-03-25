@@ -3,8 +3,16 @@ global:
     noProxy: localhost,127.0.0.1,.svc.cluster.local
   registry: ''
   tag: latest
-  vssStackTag: ''
   smartNvrStackTag: ''
+
+images:
+  nvrEventRouter:
+    repository: intel/nvr-event-router
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 
@@ -46,9 +54,6 @@ startupProbe:
   timeoutSeconds: 5
   failureThreshold: 120
 
-images:
-  nvrEventRouter:
-    repository: nvr-event-router
 service:
   nvrEventRouter:
     nodePort: 31800

@@ -34,7 +34,7 @@ spec:
       {{- end }}
       containers:
         - name: multimodal-embedding-serving
-          image: {{ include "lvs.mmes.image" (dict "registry" .Values.global.registry "repository" .Values.images.multimodalEmbeddingServing.repository "tag" (include "lvs.mmes.vssTag" .)) }}
+          image: {{ include "lvs.mmes.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.multimodalEmbeddingServing.repository .Values.imageOverride.repository) "tag" (default (include "lvs.mmes.vssTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:

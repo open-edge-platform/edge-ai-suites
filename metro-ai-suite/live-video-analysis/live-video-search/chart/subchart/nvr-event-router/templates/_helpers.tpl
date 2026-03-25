@@ -23,10 +23,6 @@ app.kubernetes.io/name: {{ include "lvs.nvrrouter.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
-{{- define "lvs.nvrrouter.vssTag" -}}
-{{- default .Values.global.tag .Values.global.vssStackTag -}}
-{{- end -}}
-
 {{- define "lvs.nvrrouter.smartNvrTag" -}}
 {{- default .Values.global.tag .Values.global.smartNvrStackTag -}}
 {{- end -}}
@@ -38,10 +34,6 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- if $registry -}}
 {{- printf "%s/%s:%s" (trimSuffix "/" $registry) $repository $tag -}}
 {{- else -}}
-{{- if contains "/" $repository -}}
-{{- printf "docker.io/%s:%s" $repository $tag -}}
-{{- else -}}
-{{- printf "docker.io/intel/%s:%s" $repository $tag -}}
-{{- end -}}
+{{- printf "%s:%s" $repository $tag -}}
 {{- end -}}
 {{- end -}}

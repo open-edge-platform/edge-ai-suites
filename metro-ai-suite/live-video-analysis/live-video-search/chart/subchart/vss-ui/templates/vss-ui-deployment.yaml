@@ -32,7 +32,7 @@ spec:
               done
       containers:
         - name: vss-ui
-          image: {{ include "lvs.vssui.image" (dict "registry" .Values.global.registry "repository" .Values.images.vssUi.repository "tag" (include "lvs.vssui.vssTag" .)) }}
+          image: {{ include "lvs.vssui.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.vssUi.repository .Values.imageOverride.repository) "tag" (default (include "lvs.vssui.vssTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:

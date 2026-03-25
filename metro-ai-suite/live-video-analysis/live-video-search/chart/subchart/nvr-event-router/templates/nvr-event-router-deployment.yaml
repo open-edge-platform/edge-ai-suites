@@ -45,7 +45,7 @@ spec:
               done
       containers:
         - name: nvr-event-router
-          image: {{ include "lvs.nvrrouter.image" (dict "registry" .Values.global.registry "repository" .Values.images.nvrEventRouter.repository "tag" (include "lvs.nvrrouter.smartNvrTag" .)) }}
+          image: {{ include "lvs.nvrrouter.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.nvrEventRouter.repository .Values.imageOverride.repository) "tag" (default (include "lvs.nvrrouter.smartNvrTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:

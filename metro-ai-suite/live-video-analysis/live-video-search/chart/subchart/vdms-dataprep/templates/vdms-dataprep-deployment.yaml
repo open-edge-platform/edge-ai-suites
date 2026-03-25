@@ -43,7 +43,7 @@ spec:
               done
       containers:
         - name: vdms-dataprep
-          image: {{ include "lvs.dataprep.image" (dict "registry" .Values.global.registry "repository" .Values.images.vdmsDataprep.repository "tag" (include "lvs.dataprep.vssTag" .)) }}
+          image: {{ include "lvs.dataprep.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.vdmsDataprep.repository .Values.imageOverride.repository) "tag" (default (include "lvs.dataprep.vssTag" .) .Values.imageOverride.tag)) }}
           imagePullPolicy: {{ .Values.imagePullPolicy }}
           {{- with .Values.securityContext }}
           securityContext:
