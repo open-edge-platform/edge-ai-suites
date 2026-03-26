@@ -23,6 +23,8 @@ persistence:
     size: 20Gi
   frigateRecordings:
     size: 100Gi
+    accessModes:
+      - ReadWriteOnce
   minioData:
     size: 20Gi
   ovModels:
@@ -36,3 +38,5 @@ persistence:
     size: 50Gi
   videos:
     size: 20Gi
+    accessModes:
+      - ReadWriteOnce

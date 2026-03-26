@@ -112,7 +112,12 @@ metadata:
   labels:
     {{- include "lvs.shared.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.persistence.frigateRecordings.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.frigateRecordings.accessModes | nindent 4 }}
+  {{- else }}
   accessModes: ["ReadWriteOnce"]
+  {{- end }}
   {{- if .Values.persistence.storageClassName }}
   storageClassName: {{ .Values.persistence.storageClassName }}
   {{- end }}
@@ -132,7 +137,12 @@ metadata:
   labels:
     {{- include "lvs.shared.labels" . | nindent 4 }}
 spec:
+  {{- if .Values.persistence.videos.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.videos.accessModes | nindent 4 }}
+  {{- else }}
   accessModes: ["ReadWriteOnce"]
+  {{- end }}
   {{- if .Values.persistence.storageClassName }}
   storageClassName: {{ .Values.persistence.storageClassName }}
   {{- end }}

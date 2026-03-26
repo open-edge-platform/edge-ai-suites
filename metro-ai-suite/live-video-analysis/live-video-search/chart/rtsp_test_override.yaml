@@ -41,6 +41,13 @@ vss-collector:
 
 shared:
   persistence:
+    storageClassName: longhorn
+    videos:
+      accessModes:
+        - ReadWriteMany
+    frigateRecordings:
+      accessModes:
+        - ReadWriteMany
     collectorSignals:
       storageClassName: longhorn
       accessModes:
