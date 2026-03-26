@@ -632,7 +632,7 @@ def invoke_make_check_env_variables():
 
 
 def update_env_file(file_path=None, values=None):
-"""Update existing .env file with specific environment variable values using sed."""
+    """Update existing .env file with specific environment variable values using sed."""
 
     # Set default file path if not provided
     if file_path is None:
