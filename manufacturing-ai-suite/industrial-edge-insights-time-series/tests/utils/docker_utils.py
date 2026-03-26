@@ -632,7 +632,7 @@ def invoke_make_check_env_variables():
 
 
 def update_env_file(file_path=None, values=None):
-    """Update existing .env file with specific environment variable values."""
+"""Update existing .env file with specific environment variable values using sed."""
 
     # Set default file path if not provided
     if file_path is None:
@@ -661,33 +661,32 @@ def update_env_file(file_path=None, values=None):
             logger.error(f".env file not found: {expanded_path}")
             return False
 
-        # Read the existing file
-        with open(expanded_path, 'r') as env_file:
-            lines = env_file.readlines()
-
-        # Update existing keys and track which ones were found
-        updated_vars = set()
-        updated_lines = []
-        for line in lines:
-            updated = False
-            for env_var_name, env_var_val in values.items():
-                if line.strip().startswith(f"{env_var_name}="):
-                    updated_lines.append(f"{env_var_name}={env_var_val}\n")
-                    updated_vars.add(env_var_name)
-                    updated = True
-                    break
-            if not updated:
-                updated_lines.append(line)
-
-        # Append any missing variables (log only the variable name, not its value)
-        for env_var_name, env_var_val in values.items():
-            if env_var_name not in updated_vars:
-                updated_lines.append(f"{env_var_name}={env_var_val}\n")
-                logger.info(f"Added missing variable {env_var_name} to .env file")
-
-        # Write the updated content back to the file
-        with open(expanded_path, 'w') as env_file:
-            env_file.writelines(updated_lines)
+        for parameter_name, value in values.items():
+            # Check whether the key already exists in the file
+            grep_result = subprocess.run(
+                ["grep", "-q", f"^{parameter_name}=", expanded_path],
+                capture_output=True
+            )
+            if grep_result.returncode == 0:
+                # Key exists — update it with sed
+                sed_result = subprocess.run(
+                    ["sed", "-i", f"s|^{parameter_name}=.*|{parameter_name}={value}|g", expanded_path],
+                    capture_output=True, text=True
+                )
+                if sed_result.returncode != 0:
+                    logger.error(f"sed failed for {parameter_name}: {sed_result.stderr}")
+                    return False
+                logger.info(f"Updated {parameter_name} in .env file")
+            else:
+                # Key missing — append it using printf via shell
+                append_result = subprocess.run(
+                    ["bash", "-c", f"printf '%s\\n' '{parameter_name}={value}' >> {expanded_path}"],
+                    capture_output=True, text=True
+                )
+                if append_result.returncode != 0:
+                    logger.error(f"Failed to append {parameter_name}: {append_result.stderr}")
+                    return False
+                logger.info(f"Added missing variable {parameter_name} to .env file")
 
         logger.info(f"Successfully updated .env file with {len(values)} environment variables")
         return True
@@ -3850,8 +3849,9 @@ def check_system_gpu_devices():
         # Method 1: Check for Intel GPU devices
         try:
             result = subprocess.run(
-                ["lspci"],
-                capture_output=True,
+                ["lspci", "|", "grep", "-i", "vga"], 
+                shell=True,
+                capture_output=True, 
                 text=True,
                 timeout=10
             )
