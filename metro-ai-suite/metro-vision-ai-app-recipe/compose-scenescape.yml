@@ -64,7 +64,7 @@ services:
       - ./${SAMPLE_APP}/src/node-red/flows_cred.json:/tmp/flows_cred.json
       - ./${SAMPLE_APP}/src/node-red/settings.js:/data/settings.js
       - ./${SAMPLE_APP}/src/node-red/install_package.sh:/data/install_package.sh
-      - node-red-node-modules:/usr/src/node-red/node_modules
+      - node-red-node-modules-smart-corridor:/usr/src/node-red/node_modules
     secrets:
       - influxdb2-admin-token
       - root-cert
