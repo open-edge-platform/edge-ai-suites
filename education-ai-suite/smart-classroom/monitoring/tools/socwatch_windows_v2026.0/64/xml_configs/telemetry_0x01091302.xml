@@ -1,0 +1,1537 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_soc_ert_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL SOC ERT PCD-S</TELEM:description>
+	<TELEM:uniqueid>0x01091302</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x400</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_EDP_PHY_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_EDP_PHY_PLL">
+			<TELC:description>EDP PHY PLL Active (Mapped to TSS0, TSS1)</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_EDP_PHY_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_EDP_PHY_PLL_1" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_EDP_PHY_PLL_1">
+			<TELC:description>DP PHY PLL Active (Mapped to TSS0, TSS1)</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_EDP_PHY_PLL_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x408</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_0">
+			<TELC:description>CLOCK OUT SRC BUFFER 0 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_1" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_1">
+			<TELC:description>CLOCK OUT SRC BUFFER 1 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x410</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_2" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_2">
+			<TELC:description>CLOCK OUT SRC BUFFER 2 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_3" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_3">
+			<TELC:description>CLOCK OUT SRC BUFFER 3 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x418</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_4" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_4">
+			<TELC:description>CLOCK OUT SRC BUFFER 4 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_5" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_5">
+			<TELC:description>CLOCK OUT SRC BUFFER 5 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ICC_CLKOUT_DBUFF_SRC_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x420</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_USB4PHY_0_PLLA" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_USB4PHY_0_PLLA">
+			<TELC:description>USB4PHY Port 0 PLLA Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_USB4PHY_0_PLLA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_USB4PHY_0_PLLB" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_USB4PHY_0_PLLB">
+			<TELC:description>USB4PHY Port 0 PLLB Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_USB4PHY_0_PLLB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x428</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_USB4PHY_1_PLLA" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_USB4PHY_1_PLLA">
+			<TELC:description>USB4PHY Port 1 PLLA Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_USB4PHY_1_PLLA</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_USB4PHY_1_PLLB" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_USB4PHY_1_PLLB">
+			<TELC:description>USB4PHY Port 1 PLLB Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_USB4PHY_1_PLLB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x430</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXON_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x438</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXOFF_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x440</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXON_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x448</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane0 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L0_TXOFF_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x450</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXON_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x458</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXOFF_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x460</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXON_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x468</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 0 Lane1 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L1_TXOFF_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x470</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXON_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x478</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXOFF_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x480</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXON_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x488</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane0 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L2_TXOFF_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x490</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXON_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x498</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXOFF_TXON2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x4a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXON_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x4a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXON__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXON__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXON__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXOFF__FIA_TC0_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXOFF__FIA_TC0_">
+			<TELC:description>USB4PHY Port 1 Lane1 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L3_TXOFF_TXOFF2_RXOFF__FIA_TC0_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_22" sampleID="22" sampleGroupID="Container_22">
+		<TELC:description>Groupname 0x4b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXON_TXON2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_23" sampleID="23" sampleGroupID="Container_23">
+		<TELC:description>Groupname 0x4b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXOFF_TXON2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_24" sampleID="24" sampleGroupID="Container_24">
+		<TELC:description>Groupname 0x4c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXON_TXOFF2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_25" sampleID="25" sampleGroupID="Container_25">
+		<TELC:description>Groupname 0x4c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 0 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L4_TXOFF_TXOFF2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_26" sampleID="26" sampleGroupID="Container_26">
+		<TELC:description>Groupname 0x4d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXON_TXON2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_27" sampleID="27" sampleGroupID="Container_27">
+		<TELC:description>Groupname 0x4d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXOFF_TXON2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_28" sampleID="28" sampleGroupID="Container_28">
+		<TELC:description>Groupname 0x4e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXON_TXOFF2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_29" sampleID="29" sampleGroupID="Container_29">
+		<TELC:description>Groupname 0x4e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXON__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXON__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXON__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXOFF__EDPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXOFF__EDPHY_">
+			<TELC:description>EDPPHY Port 0 Lane 1 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L5_TXOFF_TXOFF2_RXOFF__EDPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_30" sampleID="30" sampleGroupID="Container_30">
+		<TELC:description>Groupname 0x4f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXON_TXON2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_31" sampleID="31" sampleGroupID="Container_31">
+		<TELC:description>Groupname 0x4f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXOFF_TXON2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_32" sampleID="32" sampleGroupID="Container_32">
+		<TELC:description>Groupname 0x500</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXON_TXOFF2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_33" sampleID="33" sampleGroupID="Container_33">
+		<TELC:description>Groupname 0x508</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 0 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L6_TXOFF_TXOFF2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_34" sampleID="34" sampleGroupID="Container_34">
+		<TELC:description>Groupname 0x510</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxON_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxON_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXON_TXON2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_35" sampleID="35" sampleGroupID="Container_35">
+		<TELC:description>Groupname 0x518</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxOFF_TxON2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxOFF_TxON2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXOFF_TXON2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_36" sampleID="36" sampleGroupID="Container_36">
+		<TELC:description>Groupname 0x520</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxON_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxON_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXON_TXOFF2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_37" sampleID="37" sampleGroupID="Container_37">
+		<TELC:description>Groupname 0x528</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXON__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXON__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxOFF_TxOFF2_RxON Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXON__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXOFF__DPHY_" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXOFF__DPHY_">
+			<TELC:description>DPPHY Port 0 Lane 1 TxOFF_TxOFF2_RxOFF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_MPHY_L7_TXOFF_TXOFF2_RXOFF__DPHY_</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_38" sampleID="38" sampleGroupID="Container_38">
+		<TELC:description>Groupname 0x530</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_CSME_HF" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_CSME_HF">
+			<TELC:description>CSME in High Frequency Mode Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_CSME_HF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_CSME_LF" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_CSME_LF">
+			<TELC:description>CSME in Low Frequency Mode</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_CSME_LF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_39" sampleID="39" sampleGroupID="Container_39">
+		<TELC:description>Groupname 0x538</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_OSSE_HF" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_OSSE_HF">
+			<TELC:description>OSSE in High Frequency Mode Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_OSSE_HF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_OSSE_LF" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_OSSE_LF">
+			<TELC:description>OSSE in Low Frequency Mode</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_OSSE_LF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_40" sampleID="40" sampleGroupID="Container_40">
+		<TELC:description>Groupname 0x540</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_SLP_S0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_SLP_S0">
+			<TELC:description>PCD in S0 (!SLP_S0)</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_SLP_S0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PSF0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PSF0">
+			<TELC:description>PSF0 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PSF0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_41" sampleID="41" sampleGroupID="Container_41">
+		<TELC:description>Groupname 0x548</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PSF7" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PSF7">
+			<TELC:description>PSF7 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PSF7</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PSF8" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PSF8">
+			<TELC:description>PSF8 Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PSF8</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_42" sampleID="42" sampleGroupID="Container_42">
+		<TELC:description>Groupname 0x550</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_DBG_PSF" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_DBG_PSF">
+			<TELC:description>Debug PSF Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_DBG_PSF</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_D2D_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_D2D_PLL">
+			<TELC:description>ISCLK D2D PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_D2D_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_43" sampleID="43" sampleGroupID="Container_43">
+		<TELC:description>Groupname 0x558</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_REF_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_REF_PLL">
+			<TELC:description>ISCLK REF PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_REF_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_XTAL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_XTAL">
+			<TELC:description>ISCLK XTAL Oscillator Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_XTAL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_44" sampleID="44" sampleGroupID="Container_44">
+		<TELC:description>Groupname 0x560</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_FILTER_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_FILTER_PLL">
+			<TELC:description>ISCLK FILTER PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_FILTER_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_RTC_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_RTC_PLL">
+			<TELC:description>ISCLK RTC PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_RTC_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_45" sampleID="45" sampleGroupID="Container_45">
+		<TELC:description>Groupname 0x568</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_FABRIC_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_FABRIC_PLL">
+			<TELC:description>ISCLK FABRIC PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_FABRIC_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_SOC_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_SOC_PLL">
+			<TELC:description>ISCLK SOC PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_SOC_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_46" sampleID="46" sampleGroupID="Container_46">
+		<TELC:description>Groupname 0x570</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_DDI_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_DDI_PLL">
+			<TELC:description>ISCLK DDI PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_DDI_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_DDI2_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_DDI2_PLL">
+			<TELC:description>ISCLK DDI2 PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_DDI2_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_47" sampleID="47" sampleGroupID="Container_47">
+		<TELC:description>Groupname 0x578</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_ISCLK_SE_TCSS_PLL" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_ISCLK_SE_TCSS_PLL">
+			<TELC:description>ISCLK SE TCSS PLL Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_ISCLK_SE_TCSS_PLL</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_D2D_DISP_DDI" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_D2D_DISP_DDI">
+			<TELC:description>Die to Die Direct Display Interface Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_D2D_DISP_DDI</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_48" sampleID="48" sampleGroupID="Container_48">
+		<TELC:description>Groupname 0x580</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_D2D_DISP_EDP" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_D2D_DISP_EDP">
+			<TELC:description>Die to Die eDP Interface Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_D2D_DISP_EDP</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_D2D_NOC_CFI" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_D2D_NOC_CFI">
+			<TELC:description>Die to Die CFI Interface Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_D2D_NOC_CFI</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_49" sampleID="49" sampleGroupID="Container_49">
+		<TELC:description>Groupname 0x588</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_D2D_NOC_GPSB" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_D2D_NOC_GPSB">
+			<TELC:description>Die to Die General Purpose Sideband Interface Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_D2D_NOC_GPSB</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PHY_XTAL_CLK_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PHY_XTAL_CLK_0">
+			<TELC:description>TCSS USB4PHY Port 0 XTAL Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PHY_XTAL_CLK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_50" sampleID="50" sampleGroupID="Container_50">
+		<TELC:description>Groupname 0x590</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PHY_XTAL_CLK_1" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PHY_XTAL_CLK_1">
+			<TELC:description>TCSS USB4PHY Port 1 XTAL Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PHY_XTAL_CLK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_IP_XTAL_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_IP_XTAL_CLK">
+			<TELC:description>TCSS IP XTAL Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_IP_XTAL_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_51" sampleID="51" sampleGroupID="Container_51">
+		<TELC:description>Groupname 0x598</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_CRO_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_CRO_CLK">
+			<TELC:description>TCSS CRO Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_CRO_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_IOSFSB_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_IOSFSB_CLK">
+			<TELC:description>TCSS IOSF SB Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_IOSFSB_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_52" sampleID="52" sampleGroupID="Container_52">
+		<TELC:description>Groupname 0x5a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PSF_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PSF_CLK">
+			<TELC:description>TCSS PSF Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PSF_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_IP_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_IP_CLK">
+			<TELC:description>TCSS IP Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_IP_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_53" sampleID="53" sampleGroupID="Container_53">
+		<TELC:description>Groupname 0x5a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_TMU_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_TMU_CLK">
+			<TELC:description>TCSS TMU Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_TMU_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_1GHZ_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_1GHZ_CLK">
+			<TELC:description>TCSS 1GHz Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_1GHZ_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_54" sampleID="54" sampleGroupID="Container_54">
+		<TELC:description>Groupname 0x5b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_GENT_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_GENT_CLK">
+			<TELC:description>TCSS GenT Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_GENT_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_AON_CLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_AON_CLK">
+			<TELC:description>TCSS AON Clock Active</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_AON_CLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_55" sampleID="55" sampleGroupID="Container_55">
+		<TELC:description>Groupname 0x5b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_OSSE_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_OSSE_0">
+			<TELC:description>OSSE PGD 0 ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_OSSE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_OSSE_SMT1_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_OSSE_SMT1_0">
+			<TELC:description>OSSE PGD 1 ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_OSSE_SMT1_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_56" sampleID="56" sampleGroupID="Container_56">
+		<TELC:description>Groupname 0x5c0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_ESPISPI_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_ESPISPI_0">
+			<TELC:description>ESPISPI PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_ESPISPI_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBRG_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBRG_0">
+			<TELC:description>Global Sideband Router PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBRG_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_57" sampleID="57" sampleGroupID="Container_57">
+		<TELC:description>Groupname 0x5c8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_PMC_1" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_PMC_1">
+			<TELC:description>PMC PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_PMC_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_FUSE_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_FUSE_0">
+			<TELC:description>FUSE Controller PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_FUSE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_58" sampleID="58" sampleGroupID="Container_58">
+		<TELC:description>Groupname 0x5d0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_PSF0_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_PSF0_0">
+			<TELC:description>PSF0 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_PSF0_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_PSF7_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_PSF7_0">
+			<TELC:description>PSF7 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_PSF7_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_59" sampleID="59" sampleGroupID="Container_59">
+		<TELC:description>Groupname 0x5d8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_PSF8_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_PSF8_0">
+			<TELC:description>PSF8 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_PSF8_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_DBG_PSF_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_DBG_PSF_0">
+			<TELC:description>Debug PSF PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_DBG_PSF_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_60" sampleID="60" sampleGroupID="Container_60">
+		<TELC:description>Groupname 0x5e0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PSF11_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PSF11_PGD">
+			<TELC:description>TCSS PSF11 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PSF11_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PSF12_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PSF12_PGD">
+			<TELC:description>TCSS PSF12 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PSF12_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_61" sampleID="61" sampleGroupID="Container_61">
+		<TELC:description>Groupname 0x5e8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_IOMMAING_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_IOMMAING_PGD">
+			<TELC:description>TCSS IOMMAING PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_IOMMAING_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_IOMAONG_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_IOMAONG_PGD">
+			<TELC:description>TCSS IOMAONG PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_IOMAONG_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_62" sampleID="62" sampleGroupID="Container_62">
+		<TELC:description>Groupname 0x5f0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PCIE1_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PCIE1_PGD">
+			<TELC:description>TCSS PCIE Controller 1 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PCIE1_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_PCIE2_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_PCIE2_PGD">
+			<TELC:description>TCSS PCIE Controller 2 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_PCIE2_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_63" sampleID="63" sampleGroupID="Container_63">
+		<TELC:description>Groupname 0x5f8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_TBT1_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_TBT1_PGD">
+			<TELC:description>TCSS Thunderbolt Controller 1 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_TBT1_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_XHCI_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_XHCI_PGD">
+			<TELC:description>TCSS XHCI PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_XHCI_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_64" sampleID="64" sampleGroupID="Container_64">
+		<TELC:description>Groupname 0x600</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_TCSS_VCCSTTPC_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_VCCSTTPC_PGD">
+			<TELC:description>TCSS VCCSTTPC PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_VCCSTTPC_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_TCSS_VCCTPC_PGD" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_TCSS_VCCTPC_PGD">
+			<TELC:description>TCSS VCCTPC PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_TCSS_VCCTPC_PGD</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_65" sampleID="65" sampleGroupID="Container_65">
+		<TELC:description>Groupname 0x608</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_CSE_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_CSE_0">
+			<TELC:description>CSE PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_CSE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_DISP_PGA_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_DISP_PGA_0">
+			<TELC:description>EDPPHY PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_DISP_PGA_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_66" sampleID="66" sampleGroupID="Container_66">
+		<TELC:description>Groupname 0x610</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_DISP_PGA1_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_DISP_PGA1_0">
+			<TELC:description>DPPHY PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_DISP_PGA1_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_ISCLK" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_ISCLK">
+			<TELC:description>ISCLK PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_ISCLK</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_67" sampleID="67" sampleGroupID="Container_67">
+		<TELC:description>Groupname 0x618</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B0_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B0_0">
+			<TELC:description>SBR16B0 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B0_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B1_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B1_0">
+			<TELC:description>SBR16B1 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B1_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_68" sampleID="68" sampleGroupID="Container_68">
+		<TELC:description>Groupname 0x620</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B2_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B2_0">
+			<TELC:description>SBR16B2 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B2_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B3_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B3_0">
+			<TELC:description>SBR16B3 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B3_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_69" sampleID="69" sampleGroupID="Container_69">
+		<TELC:description>Groupname 0x628</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B4_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B4_0">
+			<TELC:description>SBR16B4 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B4_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_DBG_SBR16B_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_DBG_SBR16B_0">
+			<TELC:description>Debug SBR16B PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_DBG_SBR16B_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_70" sampleID="70" sampleGroupID="Container_70">
+		<TELC:description>Groupname 0x630</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B6_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B6_0">
+			<TELC:description>SBR16B6 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B6_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B7_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B7_0">
+			<TELC:description>SBR16B7 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B7_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_71" sampleID="71" sampleGroupID="Container_71">
+		<TELC:description>Groupname 0x638</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B20_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B20_0">
+			<TELC:description>SBR16B20 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B20_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B21_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B21_0">
+			<TELC:description>SBR16B21 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B21_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_72" sampleID="72" sampleGroupID="Container_72">
+		<TELC:description>Groupname 0x640</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR16B22_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR16B22_0">
+			<TELC:description>SBR16B22 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR16B22_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR8B0_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR8B0_0">
+			<TELC:description>SBR8B0 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR8B0_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_73" sampleID="73" sampleGroupID="Container_73">
+		<TELC:description>Groupname 0x648</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_DBG_SBR_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_DBG_SBR_0">
+			<TELC:description>Debug SBR PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_DBG_SBR_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR8B2_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR8B2_0">
+			<TELC:description>SBR8B2 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR8B2_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_74" sampleID="74" sampleGroupID="Container_74">
+		<TELC:description>Groupname 0x650</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FG_PR_CNTR_PGD_SBR8B20_0" datatypeIDREF="tpch_time_s" sampleID="FG_PR_CNTR_PGD_SBR8B20_0">
+			<TELC:description>SBR8B20 PGD ON</TELC:description>
+			<TELC:sampleSubGroup>FG_PR_CNTR_PGD_SBR8B20_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Counter</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="Ungated_SRAM_Count" datatypeIDREF="tgeneric_sample" sampleID="Ungated_SRAM_Count">
+			<TELC:description>Ungated 32KB SRAM Count</TELC:description>
+			<TELC:sampleSubGroup>SRAM_COUNT</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_75" sampleID="75" sampleGroupID="Container_75">
+		<TELC:description>Groupname 0x658</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="FIA_TC0_LOS1" datatypeIDREF="tgeneric_sample" sampleID="FIA_TC0_LOS1">
+			<TELC:description>FIA_TC0 Lane Ownership Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_TC0_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="FIA_TC0_LRSTS1" datatypeIDREF="tgeneric_sample" sampleID="FIA_TC0_LRSTS1">
+			<TELC:description>FIA_TC0 Lane Rate Status 1</TELC:description>
+			<TELC:sampleSubGroup>FIA_TC0_LANE_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

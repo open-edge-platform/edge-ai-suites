@@ -13,12 +13,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, projectN
   const [canClose, setCanClose] = useState<() => boolean>(() => () => true); // Default to always allow closing
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} canClose={canClose}>
+    <Modal isOpen={isOpen} onClose={onClose} >
       <SettingsForm
         onClose={onClose}
         projectName={projectName}
         setProjectName={setProjectName}
-        setCanClose={setCanClose} 
       />
     </Modal>
   );

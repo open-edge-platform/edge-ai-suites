@@ -7,33 +7,35 @@
 
 ## Overview
 
-**Edge AI Suites** are collections of open, industry-specific AI software development kits (SDKs), microservices, and sample applications for independent software vendors (ISVs), system integrators and solutions builders. 
+**Edge AI Suites** are collections of open, industry-specific AI software development kits (SDKs), microservices, and sample applications for independent software vendors (ISVs), system integrators and solutions builders.
 
 These suites accelerate the development of custom AI solutions by offering:
-•	Curated sample applications
-•	Optimized code for AI, media, and end-to-end workloads
-•	Benchmarks and deployment guides
+* Curated sample applications
+* Optimized code for AI, media, and end-to-end workloads
+* Benchmarks and deployment guides
 
 ## Suites and Use Cases
 
-•	[The Metro AI Suite](metro-ai-suite) accelerates the development of solutions for Edge AI video, safety and security, smart city and transportation use cases. 
+* [The Metro AI Suite](metro-ai-suite) accelerates the development of solutions for Edge AI video, safety and security, smart city and transportation use cases.
 
-•	[The Manufacturing AI Suite](manufacturing-ai-suite) enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities. 
+* [The Manufacturing AI Suite](manufacturing-ai-suite) enhances output quality and volume with automated defect detection, asset tracking, software-defined controls, and other capabilities, empowering smart factories with Vision, Time Series and Generative AI capabilities.
 
-•	[The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, featuring use cases such as self-checkout and loss prevention. 
+* [The Retail AI Suite](retail-ai-suite) accelerates hardware decisions for Retail AI workloads at the edge, featuring use cases such as self-checkout and loss prevention.
 
-•	[The Robotics AI Suite](robotics-ai-suite) provides ready to use samples leveraging AI to help solve common robotics problems such as perception, navigation, simulation, and planning. 
+* [The Robotics AI Suite](robotics-ai-suite) provides ready to use samples leveraging AI to help solve common robotics problems such as perception, navigation, simulation, and planning.
 
-•	[The Education AI Suite](education-ai-suite) is a preview collection of education-focused AI applications, libraries, and benchmarking tools to help developers build solutions faster. 
+* [The Education AI Suite](education-ai-suite) is a collection of education-focused AI applications, libraries, and benchmarking tools to help developers build solutions faster.
+
+* [The Health And Life Sciences AI Suite](health-and-life-sciences-ai-suite) is a preview solution for supporting the healthcare field with AI software tools covering a wide range of monitoring and analysis features.
 
 
 ## Contribute
 
-Read the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues and pull requests.  
+Read the [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on submitting issues and pull requests.
 
 ## Community and Support
 
-For support, submit your bug report and feature request to [Github Issues](https://github.com/open-edge-platform/edge-ai-suites/issues). 
+For support, submit your bug report and feature request to [Github Issues](https://github.com/open-edge-platform/edge-ai-suites/issues).
 
 ## License
 
@@ -52,5 +54,5 @@ Applications in this repository which are based on third-party content are liste
 |[ACT Sample](robotics-ai-suite/pipelines/act-sample) | [ACT](https://github.com/tonyzhaozh/act) |
 |[ORB-SLAM3 Sample](robotics-ai-suite/pipelines/orb-slam3-sample) | [ORB-SLAM3](https://github.com/UZ-SLAMLab/ORB_SLAM3.git) |
 
-Last Updated Date: August 04, 2025.  
- 
+Last Updated Date: August 04, 2025.
+

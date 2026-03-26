@@ -1,0 +1,189 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[Industrial Edge Insights Multimodal and Time Series] Functional Tests"
+run-name: "[Industrial Edge Insights Multimodal and Time Series] Functional Tests workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+on:
+  schedule:
+    - cron: '0 14 * * *' # 14:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Branch or tag to checkout (default: main)'
+        required: false
+        type: string
+        default: 'main'
+      build:
+        description: 'Build Docker images before running tests (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+      tests:
+        description: 'Which tests to run'
+        type: choice
+        options:
+        - all-tests
+        - timeseries-all
+        - multimodal-all
+        - test_docker_deployment_stability
+        - test_docker_deployment_weld_anomaly
+        - test_docker_deployment_wind_turbine
+        - test_docker_helm_deployment_security
+        - test_docker_influxdb_retention
+        - test_helm_deployment_weld_anomaly
+        - test_helm_deployment_wind_turbine
+        - test_helm_influxdb_retention
+        - test_docker_deployment_multimodal
+        - test_helm_deployment_multimodal
+        default: all-tests
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Branch or tag to checkout (default: main)'
+        required: false
+        type: string
+        default: 'main'
+      build:
+        description: 'Build Docker images before running tests (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+      tests:
+        description: 'Which tests to run (all-tests, timeseries-all, multimodal-all, or specific test file name)'
+        required: false
+        type: string
+        default: 'all-tests'
+permissions: {}
+
+
+jobs:
+  functional-tests:
+    name: Functional Tests for Multimodal and TimeSeries
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+    - name: Checkout current repository
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        ref: ${{ inputs.tag || 'main' }}
+        persist-credentials: false
+
+    - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
+      if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: open-edge-platform/edge-ai-libraries
+        ref: ${{ inputs.tag || 'main' }}
+        path: edge-ai-libraries
+        persist-credentials: false
+
+    - name: Building Time Series Analytics microservices
+      if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+      run: |
+        cd ./edge-ai-libraries/microservices/time-series-analytics/docker
+        docker compose down -v
+        docker compose build
+
+    - name: Building Multimodal Sample App images
+      if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+      run: |
+        cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/"
+        make down
+        make build
+
+    - name: Building Time Series Sample App images
+      if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+      run: |
+        cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+        make down
+        make build
+
+    - name: Install k3s
+      run: |
+        curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
+        sh -s - --disable=traefik --write-kubeconfig-mode=644
+        echo "KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> "$GITHUB_ENV"
+
+    - name: Load images into k3s
+      if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+      run: |
+        echo "Loading docker images into k3s..."
+        docker images --format "{{.Repository}}:{{.Tag}}" | grep "^intel/ia-" | grep -v "<none>" | while read image; do
+            echo "Importing image: $image"
+            docker save "$image" | sudo k3s ctr images import -
+        done
+
+    - name: Run Time Series Sample Apps functional tests
+      env:
+        TESTS: ${{ inputs.tests || 'all-tests' }}
+      run: |
+        # Timeseries-specific test files
+        TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
+          test_docker_deployment_wind_turbine test_docker_helm_deployment_security \
+          test_docker_influxdb_retention test_helm_deployment_weld_anomaly \
+          test_helm_deployment_wind_turbine test_helm_influxdb_retention"
+
+        # Skip if only multimodal tests are selected
+        if [[ "$TESTS" == "multimodal-all" || "$TESTS" == "test_docker_deployment_multimodal" || "$TESTS" == "test_helm_deployment_multimodal" ]]; then
+          echo "Skipping time-series tests (only multimodal tests selected)"
+          exit 0
+        fi
+
+        cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional"
+        echo "Running Time Series Sample Apps functional tests"
+        python3 -m venv env
+        source env/bin/activate
+        pip3 install -r ../requirements.txt
+        rm -rf /tmp/test_timeseries_report/report.html
+
+        # Run specific test file if selected, otherwise run all tests
+        if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
+          pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html "${TESTS}.py"
+        else
+          pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html
+        fi
+        deactivate
+
+    - name: Upload Time Series Sample Apps HTML test report to GitHub
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: timeseries-test-report
+        path: /tmp/test_timeseries_report
+
+    - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
+      env:
+        TESTS: ${{ inputs.tests || 'all-tests' }}
+      run: |
+        # Multimodal-specific test files
+        MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal"
+
+        # Skip if only timeseries tests are selected
+        if [[ "$TESTS" == "timeseries-all" ]] || echo "$TESTS" | grep -qw "test_docker_deployment_stability\|test_docker_deployment_weld_anomaly\|test_docker_deployment_wind_turbine\|test_docker_helm_deployment_security\|test_docker_influxdb_retention\|test_helm_deployment_weld_anomaly\|test_helm_deployment_wind_turbine\|test_helm_influxdb_retention"; then
+          echo "Skipping multimodal tests (only time-series tests selected)"
+          exit 0
+        fi
+
+        cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/tests/functional"
+        echo "Running Multimodal Weld Defect Detection Sample Apps functional tests"
+        python3 -m venv env
+        source env/bin/activate
+        pip3 install -r ../requirements.txt
+        rm -rf /tmp/test_multimodal_report/report.html
+
+        # Run specific test file if selected, otherwise run all tests
+        if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
+          pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html "${TESTS}.py"
+        else
+          pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html
+        fi
+        deactivate
+
+    - name: Upload Multimodal Weld Defect Detection Sample Apps HTML test report to GitHub
+      uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+      with:
+        name: multimodal-test-report
+        path: /tmp/test_multimodal_report

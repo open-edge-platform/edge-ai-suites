@@ -34,9 +34,6 @@ env:
   HTTP_PROXY: 
   HTTPS_PROXY: 
   
-  # Update with the absolute path to your industrial-edge-insights-multimodal directory
-  # Example: /home/user/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
-  WORK_DIR: ""
   # If CONTINUOUS_SIMULATOR_INGESTION is set to true (default), continuous looping of simulator data is enabled.
   # To ingest the simulator data only once (without looping), set this variable to false.
   CONTINUOUS_SIMULATOR_INGESTION: true
@@ -76,6 +73,16 @@ env:
   MTX_WEBRTCICESERVERS2_0_PASSWORD: 
   COTURN_UDP_PORT: 3478
 
+  # SeaweedFS S3 Storage related config
+  S3_STORAGE_USERNAME: 
+  S3_STORAGE_PASSWORD: 
+  # S3_BUCKET_TTL specifies the time-to-live duration for files/objects stored in SeaweedFS S3 buckets.
+  # After this duration, files/objects that have not been accessed will be automatically deleted, but the bucket itself remains.
+  # The duration can be specified using a combination of time units such as hours(h), minutes(m), and seconds(s),
+  # eg., 1h for 1 hour.
+  S3_BUCKET_TTL: 30m
+
+
   # Fusion Analytics config
   FUSION_MODE: OR
   TOLERANCE_NS: "50e6"
@@ -88,11 +95,14 @@ gpu:
   count: 1
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
-  image_suffix: "weekly"
-  time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.1.0
-  weld_data_simulator_image: intel/ia-weld-data-simulator:1.0.0
-  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2025.2.0-ubuntu24
-  fusion_analytics_image: intel/ia-multimodal-fusion-analytics:1.0.0
+  image_suffix: "2026.0.0"
+  # Date value format: "yyyymmdd" (e.g., "20260202")
+  weekly_build_date: ""
+  time_series_analytics_image: intel/ia-time-series-analytics-microservice
+  weld_data_simulator_image: intel/ia-weld-data-simulator
+  dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
+  fusion_analytics_image: intel/ia-multimodal-fusion-analytics
+  seaweedfs_image: chrislusf/seaweedfs:4.15
 privileged_access_required: false
 config:
   influx_db_server:
@@ -134,7 +144,14 @@ config:
     int:
       rest_api_port: "8080"
       rtsp_output_port: "8554"
-
+  seaweedfs_filer:
+    name: seaweedfs-filer
+  seaweedfs_master:
+    name: seaweedfs-master
+  seaweedfs_volume:
+    name: seaweedfs-volume
+  seaweedfs_s3:
+    name: seaweedfs-s3
   coturn:
     name: coturn
     int:

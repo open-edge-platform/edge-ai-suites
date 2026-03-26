@@ -5,14 +5,14 @@ Troubleshooting
 
     .. code-block:: bash
 
-        $ python3 -c "from openvino import Core; ie = Core(); print(ie.available_devices)"
+        python3 -c "from openvino import Core; ie = Core(); print(ie.available_devices)"
         ['CPU']
 
     Please firstly make sure you have installed the :doc:`firmware <installation_setup/installation/gpu_firmware>` and :doc:`driver <installation_setup/installation/client_gpu_driver>` for GPU. If you are still encountering this issue:
 
     .. code-block:: bash
 
-        $ export OCL_ICD_VENDORS=/etc/OpenCL/vendors
+        export OCL_ICD_VENDORS=/etc/OpenCL/vendors
 
 #. **MESA: warning: Driver does not support the 0x7d51 PCI ID** 
 
@@ -25,8 +25,8 @@ Troubleshooting
 
     .. code-block:: bash
 
-        $ sudo apt update
-        $ sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0 libigc2
+        sudo apt update
+        sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0 libigc2
 
 #. **IPEX workloads are incompatible with the NPU driver**
 
@@ -38,7 +38,7 @@ Troubleshooting
 
     .. code-block:: bash
 
-        $ sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
+        sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
 
 #. **DepthAnythingV2 checkpoint download failed**
 

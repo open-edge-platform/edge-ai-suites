@@ -132,10 +132,14 @@ tags
 *.avi
 *.png
 
+# autotest
+**/autotest_logs/
+
 *.html
 performance*.json
 profiling.sh
 !docs/user-guide/_images/*.png
+!docs/user-guide/_assets/*.png
 !ai_inference/test/demo/*.png
 .vscode/
 ../../.vscode/

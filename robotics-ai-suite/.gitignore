@@ -6,3 +6,5 @@ venv_robotics-ai-suite-docs/
 docs/docconf/build/
 docs/docconf/docconf.egg-info/
 robot-vision-control/docs/build/
+
+.vscode/

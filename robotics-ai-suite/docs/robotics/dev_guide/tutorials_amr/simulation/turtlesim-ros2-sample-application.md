@@ -12,7 +12,7 @@ This tutorial describes how to:
 
 ## Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 ## Run the Turtlesim ROS 2 Sample application
 
@@ -65,6 +65,8 @@ Complete the [get started guide](../../../gsg_robot/index.rst) before continuing
    ```
 
 4. In the rqt application, navigate to **Plugins** > **Services** > **Service Caller**.
+
+   ![turtlesim-service-caller](../../../images/turtlesim-service-caller.png)
 
    To move 'turtle1',
    choose `/turtle1/teleport_absolute` from the 'Service' dropdown list.

@@ -39,7 +39,7 @@ def system_check():
 
 if __name__ == "__main__":
     
-    system_check()
+    #system_check()
     RuntimeConfig.ensure_config_exists()
     ensure_model()
     preload_models()
@@ -49,4 +49,4 @@ if __name__ == "__main__":
 
     import uvicorn
     logger.info("App started, Starting Server...")
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=False)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=False)

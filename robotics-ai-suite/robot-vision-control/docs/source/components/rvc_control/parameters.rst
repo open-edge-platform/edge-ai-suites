@@ -19,10 +19,4 @@ Plugins
            motion_controller: "RVCMotionController::Moveit2ServoMotionController"
            grasp_plugin: "RVCControl::NonOrientedGrasp"
 
-To use Dobby planner plugin:
 
-.. code-block:: yaml
-
-   /**:
-       ros__parameters:
-           motion_controller: "RVCMotionController::DobbyMotionController"

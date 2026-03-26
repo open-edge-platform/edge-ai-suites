@@ -5,6 +5,7 @@
 #
 
 INCLUDE ?= default_INCLUDE
+HELM_REGISTRY = oci://registry-1.docker.io/intel
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
@@ -20,6 +21,7 @@ HELM_PACKAGE_SCRIPT = ./package_helm.sh
 
 include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
+$(shell chmod 600 .env helm/values.yaml)
 
 # Default values
 KEY_LENGTH=3072
@@ -30,12 +32,12 @@ SHA_ALGO="sha384"
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build;
+	$(DOCKER_COMPOSE) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull;
 
 .PHONY: validate_host_ip
 validate_host_ip:
@@ -61,7 +63,7 @@ validate_host_ip:
 .PHONY: check_env_variables
 check_env_variables:
 	@echo "Checking if username/password in .env are matching the rules set..."
-	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_USERNAME MTX_WEBRTCICESERVERS2_0_PASSWORD"; \
+	@variables="INFLUXDB_USERNAME INFLUXDB_PASSWORD VISUALIZER_GRAFANA_USER VISUALIZER_GRAFANA_PASSWORD MTX_WEBRTCICESERVERS2_0_USERNAME MTX_WEBRTCICESERVERS2_0_PASSWORD S3_STORAGE_USERNAME S3_STORAGE_PASSWORD"; \
 	for variable_name in $$variables; do \
 		value=$$(grep -E "^$$variable_name=" $(ENV_FILE) | cut -d'=' -f2); \
 		if [ -z "$$value" ]; then \
@@ -106,6 +108,18 @@ check_env_variables:
 			MTX_WEBRTCICESERVERS2_0_PASSWORD) \
 				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
 					echo "MTX_WEBRTCICESERVERS2_0_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
+					exit 1; \
+				fi \
+				;; \
+			S3_STORAGE_USERNAME) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z]{5,}$$"; then \
+					echo "S3_STORAGE_USERNAME must contain only alphabets and be at least 5 characters minimum"; \
+					exit 1; \
+				fi \
+				;; \
+			S3_STORAGE_PASSWORD) \
+				if ! echo "$$value" | grep -Eq "^[A-Za-z0-9]{10,}$$" || ! echo "$$value" | grep -q "[0-9]" || ! echo "$$value" | grep -q "[A-Za-z]"; then \
+					echo "S3_STORAGE_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit"; \
 					exit 1; \
 				fi \
 				;; \
@@ -177,6 +191,7 @@ push_images: build
 .PHONY: gen_helm_charts
 gen_helm_charts:
 	@echo "Generating Helm packages"
+	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
 	@cp -f configs/grafana/* helm/
 	@cp -f configs/influxdb/config/*.conf helm/
 	@cp -f configs/influxdb/init-influxdb.sh helm/
@@ -188,18 +203,36 @@ gen_helm_charts:
 	@cp -f configs/nginx/nginx.conf helm/nginx.conf
 	@cp -f configs/dlstreamer-pipeline-server/config.json helm/dlstreamer-pipeline-server.json
 	@sed -i 's/"auto_start": true,/"auto_start": false,/' helm/dlstreamer-pipeline-server.json
-	@echo "Helm packages generated"
+	@cp -f configs/seaweedfs-s3/seaweedfs_s3_config.json.template helm/seaweedfs_s3_config.json.template
+	@cp -f configs/seaweedfs-s3/s3-init-buckets.sh helm/s3-init-buckets.sh
+	@sed -i "s/version: .*/version: ${version}/" "helm/Chart.yaml"
+	@sed -i "s/appVersion: .*/appVersion: \"${version}\"/" "helm/Chart.yaml"
+	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
+	@echo "Helm packages generated with version: ${version}"
+
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts
+	@mkdir -p helm-packages
+	@rm -f helm-packages/*.tgz
+	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
+	echo "Helm chart packaged successfully: $$pkg_file"; \
+	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
+	cd ..
 
 # Help
 .PHONY: help
 help:
 	@echo "Makefile commands:"
-	@echo "  make build    - Build Docker containers"
-	@echo "  make build_copyleft_sources - Build Docker containers including copyleft licensed sources"
-	@echo "  make up    - Start Docker containers"
-	@echo "  make down     - Stop Docker containers"
-	@echo "  make restart  - Restart Docker containers"
-	@echo "  make clean    - Remove all stopped containers and unused images"
-	@echo "  make push_images     - Push the images to docker registry"
+	@echo "  make build                        - Build Docker containers"
+	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
+	@echo "  make up                           - Start Docker containers"
+	@echo "  make down                         - Stop Docker containers"
+	@echo "  make clean                        - Remove all stopped containers and unused images"
+	@echo "  make push_images                  - Push the images to docker registry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
-	@echo "  make help     - Display this help message"
+	@echo "  make push_helm_charts             - Package and Push Helm charts to docker registry"
+	@echo "  make help                         - Display this help message"

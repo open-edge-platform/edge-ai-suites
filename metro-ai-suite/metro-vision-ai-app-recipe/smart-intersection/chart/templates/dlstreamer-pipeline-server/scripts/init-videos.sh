@@ -10,7 +10,7 @@ else
     apk add --no-cache wget
     mkdir -p /data/videos
     VIDEO_URL="{{ .Values.externalUrls.videosRepo }}"
-    VIDEOS="1122east.ts 1122west.ts 1122north.ts 1122south.ts"
+    VIDEOS="1122east_h264.ts 1122west_h264.ts 1122north_h264.ts 1122south_h264.ts"
     for video in $VIDEOS; do
         echo "Downloading $video..."
         wget -O "/data/videos/$video" "$VIDEO_URL/$video"

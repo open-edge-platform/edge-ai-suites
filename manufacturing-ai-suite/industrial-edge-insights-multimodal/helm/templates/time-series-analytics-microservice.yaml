@@ -10,7 +10,7 @@ metadata:
   name: {{ .Values.config.time_series_analytics_microservice.name }}
   namespace: {{ .Values.namespace }}
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
   - port: {{ .Values.config.time_series_analytics_microservice.kapacitor_port }}
     name: kapacitor-port
@@ -41,10 +41,16 @@ spec:
       - name: registryauth
       {{- end }}
       securityContext:
-        supplementalGroups: [109,110,992]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
+        runAsNonRoot: true
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        fsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        seccompProfile:
+          type: RuntimeDefault
+        supplementalGroups: [109,110,992,993]  # render group IDs for ubuntu 20.04, 22.04 and 24.04 host OS
       containers:
       - name: ia-time-series-analytics-microservice
-        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}{{ if .Values.images.image_suffix }}-{{ .Values.images.image_suffix }}{{ end }}
+        image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           {{- if .Values.privileged_access_required }}
@@ -54,6 +60,7 @@ spec:
           privileged: false
           allowPrivilegeEscalation: false
           {{- end }}
+          runAsNonRoot: true
           readOnlyRootFilesystem: true
           capabilities:
             drop:

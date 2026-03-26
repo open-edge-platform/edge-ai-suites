@@ -2,7 +2,7 @@
 
 This tutorial provides instructions for running the ADBSCAN-based Follow-me
 algorithm from Autonomous Mobile Robot using Intel® RealSense™ camera input.
-Validation of the the algorithm was performed on a custom Aaeon robot.
+Validation of the algorithm was performed on a custom Aaeon robot.
 The Intel® RealSense™ camera publishes to `/camera/depth/color/points` topic.
 The `adbscan_sub_node` subscribes to the corresponding topic,
 detects the obstacle array, computes the robot's velocity and publishes to the
@@ -16,7 +16,7 @@ by a robot-driver.
 ### Prerequisites
 
 - Assemble your robotic kit following the instructions provided by AAEON.
-- Complete the [get started guide](../../../../../gsg_robot/index.rst) before
+- Complete the [get started guide](../../../../../gsg_robot/index.md) before
   continuing.
 
 ### Install the Deb package

@@ -16,7 +16,7 @@ operational efficiency.
 In this article, you can learn about the architecture of the sample and its data flow.
 
 If you want to start working with it, instead, check out the
-[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides/index.md)
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides.md)
 for Time-series applications.
 
 ## How It Works
@@ -26,7 +26,7 @@ simulators (which can act as data destinations, if configured) - in the real wor
 be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising
 of Telegraf, InfluxDB, and the Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_images/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
+![Wind Turbine Anomaly Detection - Time Series AI Stack Architecture Diagram](../_assets/wind-turbine-anomaly-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
@@ -83,8 +83,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 The `alerts` section defines the settings for alert mechanisms, using the MQTT protocol by
 default.
-For publishing OPC-UA alerts in Docker, refer to [Docker OPC-UA Alerts](../how-to-guides/how-to-configure-alerts.md#docker---publish-opc-ua-alerts).
-For OPC-UA Alerts in Helm, refer to [Helm OPC-UA Alerts](../how-to-guides/how-to-configure-alerts.md#helm---publish-opc-ua-alerts)
+For publishing OPC-UA alerts in Docker, refer to [Docker OPC-UA Alerts](../how-to-guides/configure-alerts.md#docker---publish-opc-ua-alerts).
+For OPC-UA Alerts in Helm, refer to [Helm OPC-UA Alerts](../how-to-guides/configure-alerts.md#helm---publish-opc-ua-alerts)
 > **Note:** Enable only one type of alerts: either MQTT or OPC-UA.
 
 **MQTT Configuration**:
@@ -121,6 +121,7 @@ For more details on how it is built refer to the [README](https://github.com/ope
 :hidden:
 
 how-to-enable-system-metrics
+how-to-select-model
 
 :::
 hide_directive-->

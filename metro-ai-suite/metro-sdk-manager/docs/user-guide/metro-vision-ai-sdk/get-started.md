@@ -76,7 +76,7 @@ docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  intel/dlstreamer
+  intel/dlstreamer:2026.0.0-ubuntu24
 ```
 
 ```bash
@@ -156,13 +156,13 @@ Profiling and monitoring performance of Metro Vision AI workloads using command-
 
 ### Technical Documentation
 
-- [DL Streamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+- [DL Streamer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment
-- [OpenVINO](https://docs.openvino.ai/2025/get-started.html)
+- [OpenVINO](https://docs.openvino.ai/2026/get-started.html)
   \- Complete reference for Intel's cross-platform inference optimization toolkit
-- [OpenVINO Model Server](https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html)
+- [OpenVINO Model Server](https://docs.openvino.ai/2026/model-server/ovms_what_is_openvino_model_server.html)
   \- Model serving infrastructure documentation for production deployments
 - [Edge AI Libraries](https://docs.openedgeplatform.intel.com/dev/ai-libraries.html)
   \- Comprehensive development toolkit documentation and API references

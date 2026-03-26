@@ -1,0 +1,30 @@
+# ********************************************************************************
+# INTEL CONFIDENTIAL
+# Copyright 2017 Intel Corporation.
+
+# This software and the related documents are Intel copyrighted materials, and
+# your use of them is governed by the express license under which they were
+# provided to you (License). Unless the License provides otherwise, you may not
+# use, modify, copy, publish, distribute, disclose or transmit this software or
+# the related documents without Intel's prior written permission.
+
+# This software and the related documents are provided as is, with no express
+# or implied warranties, other than those that are expressly stated in the
+# License.
+# ********************************************************************************
+
+ALL_SA-FREQ_TAG_TABLE_ORDER=SA-FREQ-REPORT
+
+ALL_SA-FREQ_SA-FREQ-REPORT_MIN-MAX-AVG_PRE-TABLE-TEXT=Warning: SA frequencies can change while in C0/C1/C2 but can only be sampled while in C0.  Report below incurs inaccuracy proportional to the time spent in C1 and C2.
+ALL_SA-FREQ_SA-FREQ-REPORT_MIN-MAX-AVG_TABLE=YES
+ALL_SA-FREQ_SA-FREQ-REPORT_MIN-MAX-AVG_TRANSPOSE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_MIN-MAX_TABLE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_MIN-MAX_TRANSPOSE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_NUMBER-OF-OCCURENCES_TABLE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_NUMBER-OF-OCCURENCES_TRANSPOSE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_RELATIVE-FREQUENCY-PERCENTAGE_TABLE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_RELATIVE-FREQUENCY-PERCENTAGE_TRANSPOSE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_SAMPLE-COUNT_TABLE=YES
+ALL_SA-FREQ_SA-FREQ-REPORT_SAMPLE-COUNT_TRANSPOSE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_APPROXIMATED-RESIDENCY_TABLE=NO
+ALL_SA-FREQ_SA-FREQ-REPORT_APPROXIMATED-RESIDENCY_TRANSPOSE=NO

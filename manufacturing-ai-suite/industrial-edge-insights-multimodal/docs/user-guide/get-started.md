@@ -66,23 +66,28 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    - `MTX_WEBRTCICESERVERS2_0_USERNAME`
    - `MTX_WEBRTCICESERVERS2_0_PASSWORD`
    - `HOST_IP`
+   - `S3_STORAGE_USERNAME`
+   - `S3_STORAGE_PASSWORD`
 
 2. Deploy the sample app, use only one of the following options.
 
-   > **NOTE**:
+   > **NOTE:**
    >
    > - The below `make up` fails if the above required fields are not populated
    >   as per the rules called out in `.env` file.
    > - The sample app is deployed by pulling the pre-built container images of the sample app
    >   from the docker hub OR from the internal container registry (login to the docker registry from cli and configure `DOCKER_REGISTRY`
    >   env variable in `.env` file at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal`)
-   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default, 
+   > - The `CONTINUOUS_SIMULATOR_INGESTION` variable in the `.env` file (for Docker Compose) is set to `true` by default,
    >   enabling continuous looping of simulator data. To ingest the simulator data only once (without looping),
    >   set this variable to `false`.
    > - The update rate of the graph and table may lag by a few seconds and might not perfectly align with the video stream, since
    >   Grafana’s minimum refresh interval is 5 seconds.
    > - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
    >   install its dependency packages before it can start running.
+   > - Fusion Analytics starts once the RTP sender timestamp is available in the metadata packet from the DL Streamer Pipeline Server.
+   > - **Known issue:** DL Streamer Pipeline Server may not send RTP sender timestamps for the first ~300 packets.
+   >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -104,52 +109,54 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 1. Get into the InfluxDB* container.
 
-  > **Note**: Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
-  > where for <namespace> replace with namespace name where the application was deployed and
-  > for <influxdb-pod-name> replace with InfluxDB pod name.
+   > **Note:** Use `kubectl exec -it <influxdb-pod-name> -n <namespace> -- /bin/bash` for the helm deployment
+   > where for \<namespace> replace with namespace name where the application was deployed and
+   > for \<influxdb-pod-name> replace with InfluxDB pod name.
 
-   ``` bash
-    docker exec -it ia-influxdb bash
-   ```
+    ```bash
+     docker exec -it ia-influxdb bash
+    ```
 
 2. Run following commands to see the data in InfluxDB*.
 
-    > **NOTE**:
-    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
-    > This does not affect any functionality while working with the InfluxDB commands
+   > **NOTE:**
+   > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
+   > This does not affect any functionality while working with the InfluxDB commands
 
-    ``` bash
-    # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
-    influx -username <username> -password <passwd>
-    use datain # database access
-    show measurements
-    # Run below query to check and output measurement processed
-    # by Time Series Analytics microservice
-    select * from "weld-sensor-anomaly-data"
+   ``` bash
+   # For below command, the INFLUXDB_USERNAME and INFLUXDB_PASSWORD needs to be fetched from `.env` file
+   influx -username <username> -password <passwd>
+   use datain # database access
+   show measurements
+   # Run below query to check and output measurement processed
+   # by Time Series Analytics microservice
+   select * from "weld-sensor-anomaly-data"
 
-    # Run below query to check and output measurement processed
-    # by DL Streamer pipeline server microservice
-    select * from "vision-weld-classification-results"
-    ```
+   # Run below query to check and output measurement processed
+   # by DL Streamer pipeline server microservice
+   select * from "vision-weld-classification-results"
+   ```
 
 3. Check the output in Grafana.
 
-    - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
+   - Use link `https://<host_ip>:3000` to launch Grafana from browser (preferably, chrome browser)
 
-    - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
-      in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
+   > **Note:** Use link `https://<host_ip>:30001` to launch Grafana from browser (preferably Chrome browser) for the Helm deployment
 
-      ![Grafana login](./_images/login_wt.png)
+   - Login to the Grafana with values set for `VISUALIZER_GRAFANA_USER` and `VISUALIZER_GRAFANA_PASSWORD`
+     in `.env` file and select **Multimodal Weld Defect Detection Dashboard**.
 
-    - After login, click on Dashboard
-      ![Menu view](./_images/dashboard.png)
+     ![Grafana login](./_assets/login_wt.png)
 
-    - Select the `Multimodal Weld Defect Detection Dashboard`.
-      ![Multimodal Weld Defect Detection Dashboard](./_images/grafana_dashboard_selection.png)
+   - After login, click on Dashboard
+     ![Menu view](./_assets/dashboard.png)
 
-    - One will see the below output.
+   - Select the `Multimodal Weld Defect Detection Dashboard`.
+     ![Multimodal Weld Defect Detection Dashboard](./_assets/grafana_dashboard_selection.png)
 
-      ![Anomaly prediction for weld data](./_images/anomaly_prediction.png)
+   - One will see the below output.
+
+     ![Anomaly prediction for weld data](./_assets/anomaly_prediction.png)
 
 ## Bring down the sample app
 
@@ -170,6 +177,18 @@ docker logs -f <container_name> | grep -i error
 
 ## Advanced setup
 
-- [How to build from source and deploy](./how-to-guides/how-to-build-from-source.md): Guide to build from source and docker compose deployment
+- [How to build from source and deploy](./get-started/build-from-source.md): Guide to build from source and docker compose deployment
+- [How to deploy with Helm](./get-started/deploy-with-helm.md): Guide for deploying with Helm.
 - [How to configure MQTT alerts](./how-to-guides/how-to-configure-alerts.md): Guide for configuring the MQTT alerts in the Time Series Analytics microservice
 - [How to update config](./how-to-guides/how-to-update-config.md): Guide updating configuration of Time Series Analytics Microservice.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/build-from-source
+./get-started/deploy-with-helm
+
+:::
+hide_directive-->

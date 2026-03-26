@@ -3,7 +3,16 @@
 
 import json
 from fastapi import APIRouter, Response
-from ..config import AGENT_MODE, DEFAULT_RTSP_URL, PEER_ID, SIGNALING_URL, ENABLE_DETECTION_PIPELINE, MQTT_TOPIC_PREFIX
+from ..config import (
+    ALERT_MODE,
+    CAPTION_HISTORY,
+    DEFAULT_RTSP_URL,
+    PEER_ID,
+    SIGNALING_URL,
+    ENABLE_DETECTION_PIPELINE,
+    MQTT_TOPIC_PREFIX,
+    METRICS_SERVICE_PORT,
+)
 from ..models.requests import DEFAULT_PROMPT
 
 router = APIRouter()
@@ -16,10 +25,12 @@ async def runtime_config() -> Response:
         "signalingUrl": SIGNALING_URL,
         "defaultPeerId": PEER_ID,
         "mqttTopicPrefix": MQTT_TOPIC_PREFIX,
-        "agentMode": AGENT_MODE,
+        "alertMode": ALERT_MODE,
         "defaultPrompt": DEFAULT_PROMPT,
         "defaultRtspUrl": DEFAULT_RTSP_URL,
         "enableDetectionPipeline": ENABLE_DETECTION_PIPELINE,
+        "captionHistory": CAPTION_HISTORY,
+        "metricsServicePort": METRICS_SERVICE_PORT,
     }
     body = f"window.RUNTIME_CONFIG = {json.dumps(payload)};"
     return Response(content=body, media_type="application/javascript")

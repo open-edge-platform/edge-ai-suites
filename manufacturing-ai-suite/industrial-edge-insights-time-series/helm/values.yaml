@@ -16,17 +16,17 @@ storageClassName: manual
 env:
   # The INFLUXDB_USERNAME must contain only alphabets and be at least 5 characters minimum
   # Do not set INFLUXDB_USERNAME to 'admin'.
-  INFLUXDB_USERNAME:
+  INFLUXDB_USERNAME: 
 
   # The INFLUXDB_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
   # Do not use the following special characters in the INFLUXDB_PASSWORD "~:'+[/@^{%(-"*|,&<`}._=}!>;?#$)\"
-  INFLUXDB_PASSWORD:
+  INFLUXDB_PASSWORD: 
 
   # The VISUALIZER_GRAFANA_USER must contain only alphabets and be at least 5 characters minimum
-  VISUALIZER_GRAFANA_USER:
+  VISUALIZER_GRAFANA_USER: 
 
   # The VISUALIZER_GRAFANA_PASSWORD length must be a minimum of 10 alphanumeric characters with at least one digit
-  VISUALIZER_GRAFANA_PASSWORD:
+  VISUALIZER_GRAFANA_PASSWORD: 
 
   # If your environment requires a proxy to access external resources, please set the following variables.
   # If no proxy is required, please leave them empty.
@@ -53,10 +53,12 @@ env:
 
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
-  image_suffix: "weekly"
-  time_series_analytics_image: intel/ia-time-series-analytics-microservice:1.1.0
-  opcua_server_image: intel/ia-opcua-server:1.1.0
-  mqtt_publisher_image: intel/ia-mqtt-publisher:1.1.0
+  image_suffix: "2026.0.0"
+  # Date value format: "yyyymmdd" (e.g., "20260202")
+  weekly_build_date: ""
+  time_series_analytics_image: intel/ia-time-series-analytics-microservice
+  opcua_server_image: intel/ia-opcua-server
+  mqtt_publisher_image: intel/ia-mqtt-publisher
 privileged_access_required: false
 config:
   influx_db_server:

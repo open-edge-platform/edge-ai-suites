@@ -6,11 +6,6 @@ SHELL := bash -eu -o pipefail
 
 ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 
-# Version info for packaging
-COMMIT := $(shell git rev-parse --short HEAD)
-DATE := $(shell git log -1 --format=%cd --date=format:"%Y%m%d")
-VERSION := $(COMMIT)-$(DATE)
-
 ROS_DISTRO ?= humble
 
 # Map ROS_DISTRO to Ubuntu codename
@@ -23,29 +18,23 @@ else
 endif
 
 # Base packages for all distributions
-PACKAGES_BASE = ROS2_node \
+PACKAGES = ROS2_node \
 	Follow_me_RS_2D/src/follow_me_interfaces \
 	Follow_me_RS_2D/src/adbscan_ros2 \
 	Follow_me_RS_2D/src/gesture_recognition_pkg \
 	Follow_me_RS_2D/src/speech_recognition_pkg \
 	Follow_me_RS_2D/src/text_to_speech_pkg \
+	Follow_me_RS_2D/src/turtlebot3_simulations/followme_turtlebot3_gazebo \
 	package/tutorial-aaeon-adbscan \
 	package/tutorial_follow-me \
 	package/tutorial_follow-me-w-gesture
 
-# Add turtlebot3_simulations only for humble
-ifeq ($(ROS_DISTRO),humble)
-	PACKAGES = $(PACKAGES_BASE) Follow_me_RS_2D/src/turtlebot3_simulations/followme_turtlebot3_gazebo
-else
-	PACKAGES = $(PACKAGES_BASE)
-endif
-
 .DEFAULT_GOAL := help
-.PHONY: license-check package test lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json clean-colcon clean-debian clean source-package help
+.PHONY: license-check package test lint lint-all lint-clang lint-python lint-yaml lint-githubactions lint-bash lint-markdown lint-json clean-colcon clean-debian clean help
 
 license-check:
 	@# Help: Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
-	docker run --rm --volume ${ROOT_DIR}:/data fsfe/reuse:5.0.2 lint
+	docker run --rm --volume ${ROOT_DIR}:/data amr-registry.caas.intel.com/cache/fsfe/reuse:5.0.2 lint
 
 package:
 	@# Help: Build Debian packages
@@ -56,67 +45,68 @@ package:
 		-e OPENVINO_INSTALL_DIR="/opt/intel/openvino" \
 		-e OPENVINO_DOWNLOAD_MODELS="no" \
 		-e INTEL_OPENVINO_DIR="/opt/intel/openvino" \
+		-e http_proxy=$${http_proxy:-http://proxy-dmz.intel.com:912} \
+		-e https_proxy=$${https_proxy:-http://proxy-dmz.intel.com:912} \
+		-e no_proxy=$${no_proxy:-localhost,127.0.0.1/8,ch.intel.com,ka.intel.com,devtools.intel.com,backend} \
 		amd64/ros:${ROS_DISTRO}-ros-base \
 		bash -c "curl https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg -o /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null && \
 			curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/intel-archive-keyring.gpg > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee /etc/apt/sources.list.d/eci.list > /dev/null && \
 			echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee -a /etc/apt/sources.list.d/eci.list > /dev/null && \
 			$(if $(filter humble,$(ROS_DISTRO)),echo -e \"Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000\n\nPackage: libflann*\nPin: version 1.19.*\nPin-Priority: -1\n\nPackage: flann*\nPin: version 1.19.*\nPin-Priority: -1\" | tee /etc/apt/preferences.d/isar > /dev/null && ,)\
-			echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee /etc/apt/sources.list.d/amr.list > /dev/null && \
-			echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee -a /etc/apt/sources.list.d/amr.list > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/intel-archive-keyring.gpg] https://apt.repos.intel.com/openvino ${OPENVINO_DISTRO} main\" | sudo tee /etc/apt/sources.list.d/intel-openvino.list > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/intel-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" | tee /etc/apt/sources.list.d/oneAPI.list > /dev/null && \
 			echo -e \"Package: intel-oneapi-runtime-*\nPin: version 2025.*\nPin-Priority: 1001\" | tee /etc/apt/preferences.d/oneAPI > /dev/null && \
-			apt-get -qq update && apt-get install -qq -y devscripts equivs && \
-			for path in ${PACKAGES}; do \
-				echo \"Building package: \$$path\"; \
-				cd /src/\$$path && \
+			(apt-get -qq update || (sleep 5 && apt-get -qq update) || (sleep 10 && apt-get -qq update)) && \
+			(apt-get install -qq -y devscripts equivs || (sleep 5 && apt-get install -qq -y devscripts equivs)) && \
+			for pkg in ${PACKAGES}; do \
+				echo \"Building package: \$$pkg\"; \
+				cd /src/\$$pkg && \
 				rm -rf debian && cp -r ${ROS_DISTRO}/debian ./debian && \
 				mk-build-deps -i --host-arch amd64 --build-arch amd64 \
 						-t 'apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades' debian/control && \
 				DEB_BUILD_OPTIONS='verbose' dpkg-buildpackage -us -uc -b -d && \
-				find . -path ./output -prune -o -type f -name '*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -not -name '*.changes' -exec apt-get install -f -y {} \; ; \
+				cd /src && \
+				find . -type f -name 'ros-*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' ! -path '*/debian/*' -print -exec apt-get install -f -y {} \; ; \
 			done; \
-			find . -path ./output -prune -o -type f -name '*.deb' -not -name '*-build-deps_*' -exec mv {} ./ \; || echo 'No .deb files found'"
+			find . -type f -name 'ros-*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' ! -path '*/debian/*' -exec mv {} /src/ \; || echo 'No .deb files found'"
 
 test:
 	@# Help: Test code using colcon
-	@if ! ls ros-$(ROS_DISTRO)-adbscan-ros2_*.deb 2>/dev/null | grep -q .; then \
-		echo "Error: ros-$(ROS_DISTRO)-adbscan-ros2*.deb not found. Run 'make package' first"; \
+	@echo "DEBUG: Checking for ros-$(ROS_DISTRO) packages..."
+	@if ! ls ros-$(ROS_DISTRO)-*.deb 2>/dev/null | grep -q .; then \
+		echo "Error: No ros-$(ROS_DISTRO)-*.deb packages found. Run 'make package' first"; \
+		echo "DEBUG: Current directory contents:"; \
+		ls -la *.deb 2>/dev/null || echo "No .deb files found in current directory"; \
 		exit 1; \
 	fi
+	@echo "DEBUG: Found ros-$(ROS_DISTRO) packages:"
+	@ls -1 ros-$(ROS_DISTRO)-*.deb 2>/dev/null | head -5
 	docker run --rm -t --platform linux/amd64 \
 		-v $(ROOT_DIR):/src \
 		-w /src \
 		-e DEBIAN_FRONTEND=noninteractive \
+		-e http_proxy=$${http_proxy:-http://proxy-dmz.intel.com:912} \
+		-e https_proxy=$${https_proxy:-http://proxy-dmz.intel.com:912} \
+		-e no_proxy=$${no_proxy:-localhost,127.0.0.1/8,ch.intel.com,ka.intel.com,devtools.intel.com,backend} \
 		amd64/ros:${ROS_DISTRO}-ros-base \
 		bash -c "curl https://eci.intel.com/repos/gpg-keys/GPG-PUB-KEY-INTEL-ECI.gpg -o /usr/share/keyrings/eci-archive-keyring.gpg > /dev/null && \
 			curl -fsSL https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor | tee /usr/share/keyrings/intel-archive-keyring.gpg > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee /etc/apt/sources.list.d/eci.list > /dev/null && \
 			echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/${UBUNTU_CODENAME} isar main\" | tee -a /etc/apt/sources.list.d/eci.list > /dev/null && \
-			echo \"deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee /etc/apt/sources.list.d/amr.list > /dev/null && \
-			echo \"deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://amrdocs.intel.com/repos/${UBUNTU_CODENAME} amr main\" | tee -a /etc/apt/sources.list.d/amr.list > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/intel-archive-keyring.gpg] https://apt.repos.intel.com/openvino ${OPENVINO_DISTRO} main\" | sudo tee /etc/apt/sources.list.d/intel-openvino.list > /dev/null && \
 			echo \"deb [signed-by=/usr/share/keyrings/intel-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" | tee /etc/apt/sources.list.d/oneAPI.list > /dev/null && \
 			echo -e \"Package: intel-oneapi-runtime-*\nPin: version 2025.*\nPin-Priority: 1001\" | tee /etc/apt/preferences.d/oneAPI > /dev/null && \
-			apt-get -qq update && apt install -qq -y equivs devscripts libtbb-dev \
-				$(if $(filter humble,$(ROS_DISTRO)),ros-${ROS_DISTRO}-gazebo-ros-pkgs) \
-				ros-${ROS_DISTRO}-pcl-conversions && \
-			find . -maxdepth 1 -name 'ros-$(ROS_DISTRO)-adbscan-ros2*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -exec apt-get install -f -y {} \; && \
-			current_dir=\"\$$(pwd)\" && \
-			\
-			for path in ${PACKAGES}; do \
-				if [ ! -d \"\$$path\" ]; then \
-					echo \"Skipping \$$path: not a directory\"; \
-					continue; \
-				fi; \
-				echo \"Cleaning up debian build in \$$path folder\"; \
-				cd \$$path && \
-				dpkg-buildpackage -Tclean -d && \
-				cd \$$current_dir; \
-			done && \
-			\
+			(apt-get -qq update || (sleep 5 && apt-get -qq update) || (sleep 10 && apt-get -qq update)) && \
+			(apt install -qq -y equivs devscripts libtbb-dev \
+				ros-${ROS_DISTRO}-ros-gz-sim ros-${ROS_DISTRO}-pcl-conversions || \
+		    	(sleep 5 && apt install -qq -y equivs devscripts libtbb-dev \
+				ros-${ROS_DISTRO}-ros-gz-sim ros-${ROS_DISTRO}-pcl-conversions)) && \
+			echo 'Installing all built .deb packages...' && \
+			find . -maxdepth 1 -name 'ros-$(ROS_DISTRO)-*.deb' -not -name '*-build-deps_*' -not -name '*-dbgsym_*' -exec apt-get install -f -y {} \; && \
 			echo 'Setting up ROS environment and running tests...' && \
+			echo 'Cleaning up stale build artifacts...' && \
+			rm -rf install/ log/ build/ && \
 			. /opt/ros/${ROS_DISTRO}/setup.sh && \
 			colcon build --executor sequential --event-handlers console_direct+ && \
 			colcon test --return-code-on-test-failure --executor sequential --event-handlers console_direct+"
@@ -199,13 +189,6 @@ clean-debian:
 
 clean: clean-debian clean-colcon
 	@# Help: Clean up all build artifacts
-
-source-package:
-	@# Help: Create source package tarball
-	git archive --format=zip -o adbscan-$(VERSION).zip HEAD \
-		.gitattributes .gitignore Makefile README.md REUSE.toml \
-		.github/linters docs input LICENSES output package \
-		Follow_me_RS_2D ROS2_node Standalone Visualization
 
 help:
 	@printf "%-20s %s\n" "Target" "Description"

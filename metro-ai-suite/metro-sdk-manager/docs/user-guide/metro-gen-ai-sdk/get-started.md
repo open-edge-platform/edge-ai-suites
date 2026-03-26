@@ -35,19 +35,28 @@ curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/he
 
 This section demonstrates a complete RAG (Retrieval-Augmented Generation) application workflow using the installed Gen AI components.
 
-### Step 1: Navigate to Sample Application
+### Step 1: Setup Model Download Service
 
-Navigate to the pre-installed question-answering application directory:
+Configure and start the Model Download service to manage LLM and embedding model downloads:
 
 ```bash
-cd $HOME/metro/edge-ai-libraries/sample-applications/chat-question-and-answer
+cd $HOME/metro/edge-ai-libraries/microservices/model-download
+export REGISTRY="intel/"
+export TAG=1.2.0
+export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
+source scripts/run_service.sh up --plugins openvino --model-path $HOME/metro/models/
 ```
+
+> **Note:** Keep this terminal open while the model download service is running. Open a new terminal to continue with the next steps.
+
+Update the `<your-huggingface-token>` to your Access Token from Hugging Face. To learn more, follow this [guide](https://huggingface.co/docs/hub/en/security-tokens).
 
 ### Step 2: Configure Environment and Dependencies
 
 Set up the Python virtual environment and install required dependencies:
 
 ```bash
+cd $HOME/metro/edge-ai-libraries/sample-applications/chat-question-and-answer
 # Configure application environment variables
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 export LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
@@ -55,22 +64,24 @@ export EMBEDDING_MODEL_NAME=Alibaba-NLP/gte-large-en-v1.5
 export RERANKER_MODEL=BAAI/bge-reranker-base
 export DEVICE="CPU"
 export REGISTRY="intel/"
-export TAG=2.0.0
+export TAG=2.1.0-rc2
+export MODEL_DOWNLOAD_HOST=localhost
+export MODEL_DOWNLOAD_PORT=8200
 source setup.sh llm=OVMS embed=OVMS
 ```
-Update the <your-huggingface-token> to your Access Token from Hugging Face. To know more, follow this [guide](https://huggingface.co/docs/hub/en/security-tokens).
 
 ### Step 3: Deploy the Application
 
 Start the complete Gen AI application stack using Docker Compose:
 
 ```bash
+export ALLOWED_HOSTS="*.intel.com,en.wikipedia.org,*.wikipedia.org,*.github.com"
 docker compose up
 ```
 
 ### Step 4: Verify Deployment Status
 
-Check that all application components are running correctly:
+Run below command in another terminal to check that all application components are running correctly:
 
 ```bash
 docker ps
@@ -91,7 +102,7 @@ http://localhost:8101
 - [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
 - [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/get-started.md)
+- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
   \- Vector database integration and document processing workflows
 - [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
   \- Embedding generation service architecture and API documentation

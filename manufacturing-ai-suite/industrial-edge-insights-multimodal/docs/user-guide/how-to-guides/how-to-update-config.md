@@ -1,4 +1,4 @@
-# Update config in Time Series Analytics Microservice
+# Update Configuration
 
 The Time Series Analytics Microservice provides an interactive Swagger UI at `https://<host_ip>:3000/ts-api/docs`.
 

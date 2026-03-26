@@ -20,6 +20,9 @@ spec:
       - name: nodered-config
         configMap:
           name: {{ .Release.Name }}-nodered # Reference the ConfigMap created above
+      - name: nodered-node-modules
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-nodered
       - name: secrets-volume
         projected:
           sources:
@@ -65,6 +68,8 @@ spec:
             mountPath: /mosquitto/secrets
           - name: nodered-config
             mountPath: /config
+          - name: nodered-node-modules
+            mountPath: /usr/src/node-red/node_modules
         livenessProbe:
           failureThreshold: 3
           initialDelaySeconds: 30

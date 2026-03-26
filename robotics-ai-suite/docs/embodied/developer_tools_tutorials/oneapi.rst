@@ -62,10 +62,10 @@ Install Intel® oneAPI™ Base Toolkit **2024.2.1**:
 .. code-block:: bash
 
   # launch the GUI installer as the root
-  $ sudo sh ./l_BaseKit_p_2024.2.1.100_offline.sh
+  sudo sh ./l_BaseKit_p_2024.2.1.100_offline.sh
 
   # Optionally, to launch the GUI installer as the current user
-  $ sh ./l_BaseKit_p_2024.2.1.100_offline.sh
+  sh ./l_BaseKit_p_2024.2.1.100_offline.sh
 
 3. Follow the instructions in the installer.
 

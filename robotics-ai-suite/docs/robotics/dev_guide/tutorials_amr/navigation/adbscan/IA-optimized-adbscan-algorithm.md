@@ -21,7 +21,7 @@ the point cloud is comparatively sparse and hence, not showed here.
 
 ## Prerequisites
 
-Complete the [get started guide](../../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
 ## Install and run the ROS 2 bag file Deb package
 

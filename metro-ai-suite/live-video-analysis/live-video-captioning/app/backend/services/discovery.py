@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from typing import List, Dict
+from fastapi import HTTPException
 from ..config import PIPELINE_NAME, PIPELINE_SERVER_URL, ENABLE_DETECTION_PIPELINE
 from .http_client import http_json
 
@@ -53,11 +54,13 @@ def is_detection_pipeline(item: dict) -> bool:
         # Either keys exist, or any key startswith 'detection_'
         if any(k in props for k in detection_keys):
             return True
-        if any(isinstance(k, str) and k.lower().startswith("detection_") for k in props.keys()):
+        if any(
+            isinstance(k, str) and k.lower().startswith("detection_")
+            for k in props.keys()
+        ):
             return True
 
     return False
-
 
 
 def discover_pipelines_remote() -> List[Dict[str, str]]:
@@ -89,12 +92,8 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
 
         if not isinstance(items, List):
             # Fallback to a single default pipeline
-            results = [{
-                "pipeline_name": PIPELINE_NAME,
-                "pipeline_type": "non-detection"
-            }]
             # Optional filtering: if detection were disabled, 'non-detection' remains
-            return results
+            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
 
         results: List[Dict[str, str]] = []
 
@@ -115,31 +114,29 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
                     # No usable identifier
                     continue
 
-                pipeline_type = "detection" if is_detection_pipeline(item) else "non-detection"
+                pipeline_type = (
+                    "detection" if is_detection_pipeline(item) else "non-detection"
+                )
             else:
                 continue
 
-            results.append({
-                "pipeline_name": name,
-                "pipeline_type": pipeline_type
-            })
+            results.append({"pipeline_name": name, "pipeline_type": pipeline_type})
 
         # Optional filtering based on your existing flag
         if not ENABLE_DETECTION_PIPELINE:
             results = [r for r in results if r["pipeline_type"] != "detection"]
 
+        # Filter out proxy pipelines (hidden from UI, used internally for default resolution)
+        results = [r for r in results if not r["pipeline_name"].endswith("_Default_Resolution")]
+
         # Fallback if nothing usable left
         if not results:
-            return [{
-                "pipeline_name": PIPELINE_NAME,
-                "pipeline_type": "non-detection"
-            }]
+            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
 
         return results
 
+    except HTTPException:
+        raise
     except Exception:
-        # Conservative fallback
-        return [{
-            "pipeline_name": PIPELINE_NAME,
-            "pipeline_type": "non-detection"
-        }]
+        # Conservative fallback for parse / unexpected errors
+        return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]

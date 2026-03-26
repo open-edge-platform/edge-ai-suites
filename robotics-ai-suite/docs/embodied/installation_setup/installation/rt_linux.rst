@@ -5,38 +5,79 @@ Real-Time Linux
 
 The Embodied Intelligence SDK provides real-time capabilities to the kernel with PREEMPT_RT patch and boot parameters for real-time optimization, which aims to increase predictability and reduce scheduler latencies.
 
-Installation
-================
+Automated Installation
+=======================
+
+.. _rt_linux_automated_setup:
+
+You can automate the software setup flow on this page with:
+
+`rt_linux_setup.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/installation/rt_linux_setup.sh>`_
+
+Default real-time kernel setup (includes OS setup prerequisites):
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh
+
+Skip OS setup prerequisites (run RT setup steps only):
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh --skip-os-setup
+
+Real-time setup with GRUB tuning and runtime options:
+
+.. code-block:: bash
+
+  sudo ./rt_linux_setup.sh --apply-rt-grub-tuning --disable-timer-migration --disable-swap --disable-cstate-cpus 13-13
+
+For all available options:
+
+.. code-block:: bash
+
+  ./rt_linux_setup.sh --help
+
+When using the automated script, it logs which sections from this page are skipped for the selected options.
+
+The following three sections are always skipped because they require manual, platform-specific actions:
+
+- ``Select [Experimental] ECI Ubuntu`` boot entry after reboot
+- ``Use Cache Allocation Technology``
+- ``Use Dynamic Voltage and Frequency``
+
+Manual Installation
+====================
 
 1. Install GRUB customizations
 
 .. code-block:: bash
 
-    $ sudo apt install -y customizations-grub
+    sudo apt install -y customizations-grub
 
 2. Install linux-firmware
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-firmware
+    sudo apt install -y linux-firmware
 
 **Note:** Linux OS version 6.12 requires specific Intel® Graphics Driver graphics microcontroller (guc), display microcontroller (dmc), and Intel® Graphics System Controller (Intel® GSC) (gsc) firmwares; these firmwares are installed in ``/lib/firmware/i915/experimental/``. Confirm the following boot parameters through ``cat /proc/cmdline`` after the next reboot:
 
 .. code-block:: bash
 
-    $ i915.guc_firmware_path=i915/experimental/mtl_guc_70.bin i915.dmc_firmware_path=i915/experimental/mtl_dmc.bin i915.gsc_firmware_path=i915/experimental/mtl_gsc_1.bin
+    i915.guc_firmware_path=i915/experimental/mtl_guc_70.bin i915.dmc_firmware_path=i915/experimental/mtl_dmc.bin i915.gsc_firmware_path=i915/experimental/mtl_gsc_1.bin
 
 If you cannot find the firmwares in ``/lib/firmware/i915/experimental/``, install the latest ``linux-firmware``:
 
 .. code-block:: bash
 
-   $ sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
+   sudo apt install -y linux-firmware=20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
 
 You can double check if the correct linux-firmware is in use:
 
 .. code-block:: bash
 
-   $ sudo apt-cache policy linux-firmware
+   sudo apt-cache policy linux-firmware
 
 Expected result:
 
@@ -49,13 +90,13 @@ Expected result:
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-intel-rt-experimental
+    sudo apt install -y linux-intel-rt-experimental
 
 **Note:** If you don't need to use RT kernel, install with the following command:
 
 .. code-block:: bash
 
-    $ sudo apt install -y linux-intel-experimental
+    sudo apt install -y linux-intel-experimental
 
 4. To modify default boot parameters, edit ``/etc/grub.d/10_eci_experimental``.
 
@@ -64,12 +105,12 @@ Expected result:
 .. code-block:: bash
 
     # Modify default cmdline parameters to enable cstate/pstate
-    $ sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
+    sudo sed -i 's/intel_pstate=disable intel.max_cstate=0 intel_idle.max_cstate=0 processor.max_cstate=0 processor_idle.max_cstate=0/intel_pstate=enable/g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to affinity irq to core 0-9
-    $ sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
+    sudo sed -i 's/irqaffinity=0 /irqaffinity=0-9 /g' /etc/grub.d/10_eci_experimental
     # Modify default cmdline parameter to isolate cpus to core 10-13
-    $ sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
-    $ sudo update-grub
+    sudo sed -i 's/isolcpus=${isolcpus} rcu_nocbs=${isolcpus} nohz_full=${isolcpus}/isolcpus=10-13 rcu_nocbs=10-13 nohz_full=10-13/g' /etc/grub.d/10_eci_experimental
+    sudo update-grub
 
 The following command line parameters are used for real-time optimization. You can modify them according to your requirements:
 
@@ -102,15 +143,15 @@ To achieve real-time performance on a target system, specific runtime configurat
 Use Cache Allocation Technology
 :::::::::::::::::::::::::::::::::
 
-Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy. providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
+Intel® Cache Allocation Technology (CAT) enables partitioning of caches at various levels within the caching hierarchy, providing a straightforward method to enhance temporal isolation between real-time and best-effort workloads.
 
 This is an example configuration should be tailored to your specific use case and processor. To determine cache topology, including size and number of ways supported by a processor, use the CPUID leaf "Deterministic Cache Parameters Leaf - 0x4". Linux utilities link ``lstopo`` are also useful for obtaining an overview of a processor's cache topology.
 
 For more information about CAT, refer to the following resources:
 
- - Public Intel® Time Coordinated Computing (TCC) User Guide - `RDC #[831067] <https://cdrdv2.intel.com/v1/dl/getContent/831067>`_
- - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - `RDC #[789566] <https://cdrdv2.intel.com/v1/dl/getContent/789566>`_
- - Intel® 64 and IA-32 Architectures Software Developer’s Manual - `RDC#[671200] <https://cdrdv2.intel.com/v1/dl/getContent/671200>`_
+ - Public Intel® Time Coordinated Computing (TCC) User Guide - `RDC #[831067] <https://cdrdv2-public.intel.com/851159/Public%20TCC%20User%20Guide%20-%20Q4%202025%20-%20RDC-831067.pdf>`_
+ - Intel® Resource Director Technology (Intel® RDT) Architecture Specification - `RDC #[789566] <https://cdrdv2-public.intel.com/851356/356688-004-intel-rdt-architecture-spec.pdf>`_
+ - Intel® 64 and IA-32 Architectures Software Developer’s Manual - `RDC#[671200] <https://cdrdv2-public.intel.com/874240/325462-090-sdm-vol-1-2abcd-3abcd-4.pdf>`_
 
 Below is an example script to partition the Last Level Cache (LLC) and L2 Cache, assigning an exclusive portion to real-time tasks. Ensure you have installed the Linux ``msr-tools`` to test it according to your configuration:
 
@@ -224,7 +265,7 @@ Timer migration can be disabled with the following command:
 
 .. code-block:: bash
 
-    $ echo 0 > /proc/sys/kernel/timer_migration
+    echo 0 > /proc/sys/kernel/timer_migration
 
 Disable Swap
 ::::::::::::::
@@ -234,7 +275,7 @@ Swap can be disabled with following command:
 
 .. code-block:: bash
 
-   $ swapoff -a
+   swapoff -a
 
 Verify Benchmark Performance
 ===============================
@@ -246,22 +287,22 @@ Follow with below steps, you can find ``cyclictest v2.6`` in ``rt-tests-2.6``：
 
 .. code-block:: bash
 
-    $ wget https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
-    $ tar zxvf rt-tests-2.6.tar.gz
-    $ cd rt-tests-2.6
-    $ make
+    wget https://web.git.kernel.org/pub/scm/utils/rt-tests/rt-tests.git/snapshot/rt-tests-2.6.tar.gz
+    tar zxvf rt-tests-2.6.tar.gz
+    cd rt-tests-2.6
+    make
 
 **Note**: Please ensure you had installed ``libnuma-dev`` as dependence before compilation.
 
   .. code-block:: bash
 
-     $ sudo apt install libnuma-dev
+     sudo apt install libnuma-dev
 
 An example command that runs the cyclictest benchmark as below:
 
 .. code-block:: bash
 
-    $ cyclictest -mp 99 -t1 -a 13 -i 1000 --laptop -D 72h  -N --mainaffinity 12
+    cyclictest -mp 99 -t1 -a 13 -i 1000 --laptop -D 72h  -N --mainaffinity 12
 
 Default parameters are used unless otherwise specified. Run ``cyclictest --help`` to list the modifiable arguments.
 

@@ -1,0 +1,143 @@
+<!--
+Copyright (C) 2026 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+
+These contents may have been developed with support from one or more
+Intel-operated generative artificial intelligence solutions.
+-->
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  ROS2 KPI MONITORING STACK - QUICK GUIDE                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+🚀 FASTEST START:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   make monitor NODE=/your_node_name
+
+   (Press Ctrl+C to stop and auto-generate visualizations)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+
+📋 COMMON COMMANDS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Quick Test (30s):         make quick-check
+
+  Monitor All Nodes:        make monitor
+
+  Monitor Specific Node:    make monitor NODE=/slam_toolbox
+
+  Timed Session (60s):      make monitor NODE=/node DURATION=60
+
+  List Past Sessions:       make list-sessions
+
+  Re-visualize Last:        make visualize-last
+
+  Pipeline Graph (PNG):     make pipeline-graph
+  Graph + click detail:     uv run python src/visualize_graph.py monitoring_sessions/<name> --show
+
+  Export to Grafana:        make grafana-start
+                            make monitor DURATION=120
+                            make grafana-export SESSION=<name>
+                            make grafana-open   # http://localhost:30000
+
+  Show All Commands:        make help
+
+
+🐍 PYTHON INTERFACE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  uv run python src/monitor_stack.py                              # Monitor everything
+  uv run python src/monitor_stack.py --node /node_name            # Specific node
+  uv run python src/monitor_stack.py --duration 60                # Timed session
+  uv run python src/monitor_stack.py --session my_experiment      # Named session
+  uv run python src/monitor_stack.py --graph-only                 # Graph only
+  uv run python src/monitor_stack.py --resources-only             # Resources only
+  uv run python src/monitor_stack.py --list-sessions              # List sessions
+
+
+ WHERE IS MY DATA?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  monitoring_sessions/<timestamp>/
+      ├── session_info.txt          # What you monitored
+      ├── graph_timing.csv          # Message timing data
+      ├── resource_usage.log        # CPU/memory data
+      └── visualizations/           # Auto-generated plots ⭐
+          ├── timing_delays.png
+          ├── message_frequencies.png
+          ├── cpu_usage_timeline.png
+          └── cpu_heatmap.png
+
+
+💡 PRO TIPS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✓ Name your sessions:  make monitor NODE=/node SESSION=my_test
+
+  ✓ Quick test first:    make quick-check
+
+  ✓ List all nodes:      ros2 node list
+
+  ✓ Check processes:     uv run python src/monitor_resources.py --list
+
+
+📚 DOCUMENTATION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  QUICK_START.md      - Get started in 30 seconds
+  IMPROVEMENTS.md     - What's new and why it's better
+  COMMANDS.md         - Complete command reference
+  ARCHITECTURE.md     - System design overview
+  README.md           - Full documentation
+
+
+🆚 OLD vs NEW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  OLD: 4 terminals + 6 commands + manual visualization
+
+  NEW: 1 command → automatic everything ✨
+
+
+🔧 TROUBLESHOOTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  No ROS2 processes?
+    → Make sure ROS2 nodes are running: ros2 node list
+
+  CPU shows "563%" or similar?
+    → Normal — pidstat reports 100% = 1 core. See Avg Cores column in summary.
+
+  grafana-export port error?
+    → fuser -k 9092/tcp && make grafana-export SESSION=<name>
+
+  Permission denied?
+    → chmod +x quickstart auto-setup.sh
+
+  ROS2 not found?
+    → source /opt/ros/humble/setup.bash
+
+  Monitor exits immediately?
+    → Verify target node exists: ros2 node list
+
+
+🎯 TYPICAL WORKFLOW:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  1. Start your ROS2 system:
+     ros2 launch my_robot robot.launch.py
+
+  2. Start monitoring (new terminal):
+     make monitor NODE=/my_node
+
+  3. Let it run, then press Ctrl+C
+
+  4. Check results:
+     ls monitoring_sessions/*/visualizations/
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                        Questions? Check README.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

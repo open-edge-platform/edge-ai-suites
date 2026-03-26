@@ -1,0 +1,18 @@
+{
+   "identities": [
+     {
+       "name": "${S3_STORAGE_USER}",
+       "credentials": [
+         {
+           "accessKey": "${S3_STORAGE_USER}",
+           "secretKey": "${S3_STORAGE_PASS}"
+         }
+       ],
+       "actions": [
+         "Read",
+         "Write",
+         "List"
+       ]
+     }
+   ]
+}

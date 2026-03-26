@@ -1,306 +1,488 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "../../assets/css/VideoStream.css";
 import UploadFilesModal from "../Modals/UploadFilesModal";
 import streamingIcon from "../../assets/images/streamingIcon.svg";
-import fullScreenIcon from "../../assets/images/fullScreenIcon.svg";
 import { useAppSelector, useAppDispatch } from "../../redux/hooks";
-import { setActiveStream } from "../../redux/slices/uiSlice";
+import { setActiveStream, setVideoPlaybackMode } from "../../redux/slices/uiSlice";
 import HLSPlayer from "../common/HLSPlayer";
 import { useTranslation } from "react-i18next";
+import { getRecordedVideoUrl } from "../../services/api";
+
 interface VideoStreamProps {
   isFullScreen: boolean;
   onToggleFullScreen: () => void;
 }
- 
-const VideoStream: React.FC<VideoStreamProps> = ({ isFullScreen, onToggleFullScreen }) => {
-  const [isRoomView, setIsRoomView] = useState(true);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+const VideoStream: React.FC<VideoStreamProps> = ({
+  isFullScreen,
+}) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const activeStream = useAppSelector((state) => state.ui.activeStream);
-  const sessionId = useAppSelector((state) => state.ui.sessionId);
-  const videoAnalyticsLoading = useAppSelector((state) => state.ui.videoAnalyticsLoading);
-  const videoAnalyticsActive = useAppSelector((state) => state.ui.videoAnalyticsActive);
-  const isRecording = useAppSelector((state) => state.ui.aiProcessing);
-  const uploadedAudioPath = useAppSelector((state) => state.ui.uploadedAudioPath);
-  const transcriptStatus = useAppSelector((state) => state.transcript.status);
-  const videoStatus = useAppSelector((state) => state.ui.videoStatus);
-  const streams = useAppSelector((state) => ({
-    front: state.ui.frontCameraStream,
-    back: state.ui.backCameraStream,
-    content: state.ui.boardCameraStream,
-  }));
-  const streamTypes = [
-  { pipeline: "front", label: t("accordion.frontCamera") },
-  { pipeline: "back", label: t("accordion.backCamera") },
-  { pipeline: "content", label: t("accordion.boardCamera") },
-  { pipeline: "all", label: t("accordion.allCameras") }
-  ];
-  const isValidStream = (stream: string | null): boolean => {
-    const isValid = stream && stream.trim() !== '' && (
-      stream.startsWith("http://") ||
-      stream.startsWith("https://") ||
-      stream.startsWith("rtsp://") ||
-      stream.includes("/stream") ||
-      stream.includes(".m3u8")
-    );
-    return !!isValid;
-  };
- 
-  const hasValidStreams = (): boolean => {
-    return isValidStream(streams.front) || isValidStream(streams.back) || isValidStream(streams.content);
+
+  const [isRoomView, setIsRoomView] = useState(true);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const {
+    frontCameraStream,
+    backCameraStream,
+    boardCameraStream,
+    activeStream,
+    videoAnalyticsActive,
+    videoAnalyticsLoading,
+    videoStatus,
+    uploadedAudioPath,
+    aiProcessing,
+    uploadedVideoFiles,
+    sessionId,
+    recordedVideoType,
+  } = useAppSelector((s) => s.ui);
+  const audioStatus = useAppSelector((s) => s.ui.audioStatus);
+  const mindmapState = useAppSelector((s) => s.mindmap);
+  const hasUploadedVideoFiles = useAppSelector((s) => s.ui.hasUploadedVideoFiles);
+  const transcriptStatus = useAppSelector((s) => s.transcript.status);
+
+  const streams = {
+    front: frontCameraStream,
+    back: backCameraStream,
+    content: boardCameraStream,
   };
 
+  const streamTypes = [
+    { pipeline: "front", label: t("accordion.frontCamera") },
+    { pipeline: "back", label: t("accordion.backCamera") },
+    { pipeline: "content", label: t("accordion.boardCamera") },
+    { pipeline: "all", label: t("accordion.allCameras") },
+  ];
+  
+  const hasAudio = Boolean(uploadedAudioPath);
+
+  const isMindmapDone =
+    audioStatus === "complete" ||
+    audioStatus === "error";
+
+  const areStreamsStopped =
+    videoStatus === "completed" ||
+    videoStatus === "ready" ||
+    videoStatus === "no-config" ||
+    videoStatus === "failed";
+
+  const audioReady = !hasAudio || isMindmapDone;
+  const videoReady = !hasUploadedVideoFiles || areStreamsStopped;
+
+  const isUploadEnabled = audioReady && videoReady;
+
+  const isValidStream = (url?: string | null) =>
+    !!url &&
+    url.trim() !== "" &&
+    (url.startsWith("http") ||
+      url.startsWith("rtsp://") ||
+      url.includes("/stream") ||
+      url.includes(".m3u8"));
+
+  const hasValidStreams = () =>
+    isValidStream(streams.front) ||
+    isValidStream(streams.back) ||
+    isValidStream(streams.content);
+
   const getAvailableStreams = () => {
-    const available = [];
-    if (isValidStream(streams.front)) available.push('front');
-    if (isValidStream(streams.back)) available.push('back');
-    if (isValidStream(streams.content)) available.push('content');
+    const arr: ("front" | "back" | "content")[] = [];
+    if (isValidStream(streams.front)) arr.push("front");
+    if (isValidStream(streams.back)) arr.push("back");
+    if (isValidStream(streams.content)) arr.push("content");
+    return arr;
+  };
+
+  const isCurrentlyRecording = () =>
+    aiProcessing ||
+    uploadedAudioPath === "MICROPHONE" ||
+    transcriptStatus === "streaming" ||
+    videoAnalyticsActive;
+
+  const isPlaybackMode = Boolean(
+    videoStatus === "completed" &&
+    (uploadedVideoFiles.front ||
+     uploadedVideoFiles.back ||
+     uploadedVideoFiles.board ||
+     recordedVideoType)
+  );
+
+  const getAvailableVideoFiles = () => {
+    const available: Array<{
+      type: "front" | "back" | "content";
+      file: File;
+      label: string;
+    }> = [];
+
+    if (uploadedVideoFiles.front)
+      available.push({
+        type: "front",
+        file: uploadedVideoFiles.front,
+        label: t("accordion.frontCamera"),
+      });
+
+    if (uploadedVideoFiles.back)
+      available.push({
+        type: "back",
+        file: uploadedVideoFiles.back,
+        label: t("accordion.backCamera"),
+      });
+
+    if (uploadedVideoFiles.board)
+      available.push({
+        type: "content",
+        file: uploadedVideoFiles.board,
+        label: t("accordion.boardCamera"),
+      });
+
     return available;
   };
 
-  const isCurrentlyRecording = () => {
-    return isRecording || 
-           uploadedAudioPath === 'MICROPHONE' || 
-           transcriptStatus === 'streaming' ||
-           videoAnalyticsActive;
-  };
-
   const getStreamStatus = () => {
-    if (videoAnalyticsLoading) {
+
+    if (isPlaybackMode) return "playback";
+    if (videoAnalyticsLoading) return "loading";
+    if (videoAnalyticsActive && hasValidStreams()) return "active";
+    if (
+      (videoStatus === "starting" || videoStatus === "streaming") &&
+      !hasValidStreams()
+    )
       return "loading";
-    }
-    
-    if (videoAnalyticsActive && hasValidStreams()) {
-      return "active";
-    }
-    
-    const currentlyRecording = isCurrentlyRecording();
-    if (videoStatus === 'starting' || videoStatus === 'streaming') {
-      return "loading";
-    }
-    if (videoStatus === 'failed' && currentlyRecording) {
-      return "video_failed";
-    }
-    if (currentlyRecording && hasValidStreams() && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      return "video_failed";
-    } 
-    if (currentlyRecording && !hasValidStreams() && !videoAnalyticsActive && !videoAnalyticsLoading) {
-      return "audio_only";
-    }
+    if (videoStatus === "failed" && isCurrentlyRecording()) return "video_failed";
+    if (isCurrentlyRecording() && !hasValidStreams()) return "audio_only";
+
     return "inactive";
   };
+  
+  useEffect(() => {
+    console.log('🎬 VideoStream state:', {
+      isPlaybackMode,
+      recordedVideoType,
+      videoStatus,
+      videoAnalyticsActive,
+      activeStream,
+      streamStatus: getStreamStatus()
+    });
+  }, [isPlaybackMode, recordedVideoType, videoStatus, videoAnalyticsActive, activeStream]);
 
-  React.useEffect(() => {
-    const availableStreams = getAvailableStreams();
-    if (availableStreams.length > 0 && videoAnalyticsActive) {
-      if (availableStreams.length > 1) {
-        dispatch(setActiveStream('all'));
-      } else {
-        dispatch(setActiveStream(availableStreams[0] as "front" | "back" | "content"));
-      }
-    } else if (!videoAnalyticsActive) {
+  useEffect(() => {
+    if (isPlaybackMode) return;
+
+    const available = getAvailableStreams();
+    
+    console.log('🎥 Checking streams:', {
+      videoAnalyticsActive,
+      available,
+      frontCameraStream,
+      backCameraStream,
+      boardCameraStream,
+      hasValidStreams: hasValidStreams(),
+    });
+
+    if (videoAnalyticsActive && available.length) {
+      const streamToSet = available.length > 1 ? "all" : available[0];
+      console.log('🎥 Setting activeStream to:', streamToSet);
+      dispatch(setActiveStream(streamToSet));
+    } else {
+      console.log('🎥 No valid streams, setting activeStream to null');
       dispatch(setActiveStream(null));
     }
-  }, [streams.front, streams.back, streams.content, videoAnalyticsActive, dispatch]);
- 
-  const handleToggleRoomView = () => {
-    setIsRoomView(!isRoomView);
-    console.log("Room View Toggled:", !isRoomView);
-  };
- 
-  const handleFullScreenToggle = () => {
-    onToggleFullScreen();
-    const container = document.querySelector(".container");
-    if (container) {
-      container.classList.toggle("fullscreen", !isFullScreen);
+  }, [
+    frontCameraStream,
+    backCameraStream,
+    boardCameraStream,
+    videoAnalyticsActive,
+    isPlaybackMode,
+    dispatch,
+  ]);
+
+
+  useEffect(() => {
+    if (!isPlaybackMode) return;
+
+    // If it's a recorded video, set active stream to the recorded video type
+    if (recordedVideoType) {
+      const activeStreamValue = recordedVideoType === 'board' ? 'content' : recordedVideoType;
+      dispatch(setActiveStream(activeStreamValue as 'front' | 'back' | 'content'));
+      return;
     }
-  };
- 
+
+    // Otherwise, handle uploaded video files
+    const availableFiles = getAvailableVideoFiles();
+    if (availableFiles.length > 0) {
+      const priority = availableFiles.find(f => f.type === "back") ||
+                      availableFiles.find(f => f.type === "content") ||
+                      availableFiles[0];
+      
+      dispatch(setActiveStream(priority.type));
+    }
+  }, [isPlaybackMode, uploadedVideoFiles, recordedVideoType, dispatch]);
+
   const handleStreamClick = (pipeline: "front" | "back" | "content" | "all") => {
-    console.log(`Switching to ${pipeline} stream view`);
-    if (pipeline === "all") {
-      if (!hasValidStreams()) {
-        console.warn("No valid streams available to display");
-        return;
-      }
-    } else {
-      const streamUrl = streams[pipeline];
-      if (!isValidStream(streamUrl)) {
-        console.warn(`${pipeline} stream is not available:`, streamUrl);
-        return;
-      }
+    if (isPlaybackMode) {
+      dispatch(setActiveStream(pipeline));
+      return;
     }
+
+    if (pipeline === "all" && !hasValidStreams()) return;
+    if (pipeline !== "all" && !isValidStream(streams[pipeline])) return;
+
     dispatch(setActiveStream(pipeline));
   };
- 
+
+  const streamStatus = getStreamStatus();
   const Spinner = () => (
     <div className="video-analytics-spinner">
       <div className="spinner-circle"></div>
-      <p>Loading video streams...</p>
+      <p>{t("videoStream.loadingvideo")}</p>
     </div>
   );
 
-  const streamStatus = getStreamStatus();
- 
   return (
-    <div className={`video-stream ${isRoomView ? "room-view" : "collapsed"} ${isFullScreen ? "full-screen" : ""}`}>
+    <div
+      className={`video-stream ${isRoomView ? "room-view" : "collapsed"} ${isFullScreen ? "full-screen" : ""}`}
+    >
       <div className="video-stream-header">
-        <div className="room-view-toggle-wrapper">
-          <label className="room-view-toggle">
-            <input
-              type="checkbox"
-              checked={isRoomView}
-              onChange={handleToggleRoomView}
-            />
-            <span className="toggle-slider"></span>
-            <span className="toggle-label">{t('accordion.roomView')}</span>
-          </label>
-        </div>
+        <label className="room-view-toggle">
+          <input
+            type="checkbox"
+            checked={isRoomView}
+            onChange={() => setIsRoomView((v) => !v)}
+          />
+          <span className="toggle-slider"></span>
+          <span className="toggle-label">{t("accordion.roomView")}</span>
+        </label>
+
         {isRoomView && (
           <div className="stream-controls">
-          {streamTypes.map(({ pipeline, label }) => {
-            const isAvailable = pipeline === "all"
-              ? hasValidStreams()
-              : isValidStream(streams[pipeline as keyof typeof streams]);
-        
-            return (
-              <span
-                key={pipeline}
-                className={`stream-control-label ${activeStream === pipeline ? "active" : ""} ${!isAvailable || videoAnalyticsLoading ? "disabled" : ""}`}
-                onClick={() => !videoAnalyticsLoading && isAvailable && handleStreamClick(pipeline as "front" | "back" | "content" | "all")}
-                style={{
-                  opacity: isAvailable && !videoAnalyticsLoading ? 1 : 0.5,
-                  cursor: isAvailable && !videoAnalyticsLoading ? "pointer" : "not-allowed"
-                }}
-        >
-                {label}
-        </span>
-            );
-          })}
-        </div>
+            {(isPlaybackMode && recordedVideoType
+              ? [{ 
+                  pipeline: recordedVideoType === 'board' ? 'content' : recordedVideoType, 
+                  label: {
+                    back: t("accordion.backCamera"),
+                    board: t("accordion.boardCamera"),
+                    front: t("accordion.frontCamera"),
+                  }[recordedVideoType] as string 
+                }]
+              : isPlaybackMode && !recordedVideoType
+              ? getAvailableVideoFiles().map(({ type, label }) => ({
+                  pipeline: type,
+                  label,
+                }))
+              : streamTypes
+            ).map(({ pipeline, label }) => {
+              const isAvailable = isPlaybackMode
+                ? true 
+                : pipeline === "all"
+                ? hasValidStreams()
+                : isValidStream(streams[pipeline as keyof typeof streams]);
+
+              return (
+                <span
+                  key={pipeline}
+                  className={`stream-control-label ${
+                    activeStream === pipeline ? "active" : ""
+                  } ${!isAvailable ? "disabled" : ""}`}
+                  onClick={() =>
+                    isAvailable &&
+                    handleStreamClick(
+                      pipeline as "front" | "back" | "content" | "all"
+                    )
+                  }
+                >
+                  {label}
+                </span>
+              );
+            })}
+          </div>
         )}
       </div>
-       
+
       {isRoomView && (
         <div className="video-stream-body">
-          {streamStatus === "loading" ? (
+          {streamStatus === "loading" && (
             <div className="stream-placeholder">
               <Spinner />
-              <p>
-                {videoAnalyticsActive 
-                  ? "Stopping video analytics..." 
-                  : "Initializing video analytics..."
-                }
-              </p>
             </div>
-          ) : streamStatus === "audio_only" ? (
+          )}
+
+          {streamStatus === "audio_only" && (
             <div className="stream-placeholder">
-              <img
-                src={streamingIcon}
-                alt="Audio Recording Icon"
-                className="streaming-icon"
-              />
-              <p>Video analytics service may not be available or cameras not configured.</p>
-              <small>Configure cameras in settings to enable video analytics.</small>
+              <img src={streamingIcon} className="streaming-icon" />
+              <p>{t("videoStream.noStream")}</p>
             </div>
-          ) : streamStatus === "video_failed" ? (
+          )}
+
+          {streamStatus === "video_failed" && (
             <div className="stream-placeholder">
-              <img
-                src={streamingIcon}
-                alt="Video Failed Icon"
-                className="streaming-icon"
-              />
-              <h3>Audio Recording Active</h3>
-              <p>Video analytics attempted but failed to start.</p>
-              <p>Continuing with audio-only recording.</p>
-              <small>Check camera configurations or backend video service.</small>
+              <img src={streamingIcon} className="streaming-icon" />
+              <h3>{t("videoStream.videoFailed")}</h3>
+              <p>{t("videoStream.continuingAudioOnly")}</p>
             </div>
-          ) : streamStatus === "inactive" ? (
+          )}
+
+          {streamStatus === "inactive" && (
             <div className="stream-placeholder">
-              <img
-                src={streamingIcon}
-                alt="Streaming Icon"
-                className="streaming-icon"
-              />
-<p>{t('videoStream.configureCameras')}</p>
-            <p>{t('videoStream.uploadFilesToStart')}</p>
-              <button
-                className="upload-file-button"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                {t('videoStream.uploadFileButton')}
+              <img src={streamingIcon} className="streaming-icon" />
+              <p>{t("videoStream.configureCameras")}</p>
+                <button
+                  className="upload-file-button"
+                  disabled={!isUploadEnabled}
+                  onClick={isUploadEnabled ? () => setIsUploadModalOpen(true) : undefined}
+                  style={{
+                    opacity: isUploadEnabled ? 1 : 0.6,
+                    cursor: isUploadEnabled ? "pointer" : "not-allowed",
+                  }}
+                >
+                  {t("videoStream.uploadFileButton")}
               </button>
             </div>
-          ) : streamStatus === "active" && hasValidStreams() ? (
+          )}
+
+          {streamStatus === "playback" && (
+            <div className="streams-layout">
+              {recordedVideoType ? (
+                // Playback for recorded RTSP videos - simple MP4 playback
+                (() => {
+                  if (!sessionId) {
+                    console.error('🎬 ERROR: sessionId is missing!', { sessionId, recordedVideoType });
+                    return (
+                      <div className="stream-placeholder">
+                        <p>Error: Session ID not found. Cannot play recorded video.</p>
+                      </div>
+                    );
+                  }
+                  
+                  const videoUrl = getRecordedVideoUrl(sessionId, recordedVideoType);
+                  
+                  console.log('🎬 Rendering recorded video playback:', {
+                    recordedVideoType,
+                    sessionId,
+                    videoUrl,
+                    isPlaybackMode,
+                    streamStatus
+                  });
+                  
+                  const videoLabel = {
+                    back: t("accordion.backCamera"),
+                    board: t("accordion.boardCamera"),
+                    front: t("accordion.frontCamera"),
+                  }[recordedVideoType];
+                  
+                  return (
+                    <div className="single-stream">
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#000' }}>
+                        <video
+                          key={videoUrl}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          controls
+                          autoPlay
+                          onLoadStart={() => console.log('🎬 Video loadStart:', videoUrl)}
+                          onCanPlay={() => console.log('🎬 Video canPlay')}
+                          onError={(e) => {
+                            console.error('🎬 Video error:', {
+                              error: e.currentTarget.error,
+                              errorMessage: e.currentTarget.error?.message,
+                              networkState: e.currentTarget.networkState,
+                              readyState: e.currentTarget.readyState,
+                              src: videoUrl
+                            });
+                          }}
+                          onLoadedMetadata={() => console.log('🎬 Video loadedMetadata')}
+                        >
+                          <source src={videoUrl} type="video/mp4" />
+                          {t("videoStream.browserNotSupported")}
+                        </video>
+                      </div>
+                      <div className="stream-overlay-label">{videoLabel}</div>
+                    </div>
+                  );
+                })()
+              ) : activeStream === "all" && !recordedVideoType ? (
+                // Multi-view for uploaded files
+                <div className="multi-stream-container">
+                  {getAvailableVideoFiles().map(({ type, file, label }) => (
+                    <div key={type} className="main-stream">
+                      <HLSPlayer videoFile={file} mode="playback" camera={type} />
+                      <div className="stream-overlay-label">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Single view for uploaded files
+                (() => {
+                  let file: File | null = null;
+
+                  if (activeStream === "back")
+                    file = uploadedVideoFiles.back;
+                  else if (activeStream === "content")
+                    file = uploadedVideoFiles.board;
+                  else if (activeStream === "front")
+                    file = uploadedVideoFiles.front;
+
+                  if (!file) {
+                    return (
+                      <div className="stream-placeholder">
+                        <p>{t("videoStream.noVideoConfigured")}</p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="single-stream">
+                      <HLSPlayer videoFile={file} mode="playback" camera={activeStream as "front" | "back" | "content"} />
+                      <div className="stream-overlay-label">
+                        {streamTypes.find(s => s.pipeline === activeStream)?.label || activeStream}
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </div>
+          )}
+
+          {streamStatus === "active" && (
             <div className="streams-layout">
               {activeStream === "all" && (
                 <div className="multi-stream-container">
-                  {streams.front && isValidStream(streams.front) && (
+                  {isValidStream(streams.front) && (
                     <div className="main-stream">
-                      <HLSPlayer streamUrl={streams.front} />
-                      <div className="stream-overlay-label">Front Camera</div>
+                      <HLSPlayer streamUrl={streams.front!} mode="stream" camera="front" />
+                      <div className="stream-overlay-label">{t("accordion.frontCamera")}</div>
                     </div>
                   )}
-                 
+
                   <div className="side-streams-container">
-                    {streams.back && isValidStream(streams.back) && (
+                    {isValidStream(streams.back) && (
                       <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.back} />
-                        <div className="stream-overlay-label">Back Camera</div>
+                        <HLSPlayer streamUrl={streams.back!} mode="stream" camera="back" />
+                        <div className="stream-overlay-label">{t("accordion.backCamera")}</div>
                       </div>
                     )}
-                    {streams.content && isValidStream(streams.content) && (
+
+                    {isValidStream(streams.content) && (
                       <div className="side-stream">
-                        <HLSPlayer streamUrl={streams.content} />
-                        <div className="stream-overlay-label">Board Camera</div>
+                        <HLSPlayer streamUrl={streams.content!} mode="stream" camera="content" />
+                        <div className="stream-overlay-label">{t("accordion.boardCamera")}</div>
                       </div>
                     )}
                   </div>
                 </div>
-              )}
-             
-              {activeStream === "front" && streams.front && isValidStream(streams.front) && (
-                <div className="single-stream">
-                  <HLSPlayer streamUrl={streams.front} />
-                  <div className="stream-overlay-label">Front Camera</div>
-                </div>
-              )}
-             
-              {activeStream === "back" && streams.back && isValidStream(streams.back) && (
-                <div className="single-stream">
-                  <HLSPlayer streamUrl={streams.back} />
-                  <div className="stream-overlay-label">Back Camera</div>
-                </div>
-              )}
-             
-              {activeStream === "content" && streams.content && isValidStream(streams.content) && (
-                <div className="single-stream">
-                  <HLSPlayer streamUrl={streams.content} />
-                  <div className="stream-overlay-label">Board Camera</div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="stream-placeholder">
-              <img
-                src={streamingIcon}
-                alt="Streaming Icon"
-                className="streaming-icon"
-              />
-              <p>Configure cameras in settings to enable video analytics</p>
-              <p>Or upload audio/video files to get started</p>
-              <button
-                className="upload-file-button"
-                onClick={() => setIsUploadModalOpen(true)}
-              >
-                Upload File
-              </button>
+              )} 
+
+              {activeStream !== "all" &&
+                activeStream &&
+                isValidStream(streams[activeStream]) && (
+                  <div className="single-stream">
+                    <HLSPlayer streamUrl={streams[activeStream]!} mode="stream" camera={activeStream as "front" | "back" | "content"} />
+                    <div className="stream-overlay-label">
+                      {activeStream.toUpperCase()}
+                    </div>
+                  </div>
+                )}
             </div>
           )}
         </div>
       )}
-     
+
       {isUploadModalOpen && (
         <UploadFilesModal
           isOpen={isUploadModalOpen}

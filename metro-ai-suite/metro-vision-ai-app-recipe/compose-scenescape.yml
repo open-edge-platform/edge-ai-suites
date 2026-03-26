@@ -60,10 +60,11 @@ services:
     networks:
       - scenescape
     volumes:
-      - ./${SAMPLE_APP}/src/node-red/flows.json:/tmp/flows.json
+      - ./${SAMPLE_APP}/src/node-red/flows.json:/data/flows.json
       - ./${SAMPLE_APP}/src/node-red/flows_cred.json:/tmp/flows_cred.json
-      - ./${SAMPLE_APP}/src/node-red/settings.js:/tmp/settings.js
-      - ./${SAMPLE_APP}/src/node-red/install_package.sh:/tmp/install_package.sh
+      - ./${SAMPLE_APP}/src/node-red/settings.js:/data/settings.js
+      - ./${SAMPLE_APP}/src/node-red/install_package.sh:/data/install_package.sh
+      - node-red-node-modules:/usr/src/node-red/node_modules
     secrets:
       - influxdb2-admin-token
       - root-cert
@@ -78,11 +79,9 @@ services:
         "/bin/bash",
         "-e",
         "-c",
-        "cp /tmp/flows.json /data/flows.json && \
-        cp /tmp/settings.js /data/settings.js && \
-        cp /tmp/flows_cred.json /data/flows_cred.json && \
+        "cp /tmp/flows_cred.json /data/flows_cred.json && \
         sed -i \"s/<influx-api-token>/$(cat /run/secrets/influxdb2-admin-token)/g\" /data/flows_cred.json && \
-        bash /tmp/install_package.sh && \
+        bash /data/install_package.sh && \
         /usr/src/node-red/entrypoint.sh",
       ]
     restart: on-failure:5
@@ -228,7 +227,7 @@ services:
       - "5432:5432"
 
   web:
-    image: intel/scenescape-manager:v2025.2
+    image: intel/scenescape-manager:v2026.0.0
     init: true
     networks:
       scenescape:
@@ -306,7 +305,7 @@ services:
     restart: always
 
   scene:
-    image: intel/scenescape-controller:v2025.2
+    image: intel/scenescape-controller:v2026.0.0
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -430,3 +429,4 @@ volumes:
   pgserver-migrations-smart-corridor:
   pgserver-media-smart-corridor:
   sample-data-smart-corridor:
+  node-red-node-modules-smart-corridor:

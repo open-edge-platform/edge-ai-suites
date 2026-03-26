@@ -17,11 +17,12 @@ image and time series sensor data.
 
 ## How It Works
 
-![MultiModal Weld Defect Detection Architecture Diagram](../_images/Multimodal-Weld-Defect-Detection-Architecture.png)
+![MultiModal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
 
 ### Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of a data simulator, analytics and visualization components.
+As seen in the architecture diagram above, the sample app at a high-level comprises of a data
+simulator, analytics and visualization components.
 Below is an explanation of how this architecture translates to data flow in the weld defect
 detection use case.
 
@@ -31,16 +32,14 @@ The Weld Data Simulator uses sets of time synchronized .avi and .csv files from 
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
----
-
 #### 2. **Analytics Modules**
 
 ##### 2.1 **DL Streamer Pipeline Server**
 
 The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
-defect classification model, publishes the frame metadata results over MQTT and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
+defect classification model, publishes the frame metadata results over MQTT, stores the processed frames in SeaweedFS S3 storage, and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
-###### **`DL Streamer Pipeline Server config.json`**
+###### **DL Streamer Pipeline Server `config.json`**
 
 **Pipeline Configuration**:
 
@@ -49,7 +48,7 @@ defect classification model, publishes the frame metadata results over MQTT and 
 | `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`        |
 | `source`       | The source type for video ingestion.                                        | `"gstreamer"`                         |
 | `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                  |
-| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
+| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvawatermark ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
 | `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
 
 **Parameters Properties**:
@@ -62,15 +61,38 @@ defect classification model, publishes the frame metadata results over MQTT and 
 
 **Destination Configuration**:
 
-| Key                | Description                                                                 | Example Value                          |
-|--------------------|-----------------------------------------------------------------------------|----------------------------------------|
-| `destination`      | Configuration for output destinations of the pipeline.                      | Object containing metadata and frame settings |
-| `metadata.type`    | The protocol type for sending metadata information.                         | `"mqtt"`                              |
-| `metadata.topic`   | The MQTT topic where vision classification results are published.           | `"vision_weld_defect_classification"` |
-| `frame.type`       | The protocol type for streaming video frames.                               | `"webrtc"`                            |
-| `frame.peer-id`    | Unique identifier for the WebRTC peer connection.                           | `"samplestream"`                      |
+The `destination` key contains two main properties:
+- `metadata` - defines where to send inference results
+- `frame` - an array defining one or more video output destinations
 
----
+**Metadata (`destination.metadata`)**:
+
+Publishes inference results via MQTT.
+
+| Key              | Description                                                       | Example Value                         |
+|------------------|-------------------------------------------------------------------|---------------------------------------|
+| `metadata.type`  | The protocol type for sending metadata information.               | `"mqtt"`                              |
+| `metadata.topic` | The MQTT topic where vision classification results are published. | `"vision_weld_defect_classification"` |
+
+**Frame Destinations (`destination.frame`)**:
+
+An array defining one or more video output destinations. Each entry requires a `type` field.
+
+**WebRTC Streaming (`type: "webrtc"`)**:
+
+| Key        | Description                                       | Example Value    |
+|------------|---------------------------------------------------|------------------|
+| `type`     | Frame destination type.                           | `"webrtc"`       |
+| `peer-id`  | Unique identifier for the WebRTC peer connection. | `"samplestream"` |
+
+**S3 Storage (`type: "s3_write"`)**:
+
+| Key             | Description                                                                 | Example Value                   |
+|-----------------|-----------------------------------------------------------------------------|---------------------------------|
+| `type`          | Frame destination type.                                                     | `"s3_write"`                    |
+| `bucket`        | S3 bucket name for storing processed frames.                                | `"dlstreamer-pipeline-results"` |
+| `folder_prefix` | Directory path within the bucket for storing frames.                        | `"weld-defect-classification"`  |
+| `block`         | Controls S3 write synchronization with MQTT publishing. When false, metadata may arrive before S3 write completes. When true, MQTT metadata is sent only after S3 write completion. | `false` |
 
 ##### 2.2 **Time Series Analytics Microservice**
 
@@ -93,8 +115,6 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
----
-
 **Alerts Configuration**:
 
 The `alerts` section defines the settings for alerting mechanisms, such as MQTT protocol.
@@ -109,7 +129,6 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 | `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
 | `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
 
-
 ###### **`udfs/`**
 
 Contains the python script to process the incoming data.
@@ -117,7 +136,6 @@ Uses CatBoostClassifier machine learning algorithm from the CatBoost library to 
 detect anomalous weld data points using sensor data.
 
 **Note**: Please note, CatBoost models don't run on Intel GPUs.
-
 
 ###### **`tick_scripts/`**
 
@@ -130,11 +148,10 @@ By default, it is configured to publish the alerts to **MQTT**.
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
 
----
-
 ##### 2.3 **Fusion Analytics**
 
-**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement/table in **InfluxDB**
+**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**
+It also stores the vision metadata from the `DL Streamer Pipeline Server` as a measurement in **InfluxDB**.
 
 #### 3. **Data Storage**
 
@@ -144,15 +161,6 @@ library.
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
 
----
-
 ## Next Steps
 
 Refer to the detailed instructions in [Get Started](../get-started.md).
-
-<!--hide_directive
-:::{toctree}
-:hidden:
-
-:::
-hide_directive-->

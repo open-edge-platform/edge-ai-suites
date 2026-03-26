@@ -1,15 +1,25 @@
 # Release Notes
 
+## v1.4.0
+
+**New**
+
+- Qualified on the Intel® Core™ Ultra Series 3 processor.
+
+**Improved**
+
+- Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
+- Optimized the latency for GPU and NPU workloads. 
+
 ## v1.3.0
 
-### Updates
 - Consumed latest DL Streamer Pipeline Server version 2025.2
 - Introduced nginx server as reverse proxy and TLS
 - Optimized pipelines and updated quantized model from yolo10s FP32 to yolo11s INT8.
 
----
+## Version 1.2
 
-## Version 1.2 - March 28th, 2025
+March 28th, 2025
 
 ### High-Level Features
 
@@ -18,5 +28,3 @@
 - **Customizable Alerting System:** Integration with Node-RED for setting up custom alerts and notifications based on specific events and thresholds.
 - **Expanded Device Support:** Added compatibility with a wider range of cameras and video input devices.
 - **Optimized Edge Processing:** Performance enhancements for real-time video processing on edge devices, reducing latency and resource usage.
-
-For more details on the new features and improvements, please refer to the [documentation](Overview.md).

@@ -73,6 +73,7 @@ private:
   std::string occupancyGridTopic_;
   std::string costMapTopic_;
   bool shouldStop_, initRotate_, shouldResetAll_, shouldPauseWandering_;
+  bool enableInitialRotation_;
 };
 
 #endif  // WANDERING_APP__WANDERINGMAPPER_H_

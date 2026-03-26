@@ -6,13 +6,13 @@ This tutorial will guide you through profiling and monitoring performance of Met
 
 - Ubuntu 22.04 or later
 - Docker installed and configured
-- Intel hardware with CPU and/or GPU
+- Intel® Core™, Intel® Core™ Ultra and Intel integrated graphics card
 - Administrative privileges for performance monitoring
 - Internet connection for downloading model and video files
 
-## Step 1: Install Performance Monitoring Tools and Docker
+## Step 1: Install Performance Monitoring Tools
 
-Install the required command-line performance monitoring tools and Docker:
+Install the required command-line performance monitoring tools:
 
 ```bash
 # Update system packages
@@ -21,20 +21,9 @@ sudo apt update
 # Install performance monitoring tools
 sudo apt install -y htop intel-gpu-tools
 
-# Install Docker (if not already installed)
-sudo apt install -y docker.io
-
-# Add user to docker group (requires logout/login)
-sudo usermod -aG docker $USER
-
-# Start Docker service
-sudo systemctl start docker
-sudo systemctl enable docker
-
 # Verify installations
 htop --version
 intel_gpu_top --help
-docker --version
 ```
 
 ## Step 2: Verify System Hardware
@@ -67,7 +56,7 @@ wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/video
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "${PWD}:/home/dlstreamer/" \
-  intel/dlstreamer:2025.1.2-ubuntu24 \
+  intel/dlstreamer:2026.0.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
@@ -78,6 +67,9 @@ cat > metro_vision_pipeline.sh << 'EOF'
 CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
+DEVICE=GPU
+RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
+
 
 echo "Starting Metro Vision AI Pipeline with Docker DLStreamer..."
 echo "Model: $MODEL_PATH"
@@ -103,9 +95,17 @@ while true; do
     # Run DLStreamer pipeline in Docker container with object detection
     docker run --rm \
         --device /dev/dri:/dev/dri \
+        --group-add $RENDER_GROUP_ID \
         -v "$CURRENT_DIR:/workspace" \
+        -v $HOME/.Xauthority:/root/.Xauthority:rw \
+        -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
+        --env DISPLAY=$DISPLAY \
+        --env http_proxy=$http_proxy \
+        --env https_proxy=$https_proxy \
+        --env no_proxy=$no_proxy \
+        --user root \
         -w /workspace \
-        intel/dlstreamer:2025.1.2-ubuntu24  \
+        intel/dlstreamer:2026.0.0-ubuntu24  \
         gst-launch-1.0 \
             filesrc location=/workspace/bottle-detection.mp4 ! \
             qtdemux ! h264parse ! avdec_h264 ! \
@@ -120,11 +120,10 @@ while true; do
 done
 EOF
 
-export DEVICE=GPU
 chmod +x metro_vision_pipeline.sh
 
 # Start the pipeline in background
-./metro_vision_pipeline.sh &
+sudo ./metro_vision_pipeline.sh &
 PIPELINE_PID=$!
 
 echo "Metro Vision AI pipeline started with PID: $PIPELINE_PID"
@@ -132,6 +131,10 @@ echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
 **Note**: This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+
+**Expected Console Output:**
+
+![Tutorial 5 Output](images/tutorial-5-dlstreamer-output.png)
 
 ## Step 4: Monitor Overall System Performance with htop
 
@@ -155,6 +158,10 @@ htop
 - `F4` - Filter processes by name
 - `q` - Quit htop
 
+**Expected Console Output:**
+
+![Tutorial 5 Top Output](images/tutorial-5-top.png)
+
 ## Step 5: Monitor Intel GPU Performance
 
 Use intel_gpu_top to monitor GPU usage during AI inference:
@@ -171,13 +178,17 @@ sudo intel_gpu_top
 - GPU frequency and power consumption
 - Memory usage and bandwidth
 
+**Expected Console Output:**
+
+![Tutorial 5 GPU Top Output](images/tutorial-5-gpu-top.png)
+
 ## Step 6: Stop the Running Pipeline
 
 When you're done profiling, stop the background pipeline:
 
 ```bash
 # Stop the background DL Streamer pipeline
-pkill -9 -f metro_vision_pipeline.sh
+sudo pkill -9 -f metro_vision_pipeline.sh
 ```
 
 ## Next Steps: Visual Pipeline and Platform Evaluation Tool (Vippet)

@@ -1,11 +1,12 @@
 import asyncio
 from typing import Optional
 from fastapi import Header, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi import APIRouter, FastAPI, File, HTTPException, status
 from dto.transcription_dto import TranscriptionRequest
 from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
+from dto.video_metadata_dto import VideoDurationRequest
 from pipeline import Pipeline
 import json, os
 import subprocess, re
@@ -21,6 +22,8 @@ from utils.audio_util import save_audio_file
 from utils.locks import audio_pipeline_lock, video_analytics_lock
 from components.va.va_pipeline_service import VideoAnalyticsPipelineService, PipelineOptions
 from utils.session_manager import generate_session_id
+from dto.search_dto import SearchRequest
+from utils.session_state_manager import SessionState
 import logging
 logger = logging.getLogger(__name__)
 
@@ -173,7 +176,7 @@ def get_summary_metrics(session_id: Optional[str] = Header(None, alias="session_
     except Exception as e:
         logger.error(f"Error reading performance metrics: {e}")
         return JSONResponse(
-            content={"error": str(e)},
+            content={"error": "Error reading performance metrics"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -208,7 +211,7 @@ def get_platform_info():
         return JSONResponse(content=info, status_code=200)
     except Exception as e:
         logger.error(f"Error fetching platform info: {e}")
-        return JSONResponse(content={"error": str(e)}, status_code=500)
+        return JSONResponse(content={"error": "Error fetching platform info"}, status_code=500)
 
 @router.post("/stop-monitoring")
 def stop_monitoring_endpoint():
@@ -270,6 +273,7 @@ def start_video_analytics_pipeline(
                 os.makedirs(output_dir, exist_ok=True)
 
                 va_services[x_session_id] = VideoAnalyticsPipelineService()
+                va_services[x_session_id].x_session_id = x_session_id
 
             service = va_services[x_session_id]
 
@@ -284,11 +288,18 @@ def start_video_analytics_pipeline(
                 output_dir=output_dir,
                 output_rtsp=config.va_pipeline.output_rtsp_url,
                 threshold=config.models.va.threshold,
+                record=False,
             )
+
+            names = [r.pipeline_name for r in requests]
+            record_pipeline = "back" if "back" in names else "content" if "content" in names else "front" if "front" in names else None
 
             # Launch each pipeline
             for request in requests:
                 try:
+
+                    options.record = (request.pipeline_name == record_pipeline)
+
                     # Check if pipeline is already running
                     if service.is_pipeline_running(request.pipeline_name):
                         results.append({
@@ -417,7 +428,7 @@ def stop_video_analytics_pipeline(
                         "pipeline_name": request.pipeline_name,
                         "session_id": x_session_id,
                         "error": str(e)
-                    })
+                    })                                   
 
             return JSONResponse(content={"results": results}, status_code=200)
 
@@ -425,23 +436,18 @@ def stop_video_analytics_pipeline(
             logger.error(f"Error stopping video analytics pipelines: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-
-@router.get("/class-statistics")
-def get_class_statistics(x_session_id: Optional[str] = Header(None)):
+@router.get("/monitor-video-analytics-pipeline")
+async def monitor_video_analytics_pipeline_status(
+    x_session_id: Optional[str] = Header(None)
+):
     """
-    Get class statistics after class
-
+    Monitor all video analytics pipelines status with streaming response
+    
+    Args:
+        x_session_id: Session ID from header
+        
     Returns:
-        JSON statistics data, example output:
-            {
-                "student_count": 99,
-                "stand_count": 99,
-                "raise_up_count": 99,
-                "stand_reid": [
-                    {"student_id": 1, "count": 15},
-                    {"student_id": 2, "count": 23}
-                ]
-            }
+        Streaming response with all pipelines status updates
     """
     if not x_session_id:
         raise HTTPException(
@@ -454,25 +460,379 @@ def get_class_statistics(x_session_id: Optional[str] = Header(None)):
             detail=f"No video analytics service found for session {x_session_id}",
         )
 
+    service = va_services[x_session_id]
+
+    async def stream_status():
+        async for status_data in service.monitor_pipeline_status():
+            yield json.dumps(status_data) + "\n"
+
+    return StreamingResponse(stream_status(), media_type="application/json")
+
+@router.get("/class-statistics")
+async def get_class_statistics(x_session_id: Optional[str] = Header(None)):
+    """
+    Get class statistics with real-time streaming updates
+
+    Returns streaming JSON data with statistics updated every 5 seconds:
+        {
+            "student_count": 99,
+            "stand_count": 99,
+            "raise_up_count": 99,
+            "stand_reid": [
+                {"student_id": 1, "count": 15},
+                {"student_id": 2, "count": 23}
+            ]
+        }
+    """
+    if not x_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required header: x-session-id"
+        )
+
+    if x_session_id not in va_services:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No video analytics service found for session {x_session_id}",
+        )
+
+    service = va_services[x_session_id]
+
+    # Get the front_posture.txt file path
+    project_config = RuntimeConfig.get_section("Project")
+    location = project_config.get("location", "outputs")
+    name = project_config.get("name", "default")
+    output_dir = os.path.join(location, name, x_session_id, "va")
+    front_posture_file = os.path.join(output_dir, "front_posture.txt")
+
+    async def stream_statistics():
+        stats_state = None  # Will hold the state for incremental processing
+
+        try:
+            while True:
+                # Get incremental statistics
+                stats, stats_state = service.get_pose_stats(
+                    front_posture_file, stats_state
+                )
+
+                yield json.dumps(stats) + "\n"
+
+                # Wait 5 seconds before next update
+                await asyncio.sleep(5)
+
+        except Exception as e:
+            logger.error(f"Error streaming class statistics: {e}")
+            yield json.dumps({"error": str(e)}) + "\n"
+
+    return StreamingResponse(stream_statistics(), media_type="application/json")
+
+@router.post("/mark-video-usage")
+def mark_video_usage(
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Mark that a video is being used in the current session.
+
+    """
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
     try:
-        service = va_services[x_session_id]
+        with SessionState._lock:
+            if session_id not in SessionState._sessions:
+                SessionState._sessions[session_id] = {}
+            SessionState._sessions[session_id]['has_video'] = True
+        
+        logger.info(f"Session {session_id}: Video usage marked")
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": "Video usage marked for session"}
+        )
+        
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error marking video usage: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error marking video usage: {e}"
+        )
 
-        # Get the front_posture.txt file path
-        project_config = RuntimeConfig.get_section("Project")
-        location = project_config.get("location", "outputs")
-        name = project_config.get("name", "default")
-        output_dir = os.path.join(location, name, x_session_id, "va")
-        front_posture_file = os.path.join(output_dir, "front_posture.txt")
+@router.post("/store-video-duration")
+def store_video_duration(
+    request: VideoDurationRequest,
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Store video duration 
 
-        # Get pose statistics
-        stats = service.get_pose_stats(front_posture_file)
+    """
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
+    try:
+        duration = request.duration
+        
+        if not duration or duration <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid duration: duration must be greater than 0"
+            )
+        
+        # Store the video duration in session state
+        SessionState.set_video_duration(session_id, duration)
+        
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": f"Video duration stored: {duration:.2f}s"}
+        )
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error storing video duration: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error storing video duration: {e}"
+        )
 
-        return JSONResponse(content=stats, status_code=200)
+@router.post("/store-audio-duration")
+def store_audio_duration(
+    request: VideoDurationRequest,
+    session_id: str = Header(None, alias="X-Session-ID")
+):
+    """
+    Store audio duration 
+
+    """
+    
+    if not session_id:
+        raise HTTPException(
+            status_code=400,
+            detail="X-Session-ID header is required"
+        )
+    
+    try:
+        duration = request.duration
+        
+        if not duration or duration <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid duration: duration must be greater than 0"
+            )
+        
+        SessionState.set_audio_duration(session_id, duration)
+
+        with SessionState._lock:
+            if session_id not in SessionState._sessions:
+                SessionState._sessions[session_id] = {}
+            SessionState._sessions[session_id]['has_audio'] = True
+
+        return JSONResponse(
+            status_code=200,
+            content={"status": "success", "message": f"Audio duration stored: {duration:.2f}s"}
+        )
+        
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Session {session_id}: Error storing audio duration: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error storing audio duration: {e}"
+        )
+
+@router.post("/content-segmentation")
+def content_segmentation(request: SummaryRequest):
+    """
+    Generate content-wise segmentation from teacher transcription.
+    Expects transcription.txt to exist for the session.
+    """
+
+    if audio_pipeline_lock.locked():
+        raise HTTPException(status_code=429, detail="Session Active, Try Later")
+
+    pipeline = Pipeline(request.session_id)
+    
+    # Log session state before validation
+    session_state = SessionState.get_session_state(request.session_id)
+    logger.info(f"📋 Content-segmentation request for session: {request.session_id}")
+    logger.info(f"   Session state: {session_state}")
+
+    try:
+        contents_json = pipeline.run_content_segmentation()
+        logger.info("✅ content segmentation generated successfully.")
+        return JSONResponse(content={"session_id": request.session_id})
+
+    except HTTPException as http_exc:
+        raise http_exc
 
     except Exception as e:
-        logger.error(f"Error getting class statistics: {e}")
+        logger.exception(f"❌ Error during content segmentation: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"content segmentation failed: {e}"
+        )
+
+@router.post("/search-content")
+def search_content(request: SearchRequest):
+
+    pipeline = Pipeline(request.session_id)
+
+    try:
+        results = pipeline.search_content(
+            query=request.query,
+            top_k=request.top_k
+        )
+
+        return {
+            "session_id": request.session_id,
+            "query": request.query,
+            "results": results
+        }
+
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Search failed: {e}"
+        )
+
+@router.get("/check-recorded-videos")
+def check_recorded_videos(x_session_id: Optional[str] = Header(None)):
+    """
+    Check which video files were saved for a session after RTSP recording.
+    Returns the priority-ordered available video (back > board > front).
+
+    """
+    if not x_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required header: x-session-id"
+        )
+    
+    try:
+        project_config = RuntimeConfig.get_section("Project")
+        base_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            x_session_id
+        )
+        
+        if not os.path.exists(base_path):
+            logger.warn(f"Session path does not exist: {base_path}")
+            return JSONResponse(
+                content={
+                    "session_id": x_session_id,
+                    "back": None,
+                    "board": None,
+                    "front": None,
+                    "selected_video": None,
+                    "message": "No session path found"
+                },
+                status_code=200
+            )
+        
+        # Check which videos exist
+        videos = {
+            "back": None,
+            "board": None, 
+            "front": None,
+        }
+        
+        back_path = os.path.join(base_path, "back.mp4")
+        content_path = os.path.join(base_path, "content.mp4") 
+        front_path = os.path.join(base_path, "front.mp4")
+        
+        if os.path.exists(back_path):
+            videos["back"] = back_path
+        if os.path.exists(content_path):
+            videos["board"] = content_path  
+        if os.path.exists(front_path):
+            videos["front"] = front_path
+        
+        # Select highest priority video (back > board > front)
+        selected_video = None
+        if videos["back"]:
+            selected_video = "back"
+        elif videos["board"]:
+            selected_video = "board"
+        elif videos["front"]:
+            selected_video = "front"
+        
+        return JSONResponse(
+            content={
+                "session_id": x_session_id,
+                "back": videos["back"],
+                "board": videos["board"],
+                "front": videos["front"],
+                "selected_video": selected_video,
+                "selected_path": videos[selected_video] if selected_video else None
+            },
+            status_code=200
+        )
+        
+    except Exception as e:
+        logger.error(f"Error checking recorded videos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/recorded-video/{videoType}")
+def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None), session_id: Optional[str] = None):
+    """
+    Stream a recorded video file (back.mp4, board.mp4, or front.mp4).
+
+    """
+    # Accept session ID from either header or query parameter
+    actual_session_id = x_session_id or session_id
+    if not actual_session_id:
+        raise HTTPException(
+            status_code=400, detail="Missing required session ID: x-session-id header or ?session_id query parameter"
+        )
+    
+    if videoType not in ['back', 'board', 'front']:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid videoType: {videoType}. Must be 'back', 'board', or 'front'"
+        )
+    
+    try:
+        backend_video_type = "content" if videoType == "board" else videoType
+        
+        project_config = RuntimeConfig.get_section("Project")
+        video_path = os.path.join(
+            project_config.get("location"),
+            project_config.get("name"),
+            actual_session_id,
+            f"{backend_video_type}.mp4"
+        )
+        
+        if not os.path.exists(video_path):
+            raise HTTPException(
+                status_code=404, 
+                detail=f"Video file not found: {videoType}.mp4"
+            )
+        
+        logger.info(f"Serving video file: {video_path} for session {actual_session_id}")
+        
+        file_response = FileResponse(
+            path=video_path,
+            media_type="video/mp4",
+            filename=f"{videoType}.mp4"
+        )
+        file_response.headers["Accept-Ranges"] = "bytes"
+        file_response.headers["Access-Control-Allow-Origin"] = "*"
+        file_response.headers["Cache-Control"] = "no-cache"
+        
+        return file_response
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving recorded video: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 def register_routes(app: FastAPI):
     app.include_router(router)

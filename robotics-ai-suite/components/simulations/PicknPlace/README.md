@@ -13,11 +13,11 @@ The aim is to harnesses the capabilities of both the Nav2 and MoveIt2 stacks, pr
 
 OS: Ubuntu 22.04
 
-ROS2: Tested on Humble (but Should work with Foxy too)
+ROS2: Tested on Humble
 
 ### Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/prepare-system.html)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html)
 
 ### Running via local cloning
 

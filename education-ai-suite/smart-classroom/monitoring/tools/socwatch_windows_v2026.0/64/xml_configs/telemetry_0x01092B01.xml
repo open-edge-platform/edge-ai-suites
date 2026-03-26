@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_pch_LTR_STS_C2P2_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL PCH LTR STS C2P2</TELEM:description>
+	<TELEM:uniqueid>0x01092B01</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x23a0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_THC1" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_THC1">
+			<TELC:description>THC1 Chasis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_PG5_PMA0" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PG5_PMA0">
+			<TELC:description>PG5_PMA0 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x23a8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_CNVI_BT" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_CNVI_BT">
+			<TELC:description>CNVI_BT Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_PG5_PMA1" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PG5_PMA1">
+			<TELC:description>PG5_PMA1 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x23b0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_PG5_PMA2" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_PG5_PMA2">
+			<TELC:description>PG5_PMA2 Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_CNV_WIFI" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_CNV_WIFI">
+			<TELC:description>CNV_WIFI Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x23b8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_C2P2_IP_ACE" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_ACE">
+			<TELC:description>ACE Chassis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_C2P2_IP_THC0" datatypeIDREF="tgeneric_sample" sampleID="LTR_C2P2_IP_THC0">
+			<TELC:description>THC0 Chasis 2p2 LTR Status</TELC:description>
+			<TELC:sampleSubGroup>BDF_LTR_STS_C2P2_MASK_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

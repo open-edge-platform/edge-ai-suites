@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE Aggregator [<!ENTITY otherfile SYSTEM "nvl_pch_LTR_STS_common.xml">]>
+<TELEM:Aggregator xmlns="http://schemas.intel.com/telemetry/base/1/" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xmlns:TELC="http://schemas.intel.com/telemetry/base/common" 
+	xmlns:TELEM="http://schemas.intel.com/telemetry/base/aggregator" 
+	xmlns:xi="http://www.w3.org/2001/XInclude" 
+ 	xsi:schemaLocation="http://schemas.intel.com/telemetry/base/aggregator telemetryAggregator.xsd"> 
+
+	<TELC:DataTypesInclude>&otherfile;</TELC:DataTypesInclude>
+	<TELEM:name>NVL</TELEM:name>
+	<TELEM:description>NVL PCH LTR STS</TELEM:description>
+	<TELEM:uniqueid>0x01092A01</TELEM:uniqueid>
+	<TELEM:productid>NVL</TELEM:productid>
+	<TELEM:address>0</TELEM:address>
+
+	<TELEM:SampleGroup name="Container_0" sampleID="0" sampleGroupID="Container_0">
+		<TELC:description>Groupname 0x1b60</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SPA" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPA">
+			<TELC:description>LTR Status for SPA/PXPA</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_SPB" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPB">
+			<TELC:description>LTR Status for SPB/PXPB</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_0</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_1" sampleID="1" sampleGroupID="Container_1">
+		<TELC:description>Groupname 0x1b68</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SATA" datatypeIDREF="tgeneric_sample" sampleID="LTR_SATA">
+			<TELC:description>LTR Status for SATA</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_GBE" datatypeIDREF="tgeneric_sample" sampleID="LTR_GBE">
+			<TELC:description>LTR Status for GbE LAN</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_1</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_2" sampleID="2" sampleGroupID="Container_2">
+		<TELC:description>Groupname 0x1b70</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_XHCI" datatypeIDREF="tgeneric_sample" sampleID="LTR_XHCI">
+			<TELC:description>LTR Status for XHCI</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_SPG" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPG">
+			<TELC:description>LTR Status for SPG/PXPG</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_2</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_3" sampleID="3" sampleGroupID="Container_3">
+		<TELC:description>Groupname 0x1b78</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_ME__LTR_CSME_" datatypeIDREF="tgeneric_sample" sampleID="LTR_ME__LTR_CSME_">
+			<TELC:description>LTR Status for CSME</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_SATA1" datatypeIDREF="tgeneric_sample" sampleID="LTR_SATA1">
+			<TELC:description>LTR Status for SATA1</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_3</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_4" sampleID="4" sampleGroupID="Container_4">
+		<TELC:description>Groupname 0x1b80</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SPC" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPC">
+			<TELC:description>LTR Status for SPC/PXPC</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_AZ" datatypeIDREF="tgeneric_sample" sampleID="LTR_AZ">
+			<TELC:description>LTR Status for AZALIA</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_4</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_5" sampleID="5" sampleGroupID="Container_5">
+		<TELC:description>Groupname 0x1b88</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_OSSE" datatypeIDREF="tgeneric_sample" sampleID="LTR_OSSE">
+			<TELC:description>LTR Status for OSSE</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_LPSS" datatypeIDREF="tgeneric_sample" sampleID="LTR_LPSS">
+			<TELC:description>LTR Status for LPSS</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_5</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_6" sampleID="6" sampleGroupID="Container_6">
+		<TELC:description>Groupname 0x1b90</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SATA2" datatypeIDREF="tgeneric_sample" sampleID="LTR_SATA2">
+			<TELC:description>LTR Status for SATA2</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_SPD" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPD">
+			<TELC:description>LTR Status for SPD/PXPD</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_6</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_7" sampleID="7" sampleGroupID="Container_7">
+		<TELC:description>Groupname 0x1b98</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SPE" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPE">
+			<TELC:description>LTR Status for SPE/PXPE</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_ESPISPI" datatypeIDREF="tgeneric_sample" sampleID="LTR_ESPISPI">
+			<TELC:description>LTR Status for ESPISPI</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_7</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_8" sampleID="8" sampleGroupID="Container_8">
+		<TELC:description>Groupname 0x1ba0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SCC" datatypeIDREF="tgeneric_sample" sampleID="LTR_SCC">
+			<TELC:description>LTR Status for SCC</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_8</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_ISH" datatypeIDREF="tgeneric_sample" sampleID="LTR_ISH">
+			<TELC:description>LTR Status for ISH</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_8</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_9" sampleID="9" sampleGroupID="Container_9">
+		<TELC:description>Groupname 0x1ba8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_PMC" datatypeIDREF="tgeneric_sample" sampleID="LTR_PMC">
+			<TELC:description>LTR Status for PMC</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_9</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_0" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_0">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_9</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_10" sampleID="10" sampleGroupID="Container_10">
+		<TELC:description>Groupname 0x1bb0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_1" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_1">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_10</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_2" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_2">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_10</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_11" sampleID="11" sampleGroupID="Container_11">
+		<TELC:description>Groupname 0x1bb8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_3" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_3">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_11</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_4" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_4">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_11</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_12" sampleID="12" sampleGroupID="Container_12">
+		<TELC:description>Groupname 0x1bc0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_5" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_5">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_12</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_6" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_6">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_12</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_13" sampleID="13" sampleGroupID="Container_13">
+		<TELC:description>Groupname 0x1bc8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_7" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_7">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_13</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_8" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_8">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_13</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_14" sampleID="14" sampleGroupID="Container_14">
+		<TELC:description>Groupname 0x1bd0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_9" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_9">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_14</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_10" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_10">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_14</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_15" sampleID="15" sampleGroupID="Container_15">
+		<TELC:description>Groupname 0x1bd8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_11" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_11">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_15</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_12" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_12">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_15</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_16" sampleID="16" sampleGroupID="Container_16">
+		<TELC:description>Groupname 0x1be0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_13" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_13">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_16</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_DMI3" datatypeIDREF="tgeneric_sample" sampleID="LTR_DMI3">
+			<TELC:description>LTR Status for DMI3</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_16</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_17" sampleID="17" sampleGroupID="Container_17">
+		<TELC:description>Groupname 0x1be8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="RESERVED_14" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_14">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_17</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="RESERVED_15" datatypeIDREF="tgeneric_sample" sampleID="RESERVED_15">
+			<TELC:description>RESERVED</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_17</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_18" sampleID="18" sampleGroupID="Container_18">
+		<TELC:description>Groupname 0x1bf0</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_CNV" datatypeIDREF="tgeneric_sample" sampleID="LTR_CNV">
+			<TELC:description>LTR Status for CNV</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_18</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_EMMC" datatypeIDREF="tgeneric_sample" sampleID="LTR_EMMC">
+			<TELC:description>LTR Status for EMMC</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_18</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_19" sampleID="19" sampleGroupID="Container_19">
+		<TELC:description>Groupname 0x1bf8</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_UFSX2" datatypeIDREF="tgeneric_sample" sampleID="LTR_UFSX2">
+			<TELC:description>LTR Status for UFSX2</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_19</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_WIGIG" datatypeIDREF="tgeneric_sample" sampleID="LTR_WIGIG">
+			<TELC:description>LTR Status for CNV_WIGIG</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_19</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_20" sampleID="20" sampleGroupID="Container_20">
+		<TELC:description>Groupname 0x1c00</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_SPF" datatypeIDREF="tgeneric_sample" sampleID="LTR_SPF">
+			<TELC:description>LTR Status for SPF/PXPF</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_20</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_THC0" datatypeIDREF="tgeneric_sample" sampleID="LTR_THC0">
+			<TELC:description>LTR Status for THC0</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_20</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+	<TELEM:SampleGroup name="Container_21" sampleID="21" sampleGroupID="Container_21">
+		<TELC:description>Groupname 0x1c08</TELC:description>
+		<TELC:length>64</TELC:length>
+		<TELC:sample name="LTR_THC1" datatypeIDREF="tgeneric_sample" sampleID="LTR_THC1">
+			<TELC:description>LTR Status for THC1</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_21</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>0</TELC:lsb>
+			<TELC:msb>31</TELC:msb>
+		</TELC:sample>
+		<TELC:sample name="LTR_IOE_PMC" datatypeIDREF="tgeneric_sample" sampleID="LTR_IOE_PMC">
+			<TELC:description>LTR Status for IOE_PMC</TELC:description>
+			<TELC:sampleSubGroup>LTR_STS_21</TELC:sampleSubGroup>
+			<TELC:sampleType>Snapshot</TELC:sampleType>
+			<TELC:size>32</TELC:size>
+			<TELC:lsb>32</TELC:lsb>
+			<TELC:msb>63</TELC:msb>
+		</TELC:sample>
+	</TELEM:SampleGroup>
+</TELEM:Aggregator>

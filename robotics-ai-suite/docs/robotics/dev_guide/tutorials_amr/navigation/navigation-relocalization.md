@@ -18,7 +18,7 @@ supported by the following platform:
 
 ### Prerequisites
 
-Complete the [get started guide](../../../gsg_robot/index.rst) before continuing.
+Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 ### Install Deb package
 
@@ -55,7 +55,7 @@ navigation, and TurtleBot3 robot in Gazebo simulation:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
+export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/jazzy/share/turtlebot3_gazebo/models
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
@@ -66,7 +66,7 @@ ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 
 ```bash
 source /opt/ros/humble/setup.bash
-export TURTLEBOT3_MODEL=waffle_pi
+export TURTLEBOT3_MODEL=waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
 ros2 launch nav2_bringup tb3_simulation_launch.py headless:=False
 ```
@@ -78,9 +78,9 @@ Set the robot **2D Pose Estimate** in rviz2:
 
 1. Set the initial robot pose by pressing **2D Pose Estimate** in rviz2.
 2. At the robot estimated location, down-click inside the 2D map. For
-   : reference, use the robot pose as it appears in Gazebo\*.
+   reference, use the robot pose as it appears in Gazebo\*.
 3. Set the orientation by dragging forward from the down-click. This also
-   : enables ROS 2 navigation.
+   enables ROS 2 navigation.
 
 ![2d_pose_estimate](../../../images/2d_pose_estimate.png)
 

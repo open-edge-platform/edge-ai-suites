@@ -2,7 +2,7 @@
 
 This tutorial provides instructions for running the ADBSCAN-based Follow-me
 algorithm from Autonomous Mobile Robot using Intel® RealSense™ camera input.
-Validation of the the algorithm was performed on a custom iRobot Create 3.
+Validation of the algorithm was performed on a custom iRobot Create 3.
 The Intel® RealSense™ camera publishes to `/camera/depth/color/points` topic.
 The `adbscan_sub_node` subscribes to the corresponding topic,
 detects the obstacle array, computes the robot's velocity and publishes to the
@@ -17,7 +17,7 @@ by a robot-driver.
 
 - Assemble your robotic kit following the instructions for
   [irobot-create3](../../../developer_kit/irobot-create3-robot.md).
-- Complete the [get started guide](../../../../../gsg_robot/index.rst) before continuing.
+- Complete the [get started guide](../../../../../gsg_robot/index.md) before continuing.
 
 ### Intel® board connected to iRobot Create 3
 

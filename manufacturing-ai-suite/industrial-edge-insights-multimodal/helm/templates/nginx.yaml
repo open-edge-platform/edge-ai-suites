@@ -40,15 +40,22 @@ spec:
       labels:
         app: nginx
     spec:
+      securityContext:
+        runAsUser: {{ $.Values.env.TIMESERIES_UID }}
+        runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: nginx-proxy
-        image: nginx:1.29.1-bookworm-perl
+        image: nginx:1.29.5-trixie-perl
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: {{ $.Values.env.TIMESERIES_UID }}
           runAsGroup: {{ $.Values.env.TIMESERIES_UID }}
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true
+          runAsNonRoot: true
           capabilities:
             drop:
               - ALL
@@ -57,9 +64,9 @@ spec:
         command: ["/bin/bash", "-c", "/usr/local/bin/nginx-cert-gen.sh && exec nginx -g 'daemon off;'"]
         env:
         - name: no_proxy
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server,seaweedfs-filer"
         - name: NO_PROXY
-          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server"
+          value: "ia-grafana,ia-time-series-analytics-microservice,ia-mqtt-broker,{{ .Values.env.timeseries_no_proxy }},coturn,mediamtx,{{ .Values.env.HOST_IP }},dlstreamer-pipeline-server,seaweedfs-filer"
         - name: HOST_IP
           value: "{{ .Values.env.HOST_IP }}"
         - name: MEDIAMTX_SERVER

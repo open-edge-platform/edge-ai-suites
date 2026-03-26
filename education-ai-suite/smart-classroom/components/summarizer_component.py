@@ -1,5 +1,4 @@
 from components.base_component import PipelineComponent
-from components.llm.openvino.summarizer import Summarizer as OvSummarizer
 from components.llm.ipex.summarizer import Summarizer as IpexSummarizer
 from utils.runtime_config_loader import RuntimeConfig
 from utils.config_loader import config
@@ -7,6 +6,11 @@ from utils.storage_manager import StorageManager
 import logging, os
 import time
 
+if config.app.use_ov_genai:
+    from components.llm.openvino_genai.summarizer import Summarizer as OvSummarizer
+else:
+    from components.llm.openvino.summarizer import Summarizer as OvSummarizer
+    
 logger = logging.getLogger(__name__)
 
 class SummarizerComponent(PipelineComponent):
@@ -19,25 +23,24 @@ class SummarizerComponent(PipelineComponent):
         provider = provider.lower()
         cfg = (provider, model_name, device)
 
-        # Reload only if config changed
-        if SummarizerComponent._model is None or SummarizerComponent._config != cfg:
-            if provider == "openvino":
-                SummarizerComponent._model = OvSummarizer(
-                    model_name=model_name,
-                    device=device,
-                    temperature=temperature,
-                    revision=None
-                )
-            elif provider == "ipex":
-                SummarizerComponent._model = IpexSummarizer(
-                    model_name=model_name,
-                    device=device.lower(),
-                    temperature=temperature
-                )
-            else:
-                raise ValueError(f"Unsupported summarizer provider: {provider}")
 
-            SummarizerComponent._config = cfg
+        if provider == "openvino":
+            SummarizerComponent._model = OvSummarizer(
+                model_name=model_name,
+                device=device,
+                temperature=temperature,
+                revision=None
+            )
+        elif provider == "ipex":
+            SummarizerComponent._model = IpexSummarizer(
+                model_name=model_name,
+                device=device.lower(),
+                temperature=temperature
+            )
+        else:
+            raise ValueError(f"Unsupported summarizer provider: {provider}")
+
+        SummarizerComponent._config = cfg
 
         self.summarizer = SummarizerComponent._model
         self.model_name = model_name

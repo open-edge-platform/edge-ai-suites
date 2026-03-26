@@ -30,7 +30,7 @@ jobs:
           persist-credentials: false
       
       - name: Run Trivy Filesystem Scan
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: trivy-fs
         with:
           scan_type: "fs"  
@@ -41,7 +41,7 @@ jobs:
           report_suffix: "-fs-education-ai-suite-trivy"
 
       - name: Run trivy Scan - education-suite (SPDX SBOM)
-        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@27276444a9bcf247a27369406686b689933bd1ff
+        uses: open-edge-platform/orch-ci/.github/actions/security/trivy@a416220a0f87725196093a638e0186286ac4a953
         id: videosummary-frontend-spdx
         with:
           scan_type: "fs"  
@@ -73,11 +73,11 @@ jobs:
           scan-scope: "all"  
           output-format: "txt" 
           fail-on-findings: "false"
-          paths: "microservices/multilevel-video-understanding"
-          report_suffix: "-bandit-multilevel-video-understanding-CT161"
+          paths: "education-ai-suite/smart-classroom"
+          report_suffix: "-bandit-education-ai-suite"
 
       - name: Upload Report
         uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
         with:
-          name: bandit-report-multilevel-video-understanding
+          name: bandit-education-ai-suite
           path: bandit-report-*.txt    
