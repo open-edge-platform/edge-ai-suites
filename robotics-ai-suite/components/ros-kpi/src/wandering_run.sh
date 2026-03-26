@@ -108,6 +108,15 @@ LAUNCH_LOG="$SESSION_DIR/wandering_launch.log"
 echo "  Session dir: $SESSION_DIR"
 echo ""
 
+# ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
+echo "Killing any leftover simulation processes before starting..."
+_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
+pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
+sleep 2
+pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
+echo "  Pre-run cleanup done."
+echo ""
+
 # ── Process 1: wandering launch ───────────────────────────────────────────────
 echo "Starting wandering simulation..."
 setsid nohup ros2 launch wandering_gazebo_tutorial wandering_gazebo.launch.py \

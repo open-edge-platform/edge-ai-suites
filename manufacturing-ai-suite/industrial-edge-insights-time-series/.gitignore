@@ -9,5 +9,7 @@ helm/*.yaml
 helm/*.conf
 helm/*.sh
 helm/*.csv
+helm/simulation-data/
+helm-packages/
 
 venv/
