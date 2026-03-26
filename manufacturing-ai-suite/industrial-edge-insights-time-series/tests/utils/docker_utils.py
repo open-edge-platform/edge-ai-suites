@@ -674,9 +674,8 @@ def update_env_file(file_path=None, values=None):
                     capture_output=True, text=True
                 )
                 if sed_result.returncode != 0:
-                    logger.error(f"sed failed for {parameter_name}: {sed_result.stderr}")
+                    logger.error(f"sed failed: {sed_result.stderr}")
                     return False
-                logger.info(f"Updated {parameter_name} in .env file")
             else:
                 # Key missing — append it using printf via shell
                 append_result = subprocess.run(
@@ -684,9 +683,8 @@ def update_env_file(file_path=None, values=None):
                     capture_output=True, text=True
                 )
                 if append_result.returncode != 0:
-                    logger.error(f"Failed to append {parameter_name}: {append_result.stderr}")
+                    logger.error(f"Failed while appending to .env file: {append_result.stderr}")
                     return False
-                logger.info(f"Added missing variable {parameter_name} to .env file")
 
         logger.info(f"Successfully updated .env file with {len(values)} environment variables")
         return True
