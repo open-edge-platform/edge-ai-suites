@@ -13,14 +13,29 @@ import subprocess  # nosec B404
 import json
 import os
 import glob
+import re
 from typing import Tuple, Optional
 import logging
 
-MQTT_BROKER = os.getenv("MQTT_BROKER", "ia-mqtt-broker")
-MEDIAMTX_SERVER = os.getenv("MEDIAMTX_SERVER", "mediamtx")
-MEDIAMTX_PORT = os.getenv("MEDIAMTX_PORT", "8554")
-RTSP_STREAM_NAME = os.getenv("RTSP_STREAM_NAME", "live.stream")
-TS_TOPIC = os.getenv("TS_TOPIC", "weld-data")
+# Validation pattern: alphanumeric, hyphens, dots, underscores (safe for hostnames/paths)
+_SAFE_ENV_RE = re.compile(r'^[a-zA-Z0-9._-]+$')
+
+
+def _validated_env(name: str, default: str) -> str:
+    """Return an environment variable after validating it contains only safe characters."""
+    value = os.getenv(name, default)
+    if not _SAFE_ENV_RE.match(value):
+        raise ValueError(
+            f"Environment variable {name} contains invalid characters: {value!r}"
+        )
+    return value
+
+
+MQTT_BROKER = _validated_env("MQTT_BROKER", "ia-mqtt-broker")
+MEDIAMTX_SERVER = _validated_env("MEDIAMTX_SERVER", "mediamtx")
+MEDIAMTX_PORT = _validated_env("MEDIAMTX_PORT", "8554")
+RTSP_STREAM_NAME = _validated_env("RTSP_STREAM_NAME", "live.stream")
+TS_TOPIC = _validated_env("TS_TOPIC", "weld-data")
 RTSP_URL = f"rtsp://{MEDIAMTX_SERVER}:{MEDIAMTX_PORT}/{RTSP_STREAM_NAME}"
 ffmpeg_proc = None
 client = None

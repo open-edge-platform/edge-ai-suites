@@ -8,7 +8,6 @@ import os
 import sys
 import pytest
 import time
-import subprocess  # nosec B404
 import logging
 import re
 # Add parent directory to path for utils imports
