@@ -9,7 +9,7 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import time
 import base64
-import subprocess  # nosec B404
+import subprocess  # nosec B404 - subprocess needed for ffmpeg process management
 import json
 import os
 import glob
@@ -344,7 +344,9 @@ if __name__ == "__main__":
     RTSP_URL
     ]
 
-    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)  # nosec B603
+    # All inputs to ffmpeg_cmd are either hardcoded literals or validated
+    # by _validated_env/_validated_port above (safe against injection).
+    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
     check_and_load_simulation_files(target_fps)
 
     if 'ffmpeg_proc' in locals():
