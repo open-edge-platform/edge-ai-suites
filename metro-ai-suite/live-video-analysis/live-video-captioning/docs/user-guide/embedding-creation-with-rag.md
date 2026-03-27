@@ -1,6 +1,6 @@
 # Configure Embedding Creation with RAG
 
-This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the `[Live-Video-Captioning-RAG](../../../live-video-captioning-rag/)` service for Retrieval-Augmented Generation (RAG) chat.
+This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the [Live-Video-Captioning-RAG](../../../live-video-captioning-rag/) service for Retrieval-Augmented Generation (RAG) chat.
 
 When enabled:
 
@@ -21,7 +21,7 @@ When enabled:
 
 - Docker and Docker Compose are installed.
 - Complete the base setup in [Get Started](./get-started.md).
-- VLM models are prepared for the captioning pipeline (`ov_models/`) and LLM models are prepared for the RAG pipeline (`llm_models/`). Please refer to [Model Preparation section]() to download and convert the models.
+- VLM models are prepared for the captioning pipeline (`ov_models/`) and LLM models are prepared for the RAG pipeline (`llm_models/`). Please refer to [Model Preparation section](../user-guide/get-started.md#model-preparation) to download and convert the models.
 
 ## Enabling Embedding Creation with RAG
 
@@ -43,6 +43,10 @@ When enabled:
 
      Notes:
      - Update the helper script values to use your preferred embedding and LLM models.
+     - For gated models, please export your HF_TOKEN before running the `setup_embeddings.sh` script above:
+       ```bash
+       export HF_TOKEN=<your-huggingface-token>
+       ```
 
 2. Then, now you are ready to deploy the live-video-captioning with embedding creation and RAG.
      ```bash
@@ -79,8 +83,7 @@ docker compose down
 
 ### Chat icon not visible in live captioning UI
 
-- Ensure `ENABLE_EMBEDDING=true` is exported before startup.
-- Ensure stack was started with `COMPOSE_PROFILES=EMBEDDING`.
+- Ensure `ENABLE_EMBEDDING=true` and `COMPOSE_PROFILES=EMBEDDING` is exported before startup.
 
 ### RAG page does not open or is unreachable
 
