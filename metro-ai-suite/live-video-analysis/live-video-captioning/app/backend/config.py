@@ -48,19 +48,8 @@ UI_DIR = BASE_DIR / "ui"
 # Host Server Configuration
 LIVE_VIDEO_RAG_HOST_PORT = int(os.environ.get("LIVE_VIDEO_RAG_HOST_PORT", "4172"))
 EMBEDDING_API_URL = os.environ.get(
-    "EMBEDDING_API_URL", f"http://live-video-captioning-rag:{LIVE_VIDEO_RAG_HOST_PORT}/api/embedding"
+    "EMBEDDING_API_URL", f"http://live-video-captioning-rag:{LIVE_VIDEO_RAG_HOST_PORT}/api/embeddings"
 )
 
-# Embedding/Vector Database Configuration
-VDMS_HOST = os.getenv("VDMS_HOST", "localhost")
-VDMS_PORT = int(os.getenv("VDMS_PORT", "5555"))
-EMBEDDING_HOST = os.getenv("EMBEDDING_HOST", "localhost")
-EMBEDDING_HOST_PORT = int(os.getenv("EMBEDDING_HOST_PORT", "5000"))
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "")
+# Enable/Disable Embedding
 ENABLE_EMBEDDING = os.environ.get("ENABLE_EMBEDDING", "false").lower() in ("true", "1", "yes")
-EMBEDDING_LENGTH: int = 0
-
-# Proxy settings
-NO_PROXY_ENV = os.environ.get("no_proxy", "")  # Comma-separated domains for no-proxy
-HTTP_PROXY = os.environ.get("http_proxy", "")
-HTTPS_PROXY = os.environ.get("https_proxy", "")

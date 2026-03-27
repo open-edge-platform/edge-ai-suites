@@ -162,11 +162,6 @@ services:
       - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}
       # Embedding and vectordatabase
       - ENABLE_EMBEDDING=${ENABLE_EMBEDDING:-false}
-      - EMBEDDING_MODEL=${EMBEDDING_MODEL_NAME}
-      - EMBEDDING_HOST=${EMBEDDING_HOST:-multimodal-embedding-serving}
-      - EMBEDDING_HOST_PORT=${EMBEDDING_HOST_PORT:-8000}
-      - VDMS_HOST=${VDMS_HOST:-vdms-vector-db}
-      - VDMS_PORT=${VDMS_PORT:-55555}
       - LIVE_VIDEO_RAG_HOST_PORT=${LIVE_VIDEO_RAG_HOST_PORT:-4172}
     volumes:
       - "./ov_models:/app/ov_models:ro"
@@ -324,6 +319,7 @@ services:
       LLM_DEVICE: ${LLM_DEVICE}
       MAX_TOKENS: ${MAX_TOKENS:-1024}
       TOP_K: ${TOP_K:-1}
+      SCORE_THRESHOLD: ${SCORE_THRESHOLD:-0.3}
       # EMBEDDING
       EMBEDDING_MODEL: ${EMBEDDING_MODEL_NAME}
       EMBEDDING_HOST: ${EMBEDDING_HOST:-multimodal-embedding-serving}

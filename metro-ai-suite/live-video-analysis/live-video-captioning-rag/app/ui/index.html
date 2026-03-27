@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Live Caption RAG Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <h2>
+            <svg class="chatbot-icon" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false">
+                <!-- antenna -->
+                <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <circle cx="12" cy="2" r="1" fill="currentColor" />
+                <!-- head -->
+                <rect x="5" y="6" width="14" height="12" rx="4" ry="4" fill="none" stroke="currentColor"
+                    stroke-width="2" />
+                <!-- eyes -->
+                <circle cx="9" cy="12" r="1.5" fill="currentColor" />
+                <circle cx="15" cy="12" r="1.5" fill="currentColor" />
+                <!-- mouth -->
+                <rect x="9" y="15" width="6" height="1.8" rx="0.9" fill="currentColor" />
+            </svg>
+
+            <span id="appTitle">Live Video Captioning RAG</span>
+        </h2>
+        <button id="themeToggle" class="icon-button" type="button" aria-label="Switch theme">
+            <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="2" fill="none" />
+                <line x1="12" y1="2" x2="12" y2="5" stroke="currentColor" stroke-width="2" />
+                <line x1="12" y1="19" x2="12" y2="22" stroke="currentColor" stroke-width="2" />
+                <line x1="4.22" y1="4.22" x2="6.34" y2="6.34" stroke="currentColor" stroke-width="2" />
+                <line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="currentColor" stroke-width="2" />
+                <line x1="2" y1="12" x2="5" y2="12" stroke="currentColor" stroke-width="2" />
+                <line x1="19" y1="12" x2="22" y2="12" stroke="currentColor" stroke-width="2" />
+                <line x1="4.22" y1="19.78" x2="6.34" y2="17.66" stroke="currentColor" stroke-width="2" />
+                <line x1="17.66" y1="6.34" x2="19.78" y2="4.22" stroke="currentColor" stroke-width="2" />
+            </svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M21 12.8A9 9 0 0 1 11.2 3 7.5 7.5 0 1 0 21 12.8Z" stroke="currentColor" stroke-width="2"
+                    fill="none" />
+            </svg>
+        </button>
+    </header>
+    <main class="chat-shell">
+
+        <div class="chat-layout">
+            <!-- LEFT: reserved for conversation list -->
+            <aside class="chat-sidebar" aria-label="Conversation history">
+                <div class="sidebar-header">
+                    <span>Conversation History</span>
+                    <!-- New Chat button (hidden until there is at least 1 conversation) -->
+                    <button id="newChatBtn" class="new-chat-btn" type="button" hidden>
+                        <!-- plus icon -->
+                        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
+                            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                        </svg>
+                        <span class="new-chat-text">New</span>
+                    </button>
+
+                </div>
+
+                <!-- Placeholder items (you can fill dynamically later) -->
+                <ul class="conv-list">
+                    <!-- Example items (empty for now) -->
+                    <!-- <li class="conv-item active"><span>Today · Project Alpha</span></li> -->
+                </ul>
+            </aside>
+
+            <!-- RIGHT: chat canvas -->
+            <section class="chat-canvas">
+                <!-- Centered helper text (only visible when empty) -->
+                <div class="chat-center-hint" id="chatHint">What can I help with?</div>
+
+                <!-- Messages container -->
+                <div class="messages" id="messages"></div>
+
+                <!-- Composer -->
+                <form class="composer" id="composer" autocomplete="off">
+                    <label class="visually-hidden" for="userInput">Type your message</label>
+                    <textarea id="userInput" class="input composer-input"
+                        placeholder="Hi. Please make sure there are context created from the live-captioning sample."
+                        rows="1" spellcheck="true"></textarea>
+
+                    <button id="sendBtn" class="send-btn" type="submit" aria-label="Send message">
+                        <!-- Send Icon -->
+                        <svg class="send-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M3 11.5l18-8-8 18-2.5-7-7.5-3z" fill="currentColor" />
+                        </svg>
+                    </button>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <script src="/js/utils/theme.js"></script>
+    <script src="/js/utils/sse.js"></script>
+    <script src="/js/chat/state.js"></script>
+    <script src="/js/chat/model.js"></script>
+    <script src="/js/chat/frames.js"></script>
+    <script src="/js/chat/render.js"></script>
+    <script src="/js/chat/ui.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+
+</html>

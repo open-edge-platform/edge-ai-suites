@@ -12,7 +12,7 @@ When enabled:
 ## How Data Flows
 
 1. Live Video Captioning receives metadata from MQTT which published by DLSPS.
-2. With `ENABLE_EMBEDDING=true`, frame blobs are forwarded to `live-video-captioning-rag` at `/api/embedding`.
+2. With `ENABLE_EMBEDDING=true`, frame blobs are forwarded to `live-video-captioning-rag` at `/api/embeddings`.
 3. RAG service generates embeddings through `multimodal-embedding-serving`.
 4. Embeddings + metadata are stored in `vdms-vector-db`.
 5. RAG chat (`/api/chat`) retrieves relevant context and generates answers with the configured LLM.

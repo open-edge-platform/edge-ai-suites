@@ -1,0 +1,612 @@
+/* ===========================
+   THEME TOKENS
+   =========================== */
+:root {
+  --bg: #050814;
+  --bg-gradient: radial-gradient(circle at 20% -10%, #12225b 0%, #050814 55%);
+  --panel: #0d152c;
+  --panel-strong: #111c38;
+  --accent: #1a73e8;
+  --accent-strong: #0f5cc8;
+  --text: #f5f7fb;
+  --muted: #8ca0c2;
+  --border: rgba(255, 255, 255, 0.08);
+  --shadow: 0 18px 38px rgba(5, 8, 20, 0.55);
+  --input-bg: #0b1026;
+  --input-border: var(--border);
+}
+
+[data-theme="light"] {
+  --bg: #f6f8fc;
+  --bg-gradient: radial-gradient(circle at 20% -10%, #ffffff 0%, #e8eef8 55%);
+  --panel: #ffffff;
+  --panel-strong: #f1f4fb;
+  --accent: #1a73e8;
+  --accent-strong: #0f5cc8;
+  --text: #0b152c;
+  --muted: #5b6a85;
+  --border: rgba(0, 0, 0, 0.08);
+  --shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+  --input-bg: #eef2fb;
+  --input-border: rgba(0, 0, 0, 0.12);
+}
+
+/* ===========================
+   GLOBAL RESET + BASE
+   =========================== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-gradient);
+  color: var(--text);
+}
+
+header,
+main {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 20px 0 20px;
+  flex-shrink: 0;
+  margin-bottom: 0;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chatbot-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+p {
+  color: var(--muted);
+}
+
+/* main container sizing */
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 5px 20px;
+  overflow: hidden;
+  height: calc(100vh - 50px);
+}
+
+
+/* ===========================
+   GENERIC PANELS / CARDS (legacy area you already had)
+   =========================== */
+.panels {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(300px, 30%) minmax(0, 1fr);
+  align-items: stretch;
+  flex: 1;
+  overflow: hidden;
+}
+
+.card {
+  background: var(--panel);
+  border: 3px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: var(--shadow);
+}
+
+
+/* ===========================
+   ICON BUTTONS (theme toggle)
+   =========================== */
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.2s ease;
+  box-shadow: var(--shadow);
+}
+
+.icon-button:hover {
+  transform: translateY(-1px);
+}
+
+.icon-button:active {
+  transform: translateY(0);
+}
+
+.icon-button .icon-sun,
+.icon-button .icon-moon {
+  width: 20px;
+  height: 20px;
+  display: none;
+}
+
+/* Light theme → show SUN; Dark theme → show MOON */
+[data-theme="light"] .icon-sun {
+  display: block;
+}
+
+[data-theme="dark"] .icon-moon {
+  display: block;
+}
+
+@media (max-width: 520px) {
+  header {
+    flex-direction: row;
+  }
+}
+
+
+/* ===========================
+   CHAT: SIDEBAR + CANVAS + COMPOSER
+   =========================== */
+.chat-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 0 20px 12px 20px;
+}
+
+/* Two-panel layout: left sidebar + right chat area */
+.chat-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Sidebar (reserved for history) */
+.chat-sidebar {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* space title and button */
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Inline confirm chip appears inside a conversation row */
+
+.confirm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-left: 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel-strong);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.confirm-chip button {
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.confirm-chip button:hover {
+  background: var(--panel-strong);
+  transform: translateY(-1px);
+}
+
+.confirm-chip .danger {
+  color: #ff6b6b;
+  border-color: color-mix(in srgb, #ff6b6b 50%, var(--border));
+}
+
+
+.new-chat-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: background .2s ease, transform .1s ease, box-shadow .1s ease;
+  box-shadow: var(--shadow);
+  font-size: 0.85rem;
+}
+
+.new-chat-btn:hover {
+  background: var(--panel-strong);
+  transform: translateY(-1px);
+}
+
+.new-chat-btn:active {
+  transform: translateY(0);
+}
+
+.new-chat-btn[hidden] {
+  display: none !important;
+}
+
+.new-chat-btn .new-chat-text {
+  /* Optional: hide text on narrow sidebars; keep only the + icon */
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .new-chat-btn .new-chat-text {
+    display: inline;
+  }
+}
+
+.conv-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+
+/* Layout inside each conversation row */
+.conv-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.conv-item:hover {
+  background: var(--panel-strong);
+}
+
+.conv-item.active {
+  outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+/* Title should truncate if long */
+.conv-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Right-side action icons container */
+.conv-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity .15s ease;
+}
+
+.conv-item:hover .conv-actions {
+  opacity: 1;
+}
+
+/* Ghost icon button for actions (delete) */
+.icon-btn-ghost {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .2s ease, color .2s ease, transform .1s ease;
+}
+
+.icon-btn-ghost:hover {
+  background: var(--panel-strong);
+  color: #ff6b6b;
+  /* red-ish hint for delete */
+  transform: translateY(-1px);
+}
+
+.icon-btn-ghost:active {
+  transform: translateY(0);
+}
+
+.icon-btn-ghost svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Right chat canvas */
+.chat-canvas {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  /* messages grow, composer sticks to bottom */
+  min-height: 0;
+  position: relative;
+}
+
+/* Center hint (visible when there are no messages) */
+.chat-center-hint {
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  color: color-mix(in srgb, var(--text) 40%, transparent);
+  font-size: clamp(1.1rem, 2.3vw, 1.6rem);
+  text-align: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Messages scroll area */
+.messages {
+  overflow-y: auto;
+  padding: 10px 12px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+
+/* Example message bubbles (optional, for later use) */
+.msg {
+  max-width: 78%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+}
+
+.msg.user {
+  align-self: flex-end;
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.msg.bot {
+  align-self: flex-start;
+  /* NEW: make the bot bubble a vertical stack */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Text area inside a bubble */
+.msg .msg-text {
+  white-space: pre-line;
+  /* collapse multiple spaces, keep \n as line breaks */
+  line-height: 1.45;
+  word-break: break-word;
+  /* safety for long URLs/tokens */
+}
+
+/* Bottom-right caption inside the bot bubble */
+.msg .msg-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  opacity: 0.8;
+  margin-top: 6px;
+
+  /* This pushes the caption to the right edge of the same bubble */
+  align-self: flex-end;
+}
+
+/* Optional tiny separator dot if you later add more meta (e.g., latency) */
+.msg .msg-meta .dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* Keep comfortable spacing when frames are present */
+.msg .inline-frame-gallery+.msg-meta {
+  margin-top: 10px;
+}
+
+/* Composer (bottom input row) */
+.composer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  background: var(--panel-strong);
+  border-radius: 0 0 10px 10px;
+}
+
+
+.composer-input {
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+
+  /* keep the sizing/behavior you already want */
+  resize: none;
+  max-height: 200px;
+  line-height: 1.4;
+  padding: 10px 12px;
+  padding-right: 40px;
+  /* keep text away from send button */
+  width: 100%;
+  font: inherit;
+  /* inherit font from body */
+}
+
+/* Focus visibility (matches your earlier style) */
+.composer-input:focus {
+  outline: 2px solid rgba(106, 230, 255, 0.35);
+  outline-offset: 2px;
+}
+
+/* Placeholder should match theme-muted */
+.composer-input::placeholder {
+  color: var(--muted);
+  opacity: 1;
+  /* ensure consistent across browsers */
+}
+
+.send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.2s ease, box-shadow 0.1s ease;
+  box-shadow: var(--shadow);
+}
+
+.send-btn:hover {
+  background: var(--panel-strong);
+  transform: translateY(-1px);
+}
+
+.send-btn:active {
+  transform: translateY(0);
+}
+
+.send-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.send-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Accessibility helper */
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* Responsive: collapse sidebar under 900px */
+@media (max-width: 900px) {
+  .chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-sidebar {
+    order: 2;
+    /* move below chat on mobile */
+    min-height: 160px;
+  }
+
+  .chat-canvas {
+    order: 1;
+  }
+}
+
+/* Container inside the bot bubble */
+.inline-frame-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Each inline frame (image + caption) */
+.inline-frame {
+  background: color-mix(in srgb, var(--panel) 90%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Keep images modestly sized inside a bubble */
+.inline-frame-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: 480px;
+  /* cap width so it doesn't stretch too wide */
+  max-height: 280px;
+  /* cap height so it's never huge */
+  object-fit: contain;
+  background: #000;
+  /* looks good during load on dark theme */
+  border-bottom: 1px solid var(--border);
+}
+
+/* Caption under the image */
+.inline-frame-cap {
+  padding: 6px 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* Single-turn: hide composer when locked */
+.composer.is-locked {
+  display: none;
+}
