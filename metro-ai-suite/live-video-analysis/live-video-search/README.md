@@ -32,7 +32,7 @@ graph TD
   - [Architecture](./docs/user-guide/how-it-works.md): End‑to‑end architecture.
   - [System Requirements](./docs/user-guide/system-requirements.md): Hardware and software requirements.
   - [Build from Source](./docs/user-guide/how-to-build-from-source.md): Build images for the stack.
-  - [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-video-search/api-reference.html): Key endpoints and references.
+  - [API Reference](./docs/user-guide/api-reference.md): Key endpoints and references.
   - [Release Notes](./docs/user-guide/release-notes.md): Updates and fixes.
 
 ## Notes

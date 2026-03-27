@@ -151,7 +151,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
-- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-captioning/api-reference.html)
+- [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 
 <!--hide_directive

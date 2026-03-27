@@ -34,4 +34,4 @@ RTSP Source → StreamManager (OpenCV/Circular Buffer)
 - [System Requirements](docs/user-guide/system-requirements.md) - Hardware and software needs
 - [Build from Source](docs/user-guide/how-to-build-source.md) - Custom build instructions
 - [Release Notes](docs/user-guide/release-notes.md) - Changelog and known issues
-- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-video-alert-agent/api-reference.html) - REST API endpoints
+- [API Reference](docs/user-guide/api-reference.md) - REST API endpoints

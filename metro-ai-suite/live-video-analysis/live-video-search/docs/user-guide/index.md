@@ -60,7 +60,7 @@ Live Video Search combines two existing stacks:
   - [Build from Source](./how-to-build-from-source.md): Build the required images.
 
 - **Usage & API**
-  - [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-video-search/api-reference.html): Key endpoints and references.
+  - [API Reference](./api-reference.md): Key endpoints and references.
 
 - **Release & Support**
   - [Release Notes](./release-notes.md): Updates and fixes.
