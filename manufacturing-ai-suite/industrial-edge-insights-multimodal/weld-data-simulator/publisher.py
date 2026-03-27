@@ -24,6 +24,8 @@ _SAFE_ENV_RE = re.compile(r'^[a-zA-Z0-9._-]+$')
 def _validated_env(name: str, default: str) -> str:
     """Return an environment variable after validating it contains only safe characters."""
     value = os.getenv(name, default)
+    if not value:
+        raise ValueError(f"Environment variable {name} must not be empty")
     if not _SAFE_ENV_RE.match(value):
         raise ValueError(
             f"Environment variable {name} contains invalid characters: {value!r}"
@@ -31,9 +33,25 @@ def _validated_env(name: str, default: str) -> str:
     return value
 
 
+def _validated_port(name: str, default: str) -> str:
+    """Return an environment variable after validating it is a valid port number."""
+    value = os.getenv(name, default)
+    if not value:
+        raise ValueError(f"Environment variable {name} must not be empty")
+    try:
+        port = int(value)
+    except ValueError:
+        raise ValueError(f"Environment variable {name} must be numeric: {value!r}")
+    if port < 1 or port > 65535:
+        raise ValueError(
+            f"Environment variable {name} must be a valid port (1-65535): {port}"
+        )
+    return value
+
+
 MQTT_BROKER = _validated_env("MQTT_BROKER", "ia-mqtt-broker")
 MEDIAMTX_SERVER = _validated_env("MEDIAMTX_SERVER", "mediamtx")
-MEDIAMTX_PORT = _validated_env("MEDIAMTX_PORT", "8554")
+MEDIAMTX_PORT = _validated_port("MEDIAMTX_PORT", "8554")
 RTSP_STREAM_NAME = _validated_env("RTSP_STREAM_NAME", "live.stream")
 TS_TOPIC = _validated_env("TS_TOPIC", "weld-data")
 RTSP_URL = f"rtsp://{MEDIAMTX_SERVER}:{MEDIAMTX_PORT}/{RTSP_STREAM_NAME}"
