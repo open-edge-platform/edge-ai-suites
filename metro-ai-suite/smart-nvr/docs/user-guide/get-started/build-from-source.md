@@ -73,5 +73,5 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 - [Get Started](../get-started.md): Complete the initial setup and configuration steps
 - [System Requirements](./system-requirements.md): Review hardware and software requirements
 - [How to Use the Application](../how-to-use-application.md): Learn about the application's features and functionality
-- [API Reference](../api-reference.md): Explore the available REST API endpoints
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-nvr/api-reference.html): Explore the available REST API endpoints
 - [Troubleshooting](../troubleshooting.md#troubleshooting-docker-containers): Find solutions to common deployment issues

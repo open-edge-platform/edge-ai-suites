@@ -48,4 +48,4 @@ Ensure all required software are installed and configured before proceeding to [
 
 - [Overview](../index.md)
 - [Get Started Guide](../get-started.md)
-- [API Reference](../api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pallet-defect-detection/api-reference.html)

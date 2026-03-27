@@ -40,4 +40,4 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 ## Learn More
 
 - [Overview](../index.md)
-- [API Reference](../api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-traffic-intersection-agent/api-reference.html)

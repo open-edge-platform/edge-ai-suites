@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-search">
+	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-search">
 		 GitHub project
 	</a>
-	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-search/README.md">
+	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-search/README.md">
 		 Readme
 	</a>
 </div>
@@ -33,7 +33,7 @@ Live Video Search combines two existing stacks:
 - **VSS Search Mode** (Edge AI Libraries sample app)
   - Search‑MS + VDMS DataPrep + VDMS VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
-  - See VSS docs: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/index.md)
+  - See VSS docs: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.0.0/sample-applications/video-search-and-summarization/docs/user-guide/index.md)
 
 ## Use Cases
 
@@ -60,7 +60,7 @@ Live Video Search combines two existing stacks:
   - [Build from Source](./how-to-build-from-source.md): Build the required images.
 
 - **Usage & API**
-  - [API Reference](./api-reference.md): Key endpoints and references.
+  - [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-video-search/api-reference.html): Key endpoints and references.
 
 - **Release & Support**
   - [Release Notes](./release-notes.md): Updates and fixes.

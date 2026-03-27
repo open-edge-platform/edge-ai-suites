@@ -48,4 +48,4 @@ Check [the list of supported models](https://docs.openedgeplatform.intel.com/202
 
 - [Overview](../index.md)
 - [Get Started](../get-started.md)
-- [API Reference](../api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/api-reference.html)

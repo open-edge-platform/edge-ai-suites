@@ -53,7 +53,7 @@ The Smart Traffic Intersection stack includes the following containerized servic
 ## Learn More
 
 - [Get Started Guide](./get-started.md)
-- [API Reference](./api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-traffic-intersection-agent/api-reference.html)
 - [System Requirements](./get-started/system-requirements.md)
 
 <!--hide_directive

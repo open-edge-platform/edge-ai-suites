@@ -55,5 +55,5 @@ Checks:
 ## Next Steps
 
 - [Get Started](./get-started.md) - Basic setup and configuration
-- [API Reference](./api-reference.md) - REST API documentation
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-captioning/api-reference.html) - REST API documentation
 - [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements

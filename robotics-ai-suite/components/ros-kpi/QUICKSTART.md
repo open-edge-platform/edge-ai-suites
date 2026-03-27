@@ -143,7 +143,7 @@ source /opt/ros/humble/setup.bash   # or /opt/ros/jazzy/setup.bash
 export ROS_DOMAIN_ID=0
 ```
 
-See the [Intel Robotics AI Suite Getting Started Guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) for installation instructions.
+See the [Intel Robotics AI Suite Getting Started Guide](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) for installation instructions.
 
 Or use the auto-setup script:
 ```bash

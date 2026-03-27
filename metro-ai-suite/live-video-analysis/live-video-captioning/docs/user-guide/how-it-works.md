@@ -27,6 +27,6 @@ RTSP Source → dlstreamer-pipeline-server
 
 - [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
-- [API Reference](./api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/live-captioning/api-reference.html)
 - [Known Issues](./known-issues.md)
 - [Release Notes](./release-notes.md)

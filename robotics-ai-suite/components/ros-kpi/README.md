@@ -54,7 +54,7 @@ make quick     # Quick 30-second health check
 
 | Requirement | Install |
 |-------------|---------|
-| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
+| ROS2 Humble / Jazzy | [Intel Robotics AI Suite Getting Started](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html) |
 | Python 3.8+ | included with Ubuntu 22.04 |
 | `pidstat` | `sudo apt-get install sysstat` |
 | `psutil`, `matplotlib`, `numpy` | `uv sync` |

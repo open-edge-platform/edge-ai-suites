@@ -12,5 +12,5 @@ This Sample Application enables real-time anomaly detection in printed circuit b
 ## Supporting Resources
 
 - [Get Started Guide](./get-started.md)
-- [API Reference](./api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/pcb-anomaly-detection/api-reference.html)
 - [System Requirements](./get-started/system-requirements.md)

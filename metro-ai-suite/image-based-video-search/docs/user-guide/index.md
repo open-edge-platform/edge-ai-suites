@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/image-based-video-search">
      GitHub project
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/image-based-video-search/README.md">
      Readme
   </a>
 </div>
@@ -78,7 +78,7 @@ continuously and appears in the UI as soon as the application starts.
 - [Get Started](./get-started.md)
 - [System Requirements](./get-started/system-requirements.md)
 - [Release Notes](./release-notes.md)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 
 <!--hide_directive
 :::{toctree}

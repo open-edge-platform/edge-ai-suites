@@ -80,7 +80,7 @@ This sample application offers the following features:
 ## Supporting Resources
 
 - [Get Started](./get-started.md)
-- [API Reference](./api-reference.md)
+- [API Reference](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/ai-suite-manufacturing/industrial-edge-insights-vision/worker-safety-gear-detection/api-reference.html)
 - [System Requirements](./get-started/system-requirements.md)
 
 <!--hide_directive
