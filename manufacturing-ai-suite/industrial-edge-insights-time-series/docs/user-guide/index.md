@@ -13,7 +13,7 @@ They demonstrate how AI driven analytics can improve safety and preventive maint
 
 ## Architecture
 
-The Time-series sample apps, at a high-level, are based on a generic Time Series AI stack.
+The Time-series test sample apps, at a high-level, are based on a generic Time Series AI stack.
 It comprises of typical **TICK Stack** components, such as Telegraf, InfluxDB, and Kapacitor
 (used by the Time Series Analytics microservice) and Grafana for visualization. Data
 simulators (can act as data destinations if configured) would, of course, be replaced with

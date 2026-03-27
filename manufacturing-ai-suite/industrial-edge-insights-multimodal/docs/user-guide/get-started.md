@@ -167,7 +167,7 @@ make down
 
 ## Check logs - troubleshooting
 
-Check the container logs to catch any failures:
+Check the test container logs to catch any failures:
 
 ```bash
 docker ps
