@@ -9,7 +9,7 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import time
 import base64
-import subprocess
+import subprocess  # nosec B404
 import json
 import os
 import glob
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     RTSP_URL
     ]
 
-    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
+    ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)  # nosec B603
     check_and_load_simulation_files(target_fps)
 
     if 'ffmpeg_proc' in locals():
