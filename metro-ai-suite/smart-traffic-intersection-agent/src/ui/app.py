@@ -26,7 +26,6 @@ def update_dashboard(debug_mode=False):
         
         # Generate UI components
         header = UIComponents.create_header(data)
-        #camera_images_html = UIComponents.create_camera_grid_html(data)
         camera_gallery = UIComponents.create_camera_images(data)
         traffic = UIComponents.create_traffic_summary(data)
         environmental = UIComponents.create_environmental_panel(data)
@@ -498,12 +497,12 @@ def create_dashboard_interface():
         # Row 3: System Info / Summary (full width)
         system_info_component = gr.HTML()
 
-        # Row 4: System Telemetry (left) | Device Security State (right)
+        # Row 4: System Telemetry (full width)
+        # NOTE: Device Security panel is available via _device_security_panel_html()
+        # but hidden until data source is wired up.
         with gr.Row():
             with gr.Column(scale=1):
                 gr.HTML(_metrics_panel_html())
-            with gr.Column(scale=1):
-                gr.HTML(_device_security_panel_html())
 
         # Auto-refresh status indicator
         gr.HTML(create_status_indicator_html())
