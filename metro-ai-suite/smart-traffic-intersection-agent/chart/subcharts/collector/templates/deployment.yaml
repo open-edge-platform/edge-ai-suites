@@ -1,45 +1,47 @@
 {{/*
 Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
+
+Collector Deployment.
+
+Kubernetes equivalents of docker-compose.yaml configuration:
+  pid: host                -> hostPID: true
+  privileged: true         -> securityContext.privileged: true
+  devices /sys /dev /run /proc -> hostPath volumes
+  telegraf.conf            -> ConfigMap mount
+  WEBSOCKET_URL            -> env var referencing live-metrics-service
 */}}
-{{- if and .Values.liveMetrics.enabled .Values.collector.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "stia.collector.fullname" . }}
+  name: {{ include "collector.fullname" . }}
   labels:
-    {{- include "stia.labels" . | nindent 4 }}
+    {{- include "collector.labels" . | nindent 4 }}
     app.kubernetes.io/component: collector
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: {{ include "stia.collector.fullname" . }}
+      {{- include "collector.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: {{ include "stia.collector.fullname" . }}
-        {{- include "stia.selectorLabels" . | nindent 8 }}
+        {{- include "collector.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: collector
     spec:
-      hostPID: true
+      hostPID: {{ .Values.hostPID }}
       containers:
-        - name: {{ .Values.collector.name }}
-          image: "{{ .Values.collector.image.repository }}:{{ .Values.collector.image.tag }}"
-          imagePullPolicy: {{ .Values.collector.image.pullPolicy }}
+        - name: collector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: prometheus
-              containerPort: 9273
+              containerPort: {{ .Values.prometheusPort }}
               protocol: TCP
           env:
             - name: WEBSOCKET_URL
-              value: "ws://{{ include "stia.liveMetrics.fullname" . }}:{{ .Values.liveMetrics.service.port }}/ws/collector"
-            - name: http_proxy
-              value: {{ .Values.global.proxy.httpProxy | quote }}
-            - name: https_proxy
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
-            - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,{{ include "stia.liveMetrics.fullname" . }}"
+              value: {{ .Values.websocketUrl | quote }}
+            {{- include "collector.proxyEnv" . | nindent 12 }}
           volumeMounts:
             - name: telegraf-config
               mountPath: /etc/telegraf/telegraf.conf
@@ -60,13 +62,13 @@ spec:
               mountPath: /proc
               readOnly: true
           resources:
-            {{- toYaml .Values.collector.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
-            {{- toYaml .Values.collector.securityContext | nindent 12 }}
+            {{- toYaml .Values.securityContext | nindent 12 }}
       volumes:
         - name: telegraf-config
           configMap:
-            name: {{ include "stia.collector.fullname" . }}-config
+            name: {{ include "collector.fullname" . }}-telegraf-config
         - name: collector-signals
           emptyDir: {}
         - name: host-sys
@@ -81,4 +83,3 @@ spec:
         - name: host-proc
           hostPath:
             path: /proc
-{{- end }}

@@ -142,7 +142,7 @@ services:
 
   # Live System Metrics - collector (Telegraf)
   collector:
-    image: docker.io/intel/vippet-collector:2025.2.0
+    image: docker.io/intel/vippet-collector:2026.0.0
     container_name: collector
     ports:
       - "${PROMETHEUS_PORT:-9273}:9273"

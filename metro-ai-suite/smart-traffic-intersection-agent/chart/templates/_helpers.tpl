@@ -70,20 +70,6 @@ Define the fully qualified name for the VLM serving.
 {{- end }}
 
 {{/*
-Define the fully qualified name for the live-metrics service.
-*/}}
-{{- define "stia.liveMetrics.fullname" -}}
-{{ .Release.Name | trunc 57 | trimSuffix "-" }}-{{ .Values.liveMetrics.name }}
-{{- end }}
-
-{{/*
-Define the fully qualified name for the collector.
-*/}}
-{{- define "stia.collector.fullname" -}}
-{{ .Release.Name | trunc 57 | trimSuffix "-" }}-{{ .Values.collector.name }}
-{{- end }}
-
-{{/*
 Define the name of the CA cert secret.
 */}}
 {{- define "stia.caCertSecretName" -}}

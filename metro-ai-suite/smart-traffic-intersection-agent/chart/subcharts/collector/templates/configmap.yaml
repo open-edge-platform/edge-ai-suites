@@ -1,20 +1,23 @@
 {{/*
 Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
+
+ConfigMap holding the telegraf.conf for the collector.
+The WEBSOCKET_URL environment variable in the Deployment is substituted
+by Telegraf at runtime via ${WEBSOCKET_URL}.
 */}}
-{{- if and .Values.liveMetrics.enabled .Values.collector.enabled }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "stia.collector.fullname" . }}-config
+  name: {{ include "collector.fullname" . }}-telegraf-config
   labels:
-    {{- include "stia.labels" . | nindent 4 }}
+    {{- include "collector.labels" . | nindent 4 }}
     app.kubernetes.io/component: collector
 data:
   telegraf.conf: |
     # Configuration for telegraf agent
     [agent]
-      interval = "1s"
+      interval = "2s"
       round_interval = true
       metric_batch_size = 2000
       metric_buffer_limit = 20000
@@ -39,9 +42,9 @@ data:
       commands = ["/app/read_cpu_freq.sh"]
       environment = []
       name_suffix = ""
-      timeout = "5s"
+      timeout = "15s"
       data_format = "influx"
-      interval = "1s"
+      interval = "10s"
 
     # Run executable as long-running input plugin (qmassa GPU monitoring)
     [[inputs.execd]]
@@ -68,7 +71,7 @@ data:
 
     # Configuration for the Prometheus client to spawn
     [[outputs.prometheus_client]]
-      listen = ":9273"
+      listen = ":{{ .Values.prometheusPort }}"
       metric_version = 1
       path = "/metrics"
       collectors_exclude = ["gocollector", "process"]
@@ -78,4 +81,5 @@ data:
     # A plugin that can transmit metrics over WebSocket
     [[outputs.websocket]]
       url = "${WEBSOCKET_URL}"
-{{- end }}
+      data_format = "json"
+      read_timeout = "0s"

@@ -31,13 +31,13 @@ Smart Traffic Intersection Agent — Helm chart post-install notes
 
 4. The VLM serving endpoint is available internally at:
    http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}
-{{- if .Values.liveMetrics.enabled }}
+{{- if index .Values "live-metrics-service" "enabled" }}
 
 5. Live Metrics Service is available internally at:
-   ws://{{ include "stia.liveMetrics.fullname" . }}:{{ .Values.liveMetrics.service.port }}/ws/clients
+   ws://live-metrics-service:9090/ws/clients
 {{- if .Values.collector.enabled }}
 
 6. Telegraf Collector is running with host-level metrics collection.
-   Prometheus metrics: http://{{ include "stia.collector.fullname" . }}:9273/metrics
+   Prometheus metrics: http://collector:9273/metrics
 {{- end }}
 {{- end }}
