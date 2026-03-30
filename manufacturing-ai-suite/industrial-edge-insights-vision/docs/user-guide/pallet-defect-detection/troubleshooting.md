@@ -130,7 +130,7 @@ There are few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternatively, install OpenCL runtime packages in the host system. Refer to the relevant [OpenVINO documentation](https://docs.openvino.ai/2025/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the relevant [OpenVINO documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
 
 ## Deploying on Edge Microvisor Toolkit
 
