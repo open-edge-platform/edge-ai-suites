@@ -1,0 +1,32 @@
+{
+  "model_file": "weld_defect_model.pkl",
+  "labels_file": "weld_defect_labels.pkl",
+  "features": [
+    "Pressure",
+    "CO2 Weld Flow",
+    "Feed",
+    "Primary Weld Current",
+    "Secondary Weld Voltage"
+  ],
+  "classes": [
+    "Burnthrough Weld",
+    "Crater Cracks",
+    "Excessive Convexity",
+    "Excessive Penetration",
+    "Good Weld",
+    "Lack of Fusion",
+    "Overlap",
+    "Porosity w/ EP",
+    "Porosity w/ Excessive Penetration",
+    "Spatter",
+    "Undercut",
+    "Warping Weld"
+  ],
+  "good_weld_label": "Good Weld",
+  "trained_at": "2026-03-30T11:15:14.117345+00:00",
+  "algorithm": "RandomForestClassifier",
+  "sklearn_version": "1.6.1",
+  "required_sklearn_version": "1.6.1",
+  "intel_patched": true,
+  "note": "Load model with joblib.load(model_file). Input shape: (N, 5) \u2014 columns must follow 'features' order exactly. Apply sklearnex.patch_sklearn() before loading for Intel iGPU acceleration."
+}

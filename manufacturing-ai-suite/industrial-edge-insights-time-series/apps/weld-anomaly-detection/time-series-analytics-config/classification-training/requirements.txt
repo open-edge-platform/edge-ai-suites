@@ -1,5 +1,5 @@
 # Core ML runtime
-scikit-learn
+scikit-learn==1.6.1
 scikit-learn-intelex
 joblib
 numpy

@@ -5,18 +5,16 @@
 #
 
 """ Custom user defined function for anomaly detection in weld sensor data. """
-
 import os
 import logging
 import time
 import warnings
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
-import catboost as cb
-import pandas as pd
 import numpy as np
-
-
+import joblib
+from sklearnex import patch_sklearn, config_context
+patch_sklearn()
 
 warnings.filterwarnings(
     "ignore",
@@ -31,6 +29,14 @@ logging_level = getattr(logging, log_level, logging.INFO)
 
 # Primary weld current threshold
 WELD_CURRENT_THRESHOLD = 50
+GOOD_WELD_LABEL = "Good Weld"
+FEATURES = [
+    "Pressure",
+    "CO2 Weld Flow",
+    "Feed",
+    "Primary Weld Current",
+    "Secondary Weld Voltage",
+]
 
 # Configure logging
 logging.basicConfig(
@@ -48,22 +54,20 @@ class AnomalyDetectorHandler(Handler):
     def __init__(self, agent):
         self._agent = agent
         # Need to enable after model training
-        model_name = (os.path.basename(__file__)).replace('.py', '.cb')
+        model_name = (os.path.basename(__file__)).replace('.py', '.pkl')
+        label_name = (os.path.basename(__file__)).replace('.py', '_labels.pkl')
         model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "../models/" + model_name)
         model_path = os.path.abspath(model_path)
+        label_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   "../models/" + label_name)
+        label_path = os.path.abspath(label_path)
+        with config_context(target_offload=self.device, allow_fallback_to_host=False):
+            self.pipeline = joblib.load(model_path)
+            self.le       = joblib.load(label_path)
+        self.device = os.getenv('DEVICE', 'gpu').lower()
 
-        # Initialize a CatBoostClassifier model for anomaly detection
-        self.model = cb.CatBoostClassifier(
-            depth=10,            # Set the depth of each tree to 10
-            iterations=2000,     # Number of boosting iterations (trees)
-            learning_rate=0.1,   # Step size for each iteration
-            task_type="CPU",     # Specify to use CPU for training/inference
-            devices="1:2",       # Specify device IDs (not used for CPU, but kept for config compatibility)
-            random_seed=40,      # Set random seed for reproducibility
-        )
 
-        self.model.load_model(model_path)
 
         self.points_received = {}
         global total_no_pts
@@ -129,16 +133,53 @@ class AnomalyDetectorHandler(Handler):
         for key, value in point.fieldsInt.items():
             fields[key] = value
 
-        point_series = pd.Series(fields)
-        if "Primary Weld Current" in point_series and point_series["Primary Weld Current"] > WELD_CURRENT_THRESHOLD:
-            defect_likelihood_main = self.model.predict_proba(point_series)
-            bad_defect = defect_likelihood_main[0]*100
-            good_defect = defect_likelihood_main[1]*100
-            if bad_defect > 50:
-                point.fieldsDouble["anomaly_status"] = 1.0
-            logger.info(f"Good Weld: {good_defect:.2f}%, Defective Weld: {bad_defect:.2f}%")
+
+        
+        if "Primary Weld Current" in fields and fields["Primary Weld Current"] > WELD_CURRENT_THRESHOLD:
+            missing_features = [f for f in FEATURES if f not in fields]
+            if missing_features:
+                logger.warning("Missing required features for inference: %s", missing_features)
+            else:
+                x = np.array(
+                    [[
+                        fields["Pressure"],
+                        fields["CO2 Weld Flow"],
+                        fields["Feed"],
+                        fields["Primary Weld Current"],
+                        fields["Secondary Weld Voltage"],
+                    ]],
+                    dtype=np.float32,
+                )
+                with config_context(target_offload=self.device, allow_fallback_to_host=False):
+                    pred_idx   = self.pipeline.predict(x)[0]
+                    pred_proba = self.pipeline.predict_proba(x)[0]
+                    classes = list(self.le.classes_)
+                    prob_map = {cls: float(p) for cls, p in zip(classes, pred_proba)}
+
+                    predicted_category = self.le.inverse_transform([pred_idx])[0]
+                    good_weld_prob = prob_map.get(GOOD_WELD_LABEL, 0.0)
+                    good_defect = good_weld_prob * 100.0
+                    bad_defect = (1.0 - good_weld_prob) * 100.0
+                    confidence = round(float(np.max(pred_proba)), 6)
+
+                    logger.info(
+                        "Prediction details: %s",
+                        {
+                            "predicted_category": predicted_category,
+                            "is_defect": predicted_category != GOOD_WELD_LABEL,
+                            "defect_probability": round(1.0 - good_weld_prob, 6),
+                            "good_weld_probability": round(good_weld_prob, 6),
+                            "confidence": confidence,
+                            "probabilities": prob_map,
+                        },
+                    )
+
+
+                    if bad_defect > 50:
+                        point.fieldsDouble["anomaly_status"] = 1.0
+                    logger.info("Good Weld: %.2f%%, Defective Weld: %.2f%%", good_defect, bad_defect)
         else:
-            logger.info("Primary Weld Current below threshold (%d). Skipping anomaly detection.", WELD_CURRENT_THRESHOLD)
+            logger.debug("Primary Weld Current below threshold (%d). Skipping anomaly detection.", WELD_CURRENT_THRESHOLD)
 
         point.fieldsDouble["Good Weld"] = round(good_defect, 2) if "good_defect" in locals() else 0.0
         point.fieldsDouble["Defective Weld"] = round(bad_defect, 2) if "bad_defect" in locals() else 0.0

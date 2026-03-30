@@ -85,7 +85,9 @@ services:
       - ia-mqtt-broker
     security_opt:
     - no-new-privileges
-    read_only: true
+    read_only: false
+    entrypoint: ["sleep","infinity"]
+    user: "root"
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
       interval: 10s
@@ -120,6 +122,7 @@ services:
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
+    - ./apps/${SAMPLE_APP}/time-series-analytics-config/classification-training/:/tmp/${SAMPLE_APP}/classification-training
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
