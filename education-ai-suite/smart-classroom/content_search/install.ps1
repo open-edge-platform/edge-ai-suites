@@ -44,8 +44,8 @@ if (-not (Test-Path $venvPython)) {
 Write-Host "Upgrading pip..."
 Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
 
-Write-Host "Installing requirements_providers.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements_providers.txt") --quiet
+Write-Host "Installing requirements.txt..."
+Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
 
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
