@@ -145,7 +145,7 @@ def main() -> None:
     _load_config_to_env()
 
     parser = argparse.ArgumentParser(description="Start services via Environment Variables.")
-    parser.add_argument("--services", nargs="+", default=["chromadb", "minio", "vlm", "preprocess", "ingest", "main_app"])
+    parser.add_argument("--services", nargs="+", default=["postgres", "chromadb", "minio", "vlm", "preprocess", "ingest", "main_app"])
     args = parser.parse_args()
 
     requested = _split_services(args.services)
@@ -160,7 +160,15 @@ def main() -> None:
     if not minio_exe:
         provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
         minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
+    # no service current
+    pg_bin_dir = Path(r"C:\Program Files\PostgreSQL\16\bin")
+    pg_exe = str(pg_bin_dir / "postgres.exe")
+    pg_data = r"C:\Program Files\PostgreSQL\16\data"
     services_meta = {
+        "postgres": {
+            "cmd": [pg_exe, "-D", pg_data, "-h", "127.0.0.1"],
+            "cwd": pg_bin_dir,
+        },
         "chromadb": {
             "cmd": [chroma_exe, "run", 
                     "--host", os.environ.get("CHROMA_HOST", "127.0.0.1"),
@@ -218,11 +226,7 @@ def main() -> None:
             meta = services_meta[sname]
             _spawn(sname, meta["cmd"], meta["cwd"], logs_dir, procs, log_files,
                    meta.get("extra_env"), meta.get("extra_pythonpath"))
-            if sname == "chromadb":
-                print(f"[launcher] Waiting 10s for {sname} to fully initialize...")
-                time.sleep(10)
-            else:
-                time.sleep(0.5)
+            time.sleep(0.5)
     def _terminate_all() -> None:
         for name, p in procs.items():
             if p.poll() is None:
