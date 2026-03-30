@@ -57,6 +57,6 @@ pytest==8.3.5
 httpx==0.28.1
 python-dotenv==1.2.1
 SQLAlchemy==2.0.46
-starlette==0.52.1
+starlette==0.50.0
 psycopg2==2.9.11
 python-multipart==0.0.22

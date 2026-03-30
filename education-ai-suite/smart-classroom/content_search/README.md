@@ -2,21 +2,6 @@
 
 Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities using advanced RAG (Retrieval-Augmented Generation) workflows.
 
-## Prerequisites
-### 1. Core Services
-| Component | Minimum Version | Description |
-| :--- | :--- | :--- |
-| **Python** | 3.12+ | Primary runtime for the backend orchestration framework. |
-| **PostgreSQL** | 16+ | Relational database for task metadata and state management. |
-| **MinIO** | Latest | Object storage for raw files (Videos, PDFs, Images). |
-| **ChromaDB** | Latest | Vector database for embedding storage and semantic search. |
-
-### 2. System Tools (Multimodal Processing)
-To enable advanced document and video processing, the following must be installed and added to the system `PATH`:
-
-* **Tesseract OCR**: Required for Optical Character Recognition (extracting text from images/PDFs).
-* **Poppler**: Required for PDF rendering and frame extraction.
-
 ## Quick Start
 ### Automatic Dependency Installation
 We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
@@ -31,14 +16,11 @@ Note: Open PowerShell as Administrator before running the script.
 Once the environment is configured, activate the virtual environment and start the orchestration service:
 
 ```PowerShell
-# Navigate to the search module
-cd content_search
-
 # Activate the virtual environment
 .\venv_content_search\Scripts\Activate.ps1
 
 # Start all microservices
-python start_services.py
+python .\start_services.py
 ```
 
 ## API Endpoints
