@@ -4,7 +4,7 @@
 #
 
 # main.py
-import uvicorn, sys, os
+import uvicorn, os
 from fastapi import FastAPI
 
 from utils.database import engine, Base
@@ -19,9 +19,9 @@ setup_exception_handlers(app)
 app.include_router(api_router, prefix="/api/v1", tags=["EDU AI Tasks"])
 
 if __name__ == "__main__":
-    if not check_services():
-        print("Services not ready")
-        sys.exit(1)
+    # if not check_services():
+    #     print("Services not ready")
+    #     sys.exit(1)
     app_host = os.getenv("CS_HOST", "127.0.0.1")
     app_port = int(os.getenv("CS_PORT", 9011))
     print(f"Starting server at http://{app_host}:{app_port}")

@@ -19,8 +19,8 @@ from fastapi.responses import JSONResponse
 from fastapi_utils.tasks import repeat_every
 from optimum.intel.openvino import OVModelForVisualCausalLM
 from qwen_vl_utils import process_vision_info
-from utils.common import ErrorMessages, ModelNames, logger, settings
-from utils.data_models import (
+from providers.vlm_openvino_serving.utils.common import ErrorMessages, ModelNames, logger, settings
+from providers.vlm_openvino_serving.utils.data_models import (
     ChatCompletionChoice,
     ChatCompletionDelta,
     ChatCompletionResponse,
@@ -28,7 +28,7 @@ from utils.data_models import (
     MessageContentImageUrl,
     MessageContentText,
 )
-from utils.utils import (
+from providers.vlm_openvino_serving.utils.utils import (
     convert_model,
     is_model_ready,
     load_images,
