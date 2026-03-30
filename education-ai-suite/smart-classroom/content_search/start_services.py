@@ -28,6 +28,10 @@ def load_config_to_env(config_path):
 
         cs = config.get('content_search', {})
 
+        # Content Search Service
+        os.environ["CS_HOST"] = str(cs.get('host_addr', "127.0.0.1"))
+        os.environ["CS_PORT"] = str(cs.get('port', 9011))
+
         # MinIO
         minio = cs.get('minio', {})
         os.environ["MINIO_SERVER"] = str(minio.get('server', "127.0.0.1:9000"))

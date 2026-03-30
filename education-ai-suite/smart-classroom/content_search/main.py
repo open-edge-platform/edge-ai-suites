@@ -4,7 +4,7 @@
 #
 
 # main.py
-import uvicorn, sys
+import uvicorn, sys, os
 from fastapi import FastAPI
 
 from utils.database import engine, Base
@@ -22,5 +22,7 @@ if __name__ == "__main__":
     if not check_services():
         print("Services not ready")
         sys.exit(1)
-    # develop on Windows recommand reload
-    uvicorn.run("main:app", host="127.0.0.1", port=9011, reload=True)
+    app_host = os.getenv("CS_HOST", "127.0.0.1")
+    app_port = int(os.getenv("CS_PORT", 9011))
+    print(f"Starting server at http://{app_host}:{app_port}")
+    uvicorn.run("main:app", host=app_host, port=app_port, reload=False)

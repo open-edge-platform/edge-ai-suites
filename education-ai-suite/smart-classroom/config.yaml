@@ -385,6 +385,9 @@ va_pipeline:
   hls_base_url: http://127.0.0.1:8888
 
 content_search:
+  host_addr: "127.0.0.1" 
+  port: 9011
+
   chromadb:
     host: "localhost"
     port: 9090
