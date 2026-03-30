@@ -94,7 +94,7 @@ Query Parameters:
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/task/list?status=COMPLETED&limit=2'
+curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=2'
 ```
 Response (200 OK)
 ```json
@@ -153,7 +153,7 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+curl --location 'http://127.0.0.1:9011/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
 ```
 
 Response (200 OK):
@@ -196,7 +196,7 @@ Used to upload a video file and initiate an asynchronous background task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/object/upload' \
+curl --location 'http://127.0.0.1:9011/api/v1/object/upload' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
