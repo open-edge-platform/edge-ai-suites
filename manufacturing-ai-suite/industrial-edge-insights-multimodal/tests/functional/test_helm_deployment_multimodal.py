@@ -35,8 +35,8 @@ def test_gen_chart():
     logger.info("TC001: Generating helm chart for multimodal.")
     # Use generic chart path - the function will determine the correct path
     result = helm_utils.generate_helm_chart(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP)
-    assert result != False, "Failed to generate helm chart."  # nosec B101
-    logger.info(f"Helm Chart is generated at: {result}")
+    assert result, "Failed to generate helm chart."  # nosec B101
+    logger.info(f"Helm Chart is generated at: {chart_path_multi}")
     logger.info("Current directory1 %s", os.getcwd())
     os.chdir(constants.PYTEST_DIR)
     logger.info("Current directory2 %s", os.getcwd())
