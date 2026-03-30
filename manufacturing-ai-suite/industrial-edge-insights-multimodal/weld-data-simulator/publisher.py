@@ -9,13 +9,71 @@ import pandas as pd
 import paho.mqtt.client as mqtt
 import time
 import base64
-import subprocess
+import subprocess  # nosec B404
 import json
 import os
 import glob
+import re
+import sys
 from typing import Tuple, Optional
 import logging
 
+# Validation patterns for environment variables used in subprocess commands
+_SAFE_ENV_RE = re.compile(r'^[a-zA-Z0-9._-]+$')
+_SAFE_MQTT_TOPIC_RE = re.compile(r'^[a-zA-Z0-9._/:\-]+$')
+
+
+def _validated_env(name: str, default: str) -> str:
+    """Return an environment variable after validating it contains only safe characters.
+
+    Allowed: alphanumeric, dots, hyphens, underscores (safe for hostnames/paths).
+    """
+    value = os.getenv(name, default)
+    if not value:
+        raise ValueError(f"Environment variable {name} must not be empty")
+    if not _SAFE_ENV_RE.match(value):
+        raise ValueError(
+            f"Environment variable {name} contains invalid characters: {value!r}"
+        )
+    return value
+
+
+def _validated_port(name: str, default: str) -> str:
+    """Return an environment variable after validating it is a valid port number."""
+    value = os.getenv(name, default)
+    if not value:
+        raise ValueError(f"Environment variable {name} must not be empty")
+    try:
+        port = int(value)
+    except ValueError:
+        raise ValueError(f"Environment variable {name} must be numeric: {value!r}")
+    if port < 1 or port > 65535:
+        raise ValueError(
+            f"Environment variable {name} must be a valid port (1-65535): {port}"
+        )
+    return value
+
+
+def _validated_mqtt_topic(name: str, default: str) -> str:
+    """Return an environment variable after validating it is a safe MQTT topic.
+
+    Allowed: alphanumeric, dots, hyphens, underscores, forward-slashes, colons
+    (valid MQTT topic characters).  Rejects empty values, whitespace and
+    control characters.
+    """
+    value = os.getenv(name, default)
+    if not value:
+        raise ValueError(f"Environment variable {name} must not be empty")
+    if not _SAFE_MQTT_TOPIC_RE.match(value):
+        raise ValueError(
+            f"Environment variable {name} contains invalid characters: {value!r}"
+        )
+    return value
+
+
+# Module-level defaults — safe for import.  Actual validation happens in
+# __main__ so that an invalid env var produces a clear log message and
+# ``sys.exit(1)`` instead of an import-time stack trace.
 MQTT_BROKER = os.getenv("MQTT_BROKER", "ia-mqtt-broker")
 MEDIAMTX_SERVER = os.getenv("MEDIAMTX_SERVER", "mediamtx")
 MEDIAMTX_PORT = os.getenv("MEDIAMTX_PORT", "8554")
@@ -291,7 +349,21 @@ if __name__ == "__main__":
     # stream_video_and_csv("good_weld_02-16-23-0081-00")  # Original FPS
     # stream_video_and_csv("good_weld_02-16-23-0081-00", target_fps=10)  # Downsample to 10 FPS
     # stream_video_and_csv("crater_cracks_03-20-23-0122-11", target_fps=5)  # Downsample to 5 FPS
-    
+
+    # Validate environment variables that flow into the subprocess command.
+    # Done here (not at module level) so that importing this module never
+    # crashes — only running it as a script triggers validation.
+    try:
+        MQTT_BROKER = _validated_env("MQTT_BROKER", "ia-mqtt-broker")
+        MEDIAMTX_SERVER = _validated_env("MEDIAMTX_SERVER", "mediamtx")
+        MEDIAMTX_PORT = _validated_port("MEDIAMTX_PORT", "8554")
+        RTSP_STREAM_NAME = _validated_env("RTSP_STREAM_NAME", "live.stream")
+        TS_TOPIC = _validated_mqtt_topic("TS_TOPIC", "weld-data")
+        RTSP_URL = f"rtsp://{MEDIAMTX_SERVER}:{MEDIAMTX_PORT}/{RTSP_STREAM_NAME}"
+    except ValueError as exc:
+        logger.error("Invalid environment configuration: %s", exc)
+        sys.exit(1)
+
     # Default behavior - process all available files
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.connect(MQTT_BROKER)
@@ -311,6 +383,9 @@ if __name__ == "__main__":
     RTSP_URL
     ]
 
+    # All inputs to ffmpeg_cmd are either hardcoded literals, come from
+    # _validated_env/_validated_port above, or are numeric values derived
+    # from SIMULATION_TARGET_FPS via int() (safe against injection).
     ffmpeg_proc = subprocess.Popen(ffmpeg_cmd, stdin=subprocess.PIPE)
     check_and_load_simulation_files(target_fps)
 
