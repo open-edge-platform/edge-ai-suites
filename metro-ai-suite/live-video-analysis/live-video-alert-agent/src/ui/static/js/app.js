@@ -62,23 +62,19 @@ function initSSE() {
         eventSource.close();
     }
     
-    console.log('[SSE] Connecting to /events...');
     eventSource = new EventSource('/events');
     
     eventSource.onopen = () => {
-        console.log('[SSE] Connected successfully');
         sseConnected = true;
         if (pollingInterval) {
             clearInterval(pollingInterval);
             pollingInterval = null;
-            console.log('[SSE] Stopped polling - using SSE');
         }
     };
     
     eventSource.addEventListener('init', (e) => {
         try {
             const data = JSON.parse(e.data);
-            console.log('[SSE] Received init:', data.streams?.length, 'streams');
             
             if (data.streams && JSON.stringify(data.streams.sort()) !== JSON.stringify(activeStreams.sort())) {
                 activeStreams = data.streams;
@@ -107,16 +103,11 @@ function initSSE() {
         }
     });
     
-    eventSource.addEventListener('keepalive', () => {
-        console.log('[SSE] Keepalive received');
-    });
+    eventSource.addEventListener('keepalive', () => {});
     
     eventSource.onerror = (e) => {
-        console.error('[SSE] Connection error');
         sseConnected = false;
-        
         if (eventSource.readyState === EventSource.CLOSED) {
-            console.log('[SSE] Connection closed, falling back to polling');
             eventSource.close();
             eventSource = null;
             startPollingFallback();
@@ -126,7 +117,6 @@ function initSSE() {
 
 function startPollingFallback() {
     if (pollingInterval) return;
-    console.log('[Polling] Starting fallback polling...');
     pollingInterval = setInterval(fetchData, 1000);
 }
 
@@ -600,4 +590,212 @@ function escapeHtml(str) {
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&#039;');
+}
+
+// ============== SYSTEM METRICS (WebSocket from live-metrics-service) ==============
+let metricsWs = null;
+let metricsReconnectTimer = null;
+let cpuChart, gpuChart, memChart;
+
+// Track GPU engine metrics for aggregation
+const gpuEngineUsages = [];
+
+const MAX_DATA_POINTS = 60;
+
+function createChart(canvasId, label, color) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx || typeof Chart === 'undefined') return null;
+    
+    const gradient = ctx.createLinearGradient(0, 0, 0, 128);
+    gradient.addColorStop(0, `${color}55`);
+    gradient.addColorStop(1, `${color}0f`);
+    
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: label,
+                data: [],
+                borderColor: color,
+                backgroundColor: gradient,
+                borderWidth: 2,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 0,
+                pointHoverRadius: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                y: {
+                    suggestedMin: 0,
+                    suggestedMax: 100,
+                    grid: { color: '#e2e8f0' },
+                    ticks: { color: '#94a3b8' }
+                },
+                x: { display: false }
+            }
+        }
+    });
+}
+
+function initMetricsCharts() {
+    cpuChart = createChart('cpu-chart', 'CPU %', '#3b82f6');
+    gpuChart = createChart('gpu-chart', 'GPU %', '#10b981');
+    memChart = createChart('mem-chart', 'Memory %', '#a855f7');
+}
+
+function pushStatSample(chart, value) {
+    if (!chart) return;
+    const labels = chart.data.labels;
+    labels.push(new Date().toLocaleTimeString());
+    if (labels.length > MAX_DATA_POINTS) labels.shift();
+    const ds = chart.data.datasets[0];
+    ds.data.push(value);
+    if (ds.data.length > MAX_DATA_POINTS) ds.data.shift();
+    chart.update('none');
+}
+
+function initMetricsWebSocket() {
+    const wsUrl = `ws://${window.location.hostname}:9090/ws/clients`;
+    
+    if (metricsWs) metricsWs.close();
+    
+    metricsWs = new WebSocket(wsUrl);
+    
+    metricsWs.onopen = () => {
+        updateMetricsStatus(true);
+        if (metricsReconnectTimer) {
+            clearTimeout(metricsReconnectTimer);
+            metricsReconnectTimer = null;
+        }
+    };
+    
+    metricsWs.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.metrics) {
+                processMetrics(data.metrics);
+            }
+        } catch (err) {
+            console.error('[Metrics] Parse error:', err);
+        }
+    };
+    
+    metricsWs.onclose = () => {
+        updateMetricsStatus(false);
+        scheduleMetricsReconnect();
+    };
+    
+    metricsWs.onerror = () => {
+        updateMetricsStatus(false);
+    };
+}
+
+function scheduleMetricsReconnect() {
+    if (metricsReconnectTimer) return;
+    metricsReconnectTimer = setTimeout(() => {
+        metricsReconnectTimer = null;
+        initMetricsWebSocket();
+    }, 5000);
+}
+
+function updateMetricsStatus(connected) {
+    const dot = document.getElementById('metrics-status-dot');
+    const text = document.getElementById('metrics-status-text');
+    if (!dot || !text) return;
+    
+    if (connected) {
+        dot.innerHTML = '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>';
+        text.textContent = 'Live';
+    } else {
+        dot.innerHTML = '<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-slate-300 opacity-75"></span><span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-slate-400"></span>';
+        text.textContent = 'Connecting...';
+    }
+}
+
+function processMetrics(metrics) {
+    // Reset GPU engine tracking
+    gpuEngineUsages.length = 0;
+    
+    metrics.forEach(metric => {
+        switch (metric.name) {
+            case 'cpu':
+                const cpuUsage = metric.fields?.usage_idle != null 
+                    ? parseFloat((100 - metric.fields.usage_idle).toFixed(1))
+                    : null;
+                if (cpuUsage != null) {
+                    const cpuVal = document.getElementById('metrics-cpu-val');
+                    if (cpuVal) cpuVal.textContent = cpuUsage.toFixed(1) + '%';
+                    pushStatSample(cpuChart, cpuUsage);
+                    // Sidebar
+                    const sidebarCpuVal = document.getElementById('cpu-val');
+                    const sidebarCpuBar = document.getElementById('cpu-bar');
+                    if (sidebarCpuVal) sidebarCpuVal.textContent = cpuUsage.toFixed(1) + '%';
+                    if (sidebarCpuBar) sidebarCpuBar.style.width = cpuUsage + '%';
+                }
+                break;
+            case 'gpu_engine_usage':
+                // Collect all GPU engine usages
+                const engineUsage = metric.fields?.usage;
+                if (engineUsage != null) {
+                    gpuEngineUsages.push(parseFloat(engineUsage));
+                }
+                break;
+            case 'nvidia_smi':
+            case 'gpu':
+                // NVIDIA GPU or generic GPU metrics
+                const gpuUsage = metric.fields?.utilization_gpu || metric.fields?.usage_percent || 0;
+                if (gpuUsage != null) {
+                    const gpuVal = document.getElementById('metrics-gpu-val');
+                    if (gpuVal) gpuVal.textContent = parseFloat(gpuUsage).toFixed(1) + '%';
+                    pushStatSample(gpuChart, parseFloat(gpuUsage));
+                }
+                break;
+            case 'mem':
+                const memPercent = metric.fields?.used_percent;
+                if (memPercent != null) {
+                    const memVal = document.getElementById('metrics-mem-val');
+                    if (memVal) memVal.textContent = parseFloat(memPercent).toFixed(1) + '%';
+                    pushStatSample(memChart, parseFloat(memPercent));
+                    // Sidebar
+                    const sidebarMemVal = document.getElementById('mem-val');
+                    const sidebarMemBar = document.getElementById('mem-bar');
+                    if (sidebarMemVal) sidebarMemVal.textContent = parseFloat(memPercent).toFixed(1) + '%';
+                    if (sidebarMemBar) sidebarMemBar.style.width = memPercent + '%';
+                }
+                break;
+        }
+    });
+    
+    // Calculate overall GPU usage from maximum engine utilization
+    if (gpuEngineUsages.length > 0) {
+        const maxGpuUsage = Math.max(...gpuEngineUsages);
+        const gpuVal = document.getElementById('metrics-gpu-val');
+        if (gpuVal) gpuVal.textContent = maxGpuUsage.toFixed(1) + '%';
+        pushStatSample(gpuChart, maxGpuUsage);
+    }
+}
+
+// Initialize metrics system when page loads
+function initMetricsSystem() {
+    if (typeof Chart === 'undefined') return;
+    setTimeout(() => {
+        initMetricsCharts();
+        initMetricsWebSocket();
+    }, 100);
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMetricsSystem);
+} else {
+    initMetricsSystem();
 }

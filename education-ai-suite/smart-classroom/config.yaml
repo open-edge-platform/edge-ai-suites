@@ -396,34 +396,31 @@ content_search:
     root_user: "minioadmin"
     root_password: "minioadmin"
     bucket: "content-search"
-    minio_exe: 'C:\minio.exe'
+    minio_exe: '.\minio_wrapper\minio.exe'
     data_dir: '.\minio_wrapper\minio_data'
 
-  file_ingest:
-    collection_name: "content-search"
-    device: "CPU"
-    visual_embedding_model: "CLIP/clip-vit-b-16"
-    doc_embedding_model: "BAAI/bge-small-en-v1.5"
- 
-  # TODO:below placeholder only
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 9900
     device: "GPU"
     weight_format: "int8"
-    host: "127.0.0.1"
-    port: 9900
-    timeout_seconds: 300
-    max_new_tokens: null
-    log_level: "info"
-    seed: 42
-    cors_allow_origins: "*"
-    cors_allow_methods: "*"
-    cors_allow_headers: "*"
+    ingest_enabled: true
 
-  video_preprocessing:
+  video_preprocess:
+    host_addr: "127.0.0.1"
     port: 8001
+    vlm_timeout_seconds: 300
     chunk_duration_s: 30
     chunk_overlap_s: 4
     max_num_frames: 8
     frame_width: 0
     frame_height: 0
+
+  file_ingest:
+    host_addr: "127.0.0.1"
+    port: 9990
+    collection_name: "content-search"
+    device: "CPU"
+    visual_embedding_model: "CLIP/clip-vit-b-16"
+    doc_embedding_model: "BAAI/bge-small-en-v1.5"

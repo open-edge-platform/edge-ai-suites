@@ -1,9 +1,11 @@
+{{- $serviceType := .Values.service.type | default "ClusterIP" }}
+
 apiVersion: v1
 kind: Service
 metadata:
   name: aggregator
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: aggregator
   ports:
@@ -22,7 +24,7 @@ kind: Service
 metadata:
   name: ai-ecg
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: ai-ecg
   ports:
@@ -37,7 +39,7 @@ kind: Service
 metadata:
   name: rppg
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: rppg
   ports:
@@ -52,7 +54,7 @@ kind: Service
 metadata:
   name: pose
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: pose
   ports:
@@ -71,7 +73,7 @@ kind: Service
 metadata:
   name: metrics
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: metrics
   ports:
@@ -86,7 +88,7 @@ kind: Service
 metadata:
   name: dds-bridge
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: dds-bridge
   ports:
@@ -101,7 +103,7 @@ kind: Service
 metadata:
   name: mdpnp
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: mdpnp
   ports:
@@ -116,7 +118,7 @@ kind: Service
 metadata:
   name: ui
 spec:
-  type: ClusterIP
+  type: {{ $serviceType }}
   selector:
     app: ui
   ports:
