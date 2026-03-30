@@ -9,23 +9,30 @@ import os
 import logging
 import time
 import warnings
+
+log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
+enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'
+total_no_pts = int(os.getenv('BENCHMARK_TOTAL_PTS', "0"))
+logging_level = getattr(logging, log_level, logging.INFO)
+
+# Configure logging before importing sklearnex so basicConfig takes effect
+logging.basicConfig(
+    level=logging_level,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+)
+logging.getLogger("sklearnex").setLevel(logging.INFO)
+
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
 import numpy as np
 import joblib
-from sklearnex import patch_sklearn, config_context
+from sklearnex import patch_sklearn, config_context, set_config
 patch_sklearn()
 
 warnings.filterwarnings(
     "ignore",
     message=".*Threading.*parallel backend is not supported by Extension for Scikit-learn.*"
 )
-
-
-log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
-enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'
-total_no_pts = int(os.getenv('BENCHMARK_TOTAL_PTS', "0"))
-logging_level = getattr(logging, log_level, logging.INFO)
 
 # Primary weld current threshold
 WELD_CURRENT_THRESHOLD = 50
@@ -37,12 +44,6 @@ FEATURES = [
     "Primary Weld Current",
     "Secondary Weld Voltage",
 ]
-
-# Configure logging
-logging.basicConfig(
-    level=logging_level,  # Set the log level to DEBUG
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log format
-)
 
 logger = logging.getLogger()
 
@@ -62,10 +63,10 @@ class AnomalyDetectorHandler(Handler):
         label_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                    "../models/" + label_name)
         label_path = os.path.abspath(label_path)
-        with config_context(target_offload=self.device, allow_fallback_to_host=False):
-            self.pipeline = joblib.load(model_path)
-            self.le       = joblib.load(label_path)
-        self.device = os.getenv('DEVICE', 'gpu').lower()
+        self.pipeline = joblib.load(model_path)
+        self.le       = joblib.load(label_path)
+        self.device = os.getenv('DEVICE', 'gpu').strip().lower() or 'gpu'
+        logger.info(f"on device: {self.device}")
 
 
 
@@ -150,7 +151,8 @@ class AnomalyDetectorHandler(Handler):
                     ]],
                     dtype=np.float32,
                 )
-                with config_context(target_offload=self.device, allow_fallback_to_host=False):
+                
+                with config_context(target_offload=self.device, allow_fallback_to_host=True):
                     pred_idx   = self.pipeline.predict(x)[0]
                     pred_proba = self.pipeline.predict_proba(x)[0]
                     classes = list(self.le.classes_)
