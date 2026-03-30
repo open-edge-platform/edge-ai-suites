@@ -42,15 +42,15 @@ make pipeline-graph ALGORITHM=wandering
 
 ## Benchmark (Multiple Runs)
 
-The benchmark target runs the simulation `RUNS` times (default: 5), pausing
+The benchmark target runs the simulation `RUNS` times (default: 25), pausing
 between runs, and then aggregates KPI statistics across all sessions.
 
 ```bash
-# Default benchmark (5 runs, 180s each)
+# Default benchmark (25 runs, 120s each)
 make wandering-benchmark
 
 # Custom parameters
-make wandering-benchmark RUNS=10 TIMEOUT=180
+make wandering-benchmark RUNS=10 TIMEOUT=120
 
 # Re-aggregate KPIs from a completed benchmark directory
 make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421
@@ -58,8 +58,8 @@ make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `RUNS` | Number of simulation runs | 5 |
-| `TIMEOUT` | Max duration per run (seconds) | 180 |
+| `RUNS` | Number of simulation runs | 25 |
+| `TIMEOUT` | Max duration per run (seconds) | 120 |
 | `PAUSE` | Pause between runs (seconds) | 30 |
 | `NODE` | Narrow graph discovery to a specific node | — |
 

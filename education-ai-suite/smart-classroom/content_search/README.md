@@ -1,65 +1,62 @@
-# Content Search Feature
+# Content Search
+## Prerequisites
+1 python3
+ python3.10
 
-This file shows steps to set up and run content search feature.
-For full develop guide and API Reference, please see the [Dev Guide](docs/dev_guide/).
+2 postgreSQL
+postgreSQL installation refers to [PostgreSQL installation](./docs/dev_guide/Installation.md#postgresql)
+3 Minio
+minio installation refers to [Minio installation](./docs/dev_guide/Installation.md#minio)
 
-## Setup
+4 System Tools: Required for multimodal processing:
 
-### Prerequisites
+- Tesseract OCR: For image/PDF text extraction.
+- Poppler: For PDF rendering.
 
-- **Python 3.10** — only this version is verified on Windows: https://www.python.org/downloads/
-- **Rust compiler** — required by some dependencies: https://rust-lang.org/tools/install
-- **`multimodal_embedding_serving` wheel** — obtain from [this guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/wheel-installation.md) (use verified commit `77b812f`). Place the `.whl` file in the `content_search/` folder before running `install.ps1`.
-
-### Install System Dependencies
-
-Run `install.ps1` once to set up the environment (requires admin):
-- Creates the Python 3.10 venv
-- Installs `mobileclip`, `salesforce-lavis`, `requirements.txt`, and the `multimodal_embedding_serving` wheel
-- Downloads and installs Tesseract OCR 5.5.0 and adds it to the system PATH
-- Downloads and extracts Poppler 25.12.0 and adds it to the system PATH
-
+## Environment Setup
+### Create/activate python venv
 ```powershell
-# 1. Install dependencies (once)
-cd content_search
-.\install.ps1
+# Create venv
+& '<your python dir>' -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
-> **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
-
-#### LibreOffice (Optional)
-
-This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
-
-1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
-3. Add to PATH:
-   ```powershell
-   # Open PowerShell as Administrator:
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
-   ```
-4. Verify installation:
-   ```python
-   import shutil
-   shutil.which("soffice") is not None
-   ```
-
-## Start service
-
+###
 ```powershell
-# 1. Optional: set proxy if needed
-$env:https_proxy="<your_https_proxy>"
-$env:http_proxy="<your_http_proxy>"
-
-# 2. Launch all services
-.\start.ps1
+cd xxx/content_search
+python -m pip install --upgrade pip
+pip install -r .\requirements.txt
 ```
+## Launch
+```powershell
+cd xxx/content_search
+python .\start_services.py
+```
+// todo
+## Avaliable Endpoints
 
-`start.ps1` will:
-1. Start ChromaDB
-2. Start MinIO and create the bucket
-3. Start the File Ingest & Retrieve server on port `9990`
+| Endpoint | Method | Pattern | Description | Status |
+| :--- | :---: | :---: | :--- | :---: |
+| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
+| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
+| `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
+| `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
+| `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
+| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
+| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
+| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
+| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
+| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
+| `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
 
-All settings (ports, credentials, paths) are read from `../config.yaml`.
+## API reference
+[Content Search API reference](./docs/dev_guide/Content_search_API.md)
 
----
+[Ingest and Retrieve](./docs/dev_guide/file_ingest_and_retrieve/API_GUIDE.md)
+
+[Video Preprocess](./docs/dev_guide/video_preprocess/API_GUIDE.md)
+
+[VLM OV Serving](./docs/dev_guide/vlm_openvino_serving/API_GUIDE.md)

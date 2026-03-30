@@ -16,8 +16,8 @@ $venvPython = Join-Path $PSScriptRoot "venv_content_search\Scripts\python.exe"
 
 # --- Create venv ---
 if (-not (Test-Path $venvPython)) {
-    Write-Host "Creating venv (Python 3.10 required)..."
-    py -3.10 -m venv $venvDir
+    Write-Host "Creating venv (Python 3.12 required)..."
+    py -3.12 -m venv $venvDir
 } else {
     Write-Host "Venv already exists, skipping creation."
 }
@@ -26,26 +26,8 @@ if (-not (Test-Path $venvPython)) {
 Write-Host "Upgrading pip..."
 Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
 
-Write-Host "Installing mobileclip..."
-Invoke-Cmd $venvPython -m pip install git+https://github.com/apple/ml-mobileclip.git@c16bfe5a4feb424762d6bdf5245539120a4ce9ef#egg=mobileclip --quiet
-
-Write-Host "Installing salesforce-lavis..."
-Invoke-Cmd $venvPython -m pip install salesforce-lavis==1.0.2 --quiet
-
-Write-Host "Installing requirements.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
-
-# --- Install multimodal_embedding_serving wheel ---
-$whl = Get-ChildItem -Path $PSScriptRoot -Filter "multimodal_embedding_serving*.whl" -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($null -eq $whl) {
-    $whl = Get-ChildItem -Path (Join-Path $PSScriptRoot "..") -Filter "multimodal_embedding_serving*.whl" -ErrorAction SilentlyContinue | Select-Object -First 1
-}
-if ($whl) {
-    Write-Host "Installing multimodal_embedding_serving from $($whl.FullName) ..."
-    Invoke-Cmd $venvPython -m pip install $whl.FullName --no-deps --quiet
-} else {
-    Write-Warning "multimodal_embedding_serving wheel not found. Place multimodal_embedding_serving-0.1.1-py3-none-any.whl in content_search/ and re-run."
-}
+Write-Host "Installing requirements_providers.txt..."
+Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements_providers.txt") --quiet
 
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -99,4 +81,17 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler already in user PATH, skipping."
 }
 
-Write-Host "Installation complete. Run start.ps1 to launch services."
+# --- Download MinIO ---
+$minioDir = Join-Path $PSScriptRoot "providers/minio_wrapper"
+$minioExe = Join-Path $minioDir "minio.exe"
+if (Test-Path $minioExe) {
+    Write-Host "minio.exe already exists, skipping download."
+} else {
+    $minioUrl = "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+    Write-Host "Downloading minio.exe..."
+    if (-not (Test-Path $minioDir)) { New-Item -ItemType Directory -Path $minioDir | Out-Null }
+    Invoke-WebRequest -Uri $minioUrl -OutFile $minioExe -UseBasicParsing
+    Write-Host "minio.exe downloaded to $minioExe"
+}
+
+Write-Host "Installation complete. Run start_services.py to launch services."

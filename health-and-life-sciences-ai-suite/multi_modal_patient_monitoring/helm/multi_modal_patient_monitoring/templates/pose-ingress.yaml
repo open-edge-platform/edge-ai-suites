@@ -25,12 +25,4 @@ spec:
                 name: pose
                 port:
                   number: 8085
-
-          - path: /pose-video
-            pathType: Exact
-            backend:
-              service:
-                name: pose
-                port:
-                  number: 8085
 {{- end }}

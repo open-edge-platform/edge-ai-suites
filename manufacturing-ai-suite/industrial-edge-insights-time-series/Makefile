@@ -6,6 +6,7 @@
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
 SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-anomaly-detection
+HELM_REGISTRY := oci://registry-1.docker.io/intel
 
 ifdef app
 ifeq ($(filter $(app),$(SAMPLE_APP_LIST)),)
@@ -60,17 +61,18 @@ include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
 DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
 export DRI_MOUNT_PATH
+$(shell chmod 600 .env helm/values.yaml)
 
 # Build Docker containers
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build;
+	$(DOCKER_COMPOSE) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
@@ -198,7 +200,7 @@ down:
 	@echo "Stopping Docker containers...";
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
 
-# Push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# To push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
 # and have logged into that. Applies mainly when one is dealing with internal docker registry.
 # If you are using docker hub, ensure to have logged in with `docker login` command
 # before running this command.
@@ -212,7 +214,7 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
-	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "2026.0.0-$(WEEKLY_BUILD_DATE)-weekly"; else echo "2026.0.0"; fi))
+	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
 	@cp -f configs/grafana/dashboards/*.yml helm/
 	@cp -f apps/${SAMPLE_APP}/grafana-dashboard.json helm/
 	@cp -f configs/influxdb/config/*.conf helm/
@@ -233,6 +235,19 @@ gen_helm_charts:
 	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
 	@echo "Helm packages generated with version: ${version}"
 
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts
+	@echo "Packaging Helm chart for ${SAMPLE_APP}"
+	@mkdir -p helm-packages
+	@rm -f helm-packages/*.tgz
+	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
+	echo "Helm chart packaged successfully: $$pkg_file"; \
+	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
+	cd ..
 # Help
 .PHONY: help
 help:
@@ -242,12 +257,10 @@ help:
 	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
 	@echo "      No parameters required."
 	@echo "  make up_mqtt_ingestion            - Start Docker containers using MQTT ingestion"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection), num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
 	@echo "      Example: make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
 	@echo "  make up_opcua_ingestion           - Start Docker containers using OPC UA ingestion"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection), num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
 	@echo "      Example: make up_opcua_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
 	@echo "  make down                         - Stop Docker containers and remove volumes"
 	@echo "      No parameters required."
@@ -256,10 +269,14 @@ help:
 	@echo "  make check_env_variables          - Validate required .env variables"
 	@echo "      No parameters required."
 	@echo "  make push_images                  - Push the images to docker registry"
-	@echo "      Mandatory: DOCKER_REGISTRY (set in .env or as param)"
+	@echo "      Optional: DOCKER_REGISTRY (set in .env or as param)"
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
 	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection"
+	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Example: make push_helm_charts app=weld-anomaly-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
+
