@@ -67,6 +67,37 @@ FEATURES = [
 GOOD_WELD_LABEL = "Good Weld"
 
 
+def configure_device(device: str):
+    """Configure explicit Intel oneDAL offload target when sklearnex is present."""
+    if device == "auto":
+        return "auto"
+
+    if not _INTEL_PATCHED:
+        print(
+            "Requested device selection but scikit-learn-intelex is not installed; "
+            "continuing with standard sklearn on CPU."
+        )
+        return "cpu"
+
+    try:
+        import onedal
+        # target_offload requires DPC++ oneDAL backend. Host-only builds cannot offload.
+        if getattr(onedal, "_dpc_backend", None) is None:
+            print(
+                "Requested device offload but this oneDAL build is host-only "
+                "(no DPC backend). Falling back to host CPU."
+            )
+            return "host-cpu"
+    except Exception:
+        # If backend introspection fails, continue and let set_config decide.
+        pass
+
+    from sklearnex import set_config
+    target = "cpu" if device == "cpu" else "gpu:0"
+    set_config(target_offload=target)
+    return target
+
+
 # ── Model loader ──────────────────────────────────────────────────────────────
 
 def load_model():
@@ -227,7 +258,13 @@ def main():
         "--out", default=None,
         help="Save annotated results to this CSV file"
     )
+    parser.add_argument(
+        "--device", choices=["auto", "cpu", "gpu"], default="auto",
+        help="Inference device target for Intel backend: auto, cpu, gpu"
+    )
     args = parser.parse_args()
+
+    selected_target = configure_device(args.device)
 
     # Display Intel status
     print("=" * 60)
@@ -237,6 +274,8 @@ def main():
         print("Intel Extension for Scikit-learn: ENABLED  (oneDAL / Intel iGPU backend)")
     else:
         print("Intel Extension for Scikit-learn: NOT available (standard sklearn)")
+    print(f"Requested device: {args.device}")
+    print(f"Active target   : {selected_target}")
 
     # Show model metadata if available
     if INFO_PATH.exists():

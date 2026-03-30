@@ -1,0 +1,10 @@
+# Core ML runtime
+scikit-learn
+scikit-learn-intelex
+joblib
+numpy
+pandas
+
+# Required in this environment for sklearn-intelex runtime compatibility
+packaging
+setuptools

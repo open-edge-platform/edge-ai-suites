@@ -123,6 +123,12 @@ In short: keep `weld_defect_model.pkl` and `weld_defect_labels.pkl` together whe
 pip install scikit-learn scikit-learn-intelex joblib pandas numpy packaging setuptools
 ```
 
+Or install directly from the local dependency file:
+
+```bash
+pip install -r requirements.txt
+```
+
 Or using the project virtual environment:
 
 ```bash
@@ -208,6 +214,27 @@ The output CSV contains the original columns **plus**:
 - `defect_probability`
 - `good_weld_probability`
 - `confidence`
+
+#### Device selection (CPU / GPU)
+
+The sample script supports explicit device selection through `--device`:
+
+```bash
+# Automatic target (default)
+python weld_defect_inference_sample.py --device auto
+
+# Force CPU offload target
+python weld_defect_inference_sample.py --device cpu
+
+# Request Intel iGPU offload
+python weld_defect_inference_sample.py --device gpu
+```
+
+Notes:
+- `auto` uses the default oneDAL target.
+- `cpu` and `gpu` use Intel `target_offload` configuration.
+- If the environment has host-only oneDAL (no DPC backend), the script falls back to host CPU and prints:
+  `Requested device offload but this oneDAL build is host-only (no DPC backend). Falling back to host CPU.`
 
 ---
 
@@ -355,6 +382,7 @@ The pipeline uses **Intel Extension for Scikit-learn** (`scikit-learn-intelex`) 
 - The patch is applied **before any sklearn import**, which is required for the acceleration to take effect.
 - Works on **Intel CPUs** (AVX-512 vectorisation) and **Intel iGPUs** (via oneDNN).
 - Falls back silently to standard scikit-learn if the package is not installed — no code changes needed.
+- Explicit device targeting in the sample script is available via `--device auto|cpu|gpu`.
 
 ```python
 # Applied automatically in all three scripts:
