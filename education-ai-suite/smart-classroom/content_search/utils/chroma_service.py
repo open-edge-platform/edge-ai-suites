@@ -33,8 +33,7 @@ class ChromaService:
                 where=filters,
                 n_results=limit
             )
-            
-            # 格式化输出，方便前端解析
+
             formatted_results = []
             if raw_results and raw_results['ids']:
                 for i in range(len(raw_results['ids'][0])):
@@ -56,5 +55,4 @@ class ChromaService:
         target = collection_name or self.default_collection
         return self.wrapper.query_all(collection_name=target)
 
-# 导出单例
 chroma_service = ChromaService()
