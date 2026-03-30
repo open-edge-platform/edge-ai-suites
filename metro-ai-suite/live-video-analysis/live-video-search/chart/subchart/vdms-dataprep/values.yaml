@@ -72,6 +72,7 @@ livenessProbe:
     port: http
   initialDelaySeconds: 20
   periodSeconds: 30
+  timeoutSeconds: 5
   failureThreshold: 3
 
 readinessProbe:
@@ -80,6 +81,7 @@ readinessProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 15
+  timeoutSeconds: 5
   failureThreshold: 6
 
 startupProbe:
@@ -88,4 +90,5 @@ startupProbe:
     port: http
   initialDelaySeconds: 10
   periodSeconds: 10
+  timeoutSeconds: 5
   failureThreshold: 180
