@@ -76,26 +76,7 @@ stateDiagram-v2
     COMPLETED --> [*]
 ```
 
-## Core Endpoints
-
-### Endponts table
-
-| Endpoint | Method | Pattern | Description | Status |
-| :--- | :---: | :---: | :--- | :---: |
-| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
-| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
-| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
-| `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
-| `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
-| `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
-| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
-| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
-| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
-| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
-| `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
+## API Endpoints
 
 ### Get Task List
 
@@ -180,17 +161,27 @@ Response (200 OK):
 {
     "code": 20000,
     "data": {
-        "task_id": "371109e5-d374-4064-ba72-8f61b999d824",
+        "task_id": "e557b305-e37c-4074-a04a-ebd067efbd5d",
         "status": "COMPLETED",
         "progress": 100,
         "result": {
-            "summary": "This is a mock result from the local Dummy service for None.",
-            "confidence": 0.98,
-            "provider": "Mock-Windows-Service"
+            "message": "File from MinIO successfully processed. db returns {'visual': {'insert_count': 1}}",
+            "video_summary": {
+                "type": "done",
+                "job_id": "bc6513aa-e118-4945-84a8-02922595044e",
+                "run_id": "5e405f58-03cf-4e44-9e10-85741283587a",
+                "asset_id": "classroom_8.mp4",
+                "total_chunks": 1,
+                "succeeded_chunks": 1,
+                "failed_chunks": 0,
+                "ingest_ok_chunks": 1,
+                "ingest_failed_chunks": 0,
+                "elapsed_seconds": 36.89442276954651
+            }
         }
     },
     "message": "Query successful",
-    "timestamp": 1773907521
+    "timestamp": 1774879431
 }
 ```
 

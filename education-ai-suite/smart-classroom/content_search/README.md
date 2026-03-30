@@ -10,7 +10,7 @@ Note: Open PowerShell as Administrator before running the script.
 
 ```PowerShell
 # Run the automation script from the content search root
-./install.ps1
+.\install.ps1
 ```
 ### Launching Services
 Once the environment is configured, activate the virtual environment and start the orchestration service:
