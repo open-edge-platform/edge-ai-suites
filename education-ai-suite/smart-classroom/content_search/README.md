@@ -1,28 +1,47 @@
 # Content Search
+
+Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities using advanced RAG (Retrieval-Augmented Generation) workflows.
+
 ## Prerequisites
-1 python3
- python3.12
-2 postgreSQL
-3 Minio
-4 System Tools: Required for multimodal processing:
+### 1. Core Services
+| Component | Minimum Version | Description |
+| :--- | :--- | :--- |
+| **Python** | 3.12+ | Primary runtime for the backend orchestration framework. |
+| **PostgreSQL** | 16+ | Relational database for task metadata and state management. |
+| **MinIO** | Latest | Object storage for raw files (Videos, PDFs, Images). |
+| **ChromaDB** | Latest | Vector database for embedding storage and semantic search. |
 
-- Tesseract OCR: For image/PDF text extraction.
-- Poppler: For PDF rendering.
+### 2. System Tools (Multimodal Processing)
+To enable advanced document and video processing, the following must be installed and added to the system `PATH`:
 
-## Environment Setup
-### Step1: Install Dependiencies
-```powershell
-# Run using Administrator
+* **Tesseract OCR**: Required for Optical Character Recognition (extracting text from images/PDFs).
+* **Poppler**: Required for PDF rendering and frame extraction.
+
+## Quick Start
+### Automatic Dependency Installation
+We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
+
+Note: Open PowerShell as Administrator before running the script.
+
+```PowerShell
+# Run the automation script from the content search root
 ./install.ps1
 ```
-### Launch Content Search Services
-```powershell
+### Launching Services
+Once the environment is configured, activate the virtual environment and start the orchestration service:
+
+```PowerShell
+# Navigate to the search module
 cd content_search
+
+# Activate the virtual environment
 .\venv_content_search\Scripts\Activate.ps1
+
+# Start all microservices
 python start_services.py
 ```
 
-## Avaliable Endpoints
+## API Endpoints
 
 | Endpoint | Method | Pattern | Description | Status |
 | :--- | :---: | :---: | :--- | :---: |
