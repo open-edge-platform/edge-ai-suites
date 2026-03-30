@@ -12,13 +12,14 @@ import threading
 from pathlib import Path
 from typing import Dict, List
 
+# --- Configuration & Paths ---
 CONTENT_SEARCH_DIR: Path = Path(__file__).resolve().parent
 REPO_ROOT: Path = CONTENT_SEARCH_DIR.parent
 LOGS_DIR: Path = CONTENT_SEARCH_DIR / "logs"
 
 def load_config_to_env(config_path):
     if not os.path.exists(config_path):
-        print(f"⚠️  Config not found at {config_path}")
+        print(f"Config not found at {config_path}")
         return
 
     try:
@@ -48,9 +49,10 @@ def load_config_to_env(config_path):
         os.environ["VIDEO_PREPROCESS_HOST"] = str(vp.get('host_addr', "127.0.0.1"))
         os.environ["VIDEO_PREPROCESS_PORT"] = str(vp.get('port', 8001))
 
-        print(f"✅ Config loaded. Environment variables injected.")
+        print(f"Config loaded from: {os.path.abspath(config_path)}")
+        print("Environment variables injected.")
     except Exception as e:
-        print(f"❌ Error parsing config: {e}")
+        print(f"Error parsing config: {e}")
 
 def _build_isolated_env() -> Dict[str, str]:
     env = os.environ.copy()
@@ -79,6 +81,7 @@ def _tee_log(name: str, pipe, log_file):
         pass
 
 def spawn_service(name: str, cmd: List[str], procs: Dict, log_files: Dict):
+    print(f"  [+] Launching {name}...")
     log_path = LOGS_DIR / f"{name}_{time.strftime('%Y%m%d_%H%M%S')}.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
     lf = log_path.open("w", encoding="utf-8", buffering=1)
@@ -95,7 +98,6 @@ def spawn_service(name: str, cmd: List[str], procs: Dict, log_files: Dict):
     )
     procs[name] = p
     threading.Thread(target=_tee_log, args=(name, p.stdout, lf), daemon=True).start()
-    print(f"🚀 [launcher] Started {name} (PID: {p.pid})")
 
 def is_port_open(host, port):
     try:
@@ -106,7 +108,7 @@ def is_port_open(host, port):
         return False
 
 def wait_for_service(name, host, port, timeout=60):
-    print(f"🔍 Waiting for {name} ({host}:{port})...", end="", flush=True)
+    print(f"  [?] Waiting for {name} on {host}:{port}...", end="", flush=True)
     for _ in range(timeout):
         if is_port_open(host, port):
             print(" [READY]")
@@ -119,11 +121,16 @@ def wait_for_service(name, host, port, timeout=60):
 def start_dev_environment():
     LOGS_DIR.mkdir(parents=True, exist_ok=True)
     load_config_to_env(os.path.join(os.getcwd(), "..", "config.yaml"))
+    
     procs = {}
     log_files = {}
     python_exe = sys.executable
 
+    print("\nStarting Services with Dynamic Configuration...\n")
+
     try:
+        # === STAGE 1: Infrastructure ===
+        print("--- STAGE 1: Infrastructure ---")
         m_srv = os.getenv("MINIO_SERVER", "127.0.0.1:9000").split(':')
         spawn_service("MinIO", [
             os.path.abspath(r".\providers\minio_wrapper\minio.exe"), "server", 
@@ -139,44 +146,43 @@ def start_dev_environment():
         if not wait_for_service("MinIO", m_srv[0], int(m_srv[1])): return
         if not wait_for_service("ChromaDB", os.getenv("CHROMA_HOST"), int(os.getenv("CHROMA_PORT"))): return
 
-        spawn_service("FileIngest", [
+        # === STAGE 2: Core Sub-services ===
+        print("\n--- STAGE 2: Core Sub-services ---")
+        spawn_service("File Ingest Service", [
             python_exe, "-m", "uvicorn", "providers.file_ingest_and_retrieve.server:app", 
             "--host", os.getenv("FILE_INGEST_HOST"), "--port", os.getenv("FILE_INGEST_PORT")
         ], procs, log_files)
 
-        spawn_service("VideoPreprocess", [
+        spawn_service("Video Preprocess Service", [
             python_exe, "-m", "uvicorn", "providers.video_preprocess.server:app", 
             "--host", os.getenv("VIDEO_PREPROCESS_HOST"), "--port", os.getenv("VIDEO_PREPROCESS_PORT")
         ], procs, log_files)
 
-        print("\n⏳ Verifying service dependencies before launching MainApp...")
-        ingest_ready = wait_for_service("FileIngest", os.getenv("FILE_INGEST_HOST"), int(os.getenv("FILE_INGEST_PORT")), timeout=120)
-        preproc_ready = wait_for_service("VideoPreprocess", os.getenv("VIDEO_PREPROCESS_HOST"), int(os.getenv("VIDEO_PREPROCESS_PORT")), timeout=60)
+        wait_for_service("File Ingest", os.getenv("FILE_INGEST_HOST"), int(os.getenv("FILE_INGEST_PORT")), timeout=120)
+        wait_for_service("Video Preprocess", os.getenv("VIDEO_PREPROCESS_HOST"), int(os.getenv("VIDEO_PREPROCESS_PORT")), timeout=60)
 
-        if not (ingest_ready and preproc_ready):
-            print("❌ Critical services failed to initialize. Aborting...")
-            return
-
-        print("\n🚀 [launcher] All dependencies are UP. Launching Main Application...")
+        # === STAGE 3: Main App ===
+        print("\n--- STAGE 3: Main App ---")
         spawn_service("MainApp", [python_exe, "main.py"], procs, log_files)
 
-        print("\n🌟 All systems online. Monitoring status... (Press Ctrl+C to stop)")
+        print("\nAll systems managed. Monitoring status... (Ctrl+C to stop)\n")
+        
         while True:
             time.sleep(2)
             for name, p in list(procs.items()):
                 result = p.poll()
                 if result is not None:
-                    print(f"❌ NOTICE: Service [{name}] exited with code {result}")
+                    print(f"\n[!] NOTICE: Service [{name}] exited with code {result}")
                     procs.pop(name)
 
             if "MainApp" not in procs or not procs:
-                print("⚠️ Main application has finished or all services stopped. Cleaning up...")
+                print("\nMain application has finished or all services stopped. Cleaning up...")
                 break
 
     except KeyboardInterrupt:
-        print("\n🛑 Shutdown signal received.")
+        print("\n\nShutdown signal received.")
     finally:
-        print("\nCleaning up processes...")
+        print("\nCleaning up background processes...")
         for name, p in procs.items():
             try:
                 subprocess.run(['taskkill', '/F', '/T', '/PID', str(p.pid)], 
@@ -185,7 +191,7 @@ def start_dev_environment():
                 pass
         for f in log_files.values():
             f.close()
-        print("✅ Cleanup complete.")
+        print("All background processes closed.")
 
 if __name__ == "__main__":
     start_dev_environment()
