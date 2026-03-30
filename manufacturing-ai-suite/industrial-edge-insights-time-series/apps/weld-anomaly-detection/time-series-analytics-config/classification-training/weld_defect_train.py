@@ -25,7 +25,6 @@ import joblib
 import numpy as np
 import pandas as pd
 from pathlib import Path
-from packaging.version import Version
 
 # ── Intel Extension for Scikit-learn — must be applied BEFORE sklearn imports ──
 try:
@@ -40,7 +39,6 @@ from sklearn.model_selection import StratifiedKFold, cross_val_score, train_test
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn import __version__ as sklearn_version
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
@@ -59,7 +57,6 @@ FEATURES = [
 MODEL_OUT   = Path("weld_defect_model.pkl")
 LABELS_OUT  = Path("weld_defect_labels.pkl")
 REPORT_OUT  = Path("weld_defect_report.txt")
-REQUIRED_SKLEARN_VERSION = "1.6.1"
 
 CATEGORY_LABELS = {
     "burnthrough_weld_12-14-22-0201-02":              "Burnthrough Weld",
@@ -184,15 +181,24 @@ def train_and_evaluate(X, y, le: LabelEncoder) -> Pipeline:
 MODEL_INFO_OUT = Path("model_info.json")
 
 
-def enforce_sklearn_version() -> None:
-    if Version(sklearn_version) != Version(REQUIRED_SKLEARN_VERSION):
-        raise RuntimeError(
-            "This training script requires scikit-learn=="
-            f"{REQUIRED_SKLEARN_VERSION}, but found {sklearn_version}. "
-            "Install dependencies with: pip install -r requirements.txt"
-        )
+def _build_class_feature_stats(data: pd.DataFrame) -> dict:
+    """Build per-class mean/std profiles for explanation at inference time."""
+    clean = data.dropna(subset=FEATURES + ["category"]).copy()
+    stats = {}
+    for category, grp in clean.groupby("category"):
+        feat_stats = {}
+        for feat in FEATURES:
+            mean_val = float(grp[feat].mean())
+            std_val = float(grp[feat].std()) if len(grp) > 1 else 0.0
+            feat_stats[feat] = {
+                "mean": round(mean_val, 6),
+                "std": round(std_val if not np.isnan(std_val) else 0.0, 6),
+            }
+        stats[str(category)] = feat_stats
+    return stats
 
-def save_artefacts(pipeline: Pipeline, le: LabelEncoder):
+
+def save_artefacts(pipeline: Pipeline, le: LabelEncoder, data: pd.DataFrame):
     import datetime
 
     joblib.dump(pipeline, MODEL_OUT)
@@ -205,10 +211,9 @@ def save_artefacts(pipeline: Pipeline, le: LabelEncoder):
         "features":      FEATURES,
         "classes":       list(le.classes_),
         "good_weld_label": "Good Weld",
+        "class_feature_stats": _build_class_feature_stats(data),
         "trained_at":    datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "algorithm":     "RandomForestClassifier",
-        "sklearn_version": sklearn_version,
-        "required_sklearn_version": REQUIRED_SKLEARN_VERSION,
         "intel_patched": _INTEL_PATCHED,
         "note": (
             "Load model with joblib.load(model_file). "
@@ -227,8 +232,6 @@ def save_artefacts(pipeline: Pipeline, le: LabelEncoder):
 # ── Main ───────────────────────────────────────────────────────────────────────
 
 def main():
-    enforce_sklearn_version()
-
     print("=" * 60)
     print(" WELD DEFECT CLASSIFIER — TRAINING")
     print("=" * 60)
@@ -248,7 +251,7 @@ def main():
     print(f"Classes  : {list(le.classes_)}")
 
     pipeline = train_and_evaluate(X, y, le)
-    save_artefacts(pipeline, le)
+    save_artefacts(pipeline, le, data)
 
     print("\nDone. Use weld_defect_predict.py for row-by-row inference.")
 

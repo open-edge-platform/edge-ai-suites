@@ -5,6 +5,7 @@
 #
 
 """ Custom user defined function for anomaly detection in weld sensor data. """
+import json
 import os
 import logging
 import time
@@ -44,7 +45,7 @@ FEATURES = [
     "Primary Weld Current",
     "Secondary Weld Voltage",
 ]
-
+MODEL_WITH_EXPLANATION = True
 logger = logging.getLogger()
 
 # Anomaly detection on the weld sensor data
@@ -55,6 +56,7 @@ class AnomalyDetectorHandler(Handler):
     def __init__(self, agent):
         self._agent = agent
         # Need to enable after model training
+        self.info_data = {}
         model_name = (os.path.basename(__file__)).replace('.py', '.pkl')
         label_name = (os.path.basename(__file__)).replace('.py', '_labels.pkl')
         model_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
@@ -67,8 +69,21 @@ class AnomalyDetectorHandler(Handler):
         self.le       = joblib.load(label_path)
         self.device = os.getenv('DEVICE', 'gpu').strip().lower() or 'gpu'
         logger.info(f"on device: {self.device}")
+        global MODEL_WITH_EXPLANATION
+        if MODEL_WITH_EXPLANATION:
+            logger.info("Model explanations are enabled for this UDF.")
+            model_json_info = (os.path.basename(__file__)).replace('.py', '.json')
+            
+            info_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    "../models/" + model_json_info)
+            info_path = os.path.abspath(info_path)
 
-
+            with open(info_path, "r", encoding="utf-8") as f:
+                self.info_data = json.load(f)
+            logger.info(f"Model           : {self.info_data.get('algorithm', 'unknown')}")
+            logger.info(f"Trained at      : {self.info_data.get('trained_at', 'unknown')}")
+            logger.info(f"Classes         : {len(self.info_data.get('classes', []))}")
+            logger.info(f"Trained w/ Intel: {self.info_data.get('intel_patched', 'unknown')}")
 
         self.points_received = {}
         global total_no_pts
@@ -108,6 +123,63 @@ class AnomalyDetectorHandler(Handler):
         """ A batch has begun.
         """
         raise Exception("not supported")
+    
+    def _build_explanation(self, input_row: dict, predicted_category: str, prob_map: dict, model_info: dict) -> dict:
+        """Create a human-readable reason block for why a row was classified as a category."""
+        stats = model_info.get("class_feature_stats", {}) if model_info else {}
+        pred_stats = stats.get(predicted_category, {})
+        good_stats = stats.get(GOOD_WELD_LABEL, {})
+
+        # Sort probabilities and include top alternatives for context.
+        ranked = sorted(prob_map.items(), key=lambda kv: kv[1], reverse=True)
+        top_probs = [{"category": k, "probability": round(float(v), 6)} for k, v in ranked[:3]]
+
+        signal_features = []
+        for feat in FEATURES:
+            if feat not in pred_stats or feat not in good_stats:
+                continue
+            value = float(input_row[feat])
+            pred_mean = float(pred_stats[feat].get("mean", 0.0))
+            pred_std = max(float(pred_stats[feat].get("std", 0.0)), 1e-6)
+            good_mean = float(good_stats[feat].get("mean", 0.0))
+            good_std = max(float(good_stats[feat].get("std", 0.0)), 1e-6)
+
+            # Positive score means closer to predicted class profile than Good Weld profile.
+            z_to_pred = abs(value - pred_mean) / pred_std
+            z_to_good = abs(value - good_mean) / good_std
+            evidence = z_to_good - z_to_pred
+
+            signal_features.append(
+                {
+                    "feature": feat,
+                    "value": round(value, 6),
+                    "predicted_mean": round(pred_mean, 6),
+                    "good_weld_mean": round(good_mean, 6),
+                    "evidence_score": round(float(evidence), 6),
+                }
+            )
+
+        signal_features.sort(key=lambda x: x["evidence_score"], reverse=True)
+        top_signals = signal_features[:3]
+
+        if top_signals:
+            reason = (
+                f"Classified as {predicted_category} because key signals "
+                f"({', '.join(s['feature'] for s in top_signals)}) align more with "
+                f"{predicted_category} profile than Good Weld profile."
+            )
+        else:
+            reason = (
+                f"Classified as {predicted_category} based on model probability ranking; "
+                "class profile statistics were not available."
+            )
+
+        return {
+            "reason": reason,
+            "top_probabilities": top_probs,
+            "top_signal_features": top_signals,
+        }
+
 
     def point(self, point):
         """ A point has arrived.
@@ -163,6 +235,8 @@ class AnomalyDetectorHandler(Handler):
                     good_defect = good_weld_prob * 100.0
                     bad_defect = (1.0 - good_weld_prob) * 100.0
                     confidence = round(float(np.max(pred_proba)), 6)
+                    if MODEL_WITH_EXPLANATION:
+                        explanation = self._build_explanation(fields, predicted_category, prob_map, self.info_data)
 
                     logger.info(
                         "Prediction details: %s",
@@ -173,6 +247,7 @@ class AnomalyDetectorHandler(Handler):
                             "good_weld_probability": round(good_weld_prob, 6),
                             "confidence": confidence,
                             "probabilities": prob_map,
+                            "explanation": explanation if MODEL_WITH_EXPLANATION else "N/A",
                         },
                     )
 
