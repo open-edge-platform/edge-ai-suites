@@ -259,7 +259,7 @@ def main():
         help="Save annotated results to this CSV file"
     )
     parser.add_argument(
-        "--device", choices=["auto", "cpu", "gpu"], default="auto",
+        "--device", choices=["auto", "cpu", "gpu"], default="gpu",
         help="Inference device target for Intel backend: auto, cpu, gpu"
     )
     args = parser.parse_args()
