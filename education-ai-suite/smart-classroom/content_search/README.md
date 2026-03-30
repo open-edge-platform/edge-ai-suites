@@ -1,38 +1,27 @@
 # Content Search
 ## Prerequisites
 1 python3
- python3.10
-
+ python3.12
 2 postgreSQL
-postgreSQL installation refers to [PostgreSQL installation](./docs/dev_guide/Installation.md#postgresql)
 3 Minio
-minio installation refers to [Minio installation](./docs/dev_guide/Installation.md#minio)
-
 4 System Tools: Required for multimodal processing:
 
 - Tesseract OCR: For image/PDF text extraction.
 - Poppler: For PDF rendering.
 
 ## Environment Setup
-### Create/activate python venv
+### Step1: Install Dependiencies
 ```powershell
-# Create venv
-& '<your python dir>' -m venv venv
-.\venv\Scripts\Activate.ps1
+# Run using Administrator
+./install.ps1
+```
+### Launch Content Search Services
+```powershell
+cd content_search
+.\venv_content_search\Scripts\Activate.ps1
+python start_services.py
 ```
 
-###
-```powershell
-cd xxx/content_search
-python -m pip install --upgrade pip
-pip install -r .\requirements.txt
-```
-## Launch
-```powershell
-cd xxx/content_search
-python .\start_services.py
-```
-// todo
 ## Avaliable Endpoints
 
 | Endpoint | Method | Pattern | Description | Status |
