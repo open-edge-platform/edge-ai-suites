@@ -79,7 +79,15 @@ Navigate to the chart directory:
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/chart
 ```
 
-#### Step 3: Configure the `values.yaml` File
+#### Step 3: Build Chart Dependencies
+
+The chart uses Helm subcharts for the live-metrics service and collector. Build them before installing:
+
+```bash
+helm dependency build .
+```
+
+#### Step 4: Configure the `values.yaml` File
 
 Edit the `values.yaml` file located in the chart directory to set the necessary environment variables. Refer to the [values reference table](#valuesyaml-reference) below.
 
@@ -150,8 +158,8 @@ When live metrics is enabled (the default), you will also see:
 
 | Pod | Description |
 | --- | ----------- |
-| `stia-live-metrics-service-*` | WebSocket relay for live system metrics |
-| `stia-collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
+| `live-metrics-service-*` | WebSocket relay for live system metrics |
+| `collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
 
 Wait until all pods show `Running` and `READY 1/1`:
 
@@ -289,28 +297,28 @@ helm uninstall stia -n <your-namespace>
 | `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`) | `smart-intersection-broker-rootcert` |
 | `tls.caCertKey` | Key name inside the external secret (required when `caCertSecretName` is set) | `root-cert` |
 
-### Live Metrics Service Settings
+### Live Metrics Service Settings (Subchart)
+
+The live-metrics service is packaged as a Helm subchart. Keys must be nested under `live-metrics-service` to match the subchart name.
 
 | Key | Description | Default |
 | --- | ----------- | ------- |
-| `liveMetrics.enabled` | Deploy the live-metrics WebSocket relay and collector | `true` |
-| `liveMetrics.image.repository` | Live metrics container image repository | `intel/live-metrics-service` |
-| `liveMetrics.image.tag` | Image tag | `latest` |
-| `liveMetrics.service.type` | Kubernetes service type | `ClusterIP` |
-| `liveMetrics.service.port` | Service port | `9090` |
-| `liveMetrics.env.metricsPort` | Port the relay listens on inside the container | `9090` |
-| `liveMetrics.env.logLevel` | Log level | `INFO` |
-| `liveMetrics.env.corsOrigins` | Allowed CORS origins | `*` |
+| `live-metrics-service.enabled` | Deploy the live-metrics WebSocket relay | `true` |
+| `live-metrics-service.fullnameOverride` | Fixed K8s resource name for predictable DNS | `live-metrics-service` |
 
-### Collector (Telegraf) Settings
+Additional subchart values (image, ports, env) are defined in `chart/subcharts/live-metrics-service/values.yaml`.
+
+### Collector / Telegraf Settings (Subchart)
+
+The collector is packaged as a Helm subchart. Keys must be nested under `collector` to match the subchart name.
 
 | Key | Description | Default |
 | --- | ----------- | ------- |
-| `collector.enabled` | Deploy the Telegraf collector (requires `liveMetrics.enabled=true`) | `true` |
-| `collector.image.repository` | Collector container image repository | `docker.io/intel/vippet-collector` |
-| `collector.image.tag` | Image tag | `2025.2.0` |
-| `collector.env.prometheusPort` | Prometheus metrics port | `9273` |
-| `collector.securityContext.privileged` | Run privileged for host-level metrics (CPU, memory, temperature, GPU) | `true` |
+| `collector.enabled` | Deploy the Telegraf collector (requires `live-metrics-service.enabled=true`) | `true` |
+| `collector.fullnameOverride` | Fixed K8s resource name for predictable DNS | `collector` |
+| `collector.websocketUrl` | WebSocket URL for the live-metrics relay | `ws://live-metrics-service:9090/ws/collector` |
+
+Additional subchart values (image, security context) are defined in `chart/subcharts/collector/values.yaml`.
 
 ---
 

@@ -83,3 +83,6 @@ data:
       url = "${WEBSOCKET_URL}"
       data_format = "json"
       read_timeout = "0s"
+      startup_error_behavior = "retry"
+      [outputs.websocket.headers]
+        Content-Type = "application/json"

@@ -28,16 +28,3 @@ Smart Traffic Intersection Agent — Helm chart post-install notes
    kubectl --namespace {{ .Release.Namespace }} port-forward svc/{{ include "stia.trafficAgent.fullname" . }} 7860:{{ .Values.trafficAgent.service.uiPort }} &
    echo "UI: http://127.0.0.1:7860"
 {{- end }}
-
-4. The VLM serving endpoint is available internally at:
-   http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}
-{{- if index .Values "live-metrics-service" "enabled" }}
-
-5. Live Metrics Service is available internally at:
-   ws://live-metrics-service:9090/ws/clients
-{{- if .Values.collector.enabled }}
-
-6. Telegraf Collector is running with host-level metrics collection.
-   Prometheus metrics: http://collector:9273/metrics
-{{- end }}
-{{- end }}
