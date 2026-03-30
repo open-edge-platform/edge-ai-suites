@@ -75,8 +75,8 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_PORT", ingest.get("port", "9990"))
 
         # Main App Portal
-        _set("CS_HOST", os.environ.get("INGEST_HOST", "127.0.0.1"))
-        _set("CS_PORT", "9011")
+        _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
+        _set("CS_PORT", cs.get("port", "9011"))
 
         print(f"[launcher] Config loaded from {config_path} and injected to env.")
     except Exception as e:

@@ -389,7 +389,7 @@ content_search:
   port: 9011
 
   chromadb:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 9090
     data_dir: '.\chromadb_wrapper\chroma_data'
 
