@@ -1,9 +1,27 @@
 $ErrorActionPreference = "Stop"
 
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "[!] Error: Please run this script as Administrator." -ForegroundColor Red
+    exit 1
+}
 function Invoke-Cmd {
     $exe, $rest = $args
     & $exe $rest
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+function Invoke-Cmd-Wait {
+    param(
+        [string]$Executable,
+        [string[]]$Arguments
+    )
+    Write-Host "[*] Executing: $Executable $Arguments" -ForegroundColor Gray
+    $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -Wait -PassThru -NoNewWindow
+    if ($process.ExitCode -ne 0) {
+        Write-Host "[!] Process failed with exit code $($process.ExitCode)" -ForegroundColor Red
+        exit $process.ExitCode
+    }
 }
 
 # --- Proxy settings ---
@@ -16,8 +34,8 @@ $venvPython = Join-Path $PSScriptRoot "venv_content_search\Scripts\python.exe"
 
 # --- Create venv ---
 if (-not (Test-Path $venvPython)) {
-    Write-Host "Creating venv (Python 3.10 required)..."
-    py -3.10 -m venv $venvDir
+    Write-Host "Creating venv (Python 3.12 required)..."
+    py -3.12 -m venv $venvDir
 } else {
     Write-Host "Venv already exists, skipping creation."
 }
@@ -26,26 +44,8 @@ if (-not (Test-Path $venvPython)) {
 Write-Host "Upgrading pip..."
 Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
 
-Write-Host "Installing mobileclip..."
-Invoke-Cmd $venvPython -m pip install git+https://github.com/apple/ml-mobileclip.git@c16bfe5a4feb424762d6bdf5245539120a4ce9ef#egg=mobileclip --quiet
-
-Write-Host "Installing salesforce-lavis..."
-Invoke-Cmd $venvPython -m pip install salesforce-lavis==1.0.2 --quiet
-
 Write-Host "Installing requirements.txt..."
 Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
-
-# --- Install multimodal_embedding_serving wheel ---
-$whl = Get-ChildItem -Path $PSScriptRoot -Filter "multimodal_embedding_serving*.whl" -ErrorAction SilentlyContinue | Select-Object -First 1
-if ($null -eq $whl) {
-    $whl = Get-ChildItem -Path (Join-Path $PSScriptRoot "..") -Filter "multimodal_embedding_serving*.whl" -ErrorAction SilentlyContinue | Select-Object -First 1
-}
-if ($whl) {
-    Write-Host "Installing multimodal_embedding_serving from $($whl.FullName) ..."
-    Invoke-Cmd $venvPython -m pip install $whl.FullName --no-deps --quiet
-} else {
-    Write-Warning "multimodal_embedding_serving wheel not found. Place multimodal_embedding_serving-0.1.1-py3-none-any.whl in content_search/ and re-run."
-}
 
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -99,4 +99,64 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler already in user PATH, skipping."
 }
 
-Write-Host "Installation complete. Run start.ps1 to launch services."
+# --- Install PostgreSQL ---
+$pgVersion = "16.11-3" 
+$pgDir = "C:\Program Files\PostgreSQL\16"
+$pgBinDir = Join-Path $pgDir "bin"
+$pgExe = Join-Path $pgBinDir "postgres.exe"
+$pgInstaller = Join-Path $env:TEMP "postgresql-setup.exe"
+
+if (Test-Path $pgExe) {
+    Write-Host "[+] PostgreSQL already installed, skipping."
+} else {
+    if (-not (Test-Path $pgInstaller)) {
+        $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-$pgVersion-windows-x64.exe"
+        Write-Host "[+] Downloading PostgreSQL $pgVersion..."
+        Invoke-WebRequest -Uri $pgUrl -OutFile $pgInstaller -UseBasicParsing
+    } else {
+        Write-Host "[+] Found existing installer in Temp, skipping download."
+    }
+    Write-Host "[+] Starting Unattended Installation... (This WILL take 1-3 minutes, please wait)"
+
+    $installArgs = @(
+        "--mode", "unattended",
+        "--unattendedmodeui", "none",
+        "--superpassword", "edu-ai",
+        "--serverport", "5432"
+    )
+
+    Invoke-Cmd-Wait -Executable $pgInstaller -Arguments $installArgs
+    Write-Host "[+] Finalizing installation..."
+    Start-Sleep -Seconds 10
+
+    if (Test-Path $pgExe) {
+        Write-Host "[+] PostgreSQL installed successfully."
+        Remove-Item $pgInstaller -Force -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "[!] Installation finished but $pgExe not found." -ForegroundColor Red
+        exit 1
+    }
+}
+
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($currentPath -notlike "*PostgreSQL*") {
+    [Environment]::SetEnvironmentVariable("Path", $currentPath + ";$pgBinDir", "User")
+    Write-Host "[+] PostgreSQL added to user PATH."
+} else {
+    Write-Host "[+] PostgreSQL already in user PATH."
+}
+
+# --- Download MinIO ---
+$minioDir = Join-Path $PSScriptRoot "providers/minio_wrapper"
+$minioExe = Join-Path $minioDir "minio.exe"
+if (Test-Path $minioExe) {
+    Write-Host "minio.exe already exists, skipping download."
+} else {
+    $minioUrl = "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
+    Write-Host "Downloading minio.exe..."
+    if (-not (Test-Path $minioDir)) { New-Item -ItemType Directory -Path $minioDir | Out-Null }
+    Invoke-WebRequest -Uri $minioUrl -OutFile $minioExe -UseBasicParsing
+    Write-Host "minio.exe downloaded to $minioExe"
+}
+
+Write-Host "Installation complete. Run start_services.py to launch services."

@@ -45,7 +45,8 @@ On the machine designated as the traffic injector (Machine 5), run the following
 start sending UDP traffic to the iPerf3 server.
 
 ```bash
-iperf3 -c <IPERF_SERVER_IP> -u -b 200M -t 3600
+iperf3 -c <IPERF_SERVER_IP> -u -b 960M -t 0
 ```
 
 Replace `<IPERF_SERVER_IP>` with the IP address of the machine running the iPerf3 server.
+> **Note:** Adjust the bandwidth (`-b`) to create enough network congestion to see the impact on your latency-sensitive traffic.

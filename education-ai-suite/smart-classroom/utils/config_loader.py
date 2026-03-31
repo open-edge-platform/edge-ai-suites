@@ -18,6 +18,6 @@ def load_config(path="config.yaml"):
 # Load once and expose
 config = load_config()
 
-logger.info("\n📦 CONFIGURATION START\n" + "-" * 40)
-logger.info(yaml.dump(vars(config), sort_keys=False))
-logger.info("\n" + "-" * 40 + "\n📦 CONFIGURATION END\n")
+logger.debug("\n📦 CONFIGURATION START\n" + "-" * 40)
+logger.debug(yaml.dump(vars(config), sort_keys=False))
+logger.debug("\n" + "-" * 40 + "\n📦 CONFIGURATION END\n")

@@ -23,7 +23,7 @@ services:
       - app_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc1
+    image: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -158,6 +158,7 @@ services:
       - ALERT_MODE=${ALERT_MODE:-false}
       - DEFAULT_RTSP_URL=${DEFAULT_RTSP_URL:-}
       - ENABLE_DETECTION_PIPELINE=${ENABLE_DETECTION_PIPELINE:-false}
+      - CAPTION_HISTORY=${CAPTION_HISTORY:-3}
       - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}
     volumes:
       - "./ov_models:/app/ov_models:ro"

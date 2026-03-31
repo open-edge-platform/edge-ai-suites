@@ -1,9 +1,10 @@
-# OpenVINO™ Tutorial on Multi-camera Object Detection using RealSense™ Depth Camera D457
+# OpenVINO™ Tutorial on Multi-camera Object Detection using RealSense™ Depth Camera D457 and D3CMCXXX-115-084 Camera
 
 In this tutorial, the multi-camera use case is demonstrated using an
 [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408)
 and four
-[RealSense™ Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra/).
+[RealSense™ Depth Camera D457](https://www.realsenseai.com/products/d457-gmsl-fakra/) or
+[D3CMCXXX-115-084](https://www.d3embedded.com/product/isx031-smart-camera-medium-fov-gmsl2-unsealed/).
 Here, the four cameras are connected to the Industrial Gigabit Multimedia Serial
 Link™ (GMSL) supported Axiomtek Robox500 ROS 2 AMR Controller through GMSL/FAKRA
 (female-to-female) cables, which provide high-bandwidth video transmission.
@@ -29,8 +30,8 @@ The setup looks like as described in the table below.
 |Camera-3|YOLOv8n:FP16|Object detection|GPU|
 |Camera-4|YOLOv8n-seg:FP16|Object detection & segmentation|GPU|
 
-The following steps are required in order to set up the Axiomtek Robox500 ROS 2
-AMR Controller to support four Intel® RealSense™ Depth Camera D457.
+The following steps are required in order to run the MultiCam Demo
+AMR Controller to support four Intel® RealSense™ Depth Camera D457, and D3CMCXXX-115-084
 
 ## Source Code
 
@@ -41,98 +42,57 @@ The source code of this component can be found here:
 
 Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
-## Axiomtek Robox500 ROS 2 AMR Controller Setup
+Complete the [GMSL setup guide](../../../gmsl-guide/index.rst) before continuing.
 
-Connect four Intel® RealSense™ Depth Camera D457 to the Axiomtek Robox500 ROS 2
-AMR Controller as shown in the below picture. Now, power-on the target.
 
-![Axiomtek_GMSL_Camera](../../../../images/Axiomtek_GMSL_Camera.jpg)
 
-> **Note:** Select the "MIPI" mode of the Intel® RealSense™ Depth Camera D457 by
+> **Note:** If using D457 select the "MIPI" mode of the Intel® RealSense™ Depth Camera D457 by
 > moving the select switch on the camera to "M", as shown in the picture below.
 
 ![MIPI_USB_Switch_in_D457](../../../../images/MIPI_USB_Switch_in_D457.jpeg)
 
-### Install GPU driver
 
-From the setup description explained above, three out of the four instances of
-the AI-based applications are run on a GPU. Therefore, the appropriate
-GPU drivers need to be installed.
-
-Run the below command to check for the GPU device.
-
-```bash
-# Install clinfo
-sudo apt install -y clinfo
-
-# Run clinfo command to check GPU Device
-clinfo | grep -i "Device Name"
-Device Name                                     Intel(R) UHD Graphics
-Device Name                                     13th Gen Intel(R) Core(TM) i7-1370PE
-   Device Name                                   Intel(R) UHD Graphics
-   Device Name                                   Intel(R) UHD Graphics
-   Device Name                                   Intel(R) UHD Graphics
-```
-
-If no GPU device is listed, then the GPU driver is not installed.
-
-> **Note:**
-> If the above GPU driver is not installed, then follow the steps described in the documentation
-> [Enable Intel® Level Zero and OpenCL™ Graphics Compute Runtime](https://eci.intel.com/docs/3.3/development/tutorials/enable-graphics.html#enable-intel-level-zero-and-opencl-graphics-compute-runtime)
-> (excluding the **step#2** to install the ``linux-intel-rt``, which is
-> not required for this tutorial) to install the same.
-
-Verify that the GPU driver is installed using the previous ``clinfo`` command.
 
 ### Install ``librealsense2`` and ``realsense2`` tools
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install -y ros-jazzy-librealsense2-tools
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt install -y ros-humble-librealsense2-tools
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
-### Configure the Intel’s GMSL Serializer-Deserializer ACPI devices and install ``intel-ipu6-dkms`` Dynamic Kernel Module Support package
+### Load the Intel IPU Driver ###
+::::{tab-set}
+:::{tab-item} **IPU7**
+:sync: ipu7
 
-The following steps describe how to configure the Intel’s GMSL
-Serializer-Deserializer ACPI devices and further to install and load the
-``intel-ipu6-dkms`` Dynamic Kernel Module Support package.
+```bash
+sudo modprobe intel-ipu7-isys
+```
 
-1. The design approach of the GMSL Add-in-Card present in the Axiomtek Robox500
-ROS 2 AMR Controller is called ``Standalone-mode``.
+:::
+:::{tab-item} **IPU6**
+:sync: ipu6
 
-   That is, a single GMSL Serializer  and Camera Sensor device is connected per
-   Deserializer. In order to configure the Intel’s GMSL Serializer-Deserializer
-   ACPI devices in ``Standalone-mode``, follow the steps described in
-   [Configure Intel® GMSL SerDes ACPI devices](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#configure-intel-gmsl-serdes-acpi-devices).
+```bash
+sudo modprobe intel-ipu6-isys
+```
 
-2. Download and install the ``intel-ipu6-dkms`` Dynamic Kernel Module
-   Support package.
-
-   Follow the steps described in
-   [Intel® GMSL intel-ipu6 Debian kernel modules (DKMS)](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#intel-gmsl-intel-ipu6-debian-kernel-modules-dkms).
-
-3. To load the ``intel-ipu6`` kernel modules after installation and to enable
-  the Intel® RealSense™ Depth Camera D457, follow the steps described in
-  [Enable ROS2 Intel® RealSense™ Depth Camera D457 GMSL](https://eci.intel.com/docs/3.3/development/tutorials/enable-gmsl.html#enable-ros2-intel-realsense-depth-camera-d457-gmsl).
-
-> **Note:**
-> The steps, such as BIOS settings and d4xx module user parameters, must be
-> configured to be relevant to the ``Standalone-mode`` of the Add-in-Card for
-> Axiomtek Robox500 ROS 2 AMR Controller.
+:::
+::::
 
 ## Install and run multi-camera object detection tutorial using the Intel® RealSense™ Depth Camera D457
 
@@ -140,24 +100,24 @@ ROS 2 AMR Controller is called ``Standalone-mode``.
 
 Install the multi-camera object detection tutorial by using the following command.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 sudo apt install -y ros-jazzy-pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 sudo apt install -y ros-humble-pyrealsense2-ai-demo
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 > **Note:** The `pyrealsense2-ai-demo` installation will also do the following:
 >
@@ -170,9 +130,9 @@ sudo apt install -y ros-humble-pyrealsense2-ai-demo
 
 Run the below commands to start the tutorial.
 
-<!--hide_directive::::{tab-set}hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
-<!--hide_directive:sync: jazzyhide_directive-->
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
 
 ```bash
 # Activate the pyrealsense2-ai-demo python environment
@@ -180,14 +140,25 @@ Run the below commands to start the tutorial.
 
 # Source the ros2 jazzy
 source /opt/ros/jazzy/setup.bash
+```
 
+**D457:**
+
+```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
 python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive:::{tab-item}hide_directive--> **Humble**
-<!--hide_directive:sync: humblehide_directive-->
+**D3CMCXXX-115-084:**
+
+```bash
+# Run the pyrealsense2-ai-demo tutorial for four camera input streams
+python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_isx031_4cameras.js
+```
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
 
 ```bash
 # Activate the pyrealsense2-ai-demo python environment
@@ -200,8 +171,8 @@ source /opt/ros/humble/setup.bash
 python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
-<!--hide_directive:::hide_directive-->
-<!--hide_directive::::hide_directive-->
+:::
+::::
 
 All the four cameras are started after approximately 15-20 secs, as shown in the below picture.
 

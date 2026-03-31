@@ -49,3 +49,7 @@
 [submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
 	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp
 	url = https://github.com/mdpnp/mdpnp.git
+[submodule "robotics-ai-suite/pipelines/pi05-rtc-ov/lerobot"]
+	path = robotics-ai-suite/pipelines/pi05-rtc-ov/lerobot
+	url = https://github.com/huggingface/lerobot.git
+	shallow = true

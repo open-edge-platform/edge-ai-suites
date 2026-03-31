@@ -40,12 +40,12 @@ Humanoid - Imitation Learning Resources
 - :doc:`Packages List <packages_list>`
 
 - :doc:`Sample Pipelines <sample_pipelines>`
-  
+
 - :doc:`OpenVINO Model Optimization <openvino_optimization>`
 
 - :doc:`Troubleshooting <troubleshooting>`
 
-- :doc:`Release Notes <release_note>`
+- :doc:`Release Notes <release-notes>`
 
 
 .. toctree::
@@ -58,4 +58,4 @@ Humanoid - Imitation Learning Resources
    sample_pipelines
    openvino_optimization
    troubleshooting
-   release_note
+   Release Notes <release-notes>
