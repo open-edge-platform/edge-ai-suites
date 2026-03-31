@@ -208,12 +208,10 @@ def main() -> None:
             "cwd": CONTENT_SEARCH_DIR,
         },
         "main_app": {
-            "cmd": [sys.executable, "main.py"],
+            "cmd": [sys.executable, "-m", "uvicorn", "main:app", 
+                    "--host", os.environ.get("CS_HOST", "127.0.0.1"), 
+                    "--port", os.environ.get("CS_PORT", "9011")],
             "cwd": CONTENT_SEARCH_DIR, 
-            "extra_env": {
-                "CS_HOST": os.environ.get("CS_HOST", "127.0.0.1"),
-                "CS_PORT": os.environ.get("CS_PORT", "9011")
-            },
         },
     }
 
