@@ -60,7 +60,7 @@ wget -O sample.mp4 https://github.com/intel-iot-devkit/sample-videos/raw/master/
 mkdir -p models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/
 wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.xml?raw=true"
 wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin" "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/pedestrian-and-vehicle-detector-adas-0001/FP32/pedestrian-and-vehicle-detector-adas-0001.bin?raw=true"
-wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
+wget -O "models/intel/pedestrian-and-vehicle-detector-adas-0001/pedestrian-and-vehicle-detector-adas-0001.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/pedestrian-and-vehicle-detector-adas-0001.json"
 ```
 
 ### Step 3: Pipeline Execution
@@ -76,7 +76,7 @@ docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc3
+  intel/dlstreamer:2026.0.0-ubuntu24
 ```
 
 ```bash
@@ -156,7 +156,7 @@ Profiling and monitoring performance of Metro Vision AI workloads using command-
 
 ### Technical Documentation
 
-- [DL Streamer](http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html)
+- [DL Streamer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
   \- Comprehensive documentation for Intel's GStreamer-based video analytics framework
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   \- RESTful microservice architecture documentation for scalable video analytics deployment

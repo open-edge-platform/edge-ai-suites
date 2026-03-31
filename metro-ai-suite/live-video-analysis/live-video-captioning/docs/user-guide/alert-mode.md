@@ -1,15 +1,15 @@
 # Enable Alert Mode
 
-Alert Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback for binary classification prompts. When enabled, the application provides enhanced visual indicators for "Yes" or "No" responses, making it ideal for automated monitoring and surveillance scenarios.
+Alert Mode is an optional feature in Live Video Captioning that enables alert-style visual feedback based on configurable keyword rules. When enabled, the application highlights run cards and caption panels with custom colors whenever a caption matches a user-defined keyword, making it ideal for automated monitoring and surveillance scenarios.
 
 ## Overview
 
 In Alert Mode, the application:
 
-- Changes the default prompt to: **"Is there an accident in the stream? Just Answer with a Yes or No"**
-- Applies distinct visual styling to "Yes" and "No" responses in the caption display
 - Updates the application title to "Live Video Captioning and Alerts"
-- Provides clear alert indicators for detections (Green vs Red)
+- Reveals an **Alert Rules** panel in the dashboard where you define up to 3 keyword rules
+- Applies distinct visual highlighting to the run card and caption panel whenever a caption contains a matching keyword
+- Applies rules in priority order — the **first matching rule** wins for each caption update
 
 This mode is particularly useful for:
 
@@ -20,7 +20,7 @@ This mode is particularly useful for:
 
 ## Enabling Alert Mode
 
-### Option 1: Environment Variable in `.env` File
+### Environment Variable in `.env` File
 
 Add or modify the `ALERT_MODE` variable in your `.env` file:
 
@@ -36,47 +36,53 @@ EVAM_PORT=8080
 DASHBOARD_PORT=4173
 WEBRTC_PEER_ID=stream
 ALERT_MODE=True   # Enable Alert Mode
+CAPTION_HISTORY=3
 ```
 
-## Visual Indicators
+## Configuring Alert Rules
 
-When Alert Mode is enabled:
+When Alert Mode is active, an **Alert Rules** section appears in the dashboard sidebar. You can define up to **3 rules**, each consisting of:
 
-| Response | Visual Style                                           |
-| -------- | ------------------------------------------------------ |
-| **Yes**  | Red/Alert highlighting indicating a positive detection |
-| **No**   | Green/Normal highlighting indicating no detection      |
+| Field | Description |
+| ----- | ----------- |
+| **Keyword** | A plain-text substring to search for in each caption (case-insensitive) |
+| **Color** | A highlight color (hex) applied to the run card and caption panel on a match |
+
+Rules are evaluated **in order from top to bottom**. The first rule whose keyword is found in the caption text is applied; remaining rules are skipped for that caption.
+
+### Rule Syntax
+
+- Each rule matches a **single substring** — there is no regex or list syntax.
+- Matching is **case-insensitive** and checks whether the keyword appears **anywhere** in the caption (e.g., the keyword `fire` also matches `campfire`).
+- If no rule matches, no alert highlighting is applied.
+
+### Example Rules
+
+| Keyword | Color | Triggers when caption contains… |
+| ------- | ----- | -------------------------------- |
+| `yes` | `#ff4444` (red) | "Yes", "yes", "YES", "yes, there is…" |
+| `fire` | `#ff8800` (orange) | "fire", "Fire", "campfire", "fire truck" |
+| `person` | `#ffaa00` (amber) | "person", "Person", "a person walking" |
+
+### Persistence
+
+Alert rules are automatically saved to your browser's **localStorage** under the key `lvc_alert_rules`. They are restored the next time you open the dashboard, so you do not need to re-enter them after a page refresh.
 
 ## Custom Prompts
 
-While Alert Mode sets a default accident detection prompt, you can customize the prompt in the dashboard UI to suit your specific use case. The key requirement is that your prompt should elicit a "Yes" or "No" response for proper alert styling.
+Alert Mode works with any prompt — it is not limited to binary Yes/No responses. You can use any prompt whose output reliably contains predictable keywords that your rules can match.
 
-Example prompts for different scenarios:
+Example prompts and corresponding rule keywords:
 
-- **Fire Detection**: "Is there a fire or smoke visible in the stream? Just Answer with a Yes or No"
-- **Crowd Detection**: "Is there a large crowd gathering? Just Answer with a Yes or No"
-- **Vehicle Detection**: "Is there a stopped vehicle blocking the road? Just Answer with a Yes or No"
-- **PPE Compliance**: "Is the person wearing a safety helmet? Just Answer with a Yes or No"
+- **Binary detection**: "Is there a fire or smoke visible in the stream? Just Answer with a Yes or No"
+  → Rule keyword: `yes`
+- **Descriptive monitoring**: "Describe any safety hazards visible in the scene."
+  → Rule keywords: `fire`, `smoke`, `hazard`
+- **Crowd Detection**: "Is there a large crowd gathering?"
+  → Rule keyword: `yes`
+- **PPE Compliance**: "Is the person wearing a safety helmet? Answer Yes or No."
+  → Rule keyword: `no`
 
-## Troubleshooting
-
-### Alert Mode Not Activating
-
-1. Verify the `ALERT_MODE` environment variable is set correctly in your `.env` file
-2. Ensure Docker Compose picks up the environment variable:
-
-   ```bash
-   docker compose down
-   docker compose up
-   ```
-
-3. Check the application title - it should display "Live Video Captioning and Alerts"
-
-### Alert Styling Not Appearing
-
-- Ensure your prompt is designed to receive "Yes" or "No" responses
-- Check that the VLM model is generating clear binary responses
-- Verify the metadata stream is connected (check the status indicator)
 
 ## Next Steps
 

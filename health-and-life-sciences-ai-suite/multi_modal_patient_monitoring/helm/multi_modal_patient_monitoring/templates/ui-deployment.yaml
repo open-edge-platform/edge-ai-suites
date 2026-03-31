@@ -25,8 +25,16 @@ spec:
               set -e
               mkdir -p /work
               cp -a /usr/share/nginx/html/. /work/
+              {{- if .Values.ingress.enabled }}
+              # With ingress: use relative path (ingress routes /video_feed to pose service)
               find /work/assets -type f -name "*.js" -print0 | xargs -0 sed -i 's|:8085/video_feed|/video_feed|g'
-              echo "UI bundle patched for pose stream path"
+              echo "UI bundle patched for ingress-based pose stream path"
+              {{- else }}
+              # Without ingress: use absolute path with port (for port-forward access)
+              # This allows kubectl port-forward svc/ui 8080:80 and svc/pose 8085:8085 to work together
+              find /work/assets -type f -name "*.js" -print0 | xargs -0 sed -i 's|:8085/video_feed|:8085/video_feed|g'
+              echo "UI bundle patched for port-forward-based pose stream path"
+              {{- end }}
           volumeMounts:
             - name: ui-www
               mountPath: /work
@@ -45,13 +53,19 @@ spec:
               mountPath: /usr/share/nginx/html
 
           env:
-            # Use ingress path instead of NodePort
+            {{- if .Values.ingress.enabled }}
+            # With ingress: all services routed through ingress controller
             - name: VITE_API_BASE_URL
               value: "/api"
-
-            # Pose MJPEG stream exposed via ingress
             - name: VITE_POSE_STREAM_URL
               value: "/video_feed"
+            {{- else }}
+            # Without ingress (port-forward mode): services accessible via localhost with different ports
+            - name: VITE_API_BASE_URL
+              value: "http://localhost:8001"
+            - name: VITE_POSE_STREAM_URL
+              value: "http://localhost:8085/video_feed"
+            {{- end }}
 
       volumes:
         - name: ui-www

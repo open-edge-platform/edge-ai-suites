@@ -272,7 +272,7 @@ Two components need to be wrapped for ONNX export: the observation encoder and t
 .. note::
 
    Ensure that OpenVINO is installed. Follow the official installation guide:
-   `Install OpenVINO via pip <https://docs.openvino.ai/2025/get-started/install-openvino/install-openvino-pip.html>`_
+   `Install OpenVINO via pip <https://docs.openvino.ai/2026/get-started/install-openvino/install-openvino-pip.html>`_
 
 6. Convert ONNX to OpenVINO IR
 ------------------------------
