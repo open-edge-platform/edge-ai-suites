@@ -157,10 +157,8 @@ def main() -> None:
     if not chroma_exe:
         venv_exe = CONTENT_SEARCH_DIR / "venv_content_search" / "Scripts" / "chroma.exe"
         chroma_exe = str(venv_exe) if venv_exe.exists() else "chroma"
-    minio_exe = str(CONTENT_SEARCH_DIR / "providers" / os.environ.get("MINIO_EXE", "minio_wrapper/minio.exe"))
-    if not minio_exe:
-        provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
-        minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
+    provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
+    minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
     # no service current
     pg_bin_dir = Path(r"C:\Program Files\PostgreSQL\16\bin")
     pg_exe = str(pg_bin_dir / "postgres.exe")
