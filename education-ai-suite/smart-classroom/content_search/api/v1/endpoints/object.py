@@ -143,33 +143,10 @@ async def upload_file_with_ingest(
     )
 
 @router.post("/search")
-async def file_search(payload: dict):
-    query = payload.get("query")
-    image_base64 = payload.get("image_base64")
-    filters = payload.get("filter")
-    limit = payload.get("max_num_results", 10)
+async def file_search(payload: dict, db: Session = Depends(get_db)):
+    result = await task_service.handle_sync_search(db, payload)
 
-    if not query and not image_base64:
-        raise HTTPException(status_code=400, detail="Either 'query' or 'image_base64' must be provided")
-
-    if query and image_base64:
-        raise HTTPException(status_code=400, detail="Provide only one of 'query' or 'image_base64'")
-
-    search_payload = {
-        "max_num_results": limit
-    }
-
-    if query:
-        search_payload["query"] = query
-    else:
-        search_payload["image_base64"] = image_base64
-
-    if filters:
-        search_payload["filter"] = filters
-
-    search_data = await search_service.semantic_search(search_payload)
-
-    return resp_200(data=search_data, message="Search completed")
+    return resp_200(data=result, message="Search completed")
 
 @router.get("/download")
 async def download_file(file_key: str):

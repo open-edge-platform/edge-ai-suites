@@ -30,16 +30,14 @@ python .\start_services.py
 | `/api/v1/system/health` | **GET** | SYNC | **Backend Health Check**: Verifies the operational status of the backend services. |
 | `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (PENDING, PROCESSING, COMPLETED, FAILED), and error logs if applicable. |
 | `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`) for monitoring system load and pipeline efficiency. |
-| `/api/v1/object/upload` | **POST** | ASYNC | **File Persistence to MinIO**: Streams local binary data to the object store. Generates a unique Object Key based on run-scoped UUIDs and returns the URI for downstream pipeline referencing. |
-| `/api/v1/object/ingest` | **POST** | ASYNC | **Pre-stored Asset Ingestion**: Triggers the AI pipeline for a file already existing in MinIO. Includes content extraction, chunking, and vector embedding. For video assets, it automatically executes a dedicated Video Summarization workflow. |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Specifically designed for text-based files (e.g., TXT, PDF) already stored in MinIO. Focuses on high-fidelity semantic segmentation and vector indexing for knowledge retrieval. |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO. |
 | `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and **AI-driven Video Summarization** for supported video formats. |
-| `/api/v1/object/search` | **POST** | ASYNC | **Semantic Content Retrieval**: Performs a similarity search across the vector store based on natural language descriptions. Returns matched content snippets and their corresponding MinIO file paths. |
-| `/api/v1/object/download` | **POST** | STREAM | **File Download**: Fetches objects from MinIO using a streaming response. Optimized for large-scale multimedia (MP4, PDF) to maintain low memory overhead on the application server. |
+| `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references. |
+| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file directly from MinIO storage. Utilizes stream-bridging to pipe binary data to the client. |
 
-## API reference
-[Content Search API reference](./docs/dev_guide/Content_search_API.md)
+For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)
 
+## Components API reference
 [Ingest and Retrieve](./docs/dev_guide/file_ingest_and_retrieve/API_GUIDE.md)
 
 [Video Preprocess](./docs/dev_guide/video_preprocess/API_GUIDE.md)

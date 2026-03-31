@@ -216,7 +216,7 @@ Response (200 OK):
     "code": 20000,
     "data": {
         "task_id": "c68211de-2187-4f52-b47d-f3a51a52b9ca",
-        "status": "QUEUED"
+        "status": "PROCESSING"
     },
     "message": "File received, processing started.",
     "timestamp": 1773909147
@@ -265,22 +265,29 @@ Used to trigger the ingestion pipeline for text-based documents (e.g., .txt, .pd
 * URL: /api/v1/object/ingest-text
 * Method: POST
 * Pattern: ASYNC
+* Parameters:
+
+| Field | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `text` | `string` | **Yes** | — | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `bucket_name` | `string` | No | — | MinIO bucket name (used to logically group the data or build the identifier). |
+| `file_path` | `string` | No | — | Logical path or filename (used as a unique identifier for the text source). |
+| `meta` | `object` | No | `{}` | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
 Request:
 ```
+<!-- example for raw text content -->
 curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
 --header 'Content-Type: application/json' \
 --data '{
-    "bucket_name": "content-search", 
-    "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
+    "text": "Newton'\''s Second Law of Motion states that the force acting on an object is equal to the mass of that object multiplied by its acceleration (F = ma). This relationship describes how the velocity of an object changes when it is subjected to an external force.",
     "meta": {
-        "course": "CS101",
-        "type": "study_guide"
+        "source": "topic-search"
     }
 }'
 ```
 Response:
-```
+```json
 {
     "code": 20000,
     "data": {
@@ -292,7 +299,7 @@ Response:
 }
 ```
 
-#### File upload ana ingestion
+#### File upload and ingestion
 * URL: /api/v1/object/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
@@ -330,7 +337,7 @@ Response (200 OK):
 * URL: /api/v1/object/search
 * Method: POST
 * Content-Type: multipart/form-data
-* Pattern: ASYNC
+* Pattern: SYNC
 * Parameters:
 
 | Field | Type | Required | Description |
@@ -341,7 +348,7 @@ Response (200 OK):
 | filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
 
 Request:
-```json
+```
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{

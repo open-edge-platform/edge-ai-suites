@@ -90,13 +90,41 @@ class TaskService:
         return {"task_id": str(task.id), "status": task.status}
 
     @staticmethod
+    async def handle_sync_search(db: Session, payload: dict):
+        task = task_crud.create_task(
+            db, 
+            task_type="file_search", 
+            payload=payload, 
+            status=TaskStatus.PROCESSING
+        )
+        db.commit()
+
+        try:
+            search_data = await search_service.semantic_search(payload)
+            task.status = TaskStatus.COMPLETED
+            task.result = search_data
+            db.commit()
+            return {
+                "task_id": str(task.id),
+                "status": task.status,
+                "results": search_data.get("results", [])
+            }
+        except Exception as e:
+            task.status = TaskStatus.FAILED
+            task.result = {"error": str(e)}
+            db.commit()
+            return {"task_id": str(task.id), "status": task.status, "error": str(e)}
+
+    @staticmethod
     def execute_worker_logic(task_id: str):
         print(f"[BACKGROUND] Starting Ingest for Task {task_id}", flush=True)
         with SessionLocal() as db:
             task = db.query(AITask).filter(AITask.id == task_id).first()
             if not task: return
             try:
-                file_key = task.payload.get('file_key') or task.payload.get('file_path') or task.payload.get('video_key')
+                file_key = (task.payload.get('file_key') or 
+                        task.payload.get('file_path') or 
+                        task.payload.get('video_key') or "")
                 bucket_name = task.payload.get('bucket_name')
                 is_video = any(file_key.lower().endswith(ext) for ext in ['.mp4', '.avi', '.mov', '.mkv'])
 
