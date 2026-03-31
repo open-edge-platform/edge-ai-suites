@@ -15,17 +15,35 @@
 
 #### Option 1: Build from source
 
-Clone the source code repository if you don't have it
+Clone the source code for the app if you do not already have it. You can choose either to use sparse checkout to only get the code for this application, or clone the entire repository.
+
+::::{tab-set}
+:::{tab-item} **Sparse Checkout**
 
 ```bash
+# Go to the folder where you want to clone the code, for example:
+cd c:repos
+# Clone the repository, filtering out files beyond metadata and checking out only the root directory
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git
+# Open the newly created folder
+cd edge-ai-suites
+# Check out only the Visual Search Question and Answering folder to save time and space
+git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
+```
+
+:::
+:::{tab-item} **Clone Entire Repository**
+
+```bash
+cd c:repos
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
 ```
 
-Start from `metro-ai-suite`
+:::
+::::
 
-```bash
-cd edge-ai-suites/metro-ai-suite
-```
+> **Note:** For more information on sparse checkout, refer to the [OEP Contributing Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 Run the commands to build images for the microservices:
 
@@ -53,6 +71,7 @@ docker build -t visual-search-qa-app:latest --build-arg https_proxy=$https_proxy
 ```
 
 #### Option 2: use remote prebuilt images
+
 Set a remote registry by exporting environment variables:
 
 ```bash
