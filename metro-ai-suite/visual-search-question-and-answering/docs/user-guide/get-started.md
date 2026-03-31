@@ -15,7 +15,8 @@
 
 #### Option 1: Build from source
 
-Clone the repository if you do not already have it. Go to your target directory and either only get the code for this application, or clone the entire repository.
+Go to the directory of your choice and clone the repository, either in full or partially.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 <!--hide_directive
 ::::{tab-set}
@@ -40,8 +41,6 @@ cd edge-ai-suites
 :::
 ::::
 hide_directive-->
-
-> **Note:** For more information on sparse checkout, refer to the [OEP Contributing Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 Run the commands to build images for the microservices:
 
