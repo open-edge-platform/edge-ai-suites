@@ -19,3 +19,15 @@ class AITask(Base):
     result = Column(JSON, nullable=True)
     user_id = Column(String, index=True, nullable=True, default="default_user")
     created_at = Column(DateTime, default=datetime.now)
+
+class FileAsset(Base):
+    __tablename__ = "minio_file_assets"
+
+    file_hash = Column(String, primary_key=True, index=True) 
+    file_name = Column(String, nullable=False)
+    file_path = Column(String, nullable=False)
+    bucket_name = Column(String, nullable=False)
+    content_type = Column(String)
+    size_bytes = Column(Integer)
+    meta = Column(JSON, default={})
+    created_at = Column(DateTime, default=datetime.now)

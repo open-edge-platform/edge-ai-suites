@@ -10,6 +10,7 @@ from utils.database import get_db
 from utils.task_service import task_service
 from utils.storage_service import storage_service
 from utils.search_service import search_service
+from utils.asset_service import asset_service
 import urllib.parse
 import mimetypes
 import json
@@ -20,17 +21,23 @@ from typing import Optional, Dict, Any
 
 router = APIRouter()
 
-# @router.get("/files")
-
 @router.post("/upload")
-async def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    minio_payload = await storage_service.upload_and_prepare_payload(file)
+async def upload_video(
+    background_tasks: BackgroundTasks, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    result = await asset_service.process_simple_upload(
+        db=db,
+        file=file,
+        background_tasks=background_tasks
+    )
 
-    result = await task_service.handle_file_upload(db, minio_payload, background_tasks, should_ingest=False)
     return resp_200(
         data={
             "task_id": str(result["task_id"]),
-            "status": result["status"]
+            "status": result["status"],
+            "deduplicated": result.get("deduplicated", False)
         },
         message="File received, processing started."
     )
@@ -114,46 +121,16 @@ async def upload_file_with_ingest(
     chunk_duration: int = Form(None),
     db: Session = Depends(get_db)
 ):
-    minio_payload = await storage_service.upload_and_prepare_payload(file)
+    meta_data = asset_service.parse_meta(meta)
+
+    result = await asset_service.process_upload_and_ingest(
+        db, file, background_tasks,
+        meta=meta_data,
+        prompt=prompt,
+        chunk_duration=chunk_duration
+    )
     
-    if meta:
-        try:
-            minio_payload["meta"] = json.loads(meta)
-        except:
-            minio_payload["meta"] = {"raw_info": meta}
-    else:
-        minio_payload["meta"] = {}
-
-    minio_payload["vs_options"] = {
-        "prompt": prompt,
-        "chunk_duration_s": chunk_duration
-    }
-
-    result = await task_service.handle_file_upload(
-        db, 
-        minio_payload, 
-        background_tasks, 
-        should_ingest=True
-    )
-
-    return resp_200(
-        data={
-            "task_id": str(result["task_id"]),
-            "status": result["status"],
-            "file_key": minio_payload["file_key"]
-        },
-        message="Upload and Ingest started"
-    )
-
-# @router.post("/search")
-# async def file_search(payload: dict):
-#     query = payload.get("query")
-#     limit = payload.get("max_num_results", 3)
-#     if not query:
-#         raise HTTPException(status_code=400, detail="Query cannot be empty")
-
-#     search_data = await search_service.semantic_search(query, limit)
-#     return resp_200(data=search_data, message="Resource found")
+    return resp_200(data=result, message="Asset processing initiated")
 
 @router.post("/search")
 async def file_search(payload: dict):
