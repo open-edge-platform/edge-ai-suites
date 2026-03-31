@@ -47,6 +47,7 @@ Content-Type: application/json
 | :--- | :--- | :--- |
 | 20000 | SUCCESS | Task submitted or query successful. |
 | 40001 | AUTH_FAILED | Invalid username or password. |
+| 40901	| FILE_ALREADY_EXISTS |	File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
 | 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |

@@ -5,7 +5,6 @@
 
 import hashlib
 import json
-import traceback
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, BackgroundTasks
 
@@ -33,66 +32,55 @@ class AssetService:
         return file_hash, existing_asset
 
     @staticmethod
-    async def process_upload_and_ingest(
-        db: Session, 
-        file: UploadFile, 
-        background_tasks: BackgroundTasks,
-        **kwargs
-    ):
-        try:
-            file_hash, existing_asset = await AssetService._get_file_hash_and_asset(db, file)
-
-            if existing_asset:
-                print(f"[ASSET] Ingest hit deduplication: {file_hash}", flush=True)
-                return await task_service.handle_existing_asset_task(db, existing_asset, file_hash)
-
-            minio_payload = await storage_service.upload_and_prepare_payload(file)
-            minio_payload.update({
+    def _handle_deduplication_policy(existing_asset: FileAsset, file_hash: str):
+        return {
+            "is_biz_error": True,
+            "code": 40901,
+            "message": "Upload failed: File already exists.",
+            "data": {
                 "file_hash": file_hash,
-                "is_deduplicated": False,
-                **kwargs
-            })
-
-            return await task_service.handle_file_upload(
-                db, minio_payload, background_tasks, should_ingest=True
-            )
-        except Exception as e:
-            traceback.print_exc()
-            raise e
+                "file_name": existing_asset.file_name,
+                "created_at": str(existing_asset.created_at)
+            }
+        }
 
     @staticmethod
-    async def process_simple_upload(
-        db: Session,
-        file: UploadFile,
-        background_tasks: BackgroundTasks
-    ):
-        try:
-            file_hash, existing_asset = await AssetService._get_file_hash_and_asset(db, file)
+    async def _prepare_and_upload_asset(db: Session, file: UploadFile, **kwargs) -> dict:
+        file_hash, existing_asset = await AssetService._get_file_hash_and_asset(db, file)
 
-            if existing_asset:
-                print(f"[ASSET] Simple upload hit: {file_hash}", flush=True)
-                minio_payload = {
-                    "file_key": existing_asset.file_path,
-                    "bucket_name": existing_asset.bucket_name,
-                    "file_hash": file_hash,
-                    "is_deduplicated": True
-                }
-                return await task_service.handle_file_upload(
-                    db, minio_payload, background_tasks, should_ingest=False
-                )
+        if existing_asset:
+            print(f"[ASSET] File existed! filename: {file.filename}, Hash: {file_hash}")
+            return AssetService._handle_deduplication_policy(existing_asset, file_hash)
 
-            print(f"[ASSET] New simple upload: {file.filename}", flush=True)
-            minio_payload = await storage_service.upload_and_prepare_payload(file)
-            minio_payload.update({
-                "file_hash": file_hash,
-                "is_deduplicated": False
-            })
+        print(f"[ASSET] New upload: {file.filename}", flush=True)
+        payload = await storage_service.upload_and_prepare_payload(file)
+        payload.update({
+            "is_biz_error": False,
+            "file_hash": file_hash,
+            "file_name": file.filename,
+            "content_type": file.content_type,
+            "size_bytes": file.size,
+            "bucket_name": payload.get("bucket_name") or "content-search",
+            **kwargs
+        })
+        return payload
 
-            return await task_service.handle_file_upload(
-                db, minio_payload, background_tasks, should_ingest=False
-            )
-        except Exception as e:
-            traceback.print_exc()
-            raise e
+    @staticmethod
+    async def process_simple_upload(db: Session, file: UploadFile, background_tasks: BackgroundTasks):
+        payload = await AssetService._prepare_and_upload_asset(db, file)
+
+        if payload.get("is_biz_error"):
+            return payload
+
+        return await task_service.handle_file_upload(db, payload, background_tasks, should_ingest=False)
+
+    @staticmethod
+    async def process_upload_and_ingest(db: Session, file: UploadFile, background_tasks: BackgroundTasks, **kwargs):
+        payload = await AssetService._prepare_and_upload_asset(db, file, **kwargs)
+
+        if payload.get("is_biz_error"):
+            return payload
+
+        return await task_service.handle_file_upload(db, payload, background_tasks, should_ingest=True)
 
 asset_service = AssetService()

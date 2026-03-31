@@ -12,7 +12,7 @@ from utils.crud_task import task_crud
 from utils.schemas_task import TaskStatus
 from utils.search_service import search_service 
 from utils.video_service import video_service 
-from utils.core_models import AITask
+from utils.core_models import FileAsset, AITask
 
 class TaskService:
     @staticmethod
@@ -23,6 +23,21 @@ class TaskService:
         should_ingest: bool = False
     ):
         try:
+            file_hash = minio_payload.get("file_hash")
+            existing_asset = db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
+            if not existing_asset:
+                new_asset = FileAsset(
+                    file_hash=file_hash,
+                    file_name=minio_payload.get("file_name", "unknown"),
+                    file_path=minio_payload.get("file_key"),
+                    bucket_name=minio_payload.get("bucket_name") or "content-search",
+                    content_type=minio_payload.get("content_type"),
+                    size_bytes=minio_payload.get("size_bytes", 0),
+                    meta=minio_payload.get("meta", {})
+                )
+                db.add(new_asset)
+                db.commit() 
+                print(f"[ASSET] Successfully saved new asset: {file_hash}", flush=True)
             task = task_crud.create_task(
                 db, 
                 task_type="file_search", 
@@ -34,11 +49,17 @@ class TaskService:
                 background_tasks.add_task(TaskService.execute_worker_logic, str(task.id))
             else:
                 task.status = "COMPLETED"
-                task.result = {"message": "Upload only, no ingest requested"}
+                task.result = {
+                    "message": "Upload successful",
+                    "file_key": minio_payload.get("file_key"),
+                    "bucket_name": minio_payload.get("bucket_name"),
+                    "file_hash": minio_payload.get("file_hash")
+                }
                 db.commit()
 
             return {"task_id": str(task.id), "status": task.status}
         except Exception as e:
+            db.rollback()
             traceback.print_exc()
             raise e
 

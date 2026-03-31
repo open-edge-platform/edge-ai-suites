@@ -32,15 +32,7 @@ async def upload_video(
         file=file,
         background_tasks=background_tasks
     )
-
-    return resp_200(
-        data={
-            "task_id": str(result["task_id"]),
-            "status": result["status"],
-            "deduplicated": result.get("deduplicated", False)
-        },
-        message="File received, processing started."
-    )
+    return resp_200(data=result)
 
 @router.post("/ingest")
 async def ingest_existing_file(
@@ -129,8 +121,8 @@ async def upload_file_with_ingest(
         prompt=prompt,
         chunk_duration=chunk_duration
     )
-    
-    return resp_200(data=result, message="Asset processing initiated")
+    return resp_200(data=result)
+    # return resp_200(data=result, message="Asset processing initiated")
 
 @router.post("/search")
 async def file_search(payload: dict):
