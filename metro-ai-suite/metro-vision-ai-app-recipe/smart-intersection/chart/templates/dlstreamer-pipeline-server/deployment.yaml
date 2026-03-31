@@ -14,6 +14,7 @@ spec:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
     spec:
+      runtimeClassName: kata-qemu
       securityContext:
         supplementalGroups: [109,110,992]
       volumes:
@@ -106,6 +107,13 @@ spec:
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        resources:
+          requests:
+            memory: "16Gi"
+            cpu: "4"
+        limits:
+            memory: "16Gi"
+            cpu: "4"
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
         securityContext:
