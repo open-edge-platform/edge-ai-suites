@@ -38,36 +38,12 @@ import tempfile
 from providers.minio_wrapper.minio_client import MinioStore
 from providers.file_ingest_and_retrieve.indexer import Indexer
 from providers.file_ingest_and_retrieve.retriever import ChromaRetriever
+from providers.file_ingest_and_retrieve.models import (
+    get_visual_embedding_model,
+    get_document_embedding_model,
+)
 
 logger = logging.getLogger("visual_data_service")
-
-# Global model cache to avoid duplicate loading
-_visual_embedding_model = None
-_document_embedding_model = None
-
-def _get_visual_embedding_model():
-    """Lazy load visual embedding model once and cache it."""
-    global _visual_embedding_model
-    if _visual_embedding_model is None:
-        from providers.file_ingest_and_retrieve.embedding import get_model_handler, EmbeddingModel
-        visual_model_name = os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-vit-b-16")
-        handler = get_model_handler(visual_model_name)
-        handler.load_model()
-        _visual_embedding_model = EmbeddingModel(handler)
-    return _visual_embedding_model
-
-def _get_document_embedding_model():
-    """Lazy load document embedding model once and cache it."""
-    global _document_embedding_model
-    if _document_embedding_model is None:
-        from llama_index.embeddings.huggingface_openvino import OpenVINOEmbedding
-        doc_model_path = os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
-        run_device = os.getenv("INGEST_DEVICE", "CPU")
-        _document_embedding_model = OpenVINOEmbedding(
-            model_id_or_path=doc_model_path,
-            device=run_device,
-        )
-    return _document_embedding_model
 
 class _IngestRequestBase(BaseModel):
     @field_validator('meta', check_fields=False)
@@ -112,8 +88,8 @@ app = FastAPI()
 
 _collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
 
-_visual_model = _get_visual_embedding_model()
-_document_model = _get_document_embedding_model()
+_visual_model = get_visual_embedding_model()
+_document_model = get_document_embedding_model()
 
 indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
 retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
