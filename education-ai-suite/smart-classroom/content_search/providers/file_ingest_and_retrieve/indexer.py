@@ -298,7 +298,8 @@ class Indexer:
             self.init_document_db_client(len(embedding))
 
         node = create_chroma_data(embedding, meta_data)
-        self._update_id_map(self.document_id_map, meta_data["file_path"], node["id"])
+        file_path = meta_data.get("file_path", "__independent_text__")
+        self._update_id_map(self.document_id_map, file_path, node["id"])
         return [node]
 
     def ingest_text(self, text: str, meta: dict) -> dict:
