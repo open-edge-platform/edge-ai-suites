@@ -77,8 +77,8 @@ stateDiagram-v2
 ```
 
 ## API Endpoints
-
-### Get Task List
+### Task endpoints
+#### Get Task List
 
 * URL: /api/v1/task/list
 
@@ -142,7 +142,7 @@ Response (200 OK)
     "timestamp": 1774330753
 }
 ```
-### Task Status Polling
+#### Task Status Polling
 Used to track the progress and retrieve the final result of a submitted task.
 
 * URL: /api/v1/task/query/{task_id}
@@ -153,7 +153,7 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:9011/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+curl --location 'http://127.0.0.1:9011/api/v1/task/query/6b9a6a55-d327-42fe-b05e-e0f3098fe797'
 ```
 
 Response (200 OK):
@@ -161,31 +161,42 @@ Response (200 OK):
 {
     "code": 20000,
     "data": {
-        "task_id": "e557b305-e37c-4074-a04a-ebd067efbd5d",
+        "task_id": "6b9a6a55-d327-42fe-b05e-e0f3098fe797",
         "status": "COMPLETED",
         "progress": 100,
         "result": {
-            "message": "File from MinIO successfully processed. db returns {'visual': {'insert_count': 1}}",
-            "video_summary": {
-                "type": "done",
-                "job_id": "bc6513aa-e118-4945-84a8-02922595044e",
-                "run_id": "5e405f58-03cf-4e44-9e10-85741283587a",
-                "asset_id": "classroom_8.mp4",
-                "total_chunks": 1,
-                "succeeded_chunks": 1,
-                "failed_chunks": 0,
-                "ingest_ok_chunks": 1,
-                "ingest_failed_chunks": 0,
-                "elapsed_seconds": 36.89442276954651
+            "message": "Upload only, no ingest requested",
+            "file_info": {
+                "source": "minio",
+                "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
+                "bucket": "content-search",
+                "filename": "phy_class.txt",
+                "run_id": "9e96f16a-9689-4c25-a515-04a1040b193f"
             }
         }
     },
     "message": "Query successful",
-    "timestamp": 1774879431
+    "timestamp": 1774931711
 }
 ```
+### File Process
+#### File Support Matrix
 
-### File Upload
+The system supports the following file formats for all ingestion and upload-ingest operations.
+
+| Category | Supported Extensions | Processing Logic |
+| :--- | :--- | :--- |
+| **Video** | `.mp4` | Frame extraction, AI-driven summarization, and semantic indexing. |
+| **Document** | `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls` | Full-text extraction, semantic chunking, and vector embedding. |
+| **Web/Markup** | `.html`, `.htm`, `.xml`, `.md`, `.rst` | Structured text parsing and content indexing. |
+| **Image** | `.jpg`, `.png`, `.jpeg` | Visual feature embedding and similarity search indexing. |
+
+> **Technical Note**: 
+> - **Video**: Default chunking is set to 30 seconds unless the `chunk_duration` parameter is provided.
+> - **Text**: Automatic semantic segmentation is applied to ensure high-quality retrieval results.
+> - **Max File Size**: Please refer to the `CS_MAX_CONTENT_LENGTH` environment variable (Default: 100MB).
+
+#### File Upload
 Used to upload a video file and initiate an asynchronous background task.
 
 * URL: /api/v1/object/upload
@@ -212,7 +223,7 @@ Response (200 OK):
 }
 ```
 
-### File ingestion
+#### File ingestion
 * URL: /api/v1/object/ingest
 * Method: POST
 * Pattern: ASYNC
@@ -248,8 +259,40 @@ Response:
     "timestamp": 1774878031
 }
 ```
+#### Text file ingestion
+Used to trigger the ingestion pipeline for text-based documents (e.g., .txt, .pdf, .docx) that already exist in MinIO.
 
-### File upload ana ingestion
+* URL: /api/v1/object/ingest-text
+* Method: POST
+* Pattern: ASYNC
+
+Request:
+```
+curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
+--header 'Content-Type: application/json' \
+--data '{
+    "bucket_name": "content-search", 
+    "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
+    "meta": {
+        "course": "CS101",
+        "type": "study_guide"
+    }
+}'
+```
+Response:
+```
+{
+    "code": 20000,
+    "data": {
+        "task_id": "f5eb96fd-9c75-4dee-a715-4d39b0762436",
+        "status": "PROCESSING"
+    },
+    "message": "Text ingestion task created successfully",
+    "timestamp": 1774933932
+}
+```
+
+#### File upload ana ingestion
 * URL: /api/v1/object/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
@@ -283,7 +326,7 @@ Response (200 OK):
 }
 ```
 
-### Retrieve and Search
+#### Retrieve and Search
 * URL: /api/v1/object/search
 * Method: POST
 * Content-Type: multipart/form-data
@@ -346,7 +389,7 @@ Response (200 OK):
     "timestamp": 1774877744
 }
 ```
-### Resource Download (Video/Image/Document)
+#### Resource Download (Video/Image/Document)
 Download existing resources in Minio.
 
 * URL: /api/v1/object/download/{resource_id}

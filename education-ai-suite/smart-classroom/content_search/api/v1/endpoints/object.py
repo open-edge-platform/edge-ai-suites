@@ -76,24 +76,21 @@ async def ingest_existing_file(
     )
 
 class IngestTextRequest(BaseModel):
-    text: str
-    bucket_name: Optional[str] = None
-    file_path: Optional[str] = None
+    text: Optional[str] = None
+    bucket_name: Optional[str] = "content-search"
+    file_key: Optional[str] = None
     meta: Dict[str, Any] = Field(default_factory=dict)
+
 @router.post("/ingest-text")
 async def ingest_raw_text(
     request: IngestTextRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    payload = request.model_dump() 
-
-    if "tags" not in payload["meta"] or payload["meta"]["tags"] is None:
-        payload["meta"]["tags"] = ["default"]
 
     result = await task_service.handle_text_ingest(
         db,
-        payload,
+        request.model_dump(), 
         background_tasks
     )
 
@@ -102,7 +99,7 @@ async def ingest_raw_text(
             "task_id": str(result["task_id"]),
             "status": result["status"]
         },
-        message="Text ingestion started"
+        message="Text ingestion task created successfully"
     )
 
 @router.post("/upload-ingest")
@@ -144,16 +141,6 @@ async def upload_file_with_ingest(
         },
         message="Upload and Ingest started"
     )
-
-# @router.post("/search")
-# async def file_search(payload: dict):
-#     query = payload.get("query")
-#     limit = payload.get("max_num_results", 3)
-#     if not query:
-#         raise HTTPException(status_code=400, detail="Query cannot be empty")
-
-#     search_data = await search_service.semantic_search(query, limit)
-#     return resp_200(data=search_data, message="Resource found")
 
 @router.post("/search")
 async def file_search(payload: dict):
