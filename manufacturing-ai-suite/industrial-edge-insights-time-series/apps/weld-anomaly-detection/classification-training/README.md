@@ -120,7 +120,7 @@ In short: keep `weld_defect_model.pkl` and `weld_defect_labels.pkl` together whe
 ### Requirements
 
 ```bash
-pip install scikit-learn scikit-learn-intelex joblib pandas numpy packaging setuptools
+pip install scikit-learn==1.6.1 scikit-learn-intelex joblib pandas numpy packaging setuptools
 ```
 
 Or install directly from the local dependency file:
@@ -134,7 +134,7 @@ Or using the project virtual environment:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install scikit-learn scikit-learn-intelex joblib pandas numpy packaging setuptools
+pip install scikit-learn==1.6.1 scikit-learn-intelex joblib pandas numpy packaging setuptools
 ```
 
 ### Data
