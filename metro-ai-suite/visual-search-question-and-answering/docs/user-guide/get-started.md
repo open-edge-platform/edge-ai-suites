@@ -22,11 +22,11 @@ Clone the source code for the app if you do not already have it. You can choose 
 
 ```bash
 # Go to the folder where you want to clone the code, for example:
-cd c:repos
+cd c:repos &&
 # Clone the repository, filtering out files beyond metadata and checking out only the root directory
-git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
 # Open the newly created folder
-cd edge-ai-suites
+cd edge-ai-suites &&
 # Check out only the Visual Search Question and Answering folder to save time and space
 git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
 ```
@@ -35,8 +35,8 @@ git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
 :::{tab-item} **Clone Entire Repository**
 
 ```bash
-cd c:repos
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd c:repos &&
+git clone https://github.com/open-edge-platform/edge-ai-suites.git &&
 cd edge-ai-suites
 ```
 
