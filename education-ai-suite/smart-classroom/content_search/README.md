@@ -1,65 +1,47 @@
-# Content Search Feature
+# Content Search
 
-This file shows steps to set up and run content search feature.
-For full develop guide and API Reference, please see the [Dev Guide](docs/dev_guide/).
+Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities using advanced RAG (Retrieval-Augmented Generation) workflows.
 
-## Setup
+## Quick Start
+### Automatic Dependency Installation
+We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
 
-### Prerequisites
+Note: Open PowerShell as Administrator before running the script.
 
-- **Python 3.10** — only this version is verified on Windows: https://www.python.org/downloads/
-- **Rust compiler** — required by some dependencies: https://rust-lang.org/tools/install
-- **`multimodal_embedding_serving` wheel** — obtain from [this guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/wheel-installation.md) (use verified commit `77b812f`). Place the `.whl` file in the `content_search/` folder before running `install.ps1`.
-
-### Install System Dependencies
-
-Run `install.ps1` once to set up the environment (requires admin):
-- Creates the Python 3.10 venv
-- Installs `mobileclip`, `salesforce-lavis`, `requirements.txt`, and the `multimodal_embedding_serving` wheel
-- Downloads and installs Tesseract OCR 5.5.0 and adds it to the system PATH
-- Downloads and extracts Poppler 25.12.0 and adds it to the system PATH
-
-```powershell
-# 1. Install dependencies (once)
-cd content_search
+```PowerShell
+# Run the automation script from the content search root
 .\install.ps1
 ```
+### Launching Services
+Once the environment is configured, activate the virtual environment and start the orchestration service:
 
-> **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
+```PowerShell
+# Activate the virtual environment
+.\venv_content_search\Scripts\Activate.ps1
 
-#### LibreOffice (Optional)
-
-This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
-
-1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
-3. Add to PATH:
-   ```powershell
-   # Open PowerShell as Administrator:
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
-   ```
-4. Verify installation:
-   ```python
-   import shutil
-   shutil.which("soffice") is not None
-   ```
-
-## Start service
-
-```powershell
-# 1. Optional: set proxy if needed
-$env:https_proxy="<your_https_proxy>"
-$env:http_proxy="<your_http_proxy>"
-
-# 2. Launch all services
-.\start.ps1
+# Start all microservices
+python .\start_services.py
 ```
 
-`start.ps1` will:
-1. Start ChromaDB
-2. Start MinIO and create the bucket
-3. Start the File Ingest & Retrieve server on port `9990`
+## API Endpoints
 
-All settings (ports, credentials, paths) are read from `../config.yaml`.
+| Endpoint | Method | Pattern | Description | Status |
+| :--- | :---: | :---: | :--- | :---: |
+| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
+| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
+| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
+| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | DONE |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | DONE |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
+| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
+| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
 
----
+## API reference
+[Content Search API reference](./docs/dev_guide/Content_search_API.md)
+
+[Ingest and Retrieve](./docs/dev_guide/file_ingest_and_retrieve/API_GUIDE.md)
+
+[Video Preprocess](./docs/dev_guide/video_preprocess/API_GUIDE.md)
+
+[VLM OV Serving](./docs/dev_guide/vlm_openvino_serving/API_GUIDE.md)

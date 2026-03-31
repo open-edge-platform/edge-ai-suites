@@ -14,11 +14,11 @@ README.md          @xwu2intel
 # Education-AI Suite
 # ============================================================================
 
-/education-ai-suite/                                                  @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich
-/education-ai-suite/README.md                                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/                                                  @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208
+/education-ai-suite/README.md                                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
 
-/education-ai-suite/smart-classroom/docs/                             @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
-/education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich  @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/smart-classroom/docs/                             @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
+/education-ai-suite/smart-classroom/README.md                         @avinash-palleti @unarayan @qianlongding @yunowo @BaoHuiling @xiaojingrich @yangjianfeng1208 @open-edge-platform/open-edge-platform-docs-write
 
 # ============================================================================
 # Health And Life Sciences AI Suite
@@ -41,9 +41,9 @@ README.md          @xwu2intel
 /manufacturing-ai-suite/hmi-augmented-worker/docs/                     @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 /manufacturing-ai-suite/hmi-augmented-worker/README.md                 @hteeyeoh @madhuri-rai07 @bharagha @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
 
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/            @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu  @open-edge-platform/open-edge-platform-docs-write
-/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @sugnanprabhu  @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/            @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/docs/       @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @open-edge-platform/open-edge-platform-docs-write
+/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md   @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe @open-edge-platform/open-edge-platform-docs-write
 
 /manufacturing-ai-suite/industrial-edge-insights-time-series/           @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe
 /manufacturing-ai-suite/industrial-edge-insights-time-series/docs/      @vkb1 @sathyendranv @pooja-intel @xwu2intel @SudarshanaPanda @rashmihe  @open-edge-platform/open-edge-platform-docs-write
@@ -62,9 +62,9 @@ README.md          @xwu2intel
 /metro-ai-suite/                                                 @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard
 /metro-ai-suite/README.md                                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/deterministic-threat-detection/                  @rrajore @sugnanprabhu @xwu2intel
-/metro-ai-suite/deterministic-threat-detection/docs/             @rrajore @sugnanprabhu @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/deterministic-threat-detection/README.md         @rrajore @sugnanprabhu @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/deterministic-threat-detection/                  @rrajore @sugnanprabhu @xwu2intel @ajagadi1
+/metro-ai-suite/deterministic-threat-detection/docs/             @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/deterministic-threat-detection/README.md         @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
 
 
 /metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol
@@ -137,8 +137,8 @@ README.md          @xwu2intel
 # Robotics-AI Suite
 # ============================================================================
 
-/robotics-ai-suite/                    @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22
-/robotics-ai-suite/docs/               @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22  @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22  @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22  @open-edge-platform/open-edge-platform-docs-write
-/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/                    @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel
+/robotics-ai-suite/docs/               @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel  @open-edge-platform/open-edge-platform-docs-write
+/robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel  @open-edge-platform/open-edge-platform-docs-write

@@ -6,7 +6,7 @@ import json
 import logging
 import re
 import uuid
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from ..config import (
@@ -22,60 +22,88 @@ from ..state import RUNS
 
 router = APIRouter(prefix="/api", tags=["runs"])
 logger = logging.getLogger("app.runs")
+WEBRTC_PEER_ID_MAX_LENGTH = 8
+WEBRTC_PEER_ID_PREFIX = "s"
 
 
-@router.post("/runs")
-async def start_run(req: StartRunRequest) -> RunInfo:
-    """Start a new video captioning run."""
-    # Process optional runName - use it for run_id if provided
-    run_name = None
-    if req.runName and req.runName.strip():
-        # Sanitize: replace spaces with underscores, remove special chars
-        sanitized = re.sub(r"\s+", "_", req.runName.strip())
-        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
-        if sanitized:
-            run_name = sanitized
-            # Check for duplicates and append suffix if needed
-            base_name = sanitized
-            counter = 1
-            while run_name in RUNS:
-                run_name = f"{base_name}_{counter}"
-                counter += 1
+def _sanitize_run_name(run_name: str) -> str:
+    """Normalize a user-supplied run name into a safe run identifier."""
+    sanitized = re.sub(r"\s+", "_", run_name.strip())
+    return re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
 
-    # Use runName for run_id if provided, otherwise generate UUID
-    if run_name:
-        run_id = run_name
-    else:
-        run_id = uuid.uuid4().hex[:10]
 
-    peer_id = f"stream-{run_id[:10] if len(run_id) > 10 else run_id}"
+def _build_unique_run_name(requested_name: Optional[str]) -> Optional[str]:
+    """Return a sanitized, unique run name or None when no valid name was provided."""
+    if not requested_name or not requested_name.strip():
+        return None
 
-    # MQTT topic for this run's metadata
-    mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
+    sanitized = _sanitize_run_name(requested_name)
+    if not sanitized:
+        return None
 
-    pipeline_name = (req.pipelineName or PIPELINE_NAME).strip() or PIPELINE_NAME
+    run_name = sanitized
+    counter = 1
+    while run_name in RUNS:
+        run_name = f"{sanitized}_{counter}"
+        counter += 1
 
-    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
-    payload = {
+    return run_name
+
+
+def _generate_peer_id() -> str:
+    """Generate a short, unique WebRTC peer ID accepted by the pipeline server."""
+    existing_peer_ids = {run.peerId for run in RUNS.values()}
+    peer_body_length = WEBRTC_PEER_ID_MAX_LENGTH - len(WEBRTC_PEER_ID_PREFIX)
+    if peer_body_length < 1:
+        raise RuntimeError("Invalid WebRTC peer ID configuration")
+
+    while True:
+        candidate = f"{WEBRTC_PEER_ID_PREFIX}{uuid.uuid4().hex[:peer_body_length]}"
+        if candidate not in existing_peer_ids:
+            return candidate
+
+
+def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
+    parameters = {
+        "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
+        "captioner_model_name": (req.modelName or "").strip()
+        or "OpenGVLab/InternVL2-2B",
+        "captioner_max_new_tokens": req.maxNewTokens,
+        "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
+        "detection_threshold": req.detectionThreshold,
+        "mqtt_publisher": {
+            "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
+            "publish_frame": False,
+        },
+    }
+
+    optional_parameters = {
+        "captioner_frame_rate": req.frameRate,
+        "captioner_chunk_size": req.chunkSize,
+        "frame_width": req.frameWidth,
+        "frame_height": req.frameHeight,
+    }
+    parameters.update(
+        {key: value for key, value in optional_parameters.items() if value is not None}
+    )
+
+    if req.chunkSize is not None:
+        parameters["captioner_queue_size"] = max(1, req.chunkSize)
+
+    return parameters
+
+
+def _build_start_payload(req: StartRunRequest, run_id: str, peer_id: str) -> dict:
+    return {
         "source": {"uri": req.rtspUrl, "type": "uri"},
         "destination": {
             "frame": {"type": "webrtc", "peer-id": peer_id, "bitrate": WEBRTC_BITRATE},
         },
-        "parameters": {
-            "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
-            "captioner_model_name": (req.modelName or "").strip()
-            or "OpenGVLab/InternVL2-2B",
-            "captioner_max_new_tokens": req.maxNewTokens,
-            "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
-            "detection_threshold": req.detectionThreshold,
-            "mqtt_publisher": {
-                "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-                "publish_frame": False,
-            },
-        },
+        "parameters": _build_pipeline_parameters(req, run_id),
     }
 
-    raw = http_json("POST", start_url, payload=payload)
+
+def _extract_pipeline_id(raw: str) -> str:
     pipeline_id = raw.replace('"', "").strip()
     if not pipeline_id:
         raise HTTPException(
@@ -85,6 +113,35 @@ async def start_run(req: StartRunRequest) -> RunInfo:
                 "body": raw,
             },
         )
+    return pipeline_id
+
+
+@router.post("/runs")
+async def start_run(req: StartRunRequest) -> RunInfo:
+    """Start a new video captioning run."""
+    run_name = _build_unique_run_name(req.runName)
+
+    # Use runName for run_id if provided, otherwise generate UUID
+    if run_name:
+        run_id = run_name
+    else:
+        run_id = uuid.uuid4().hex[:10]
+
+    peer_id = _generate_peer_id()
+
+    # MQTT topic for this run's metadata
+    mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
+
+    pipeline_name = (req.pipelineName or PIPELINE_NAME).strip() or PIPELINE_NAME
+
+    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
+    payload = _build_start_payload(req, run_id, peer_id)
+
+    logger.debug(f"Starting pipeline {pipeline_name} with URL: {start_url}")
+    logger.debug(f"Pipeline payload: {json.dumps(payload, indent=2)}")
+
+    raw = http_json("POST", start_url, payload=payload)
+    pipeline_id = _extract_pipeline_id(raw)
 
     model_name = (req.modelName or "").strip() or "InternVL2-2B"
     # Use full run_id for custom names, truncated for UUID-based
@@ -100,6 +157,10 @@ async def start_run(req: StartRunRequest) -> RunInfo:
         prompt=(req.prompt or "").strip() or DEFAULT_PROMPT,
         maxTokens=req.maxNewTokens,
         rtspUrl=req.rtspUrl,
+        frameRate=req.frameRate,
+        chunkSize=req.chunkSize,
+        frameWidth=req.frameWidth,
+        frameHeight=req.frameHeight,
     )
     RUNS[info.runId] = info
     return info
@@ -216,7 +277,7 @@ async def stop_run(run_id: str) -> dict[str, str]:
     # A failure (502) usually means the pipeline is already stopped
     try:
         http_json("DELETE", stop_url)
-    except HTTPException:
+    except Exception:
         # Pipeline may already be stopped or unreachable - continue cleanup
         pass
 

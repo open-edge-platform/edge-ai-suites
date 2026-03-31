@@ -22,3 +22,4 @@ monitoring/executionlogs/
 chroma_data/
 minio_data/
 extracted_images/
+logs/

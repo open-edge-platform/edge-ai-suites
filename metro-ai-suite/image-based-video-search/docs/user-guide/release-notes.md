@@ -10,9 +10,15 @@ application.
 
 ## Version 1.2.0
 
-- Consumed latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is default now.
-- Changed model from person-vehicle-bike-detection-2004 to yolov11s model.
-- Support IBVS for NPU device
+**New**
+
+- Qualified on the Intel® Core™ Ultra Series 3 processor.
+- Changed the person-vehicle-bike-detection-2004 model to the yolov11s model.
+
+**Improved**
+
+- Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
+- Image-based Video Search now supports the NPU device.
 
 ## Version 1.1.0
 

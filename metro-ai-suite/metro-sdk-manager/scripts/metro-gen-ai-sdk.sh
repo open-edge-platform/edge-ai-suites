@@ -28,6 +28,9 @@ images=(
   "intel/multimodal-embedding-serving:1.3.2-rc1"
   "intel/vdms-dataprep:1.3.2-rc1"
   "intel/vlm-openvino-serving:1.3.2-rc1"
+  "intel/model-download:1.2.0"
+  "intel/chatqna:2.1.0-rc2"
+  "intel/chatqna-ui:2.1.0-rc2"
 )
 NAME="Metro Gen AI SDK"
 

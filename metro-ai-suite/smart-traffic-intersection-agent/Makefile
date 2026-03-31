@@ -346,11 +346,11 @@ trivy-scan-fs:
 	@echo "🔍 Running Trivy Filesystem Scan..."
 	@mkdir -p security-results
 	@trivy fs --severity HIGH,CRITICAL --ignore-unfixed --format json \
-		--output security-results/trivy-fs-$(SERVICE_NAME).json . || true
+		--skip-dirs deps --skip-dirs .venv --output security-results/trivy-fs-$(SERVICE_NAME).json . || true
 	@$(ENSURE_TRIVY_HTML_TPL); \
 	if [ -n "$$TRIVY_HTML_TPL" ] && [ -f "$$TRIVY_HTML_TPL" ]; then \
 		trivy fs --severity HIGH,CRITICAL --ignore-unfixed --format template \
-			--template "@$$TRIVY_HTML_TPL" \
+			--template "@$$TRIVY_HTML_TPL" --skip-dirs deps --skip-dirs .venv \
 			--output security-results/trivy-fs-$(SERVICE_NAME).html . || true; \
 		echo "✅ Filesystem scan complete: security-results/trivy-fs-$(SERVICE_NAME).{json,html}"; \
 	else \
@@ -462,7 +462,7 @@ codeql-scan-new:
 	@echo "→ Creating CodeQL database for Python..."
 	@codeql database create security-results/codeql-db-python-$(SERVICE_NAME) \
 		--language=python \
-		--source-root=. \
+		--source-root=src \
 		--build-mode=none \
 		--overwrite 2>&1 | tail -5
 
