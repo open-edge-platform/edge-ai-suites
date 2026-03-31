@@ -26,15 +26,19 @@ def create_chroma_data(embedding, meta=None):
     return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
 
 class Indexer:
-    def __init__(self, collection_name="content-search"):
+    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None):
         self.client = ChromaClientWrapper()
         run_device = os.getenv("INGEST_DEVICE", "CPU")
         self.visual_collection_name = collection_name
-        visual_model_name = os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-vit-b-16")
-        handler = get_model_handler(visual_model_name)
-        handler.load_model()
 
-        self.visual_embedding_model = EmbeddingModel(handler)
+        if visual_embedding_model is not None:
+            self.visual_embedding_model = visual_embedding_model
+        else:
+            visual_model_name = os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-vit-b-16")
+            handler = get_model_handler(visual_model_name)
+            handler.load_model()
+            self.visual_embedding_model = EmbeddingModel(handler)
+
         self.detector = Detector(device=run_device)
         self.visual_id_map = {}
         self.visual_db_inited = False
@@ -46,12 +50,14 @@ class Indexer:
 
         self.document_collection_name = f"{collection_name}_documents"
 
-        doc_model_path = os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
-
-        self.document_embedding_model = OpenVINOEmbedding(
-            model_id_or_path=doc_model_path,
-            device=run_device,
-        )
+        if document_embedding_model is not None:
+            self.document_embedding_model = document_embedding_model
+        else:
+            doc_model_path = os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
+            self.document_embedding_model = OpenVINOEmbedding(
+                model_id_or_path=doc_model_path,
+                device=run_device,
+            )
 
         self.document_parser = DocumentParser(
             chunk_size=250,
