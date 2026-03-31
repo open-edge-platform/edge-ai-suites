@@ -12,7 +12,7 @@ This approach uses a standard camera RGB steam together with the camera calibrat
 With Computer Vision methods, the camera stream is scanned for given objects (by sample image).
 A detection is in the form of a 2D bounding box with an additional angle defining the rotation of the object.
 
-.. image:: ../../../images/html/rotatedBB.png
+.. image:: ./../../../../images/html/rotatedBB.png
 
 
 .. note:: 
@@ -31,7 +31,7 @@ Pose Projection
 Additionally, this component is capable of projecting the finding in the flat RGB input image into a 3D object pose.
 Therefor the algorithm projects the object found in the 2D image onto a plane at the given distance and assumes that the object from the image is located on this plane.
 
-.. image:: ../../../images/html/PoseProjection.png
+.. image:: ../../../../../images/html/PoseProjection.png
 
 The above illustration shows the setup and how the camera, the plana and the object relate to each other.
 
@@ -40,7 +40,7 @@ This will be the input for the :ref:`Control<rvc_control>` components to define 
 
 Annotated image
 ^^^^^^^^^^^^^^^
-.. image:: ../../../images/html/2.5DAnnotatedImage.png
+.. image:: ../../../../../images/html/2.5DAnnotatedImage.png
 
 The ``rotated_object_detection`` node can produce an annotated image as output. This is useful to visually inspect the detections.
 

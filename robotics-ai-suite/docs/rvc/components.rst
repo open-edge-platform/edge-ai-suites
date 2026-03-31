@@ -15,7 +15,7 @@ RVC Framework is composed by
 
 High level design:
 
-.. image:: images/html/RVC.png
+.. image:: ../images/html/RVC.png
 
 .. toctree::
    :maxdepth: 1
