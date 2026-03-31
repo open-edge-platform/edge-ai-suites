@@ -27,11 +27,10 @@ python .\start_services.py
 
 | Endpoint | Method | Pattern | Description |
 | :--- | :---: | :---: | :--- |
-| `/api/v1/system/health` | **GET** | SYNC | **Backend Health Check**: Verifies the operational status of the backend services. |
 | `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (PENDING, PROCESSING, COMPLETED, FAILED), and error logs if applicable. |
 | `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`) for monitoring system load and pipeline efficiency. |
 | `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO. |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and **AI-driven Video Summarization** for supported video formats. |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats. |
 | `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references. |
 | `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file directly from MinIO storage. Utilizes stream-bridging to pipe binary data to the client. |
 
