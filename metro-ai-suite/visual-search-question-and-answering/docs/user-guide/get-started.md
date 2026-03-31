@@ -15,33 +15,31 @@
 
 #### Option 1: Build from source
 
-Clone the source code for the app if you do not already have it. You can choose either to use sparse checkout to only get the code for this application, or clone the entire repository.
+Clone the repository if you do not already have it. Go to your target directory and either only get the code for this application, or clone the entire repository.
 
+<!--hide_directive
 ::::{tab-set}
-:::{tab-item} **Sparse Checkout**
+:::{tab-item} hide_directive--> **Clone Only the Application**
 
 ```bash
-# Go to the folder where you want to clone the code, for example:
-cd c:repos &&
-# Clone the repository, filtering out files beyond metadata and checking out only the root directory
 git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
-# Open the newly created folder
 cd edge-ai-suites &&
-# Check out only the Visual Search Question and Answering folder to save time and space
 git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
 ```
 
+<!--hide_directive
 :::
-:::{tab-item} **Clone Entire Repository**
+:::{tab-item} hide_directive--> **Clone Entire Repository**
 
 ```bash
-cd c:repos &&
 git clone https://github.com/open-edge-platform/edge-ai-suites.git &&
 cd edge-ai-suites
 ```
 
+<!--hide_directive
 :::
 ::::
+hide_directive-->
 
 > **Note:** For more information on sparse checkout, refer to the [OEP Contributing Guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
