@@ -1,3 +1,7 @@
+global:
+  persistence:
+    rwxEnabled: false
+
 frigate:
   mode: default
 rtspTest:

@@ -11,6 +11,12 @@ global:
   usePvc: true
   keepPvc: false
 
+  # Storage mode
+  # false = RWO: pods sharing PVCs are co-located on the same node (default, works with any storage class)
+  # true  = RWX: pods can schedule freely across nodes (requires RWX-capable storage class e.g. longhorn)
+  persistence:
+    rwxEnabled: false
+
   # Proxy settings
   proxy:
     httpProxy: ""

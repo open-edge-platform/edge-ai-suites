@@ -16,6 +16,18 @@ spec:
         {{- include "lvs.nvrrouter.selectorLabels" . | nindent 8 }}
     spec:
       enableServiceLinks: false
+      {{- if not .Values.global.persistence.rwxEnabled }}
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - frigate-vms
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

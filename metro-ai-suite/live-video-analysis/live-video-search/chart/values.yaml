@@ -13,6 +13,9 @@ global:
   keepPvc: false
   sharedPvcName: ""
 
+  persistence:
+    rwxEnabled: false
+
   proxy:
     httpProxy: ""
     httpsProxy: ""
