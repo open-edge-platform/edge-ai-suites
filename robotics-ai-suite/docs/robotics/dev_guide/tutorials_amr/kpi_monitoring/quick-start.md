@@ -13,10 +13,26 @@ Complete the [installation](installation.md) before proceeding.
 The `quickstart` script provides a guided menu that handles ROS2 environment
 setup automatically:
 
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
 ```bash
-cd <ros-kpi-component-dir>
+cd /opt/ros/jazzy/benchmarking
 ./quickstart
 ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+cd /opt/ros/humble/benchmarking
+./quickstart
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 The menu guides you through:
 
@@ -144,7 +160,7 @@ See [Grafana Dashboard](grafana.md) for the full setup guide.
 
 | Problem | Fix |
 |---------|-----|
-| ROS2 not found | `source /opt/ros/humble/setup.bash` (or `jazzy`) `&& export ROS_DOMAIN_ID=0` |
+| ROS2 not found | Source your ROS2 environment — see [Set Up ROS2](../../gsg_robot/index.md) |
 | No nodes detected | Ensure your ROS2 application is running first |
 | `permission denied` on scripts | `chmod +x quickstart auto-setup.sh` |
 | `uv` not found | `curl -LsSf https://astral.sh/uv/install.sh | sh && source ~/.bashrc` |

@@ -24,5 +24,6 @@ distribution across local and remote machines.
 Source Code
 -----------
 
-The source code for this component is in
+This component is distributed as the ``ros-${ROS_DISTRO}-benchmark-framework``
+apt package. The source code is maintained in the
 `ros-kpi <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/ros-kpi>`_.
