@@ -13,6 +13,10 @@ global:
   keepPvc: false
   sharedPvcName: ""
 
+  persistence:
+    rwxEnabled: false
+    storageClassName: ""
+
   proxy:
     httpProxy: ""
     httpsProxy: ""

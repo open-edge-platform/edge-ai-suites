@@ -15,6 +15,18 @@ spec:
         app: frigate-vms
         {{- include "lvs.frigate.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if and (eq .Values.frigate.mode "rtsp") (not .Values.global.persistence.rwxEnabled) }}
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - rtsp-publisher
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}

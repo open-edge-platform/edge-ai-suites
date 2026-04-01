@@ -19,10 +19,17 @@ spec:
       {{- if .Values.telemetry.hostPathMounts }}
       hostPID: true
       {{- end }}
-      {{- with .Values.podAffinity }}
+      {{- if not .Values.global.persistence.rwxEnabled }}
       affinity:
         podAffinity:
-          {{- toYaml . | nindent 10 }}
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - vdms-dataprep
+              topologyKey: kubernetes.io/hostname
       {{- end }}
       {{- with .Values.podSecurityContext }}
       securityContext:
