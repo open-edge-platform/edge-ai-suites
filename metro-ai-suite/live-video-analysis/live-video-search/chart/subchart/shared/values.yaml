@@ -1,4 +1,7 @@
 global:
+  persistence:
+    rwxEnabled: false
+    storageClassName: ''
   videos:
     source: download
     hostPath: ''

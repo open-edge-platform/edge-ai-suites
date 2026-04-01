@@ -35,10 +35,3 @@ nvr-event-router:
 vss-collector:
   collectorSignals:
     usePvc: true
-
-shared:
-  persistence:
-    collectorSignals:
-      storageClassName: longhorn
-      accessModes:
-        - ReadWriteMany

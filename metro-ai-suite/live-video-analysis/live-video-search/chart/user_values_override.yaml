@@ -16,6 +16,8 @@ global:
   # true  = RWX: pods can schedule freely across nodes (requires RWX-capable storage class e.g. longhorn)
   persistence:
     rwxEnabled: false
+    # Storage class for shared PVCs. Leave empty to use cluster default.
+    storageClassName: ""
 
   # Proxy settings
   proxy:

@@ -42,17 +42,3 @@ vss-collector:
     enabled: true
   collectorSignals:
     usePvc: true
-
-shared:
-  persistence:
-    storageClassName: longhorn
-    videos:
-      accessModes:
-        - ReadWriteMany
-    frigateRecordings:
-      accessModes:
-        - ReadWriteMany
-    collectorSignals:
-      storageClassName: longhorn
-      accessModes:
-        - ReadWriteMany
