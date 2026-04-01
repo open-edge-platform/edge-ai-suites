@@ -77,10 +77,10 @@ vlmServing:
     tag: "1.3.2"
     pullPolicy: IfNotPresent
   replicas: 1
+  runtimeClassName: "kata-qemu"
   service:
-    type: NodePort
+    type: ClusterIP
     port: 8000
-    nodePort: 30800
   env:
     modelName: "microsoft/Phi-3.5-vision-instruct"
     compressionWeightFormat: "int4"
@@ -123,8 +123,12 @@ vlmServing:
     timeoutSeconds: 10
     failureThreshold: 180
   resources:
+    limits:
+      cpu: "8"
+      memory: "16Gi"
     requests:
-      memory: "12Gi"
+      cpu: "8"
+      memory: "16Gi"
   # Volume for model cache
   persistence:
     enabled: true
