@@ -13,8 +13,9 @@ image:
   pullPolicy: Always
 
 service:
-  type: NodePort
-  # Container / service port.
+  type: ClusterIP
+  # Container / service port.  Also used as hostPort so browsers can connect
+  # directly on the node IP (same as Docker Compose port publishing).
   port: 9090
 
 env:
