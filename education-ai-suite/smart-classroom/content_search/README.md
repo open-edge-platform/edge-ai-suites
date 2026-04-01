@@ -7,7 +7,10 @@ Content Search is a core multimodal service designed for smart classroom environ
 We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
 
 #### Pre-requisites
+**Python 3.12**: Ensure Python 3.12 is installed and added to your system PATH.
+
 **Administrator Privileges**: Open PowerShell as Administrator.
+
 **Enable Long Paths**: To prevent issues with the Windows 260-character path limit, run the following command in an elevated PowerShell:
 ```PowerShell
 New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
@@ -16,11 +19,11 @@ New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
 
 #### Dependencies Installation
 ```PowerShell
-# Run the automation script from the content search root
+# Run the automation script from the content search root with Windows PowerShell
 .\install.ps1
 ```
 ### Launching Services
-Once the environment is configured, activate the virtual environment and start the `Content Search` service:
+Once the environment is configured, activate the virtual environment and launch the `Content Search` service:
 
 ```PowerShell
 # Activate the virtual environment
@@ -29,7 +32,13 @@ Once the environment is configured, activate the virtual environment and start t
 # Start all microservices
 python .\start_services.py
 ```
-> Note: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to automatically download pre-trained AI models. Please ensure you have a stable internet connection.
+
+> For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. Please ensure you have a stable internet connection.
+
+> Upon a successful launch, the console output should not contain any "ERROR" logs.
+
+### Termination
+To stop the service and all associated microservices, press `Ctrl` + `C` in the terminal window.
 
 ## API Endpoints
 
