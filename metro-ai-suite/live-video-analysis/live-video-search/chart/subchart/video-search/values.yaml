@@ -52,18 +52,18 @@ livenessProbe:
     path: /health
     port: http
   initialDelaySeconds: 15
-  timeoutSeconds: 10
-  periodSeconds: 20
-  failureThreshold: 6
+  timeoutSeconds: 30
+  periodSeconds: 30
+  failureThreshold: 5
 
 readinessProbe:
   httpGet:
     path: /health
     port: http
   initialDelaySeconds: 5
-  timeoutSeconds: 5
-  periodSeconds: 10
-  failureThreshold: 6
+  timeoutSeconds: 30
+  periodSeconds: 30
+  failureThreshold: 10
 
 startupProbe:
   httpGet:
