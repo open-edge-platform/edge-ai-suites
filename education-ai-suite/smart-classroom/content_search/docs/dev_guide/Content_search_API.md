@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
   "code": 20000,
-  "data": { "task_id": "0892f506-4087-4d7e-b890-21303145b4ee" },
+  "data": { "task_id": "0892f506-4087-4d7e-b890-21303145b4ee", "status": "PROCESSING" },
   "message": "Operation Successful",
   "timestamp": 167890123
 }
@@ -77,8 +77,8 @@ stateDiagram-v2
 ```
 
 ## API Endpoints
-
-### Get Task List
+### Task endpoints
+#### Get Task List
 
 * URL: /api/v1/task/list
 
@@ -142,7 +142,7 @@ Response (200 OK)
     "timestamp": 1774330753
 }
 ```
-### Task Status Polling
+#### Task Status Polling
 Used to track the progress and retrieve the final result of a submitted task.
 
 * URL: /api/v1/task/query/{task_id}
@@ -153,7 +153,7 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:9011/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+curl --location 'http://127.0.0.1:9011/api/v1/task/query/6b9a6a55-d327-42fe-b05e-e0f3098fe797'
 ```
 
 Response (200 OK):
@@ -161,31 +161,42 @@ Response (200 OK):
 {
     "code": 20000,
     "data": {
-        "task_id": "e557b305-e37c-4074-a04a-ebd067efbd5d",
+        "task_id": "6b9a6a55-d327-42fe-b05e-e0f3098fe797",
         "status": "COMPLETED",
         "progress": 100,
         "result": {
-            "message": "File from MinIO successfully processed. db returns {'visual': {'insert_count': 1}}",
-            "video_summary": {
-                "type": "done",
-                "job_id": "bc6513aa-e118-4945-84a8-02922595044e",
-                "run_id": "5e405f58-03cf-4e44-9e10-85741283587a",
-                "asset_id": "classroom_8.mp4",
-                "total_chunks": 1,
-                "succeeded_chunks": 1,
-                "failed_chunks": 0,
-                "ingest_ok_chunks": 1,
-                "ingest_failed_chunks": 0,
-                "elapsed_seconds": 36.89442276954651
+            "message": "Upload only, no ingest requested",
+            "file_info": {
+                "source": "minio",
+                "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
+                "bucket": "content-search",
+                "filename": "phy_class.txt",
+                "run_id": "9e96f16a-9689-4c25-a515-04a1040b193f"
             }
         }
     },
     "message": "Query successful",
-    "timestamp": 1774879431
+    "timestamp": 1774931711
 }
 ```
+### File Process
+#### File Support Matrix
 
-### File Upload
+The system supports the following file formats for all ingestion and upload-ingest operations.
+
+| Category | Supported Extensions | Processing Logic |
+| :--- | :--- | :--- |
+| **Video** | `.mp4` | Frame extraction, AI-driven summarization, and semantic indexing. |
+| **Document** | `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls` | Full-text extraction, semantic chunking, and vector embedding. |
+| **Web/Markup** | `.html`, `.htm`, `.xml`, `.md`, `.rst` | Structured text parsing and content indexing. |
+| **Image** | `.jpg`, `.png`, `.jpeg` | Visual feature embedding and similarity search indexing. |
+
+> **Technical Note**: 
+> - **Video**: Default chunking is set to 30 seconds unless the `chunk_duration` parameter is provided.
+> - **Text**: Automatic semantic segmentation is applied to ensure high-quality retrieval results.
+> - **Max File Size**: Please refer to the `CS_MAX_CONTENT_LENGTH` environment variable (Default: 100MB).
+
+#### File Upload
 Used to upload a video file and initiate an asynchronous background task.
 
 * URL: /api/v1/object/upload
@@ -205,14 +216,14 @@ Response (200 OK):
     "code": 20000,
     "data": {
         "task_id": "c68211de-2187-4f52-b47d-f3a51a52b9ca",
-        "status": "QUEUED"
+        "status": "PROCESSING"
     },
     "message": "File received, processing started.",
     "timestamp": 1773909147
 }
 ```
 
-### File ingestion
+#### File ingestion
 * URL: /api/v1/object/ingest
 * Method: POST
 * Pattern: ASYNC
@@ -248,8 +259,49 @@ Response:
     "timestamp": 1774878031
 }
 ```
+#### Text file ingestion
+Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO.
 
-### File upload ana ingestion
+* URL: /api/v1/object/ingest-text
+* Method: POST
+* Pattern: ASYNC
+* Parameters:
+
+| Field | Type | Required | Default | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `text` | `string` | **Yes** | — | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `bucket_name` | `string` | No | — | MinIO bucket name (used to logically group the data or build the identifier). |
+| `file_path` | `string` | No | — | Logical path or filename (used as a unique identifier for the text source). |
+| `meta` | `object` | No | `{}` | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
+
+Request:
+```
+# example for raw text content
+curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
+--header 'Content-Type: application/json' \
+--data '{
+    "text": "Newton'\''s Second Law of Motion states that the force acting on an object is equal to the mass of that object multiplied by its acceleration (F = ma). This relationship describes how the velocity of an object changes when it is subjected to an external force.",
+    "meta": {
+        "source": "topic-search"
+    }
+}'
+```
+Response:
+```json
+{
+    "code": 20000,
+    "data": {
+        "task_id": "df3caeb3-3287-4e41-a1f0-098c90d08e03",
+        "status": "PROCESSING"
+    },
+    "message": "Text ingestion task created successfully",
+    "timestamp": 1775006765
+}
+```
+
+#### File upload and ingestion
+A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
+
 * URL: /api/v1/object/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
@@ -263,6 +315,7 @@ Response:
 | chunk_duration | integer | No | Segment duration in seconds (passed as a Form field). |
 | meta | string | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
 
+* Example:
 Request:
 ```
 curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
@@ -283,11 +336,13 @@ Response (200 OK):
 }
 ```
 
-### Retrieve and Search
+#### Retrieve and Search
+Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references.
+
 * URL: /api/v1/object/search
 * Method: POST
 * Content-Type: multipart/form-data
-* Pattern: ASYNC
+* Pattern: SYNC
 * Parameters:
 
 | Field | Type | Required | Description |
@@ -297,8 +352,9 @@ Response (200 OK):
 | max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
 | filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
 
+* Example:
 Request:
-```json
+```
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -346,7 +402,7 @@ Response (200 OK):
     "timestamp": 1774877744
 }
 ```
-### Resource Download (Video/Image/Document)
+#### Resource Download (Video/Image/Document)
 Download existing resources in Minio.
 
 * URL: /api/v1/object/download/{resource_id}

@@ -6,6 +6,7 @@
 import uuid
 import logging
 from fastapi import UploadFile
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -24,10 +25,10 @@ class StorageService:
             self._error_msg = None
         except (ImportError, ModuleNotFoundError) as e:
             self._error_msg = f"Component missing: {str(e)}"
-            logger.error(f"❌ MinIO component load failed: {self._error_msg}")
+            logger.error(f"MinIO component load failed: {self._error_msg}")
         except Exception as e:
             self._error_msg = f"Initialization failed: {str(e)}"
-            logger.error(f"❌ MinIO connection failed: {self._error_msg}")
+            logger.error(f"MinIO connection failed: {self._error_msg}")
 
     @property
     def is_available(self) -> bool:
@@ -63,7 +64,17 @@ class StorageService:
             response = self._store.client.get_object(self._store.bucket, file_key)
             return response
         except Exception as e:
-            logger.error(f"❌ Failed to get file {file_key}: {str(e)}")
+            logger.error(f"Failed to get file {file_key}: {str(e)}")
+            raise e
+
+    async def get_file_content(self, file_key: str, bucket_name: Optional[str] = None) -> bytes:
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        target_bucket = bucket_name or self._store.bucket
+        try:
+            return self._store.get_bytes(file_key)
+        except Exception as e:
+            logger.error(f"Failed to read content for {file_key}: {str(e)}")
             raise e
 
 storage_service = StorageService()
