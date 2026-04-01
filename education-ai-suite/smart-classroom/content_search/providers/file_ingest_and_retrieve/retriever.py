@@ -6,33 +6,25 @@ from PIL import Image
 import base64
 import io
 
-from providers.file_ingest_and_retrieve.embedding import get_model_handler, EmbeddingModel
-from llama_index.embeddings.huggingface_openvino import OpenVINOEmbedding
-
 from providers.chromadb_wrapper.chroma_client import ChromaClientWrapper
-
-import os
+from providers.file_ingest_and_retrieve.models import (
+    get_visual_embedding_model,
+    get_document_embedding_model,
+)
 
 class ChromaRetriever:
-    def __init__(self, collection_name="default"):
+    def __init__(self, collection_name="default", visual_embedding_model=None, document_embedding_model=None):
         self.client = ChromaClientWrapper()
 
         self.visual_collection_name = collection_name
         self.client.load_collection(self.visual_collection_name)
-        visual_model_name = os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-vit-b-16")
-        handler = get_model_handler(visual_model_name)
-        handler.load_model()
-        self.visual_embedding_model = EmbeddingModel(handler)
+
+        self.visual_embedding_model = visual_embedding_model or get_visual_embedding_model()
 
         self.document_collection_name = f"{collection_name}_documents"
         self.client.load_collection(self.document_collection_name)
 
-        doc_model_path = os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
-        run_device = os.getenv("INGEST_DEVICE", "CPU")
-        self.document_embedding_model = OpenVINOEmbedding(
-            model_id_or_path=doc_model_path,
-            device=run_device,
-        )
+        self.document_embedding_model = document_embedding_model or get_document_embedding_model()
 
     def get_text_embedding(self, query):
         embedding_tensor = self.visual_embedding_model.handler.encode_text(query)
