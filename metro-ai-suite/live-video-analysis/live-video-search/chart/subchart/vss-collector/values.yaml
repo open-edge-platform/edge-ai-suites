@@ -114,13 +114,3 @@ telemetry:
       url = "ws://pipeline-manager:3000/metrics/ws/collector"
       data_format = "json"
       read_timeout = "0s"
-
-podAffinity:
-  requiredDuringSchedulingIgnoredDuringExecution:
-    - labelSelector:
-        matchExpressions:
-          - key: app
-            operator: In
-            values:
-              - vdms-dataprep
-      topologyKey: kubernetes.io/hostname
