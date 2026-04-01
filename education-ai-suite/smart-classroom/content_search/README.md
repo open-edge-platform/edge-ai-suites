@@ -3,10 +3,7 @@
 Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities.
 
 ## Quick Start
-### Environment Setup
-We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
-
-#### Pre-requisites
+### Pre-requisites
 **Python 3.12**: Ensure Python 3.12 is installed and added to your system PATH.
 
 **Administrator Privileges**: Open PowerShell as Administrator.
@@ -17,11 +14,33 @@ New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
 -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 ```
 
-#### Dependencies Installation
+### Dependencies Installation
+We provide a unified installation script that automates the setup of core dependencies.
 ```PowerShell
 # Run the automation script from the content search root with Windows PowerShell
 .\install.ps1
 ```
+
+> Restart your PowerShell terminal to apply those new environment variables.
+
+Verify the installation by running the following commands:
+```PowerShell
+tesseract --version
+```
+
+### Create the Python Environment
+Open PowerShell in the project root and run (replace <PythonPath> with your actual python path):
+```PowerShell
+& "<PythonPath>" -m venv venv_content_search
+# Activate
+.\venv_content_search\Scripts\Activate.ps1
+# Upgrade pip and install requirements
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+> To Exit: Simply type `deactivate` in your terminal to leave the virtual environment.
+
 ### Launching Services
 Once the environment is configured, activate the virtual environment and launch the `Content Search` service:
 

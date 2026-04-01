@@ -29,24 +29,6 @@ Write-Host "HTTP_PROXY  = $env:HTTP_PROXY"
 Write-Host "HTTPS_PROXY = $env:HTTPS_PROXY"
 Write-Host "NO_PROXY    = $env:NO_PROXY"
 
-$venvDir    = Join-Path $PSScriptRoot "venv_content_search"
-$venvPython = Join-Path $PSScriptRoot "venv_content_search\Scripts\python.exe"
-
-# --- Create venv ---
-if (-not (Test-Path $venvPython)) {
-    Write-Host "Creating venv (Python 3.12 required)..."
-    py -3.12 -m venv $venvDir
-} else {
-    Write-Host "Venv already exists, skipping creation."
-}
-
-# --- Install dependencies ---
-Write-Host "Upgrading pip..."
-Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
-
-Write-Host "Installing requirements.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
-
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 $tesseractDir = "C:\Program Files\Tesseract-OCR"
