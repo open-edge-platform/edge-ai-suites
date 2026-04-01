@@ -29,6 +29,16 @@ spec:
         {{- include "collector.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: collector
     spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - traffic-agent
+              topologyKey: kubernetes.io/hostname
       hostPID: {{ .Values.hostPID }}
       containers:
         - name: collector

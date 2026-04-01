@@ -20,6 +20,16 @@ spec:
         {{- include "live-metrics-service.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: live-metrics-service
     spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - traffic-agent
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: live-metrics-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
