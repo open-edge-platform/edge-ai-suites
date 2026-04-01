@@ -28,7 +28,7 @@ class VideoService:
         payload = {
             "minio_video_key": file_key,
             "reuse_existing": True,
-            "tags": tags if (tags and len(tags) > 0) else ["video"]
+            "tags": tags
         }
 
         if prompt is not None:

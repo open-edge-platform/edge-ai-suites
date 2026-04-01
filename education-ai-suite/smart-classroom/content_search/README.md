@@ -25,21 +25,18 @@ python .\start_services.py
 
 ## API Endpoints
 
-| Endpoint | Method | Pattern | Description | Status |
-| :--- | :---: | :---: | :--- | :---: |
-| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
-| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
-| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
-| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | DONE |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | DONE |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
-| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
-| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
+| Endpoint | Method | Pattern | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. PROCESSING, COMPLETED, FAILED), and error logs if applicable. |
+| `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`) for monitoring system load and pipeline efficiency. |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO. |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats. |
+| `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references. |
+| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file directly from MinIO storage. Utilizes stream-bridging to pipe binary data to the client. |
 
-## API reference
-[Content Search API reference](./docs/dev_guide/Content_search_API.md)
+For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)
 
+## Components API reference
 [Ingest and Retrieve](./docs/dev_guide/file_ingest_and_retrieve/API_GUIDE.md)
 
 [Video Preprocess](./docs/dev_guide/video_preprocess/API_GUIDE.md)

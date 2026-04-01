@@ -36,7 +36,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         cs = data.get("content_search", {})
 
-        def _set(k, v): 
+        def _set(k, v):
             if v is not None:
                 os.environ.setdefault(k, str(v))
 
@@ -52,6 +52,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         server_addr = str(minio.get("server", "127.0.0.1:9000"))
         port = server_addr.rsplit(':', 1)[-1]
         _set("MINIO_ADDRESS", f":{port}")
+        _set("MINIO_CONSOLE_ADDRESS", minio.get("console_address", ":9001"))
         _set("MINIO_ROOT_USER", minio.get("root_user", "minioadmin"))
         _set("MINIO_ROOT_PASSWORD", minio.get("root_password", "minioadmin"))
         _set("MINIO_DATA_DIR", minio.get("data_dir", "./minio_data"))
@@ -156,10 +157,8 @@ def main() -> None:
     if not chroma_exe:
         venv_exe = CONTENT_SEARCH_DIR / "venv_content_search" / "Scripts" / "chroma.exe"
         chroma_exe = str(venv_exe) if venv_exe.exists() else "chroma"
-    minio_exe = str(CONTENT_SEARCH_DIR / "providers" / os.environ.get("MINIO_EXE", "minio_wrapper/minio.exe"))
-    if not minio_exe:
-        provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
-        minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
+    provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
+    minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
     # no service current
     pg_bin_dir = Path(r"C:\Program Files\PostgreSQL\16\bin")
     pg_exe = str(pg_bin_dir / "postgres.exe")
@@ -178,7 +177,8 @@ def main() -> None:
         },
         "minio": {
             "cmd": [minio_exe, "server", os.environ.get("MINIO_DATA_DIR", "./minio_data"),
-                    "--address", os.environ.get("MINIO_ADDRESS", ":9000")],
+                    "--address", os.environ.get("MINIO_ADDRESS", ":9000"),
+                    "--console-address", os.environ.get("MINIO_CONSOLE_ADDRESS", ":9001")],
             "cwd": CONTENT_SEARCH_DIR,
             "extra_env": {
                 "MINIO_ROOT_USER": os.environ.get("MINIO_ROOT_USER", "minioadmin"),
