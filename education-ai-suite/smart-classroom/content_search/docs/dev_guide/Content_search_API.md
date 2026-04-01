@@ -268,12 +268,12 @@ Primarily processes raw text strings passed in the request body for semantic ind
 * Pattern: ASYNC
 * Parameters:
 
-| Field | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | — | **Raw text content** to be segmented, embedded, and stored in the vector database. |
-| `bucket_name` | `string` | No | — | MinIO bucket name (used to logically group the data or build the identifier). |
-| `file_path` | `string` | No | — | Logical path or filename (used as a unique identifier for the text source). |
-| `meta` | `object` | No | `{}` | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `bucket_name` | `string` | No | MinIO bucket name (used to logically group the data or build the identifier). |
+| `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
+| `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
 Request:
 ```

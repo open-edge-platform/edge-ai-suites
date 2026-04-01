@@ -3,11 +3,18 @@
 Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities using advanced RAG (Retrieval-Augmented Generation) workflows.
 
 ## Quick Start
-### Automatic Dependency Installation
+### Environment Setup
 We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
 
-Note: Open PowerShell as Administrator before running the script.
+#### Pre-requisites
+**Administrator Privileges**: Open PowerShell as Administrator.
+**Enable Long Paths**: To prevent issues with the Windows 260-character path limit, run the following command in an elevated PowerShell:
+```PowerShell
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
+-Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+```
 
+#### Dependencies Installation
 ```PowerShell
 # Run the automation script from the content search root
 .\install.ps1

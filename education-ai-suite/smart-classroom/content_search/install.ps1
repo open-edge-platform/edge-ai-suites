@@ -99,53 +99,6 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler already in user PATH, skipping."
 }
 
-# --- Install PostgreSQL ---
-$pgVersion = "16.11-3" 
-$pgDir = "C:\Program Files\PostgreSQL\16"
-$pgBinDir = Join-Path $pgDir "bin"
-$pgExe = Join-Path $pgBinDir "postgres.exe"
-$pgInstaller = Join-Path $env:TEMP "postgresql-setup.exe"
-
-if (Test-Path $pgExe) {
-    Write-Host "[+] PostgreSQL already installed, skipping."
-} else {
-    if (-not (Test-Path $pgInstaller)) {
-        $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-$pgVersion-windows-x64.exe"
-        Write-Host "[+] Downloading PostgreSQL $pgVersion..."
-        Invoke-WebRequest -Uri $pgUrl -OutFile $pgInstaller -UseBasicParsing
-    } else {
-        Write-Host "[+] Found existing installer in Temp, skipping download."
-    }
-    Write-Host "[+] Starting Unattended Installation... (This WILL take 1-3 minutes, please wait)"
-
-    $installArgs = @(
-        "--mode", "unattended",
-        "--unattendedmodeui", "none",
-        "--superpassword", "edu-ai",
-        "--serverport", "5432"
-    )
-
-    Invoke-Cmd-Wait -Executable $pgInstaller -Arguments $installArgs
-    Write-Host "[+] Finalizing installation..."
-    Start-Sleep -Seconds 10
-
-    if (Test-Path $pgExe) {
-        Write-Host "[+] PostgreSQL installed successfully."
-        Remove-Item $pgInstaller -Force -ErrorAction SilentlyContinue
-    } else {
-        Write-Host "[!] Installation finished but $pgExe not found." -ForegroundColor Red
-        exit 1
-    }
-}
-
-$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if ($currentPath -notlike "*PostgreSQL*") {
-    [Environment]::SetEnvironmentVariable("Path", $currentPath + ";$pgBinDir", "User")
-    Write-Host "[+] PostgreSQL added to user PATH."
-} else {
-    Write-Host "[+] PostgreSQL already in user PATH."
-}
-
 # --- Download MinIO ---
 $minioDir = Join-Path $PSScriptRoot "providers/minio_wrapper"
 $minioExe = Join-Path $minioDir "minio.exe"
