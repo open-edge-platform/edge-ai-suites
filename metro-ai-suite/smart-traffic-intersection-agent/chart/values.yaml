@@ -41,12 +41,12 @@ trafficAgent:
     vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
   # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
-  # Override brokerNamespace to match the namespace where Smart Intersection is deployed.
+  # If brokerNamespace is empty, it defaults to the release namespace.
   # If host is set explicitly, it takes precedence over the constructed FQDN.
   mqtt:
     host: ""
     serviceName: "smart-intersection-broker"
-    brokerNamespace: "smart-intersection"
+    brokerNamespace: ""
     port: "1883"
   # Traffic analysis thresholds
   traffic:
