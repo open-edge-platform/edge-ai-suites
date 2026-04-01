@@ -33,7 +33,11 @@
 
 3. For Helm-related test cases, run the following commands:
 
-   > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites.
+   > **Note**: A Kubernetes cluster and Helm must be installed as prerequisites. If you are using k3s, ensure `KUBECONFIG` is exported before running the tests:
+   >
+   > ```sh
+   > export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+   > ```
 
    * Wind Turbine Anomaly Detection
 

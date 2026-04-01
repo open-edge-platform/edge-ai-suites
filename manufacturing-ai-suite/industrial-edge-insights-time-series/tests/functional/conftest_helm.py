@@ -13,14 +13,6 @@ from utils import helm_utils
 from utils import constants
 import time
 
-# Ensure KUBECONFIG is set for k3s so helm/kubectl commands work without an
-# explicit export in the shell.  Only applied when k3s is installed (detected
-# by the presence of its kubeconfig file).  setdefault leaves any
-# caller-supplied value (e.g. from a CI environment variable) untouched.
-_K3S_KUBECONFIG = "/etc/rancher/k3s/k3s.yaml"
-if os.path.isfile(_K3S_KUBECONFIG):
-    os.environ.setdefault("KUBECONFIG", _K3S_KUBECONFIG)
-
 # Set up logger
 logger = logging.getLogger(__name__)
 
