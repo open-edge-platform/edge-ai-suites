@@ -1,9 +1,27 @@
 $ErrorActionPreference = "Stop"
 
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "[!] Error: Please run this script as Administrator." -ForegroundColor Red
+    exit 1
+}
 function Invoke-Cmd {
     $exe, $rest = $args
     & $exe $rest
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
+function Invoke-Cmd-Wait {
+    param(
+        [string]$Executable,
+        [string[]]$Arguments
+    )
+    Write-Host "[*] Executing: $Executable $Arguments" -ForegroundColor Gray
+    $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -Wait -PassThru -NoNewWindow
+    if ($process.ExitCode -ne 0) {
+        Write-Host "[!] Process failed with exit code $($process.ExitCode)" -ForegroundColor Red
+        exit $process.ExitCode
+    }
 }
 
 # --- Proxy settings ---
@@ -26,8 +44,8 @@ if (-not (Test-Path $venvPython)) {
 Write-Host "Upgrading pip..."
 Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
 
-Write-Host "Installing requirements_providers.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements_providers.txt") --quiet
+Write-Host "Installing requirements.txt..."
+Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
 
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -79,6 +97,53 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler added to user PATH."
 } else {
     Write-Host "Poppler already in user PATH, skipping."
+}
+
+# --- Install PostgreSQL ---
+$pgVersion = "16.11-3" 
+$pgDir = "C:\Program Files\PostgreSQL\16"
+$pgBinDir = Join-Path $pgDir "bin"
+$pgExe = Join-Path $pgBinDir "postgres.exe"
+$pgInstaller = Join-Path $env:TEMP "postgresql-setup.exe"
+
+if (Test-Path $pgExe) {
+    Write-Host "[+] PostgreSQL already installed, skipping."
+} else {
+    if (-not (Test-Path $pgInstaller)) {
+        $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-$pgVersion-windows-x64.exe"
+        Write-Host "[+] Downloading PostgreSQL $pgVersion..."
+        Invoke-WebRequest -Uri $pgUrl -OutFile $pgInstaller -UseBasicParsing
+    } else {
+        Write-Host "[+] Found existing installer in Temp, skipping download."
+    }
+    Write-Host "[+] Starting Unattended Installation... (This WILL take 1-3 minutes, please wait)"
+
+    $installArgs = @(
+        "--mode", "unattended",
+        "--unattendedmodeui", "none",
+        "--superpassword", "edu-ai",
+        "--serverport", "5432"
+    )
+
+    Invoke-Cmd-Wait -Executable $pgInstaller -Arguments $installArgs
+    Write-Host "[+] Finalizing installation..."
+    Start-Sleep -Seconds 10
+
+    if (Test-Path $pgExe) {
+        Write-Host "[+] PostgreSQL installed successfully."
+        Remove-Item $pgInstaller -Force -ErrorAction SilentlyContinue
+    } else {
+        Write-Host "[!] Installation finished but $pgExe not found." -ForegroundColor Red
+        exit 1
+    }
+}
+
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+if ($currentPath -notlike "*PostgreSQL*") {
+    [Environment]::SetEnvironmentVariable("Path", $currentPath + ";$pgBinDir", "User")
+    Write-Host "[+] PostgreSQL added to user PATH."
+} else {
+    Write-Host "[+] PostgreSQL already in user PATH."
 }
 
 # --- Download MinIO ---
