@@ -224,10 +224,25 @@ helm uninstall lvs -n $my_namespace
 
 PVC retention on uninstall is controlled by `global.keepPvc`.
 
+When `global.keepPvc: true`, PVC-backed data is retained across uninstall/reinstall and pod restarts. This includes persisted application state (for example, stored query-related data in backing services) and converted OpenVINO model assets stored on persistent volumes.
+
+If you want a clean reset, delete all PVCs for the `lvs` release:
+
+```bash
+kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
+```
+
 ## Troubleshooting
 
 - **Pods stay Pending or not Ready:**
   Check storage provisioning, node capacity, and device plugin availability (for GPU mode).
+
+- **Node allocation/scheduling issues caused by PVC affinity conflicts (often from old PVCs):**
+  Delete old release PVCs and redeploy:
+
+  ```bash
+  kubectl delete pvc -n "$my_namespace" -l app.kubernetes.io/instance=lvs
+  ```
 
 - **Search not returning expected results:**
   Verify `global.env.embeddingModelName` and confirm clips are ingested.
