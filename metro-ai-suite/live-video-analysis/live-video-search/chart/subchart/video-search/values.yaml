@@ -20,13 +20,13 @@ images:
     repository: intel/video-search
 
 imageOverride:
-  registry: ''
-  repository: ''
-  tag: ''
+  registry: 'amr-fm-registry.caas.intel.com/esh-user/egai/'
+  repository: 'video-search'
+  tag: '1.3.3-rc1'
 
 replicaCount: 1
 
-imagePullPolicy: IfNotPresent
+imagePullPolicy: Always
 
 service:
   type: ClusterIP

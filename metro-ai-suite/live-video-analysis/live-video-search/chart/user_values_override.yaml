@@ -1,13 +1,11 @@
 # DO NOT COMMIT/PUSH THIS FILE TO ANY REPO WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
 # RESET ALL THE VALUES HERE TO DEFAULT, BEFORE COMMITING/PUSHING.
-
 global:
   # Image registry and tags
-  registry: ""
-  tag: "latest"
-  vssStackTag: ""
-  smartNvrStackTag: ""
-
+  registry: ''
+  tag: 'latest'
+  vssStackTag: ''
+  smartNvrStackTag: ''
   usePvc: true
   keepPvc: false
 
@@ -19,39 +17,34 @@ global:
 
   # Proxy settings
   proxy:
-    httpProxy: ""
-    httpsProxy: ""
-
+    httpProxy: 'http://proxy-dmz.intel.com:911'
+    httpsProxy: 'http://proxy-dmz.intel.com:912'
   # Credentials required by services (LVS canonical)
   credentials:
-    minioRootUser: ""
-    minioRootPassword: ""
-    postgresUser: ""
-    postgresPassword: ""
-    mqttUser: ""
-    mqttPassword: ""
-
+    minioRootUser: 'minio'
+    minioRootPassword: 'minio_minio'
+    postgresUser: 'postgres'
+    postgresPassword: 'postures'
+    mqttUser: 'mqtt'
+    mqttPassword: 'mqtt'
   # Environment values
   env:
-    embeddingModelName: ""
-    frameInterval: "15"
-    enableObjectDetection: "true"
-    detectionConfidence: "0.85"
-    ovPerformanceMode: "THROUGHPUT"
-
+    embeddingModelName: 'CLIP/clip-vit-b-32'
+    frameInterval: '15'
+    enableObjectDetection: 'true'
+    detectionConfidence: '0.85'
+    ovPerformanceMode: 'THROUGHPUT'
   # GPU controls
   gpu:
     multimodalEmbeddingEnabled: false
     vdmsDataprepEnabled: false
-
     # Set `key` and `device` if GPU is enabled.
     # Update as per the cluster node label key for GPU assigned by the device plugin.
-    key: ""
-
+    key: 'gpu.intel.com/i915'
+    # key: "gpu.intel.com/xe"
     # Set `device` when GPU mode is enabled.
     # Set value to `GPU` to deploy on GPU.
-    device: ""
-
+    device: 'GPU'
 # Optional USB camera override (used with usb_camera_override.yaml profile)
 frigate:
-  usbCameraDevice: ""
+  usbCameraDevice: '/dev/video0'
