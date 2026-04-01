@@ -29,7 +29,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Run Zizmor scan
-        uses: open-edge-platform/geti-ci/actions/zizmor@3a4b81ea648711eb638b34757427cd3ef71d19f1
+        uses: open-edge-platform/geti-ci/actions/zizmor@e80098b3d180db37914f11ff6021f9fa34d0bb9f
         with:
           scan-scope: ${{ github.event_name == 'pull_request' && 'changed' || 'all' }}
           severity-level: ${{ github.event_name == 'pull_request' && 'HIGH' || 'LOW' }}

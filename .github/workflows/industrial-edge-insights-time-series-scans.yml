@@ -445,7 +445,7 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-time-series/simulator/mqtt-publisher/Dockerfile
             output-report-path: trivy-mqttpublisher-dockerfile.json
             scan-name: Time Series mqttpublisher Dockerfile
-    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
+    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@7b212e21adc2755c602b02d56ef721470a408cf5
     with:
       dockerfile-path: ${{ matrix.dockerfile-path }}
       trivy-report-format: 'json'
@@ -469,7 +469,7 @@ jobs:
           - dockerfile-path: manufacturing-ai-suite/industrial-edge-insights-multimodal/fusion-analytics/Dockerfile
             output-report-path: trivy-fusion-analytics-dockerfile.json
             scan-name: Multimodal Fusion Analytics Dockerfile
-    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@e6e04af3dbca805db9118b85a22ad2998f7eec39
+    uses: open-edge-platform/edge-ai-libraries/.github/workflows/trivy-config-mode.yaml@7b212e21adc2755c602b02d56ef721470a408cf5
     with:
       dockerfile-path: ${{ matrix.dockerfile-path }}
       trivy-report-format: 'json'
@@ -814,7 +814,7 @@ jobs:
           output: results-timeseries
 
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d  # v5.3.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v5.3.0
         with:
           python-version: '3.x'
 
@@ -894,7 +894,7 @@ jobs:
           output: results-multimodal
 
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.3.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5.3.0
         with:
           python-version: '3.x'
 
@@ -958,7 +958,7 @@ jobs:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@82c7e631bb3cdc910f68e0081d67478d79c6982d # v5.3.0
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5.3.0
         with:
           python-version: '3.11'
 
