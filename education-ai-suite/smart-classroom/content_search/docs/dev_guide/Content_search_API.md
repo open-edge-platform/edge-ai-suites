@@ -22,7 +22,7 @@ Content-Type: application/json
 
 {
   "code": 20000,
-  "data": { "task_id": "0892f506-4087-4d7e-b890-21303145b4ee" },
+  "data": { "task_id": "0892f506-4087-4d7e-b890-21303145b4ee", "status": "PROCESSING" },
   "message": "Operation Successful",
   "timestamp": 167890123
 }
@@ -260,7 +260,7 @@ Response:
 }
 ```
 #### Text file ingestion
-Used to trigger the ingestion pipeline for text-based documents (e.g., .txt, .pdf, .docx) that already exist in MinIO.
+Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO.
 
 * URL: /api/v1/object/ingest-text
 * Method: POST
@@ -276,7 +276,7 @@ Used to trigger the ingestion pipeline for text-based documents (e.g., .txt, .pd
 
 Request:
 ```
-<!-- example for raw text content -->
+# example for raw text content
 curl --location 'http://127.0.0.1:9011/api/v1/object/ingest-text' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -291,15 +291,17 @@ Response:
 {
     "code": 20000,
     "data": {
-        "task_id": "f5eb96fd-9c75-4dee-a715-4d39b0762436",
+        "task_id": "df3caeb3-3287-4e41-a1f0-098c90d08e03",
         "status": "PROCESSING"
     },
     "message": "Text ingestion task created successfully",
-    "timestamp": 1774933932
+    "timestamp": 1775006765
 }
 ```
 
 #### File upload and ingestion
+A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
+
 * URL: /api/v1/object/upload-ingest
 * Method: POST
 * Content-Type: multipart/form-data
@@ -313,6 +315,7 @@ Response:
 | chunk_duration | integer | No | Segment duration in seconds (passed as a Form field). |
 | meta | string | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
 
+* Example:
 Request:
 ```
 curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
@@ -334,6 +337,8 @@ Response (200 OK):
 ```
 
 #### Retrieve and Search
+Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references.
+
 * URL: /api/v1/object/search
 * Method: POST
 * Content-Type: multipart/form-data
@@ -347,6 +352,7 @@ Response (200 OK):
 | max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
 | filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
 
+* Example:
 Request:
 ```
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
