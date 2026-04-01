@@ -76,26 +76,7 @@ stateDiagram-v2
     COMPLETED --> [*]
 ```
 
-## Core Endpoints
-
-### Endponts table
-
-| Endpoint | Method | Pattern | Description | Status |
-| :--- | :---: | :---: | :--- | :---: |
-| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
-| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
-| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
-| `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
-| `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
-| `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
-| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
-| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
-| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
-| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
-| `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
+## API Endpoints
 
 ### Get Task List
 
@@ -113,7 +94,7 @@ Query Parameters:
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/task/list?status=COMPLETED&limit=2'
+curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=2'
 ```
 Response (200 OK)
 ```json
@@ -172,7 +153,7 @@ Used to track the progress and retrieve the final result of a submitted task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
+curl --location 'http://127.0.0.1:9011/api/v1/task/query/56cc417c-9524-41a9-a500-9f0c44a05eac'
 ```
 
 Response (200 OK):
@@ -180,17 +161,27 @@ Response (200 OK):
 {
     "code": 20000,
     "data": {
-        "task_id": "371109e5-d374-4064-ba72-8f61b999d824",
+        "task_id": "e557b305-e37c-4074-a04a-ebd067efbd5d",
         "status": "COMPLETED",
         "progress": 100,
         "result": {
-            "summary": "This is a mock result from the local Dummy service for None.",
-            "confidence": 0.98,
-            "provider": "Mock-Windows-Service"
+            "message": "File from MinIO successfully processed. db returns {'visual': {'insert_count': 1}}",
+            "video_summary": {
+                "type": "done",
+                "job_id": "bc6513aa-e118-4945-84a8-02922595044e",
+                "run_id": "5e405f58-03cf-4e44-9e10-85741283587a",
+                "asset_id": "classroom_8.mp4",
+                "total_chunks": 1,
+                "succeeded_chunks": 1,
+                "failed_chunks": 0,
+                "ingest_ok_chunks": 1,
+                "ingest_failed_chunks": 0,
+                "elapsed_seconds": 36.89442276954651
+            }
         }
     },
     "message": "Query successful",
-    "timestamp": 1773907521
+    "timestamp": 1774879431
 }
 ```
 
@@ -205,7 +196,7 @@ Used to upload a video file and initiate an asynchronous background task.
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/object/upload' \
+curl --location 'http://127.0.0.1:9011/api/v1/object/upload' \
 --form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
 ```
 Response (200 OK):
@@ -225,13 +216,37 @@ Response (200 OK):
 * URL: /api/v1/object/ingest
 * Method: POST
 * Pattern: ASYNC
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| file_key | string | Yes | The full path of the file in MinIO (excluding bucket name). |
+| bucket_name | string | No | The MinIO bucket name. Defaults to content-search. |
+| prompt | string | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
+| chunk_duration | integer | No | Duration of each video segment in seconds. Defaults to 30. |
+| meta | object | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
+
 Request:
 ```
-// todo
+curl --location 'http://127.0.0.1:9011/api/v1/object/ingest' \
+--header 'Content-Type: application/json' \
+--data '{
+    "bucket_name": "content-search", 
+    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
+}'
 ```
 Response:
 ```json
-// todo
+{
+    "code": 20000,
+    "data": {
+        "task_id": "44e339fb-3306-41b8-b1e1-4ecae7ce0ada",
+        "status": "PROCESSING",
+        "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4"
+    },
+    "message": "Ingestion process started for existing file",
+    "timestamp": 1774878031
+}
 ```
 
 ### File upload ana ingestion
@@ -239,44 +254,107 @@ Response:
 * Method: POST
 * Content-Type: multipart/form-data
 * Pattern: ASYNC
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| file | Binary | Yes | The video file to be uploaded. |
+| prompt | string | No | Summarization instructions (passed as a Form field). |
+| chunk_duration | integer | No | Segment duration in seconds (passed as a Form field). |
+| meta | string | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
 
 Request:
 ```
-curl --location 'http://127.0.0.1:8000/api/v1/object/upload-ingest' \
---form 'file=@"/C:/videos/videos/car-detection-2min.mp4"'
+curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
+--form 'file=@"/C:/videos/videos/classroom_8.mp4"' \
+--form 'meta="{\"tags\": [\"class\"], \"course\": \"CS101\", \"semester\": \"Spring 2026\"}"'
 ```
 Response (200 OK):
 ```json
 {
     "code": 20000,
     "data": {
-        "task_id": "e458add3-bf5c-48f1-9593-4b72481bdca5",
-        "status": "QUEUED",
-        "file_key": "runs/5a477a66-bf88-4ebb-8cb6-0058811f5836/raw/video/default/car-detection-2min.mp4"
+        "task_id": "559814ae-cef6-475c-9a79-3819549228d9",
+        "status": "PROCESSING",
+        "file_key": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4"
     },
     "message": "Upload and Ingest started",
-    "timestamp": 1773909831
+    "timestamp": 1774878113
 }
 ```
-### Resource Lookup (Video/Image/Document)
-Retrieve file metadata or direct access links for existing resources.
 
-* URL: /api/v1/object/files/{resource_id}
-* Method: GET
-* Pattern: SYNC
+### Retrieve and Search
+* URL: /api/v1/object/search
+* Method: POST
+* Content-Type: multipart/form-data
+* Pattern: ASYNC
+* Parameters:
 
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| query | string | Either | Natural language search query (e.g., "student at desk"). |
+| image_base64 | string | Either | Base64 encoded image string for visual similarity search. |
+| max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
+| filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
+
+Request:
+```json
+curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "student in classroom",
+    "max_num_results": 1,
+    "filter": {
+        "tags": ["classroom", "student"]
+    }
+}'
+```
 Response (200 OK):
 ```json
 {
-  "code": 20000,
-  "data": {
-    "resource_id": "res-999",
-    "type": "video",
-    "name": "tutorial_01.mp4",
-    "url": "https://cdn.example.com/files/tutorial_01.mp4",
-    "created_at": 1709184000
-  },
-  "message": "Resource found",
-  "timestamp": 1709184100
+    "code": 20000,
+    "data": {
+        "results": [
+            {
+                "id": "1680138485034402529",
+                "distance": 0.47685748,
+                "meta": {
+                    "start_frame": 0,
+                    "chunk_text": "The video depicts a classroom setting with four individuals seated at desks arranged in a U-shape. The room has a modern design with blue chairs, white tables, and a whiteboard on the right side. The walls are adorned with various posters and a large mirror reflecting part of the room. The lighting is bright, creating a well-lit environment. The individuals appear to be engaged in a discussion or presentation, with one person standing and gesturing towards the others. The overall atmosphere suggests an educational or collaborative activity taking place.",
+                    "reused": false,
+                    "start_time": 0.0,
+                    "asset_id": "classroom_8.mp4",
+                    "file_path": "minio://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "run_id": "81802f9e-0a28-4486-bad2-2e05c1086326",
+                    "type": "document",
+                    "end_time": 0.32,
+                    "summary_minio_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "doc_filetype": "text/plain",
+                    "chunk_id": "chunk_0001",
+                    "minio_video_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
+                    "chunk_index": 0,
+                    "tags": [
+                        "class",
+                        "student"
+                    ],
+                    "end_frame": 8
+                }
+            }
+        ]
+    },
+    "message": "Search completed",
+    "timestamp": 1774877744
 }
 ```
+### Resource Download (Video/Image/Document)
+Download existing resources in Minio.
+
+* URL: /api/v1/object/download/{resource_id}
+* Method: GET
+* Pattern: SYNC
+Request:
+```
+curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fvideo%2Fdefault%2Fclassroom_8.mp4' \
+--header 'Content-Type: application/json'
+```
+

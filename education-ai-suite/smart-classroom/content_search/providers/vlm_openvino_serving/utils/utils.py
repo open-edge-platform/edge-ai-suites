@@ -22,7 +22,7 @@ from optimum.intel import (
 )
 from optimum.utils.save_utils import maybe_load_preprocessors
 from PIL import Image
-from utils.common import ErrorMessages, logger, settings
+from providers.vlm_openvino_serving.utils.common import ErrorMessages, logger, settings
 from transformers import AutoTokenizer
 
 

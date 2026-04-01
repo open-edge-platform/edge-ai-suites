@@ -1,56 +1,41 @@
 # Content Search
-## Prerequisites
-1 python3
- python3.10
 
-2 postgreSQL
-postgreSQL installation refers to [PostgreSQL installation](./docs/dev_guide/Installation.md#postgresql)
-3 Minio
-minio installation refers to [Minio installation](./docs/dev_guide/Installation.md#minio)
+Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities using advanced RAG (Retrieval-Augmented Generation) workflows.
 
-4 System Tools: Required for multimodal processing:
+## Quick Start
+### Automatic Dependency Installation
+We provide a unified installation script that automates the setup of the databases, Python virtual environment, and core dependencies.
 
-- Tesseract OCR: For image/PDF text extraction.
-- Poppler: For PDF rendering.
+Note: Open PowerShell as Administrator before running the script.
 
-## Environment Setup
-### Create/activate python venv
-```powershell
-# Create venv
-& '<your python dir>' -m venv venv
-.\venv\Scripts\Activate.ps1
+```PowerShell
+# Run the automation script from the content search root
+.\install.ps1
 ```
+### Launching Services
+Once the environment is configured, activate the virtual environment and start the orchestration service:
 
-###
-```powershell
-cd xxx/content_search
-python -m pip install --upgrade pip
-pip install -r .\requirements.txt
-```
-## Launch
-```powershell
-cd xxx/content_search
+```PowerShell
+# Activate the virtual environment
+.\venv_content_search\Scripts\Activate.ps1
+
+# Start all microservices
 python .\start_services.py
 ```
-// todo
-## Avaliable Endpoints
+
+## API Endpoints
 
 | Endpoint | Method | Pattern | Description | Status |
 | :--- | :---: | :---: | :--- | :---: |
 | `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
 | `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
 | `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
-| `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
-| `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
-| `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
-| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
 | `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
+| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | DONE |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | DONE |
 | `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
 | `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
 | `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
-| `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
 
 ## API reference
 [Content Search API reference](./docs/dev_guide/Content_search_API.md)
