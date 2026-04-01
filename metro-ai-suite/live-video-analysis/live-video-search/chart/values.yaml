@@ -72,6 +72,7 @@ global:
     aggregationContextSeekOffsetSeconds: "0"
 
     dataprepTelemetryUrl: "http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1"
+    searchDataprepTimeoutMs: "90000"
 
 service:
   app:
