@@ -126,6 +126,13 @@ MULTIMODAL_WAIT_AFTER_PODS_READY = 20
 MULTIMODAL_WAIT_AFTER_UDF_ACTIVATION = 25
 MULTIMODAL_WAIT_FOR_VISION_DATA = 60
 
+# Multimodal SeaweedFS S3 wait durations (in seconds)
+MULTIMODAL_SEAWEED_WAIT_POD_STABILIZATION = 30   # wait after essential pods verified
+MULTIMODAL_SEAWEED_WAIT_INFLUX_CONSISTENCY = 15  # wait for InfluxDB data consistency
+MULTIMODAL_SEAWEED_WAIT_S3_API_RESPONSE = 10     # wait for S3 API response processing
+MULTIMODAL_SEAWEED_WAIT_S3_POPULATE = 30         # wait for S3 storage to be fully populated
+MULTIMODAL_SEAWEED_WAIT_FILE_VALIDATION = 10     # wait before file content validation
+
 # Multimodal specific constants
 MULTIMODAL_TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal"
 MULTIMODAL_APPLICATION_DIRECTORY = os.path.join(os.path.dirname(__file__), "../../../industrial-edge-insights-multimodal")
