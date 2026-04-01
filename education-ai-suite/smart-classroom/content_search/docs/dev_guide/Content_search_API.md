@@ -47,6 +47,7 @@ Content-Type: application/json
 | :--- | :--- | :--- |
 | 20000 | SUCCESS | Task submitted or query successful. |
 | 40001 | AUTH_FAILED | Invalid username or password. |
+| 40901	| FILE_ALREADY_EXISTS |	File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
 | 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
@@ -267,12 +268,12 @@ Primarily processes raw text strings passed in the request body for semantic ind
 * Pattern: ASYNC
 * Parameters:
 
-| Field | Type | Required | Default | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | — | **Raw text content** to be segmented, embedded, and stored in the vector database. |
-| `bucket_name` | `string` | No | — | MinIO bucket name (used to logically group the data or build the identifier). |
-| `file_path` | `string` | No | — | Logical path or filename (used as a unique identifier for the text source). |
-| `meta` | `object` | No | `{}` | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `bucket_name` | `string` | No | MinIO bucket name (used to logically group the data or build the identifier). |
+| `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
+| `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
 Request:
 ```

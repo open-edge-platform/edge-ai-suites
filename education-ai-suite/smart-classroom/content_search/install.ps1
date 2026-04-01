@@ -29,24 +29,6 @@ Write-Host "HTTP_PROXY  = $env:HTTP_PROXY"
 Write-Host "HTTPS_PROXY = $env:HTTPS_PROXY"
 Write-Host "NO_PROXY    = $env:NO_PROXY"
 
-$venvDir    = Join-Path $PSScriptRoot "venv_content_search"
-$venvPython = Join-Path $PSScriptRoot "venv_content_search\Scripts\python.exe"
-
-# --- Create venv ---
-if (-not (Test-Path $venvPython)) {
-    Write-Host "Creating venv (Python 3.12 required)..."
-    py -3.12 -m venv $venvDir
-} else {
-    Write-Host "Venv already exists, skipping creation."
-}
-
-# --- Install dependencies ---
-Write-Host "Upgrading pip..."
-Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
-
-Write-Host "Installing requirements.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements.txt") --quiet
-
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
 $tesseractDir = "C:\Program Files\Tesseract-OCR"
@@ -97,53 +79,6 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler added to user PATH."
 } else {
     Write-Host "Poppler already in user PATH, skipping."
-}
-
-# --- Install PostgreSQL ---
-$pgVersion = "16.11-3" 
-$pgDir = "C:\Program Files\PostgreSQL\16"
-$pgBinDir = Join-Path $pgDir "bin"
-$pgExe = Join-Path $pgBinDir "postgres.exe"
-$pgInstaller = Join-Path $env:TEMP "postgresql-setup.exe"
-
-if (Test-Path $pgExe) {
-    Write-Host "[+] PostgreSQL already installed, skipping."
-} else {
-    if (-not (Test-Path $pgInstaller)) {
-        $pgUrl = "https://get.enterprisedb.com/postgresql/postgresql-$pgVersion-windows-x64.exe"
-        Write-Host "[+] Downloading PostgreSQL $pgVersion..."
-        Invoke-WebRequest -Uri $pgUrl -OutFile $pgInstaller -UseBasicParsing
-    } else {
-        Write-Host "[+] Found existing installer in Temp, skipping download."
-    }
-    Write-Host "[+] Starting Unattended Installation... (This WILL take 1-3 minutes, please wait)"
-
-    $installArgs = @(
-        "--mode", "unattended",
-        "--unattendedmodeui", "none",
-        "--superpassword", "edu-ai",
-        "--serverport", "5432"
-    )
-
-    Invoke-Cmd-Wait -Executable $pgInstaller -Arguments $installArgs
-    Write-Host "[+] Finalizing installation..."
-    Start-Sleep -Seconds 10
-
-    if (Test-Path $pgExe) {
-        Write-Host "[+] PostgreSQL installed successfully."
-        Remove-Item $pgInstaller -Force -ErrorAction SilentlyContinue
-    } else {
-        Write-Host "[!] Installation finished but $pgExe not found." -ForegroundColor Red
-        exit 1
-    }
-}
-
-$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
-if ($currentPath -notlike "*PostgreSQL*") {
-    [Environment]::SetEnvironmentVariable("Path", $currentPath + ";$pgBinDir", "User")
-    Write-Host "[+] PostgreSQL added to user PATH."
-} else {
-    Write-Host "[+] PostgreSQL already in user PATH."
 }
 
 # --- Download MinIO ---
