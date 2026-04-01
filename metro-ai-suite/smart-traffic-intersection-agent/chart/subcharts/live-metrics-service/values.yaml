@@ -13,7 +13,7 @@ image:
   pullPolicy: Always
 
 service:
-  type: ClusterIP
+  type: NodePort
   # Container / service port.
   port: 9090
 

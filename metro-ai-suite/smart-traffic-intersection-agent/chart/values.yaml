@@ -40,12 +40,13 @@ trafficAgent:
     weatherMock: "false"
     vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
-  # Uses the fully qualified K8s DNS name so the agent works even when deployed
-  # in a different namespace than the Smart Intersection stack.
-  # Format: <service-name>.<namespace>.svc.cluster.local
-  # Override the namespace portion if Smart Intersection is deployed elsewhere.
+  # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
+  # Override brokerNamespace to match the namespace where Smart Intersection is deployed.
+  # If host is set explicitly, it takes precedence over the constructed FQDN.
   mqtt:
-    host: "smart-intersection-broker.smart-intersection.svc.cluster.local"
+    host: ""
+    serviceName: "smart-intersection-broker"
+    brokerNamespace: "smart-intersection"
     port: "1883"
   # Traffic analysis thresholds
   traffic:
