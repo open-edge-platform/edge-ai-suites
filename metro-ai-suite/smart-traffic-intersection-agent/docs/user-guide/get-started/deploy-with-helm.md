@@ -35,7 +35,7 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version <version-no>
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version latest-helm
 ```
 
 #### Step 2: Extract the `.tgz` File
@@ -43,13 +43,13 @@ helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --ve
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
+tar -xvf smart-traffic-intersection-agent-latest-helm.tgz
 ```
 
 Navigate to the extracted directory:
 
 ```bash
-cd smart-traffic-intersection-agent
+cd smart-traffic-intersection-agent-latest-helm
 ```
 
 #### Step 3: Configure the `values.yaml` File
@@ -68,7 +68,7 @@ Clone the repository containing the Helm chart:
 # Clone the latest on mainline
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 # Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -99,7 +99,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
 ### Step 6: Configure GPU Support (Optional)
 
@@ -133,9 +133,10 @@ helm install stia . -n <your-namespace> --create-namespace \
 Deploy the Smart Traffic Intersection Agent Helm chart:
 
 ```bash
-helm install stia . -n <your-namespace> --create-namespace \
-  --set trafficAgent.mqtt.brokerNamespace=<smart-intersection-namespace>
+helm install stia . -n <your-namespace> --create-namespace
 ```
+
+> **Note:** By default, the chart assumes the Smart Intersection RI (MQTT broker) is deployed in the same namespace as the STIA release. If the RI is in a different namespace, add `--set trafficAgent.mqtt.brokerNamespace=<ri-namespace>`.
 
 > **Note:** The VLM OpenVINO Serving pod will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `vlmServing.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
 
@@ -187,8 +188,8 @@ kubectl get nodes -o wide
 Then open your browser at:
 
 ```
-http://<node-ip>:<backend-node-port>   # Backend API (default NodePort: 30881)
-http://<node-ip>:<ui-node-port>         # Gradio UI   (default NodePort: 30860)
+http://<node-ip>:<backend-node-port>   # Backend API
+http://<node-ip>:<ui-node-port>         # Gradio UI
 ```
 
 > **Important:** When live metrics is enabled, you **must** use the IP of the node where the traffic-agent pod is running. The live-metrics service uses `hostPort` (port 9090) and is co-located with the traffic-agent via pod affinity, so the System Telemetry panel will only connect if the browser accesses the UI on that node's IP.
@@ -247,9 +248,7 @@ helm uninstall stia -n <your-namespace>
 | `trafficAgent.image.tag` | Image tag | `latest` |
 | `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
-| `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
 | `trafficAgent.service.uiPort` | Gradio UI port | `7860` |
-| `trafficAgent.service.uiNodePort` | NodePort for Gradio UI (only used when type is `NodePort`) | `30860` |
 | `trafficAgent.intersection.name` | Unique intersection identifier | `intersection_1` |
 | `trafficAgent.intersection.latitude` | Intersection latitude | `37.51358` |
 | `trafficAgent.intersection.longitude` | Intersection longitude | `-122.25591` |
@@ -259,7 +258,7 @@ helm uninstall stia -n <your-namespace>
 | `trafficAgent.env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
 | `trafficAgent.mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |
 | `trafficAgent.mqtt.serviceName` | MQTT broker K8s service name | `smart-intersection-broker` |
-| `trafficAgent.mqtt.brokerNamespace` | Namespace where Smart Intersection is deployed. The FQDN is built as `<serviceName>.<brokerNamespace>.svc.cluster.local`. | `smart-intersection` |
+| `trafficAgent.mqtt.brokerNamespace` | Namespace where the Smart Intersection RI (MQTT broker) is deployed. Only set this if the RI is in a different namespace than the STIA release. The FQDN is built as `<serviceName>.<brokerNamespace>.svc.cluster.local`. | `""` (defaults to release namespace) |
 | `trafficAgent.mqtt.port` | MQTT broker port | `1883` |
 | `trafficAgent.traffic.highDensityThreshold` | Object count for high-density classification | `10` |
 | `trafficAgent.traffic.moderateDensityThreshold` | Object count for moderate-density classification | `""` |
@@ -276,7 +275,6 @@ helm uninstall stia -n <your-namespace>
 | `vlmServing.image.tag` | Image tag | `1.3.2` |
 | `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `vlmServing.service.port` | VLM HTTP API port | `8000` |
-| `vlmServing.service.nodePort` | NodePort for VLM API (only used when type is `NodePort`) | `30800` |
 | `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
 | `vlmServing.env.compressionWeightFormat` | Model weight format (`int4`, `int8`, `fp16`) | `int4` |
 | `vlmServing.env.device` | OpenVINO inference device when GPU is disabled (`CPU` or `GPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
@@ -348,7 +346,7 @@ trafficAgent:
     latitude: "37.7749"
     longitude: "-122.4194"
   mqtt:
-    brokerNamespace: "smart-intersection"
+    brokerNamespace: ""  # defaults to release namespace; set only if RI is in a different namespace
 
 tls:
   caCert: |
