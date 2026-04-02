@@ -25,3 +25,5 @@ The camera must support **RTCP Sender Reports (SR)** to ensure proper timestamp 
    ```bash
    make down && make up
    ```
+
+For more on RTSP, see [RTSP protocol](https://en.wikipedia.org/wiki/Real_Time_Streaming_Protocol) and [DL Streamer Pipeline Server RTSP guide](https://docs.openedgeplatform.intel.com/2025.2/edge-ai-libraries/dlstreamer-pipeline-server/advanced-guide/detailed_usage/camera/rtsp.html#rtsp-cameras).
