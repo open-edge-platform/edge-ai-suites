@@ -49,7 +49,7 @@ tar -xvf smart-traffic-intersection-agent-1.1.0-helm.tgz
 Navigate to the extracted directory:
 
 ```bash
-cd smart-traffic-intersection-agent-latest-helm
+cd smart-traffic-intersection-agent
 ```
 
 #### Step 3: Configure the `values.yaml` File
