@@ -83,7 +83,7 @@ Run the below command to check for the GPU device.
 sudo apt install -y clinfo
 
 # Run clinfo command to check GPU Device
-$ clinfo | grep -i "Device Name"
+clinfo | grep -i "Device Name"
   Device Name                                     Intel(R) UHD Graphics
   Device Name                                     13th Gen Intel(R) Core(TM) i7-1370PE
     Device Name                                   Intel(R) UHD Graphics

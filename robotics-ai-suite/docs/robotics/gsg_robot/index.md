@@ -905,7 +905,7 @@ To install the Intel® NPU driver, complete the following steps:
    and that the device belongs to the ``render`` group:
 
    ```bash
-   $ ls -lah /dev/accel/accel0
+   ls -lah /dev/accel/accel0
    crw-rw---- 1 root render 261, 0 Jul  1 13:10 /dev/accel/accel0
    ```
 

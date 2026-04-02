@@ -93,7 +93,7 @@ After build process successfully finishes, built packages will be available in t
 You can list all built packages:
 
 ```bash
-$ ls humble_cslam_deb_packages/|grep -i .deb
+ls humble_cslam_deb_packages/|grep -i .deb
 ros-humble-univloc-msgs_2.0.1-1_amd64.deb
 ros-humble-univloc-server_2.0.1-1_amd64.deb
 ros-humble-univloc-slam_2.0.1-1_amd64.deb
@@ -172,7 +172,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
 Target               Description
 ------               -----------
 clean                Clean up all build artifacts

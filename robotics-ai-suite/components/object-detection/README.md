@@ -27,7 +27,7 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls | grep -i .deb
+ls | grep -i .deb
 ros-jazzy-object-detection-tutorial_2.3-1_amd64.deb
 ros-jazzy-segmentation-realsense-tutorial_2.3-1_amd64.deb
 ros-jazzy-yolo-msgs_2.3-1_amd64.deb
@@ -91,7 +91,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make
+make
 Target               Description
 ------               -----------
 clean                Clean up all build artifacts

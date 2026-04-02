@@ -38,7 +38,7 @@ ROS_DISTRO=humble make package
 You can list all built packages:
 
 ```bash
-$ ls|grep -i .deb
+ls|grep -i .deb
 ros-humble-pyrealsense2-ai-demo_*_amd64.deb
 ros-humble-pyrealsense2-ai-demo-build-deps_*_amd64.deb
 ```
@@ -126,7 +126,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
 Target               Description
 ------               -----------
 default              Run demo
@@ -194,11 +194,11 @@ Run the below command to check for the iGPU driver on 12th Gen Intel® Core™ i
 
 ```bash
 # Install clinfo
-$ sudo apt install -y clinfo
+sudo apt install -y clinfo
 
 # clinfo command to check GPU device
-$ clinfo | grep -i "Device Name"
-$ clinfo | grep -i "Device Name"
+clinfo | grep -i "Device Name"
+clinfo | grep -i "Device Name"
     Device Name                                   Intel(R) Iris(R) Xe Graphics
     Device Name                                   Intel(R) FPGA Emulation Device
     Device Name                                   12th Gen Intel(R) Core(TM) i7-1270PE
@@ -241,7 +241,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
 5. Check the dkms status by running the following command.
 
    ```bash
-    $ dkms status
+   dkms status
     ipu6-drivers/20230621+iotgipu6-0eci8, 5.15.0-1048-intel-iotg, x86_64: installed
    ```
 
@@ -254,7 +254,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
 7. Once installed check the status of the intel-ipu6 driver using the below command. The file loaded must be: ***/lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko*** as shown below.
 
    ```bash
-    $ modinfo intel-ipu6-isys | head -3
+   modinfo intel-ipu6-isys | head -3
     filename:       /lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko
     description:    Intel ipu input system driver
     license:        GPL
@@ -315,11 +315,11 @@ python3 pyrealsense2_ai_demo_launcher.py --config=../config/<your-config-file>.j
 Run the below command to start the application.
 
 ```bash
-$ . /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
-$ source /opt/ros/humble/setup.bash
+. /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
+source /opt/ros/humble/setup.bash
 
 # Command to run the demo application for 4x camera input streams.
-$ python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
+python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
 All the four cameras are started, after approx 15-20sec, as shown in the below picture.
@@ -332,7 +332,7 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
    For example:
 
    ```bash
-    $ sudo intel_gpu_top
+   sudo intel_gpu_top
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted
    ```
@@ -369,7 +369,7 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
     GRUB_CMDLINE_LINUX="i915.enable_dc=0"
 
     # Save the file and do update grub
-    $ sudo update-grub
+   sudo update-grub
    ```
 
 Reboot the system.

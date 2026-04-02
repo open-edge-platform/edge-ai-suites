@@ -27,7 +27,7 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls|grep -i .deb
+ls|grep -i .deb
 ros-jazzy-fast-mapping_2.3-1_amd64.deb
 ros-jazzy-fast-mapping-build-deps_2.3-1_amd64.deb
 ```
@@ -106,7 +106,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
 Target               Description
 ------               -----------
 build                Build code using colcon
