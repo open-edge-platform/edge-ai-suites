@@ -14,11 +14,12 @@ New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
 
 ### Dependencies Installation
 We provide a unified installation script that automates the setup of core dependencies.
+
+Open PowerShell as Administrator:
 ```PowerShell
 # Run the automation script from the content search root with Windows PowerShell
 .\install.ps1
 ```
-> **Administrator Privileges**: Open PowerShell as Administrator.
 > Restart your PowerShell terminal to apply those new environment variables.
 
 Verify the installation by running the following commands:
