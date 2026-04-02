@@ -4,31 +4,39 @@ Content Search is a core multimodal service designed for smart classroom environ
 
 ## Quick Start
 ### Pre-requisites
-**Python 3.12**: Ensure Python 3.12 is installed and added to your system PATH.
+**Python 3.12**: 
+- Ensure Python 3.12 is installed and added to your system PATH.
 
-**Enable Long Paths**: To prevent issues with the Windows 260-character path limit, run the following command in an elevated PowerShell:
+**Enable Long Paths**: 
+To prevent issues with the Windows 260-character path limit, please choose one of the following:
+- Option A (Recommended): Move the project folder to a shallow directory (e.g., C:\User\CS or D:\Projects).
+- Option B: Lift the path limit by running the following command in a PowerShell window with `Administrator` privileges:
 ```PowerShell
 New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
 -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 ```
 
+**Network Requirement**: 
+- Proxy: If your machine is behind a proxy, ensure your environment variables (e.g., `HTTP_PROXY`, `HTTPS_PROXY`) are correctly configured to allow the script to download necessary components.
+- Model Downloads: This system downloads pre-trained models (such as CLIP and BGE) from Hugging Face. Ensure your network has stable access to `huggingface.co`.
+
 ### Dependencies Installation
 We provide a unified installation script that automates the setup of core dependencies.
-
-Open PowerShell as Administrator:
+Run the following script in PowerShell window with `Administrator` privileges:
 ```PowerShell
-# Run the automation script from the content search root with Windows PowerShell
+# Run the automation script from the Content Search root with Windows PowerShell
 .\install.ps1
 ```
-> Restart your PowerShell terminal to apply those new environment variables.
+> **Note**: Restart your PowerShell terminal to apply those new environment variables.
 
 Verify the installation by running the following commands:
 ```PowerShell
 tesseract --version
+pdftoppm -v
 ```
 
 ### Create the Python Environment
-Open PowerShell in the project root and run (replace <PythonPath> with your actual python path):
+Open PowerShell in the Content Search project root and run (replace <PythonPath> with your actual python path):
 ```PowerShell
 & "<PythonPath>" -m venv venv_content_search
 # Activate
@@ -38,7 +46,7 @@ python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
-> To Exit: Simply type `deactivate` in your terminal to leave the virtual environment.
+> **To Exit Venv**: Simply type `deactivate` in your terminal to leave the virtual environment.
 
 ### Launching Services
 Once the environment is configured, activate the virtual environment and launch the `Content Search` service:
@@ -50,9 +58,9 @@ Once the environment is configured, activate the virtual environment and launch 
 # Start all microservices
 python .\start_services.py
 ```
-> For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. Please ensure you have a stable internet connection.
+> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. Please ensure you have a stable internet connection.
 
-> Upon a successful launch, the console output should not contain any "ERROR" logs.
+> **Note**: Upon a successful launch, the console output should not contain any "ERROR" logs.
 
 To verify that the Content Search service is running correctly, execute the following command:
 ```PowerShell
