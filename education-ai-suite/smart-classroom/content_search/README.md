@@ -6,8 +6,6 @@ Content Search is a core multimodal service designed for smart classroom environ
 ### Pre-requisites
 **Python 3.12**: Ensure Python 3.12 is installed and added to your system PATH.
 
-**Administrator Privileges**: Open PowerShell as Administrator.
-
 **Enable Long Paths**: To prevent issues with the Windows 260-character path limit, run the following command in an elevated PowerShell:
 ```PowerShell
 New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
@@ -20,7 +18,7 @@ We provide a unified installation script that automates the setup of core depend
 # Run the automation script from the content search root with Windows PowerShell
 .\install.ps1
 ```
-
+> **Administrator Privileges**: Open PowerShell as Administrator.
 > Restart your PowerShell terminal to apply those new environment variables.
 
 Verify the installation by running the following commands:
@@ -51,13 +49,18 @@ Once the environment is configured, activate the virtual environment and launch 
 # Start all microservices
 python .\start_services.py
 ```
-
 > For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. Please ensure you have a stable internet connection.
 
 > Upon a successful launch, the console output should not contain any "ERROR" logs.
 
+To verify that the Content Search service is running correctly, execute the following command:
+```PowerShell
+Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
+```
+> Tip: The default port is `9011`, but this may vary depending on your specific configuration. Please ensure you are using the correct port for your environment.
+
 ### Termination
-To stop the service and all associated microservices, press `Ctrl` + `C` in the terminal window.
+To stop the service and all associated microservices, press `Ctrl` + `C` in the launch terminal window.
 
 ## API Endpoints
 
