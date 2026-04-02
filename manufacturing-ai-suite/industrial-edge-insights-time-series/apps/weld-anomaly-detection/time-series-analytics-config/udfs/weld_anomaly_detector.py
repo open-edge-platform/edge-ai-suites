@@ -38,6 +38,7 @@ warnings.filterwarnings(
 # Primary weld current threshold
 WELD_CURRENT_THRESHOLD = 50
 GOOD_WELD_LABEL = "Good Weld"
+NO_WELD_LABEL = "No Weld"
 FEATURES = [
     "Pressure",
     "CO2 Weld Flow",
@@ -81,7 +82,6 @@ class AnomalyDetectorHandler(Handler):
             with open(info_path, "r", encoding="utf-8") as f:
                 self.info_data = json.load(f)
             logger.info(f"Model           : {self.info_data.get('algorithm', 'unknown')}")
-            logger.info(f"Trained at      : {self.info_data.get('trained_at', 'unknown')}")
             logger.info(f"Classes         : {len(self.info_data.get('classes', []))}")
             logger.info(f"Trained w/ Intel: {self.info_data.get('intel_patched', 'unknown')}")
 
@@ -205,10 +205,20 @@ class AnomalyDetectorHandler(Handler):
             
         for key, value in point.fieldsInt.items():
             fields[key] = value
-
-
+        for key, value in point.fieldsString.items():
+            fields[key] = value
         
-        if "Primary Weld Current" in fields and fields["Primary Weld Current"] > WELD_CURRENT_THRESHOLD:
+        if "Primary Weld Current" in fields and fields["Primary Weld Current"] < WELD_CURRENT_THRESHOLD:
+            point.fieldsString["predicted_category"] = NO_WELD_LABEL
+            point.fieldsDouble["Good Weld"] = 0.0
+            point.fieldsDouble["Defective Weld"] = 0.0
+            point.fieldsDouble["anomaly_status"] = 0.0
+            logger.debug(
+                "Primary Weld Current below threshold (%d). Classified as %s.",
+                WELD_CURRENT_THRESHOLD,
+                NO_WELD_LABEL,
+            )
+        elif "Primary Weld Current" in fields and fields["Primary Weld Current"] >= WELD_CURRENT_THRESHOLD:
             missing_features = [f for f in FEATURES if f not in fields]
             if missing_features:
                 logger.warning("Missing required features for inference: %s", missing_features)
@@ -231,6 +241,7 @@ class AnomalyDetectorHandler(Handler):
                     prob_map = {cls: float(p) for cls, p in zip(classes, pred_proba)}
 
                     predicted_category = self.le.inverse_transform([pred_idx])[0]
+                    point.fieldsString["predicted_category"] = str(predicted_category)
                     good_weld_prob = prob_map.get(GOOD_WELD_LABEL, 0.0)
                     good_defect = good_weld_prob * 100.0
                     bad_defect = (1.0 - good_weld_prob) * 100.0
@@ -238,9 +249,7 @@ class AnomalyDetectorHandler(Handler):
                     if MODEL_WITH_EXPLANATION:
                         explanation = self._build_explanation(fields, predicted_category, prob_map, self.info_data)
 
-                    logger.info(
-                        "Prediction details: %s",
-                        {
+                    data_prediction = {
                             "predicted_category": predicted_category,
                             "is_defect": predicted_category != GOOD_WELD_LABEL,
                             "defect_probability": round(1.0 - good_weld_prob, 6),
@@ -248,12 +257,16 @@ class AnomalyDetectorHandler(Handler):
                             "confidence": confidence,
                             "probabilities": prob_map,
                             "explanation": explanation if MODEL_WITH_EXPLANATION else "N/A",
-                        },
+                        }
+                    logger.debug(
+                        "Prediction details: %s",
+                        data_prediction,
                     )
 
+                    point.fieldsString["prediction_details"] = str(data_prediction)
 
                     if bad_defect > 50:
-                        point.fieldsDouble["anomaly_status"] = 1.0
+                        point.fieldsDouble["anomaly_status"] = 1.0 
                     logger.info("Good Weld: %.2f%%, Defective Weld: %.2f%%", good_defect, bad_defect)
         else:
             logger.debug("Primary Weld Current below threshold (%d). Skipping anomaly detection.", WELD_CURRENT_THRESHOLD)
@@ -266,6 +279,7 @@ class AnomalyDetectorHandler(Handler):
         end_end_time = time_now - point.time
         point.fieldsDouble["processing_time"] = processing_time
         point.fieldsDouble["end_end_time"] = end_end_time
+        
 
         logger.info("Processing point %s %s for source %s", point.time, time.time(), stream_src)
 

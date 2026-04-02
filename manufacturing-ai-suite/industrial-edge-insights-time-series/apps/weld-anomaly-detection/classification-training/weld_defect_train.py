@@ -42,10 +42,12 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # -- Configuration -------------------------------------------------------------
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/tmp/welding_dataset"))
+DATA_DIR = Path(os.getenv("DATA_DIR", "/home/ecgv-d19-l3t19/welding_dataset/raid/intel_robotic_welding_dataset"))
 MANIFEST_NAME = "manifest.csv"
 TARGET_STEEL_TYPE = "FE410"
 MIN_WELD_CURRENT = 50.0
+MAX_MODEL_SIZE_MB = 100.0
+MODEL_DUMP_COMPRESS = ("xz", 3)
 
 FEATURES = [
     "Pressure",
@@ -55,10 +57,10 @@ FEATURES = [
     "Secondary Weld Voltage",
 ]
 
-MODEL_OUT = Path("weld_defect_model.pkl")
-LABELS_OUT = Path("weld_defect_labels.pkl")
-REPORT_OUT = Path("weld_defect_report.txt")
-MODEL_INFO_OUT = Path("model_info.json")
+MODEL_OUT = Path("weld_anomaly_detector.pkl")
+LABELS_OUT = Path("weld_anomaly_detector_labels.pkl")
+REPORT_OUT = Path("weld_anomaly_detector.txt")
+MODEL_INFO_OUT = Path("weld_anomaly_detector.json")
 
 CATEGORY_LABELS = {
     "burnthrough_weld_12-14-22-0201-02": "Burnthrough Weld",
@@ -313,16 +315,16 @@ def load_data_from_manifest(data_dir: Path, steel_type: str = TARGET_STEEL_TYPE)
     if not split_frames["VAL"]:
         raise ValueError("No VAL data files resolved from manifest for FE410.")
 
-    train_test_frames = split_frames["TRAIN"] + split_frames["TEST"]
-    train_test_data = pd.concat(train_test_frames, ignore_index=True)
-    val_data = pd.concat(split_frames["VAL"], ignore_index=True)
+    train_val_frames = split_frames["TRAIN"] + split_frames["VAL"]
+    train_val_data = pd.concat(train_val_frames, ignore_index=True)
+    test_data = pd.concat(split_frames["TEST"], ignore_index=True)
 
     print(
         "Loaded manifest data "
-        f"(files={total_resolved_files}, train+test_rows={len(train_test_data):,}, val_rows={len(val_data):,})"
+        f"(files={total_resolved_files}, train+val_rows={len(train_val_data):,}, test_rows={len(test_data):,})"
     )
 
-    return train_test_data, val_data
+    return train_val_data, test_data
 
 
 def _clean_category_column(df: pd.DataFrame) -> pd.DataFrame:
@@ -333,62 +335,63 @@ def _clean_category_column(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def preprocess_split_data(train_test_data: pd.DataFrame, val_data: pd.DataFrame):
-    train_test_clean = train_test_data.dropna(subset=FEATURES + ["category"]).copy()
-    val_clean = val_data.dropna(subset=FEATURES + ["category"]).copy()
+def preprocess_split_data(train_val_data: pd.DataFrame, test_data: pd.DataFrame):
+    train_val_clean = train_val_data.dropna(subset=FEATURES + ["category"]).copy()
+    test_clean = test_data.dropna(subset=FEATURES + ["category"]).copy()
 
-    train_test_clean = _clean_category_column(train_test_clean)
-    val_clean = _clean_category_column(val_clean)
+    train_val_clean = _clean_category_column(train_val_clean)
+    test_clean = _clean_category_column(test_clean)
 
     # Remove non-welding rows where primary current is below threshold.
-    train_test_clean = train_test_clean[
-        train_test_clean["Primary Weld Current"] >= MIN_WELD_CURRENT
+    train_val_clean = train_val_clean[
+        train_val_clean["Primary Weld Current"] >= MIN_WELD_CURRENT
     ].copy()
-    val_clean = val_clean[
-        val_clean["Primary Weld Current"] >= MIN_WELD_CURRENT
+    test_clean = test_clean[
+        test_clean["Primary Weld Current"] >= MIN_WELD_CURRENT
     ].copy()
 
-    if train_test_clean.empty:
+    if train_val_clean.empty:
         raise ValueError(
             f"No training rows left after filtering Primary Weld Current >= {MIN_WELD_CURRENT}."
         )
 
     le = LabelEncoder()
-    y_train = le.fit_transform(train_test_clean["category"].values)
+    y_train = le.fit_transform(train_val_clean["category"].values)
 
     train_classes = set(le.classes_)
-    val_classes = set(val_clean["category"].unique())
-    unseen_in_train = sorted(val_classes - train_classes)
+    test_classes = set(test_clean["category"].unique())
+    unseen_in_train = sorted(test_classes - train_classes)
     if unseen_in_train:
         preview = ", ".join([repr(x) for x in unseen_in_train[:6]])
         print(
-            "Warning: dropping VAL rows with classes not present in TRAIN/TEST: "
+            "Warning: dropping TEST rows with classes not present in TRAIN/VAL: "
             f"{preview}"
         )
-        val_clean = val_clean[val_clean["category"].isin(train_classes)].copy()
+        test_clean = test_clean[test_clean["category"].isin(train_classes)].copy()
 
-    if val_clean.empty:
+    if test_clean.empty:
         raise ValueError(
-            "No evaluable VAL rows left after filtering classes to TRAIN/TEST overlap "
+            "No evaluable TEST rows left after filtering classes to TRAIN/VAL overlap "
             f"and Primary Weld Current >= {MIN_WELD_CURRENT}."
         )
 
-    val_index = pd.Index(le.classes_)
-    y_val = val_index.get_indexer(val_clean["category"].values)
+    test_index = pd.Index(le.classes_)
+    y_test = test_index.get_indexer(test_clean["category"].values)
 
-    X_train = train_test_clean[FEATURES].values.astype(np.float32)
-    X_val = val_clean[FEATURES].values.astype(np.float32)
+    X_train = train_val_clean[FEATURES].values.astype(np.float32)
+    X_test = test_clean[FEATURES].values.astype(np.float32)
 
-    return X_train, y_train, X_val, y_val, le, train_test_clean
+    return X_train, y_train, X_test, y_test, le, train_val_clean
 
 
 # -- Model Definition ----------------------------------------------------------
 
 def build_pipeline() -> Pipeline:
     clf = RandomForestClassifier(
-        n_estimators=300,
-        max_depth=None,
-        min_samples_leaf=2,
+        n_estimators=60,
+        max_depth=14,
+        min_samples_leaf=8,
+        max_features="sqrt",
         n_jobs=-1,
         random_state=42,
     )
@@ -397,29 +400,29 @@ def build_pipeline() -> Pipeline:
 
 # -- Training & Evaluation -----------------------------------------------------
 
-def train_and_evaluate(X_train, y_train, X_val, y_val, le: LabelEncoder) -> Pipeline:
+def train_and_evaluate(X_train, y_train, X_test, y_test, le: LabelEncoder) -> Pipeline:
     class_names = list(le.classes_)
 
     print("Training model...")
     pipeline = build_pipeline()
     pipeline.fit(X_train, y_train)
 
-    print("Evaluating on VAL...")
-    y_pred = pipeline.predict(X_val)
+    print("Evaluating on TEST...")
+    y_pred = pipeline.predict(X_test)
 
-    acc = accuracy_score(y_val, y_pred)
-    report = classification_report(y_val, y_pred, target_names=class_names, digits=4)
-    cm = confusion_matrix(y_val, y_pred)
+    acc = accuracy_score(y_test, y_pred)
+    report = classification_report(y_test, y_pred, target_names=class_names, digits=4)
+    cm = confusion_matrix(y_test, y_pred)
 
-    print(f"VAL Accuracy: {acc:.4f}")
+    print(f"TEST Accuracy: {acc:.4f}")
 
     with open(REPORT_OUT, "w", encoding="utf-8") as f:
         f.write("WELD DEFECT CLASSIFIER - EVALUATION REPORT\n")
         f.write("=" * 60 + "\n\n")
-        f.write("Training split : TRAIN + TEST\n")
-        f.write("Evaluation split: VAL\n")
-        f.write(f"VAL Accuracy   : {acc:.4f}\n\n")
-        f.write("Classification Report (VAL):\n")
+        f.write("Training split : TRAIN + VAL\n")
+        f.write("Evaluation split: TEST\n")
+        f.write(f"TEST Accuracy   : {acc:.4f}\n\n")
+        f.write("Classification Report (TEST):\n")
         f.write(report + "\n\n")
         f.write("Confusion Matrix (rows=actual, cols=predicted):\n")
         f.write("Labels: " + ", ".join(class_names) + "\n")
@@ -447,11 +450,18 @@ def _build_class_feature_stats(data: pd.DataFrame) -> dict:
     return stats
 
 
-def save_artefacts(pipeline: Pipeline, le: LabelEncoder, train_test_data: pd.DataFrame):
+def save_artefacts(pipeline: Pipeline, le: LabelEncoder, train_val_data: pd.DataFrame):
     import datetime
 
-    joblib.dump(pipeline, MODEL_OUT)
-    joblib.dump(le, LABELS_OUT)
+    joblib.dump(pipeline, MODEL_OUT, compress=MODEL_DUMP_COMPRESS)
+    joblib.dump(le, LABELS_OUT, compress=MODEL_DUMP_COMPRESS)
+
+    model_size_mb = MODEL_OUT.stat().st_size / (1024 * 1024)
+    if model_size_mb > MAX_MODEL_SIZE_MB:
+        raise ValueError(
+            f"Saved model size is {model_size_mb:.2f} MB, which exceeds "
+            f"MAX_MODEL_SIZE_MB={MAX_MODEL_SIZE_MB:.2f}."
+        )
 
     model_info = {
         "model_file": str(MODEL_OUT),
@@ -459,16 +469,21 @@ def save_artefacts(pipeline: Pipeline, le: LabelEncoder, train_test_data: pd.Dat
         "features": FEATURES,
         "classes": list(le.classes_),
         "good_weld_label": "Good Weld",
-        "class_feature_stats": _build_class_feature_stats(train_test_data),
+        "class_feature_stats": _build_class_feature_stats(train_val_data),
         "trained_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
         "algorithm": "RandomForestClassifier",
+        "model_size_mb": round(model_size_mb, 4),
+        "artifact_compression": {
+            "method": MODEL_DUMP_COMPRESS[0],
+            "level": MODEL_DUMP_COMPRESS[1],
+        },
         "intel_patched": _INTEL_PATCHED,
         "data_source": {
             "data_dir": str(DATA_DIR),
             "manifest": MANIFEST_NAME,
             "steel_type": TARGET_STEEL_TYPE,
-            "train_splits_used": ["TRAIN", "TEST"],
-            "eval_split_used": "VAL",
+            "train_splits_used": ["TRAIN", "VAL"],
+            "eval_split_used": "TEST",
         },
         "note": (
             "Load model with joblib.load(model_file). "
@@ -486,14 +501,14 @@ def save_artefacts(pipeline: Pipeline, le: LabelEncoder, train_test_data: pd.Dat
 def main():
     print("Starting weld defect training")
 
-    train_test_data, val_data = load_data_from_manifest(DATA_DIR)
+    train_val_data, test_data = load_data_from_manifest(DATA_DIR)
 
-    X_train, y_train, X_val, y_val, le, clean_train_test = preprocess_split_data(
-        train_test_data, val_data
+    X_train, y_train, X_test, y_test, le, clean_train_val = preprocess_split_data(
+        train_val_data, test_data
     )
 
-    pipeline = train_and_evaluate(X_train, y_train, X_val, y_val, le)
-    save_artefacts(pipeline, le, clean_train_test)
+    pipeline = train_and_evaluate(X_train, y_train, X_test, y_test, le)
+    save_artefacts(pipeline, le, clean_train_val)
 
     print("Done")
 

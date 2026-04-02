@@ -119,31 +119,34 @@ In short: keep `weld_defect_model.pkl` and `weld_defect_labels.pkl` together whe
 
 ### Requirements
 
-```bash
-pip install scikit-learn==1.6.1 scikit-learn-intelex joblib pandas numpy packaging setuptools
-```
-
-Or install directly from the local dependency file:
+- Python 3.10 is required for training.
 
 ```bash
+rm -rf venv
+/usr/bin/python3.10 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-```
-
-Or using the project virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install scikit-learn==1.6.1 scikit-learn-intelex joblib pandas numpy packaging setuptools
 ```
 
 ### Data
 
-Training data is read from:
+Training data source:
+- https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset
+
+After downloading and extracting the dataset, set the training data root to the extracted folder that contains `manifest.csv`.
+
+Example extracted path:
 ```
-edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/
-  weld-data-simulator/simulation-data/*.csv
+/home/<user>/datasets/intel_robotic_welding_dataset
 ```
+
+Run training by pointing `DATA_DIR` to that path:
+```bash
+DATA_DIR=/home/<user>/datasets/intel_robotic_welding_dataset python3.10 weld_defect_train.py
+```
+
+If `DATA_DIR` is not set, the script uses its built-in default path.
+
 Each CSV contains one defect category and columns: `Pressure`, `CO2 Weld Flow`, `Feed`, `Primary Weld Current`, `Wire Consumed`, `Secondary Weld Voltage`.
 
 ---
@@ -151,7 +154,7 @@ Each CSV contains one defect category and columns: `Pressure`, `CO2 Weld Flow`, 
 ## Training the Model
 
 ```bash
-python weld_defect_train.py
+python3.10 weld_defect_train.py
 ```
 
 This will:
