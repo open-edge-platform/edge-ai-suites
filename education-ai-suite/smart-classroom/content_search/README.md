@@ -8,8 +8,9 @@ Content Search is a core multimodal service designed for smart classroom environ
 - Ensure Python 3.12 is installed and added to your system PATH.
 
 **Windows Long Paths Issue**: 
+
 To prevent issues with the Windows 260-character path limit, please choose one of the following:
-- Option A (Recommended): Move the project folder to a shallow directory (e.g., C:\User\CS or D:\Projects).
+- Option A (Recommended): Move the project folder to a shallow directory (e.g., `C:\User\CS` or `D:\Projects`).
 - Option B: Lift the path limit by running the following command in a PowerShell window with `Administrator` privileges:
 ```PowerShell
 New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
@@ -35,7 +36,7 @@ tesseract --version
 pdftoppm -v
 ```
 
-### Create the Python Environment
+### Create Python Virtual Environment
 Open PowerShell in the Content Search project root and run (replace <PythonPath> with your actual python path):
 ```PowerShell
 & "<PythonPath>" -m venv venv_content_search
@@ -48,8 +49,8 @@ python -m pip install -r requirements.txt
 
 > **To Exit Venv**: Simply type `deactivate` in your terminal to leave the virtual environment.
 
-### Launching Services
-Once the environment is configured, activate the virtual environment and launch the `Content Search` service:
+### Launching Content Search Services
+Once the environment is configured, activate the virtual environment and launch the Content Search service:
 
 ```PowerShell
 # Activate the virtual environment
@@ -58,7 +59,7 @@ Once the environment is configured, activate the virtual environment and launch 
 # Start all microservices
 python .\start_services.py
 ```
-> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. Please ensure you have a stable internet connection.
+> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. 
 
 > **Note**: Upon a successful launch, the console output should not contain any "ERROR" logs.
 
@@ -68,14 +69,14 @@ Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```
 > Tip: The default port is `9011`, but this may vary depending on your specific configuration. Please ensure you are using the correct port for your environment.
 
-### Termination
+### Services Termination
 To stop the service and all associated microservices, press `Ctrl` + `C` in the launch terminal window.
 
 ## API Endpoints
 
 | Endpoint | Method | Pattern | Description | Documentation |
 | :--- | :---: | :---: | :--- | :--- |
-| `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. PROCESSING, COMPLETED, FAILED). | [Details](./docs/dev_guide/Content_search_API.md#task-status-polling) |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. `PROCESSING`, `COMPLETED`, `FAILED`). | [Details](./docs/dev_guide/Content_search_API.md#task-status-polling) |
 | `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`). | [Details](./docs/dev_guide/Content_search_API.md#get-task-list) |
 | `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Processes raw text strings or existing text-based objects in MinIO for semantic indexing. | [Details](./docs/dev_guide/Content_search_API.md#text-file-ingestion) |
 | `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to MinIO and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
