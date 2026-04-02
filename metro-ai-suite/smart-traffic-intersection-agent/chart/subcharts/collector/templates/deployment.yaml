@@ -37,7 +37,7 @@ spec:
                   - key: app.kubernetes.io/component
                     operator: In
                     values:
-                      - traffic-agent
+                      - vlm-serving
               topologyKey: kubernetes.io/hostname
       hostPID: {{ .Values.hostPID }}
       containers:
