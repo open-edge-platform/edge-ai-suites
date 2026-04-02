@@ -68,6 +68,8 @@ spec:
             - name: WEATHER_MOCK
               value: {{ .Values.trafficAgent.env.weatherMock | quote }}
             # VLM configuration - point to VLM K8s service
+            - name: VLM_BASE_URL
+              value: "http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}"
             - name: VLM_MODEL_NAME
               value: {{ .Values.vlmServing.env.modelName | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
