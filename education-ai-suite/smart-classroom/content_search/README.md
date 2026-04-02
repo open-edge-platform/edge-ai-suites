@@ -7,7 +7,7 @@ Content Search is a core multimodal service designed for smart classroom environ
 **Python 3.12**: 
 - Ensure Python 3.12 is installed and added to your system PATH.
 
-**Enable Long Paths**: 
+**Windows Long Paths Issue**: 
 To prevent issues with the Windows 260-character path limit, please choose one of the following:
 - Option A (Recommended): Move the project folder to a shallow directory (e.g., C:\User\CS or D:\Projects).
 - Option B: Lift the path limit by running the following command in a PowerShell window with `Administrator` privileges:
