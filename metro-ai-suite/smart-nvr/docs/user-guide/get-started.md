@@ -56,7 +56,7 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
 ### Step 1: Clone the application
 
-Go to the target directory of your choice and do a partial clone of the repository with the application code and dependencies.
+Go to the target directory of your choice and do a partial clone of the repository with the application code and dependent applications.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
