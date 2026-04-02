@@ -1,6 +1,8 @@
 # Configure RTSP Camera
 
-The camera must support **RTCP Sender Reports (SR)** to ensure proper timestamp synchronization and smooth video processing in the pipeline. The camera’s system time and time zone must also be synchronized with the edge device to avoid timestamp drift and inconsistencies during stream processing.
+The camera must support **RTCP Sender Reports (SR)** to ensure proper timestamp synchronization and smooth video processing in the pipeline. 
+
+Additionally, the camera’s system time should be synchronized with the edge device using a common time source such as NTP, and both should use the same time zone to prevent timestamp drift, logging mismatches, and inconsistencies during stream processing.
 
 ## Configure RTSP Camera in the Multimodal App
 
