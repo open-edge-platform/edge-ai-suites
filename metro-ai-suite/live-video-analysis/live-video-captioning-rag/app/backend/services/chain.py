@@ -21,6 +21,24 @@ prompt = ChatPromptTemplate.from_template(template)
 
 caption_embeddings = CaptionEmbeddings()
 
+
+def _is_vdms_retryable_error(exc: Exception) -> bool:
+    """Identify likely transient VDMS/transport failures safe to retry once."""
+    err = str(exc).lower()
+    retry_markers = (
+        "vdms",
+        "connection",
+        "timed out",
+        "timeout",
+        "reset by peer",
+        "broken pipe",
+        "eof",
+        "refused",
+        "transport",
+        "socket",
+    )
+    return any(marker in err for marker in retry_markers)
+
 async def process_embeddings(image_data: str, metadata: dict):
     """
     Process incoming embedding requests by adding the image-caption pair to the VDMS vector store.
@@ -87,12 +105,32 @@ async def process_query(chain=None, query: str = ""):
         chain = build_chain()
 
     docs = []
-    async for chunk in chain.astream(query):
-        if "source_documents" in chunk and chunk["source_documents"]:
-            docs = chunk["source_documents"]
+    has_streamed_answer = False
 
-        if "answer" in chunk and chunk["answer"]:
-            yield f"data: {chunk['answer']}\n\n"
+    try:
+        async for chunk in chain.astream(query):
+            if "source_documents" in chunk and chunk["source_documents"]:
+                docs = chunk["source_documents"]
+
+            if "answer" in chunk and chunk["answer"]:
+                has_streamed_answer = True
+                yield f"data: {chunk['answer']}\n\n"
+    except Exception as exc:
+        # Retry only if no partial answer was sent to avoid duplicate streamed tokens.
+        if has_streamed_answer or not _is_vdms_retryable_error(exc):
+            raise
+
+        logger.warning("Query failed due to VDMS/retrieval error; reinitializing and retrying once. Error: %s", exc)
+        caption_embeddings.reconnect_vdms(exc)
+        chain = build_chain()
+        docs = []
+
+        async for chunk in chain.astream(query):
+            if "source_documents" in chunk and chunk["source_documents"]:
+                docs = chunk["source_documents"]
+
+            if "answer" in chunk and chunk["answer"]:
+                yield f"data: {chunk['answer']}\n\n"
 
     # Example of sources data: [{'metadata': {'frame_data': 'base64_encoded', 'frame_format': 'BGRA', 'frame_height': 1080, 'frame_id': 11, 'frame_width': 1920}, 'preview': '<caption_text>'}, {'metadata': {'frame_data': 'base64_encoded', 'frame_format': 'BGRA', 'frame_height': 1080, 'frame_id': 10, 'frame_width': 1920}, 'preview': '<caption_text>'}, {'metadata': {'frame_data': 'base64_encoded', 'frame_format': 'BGRA', 'frame_height': 1080, 'frame_id': 4, 'frame_width': 1920}, 'preview': '<caption_text>'}]
     sources = [

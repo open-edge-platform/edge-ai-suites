@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from langchain_vdms.vectorstores import VDMS, VDMS_Client
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import logging
 import requests
 import uuid
@@ -66,6 +66,15 @@ class CaptionEmbeddings:
         """Reconnect VDMS after transient or idle disconnection failures."""
         logger.warning("VDMS operation failed; reinitializing client/store. Error: %s", reason)
         self._init_vdms_store()
+
+    def reconnect_vdms(self, reason: Optional[Exception] = None):
+        """Public reconnect hook for query-side recovery from stale retrievers."""
+        if reason is None:
+            logger.warning("Reinitializing VDMS client/store due to explicit reconnect request")
+            self._init_vdms_store()
+            return
+
+        self._reinitialize_vdms_store(reason)
 
     @staticmethod
     def _build_embedding_metadata(img_blob: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
