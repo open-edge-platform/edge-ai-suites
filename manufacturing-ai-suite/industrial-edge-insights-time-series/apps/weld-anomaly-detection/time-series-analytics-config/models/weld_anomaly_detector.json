@@ -1,6 +1,6 @@
 {
-  "model_file": "weld_defect_model.pkl",
-  "labels_file": "weld_defect_labels.pkl",
+  "model_file": "weld_anomaly_detector.pkl",
+  "labels_file": "weld_anomaly_detector_labels.pkl",
   "features": [
     "Pressure",
     "CO2 Weld Flow",
@@ -9,288 +9,303 @@
     "Secondary Weld Voltage"
   ],
   "classes": [
-    "Burnthrough Weld",
-    "Crater Cracks",
-    "Excessive Convexity",
-    "Excessive Penetration",
+    "Burnthrough",
+    "Crater_Cracks",
+    "Excessive_Convexity",
+    "Excessive_Penetration",
     "Good Weld",
-    "Lack of Fusion",
+    "Lack_of_Fusion",
     "Overlap",
-    "Porosity w/ EP",
-    "Porosity w/ Excessive Penetration",
+    "Porosity",
+    "Porosity_w_Excessive_Penetration",
     "Spatter",
     "Undercut",
-    "Warping Weld"
+    "Warping"
   ],
   "good_weld_label": "Good Weld",
   "class_feature_stats": {
-    "Burnthrough Weld": {
+    "Burnthrough": {
       "Pressure": {
-        "mean": 0.677613,
-        "std": 1.233722
+        "mean": 0.138146,
+        "std": 0.387291
       },
       "CO2 Weld Flow": {
-        "mean": 7.712266,
-        "std": 7.067803
+        "mean": 13.424475,
+        "std": 10.993828
       },
       "Feed": {
-        "mean": 32.749396,
-        "std": 16.058043
+        "mean": 42.724939,
+        "std": 13.678241
       },
       "Primary Weld Current": {
-        "mean": 109.185378,
-        "std": 70.355806
+        "mean": 160.016832,
+        "std": 16.523486
       },
       "Secondary Weld Voltage": {
-        "mean": 17.981843,
-        "std": 13.412142
+        "mean": 22.628856,
+        "std": 2.246037
       }
     },
-    "Crater Cracks": {
+    "Crater_Cracks": {
       "Pressure": {
-        "mean": 0.45205,
-        "std": 0.755734
+        "mean": 0.059292,
+        "std": 0.156386
       },
       "CO2 Weld Flow": {
-        "mean": 8.711832,
-        "std": 4.726982
+        "mean": 8.287906,
+        "std": 3.393124
       },
       "Feed": {
-        "mean": 1.614938,
-        "std": 0.468665
+        "mean": 29.019106,
+        "std": 61.977657
       },
       "Primary Weld Current": {
-        "mean": 185.413354,
-        "std": 125.429564
+        "mean": 275.134418,
+        "std": 17.838384
       },
       "Secondary Weld Voltage": {
-        "mean": 13.379845,
-        "std": 9.114096
+        "mean": 18.113709,
+        "std": 1.735273
       }
     },
-    "Excessive Convexity": {
+    "Excessive_Convexity": {
       "Pressure": {
-        "mean": 0.761285,
-        "std": 1.033626
+        "mean": 0.206303,
+        "std": 0.221896
       },
       "CO2 Weld Flow": {
-        "mean": 5.822179,
-        "std": 4.416059
+        "mean": 9.129876,
+        "std": 4.637927
       },
       "Feed": {
-        "mean": 98.598827,
-        "std": 42.707889
+        "mean": 103.283847,
+        "std": 39.900803
       },
       "Primary Weld Current": {
-        "mean": 201.896983,
-        "std": 123.690734
+        "mean": 283.322021,
+        "std": 20.334365
       },
       "Secondary Weld Voltage": {
-        "mean": 12.650307,
-        "std": 7.880308
+        "mean": 15.627773,
+        "std": 2.118288
       }
     },
-    "Excessive Penetration": {
+    "Excessive_Penetration": {
       "Pressure": {
-        "mean": 0.872104,
-        "std": 0.958749
+        "mean": 0.276218,
+        "std": 0.482427
       },
       "CO2 Weld Flow": {
-        "mean": 18.950104,
-        "std": 10.245205
+        "mean": 19.41604,
+        "std": 10.804953
       },
       "Feed": {
-        "mean": 37.586286,
-        "std": 18.251008
+        "mean": 37.347042,
+        "std": 13.783552
       },
       "Primary Weld Current": {
-        "mean": 89.059714,
-        "std": 54.183527
+        "mean": 135.375113,
+        "std": 20.359254
       },
       "Secondary Weld Voltage": {
-        "mean": 24.10239,
-        "std": 22.031935
+        "mean": 19.841677,
+        "std": 2.468389
       }
     },
     "Good Weld": {
       "Pressure": {
-        "mean": 0.397026,
-        "std": 0.503095
+        "mean": 0.180755,
+        "std": 0.343373
       },
       "CO2 Weld Flow": {
-        "mean": 3.210921,
-        "std": 1.915733
+        "mean": 16.68298,
+        "std": 10.756264
       },
       "Feed": {
-        "mean": 38.883632,
-        "std": 18.685298
+        "mean": 36.491665,
+        "std": 15.490265
       },
       "Primary Weld Current": {
-        "mean": 98.685579,
-        "std": 69.105542
+        "mean": 148.131805,
+        "std": 19.451389
       },
       "Secondary Weld Voltage": {
-        "mean": 15.810368,
-        "std": 10.397631
+        "mean": 21.40713,
+        "std": 2.575024
       }
     },
-    "Lack of Fusion": {
+    "Lack_of_Fusion": {
       "Pressure": {
-        "mean": 0.702177,
-        "std": 1.268095
+        "mean": 0.184523,
+        "std": 0.529726
       },
       "CO2 Weld Flow": {
-        "mean": 9.248833,
-        "std": 8.672725
+        "mean": 15.268738,
+        "std": 11.335853
       },
       "Feed": {
-        "mean": 27.760568,
-        "std": 13.582843
+        "mean": 33.306874,
+        "std": 10.182742
       },
       "Primary Weld Current": {
-        "mean": 83.88306,
-        "std": 57.256429
+        "mean": 130.07899,
+        "std": 19.161102
       },
       "Secondary Weld Voltage": {
-        "mean": 12.576435,
-        "std": 11.264446
+        "mean": 16.760035,
+        "std": 2.841483
       }
     },
     "Overlap": {
       "Pressure": {
-        "mean": 0.696872,
-        "std": 0.822824
+        "mean": 0.066834,
+        "std": 0.182792
       },
       "CO2 Weld Flow": {
-        "mean": 4.239179,
-        "std": 3.665112
+        "mean": 8.13135,
+        "std": 3.559692
       },
       "Feed": {
-        "mean": 0.863538,
-        "std": 0.306685
+        "mean": 8.120672,
+        "std": 14.580875
       },
       "Primary Weld Current": {
-        "mean": 115.903897,
-        "std": 115.541946
+        "mean": 236.613305,
+        "std": 22.110106
       },
       "Secondary Weld Voltage": {
-        "mean": 9.316667,
-        "std": 9.562115
+        "mean": 16.409244,
+        "std": 2.852842
       }
     },
-    "Porosity w/ EP": {
+    "Porosity": {
       "Pressure": {
-        "mean": -0.026192,
-        "std": 0.029949
+        "mean": 0.007298,
+        "std": 0.035358
       },
       "CO2 Weld Flow": {
-        "mean": -0.003529,
-        "std": 0.017372
+        "mean": -0.004802,
+        "std": 0.018898
       },
       "Feed": {
-        "mean": 43.800062,
-        "std": 19.547468
+        "mean": 37.479202,
+        "std": 12.377178
       },
       "Primary Weld Current": {
-        "mean": 89.928204,
-        "std": 60.614217
+        "mean": 140.410732,
+        "std": 18.365563
       },
       "Secondary Weld Voltage": {
-        "mean": 15.114427,
-        "std": 10.037807
+        "mean": 19.480294,
+        "std": 2.594742
       }
     },
-    "Porosity w/ Excessive Penetration": {
+    "Porosity_w_Excessive_Penetration": {
       "Pressure": {
-        "mean": 0.048918,
-        "std": 0.012307
+        "mean": 0.010628,
+        "std": 0.036892
       },
       "CO2 Weld Flow": {
-        "mean": -0.004934,
-        "std": 0.018015
+        "mean": -0.003079,
+        "std": 0.017414
       },
       "Feed": {
-        "mean": 33.945778,
-        "std": 15.436759
+        "mean": 40.555647,
+        "std": 19.338148
       },
       "Primary Weld Current": {
-        "mean": 113.48942,
-        "std": 67.865062
+        "mean": 142.604168,
+        "std": 21.178471
       },
       "Secondary Weld Voltage": {
-        "mean": 13.385646,
-        "std": 9.251988
+        "mean": 19.010896,
+        "std": 2.425051
       }
     },
     "Spatter": {
       "Pressure": {
-        "mean": 0.765599,
-        "std": 1.347134
+        "mean": 0.341853,
+        "std": 0.493568
       },
       "CO2 Weld Flow": {
-        "mean": 9.621003,
-        "std": 7.996145
+        "mean": 22.355869,
+        "std": 17.971494
       },
       "Feed": {
-        "mean": 44.271424,
-        "std": 14.609723
+        "mean": 38.498386,
+        "std": 12.516306
       },
       "Primary Weld Current": {
-        "mean": 96.058544,
-        "std": 73.494314
+        "mean": 142.809943,
+        "std": 31.844257
       },
       "Secondary Weld Voltage": {
-        "mean": 11.201294,
-        "std": 10.833226
+        "mean": 14.247129,
+        "std": 4.144952
       }
     },
     "Undercut": {
       "Pressure": {
-        "mean": 0.88204,
-        "std": 1.230727
+        "mean": 0.195746,
+        "std": 0.240227
       },
       "CO2 Weld Flow": {
-        "mean": 13.678161,
-        "std": 9.325167
+        "mean": 13.797545,
+        "std": 7.079273
       },
       "Feed": {
-        "mean": 114.432341,
-        "std": 58.096437
+        "mean": 124.108857,
+        "std": 40.612668
       },
       "Primary Weld Current": {
-        "mean": 202.339331,
-        "std": 142.202567
+        "mean": 286.436004,
+        "std": 21.249311
       },
       "Secondary Weld Voltage": {
-        "mean": 12.552475,
-        "std": 8.920111
+        "mean": 17.661896,
+        "std": 2.171319
       }
     },
-    "Warping Weld": {
+    "Warping": {
       "Pressure": {
-        "mean": 0.74,
-        "std": 1.361768
+        "mean": 0.199865,
+        "std": 0.625172
       },
       "CO2 Weld Flow": {
-        "mean": 13.670466,
-        "std": 10.612989
+        "mean": 17.159467,
+        "std": 11.500191
       },
       "Feed": {
-        "mean": 32.934845,
-        "std": 14.641674
+        "mean": 40.504605,
+        "std": 16.159729
       },
       "Primary Weld Current": {
-        "mean": 99.022826,
-        "std": 65.971609
+        "mean": 152.336879,
+        "std": 16.273665
       },
       "Secondary Weld Voltage": {
-        "mean": 17.773261,
-        "std": 12.230581
+        "mean": 21.501077,
+        "std": 3.712743
       }
     }
   },
-  "trained_at": "2026-03-30T13:13:50.665610+00:00",
+  "trained_at": "2026-04-02T06:33:53.837071+00:00",
   "algorithm": "RandomForestClassifier",
+  "model_size_mb": 4.2293,
+  "artifact_compression": {
+    "method": "xz",
+    "level": 3
+  },
   "intel_patched": true,
-  "note": "Load model with joblib.load(model_file). Input shape: (N, 5) \u2014 columns must follow 'features' order exactly. Apply sklearnex.patch_sklearn() before loading for Intel iGPU acceleration."
+  "data_source": {
+    "data_dir": "/home/ecgv-d19-l3t19/welding_dataset/raid/intel_robotic_welding_dataset",
+    "manifest": "manifest.csv",
+    "steel_type": "FE410",
+    "train_splits_used": [
+      "TRAIN",
+      "VAL"
+    ],
+    "eval_split_used": "TEST"
+  },
+  "note": "Load model with joblib.load(model_file). Input shape: (N, 5) and columns must follow 'features' order exactly."
 }
