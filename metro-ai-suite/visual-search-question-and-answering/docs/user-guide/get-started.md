@@ -15,12 +15,12 @@
 
 #### Option 1: Build from source
 
-Go to the directory of your choice and clone the repository, either in full or partially.
+Go to the target directory of your choice and clone the application, or the suite.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 <!--hide_directive
 ::::{tab-set}
-:::{tab-item} hide_directive--> **Clone Only the Application**
+:::{tab-item} hide_directive--> **Clone the Application**
 
 ```bash
 git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
@@ -30,11 +30,12 @@ git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
 
 <!--hide_directive
 :::
-:::{tab-item} hide_directive--> **Clone Entire Repository**
+:::{tab-item} hide_directive--> **Clone the Suite**
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git &&
-cd edge-ai-suites
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite/
 ```
 
 <!--hide_directive
@@ -112,8 +113,8 @@ Otherwise, if you would like to use your own data (images and video), make sure 
      ```
 
      > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
-     > [multimodal-embedding-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for available embedding models, and
-     > [vlm-openvino-serving's supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for available vlm models.
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for Multimodal Embedding Serving for available embedding models, and
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
      You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 

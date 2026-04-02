@@ -54,12 +54,16 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
 ## Quick Start
 
-### Step 1: Clone the repo
+### Step 1: Clone the application
+
+Go to the target directory of your choice and do a partial clone of the repository with the application code and dependencies.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-# Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/smart-nvr
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite/smart-nvr &&
+git sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection
 ```
 
 ### Step 2: Configure Environment
