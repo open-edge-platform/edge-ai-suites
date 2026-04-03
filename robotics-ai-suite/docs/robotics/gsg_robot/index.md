@@ -18,7 +18,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
 The Express Setup will use a convenience script to automatically configure and install the necessary content on your system. If you prefer to perform the steps yourself, use the [Step-by-step Setup](#step-by-step-setup) guide.
 
-## 1. Express Setup: Install Canonical Ubuntu OS
+### 1. Express Setup: Install Canonical Ubuntu OS
 
 Intel recommends a fresh installation of the Ubuntu distribution of the Linux OS
 for your target system, but this is not mandatory.
@@ -50,7 +50,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 Visit the Canonical Ubuntu website to see the detailed installation instructions: [Install Ubuntu desktop](https://ubuntu.com/tutorials/install-ubuntu-desktop).
 
-## 2. Express Setup: Execute Convenience Script
+### 2. Express Setup: Execute Convenience Script
 
 Download and execute the convenience script. Note: This script may take anywhere from 10 to 30 minutes depending on your network and system performance.
 
@@ -58,7 +58,7 @@ Download and execute the convenience script. Note: This script may take anywhere
 :::{tab-item} **Jazzy**
 :sync: jazzy
 
-> [!IMPORTANT] The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
+> **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
 > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
 
 ```bash
@@ -68,15 +68,11 @@ export USE_PROXY=0
 ./setup-robotics-jazzy.sh
 ```
 
-> **Note:** If you are behind a network proxy, make sure you have
-> defined ``http_proxy`` and ``https_proxy`` environment variables and 
-> modify the command above to be `export USE_PROXY=1`
-
 :::
 :::{tab-item} **Humble**
 :sync: humble
 
-> [!IMPORTANT] The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
+> **Note:** The convenience script will first initialize the system by uninstalling any packages with names matching the following patterns:
 > ``*oneapi*`` ``ros-*`` ``*openvino*`` ``*gazebo*`` ``*realsense*``
 
 ```bash
@@ -86,12 +82,12 @@ export USE_PROXY=0
 ./setup-robotics-humble.sh
 ```
 
-> **Note:** If you are behind a network proxy, make sure you have
-> defined ``http_proxy`` and ``https_proxy`` environment variables and 
-> modify the command above to be `export USE_PROXY=1`
-
 :::
 ::::
+
+> **Note:** If you are behind a network proxy, make sure you have
+> defined ``http_proxy`` and ``https_proxy`` environment variables and
+> modify the command above to be `export USE_PROXY=1`
 
 ## Step-by-step Setup
 
