@@ -88,7 +88,7 @@ Verify that the PCD file has enough points using the pcl_viewer tool which comes
 
   pcl_viewer <pcdFilename.pcd>
 
-As show in following image  
+As shown in the following image  
 
 
 .. image:: ../../images/html/pcl_viewer.png

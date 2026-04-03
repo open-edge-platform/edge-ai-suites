@@ -35,14 +35,14 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 
 1. Create a Python 3.10 virtual environment with the following command:
 
-```
+```bash
 sudo apt install python3-venv
 python3 -m venv act
 ```
 
 2. Activate the virtual environment with the following command:
 
-```
+```bash
 source act/bin/activate
 ```
 
@@ -53,7 +53,7 @@ source act/bin/activate
 
 Install the Intel® Extension for PyTorch with the following command:
 
-```
+```bash
 pip install torch==2.3.1+cxx11.abi torchvision==0.18.1+cxx11.abi torchaudio==2.3.1+cxx11.abi intel-extension-for-pytorch==2.3.110+xpu oneccl_bind_pt==2.3.100+xpu ipex-llm==2.2.0b20241224 --extra-index-url https://pytorch-extension.intel.com/release-whl/stable/xpu/us/
 ```
 
@@ -61,7 +61,7 @@ pip install torch==2.3.1+cxx11.abi torchvision==0.18.1+cxx11.abi torchaudio==2.3
 
 Install the Intel® OpenVINO™ with the following command:
 
-```
+```bash
 pip install openvino==2024.6.0
 ```
 
@@ -69,7 +69,7 @@ pip install openvino==2024.6.0
 
 Install the dependencies with the following command:
 
-```
+```bash
 pip install pyquaternion==0.9.9 pyyaml==6.0 rospkg==1.5.0 pexpect==4.8.0 mujoco==3.2.6 dm_control==1.0.26 matplotlib==3.10.0 einops==0.6.0 packaging==23.0 h5py==3.12.1 ipython==8.12.0 opencv-python==4.10.0.84 transformers==4.37.0 accelerate==0.23.0 bigdl-core-xe-21==2.6.0b2 bigdl-core-xe-addons-21==2.6.0b2 bigdl-core-xe-batch-21==2.6.0b2 huggingface-hub==0.24.7
 ```
 
@@ -79,14 +79,14 @@ The Embodied Intelligence SDK provides optimized source code for Intel® Extensi
 
 For Intel® Extension for PyTorch:
 
-```
+```bash
 sudo apt install act-ipex 
 sudo chown -R $USER /opt/act-ipex/
 ```
 
 For Intel® OpenVINO™:
 
-```
+```bash
 sudo apt install act-ov
 sudo chown -R $USER /opt/act-ov/
 ```
@@ -95,7 +95,7 @@ sudo chown -R $USER /opt/act-ov/
 
 Install the DETR with the following command:
 
-```
+```bash
 cd <path_to_act>/detr/
 pip install -e .
 ```
@@ -110,14 +110,14 @@ pip install -e .
 
 `ov_convert.py` is a script provided to convert the PyTorch model to OpenVINO IR. You can find the script in the `act-ov` directory, and see the usage with the following command:
 
-```
+```bash
 cd /opt/act-ov/
 python3 ov_convert.py -h
 ```
 
 For example, you can convert the model with the following command:
 
-```
+```bash
 python3 ov_convert.py --ckpt_path <your_ckpt_path> --height 480 --weight 640 --camera_num 4 --chunk_size 100
 ```
 
@@ -154,7 +154,7 @@ Below is a camera viewer showcasing four different camera perspectives, the left
 
 4. Evaluate the policy with the following command:
 
-```
+```bash
 python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0 --device GPU --eval
 ```
 
@@ -175,20 +175,20 @@ When the `--onscreen_render` parameter is enabled, the successful inference resu
 
 1. Generate 50 episodes with the following command:
 
-```
+```bash
 # Bimanual Insertion task
 python3 record_sim_episodes.py --task_name sim_insertion_scripted --dataset_dir <data save dir> --num_episodes 50
 ```
 
 2. Visualize the episode with the following command:
 
-```
+```bash
 python3 visualize_episodes.py --dataset_dir <data save dir> --episode_idx 0
 ```
 
 3. Train ACT with the following command:
 
-```
+```bash
 # Bimanual Insertion task
 python3 imitate_episodes.py --task_name sim_insertion_scripted --ckpt_dir <ckpt dir> --policy_class ACT --kl_weight 10 --chunk_size 100 --hidden_dim 512 --batch_size 8 --dim_feedforward 3200 --num_epochs 2000  --lr 1e-5 --seed 0
 ```

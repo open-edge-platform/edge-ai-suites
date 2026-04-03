@@ -39,6 +39,9 @@ You can list all built packages:
 
 ```bash
 ls|grep -i .deb
+```
+
+```text
 ros-humble-pyrealsense2-ai-demo_*_amd64.deb
 ros-humble-pyrealsense2-ai-demo-build-deps_*_amd64.deb
 ```
@@ -127,6 +130,9 @@ To see a full list of available Makefile targets:
 
 ```bash
 make help
+```
+
+```text
 Target               Description
 ------               -----------
 default              Run demo
@@ -195,7 +201,9 @@ Run the below command to check for the iGPU driver on 12th Gen Intel® Core™ i
 ```bash
 # Install clinfo
 sudo apt install -y clinfo
+```
 
+```text
 # clinfo command to check GPU device
 clinfo | grep -i "Device Name"
 clinfo | grep -i "Device Name"
@@ -242,6 +250,8 @@ Follow the below steps only in case the above iGPU driver is not installed.
 
    ```bash
    dkms status
+   ```
+   ```text
     ipu6-drivers/20230621+iotgipu6-0eci8, 5.15.0-1048-intel-iotg, x86_64: installed
    ```
 
@@ -255,6 +265,8 @@ Follow the below steps only in case the above iGPU driver is not installed.
 
    ```bash
    modinfo intel-ipu6-isys | head -3
+   ```
+   ```text
     filename:       /lib/modules/5.15.0-1048-intel-iotg/updates/dkms/intel-ipu6-isys.ko
     description:    Intel ipu input system driver
     license:        GPL
@@ -303,6 +315,8 @@ To use a different configuration, modify the demo target in the Makefile or run 
 
 ```bash
 make bash
+```
+```bash
 # Inside the container:
 cd src
 source /opt/intel/oneapi/setvars.sh
@@ -318,7 +332,7 @@ Run the below command to start the application.
 . /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
 source /opt/ros/humble/setup.bash
 
-# Command to run the demo application for 4x camera input streams.
+# Command to run the demo application for 4x camera input streams:
 python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
@@ -333,6 +347,8 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
 
    ```bash
    sudo intel_gpu_top
+   ```
+   ```text
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted
    ```
