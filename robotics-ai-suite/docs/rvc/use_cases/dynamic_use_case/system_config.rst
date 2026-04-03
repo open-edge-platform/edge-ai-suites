@@ -119,7 +119,7 @@ Configure the URCaps for the robot and the Robotiq 2F-85 URCap. For details, ref
 
 After installing `external_control.urcap`, the screen, shown in the following figure, will be displayed.
 
-.. image:: images/html/URExternalControl.png
+.. image:: ../../images/html/URExternalControl.png
     :alt: UR External Control
 
 .. note::
@@ -142,7 +142,7 @@ Install these URCaps on the UR5e robot teach pendant using a USB drive.
 
 Restart the robot. Select **Program Robot** on the Welcome screen. Go to the **Installation** tab. Select **Gripper** listed under **URCaps**.
 
-.. image:: images/html/URRobotiqGripper.png
+.. image:: ../../images/html/URRobotiqGripper.png
     :alt: UR Robotiq Gripper urcap
 
 
@@ -199,7 +199,7 @@ Create Program
 
 To use the new URCaps, enabling the communication with the Intel® architecture RVC controller, create a new program on the teaching pendant and insert the **External Control** program node in the program tree.
 
-.. image:: images/html//URCreateProgram.png
+.. image:: ../../images/html//URCreateProgram.png
     :alt: Create Program
 
 .. note::
@@ -237,5 +237,5 @@ correctly homed before initiating any automated behavior.
 | Wrist 3  | 0°            |
 +----------+---------------+
 
-.. image:: images/html/sethomeposition.png
+.. image:: ../../images/html/sethomeposition.png
    :alt: setting home position
