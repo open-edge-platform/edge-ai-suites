@@ -33,6 +33,7 @@ import os
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Union
 
+import asyncio
 import tempfile
 
 from providers.minio_wrapper.minio_client import MinioStore
@@ -161,30 +162,34 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
 
         store = MinioStore(minio_store.client, bucket_name)
 
-        proc_files = []
-        metas = []
-        
-        # TODO: Supported file extensions, verify
-        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc', 
-                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md', '.rst')
-        
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for object_name in store.list_object_names(prefix=folder_path, recursive=True):
-                if not object_name.lower().endswith(supported_extensions):
-                    logger.warning(f"Unsupported file type: {object_name}, skipped.")
-                    continue
+        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc',
+                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md')
 
-                local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
-                store.get_file(object_name, local_file_path)
-                
-                file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
-                proc_files.append(local_file_path)
-                metas.append(file_meta)
+        def _blocking_ingest():
+            proc_files = []
+            metas = []
+            with tempfile.TemporaryDirectory() as temp_dir:
+                for object_name in store.list_object_names(prefix=folder_path, recursive=True):
+                    if not object_name.lower().endswith(supported_extensions):
+                        logger.warning(f"Unsupported file type: {object_name}, skipped.")
+                        continue
 
-            if not proc_files:
-                return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
+                    local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
+                    store.get_file(object_name, local_file_path)
 
-            res = indexer.add_embedding(proc_files, metas, frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+                    file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
+                    proc_files.append(local_file_path)
+                    metas.append(file_meta)
+
+                if not proc_files:
+                    return None
+
+                return indexer.add_embedding(proc_files, metas, frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
+
+        if res is None:
+            return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
 
         return JSONResponse(
             content={"message": f"Files from MinIO directory successfully processed. db returns {res}"},
@@ -210,12 +215,15 @@ async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
 
         store = MinioStore(minio_store.client, bucket_name)
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
-            store.get_file(file_path, local_file_path)
-            logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
-            meta["file_path"] = f"minio://{bucket_name}/{file_path}"
-            res = indexer.add_embedding([local_file_path], [meta], frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+        def _blocking_ingest():
+            with tempfile.TemporaryDirectory() as temp_dir:
+                local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
+                store.get_file(file_path, local_file_path)
+                logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
+                meta["file_path"] = f"minio://{bucket_name}/{file_path}"
+                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
 
         return JSONResponse(
             content={"message": f"File from MinIO successfully processed. db returns {res}"},
@@ -237,7 +245,7 @@ async def ingest_text(request: IngestTextRequest):
             meta["file_path"] = f"minio://{request.bucket_name}/{request.file_path}"
         else:
             logger.info("'bucket_name' and 'file_path' not provided, will ingest as independent text")
-        res = indexer.ingest_text(request.text, meta)
+        res = await asyncio.to_thread(indexer.ingest_text, request.text, meta)
         return JSONResponse(content={"message": f"Text successfully ingested. db returns {res}"}, status_code=200)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -419,23 +427,30 @@ async def retrieval(request: RetrievalRequest):
         # Process query or image_base64
         if request.query:
             # Search in both visual and document collections and merge results, return 2*top_k results
-            results = retriever.search(query=request.query, filters=request.filter, top_k=request.max_num_results)
+            results = await asyncio.to_thread(retriever.search, query=request.query, filters=request.filter, top_k=request.max_num_results)
         else:
             try:
-                results = retriever.search(image_base64=request.image_base64, filters=request.filter, top_k=request.max_num_results)
+                results = await asyncio.to_thread(retriever.search, image_base64=request.image_base64, filters=request.filter, top_k=request.max_num_results)
             except Exception as e:
                 logger.error(f"Error processing image_base64: {e}")
                 raise HTTPException(status_code=400, detail=f"Error processing image_base64: {str(e)}")
 
         # Format results
         ret = []
+        scores = results.get("scores", [[]])[0] if results else []
+        reranker_scores = results.get("reranker_scores", [[]])[0] if results and "reranker_scores" in results else []
         if results and results['ids']:
             for i in range(len(results['ids'][0])):
-                ret.append({
+                item = {
                     "id": results['ids'][0][i],
                     "distance": results['distances'][0][i],
-                    "meta": results['metadatas'][0][i]
-                })
+                    "meta": results['metadatas'][0][i],
+                }
+                if i < len(scores):
+                    item["score"] = scores[i]
+                if i < len(reranker_scores) and reranker_scores[i] is not None:
+                    item["reranker_score"] = reranker_scores[i]
+                ret.append(item)
 
         # Return the results
         return JSONResponse(

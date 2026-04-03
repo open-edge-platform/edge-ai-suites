@@ -426,3 +426,9 @@ content_search:
     device: "CPU"
     visual_embedding_model: "CLIP/clip-vit-b-16"
     doc_embedding_model: "BAAI/bge-small-en-v1.5"
+    reranker:
+      enabled: true
+      model: "BAAI/bge-reranker-large"
+      device: "CPU"
+      dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
+      overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing

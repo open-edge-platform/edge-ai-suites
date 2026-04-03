@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import base64
+import multiprocessing
 import os
 import random
 from io import BytesIO
@@ -12,18 +13,57 @@ import numpy as np
 import openvino as ov
 import torch
 import yaml
-from openvino_tokenizers import convert_tokenizer
-from optimum.exporters.openvino.utils import save_preprocessors
-from optimum.intel import (
-    OVModelForCausalLM,
-    OVModelForFeatureExtraction,
-    OVModelForSequenceClassification,
-    OVModelForVisualCausalLM,
-)
-from optimum.utils.save_utils import maybe_load_preprocessors
 from PIL import Image
 from providers.vlm_openvino_serving.utils.common import ErrorMessages, logger, settings
-from transformers import AutoTokenizer
+
+
+def _convert_model_worker(
+    model_id: str, cache_dir: str, model_type: str, weight_format: str
+):
+    """
+    Worker function that runs in a subprocess to perform the actual model conversion.
+    When the subprocess exits, all memory used during conversion is fully reclaimed by the OS.
+    """
+    from openvino_tokenizers import convert_tokenizer
+    from optimum.exporters.openvino.utils import save_preprocessors
+    from optimum.intel import (
+        OVModelForCausalLM,
+        OVModelForFeatureExtraction,
+        OVModelForSequenceClassification,
+        OVModelForVisualCausalLM,
+    )
+    from optimum.utils.save_utils import maybe_load_preprocessors
+    from transformers import AutoTokenizer
+
+    hf_tokenizer = AutoTokenizer.from_pretrained(model_id)
+    hf_tokenizer.save_pretrained(cache_dir)
+    ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=False)
+    ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
+
+    if model_type == "embedding":
+        embedding_model = OVModelForFeatureExtraction.from_pretrained(
+            model_id, export=True
+        )
+        embedding_model.save_pretrained(cache_dir)
+    elif model_type == "reranker":
+        reranker_model = OVModelForSequenceClassification.from_pretrained(
+            model_id, export=True
+        )
+        reranker_model.save_pretrained(cache_dir)
+    elif model_type == "llm":
+        llm_model = OVModelForCausalLM.from_pretrained(
+            model_id, export=True, weight_format=weight_format
+        )
+        llm_model.save_pretrained(cache_dir)
+    elif model_type == "vlm":
+        vlm_model = OVModelForVisualCausalLM.from_pretrained(
+            model_id, export=True, weight_format=weight_format
+        )
+        vlm_model.save_pretrained(cache_dir)
+        preprocessors = maybe_load_preprocessors(model_id)
+        save_preprocessors(preprocessors, vlm_model.config, cache_dir, True)
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
 
 
 def convert_model(
@@ -31,6 +71,9 @@ def convert_model(
 ):
     """
     Converts a specified model to OpenVINO format and saves it to the cache directory.
+
+    The conversion runs in a subprocess so that all memory used during quantization
+    and export is fully released when the subprocess exits.
 
     Args:
         model_id (str): The identifier of the model to be converted.
@@ -42,52 +85,25 @@ def convert_model(
 
     Raises:
         ValueError: If the model_type is not one of "embedding", "reranker", "llm", or "vlm".
-
-    Notes:
-        - If the model has already been converted and exists in the cache directory, the conversion process is skipped.
-        - The function uses the Hugging Face `AutoTokenizer` to load and save the tokenizer.
-        - The function uses OpenVINO's `convert_tokenizer` and `save_model` to convert and save the tokenizer.
-        - Depending on the model_type, the function uses different OpenVINO model classes to convert and save the model:
-            - "embedding": Uses `OVModelForFeatureExtraction`.
-            - "reranker": Uses `OVModelForSequenceClassification`.
-            - "llm": Uses `OVModelForCausalLM`.
-            - "vlm": Uses `OVModelForVisualCausalLM`.
+        RuntimeError: If the subprocess fails during conversion.
     """
     try:
         logger.debug(f"cache_ddir: {cache_dir}")
         if is_model_ready(Path(cache_dir)):
             logger.info(f"Optimized {model_id} exist in {cache_dir}. Skip process...")
         else:
-            logger.info(f"Converting {model_id} model to OpenVINO format...")
-            hf_tokenizer = AutoTokenizer.from_pretrained(model_id)
-            hf_tokenizer.save_pretrained(cache_dir)
-            ov_tokenizer = convert_tokenizer(hf_tokenizer, add_special_tokens=False)
-            ov.save_model(ov_tokenizer, f"{cache_dir}/openvino_tokenizer.xml")
-
-            if model_type == "embedding":
-                embedding_model = OVModelForFeatureExtraction.from_pretrained(
-                    model_id, export=True
+            logger.info(f"Converting {model_id} model to OpenVINO format in subprocess...")
+            process = multiprocessing.Process(
+                target=_convert_model_worker,
+                args=(model_id, cache_dir, model_type, weight_format),
+            )
+            process.start()
+            process.join()
+            if process.exitcode != 0:
+                raise RuntimeError(
+                    f"Model conversion subprocess failed with exit code {process.exitcode}"
                 )
-                embedding_model.save_pretrained(cache_dir)
-            elif model_type == "reranker":
-                reranker_model = OVModelForSequenceClassification.from_pretrained(
-                    model_id, export=True
-                )
-                reranker_model.save_pretrained(cache_dir)
-            elif model_type == "llm":
-                llm_model = OVModelForCausalLM.from_pretrained(
-                    model_id, export=True, weight_format=weight_format
-                )
-                llm_model.save_pretrained(cache_dir)
-            elif model_type == "vlm":
-                vlm_model = OVModelForVisualCausalLM.from_pretrained(
-                    model_id, export=True, weight_format=weight_format
-                )
-                vlm_model.save_pretrained(cache_dir)
-                preprocessors = maybe_load_preprocessors(model_id)
-                save_preprocessors(preprocessors, vlm_model.config, cache_dir, True)
-            else:
-                raise ValueError(f"Unsupported model type: {model_type}")
+            logger.info(f"Model conversion completed. Subprocess memory released.")
     except Exception as e:
         logger.error(f"Error occurred during model conversion: {e}")
         raise RuntimeError(f"Error occurred during model conversion: {e}")

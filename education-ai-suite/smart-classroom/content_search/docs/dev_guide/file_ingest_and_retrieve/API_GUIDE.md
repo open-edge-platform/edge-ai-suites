@@ -90,7 +90,7 @@ curl http://localhost:9990/v1/dataprep/info
 
 Files must first be uploaded to MinIO before they can be ingested. The service downloads the file, extracts embeddings, and stores them in ChromaDB.
 
-**Supported file types:** `.jpg`, `.png`, `.jpeg`, `.mp4`, `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.html`, `.htm`, `.xml`, `.md`, `.rst`
+**Supported file types:** `.jpg`, `.png`, `.jpeg`, `.mp4`, `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.html`, `.htm`, `.xml`, `.md`
 
 ### `POST /v1/dataprep/ingest`
 

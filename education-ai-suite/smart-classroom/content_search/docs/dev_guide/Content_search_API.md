@@ -189,7 +189,7 @@ The system supports the following file formats for all ingestion and upload-inge
 | :--- | :--- | :--- |
 | **Video** | `.mp4` | Frame extraction, AI-driven summarization, and semantic indexing. |
 | **Document** | `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls` | Full-text extraction, semantic chunking, and vector embedding. |
-| **Web/Markup** | `.html`, `.htm`, `.xml`, `.md`, `.rst` | Structured text parsing and content indexing. |
+| **Web/Markup** | `.html`, `.htm`, `.xml`, `.md` | Structured text parsing and content indexing. |
 | **Image** | `.jpg`, `.png`, `.jpeg` | Visual feature embedding and similarity search indexing. |
 
 > **Technical Note**: 

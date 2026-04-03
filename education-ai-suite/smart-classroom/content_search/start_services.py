@@ -75,6 +75,14 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_HOST", ingest.get("host_addr", "127.0.0.1"))
         _set("INGEST_PORT", ingest.get("port", "9990"))
 
+        # Reranker
+        reranker = ingest.get("reranker", {})
+        _set("RERANKER_ENABLED", str(reranker.get("enabled", False)).lower())
+        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-large"))
+        _set("RERANKER_DEVICE", reranker.get("device", "CPU"))
+        _set("RERANKER_DEDUP_TIME_THRESHOLD", str(reranker.get("dedup_time_threshold", 5)))
+        _set("RERANKER_OVERFETCH_MULTIPLIER", str(reranker.get("overfetch_multiplier", 3)))
+
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
         _set("CS_PORT", cs.get("port", "9011"))

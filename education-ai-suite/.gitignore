@@ -2,8 +2,13 @@
 __pycache__/
 *.py[cod]
 
+# Ignore virtual environments
+*venv*
+
 # Ignore storage directory
 storage/
+chroma_data/
+minio_data/
 
 # Ignore models directory
 models/
@@ -13,13 +18,7 @@ chunks/
 
 #Ignore logs
 monitoring/executionlogs/
+logs/
 
 *.exe
 *.whl
-
-*venv*
-
-chroma_data/
-minio_data/
-extracted_images/
-logs/

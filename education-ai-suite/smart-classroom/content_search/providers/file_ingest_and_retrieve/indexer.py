@@ -4,6 +4,7 @@
 import logging
 import copy
 import os
+import sys
 
 from moviepy import VideoFileClip
 from PIL import Image
@@ -18,10 +19,6 @@ from providers.file_ingest_and_retrieve.models import (
 )
 
 logger = logging.getLogger(__name__)
-
-def create_chroma_data(embedding, meta=None):
-    return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
-
 
 def create_chroma_data(embedding, meta=None):
     return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
@@ -220,6 +217,7 @@ class Indexer:
                 entities.append(node)
                 self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
             frame_counter += 1
+        logger.info(f"Processed video {video_path}: {len(entities)} embeddings")
         return entities
 
     def process_image(self, image_path, meta, do_detect_and_crop=True):
@@ -240,6 +238,7 @@ class Indexer:
         node = create_chroma_data(embedding, meta_data)
         entities.append(node)
         self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
+        logger.info(f"Processed image {image_path}: {len(entities)} embeddings")
         return entities
 
     def process_document(self, document_path, meta):
@@ -320,7 +319,7 @@ class Indexer:
         do_detect_and_crop = kwargs.get("do_detect_and_crop", True)
         entities = []
         doc_extensions = ('.txt', '.pdf', '.docx', '.doc', '.pptx', '.ppt', '.xlsx',
-                          '.xls', '.html', '.htm', '.xml', '.md', '.rst')
+                          '.xls', '.html', '.htm', '.xml', '.md')
 
         for file, meta in zip(files, metas):
             if meta["file_path"] in self.visual_id_map or meta["file_path"] in self.document_id_map:
@@ -329,9 +328,11 @@ class Indexer:
             file_lower = file.lower()
             if file_lower.endswith('.mp4'):
                 meta["type"] = "video"
+                logger.info(f"Processing video: {file}")
                 entities.extend(self.process_video(file, meta, frame_interval, minimal_duration, do_detect_and_crop))
             elif file_lower.endswith(('.jpg', '.png', '.jpeg')):
                 meta["type"] = "image"
+                logger.info(f"Processing image: {file}")
                 entities.extend(self.process_image(file, meta, do_detect_and_crop))
             elif file_lower.endswith(doc_extensions):
                 meta["type"] = "document"
