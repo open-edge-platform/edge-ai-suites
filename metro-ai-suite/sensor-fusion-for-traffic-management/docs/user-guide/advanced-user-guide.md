@@ -22,13 +22,13 @@ For prerequisites and system requirements, see
 
 ## Architecture Overview
 
-In this section, we describe how to run Intel® Metro AI Suite Sensor Fusion for Traffic Management application.
+This section describes how to run Intel® Metro AI Suite Sensor Fusion for Traffic Management application.
 
 Intel® Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources](#resources)
 
 There are two steps required for running the sensor fusion application:
 
-- Start AI Inference service, more details can be found at [Service Start ](#service-start)
+- Start AI Inference service, more details can be found at [Service Start](#service-start)
 - Run the application entry program, more details can be found at [Entry Program](#entry-program)
 
 Additionally, you can test each component (without display) following the guides at
@@ -203,12 +203,12 @@ Environment requirement:
   - `lidar`: only show lidar results in birdview.
   - `media_lidar`: show image results in frontview and lidar results in birdview separately.
   - `media_fusion`: show both for image results in frontview and fusion results in birdview.
-- **visualization_type**: visualization type of different pipelines, currently support `2C1L`, `4C2L`, `8C4L`, `12C2L`.
+- **visualization_type**: visualization type of different pipelines, currently supports `2C1L`, `4C2L`, `8C4L`, `12C2L`.
 - **save_flag**: whether to save display results into video.
 - **pipeline_repeats**: pipeline repeats number.
 - **cross_stream_num**: the stream number that run in a single pipeline.
 - **warmup_flag**: warm up flag before pipeline start.
-- **logo_flag**: whether to add intel logo in display.
+- **logo_flag**: whether to add Intel logo in display.
 
 ##### entry program without display
 
@@ -234,10 +234,10 @@ Environment requirement:
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -248,7 +248,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    ![Display type: media_fusion](./_assets/2C1L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/2C1L-Display-type-media-fusion.png "Display type: media_fusion")
 
 - `media_lidar` display type
 
@@ -259,7 +259,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
     ```
 
-    ![Display type: media_lidar](./_assets/2C1L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/2C1L-Display-type-media-lidar.png "Display type: media_lidar")
 
 - `media` display type
 
@@ -270,7 +270,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
     ```
 
-    ![Display type: media](./_assets/2C1L-Display-type-media.png)
+    ![Display type: media](./_assets/2C1L-Display-type-media.png "Display type: media")
 
 - `lidar` display type
 
@@ -281,18 +281,18 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
     ```
 
-    ![Display type: lidar](./_assets/2C1L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/2C1L-Display-type-lidar.png "Display type: lidar")
 
 #### 2C+1L Unit Tests
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
-In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
 **Unit Test: Fusion pipeline without display**:
 Open another terminal, run the following commands:
@@ -324,10 +324,10 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -338,7 +338,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
     ```
 
-    ![Display type: media_fusion](./_assets/4C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/4C2L-Display-type-media-fusion.png "Display type: media_fusion")
 
 - `media_lidar` display type
 
@@ -349,7 +349,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
     ```
 
-    ![Display type: media_lidar](./_assets/4C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/4C2L-Display-type-media-lidar.png "Display type: media_lidar")
 
 - `media` display type
 
@@ -360,7 +360,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
     ```
 
-    ![Display type: media](./_assets/4C2L-Display-type-media.png)
+    ![Display type: media](./_assets/4C2L-Display-type-media.png "Display type: media")
 
 - `lidar` display type
 
@@ -371,18 +371,18 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
     ```
 
-    ![Display type: lidar](./_assets/4C2L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/4C2L-Display-type-lidar.png "Display type: lidar")
 
 #### 4C+2L Unit Tests
 
 **The target platform is Intel® Core™ Ultra 7 265H.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
-In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
 **Unit Test: Fusion pipeline without display**:
 
@@ -415,10 +415,10 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -429,7 +429,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
     ```
 
-    ![Display type: media_fusion](./_assets/12C2L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/12C2L-Display-type-media-fusion.png "Display type: media_fusion")
 
 - `media_lidar` display type
 
@@ -440,7 +440,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
     ```
 
-    ![Display type: media_lidar](./_assets/12C2L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/12C2L-Display-type-media-lidar.png "Display type: media_lidar")
 
 - `media` display type
 
@@ -451,7 +451,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
     ```
 
-    ![Display type: media](./_assets/12C2L-Display-type-media.png)
+    ![Display type: media](./_assets/12C2L-Display-type-media.png "Display type: media")
 
 - `lidar` display type
 
@@ -462,18 +462,18 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
     ```
 
-    ![Display type: lidar](./_assets/12C2L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/12C2L-Display-type-lidar.png "Display type: lidar")
 
 #### 12C+2L Unit Tests
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
-In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
 **Unit Test: Fusion pipeline without display**:
 
@@ -506,10 +506,10 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -520,7 +520,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
     ```
 
-    ![Display type: media_fusion](./_assets/8C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/8C4L-Display-type-media-fusion.png "Display type: media_fusion")
 
 - `media_lidar` display type
 
@@ -531,7 +531,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
     ```
 
-    ![Display type: media_lidar](./_assets/8C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/8C4L-Display-type-media-lidar.png "Display type: media_lidar")
 
 - `media` display type
 
@@ -542,7 +542,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
     ```
 
-    ![Display type: media](./_assets/8C4L-Display-type-media.png)
+    ![Display type: media](./_assets/8C4L-Display-type-media.png "Display type: media")
 
 - `lidar` display type
 
@@ -553,18 +553,18 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
     ```
 
-    ![Display type: lidar](./_assets/8C4L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/8C4L-Display-type-lidar.png "Display type: lidar")
 
 #### 8C+4L Unit Tests
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
-In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
 **Unit Test: Fusion pipeline without display**:
 
@@ -597,10 +597,10 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 ***The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
 - `media_fusion` display type
 
@@ -611,7 +611,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
     ```
 
-    ![Display type: media_fusion](./_assets/12C4L-Display-type-media-fusion.png)
+    ![Display type: media_fusion](./_assets/12C4L-Display-type-media-fusion.png "Display type: media_fusion")
 
 - `media_lidar` display type
 
@@ -622,7 +622,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
     ```
 
-    ![Display type: media_lidar](./_assets/12C4L-Display-type-media-lidar.png)
+    ![Display type: media_lidar](./_assets/12C4L-Display-type-media-lidar.png "Display type: media_lidar")
 
 - `media` display type
 
@@ -633,7 +633,7 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
     ```
 
-    ![Display type: media](./_assets/12C4L-Display-type-media.png)
+    ![Display type: media](./_assets/12C4L-Display-type-media.png "Display type: media")
 
 - `lidar` display type
 
@@ -644,18 +644,18 @@ Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_form
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
     ```
 
-    ![Display type: lidar](./_assets/12C4L-Display-type-lidar.png)
+    ![Display type: lidar](./_assets/12C4L-Display-type-lidar.png "Display type: lidar")
 
 #### 12C+4L Unit Tests
 
 **The target platform is Intel® Core™ i7-13700 and Intel® B580 Graphics.**
 
-> Note: Run with `root` if users want to get the GPU utilization profiling.
-> change /path-to-dataset to your data path.
+> **Note:** Run with `root` if you want to get the GPU utilization profiling.
+> Change `/path-to-dataset` to your data path.
 
-Please refer to [kitti360_guide.md](../../deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](../../ai_inference/test/demo/kitti360/).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/metro-ai-suite/sensor-fusion-for-traffic-management/ai_inference/test/demo/kitti360/).
 
-In this section, the unit tests of three major components will be described: media processing, lidar processing, fusion pipeline without display.
+This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
 **Unit Test: Fusion pipeline without display**:
 
@@ -745,7 +745,7 @@ Fps and average latency will be calculated.
 
 #### 2C+1L stability test
 
-> **Note:** change workload configuration to 1 in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> **Note:** change workload configuration to `1` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -763,7 +763,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 4C+2L stability test
 
-> **Note:** change workload configuration to 2 in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
+> **Note:** change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -781,7 +781,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+2L stability test
 
-> **Note:** change workload configuration to 2 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
+> **Note:** change workload configuration to `2` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -799,7 +799,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 8C+4L stability test
 
-> **Note:** change workload configuration to 4 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
+> **Note:** change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -817,7 +817,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 
 #### 12C+4L stability test
 
-> **Note:** change workload configuration to 4 in file: $PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config
+> **Note:** change workload configuration to `4` in file: `$PROJ_DIR/ai_inference/source/low_latency_server/AiInference.config`
 
 ```vim
 ...
@@ -965,13 +965,13 @@ bash run_docker.sh tfcc:latest false
 
 **Enter docker**:
 
-Get the container id by command bellow:
+Get the container id using the command below:
 
 ```bash
 docker ps -a
 ```
 
-And then enter docker by command bellow:
+And then enter docker using the command below:
 
 ```bash
 docker exec -it <container id> /bin/bash
@@ -979,7 +979,7 @@ docker exec -it <container id> /bin/bash
 
 **Copy dataset**:
 
-If you want to copy dataset or other files to docker, you can refer the command bellow:
+If you want to copy the dataset or other files to docker, you can refer to the command below:
 
 ```bash
 docker cp /path/to/dataset <container id>:/path/to/dataset
@@ -987,7 +987,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 
 ### Build and run docker image through docker compose
 
-> **Note that the default username is `tfcc` and password is `intel` in docker image.**
+> **Note:** The default username is `tfcc` and password is `intel` in docker image.
 
 Modify `proxy`, `VIDEO_GROUP_ID` and `RENDER_GROUP_ID` in `.env` file.
 
@@ -1030,7 +1030,7 @@ cd $PROJ_DIR/docker
 docker compose up tfcc -d
 ```
 
-Note if you need NPU support, for example, on MTL platform please run the command bellow:
+If you need NPU support, for example, on MTL platform, run the command below:
 
 ```bash
 cd $PROJ_DIR/docker

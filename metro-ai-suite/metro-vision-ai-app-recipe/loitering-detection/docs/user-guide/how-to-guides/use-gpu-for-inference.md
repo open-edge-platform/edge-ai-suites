@@ -8,6 +8,7 @@ For containerized applications built using the DL Streamer Pipeline Server, firs
 provide GPU device(s) access to the container user.
 
 ### Provide GPU access to the container
+
 This can be done by making the following changes to the docker compose file.
 
 ```yaml
@@ -22,10 +23,12 @@ services:
       # you can add specific devices in case you don't want to provide access to all like below.
       - "/dev:/dev"
 ```
+
 The changes above adds the container user to the `render` group and provides access to the GPU
 devices.
 
 ### Hardware specific encoder/decoders
+
 Unlike the changes done for the container above, the following requires a modification to the
 media pipeline itself.
 
@@ -52,7 +55,7 @@ DL Streamer document for selecting the GPU render device of your choice for VA c
 > **Note:** This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary GPU access to the containers.
 
-The pipeline `object_tracking_gpu` in [pipeline-server-config](../../../src/dlstreamer-pipeline-server/config.json)
+The pipeline `object_tracking_gpu` in [pipeline-server-config](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/src/dlstreamer-pipeline-server/config.json)
 contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline
 as follows:
 

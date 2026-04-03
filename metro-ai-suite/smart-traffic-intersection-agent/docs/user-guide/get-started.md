@@ -20,12 +20,12 @@ traffic data streaming, or use the included broker.
 terminal. If you are new to Docker, see [Docker Documentation](https://docs.docker.com/) for
 an introduction.
 - **Hugging Face token**: Set your token using `export HUGGINGFACE_TOKEN="<your-huggingface-token>"`
-- **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. Following is the recommended default setting.
+- **Registry configuration**: To pull pre-built images from a specific registry, set the `REGISTRY` and `TAG` parameters. The recommended default setting is below.
+
   ```bash
   export REGISTRY="intel"
   export TAG="1.0.0"
   ```
-
 
 ## Quick Start with Setup Script
 
@@ -142,6 +142,7 @@ locations on the same machine for `n` required instances.
     ```bash
     export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
     ```
+
     > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4.  Run the setup for instance #1:
@@ -184,6 +185,7 @@ locations on the same machine for `n` required instances.
     ```bash
     export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
     ```
+
     > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4.  Run Setup for Instance #2
@@ -238,8 +240,10 @@ export TRAFFIC_BUFFER_DURATION=20      # Default value 30; Analysis window of tr
 # To mock the weather data (say in airgapped deployment)
 export WEATHER_MOCK=True
 ```
+
 ### Customizing the video used by sample application
-The video used by this sample application is determined by the configuration in [Smart Intersection application](../../../metro-vision-ai-app-recipe/smart-intersection/). Refer to its documentation for further details.
+
+The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
 
 ## Accessing the Services
 
@@ -250,7 +254,7 @@ from the response, and access it in a web browser.
 The following is a sample response that you might get at script completion, which displays the
 URLs for accessing the relevant services:
 
-![Service endpoints displayed after setup completion](./_assets/service_endpoints.png)
+![Service endpoints displayed after setup completion](./_assets/service_endpoints.png "Service endpoints after completed setup")
 
 ## Troubleshooting
 

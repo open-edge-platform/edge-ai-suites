@@ -3,6 +3,7 @@
 The Live Video Captioning sample application demonstrates real-time video captioning using Intel® DLStreamer and OpenVINO™. It processes RTSP video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model(VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
 
 By following this guide, you will learn how to:
+
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
@@ -12,8 +13,8 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
-- OpenVINO-compatible VLM in `ov_models/`. User may use the [script](../../download_models.sh) provided to prepare the model.
+- RTSP stream source (live camera or test feed). Refer to this [guide](https://github.com/open-edge-platform/scenescape/tree/release-2026.0.0/tools/streamer) to create simulated RTSP test feed stram using exisiting video files.
+- OpenVINO-compatible VLM in `ov_models/`. For conveniance, use the [download models script](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-captioning/download_models.sh) provided to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
 when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.
 

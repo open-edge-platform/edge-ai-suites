@@ -15,7 +15,7 @@ Intel® Core&trade; i7-14700 based systems with Edge Microvisor Toolkit and Wind
 
 **Documentation:**
 
-Documentation is **completed**. [README.md](../../README.md) is updated with installation steps and reference documents.
+Documentation is **completed**. [README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/manufacturing-ai-suite/hmi-augmented-worker/README.md) is updated with installation steps and reference documents.
 
 **Known Limitations and Issues:**
 

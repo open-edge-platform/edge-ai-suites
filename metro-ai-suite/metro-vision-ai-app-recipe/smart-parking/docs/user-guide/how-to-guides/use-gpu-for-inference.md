@@ -1,12 +1,14 @@
 # Use GPU for Inference
 
 ## Pre-requisites
+
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that
 different stages such as decoding, inference etc., can make use of these devices.
 For containerized applications built using the DL Streamer Pipeline Server, first we need to
 provide GPU device(s) access to the container user.
 
 ### Provide GPU access to the container
+
 This can be done by making the following changes to the docker compose file.
 
 ```yaml
@@ -26,6 +28,7 @@ The changes above adds the container user to the `render` group and provides acc
 GPU devices.
 
 ### Hardware specific encoder/decoders
+
 Unlike the changes done for the container above, the following requires a modification to the
 media pipeline itself.
 
@@ -39,6 +42,7 @@ pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated an
 Read the DL Streamer [GPU Device Selection](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) document for more details.
 
 ### GPU specific element properties
+
 DL Streamer inference elements also provides property such as `device=GPU` and
 `pre-process-backend=va-surface-sharing` to infer and pre-process on GPU. Read the DL Streamer
 [Model Preparation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) documentation for more information.
@@ -53,7 +57,7 @@ DL Streamer document for selecting the GPU render device of your choice for VA c
 > **Note:** This sample application already provides a default `compose-without-scenescape.yml`
 > file that includes the necessary GPU access to the containers.
 
-The pipeline `yolov11s_gpu` in [pipeline-server-config](../../../src/dlstreamer-pipeline-server/config.json)
+The pipeline `yolov11s_gpu` in [pipeline-server-config](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/src/dlstreamer-pipeline-server/config.json)
 contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline
 as follows:
 
