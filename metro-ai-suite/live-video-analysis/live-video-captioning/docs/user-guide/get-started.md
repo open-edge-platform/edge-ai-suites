@@ -13,7 +13,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- RTSP stream source (live camera or test feed). Refer to this [guide](https://github.com/open-edge-platform/scenescape/tree/release-2026.0.0/tools/streamer) to create simulated RTSP test feed stram using exisiting video files.
+- RTSP stream source (live camera or test feed). To create a simulated RTSP test feed stream using existing video files, see the [Streamer readme](https://github.com/open-edge-platform/scenescape/tree/release-2026.0/tools/streamer).
 - OpenVINO-compatible VLM in `ov_models/`. For convenience, use the [download models script](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-captioning/download_models.sh) provided to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
 when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.

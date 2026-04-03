@@ -2,8 +2,6 @@
 
 FastMapping application is the Intel® optimized version of octomap.
 
-For more information on FastMapping, see [how_it_works](../../how_it_works/index.rst).
-
 ## Source Code
 
 The source code of this component can be found here: [FastMapping](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/components/fast-mapping)
