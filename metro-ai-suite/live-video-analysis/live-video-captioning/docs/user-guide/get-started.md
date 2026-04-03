@@ -14,13 +14,14 @@ By following this guide, you will learn how to:
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed). Refer to this [guide](https://github.com/open-edge-platform/scenescape/tree/release-2026.0.0/tools/streamer) to create simulated RTSP test feed stram using exisiting video files.
-- OpenVINO-compatible VLM in `ov_models/`. For conveniance, use the [download models script](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-captioning/download_models.sh) provided to prepare the model.
+- OpenVINO-compatible VLM in `ov_models/`. For convenience, use the [download models script](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/live-video-analysis/live-video-captioning/download_models.sh) provided to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
 when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.
 
 ## Run the application
 
 1. **Clone the repository**:
+
      ```bash
      # Clone the release branch
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b release-2026.0.0
@@ -29,19 +30,24 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 > **Note:** Adjust the repo link appropriately in case of forked repo.
 
 2. **Navigate to the Directory**:
+
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
      ```
 
 3. **Configure Image Registry and Tag**:
+
      ```bash
         export REGISTRY="intel/"
         export TAG="1.0.0"
      ```
-    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
+
+    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
 
 4. **Configure Environment**:
-    Create a `.env` file in the repository root:
+
+    Create an `.env` file in the repository root:
+
      ```bash
      WHIP_SERVER_IP=mediamtx
      WHIP_SERVER_PORT=8889
@@ -56,13 +62,16 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
      ALERT_MODE=False
      ENABLE_DETECTION_PIPELINE=False
      ```
+
     Notes:
     - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
     - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
     - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
 
 5. **Download/Export Models**:
+
     Run the following scripts to download and convert VLM models.
+
      ```bash
      chmod +x download_models.sh
      ./download_models.sh [internvl2_1B|gemma3|internvl2_2B]
@@ -81,7 +90,9 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
      ```
 
 6. **Start the Application**:
+
     Start the application using Docker Compose tool:
+
      ```bash
      docker compose up
      ```
@@ -99,12 +110,15 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
     > **Note:** If running in a proxy network, ensure that your RTSP stream URLs or IPs are added to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
 8. **Stop the Services**:
+
     Stop the sample application services using below:
+
      ```bash
      docker compose down
      ```
 
 ## Advanced Setup Options
+
 For alternative ways to setup the application, see:
 
 - [Build from Source](./get-started/build-from-source.md)

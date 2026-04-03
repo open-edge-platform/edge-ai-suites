@@ -73,20 +73,12 @@ Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
 ### Architecture Overview
 
-```
-                    ┌─────────────────────────────┐
-                    │  Smart Route Planning Agent │
-                    │       (Central Node)        │
-                    └──────────────┬──────────────┘
-                                   │
-           ┌───────────────────────┼───────────────────────┐
-           │                       │                       │
-           ▼                       ▼                       ▼
-┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐
-│ Smart Traffic       │ │ Smart Traffic       │ │ Smart Traffic       │
-│ Intersection Agent  │ │ Intersection Agent  │ │ Intersection Agent  │
-│ (Edge Node 1)       │ │ (Edge Node 2)       │ │ (Edge Node N)       │
-└─────────────────────┘ └─────────────────────┘ └─────────────────────┘
+```text
+Smart Route Planning Agent (Central Node)
+|
++-- Smart Traffic Intersection Agent (Edge Node 1)
++-- Smart Traffic Intersection Agent (Edge Node 2)
+`-- Smart Traffic Intersection Agent (Edge Node N)
 ```
 
 ### Multi-Node Deployment Prerequisites
