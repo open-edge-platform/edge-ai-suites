@@ -48,16 +48,10 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("CHROMA_DATA_DIR", chroma.get("data_dir", "./chroma_data"))
         _set("CHROMA_EXE", chroma.get("chroma_exe"))
 
-        # MinIO
-        minio = cs.get("minio", {})
-        server_addr = str(minio.get("server", "127.0.0.1:9000"))
-        port = server_addr.rsplit(':', 1)[-1]
-        _set("MINIO_ADDRESS", f":{port}")
-        _set("MINIO_CONSOLE_ADDRESS", minio.get("console_address", ":9001"))
-        _set("MINIO_ROOT_USER", minio.get("root_user", "minioadmin"))
-        _set("MINIO_ROOT_PASSWORD", minio.get("root_password", "minioadmin"))
-        _set("MINIO_DATA_DIR", minio.get("data_dir", "./minio_data"))
-        _set("MINIO_EXE", minio.get("minio_exe"))
+        # Local Storage
+        storage = cs.get("storage", {})
+        _set("STORAGE_DATA_DIR", storage.get("data_dir", "./providers/local_storage/data"))
+        _set("STORAGE_BUCKET", storage.get("bucket", "content-search"))
 
         # VLM
         vlm = cs.get("vlm", {})
@@ -175,7 +169,7 @@ def main() -> None:
     _load_config_to_env()
 
     parser = argparse.ArgumentParser(description="Start services via Environment Variables.")
-    parser.add_argument("--services", nargs="+", default=["chromadb", "minio", "vlm", "preprocess", "ingest", "main_app"])
+    parser.add_argument("--services", nargs="+", default=["chromadb", "vlm", "preprocess", "ingest", "main_app"])
     args = parser.parse_args()
 
     requested = []
@@ -190,8 +184,6 @@ def main() -> None:
     if not chroma_exe:
         venv_exe = CONTENT_SEARCH_DIR / "venv_content_search" / "Scripts" / "chroma.exe"
         chroma_exe = str(venv_exe) if venv_exe.exists() else "chroma"
-    provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
-    minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
 
     # Each service: cmd, cwd, extra_env, health check (host, port, path), timeout
     # health path="" means TCP-only check
@@ -203,18 +195,6 @@ def main() -> None:
                     "--path", _env("CHROMA_DATA_DIR", "./chroma_data")],
             "cwd": CONTENT_SEARCH_DIR,
             "health": (_env("CHROMA_HOST", "127.0.0.1"), int(_env("CHROMA_PORT", "9090")), ""),
-            "health_timeout": 60,
-        },
-        "minio": {
-            "cmd": [minio_exe, "server", _env("MINIO_DATA_DIR", "./minio_data"),
-                    "--address", _env("MINIO_ADDRESS", ":9000"),
-                    "--console-address", _env("MINIO_CONSOLE_ADDRESS", ":9001")],
-            "cwd": CONTENT_SEARCH_DIR,
-            "extra_env": {
-                "MINIO_ROOT_USER": _env("MINIO_ROOT_USER", "minioadmin"),
-                "MINIO_ROOT_PASSWORD": _env("MINIO_ROOT_PASSWORD", "minioadmin"),
-            },
-            "health": ("127.0.0.1", int(_env("MINIO_ADDRESS", ":9000").lstrip(":")), "/minio/health/live"),
             "health_timeout": 60,
         },
         "vlm": {

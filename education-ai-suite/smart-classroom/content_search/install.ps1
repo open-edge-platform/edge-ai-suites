@@ -81,17 +81,4 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler already in user PATH, skipping."
 }
 
-# --- Download MinIO ---
-$minioDir = Join-Path $PSScriptRoot "providers/minio_wrapper"
-$minioExe = Join-Path $minioDir "minio.exe"
-if (Test-Path $minioExe) {
-    Write-Host "minio.exe already exists, skipping download."
-} else {
-    $minioUrl = "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
-    Write-Host "Downloading minio.exe..."
-    if (-not (Test-Path $minioDir)) { New-Item -ItemType Directory -Path $minioDir | Out-Null }
-    Invoke-WebRequest -Uri $minioUrl -OutFile $minioExe -UseBasicParsing
-    Write-Host "minio.exe downloaded to $minioExe"
-}
-
 Write-Host "Installation complete."

@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-"""Video Preprocess Service (decode/chunk/sample → summarize → MinIO)
-- downloads the video from MinIO to a temp file
+"""Video Preprocess Service (decode/chunk/sample → summarize → local storage)
+- loads the video from local storage to a temp file
 - chunks the video by time (FrameSampler.iter_chunks)
 - samples frames per chunk (FrameSampler.sample_frames_from_video)
 - calls vlm-openvino-serving (/v1/chat/completions) to generate a chunk summary
-- uploads chunk summary text files back to MinIO
+- saves chunk summary text files back to local storage
 
-MinIO output layout (derived artifacts):
+Output layout (derived artifacts):
   runs/{run_id}/derived/video/{asset_id}/chunksum-v1/summaries/chunk_0001/summary.txt
   runs/{run_id}/derived/video/{asset_id}/chunksum-v1/summaries/chunk_0001/metadata.json
   runs/{run_id}/derived/video/{asset_id}/chunksum-v1/manifest.json
@@ -37,7 +37,7 @@ from pydantic import BaseModel, Field
 
 from providers.video_preprocess.frame_sampler import FrameSampler
 
-from providers.minio_wrapper.minio_client import MinioStore
+from providers.local_storage.store import LocalStore
 
 _vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
 _vlm_port = os.getenv("VLM_PORT", "9900")
@@ -58,16 +58,16 @@ if INGEST_ENABLED:
     INGEST_ENDPOINT: Optional[str] = (
         f"http://{_ingest_host}:{_ingest_port}/v1/dataprep/ingest_text"
     )
-    INGEST_BUCKET: str = os.getenv("MINIO_BUCKET", "content-search")
+    INGEST_BUCKET: str = os.getenv("STORAGE_BUCKET", "content-search")
 else:
     INGEST_ENDPOINT = None
     INGEST_BUCKET = ""
 
 
 class PreprocessRequest(BaseModel):
-    minio_video_key: str = Field(
+    file_key: str = Field(
         ...,
-        description="MinIO object key for the source video (uploaded by Service Manager)",
+        description="Storage key for the source video (uploaded by Service Manager)",
     )
     job_id: Optional[str] = Field(
         None,
@@ -79,7 +79,7 @@ class PreprocessRequest(BaseModel):
     )
     asset_id: Optional[str] = Field(
         None,
-        description="Asset/video id for output path segment (defaults to filename of minio_video_key)",
+        description="Asset/video id for output path segment (defaults to filename from file_key)",
     )
     tags: Optional[List[str]] = Field(
         None,
@@ -98,7 +98,7 @@ class PreprocessRequest(BaseModel):
 
     reuse_existing: bool = Field(
         True,
-        description="If true and summary.txt already exists in MinIO, reuse it instead of recomputing",
+        description="If true and summary.txt already exists in storage, reuse it instead of recomputing",
     )
 
 class ChunkSummaryResult(BaseModel):
@@ -108,12 +108,12 @@ class ChunkSummaryResult(BaseModel):
     end_time: float
     start_frame: int
     end_frame: int
-    minio_key: str
+    storage_key: str
     chunk_metadata_key: str = ""
     summary: str
     reused: bool = False
     total_chunks: int = 0   # total number of chunks in this job (0 = not yet known)
-    error: Optional[str] = None  # set if VLM or MinIO write failed for this chunk
+    error: Optional[str] = None
     ingest_status: str = "pending"  # pending | ok | failed | skipped
 
 
@@ -121,7 +121,7 @@ class PreprocessResponse(BaseModel):
     job_id: str
     run_id: str
     asset_id: str
-    minio_video_key: str
+    file_key: str
     elapsed_seconds: float
     total_chunks: int = 0
     succeeded_chunks: int = 0
@@ -219,8 +219,8 @@ def _ingest_chunk_async(bucket: str, summary_key: str, summary_text: str, meta: 
 
 app = FastAPI(
     title="Video Preprocess Service",
-    version="0.2.0",
-    description="Decode/chunk/sample a MinIO video, call vlm-openvino-serving, write chunk summaries to MinIO.",
+    version="0.3.0",
+    description="Decode/chunk/sample a video from storage, call vlm-openvino-serving, write chunk summaries.",
 )
 
 @app.get("/health")
@@ -229,19 +229,13 @@ def health():
 
 @app.post("/preprocess")
 def submit_preprocess(req: PreprocessRequest) -> StreamingResponse:
-    """Preprocess a video: decode/chunk/sample → summarize → ingest → write to MinIO.
+    """Preprocess a video: decode/chunk/sample → summarize → ingest → write to storage.
 
     Streams NDJSON lines so the caller gets progress as each chunk completes.
-
-    Each chunk line: {"type": "chunk", "chunk_id": "chunk_0001", "chunk_index": 1,
-                      "start_time": 0.0, "end_time": 30.0, "reused": false,
-                      "ingest_status": "ok", "error": null}
-    Final line:      {"type": "done", "job_id": "...", "total_chunks": 3, ...}
-    Error line:      {"type": "error", "message": "..."}
     """
     job_id = str(req.job_id) if req.job_id else str(uuid.uuid4())
     t0 = time.time()
-    print(f"[preprocess] Request received: job_id={job_id} key={req.minio_video_key}")
+    print(f"[preprocess] Request received: job_id={job_id} key={req.file_key}")
 
     q: _queue.Queue = _queue.Queue()
 
@@ -291,7 +285,7 @@ def submit_preprocess(req: PreprocessRequest) -> StreamingResponse:
 def _process(job_id: str, req: PreprocessRequest, t0: float,
              on_chunk: Optional[Callable[["ChunkSummaryResult"], None]] = None) -> PreprocessResponse:
     run_id = req.run_id or str(uuid.uuid4())
-    asset_id = req.asset_id or req.minio_video_key.rsplit("/", 1)[-1]
+    asset_id = req.asset_id or req.file_key.rsplit("/", 1)[-1]
     frame_resolution = [DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT] if DEFAULT_FRAME_WIDTH > 0 and DEFAULT_FRAME_HEIGHT > 0 else []
 
     def _summary_params_for_reuse() -> Dict[str, Any]:
@@ -305,8 +299,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
             "max_completion_tokens": int(req.max_completion_tokens),
         }
 
-    store = MinioStore.from_config()
-    store.ensure_bucket()
+    store = LocalStore.from_config()
 
     endpoint = req.vlm_endpoint or VLM_ENDPOINT
     if not endpoint:
@@ -324,8 +317,8 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
 
     with tempfile.TemporaryDirectory() as tmpdir:
         local_video = os.path.join(tmpdir, asset_id)
-        print(f"[preprocess] Downloading video from MinIO: {req.minio_video_key}")
-        store.get_file(req.minio_video_key, local_video)
+        print(f"[preprocess] Loading video from storage: {req.file_key}")
+        store.get_file(req.file_key, local_video)
 
         chunker = FrameSampler(max_num_frames=1, resolution=frame_resolution)
         chunks = list(chunker.iter_chunks(local_video, chunk_duration_s=req.chunk_duration_s, chunk_overlap_s=req.chunk_overlap_s))
@@ -357,7 +350,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                 end_time=float(chunk["end_time"]),
                 start_frame=int(chunk["start_frame"]),
                 end_frame=int(chunk["end_frame"]),
-                minio_key=summary_key,
+                storage_key=summary_key,
                 chunk_metadata_key=chunk_meta_key,
                 summary="",
             )
@@ -374,7 +367,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                 except Exception:
                     can_reuse = False
 
-            # --- VLM summarization + MinIO write (per-chunk error isolation) ---
+            # --- VLM summarization + storage write (per-chunk error isolation) ---
             try:
                 if can_reuse:
                     summary_text = store.get_bytes(summary_key).decode("utf-8", errors="replace")
@@ -414,7 +407,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                 _tb.print_exc()
                 chunk_result.error = err_msg
                 chunk_result.ingest_status = "skipped"
-                # Still write metadata.json to record the failure in MinIO
+                # Still write metadata.json to record the failure
                 try:
                     store.put_json(
                         chunk_meta_key,
@@ -445,12 +438,12 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                     "chunk_index": idx,
                     "asset_id": asset_id,
                     "run_id": run_id,
-                    "minio_video_key": req.minio_video_key,
+                    "file_key": req.file_key,
                     "start_time": float(chunk["start_time"]),
                     "end_time": float(chunk["end_time"]),
                     "start_frame": int(chunk["start_frame"]),
                     "end_frame": int(chunk["end_frame"]),
-                    "summary_minio_key": summary_key,
+                    "summary_key": summary_key,
                     "reused": reused,
                 },
                 result=chunk_result,
@@ -490,7 +483,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                 "job_id": job_id,
                 "run_id": run_id,
                 "asset_id": asset_id,
-                "minio_video_key": req.minio_video_key,
+                "file_key": req.file_key,
                 "created_at_epoch_s": time.time(),
                 "params": {
                     "chunk_duration_s": int(req.chunk_duration_s),
@@ -510,8 +503,8 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                     {
                         "chunk_id": s.chunk_id,
                         "chunk_index": int(s.chunk_index),
-                        "summary_minio_key": s.minio_key,
-                        "metadata_minio_key": s.chunk_metadata_key,
+                        "summary_key": s.storage_key,
+                        "metadata_key": s.chunk_metadata_key,
                         "reused": bool(s.reused),
                         "ingest_status": s.ingest_status,
                         **({"error": s.error} if s.error else {}),
@@ -540,7 +533,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
         job_id=job_id,
         run_id=run_id,
         asset_id=asset_id,
-        minio_video_key=req.minio_video_key,
+        file_key=req.file_key,
         elapsed_seconds=elapsed,
         total_chunks=len(summaries),
         succeeded_chunks=succeeded,

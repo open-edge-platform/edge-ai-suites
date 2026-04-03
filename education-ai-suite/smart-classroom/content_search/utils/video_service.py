@@ -26,7 +26,7 @@ class VideoService:
         url = f"{self.base_url}/preprocess"
         
         payload = {
-            "minio_video_key": file_key,
+            "file_key": file_key,
             "reuse_existing": True,
             "tags": tags
         }

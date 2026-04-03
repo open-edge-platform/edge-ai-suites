@@ -16,7 +16,6 @@ The `install.ps1` will:
 - Installs `requirements_providers.txt`
 - Downloads and installs Tesseract OCR 5.5.0 and adds it to the user PATH
 - Downloads and extracts Poppler 25.12.0 and adds it to the user PATH
-- Install minio to content_search/providers/minio_wrapper folder
 
 ```powershell
 # 1. Install dependencies (once), requires admin
@@ -57,8 +56,7 @@ python .\start_services.py
 
 `start_services.py` will:
 1. Start ChromaDB
-2. Start MinIO
-3. Start Video Preprocess on port `8001`
+2. Start Video Preprocess on port `8001`
 4. Start VLM on port `9900`
 5. Start the File Ingest & Retrieve server on port `9990`
 

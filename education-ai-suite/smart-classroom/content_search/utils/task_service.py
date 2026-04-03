@@ -19,22 +19,22 @@ class TaskService:
     @staticmethod
     async def handle_file_upload(
         db: Session, 
-        minio_payload: dict, 
+        storage_payload: dict,
         background_tasks: BackgroundTasks,
         should_ingest: bool = False
     ):
         try:
-            file_hash = minio_payload.get("file_hash")
+            file_hash = storage_payload.get("file_hash")
             existing_asset = db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
             if not existing_asset:
                 new_asset = FileAsset(
                     file_hash=file_hash,
-                    file_name=minio_payload.get("file_name", "unknown"),
-                    file_path=minio_payload.get("file_key"),
-                    bucket_name=minio_payload.get("bucket_name") or "content-search",
-                    content_type=minio_payload.get("content_type"),
-                    size_bytes=minio_payload.get("size_bytes", 0),
-                    meta=minio_payload.get("meta", {})
+                    file_name=storage_payload.get("file_name", "unknown"),
+                    file_path=storage_payload.get("file_key"),
+                    bucket_name=storage_payload.get("bucket_name") or "content-search",
+                    content_type=storage_payload.get("content_type"),
+                    size_bytes=storage_payload.get("size_bytes", 0),
+                    meta=storage_payload.get("meta", {})
                 )
                 db.add(new_asset)
                 db.commit() 
@@ -42,7 +42,7 @@ class TaskService:
             task = task_crud.create_task(
                 db, 
                 task_type="file_search", 
-                payload=minio_payload, 
+                payload=storage_payload,
                 status=TaskStatus.PROCESSING
             )
 
@@ -52,9 +52,9 @@ class TaskService:
                 task.status = "COMPLETED"
                 task.result = {
                     "message": "Upload successful",
-                    "file_key": minio_payload.get("file_key"),
-                    "bucket_name": minio_payload.get("bucket_name"),
-                    "file_hash": minio_payload.get("file_hash")
+                    "file_key": storage_payload.get("file_key"),
+                    "bucket_name": storage_payload.get("bucket_name"),
+                    "file_hash": storage_payload.get("file_hash")
                 }
                 db.commit()
 
@@ -139,9 +139,8 @@ class TaskService:
             task = db.query(AITask).filter(AITask.id == task_id).first()
             if not task: return
             try:
-                file_key = (task.payload.get('file_key') or 
-                        task.payload.get('file_path') or 
-                        task.payload.get('video_key') or "")
+                file_key = (task.payload.get('file_key') or
+                        task.payload.get('file_path') or "")
                 bucket_name = task.payload.get('bucket_name')
                 is_video = any(file_key.lower().endswith(ext) for ext in ['.mp4', '.avi', '.mov', '.mkv'])
 
@@ -149,7 +148,7 @@ class TaskService:
                     text_content = task.payload.get("text")
 
                     if not text_content and file_key:
-                        print(f"[WORKER] Fetching text from MinIO: {file_key}", flush=True)
+                        print(f"[WORKER] Fetching text from storage: {file_key}", flush=True)
                         file_data = asyncio.run(storage_service.get_file_content(file_key, bucket_name))
                         text_content = file_data.decode("utf-8")
 

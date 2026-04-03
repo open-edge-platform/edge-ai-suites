@@ -1,7 +1,6 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 chromadb==1.5.5
-minio==7.2.20
 
 fastapi==0.121.3
 fastapi-utils==0.8.0
