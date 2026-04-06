@@ -1,0 +1,28 @@
+{{- $gpu := default (dict) .Values.global.gpu -}}
+{{- $embedGpuEnabled := default false (index $gpu "multimodalEmbeddingEnabled") -}}
+{{- $gpuDevice := default "" (index $gpu "device") -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: multimodal-embedding-serving-config
+  labels:
+    {{- include "lvs.mmes.labels" . | nindent 4 }}
+data:
+  EMBEDDING_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
+  EMBEDDING_DEVICE: {{ ternary $gpuDevice (.Values.global.env.embeddingDevice | default "CPU") $embedGpuEnabled | quote }}
+  EMBEDDING_USE_OV: {{ .Values.global.env.embeddingUseOv | quote }}
+  EMBEDDING_OV_MODELS_DIR: {{ .Values.global.env.ovModelsDir | quote }}
+  DEFAULT_START_OFFSET_SEC: {{ .Values.global.env.defaultStartOffsetSec | quote }}
+  DEFAULT_CLIP_DURATION: {{ .Values.global.env.defaultClipDuration | quote }}
+  DEFAULT_NUM_FRAMES: {{ .Values.global.env.defaultNumFrames | quote }}
+  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $embedGpuEnabled | quote }}
+  HF_HOME: "/home/appuser/.cache/huggingface"
+  HF_TOKEN_PATH: "/tmp/hf_token"
+  HF_HUB_DISABLE_IMPLICIT_TOKEN: "1"
+  TRANSFORMERS_CACHE: "/home/appuser/.cache/huggingface"
+  HUGGINGFACE_HUB_CACHE: "/home/appuser/.cache/huggingface"
+  XDG_CACHE_HOME: "/home/appuser/.cache"
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}
+  no_proxy: "{{ .Values.global.proxy.noProxy }},minio-service,vdms-dataprep,localhost"
+  no_proxy_env: "{{ .Values.global.proxy.noProxy }},minio-service,vdms-dataprep,localhost"

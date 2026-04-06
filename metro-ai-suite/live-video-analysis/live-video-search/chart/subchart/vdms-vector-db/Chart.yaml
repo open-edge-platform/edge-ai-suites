@@ -1,0 +1,5 @@
+apiVersion: v2
+name: vdms-vector-db
+description: Live Video Search vdms-vector-db subchart
+version: 1.0.0
+appVersion: "1.0.0"

@@ -59,11 +59,21 @@ Once the environment is configured, activate the virtual environment and launch 
 # Start all microservices
 python .\start_services.py
 ```
-> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models. 
+> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models (such as CLIP, BGE, and Qwen VLM).
 
-> **Note**: Upon a successful launch, the console output should not contain any "ERROR" logs.
+The launcher automatically performs health checks on all services. When all services are ready, you will see:
+```
+[launcher] All 6 services are ready. (startup took XXs)
+[launcher] You can use Ctrl+C to stop all services.
+```
 
-To verify that the Content Search service is running correctly, execute the following command:
+If any service fails to start, the launcher will report which service(s) failed:
+```
+[launcher] WARNING: 1 service(s) failed: vlm (not ready after 600s)
+[launcher] Check logs in: <path>/content_search/logs/
+```
+
+You can also manually verify the service status:
 ```PowerShell
 Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
 ```

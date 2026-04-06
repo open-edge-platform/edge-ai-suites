@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## 1. Set Up ROS2
 
-Follow the [Getting Started guide](../../gsg_robot/index.md) to install and
+Follow the [Getting Started guide](../../../gsg_robot/index.md) to install and
 configure ROS2 before continuing.
 
 ## 2. Install Simulation Packages

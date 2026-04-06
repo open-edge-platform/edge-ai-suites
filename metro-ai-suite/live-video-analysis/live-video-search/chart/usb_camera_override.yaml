@@ -1,0 +1,27 @@
+frigate:
+  mode: usb
+  usbCameraDevice: /dev/video0
+rtspTest:
+  enabled: false
+
+frigate-vms:
+  service:
+    frigate:
+      nodePort: null
+
+nginx:
+  service:
+    app:
+      nodePort: null
+
+minio-service:
+  service:
+    minioApi:
+      nodePort: null
+    minioConsole:
+      nodePort: null
+
+nvr-event-router:
+  service:
+    nvrEventRouter:
+      nodePort: null

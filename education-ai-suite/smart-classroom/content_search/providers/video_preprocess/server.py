@@ -440,7 +440,7 @@ def _process(job_id: str, req: PreprocessRequest, t0: float,
                 summary_key,
                 summary_text=summary_text,
                 meta={
-                    "tags": req.tags,
+                    **({"tags": req.tags} if req.tags else {}),
                     "chunk_id": chunk_id,
                     "chunk_index": idx,
                     "asset_id": asset_id,

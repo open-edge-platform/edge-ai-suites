@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate-vms
+  labels:
+    {{- include "lvs.frigate.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: frigate-vms
+  template:
+    metadata:
+      labels:
+        app: frigate-vms
+        {{- include "lvs.frigate.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if and (eq .Values.frigate.mode "rtsp") (not .Values.global.persistence.rwxEnabled) }}
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - rtsp-publisher
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: frigate
+          image: {{ .Values.images.frigate }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},frigate,{{ .Values.smartNvr.vssSummaryIp }},{{ .Values.smartNvr.vlmServingIp }}"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy }},frigate,{{ .Values.smartNvr.vssSummaryIp }},{{ .Values.smartNvr.vlmServingIp }}"
+            - name: FRIGATE_MQTT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.frigate.fullname" . }}-credentials
+                  key: MQTT_USER
+            - name: FRIGATE_MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.frigate.fullname" . }}-credentials
+                  key: MQTT_PASSWORD
+            - name: OPENAI_BASE_URL
+              value: "http://{{ .Values.smartNvr.vlmServingIp }}:{{ .Values.smartNvr.vlmServingPort }}/v1"
+            - name: OPENAI_API_KEY
+              value: "your_openai_api_key"
+          ports:
+            - containerPort: 5000
+              name: http
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: frigate-config
+              mountPath: /config/config.yml
+              subPath: config.yml
+            - name: frigate-cache
+              mountPath: /tmp/cache
+            - name: videos
+              mountPath: /videos
+            - name: frigate-recordings
+              mountPath: /media/frigate/recordings
+            {{- if eq .Values.frigate.mode "usb" }}
+            - name: usb-camera
+              mountPath: /dev/video0
+            {{- end }}
+      volumes:
+        - name: frigate-config
+          configMap:
+            name: {{ include "lvs.frigate.fullname" . }}-frigate
+        - name: frigate-cache
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1000Mi
+        - name: videos
+          {{- if eq (.Values.global.videos.source | default "download") "local" }}
+          hostPath:
+            path: {{ required "global.videos.hostPath is required when global.videos.source=local" .Values.global.videos.hostPath }}
+            type: Directory
+          {{- else }}
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.frigate.fullname" . }}-videos
+          {{- end }}
+        - name: frigate-recordings
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.frigate.fullname" . }}-frigate-recordings
+        {{- if eq .Values.frigate.mode "usb" }}
+        - name: usb-camera
+          hostPath:
+            path: {{ .Values.frigate.usbCameraDevice }}
+            type: CharDevice
+        {{- end }}

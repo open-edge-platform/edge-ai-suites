@@ -1,56 +1,93 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""
-Data loader module for the RSU Monitoring System
-"""
+
 import logging
-import requests
 from typing import Optional
 from datetime import datetime, timezone
+import json
+import asyncio
 
-try:
-    from ui.models import (
-        MonitoringData, IntersectionData, RegionCount,
-        VLMAnalysis, WeatherData, CameraData, TrafficContext
-    )
-except (ModuleNotFoundError, ImportError):
-    from models import (
-        MonitoringData, IntersectionData, RegionCount,
-        VLMAnalysis, WeatherData, CameraData, TrafficContext
-    )
+from websockets.exceptions import WebSocketException, ConnectionClosed as WebsocketsConnectionClosed
+from websockets.asyncio.client import connect as websocket_connect
+import gradio as gr
+
+from models import (
+    MonitoringData, IntersectionData, RegionCount,
+    VLMAnalysis, WeatherData, CameraData, TrafficContext
+)
+from ui_components import UIComponents
+from config import Config
 
 logger = logging.getLogger(__name__)
+ui_update_queue = asyncio.Queue()
 
-
-def load_monitoring_data_from_api(api_url: str = "http://localhost:8081/api/v1/traffic/current") -> Optional[MonitoringData]:
+async def fetch_intersection_data(api_url: str = Config.get_api_url()) -> None:
     """
-    Load monitoring data from the Traffic Intersection Agent API
+    Fetch data from the Traffic Intersection Agent API
     
     Args:
         api_url: URL of the Traffic Intersection Agent API endpoint
         
     Returns:
-        MonitoringData object or None if loading fails
+        None. Puts MonitoringData objects into the UI update queue.
     """
     try:
-        logger.info(f"Fetching data from API: {api_url}")
-        response = requests.get(api_url, timeout=10)
-        response.raise_for_status()
-        
-        raw_data = response.json()
-        
-        # Parse the API response and convert to UI data structure
-        return parse_api_response(raw_data)
-        
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching data from API: {str(e)}")
-        return None
+        logger.info(f"Connecting to WebSocket API at {api_url}")
+        async for websocket in websocket_connect(api_url, max_size=100_000_000): 
+            async for message in websocket:
+                raw_data: dict = json.loads(message)
+                traffic_data: Optional[MonitoringData] = await parse_api_response(raw_data)
+                # Put data into the queue for the UI to consume
+                await ui_update_queue.put(traffic_data)
+    except WebsocketsConnectionClosed as e:
+        logger.warning(f"WebSocket connection closed by server: {str(e)}")
+        await asyncio.sleep(3)
+    except WebSocketException as e:
+        logger.error(f"WebSocket error: {str(e)}")
+        await asyncio.sleep(3)
+    except json.JSONDecodeError as e:
+        logger.error("Received invalid JSON data from WebSocket")
+        raise e
     except Exception as e:
-        logger.error(f"Error processing API response: {str(e)}")
-        return None
+        logger.error(f"Error Connecting to WebSocket: {str(e)}.")
+        await asyncio.sleep(3)
 
+async def update_components(debug_mode=False):
+    """
+    Get the latest monitoring data from the UI update queue
 
-def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
+    Args:
+        debug_mode: Whether to include the debug panel in the UI update
+    
+    Returns:
+        AsyncGenerator yielding tuple of UI components to update the dashboard
+    """
+    while True:
+        try:
+            # Wait for new data from the queue, required to update the UI
+            data = await ui_update_queue.get()
+            if data is None:
+                error_msg = "<div style='color: red; text-align: center; padding: 20px;'> 🤖 Waiting for Agent. This might take several seconds...</div>"
+                yield error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
+                continue
+
+            header = await UIComponents.create_header(data)
+            camera_gallery = await UIComponents.create_camera_images(data)
+            traffic = await UIComponents.create_traffic_summary(data)
+            environmental = await UIComponents.create_environmental_panel(data)
+            alerts = await UIComponents.create_alerts_panel(data)
+            system_info = await UIComponents.create_system_info(data)
+            debug_panel = await UIComponents.create_debug_panel(data)
+
+            yield header, camera_gallery, traffic, environmental, alerts, system_info, gr.HTML(value=debug_panel, visible=debug_mode)
+            
+        except Exception as e:
+            logger.error(f"Error getting monitoring data from queue: {str(e)}")
+            error_msg = f"<div style='color: red; text-align: center; padding: 20px;'>❌ Error</div>"
+            yield error_msg, [], error_msg, error_msg, error_msg, error_msg, gr.HTML(visible=False)
+            await asyncio.sleep(5)
+
+async def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
     """
     Parse the Traffic Intersection Agent API response and convert to MonitoringData
     
@@ -63,6 +100,10 @@ def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
     try:
         # Extract traffic data
         traffic_data = raw_data.get("data", {})
+
+        if not traffic_data and raw_data.get("status") == "waiting":
+            logger.warning("API response not yet available!")
+            return None
         
         # Create region counts mapping pedestrian data from API
         # Map directional pedestrian counts to regions
@@ -85,9 +126,7 @@ def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
             )
         }
         
-        # Parse intersection data
         # Create IntersectionData from the main data
-        # Map API field names to model field names
         intersection_data = IntersectionData(
             intersection_id=traffic_data["intersection_id"],
             intersection_name=traffic_data["intersection_name"],
@@ -260,43 +299,3 @@ def parse_api_response(raw_data: dict) -> Optional[MonitoringData]:
     except Exception as e:
         logger.error(f"Error parsing API response: {str(e)}")
         return None
-
-
-def convert_fahrenheit_to_celsius(fahrenheit: float) -> float:
-    """Convert Fahrenheit to Celsius"""
-    return (fahrenheit - 32) * 5.0 / 9.0
-def load_monitoring_data(api_url: str = None) -> Optional[MonitoringData]:
-    """
-    Load monitoring data from API endpoint only
-    
-    Args:
-        api_url: API endpoint URL (if None, uses default)
-        
-    Returns:
-        MonitoringData object or None if loading fails
-    """
-    # Load from API endpoint only
-    api_data = load_monitoring_data_from_api(api_url) if api_url else load_monitoring_data_from_api()
-    if api_data:
-        return api_data
-    
-    logger.error("Failed to load data from API endpoint. Please check API connectivity and try again.")
-    return None
-
-
-def get_last_update_time(monitoring_data: MonitoringData) -> str:
-    """
-    Get formatted last update time
-    
-    Args:
-        monitoring_data: MonitoringData object
-        
-    Returns:
-        Formatted timestamp string
-    """
-    try:
-        from datetime import datetime
-        timestamp = datetime.fromisoformat(monitoring_data.timestamp.replace('Z', '+00:00'))
-        return timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
-    except:
-        return monitoring_data.timestamp

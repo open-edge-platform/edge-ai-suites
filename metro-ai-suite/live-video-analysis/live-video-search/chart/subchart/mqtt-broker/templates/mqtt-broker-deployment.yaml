@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-broker
+  labels:
+    {{- include "lvs.mqtt.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: mqtt-broker
+  template:
+    metadata:
+      labels:
+        app: mqtt-broker
+        {{- include "lvs.mqtt.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mqtt-broker
+          image: {{ .Values.images.mqttBroker }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: MQTT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.mqtt.fullname" . }}-credentials
+                  key: MQTT_USER
+            - name: MQTT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.mqtt.fullname" . }}-credentials
+                  key: MQTT_PASSWORD
+          command:
+            - sh
+            - -c
+            - |
+              touch /mosquitto/config/pwfile &&
+              mosquitto_passwd -c -b /mosquitto/config/pwfile $$MQTT_USER $$MQTT_PASSWORD &&
+              chmod 0700 /mosquitto/config/pwfile &&
+              chown mosquitto:mosquitto /mosquitto/config/pwfile &&
+              mosquitto -c /mosquitto/config/mosquitto.conf
+          ports:
+            - containerPort: 1883
+              name: mqtt
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: mqtt-config
+              mountPath: /mosquitto/config/mosquitto.conf
+              subPath: mosquitto.conf
+            - name: mqtt-data
+              mountPath: /mosquitto/data
+            - name: mqtt-log
+              mountPath: /mosquitto/log
+      volumes:
+        - name: mqtt-config
+          configMap:
+            name: {{ include "lvs.mqtt.fullname" . }}-mqtt
+        - name: mqtt-data
+          emptyDir: {}
+        - name: mqtt-log
+          emptyDir: {}

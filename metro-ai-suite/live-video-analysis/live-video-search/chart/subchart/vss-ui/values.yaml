@@ -1,0 +1,67 @@
+global:
+  env:
+    appFeatureMux: ATOMIC
+    cameraConfigFeature: FEATURE_ON
+    configSocketAppend: CONFIG_OFF
+    searchFeature: FEATURE_ON
+    summaryFeature: FEATURE_OFF
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  vssStackTag: ''
+
+images:
+  vssUi:
+    repository: intel/vss-ui
+
+imageOverride:
+  registry: 'amr-fm-registry.caas.intel.com/esh-user/egai/'
+  repository: 'vss-ui'
+  tag: '1.3.3-rc1'
+
+replicaCount: 1
+
+imagePullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8080
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 60

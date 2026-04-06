@@ -45,7 +45,7 @@ pytesseract==0.3.13
 unstructured[all-docs]==0.18.32
 python-docx==1.2.0
 docx2txt==0.9
-
+python-magic==0.4.27
 requests==2.32.4
 tqdm==4.67.0
 numpy>=1.24

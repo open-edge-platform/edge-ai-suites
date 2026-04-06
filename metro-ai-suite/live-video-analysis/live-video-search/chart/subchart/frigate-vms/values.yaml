@@ -1,0 +1,219 @@
+frigate:
+  mode: default
+  usbCameraDevice: /dev/video0
+  configs:
+    default: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        backyard:
+          ffmpeg:
+            inputs:
+              - path: /videos/backyard.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+
+        livingroom:
+          ffmpeg:
+            inputs:
+              - path: /videos/livingroom.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+
+        garage:
+          ffmpeg:
+            inputs:
+              - path: /videos/garage.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+
+    rtsp: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        rtsp-garage:
+          ffmpeg:
+            inputs:
+              - path: rtsp://rtsp-server:8554/rtsp-garage
+                roles:
+                  - record
+            output_args:
+              record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+
+    usb: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        usb-camera:
+          ffmpeg:
+            inputs:
+              - path: /dev/video0
+                input_args: -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30
+                roles:
+                  - record
+            output_args:
+              record:
+                -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+global:
+  videos:
+    source: download
+    hostPath: ''
+  proxy:
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+
+images:
+  frigate: ghcr.io/blakeblackshear/frigate:0.15.1
+
+persistence:
+  storageClassName: ''
+  frigateRecordings:
+    size: 100Gi
+
+service:
+  frigate:
+    type: NodePort
+    port: 5000
+    nodePort: 31500
+
+smartNvr:
+  vlmServingIp: pipeline-manager
+  vlmServingPort: '9766'
+  vssSummaryIp: nginx

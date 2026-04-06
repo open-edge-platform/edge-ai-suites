@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-minio-data
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.minioData.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-pg-data
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.pgData.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-vdms-db
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.vdmsDb.size }}
+---
+{{- if .Values.global.usePvc }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .Values.global.sharedPvcName | default "lvs-pvc" }}
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  accessModes: ["ReadWriteOnce"]
+  {{- if .Values.persistence.storageClassName }}
+  storageClassName: {{ .Values.persistence.storageClassName }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.sharedData.size }}
+{{- end }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-collector-signals
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.global.persistence.rwxEnabled }}
+  accessModes: ["ReadWriteMany"]
+  {{- else if .Values.persistence.collectorSignals.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.collectorSignals.accessModes | nindent 4 }}
+  {{- else }}
+  accessModes: ["ReadWriteOnce"]
+  {{- end }}
+  {{- $collectorSignalsStorageClass := .Values.global.persistence.storageClassName | default .Values.persistence.collectorSignals.storageClassName | default .Values.persistence.storageClassName }}
+  {{- if $collectorSignalsStorageClass }}
+  storageClassName: {{ $collectorSignalsStorageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.collectorSignals.size }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-frigate-recordings
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.global.persistence.rwxEnabled }}
+  accessModes: ["ReadWriteMany"]
+  {{- else if .Values.persistence.frigateRecordings.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.frigateRecordings.accessModes | nindent 4 }}
+  {{- else }}
+  accessModes: ["ReadWriteOnce"]
+  {{- end }}
+  {{- $frigateStorageClass := .Values.global.persistence.storageClassName | default .Values.persistence.storageClassName }}
+  {{- if $frigateStorageClass }}
+  storageClassName: {{ $frigateStorageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.frigateRecordings.size }}
+{{- if ne (.Values.global.videos.source | default "download") "local" }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "lvs.shared.fullname" . }}-videos
+  {{- if .Values.global.keepPvc }}
+  annotations:
+    helm.sh/resource-policy: keep
+  {{- end }}
+  labels:
+    {{- include "lvs.shared.labels" . | nindent 4 }}
+spec:
+  {{- if .Values.global.persistence.rwxEnabled }}
+  accessModes: ["ReadWriteMany"]
+  {{- else if .Values.persistence.videos.accessModes }}
+  accessModes:
+    {{- toYaml .Values.persistence.videos.accessModes | nindent 4 }}
+  {{- else }}
+  accessModes: ["ReadWriteOnce"]
+  {{- end }}
+  {{- $videosStorageClass := .Values.global.persistence.storageClassName | default .Values.persistence.storageClassName }}
+  {{- if $videosStorageClass }}
+  storageClassName: {{ $videosStorageClass }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.videos.size }}
+{{- end }}

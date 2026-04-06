@@ -20,5 +20,5 @@ class VLMAnalysisData:
     """VLM analysis results with structured traffic and alert data."""
     traffic_summary: str                     # General traffic conditions summary
     alerts: List[VLMAlert]                  # Structured alerts list
-    recommendations: List[str] = None        # Traffic management recommendations
+    recommendations: List[str]              # Traffic management recommendations
     analysis_timestamp: Optional[datetime] = None

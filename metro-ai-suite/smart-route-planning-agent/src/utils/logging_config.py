@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 
-def setup_logging(log_level=logging.INFO):
+def setup_logging(log_level=logging.INFO, logger_name=__name__):
     """Setup application logging configuration"""
 
     # Create logs directory if it doesn't exist
@@ -20,7 +20,7 @@ def setup_logging(log_level=logging.INFO):
         handlers=[logging.FileHandler(log_file), logging.StreamHandler()],
     )
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(logger_name)
     logger.info(f"Logging initialized at {datetime.now()}")
 
     return logger
