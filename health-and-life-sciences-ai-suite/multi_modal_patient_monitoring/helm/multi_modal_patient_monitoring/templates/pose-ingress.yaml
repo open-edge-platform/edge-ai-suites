@@ -1,3 +1,4 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -24,11 +25,4 @@ spec:
                 name: pose
                 port:
                   number: 8085
-
-          - path: /pose-video
-            pathType: Exact
-            backend:
-              service:
-                name: pose
-                port:
-                  number: 8085
+{{- end }}

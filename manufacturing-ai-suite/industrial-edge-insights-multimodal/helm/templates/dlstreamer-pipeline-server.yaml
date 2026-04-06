@@ -79,8 +79,8 @@ spec:
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
-        - name: dev
-          mountPath: /dev
+        - name: dev-dri
+          mountPath: /dev/dri
           readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
@@ -163,9 +163,9 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
-      - name: dev
+      - name: dev-dri
         hostPath:
-          path: /dev
+          path: /dev/dri
       - name: dev-shm
         hostPath:
           path: /dev/shm

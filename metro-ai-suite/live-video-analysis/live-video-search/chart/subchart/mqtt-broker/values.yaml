@@ -1,0 +1,49 @@
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 1883
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  tcpSocket:
+    port: mqtt
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  tcpSocket:
+    port: mqtt
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  tcpSocket:
+    port: mqtt
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+images:
+  mqttBroker: eclipse-mosquitto:2.0.21
+
+mqtt:
+  config: |
+    allow_anonymous false
+    listener 1883
+    password_file /mosquitto/config/pwfile

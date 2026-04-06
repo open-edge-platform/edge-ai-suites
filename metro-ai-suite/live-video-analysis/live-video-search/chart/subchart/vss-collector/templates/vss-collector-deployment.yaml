@@ -1,0 +1,116 @@
+{{- if .Values.telemetry.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vss-collector
+  labels:
+    {{- include "lvs.collector.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: vss-collector
+  template:
+    metadata:
+      labels:
+        app: vss-collector
+        {{- include "lvs.collector.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if .Values.telemetry.hostPathMounts }}
+      hostPID: true
+      {{- end }}
+      {{- if not .Values.global.persistence.rwxEnabled }}
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - vdms-dataprep
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: vss-collector
+          image: {{ .Values.images.telemetryCollector }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: no_proxy
+              value: "localhost,127.0.0.1,pipeline-manager,vss-ui,{{ .Values.global.proxy.noProxy }}"
+            - name: WEBSOCKET_URL
+              value: "ws://pipeline-manager:3000/metrics/ws/collector"
+          ports:
+            - containerPort: 9273
+              name: metrics
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            - name: collector-signals
+              mountPath: /app/.collector-signals
+            {{- if .Values.telemetry.hostPathMounts }}
+            - name: host-sys
+              mountPath: /sys
+            - name: host-dev
+              mountPath: /dev
+            - name: host-run
+              mountPath: /run
+            - name: host-proc
+              mountPath: /proc
+            {{- end }}
+      volumes:
+        - name: telegraf-config
+          configMap:
+            name: {{ include "lvs.collector.fullname" . }}-telegraf
+        - name: collector-signals
+          {{- if .Values.collectorSignals.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.collector.fullname" . }}-collector-signals
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.telemetry.hostPathMounts }}
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-run
+          hostPath:
+            path: /run
+        - name: host-proc
+          hostPath:
+            path: /proc
+        {{- end }}
+{{- end }}

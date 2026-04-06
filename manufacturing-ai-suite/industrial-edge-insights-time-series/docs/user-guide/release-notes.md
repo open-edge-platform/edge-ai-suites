@@ -1,33 +1,34 @@
-# Industrial Edge Insights - Time Series Release Notes
+# Release Notes: Industrial Edge Insights - Time Series
 
-## v2025.2 - December 2025
+## Version 2026.0
 
-This release introduces substantial enhancements to the Time Series AI stack, including a new sample application and several key features detailed below.
+**March 2026**
 
-### Time Series AI Stack Enhancements
+This release introduces **new documentation for UDF development and wind turbine
+model integration**, along with **updated service images** and
+**documentation improvements**.
 
-- Introduced Makefile support for scalable processing of multiple input streams via OPC-UA and MQTT protocols, enabling effective benchmarking of sample applications.
-- Updated Makefile to support multiple sample applications through an app parameter.
-- Enabled GPU-based inferencing for both Docker Compose and Helm deployments.
-- Removed model registry microservice code and documentation from sample applications.
-- Integrated nginx reverse proxy to centralize external traffic for web applications and REST API servers, reducing port exposure.
-- Refactored configuration files, codebase, and documentation to eliminate redundancy.
-- Added documentation for secure connectivity to internal and external MQTT brokers.
-- Implemented various improvements in documentation, usability, and configuration management for both Docker Compose and Helm deployments.
+**New**
 
-### Wind Turbine Anomaly Detection - v1.1.0
+- **UDF Development Guide** — Added a comprehensive guide for writing
+  User Defined Functions (UDFs) covering architecture, implementation steps, and
+  examples.
+- **Wind Turbine Model Guidelines** — Added wind turbine model selection and
+  integration guidelines.
 
-- Enabled iGPU based inferencing for the machine learning model using the scikit-learn-intelex package.
+**Improved**
 
-### Weld Anomaly Detection - v1.0.0
-
-- Introduced a weld anomaly detection sample application featuring dataset ingestion, CatBoost machine learning model integration, and a dedicated Grafana dashboard.
+- Updated image tags/versioning and aligned deployment/documentation examples.
+- Updated third-party service image versions used by Time Series (Telegraf,
+  Grafana, Eclipse Mosquitto).
+- Reorganized Time Series how-to guides for better navigation.
+- Updated Time Series documentation toctree structure.
+- Fixed failing code blocks in Time Series documentation.
+- Fixed formatting issues in Wind Turbine Anomaly documentation.
 
 <!--hide_directive
-:::{toctree}
+```{toctree}
 :hidden:
-
-release-notes/aug-2025
-
-:::
+Release Notes 2025 <./release-notes/release-notes-2025>
+```
 hide_directive-->

@@ -1,0 +1,676 @@
+From 1eeb6f46695058818323858f059e9c03ee53b693 Mon Sep 17 00:00:00 2001
+From: "Liu, Baihe" <baihe.liu@intel.com>
+Date: Mon, 19 Jan 2026 08:45:55 -0500
+Subject: [PATCH 3/6] [Feat] Enable ov inference in pi05 policy
+
+---
+ examples/pi05_with_openvino/README.md         |  14 +-
+ .../scripts/benchmark_pi05_ov_rtc.py          | 205 ++++++++++++++++++
+ .../policies/pi05/configuration_pi05.py       |   6 +
+ src/lerobot/policies/pi05/modeling_pi05.py    | 139 +++++++++---
+ tests/policies/pi0_pi05/test_pi05_ov_rtc.py   | 203 +++++++++++++++++
+ 5 files changed, 535 insertions(+), 32 deletions(-)
+ create mode 100644 examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
+ create mode 100644 tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+
+diff --git a/examples/pi05_with_openvino/README.md b/examples/pi05_with_openvino/README.md
+index 59de7ec..eb3bbcd 100644
+--- a/examples/pi05_with_openvino/README.md
++++ b/examples/pi05_with_openvino/README.md
+@@ -81,17 +81,21 @@ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
+ Arguments are the same as above.
+ 
+ ## Test Pi05 Policy
+-Run script to test policy (In the project directory):
++Run script to benchmark policy pipeline which includes preprocessing, model inference and postprocessing.
++
+ ```bash
+-uv run --extra pi-ov tests/policies/pi0_pi05/test_pi05_ov.py \
++uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
+     --model_dir <ov_model_dir> \
+-    --device CPU \
++    --device GPU \
+     -n 10
+ ```
+ 
+ **Arguments:**
+-- `--model_dir`: Directory containing the OpenVINO model (xml and bin files).
++- `--model_dir`: Directory containing the OpenVINO model (.xml and .bin files).
+ - `--device`: Target device for inference (e.g., "CPU", "GPU"). Default: "CPU".
+ - `-n`, `--num_runs`: Number of inference runs to average for benchmarking. Default: 10.
+-- `--run_torch`: (Optional) Run the original PyTorch model instead of OpenVINO for comparison.
++- `--camera_num`, `-c`: Number of cameras used in the model, should be same as the setting used during model conversion. Default: 4.
++- `--run_torch`: (Optional) Run the original PyTorch model for output comparison.
++- `--torch_dir`: (Optional) Path to PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
++- `--disable_rtc`: (Optional) Disable RTC functionality when loading model with RTC. Would be invalid when loading model without RTC support.
+ 
+diff --git a/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py b/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
+new file mode 100644
+index 0000000..e5364bb
+--- /dev/null
++++ b/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
+@@ -0,0 +1,205 @@
++import numpy as np
++import torch
++import time
++import argparse
++from lerobot.policies.pi05.configuration_pi05 import PI05Config, OVConfig
++from lerobot.policies.pi05.modeling_pi05 import PI05Policy
++from lerobot.policies.pi05.processor_pi05 import make_pi05_pre_post_processors
++from lerobot.configs.types import RTCAttentionSchedule
++from lerobot.policies.rtc.configuration_rtc import RTCConfig
++
++from lerobot.configs.types import FeatureType, PolicyFeature
++
++"""
++Benchmark script for PI05 policy using OpenVINO with RTC.
++
++Usage: 
++- Install dependencies with: uv sync --extra pi-ov
++- Run test with: uv run --extra pi-ov benchmark_pi05_ov_rtc.py --model_dir <path_to_openvino_model> --device <device_name> [-n <number_of_runs>] [--disable_rtc] [--run_torch] [--torch_dir <path_to_torch_model>]
++
++"""
++torch.manual_seed(42)
++
++parser = argparse.ArgumentParser()
++parser.add_argument("--model_dir", type=str, default="./pi05_rtc_lerobot_ov_ir_4c_FP16", help="Path to OpenVINO model directory")
++parser.add_argument("--camera_num", "-c", type=int, default=4, help="Number of cameras used in the model")
++parser.add_argument("--device", type=str, default="CPU", help="Device to run inference on")
++parser.add_argument("--run_torch", action="store_true", help="Whether to run the original PyTorch model for output comparison.")
++parser.add_argument("--torch_dir",  type=str, default="lerobot/pi05_base", help="Path to PyTorch model directory for comparison if --run_torch is set")
++parser.add_argument("--num_runs" , "-n", type=int, default=10, help="Number of runs for averaging inference time")
++parser.add_argument("--num_warmup", type=int, default=3, help="Number of warmup runs, 0 to disable")
++parser.add_argument("--disable_rtc", action="store_true", default=False, help="Disable RTC functionality")
++args = parser.parse_args()
++
++if args.num_runs <= 0:
++    parser.error("--num_runs must be at least 1")
++
++image_keys = [
++    "observation.images.cam_high",
++    "observation.images.cam_low",
++    "observation.images.cam_left_wrist",
++    "observation.images.cam_right_wrist",
++][:args.camera_num]
++
++config = PI05Config(
++    input_features={
++        **{key: PolicyFeature(type=FeatureType.VISUAL, shape=(3, 224, 224)) for key in image_keys},
++        "observation.state": PolicyFeature(type=FeatureType.STATE, shape=(14,)),
++    },
++    output_features={
++        "action": PolicyFeature(type=FeatureType.ACTION, shape=(14,)),
++    },
++)
++
++dummy_input = {
++        "observation.state": torch.ones(14),
++        **{key: torch.randint(256, size=(3, 224, 224), dtype=torch.uint8) for key in image_keys},
++        "task": "do something",
++    }   # batch dim will be added in preprocessor for only torch.Tensor but not np.ndarray
++
++dataset_stats = {
++    "observation.state": {
++        "mean": torch.zeros(14),
++        "std": torch.ones(14),
++        "min": torch.zeros(14),
++        "max": torch.ones(14),
++        "q01": torch.zeros(14),
++        "q99": torch.ones(14),
++    },
++    "action": {
++        "mean": torch.zeros(14),
++        "std": torch.ones(14),
++        "min": torch.zeros(14),
++        "max": torch.ones(14),
++        "q01": torch.zeros(14),
++        "q99": torch.ones(14),
++    },
++    "observation.images.cam_high": {
++        "mean": torch.zeros(3, 224, 224),
++        "std": torch.ones(3, 224, 224),
++        "q01": torch.zeros(3, 224, 224),
++        "q99": torch.ones(3, 224, 224),
++    },
++    "observation.images.cam_low": {
++        "mean": torch.zeros(3, 224, 224),
++        "std": torch.ones(3, 224, 224),
++        "q01": torch.zeros(3, 224, 224),
++        "q99": torch.ones(3, 224, 224),
++    },
++    "observation.images.cam_left_wrist": {
++        "mean": torch.zeros(3, 224, 224),
++        "std": torch.ones(3, 224, 224),
++        "q01": torch.zeros(3, 224, 224),
++        "q99": torch.ones(3, 224, 224),
++    },
++    "observation.images.cam_right_wrist": {
++        "mean": torch.zeros(3, 224, 224),
++        "std": torch.ones(3, 224, 224),
++        "q01": torch.zeros(3, 224, 224),
++        "q99": torch.ones(3, 224, 224),
++    },
++}
++
++preprocessor, postprocessor = make_pi05_pre_post_processors(config, dataset_stats=dataset_stats)
++
++if args.disable_rtc:
++    print("Disable RTC...")
++    rtc_args = {}
++else:
++    print("Enable RTC...")
++    rtc_args = {
++        "prev_chunk_left_over": torch.randn(1, 25, 32, dtype=torch.float32),
++        "inference_delay": 8,
++        "execution_horizon": 25,
++    }
++
++ov_config = OVConfig(model_dir=args.model_dir, device=args.device)
++policy = PI05Policy(config=config, ov_config=ov_config)
++
++noise = policy.model.sample_noise((1, config.chunk_size, 32), torch.device("cpu"))
++
++if args.run_torch:
++    print("Running PyTorch model...")
++    torch_policy = PI05Policy.from_pretrained(args.torch_dir, config=config)
++
++    if not args.disable_rtc:
++        torch_policy.config.rtc_config = RTCConfig(
++            enabled=True,
++            execution_horizon=10,
++            max_guidance_weight=5.0,
++            prefix_attention_schedule=RTCAttentionSchedule.EXP,
++            debug=False,
++        )
++
++    torch_policy.init_rtc_processor()
++    device = torch.device("cpu")
++    torch_policy.to(device)
++    torch_policy.eval()
++
++    batch = preprocessor(dummy_input)
++    torch_output = torch_policy.predict_action_chunk(batch, noise=noise, **rtc_args)
++    torch_action = postprocessor(torch_output)
++    del torch_policy
++        
++# Warmup
++if args.num_warmup > 0:
++    print(f"Warming up for {args.num_warmup} runs...")
++    for _ in range(args.num_warmup):
++        batch = preprocessor(dummy_input)
++        output = policy.predict_action_chunk(batch, noise=noise, **rtc_args)
++        action = postprocessor(output)
++
++print("Measuring average time...")
++num_runs = args.num_runs
++preprocess_time = []
++inference_time = []
++postprocess_time = []
++
++for _ in range(num_runs):
++    start_time = time.time()
++    batch = preprocessor(dummy_input)
++    preprocess_time.append(time.time() - start_time)
++
++    start_time = time.time()
++    output = policy.predict_action_chunk(batch, noise=noise, **rtc_args)
++    inference_time.append(time.time() - start_time) 
++    print(f"Inference time: {inference_time[-1]:.4f}s")
++
++    start_time = time.time()
++    action = postprocessor(output)
++    postprocess_time.append(time.time() - start_time)
++
++print(f"Average Preprocess time: {np.mean(preprocess_time):.4f}s")
++print(f"Average Inference time: {np.mean(inference_time):.4f}s")
++print(f"Average Postprocess time: {np.mean(postprocess_time):.4f}s")
++print(f"Total Average loop time: {np.mean(preprocess_time) + np.mean(inference_time) + np.mean(postprocess_time):.4f}s")
++
++print("Predicted action:", action.shape)
++
++# compare results between torch and ov
++if args.run_torch:
++    arr1 = torch_action.numpy()
++    arr2 = action.numpy()
++
++    diff = np.abs(arr1 - arr2)
++    max_abs = np.max(diff)
++    p99_abs = np.percentile(diff, 99)
++    # Avoid division by zero
++    max_rel = np.max(diff / (np.maximum(np.abs(arr1), 1e-8)))
++
++    # Metrics
++    mse = np.mean(np.square(arr1 - arr2))
++    mae = np.mean(diff)
++
++    # Cosine Similarity
++    v1, v2 = arr1.flatten(), arr2.flatten()
++    norm1, norm2 = np.linalg.norm(v1), np.linalg.norm(v2)
++    if norm1 > 1e-8 and norm2 > 1e-8:
++        cos_sim = np.dot(v1, v2) / (norm1 * norm2)
++    else:
++        cos_sim = 0.0
++
++    print(f"Output Comparison between PyTorch and OpenVINO implementations")
++    print(f"  Max Abs: {max_abs:.6g}, P99 Abs: {p99_abs:.6g}, Max Rel: {max_rel:.6g}")
++    print(f"  MSE: {mse:.6g}, MAE: {mae:.6g}, Cos Sim: {cos_sim:.6g}")
++
+diff --git a/src/lerobot/policies/pi05/configuration_pi05.py b/src/lerobot/policies/pi05/configuration_pi05.py
+index b96e6d1..5780adc 100644
+--- a/src/lerobot/policies/pi05/configuration_pi05.py
++++ b/src/lerobot/policies/pi05/configuration_pi05.py
+@@ -167,3 +167,9 @@ class PI05Config(PreTrainedConfig):
+     @property
+     def reward_delta_indices(self) -> None:
+         return None
++
++
++@dataclass
++class OVConfig:
++    model_dir: str = "pi05_rtc_lerobot_ov_ir"
++    device: str = "CPU"
+\ No newline at end of file
+diff --git a/src/lerobot/policies/pi05/modeling_pi05.py b/src/lerobot/policies/pi05/modeling_pi05.py
+index a4aa323..7a905b0 100644
+--- a/src/lerobot/policies/pi05/modeling_pi05.py
++++ b/src/lerobot/policies/pi05/modeling_pi05.py
+@@ -41,7 +41,7 @@ else:
+     PaliGemmaForConditionalGeneration = None
+ 
+ from lerobot.configs.policies import PreTrainedConfig
+-from lerobot.policies.pi05.configuration_pi05 import DEFAULT_IMAGE_SIZE, PI05Config
++from lerobot.policies.pi05.configuration_pi05 import DEFAULT_IMAGE_SIZE, OVConfig, PI05Config
+ from lerobot.policies.pretrained import PreTrainedPolicy, T
+ from lerobot.policies.rtc.modeling_rtc import RTCProcessor
+ from lerobot.utils.constants import (
+@@ -534,10 +534,11 @@ class PaliGemmaWithExpertModel(
+ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+     """Core PI05 PyTorch model."""
+ 
+-    def __init__(self, config: PI05Config, rtc_processor: RTCProcessor | None = None):
++    def __init__(self, config: PI05Config, rtc_processor: RTCProcessor | None = None, ov_config: OVConfig | None = None):
+         super().__init__()
+         self.config = config
+         self.rtc_processor = rtc_processor
++        self.ov_config = ov_config
+ 
+         paligemma_config = get_gemma_config(config.paligemma_variant)
+         action_expert_config = get_gemma_config(config.action_expert_variant)
+@@ -546,32 +547,43 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+             raise ValueError(
+                 f"PaliGemma expects square image resolution, invalid resolution: {config.image_resolution}"
+             )
++        
++        if ov_config is not None:
++            import openvino as ov
++            import os
++            core = ov.Core()
++            self.ov_model = core.read_model(os.path.join(ov_config.model_dir, "model.xml"))
++            self.ov_model = core.compile_model(self.ov_model, device_name=ov_config.device)
++            self.infer_request = self.ov_model.create_infer_request()
++
++            self.sample_actions = self._sample_actions_ov
++        
++        else:
++            self.paligemma_with_expert = PaliGemmaWithExpertModel(
++                paligemma_config,
++                action_expert_config,
++                use_adarms=[False, True],
++                precision=config.dtype,
++                image_size=config.image_resolution[0],
++                freeze_vision_encoder=config.freeze_vision_encoder,
++                train_expert_only=config.train_expert_only,
++            )
+ 
+-        self.paligemma_with_expert = PaliGemmaWithExpertModel(
+-            paligemma_config,
+-            action_expert_config,
+-            use_adarms=[False, True],
+-            precision=config.dtype,
+-            image_size=config.image_resolution[0],
+-            freeze_vision_encoder=config.freeze_vision_encoder,
+-            train_expert_only=config.train_expert_only,
+-        )
+-
+-        self.action_in_proj = nn.Linear(config.max_action_dim, action_expert_config.width)
+-        self.action_out_proj = nn.Linear(action_expert_config.width, config.max_action_dim)
++            self.action_in_proj = nn.Linear(config.max_action_dim, action_expert_config.width)
++            self.action_out_proj = nn.Linear(action_expert_config.width, config.max_action_dim)
+ 
+-        self.time_mlp_in = nn.Linear(action_expert_config.width, action_expert_config.width)
+-        self.time_mlp_out = nn.Linear(action_expert_config.width, action_expert_config.width)
++            self.time_mlp_in = nn.Linear(action_expert_config.width, action_expert_config.width)
++            self.time_mlp_out = nn.Linear(action_expert_config.width, action_expert_config.width)
+ 
+-        # Initialize gradient checkpointing flag
+-        self.gradient_checkpointing_enabled = False
++            # Initialize gradient checkpointing flag
++            self.gradient_checkpointing_enabled = False
+ 
+-        # Compile model if requested
+-        if config.compile_model:
+-            torch.set_float32_matmul_precision("high")
+-            self.sample_actions = torch.compile(self.sample_actions, mode=config.compile_mode)
+-            # Also compile the main forward pass used during training
+-            self.forward = torch.compile(self.forward, mode=config.compile_mode)
++            # Compile model if requested
++            if config.compile_model:
++                torch.set_float32_matmul_precision("high")
++                self.sample_actions = torch.compile(self.sample_actions, mode=config.compile_mode)
++                # Also compile the main forward pass used during training
++                self.forward = torch.compile(self.forward, mode=config.compile_mode)
+ 
+         msg = """An incorrect transformer version is used, please create an issue on https://github.com/huggingface/lerobot/issues"""
+ 
+@@ -875,6 +887,76 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+                 self.rtc_processor.track(time=time, x_t=x_t, v_t=v_t)
+ 
+         return x_t
++    
++    def _sample_actions_ov(
++        self,
++        images,
++        img_masks,
++        tokens,
++        masks,
++        noise=None,
++        **kwargs: Unpack[ActionSelectKwargs],
++    ) -> Tensor:
++        """Do a full inference forward and compute the action using OpenVINO."""
++        if noise is None:
++            bsize = tokens.shape[0]
++            actions_shape = (
++                bsize,
++                self.config.chunk_size,
++                self.config.max_action_dim,
++            )  # Use config max_action_dim for internal processing
++            noise = self.sample_noise(actions_shape, device="cpu")
++        
++        # Prepare inputs
++        images = torch.stack(images, dim=0)
++        img_masks = torch.stack(img_masks, dim=0)
++
++        prev_chunk_left_over = None
++        # Check if model expects RTC inputs
++        has_rtc_inputs = False
++        for input_node in self.ov_model.inputs:
++            if "prev_chunk_left_over" in input_node.get_names():
++                has_rtc_inputs = True
++                break
++
++        if has_rtc_inputs:
++            inference_delay = kwargs.get("inference_delay")
++            prev_chunk_left_over = kwargs.get("prev_chunk_left_over")
++            execution_horizon = kwargs.get("execution_horizon")
++
++            # Input arguments for RTC should be type of Tensor
++            # If RTC is disabled, set args to zero tensors
++            if prev_chunk_left_over is None:
++                prev_chunk_left_over = torch.zeros(
++                    (tokens.shape[0], self.config.chunk_size, self.config.output_features[ACTION].shape[0]), dtype=torch.float32
++                )
++                inference_delay_tensor = torch.tensor(0.0, dtype=torch.float32)
++                execution_horizon_tensor = torch.tensor(0.0, dtype=torch.float32)
++            else:
++                inference_delay_tensor = (torch.tensor(inference_delay, dtype=torch.float32)
++                    if inference_delay is not None else torch.tensor(0.0, dtype=torch.float32))
++                execution_horizon_tensor = (torch.tensor(execution_horizon, dtype=torch.float32)
++                    if execution_horizon is not None else torch.tensor(self.rtc_config.execution_horizon, dtype=torch.float32))
++
++        inputs = {
++            "images": images.cpu(),
++            "img_masks": img_masks.cpu(),
++            "lang_tokens": tokens.cpu(),
++            "lang_masks": masks.cpu(),
++            "noise": noise.cpu(),
++        }
++
++        if has_rtc_inputs:
++            inputs.update({
++                "prev_chunk_left_over": prev_chunk_left_over.cpu(),
++                "inference_delay": inference_delay_tensor.cpu(),
++                "execution_horizon": execution_horizon_tensor.cpu(),
++            })
++
++        outputs = self.infer_request.infer(inputs)
++
++        return torch.tensor(outputs["actions_out"]).to(device=tokens.device)
++
+ 
+     def denoise_step(
+         self,
+@@ -936,7 +1018,7 @@ class PI05Policy(PreTrainedPolicy):
+ 
+         # Initialize the core PI05 model
+         self.init_rtc_processor()
+-        self.model = PI05Pytorch(config, rtc_processor=self.rtc_processor)
++        self.model = PI05Pytorch(config, rtc_processor=self.rtc_processor, ov_config=kwargs.get("ov_config"))
+ 
+         # Enable gradient checkpointing if requested
+         if config.gradient_checkpointing:
+@@ -1158,8 +1240,11 @@ class PI05Policy(PreTrainedPolicy):
+         img_masks = []
+ 
+         # Get device from model parameters
+-        device = next(self.parameters()).device
+-
++        try:
++            device = next(self.parameters()).device
++        except StopIteration:
++            # Fallback for OpenVINO mode where there are no PyTorch parameters
++            device = self.config.device
+         present_img_keys = [key for key in self.config.image_features if key in batch]
+         missing_img_keys = [key for key in self.config.image_features if key not in batch]
+ 
+diff --git a/tests/policies/pi0_pi05/test_pi05_ov_rtc.py b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+new file mode 100644
+index 0000000..495a5c9
+--- /dev/null
++++ b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+@@ -0,0 +1,203 @@
++#!/usr/bin/env python
++
++"""Test script to verify OpenVINO support in PI0.5 (pi05) policy."""
++"""Usage: uv run --with pytest --extra pi-ov pytest tests/policies/pi0_pi05/test_pi05_ov_rtc.py"""
++
++import os
++import sys
++from unittest.mock import MagicMock, patch
++
++import pytest
++import torch
++
++from lerobot.configs.types import FeatureType, PolicyFeature
++from lerobot.policies.pi05.configuration_pi05 import OVConfig, PI05Config
++from lerobot.policies.pi05 import PI05Policy
++from lerobot.utils.constants import ACTION, OBS_LANGUAGE_TOKENS, OBS_LANGUAGE_ATTENTION_MASK
++
++# Skip this entire module in CI
++pytestmark = pytest.mark.skipif(
++    os.environ.get("CI") == "true" or os.environ.get("GITHUB_ACTIONS") == "true",
++    reason="This test requires local OpenPI installation and is not meant for CI",
++)
++
++@pytest.fixture
++def mock_openvino():
++    with patch.dict(sys.modules, {"openvino": MagicMock()}):
++        yield sys.modules["openvino"]
++
++@pytest.fixture
++def pi05_config():
++    config = PI05Config(max_action_dim=7, max_state_dim=14, dtype="float32", device="cpu")
++    config.input_features = {
++        "observation.state": PolicyFeature(
++            type=FeatureType.STATE,
++            shape=(14,),
++        ),
++        "observation.images.base_0_rgb": PolicyFeature(
++            type=FeatureType.VISUAL,
++            shape=(3, 224, 224),
++        ),
++    }
++    config.output_features = {
++        "action": PolicyFeature(
++            type=FeatureType.ACTION,
++            shape=(7,),
++        ),
++    }
++    return config
++
++def setup_mock_ov(mock_openvino, input_names):
++    mock_core = MagicMock()
++    mock_openvino.Core.return_value = mock_core
++    mock_model = MagicMock()
++    mock_compiled_model = MagicMock()
++    mock_core.read_model.return_value = mock_model
++    mock_core.compile_model.return_value = mock_compiled_model
++    
++    # Mock inputs
++    inputs = []
++    for name in input_names:
++        input_node = MagicMock()
++        input_node.get_names.return_value = {name}
++        inputs.append(input_node)
++    mock_compiled_model.inputs = inputs
++    
++    # Mock infer request
++    mock_infer_request = MagicMock()
++    mock_compiled_model.create_infer_request.return_value = mock_infer_request
++    
++    return mock_compiled_model, mock_infer_request
++
++def test_ov_config_initialization():
++    config = OVConfig(model_dir="/tmp/model", device="CPU")
++    assert config.model_dir == "/tmp/model"
++    assert config.device == "CPU"
++
++def test_policy_ov_init(mock_openvino, pi05_config):
++    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    mock_compiled_model, _ = setup_mock_ov(mock_openvino, ["images"])
++
++    policy = PI05Policy(pi05_config, ov_config=ov_config)
++    
++    mock_openvino.Core.assert_called_once()
++    mock_compiled_model.create_infer_request.assert_called_once()
++    assert policy.model.sample_actions == policy.model._sample_actions_ov
++    assert policy.model.ov_model == mock_compiled_model
++    assert policy.model.infer_request == mock_compiled_model.create_infer_request.return_value
++
++def test_preprocess_images_ov_device(mock_openvino, pi05_config):
++    pi05_config.device = "cpu"
++    ov_config = OVConfig(model_dir="/tmp/model", device="GPU")
++    setup_mock_ov(mock_openvino, ["images"])
++    
++    policy = PI05Policy(pi05_config, ov_config=ov_config)
++    assert list(policy.parameters()) == []
++    
++    batch = {"observation.images.base_0_rgb": torch.rand(1, 3, 224, 224)}
++    images, masks = policy._preprocess_images(batch)
++    
++    assert len(images) == 1
++    assert images[0].device == torch.device("cpu")
++
++def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config):
++    # Case 1: Model does NOT expect RTC inputs
++    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    mock_compiled_model, mock_infer_request = setup_mock_ov(
++        mock_openvino, ["images", "img_masks", "lang_tokens", "lang_masks", "noise"]
++    )
++    
++    batch_size = 1
++    mock_output = torch.randn(batch_size, pi05_config.chunk_size, pi05_config.max_action_dim).numpy()
++    mock_infer_request.infer.return_value = {"actions_out": mock_output}
++
++    policy = PI05Policy(pi05_config, ov_config=ov_config)
++    
++    batch = {
++        "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
++        OBS_LANGUAGE_TOKENS: torch.randint(0, 100, (batch_size, 10)),
++        OBS_LANGUAGE_ATTENTION_MASK: torch.ones((batch_size, 10), dtype=torch.bool),
++    }
++    
++    actions = policy.predict_action_chunk(batch)
++    
++    # Verify RTC keys are NOT in call_args
++    call_args = mock_infer_request.infer.call_args[0][0]
++    rtc_keys = {"prev_chunk_left_over", "inference_delay", "execution_horizon"}
++    for key in rtc_keys:
++        assert key not in call_args
++    
++    assert actions.shape == (batch_size, pi05_config.chunk_size, pi05_config.output_features[ACTION].shape[0])
++
++def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_config):
++    # Case 2: Model DOES expect RTC inputs, and we pass them
++    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    mock_compiled_model, mock_infer_request = setup_mock_ov(
++        mock_openvino, 
++        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"]
++    )
++    
++    batch_size = 1
++    mock_infer_request.infer.return_value = {
++        "actions_out": torch.randn(batch_size, pi05_config.chunk_size, pi05_config.max_action_dim).numpy()
++    }
++
++    policy = PI05Policy(pi05_config, ov_config=ov_config)
++    
++    batch = {
++        "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
++        OBS_LANGUAGE_TOKENS: torch.randint(0, 100, (batch_size, 10)),
++        OBS_LANGUAGE_ATTENTION_MASK: torch.ones((batch_size, 10), dtype=torch.bool),
++    }
++    
++    rtc_kwargs = {
++        "prev_chunk_left_over": torch.randn(batch_size, pi05_config.chunk_size, pi05_config.max_action_dim),
++        "inference_delay": 5,
++        "execution_horizon": 10
++    }
++    
++    policy.predict_action_chunk(batch, **rtc_kwargs)
++    
++    call_args = mock_infer_request.infer.call_args[0][0]
++    assert torch.equal(call_args["prev_chunk_left_over"], rtc_kwargs["prev_chunk_left_over"])
++    assert call_args["inference_delay"].item() == 5.0
++    assert call_args["execution_horizon"].item() == 10.0
++
++def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config):
++    # Case 3: Model DOES expect RTC inputs, but we DON'T pass them (verify defaults)
++    ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
++    mock_compiled_model, mock_infer_request = setup_mock_ov(
++        mock_openvino, 
++        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"]
++    )
++    
++    batch_size = 1
++    mock_infer_request.infer.return_value = {
++        "actions_out": torch.randn(batch_size, pi05_config.chunk_size, pi05_config.max_action_dim).numpy()
++    }
++
++    policy = PI05Policy(pi05_config, ov_config=ov_config)
++    
++    batch = {
++        "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
++        OBS_LANGUAGE_TOKENS: torch.randint(0, 100, (batch_size, 10)),
++        OBS_LANGUAGE_ATTENTION_MASK: torch.ones((batch_size, 10), dtype=torch.bool),
++    }
++    
++    policy.predict_action_chunk(batch)
++
++    
++    call_args = mock_infer_request.infer.call_args[0][0]
++    
++    # Defaults checking
++    assert torch.all(call_args["prev_chunk_left_over"] == 0)
++    # The shape should be (batch_size, chunk_size, original_action_dim) 
++    # based on user's logic in modeling_pi05.py:936
++    original_action_dim = pi05_config.output_features[ACTION].shape[0]
++    assert call_args["prev_chunk_left_over"].shape == (batch_size, pi05_config.chunk_size, original_action_dim)
++    
++    assert call_args["inference_delay"].item() == 0.0
++    assert call_args["execution_horizon"].item() == 0.0
++
++
++
+-- 
+2.34.1
+

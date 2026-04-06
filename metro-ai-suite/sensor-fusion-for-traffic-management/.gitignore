@@ -132,6 +132,9 @@ tags
 *.avi
 *.png
 
+# autotest
+**/autotest_logs/
+
 *.html
 performance*.json
 profiling.sh

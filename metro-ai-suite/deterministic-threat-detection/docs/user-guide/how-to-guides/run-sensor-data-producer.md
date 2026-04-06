@@ -15,7 +15,8 @@ application.
 Before running the script, ensure you have Python 3 and the `paho-mqtt` library installed.
 
 ```bash
-pip install paho-mqtt
+cd deterministic-threat-detection/sensor_data_producer
+pip install -r requirements.txt
 ```
 
 ## MQTT Broker Setup

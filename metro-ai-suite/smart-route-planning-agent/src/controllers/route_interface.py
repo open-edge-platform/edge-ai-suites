@@ -44,7 +44,9 @@ class RouteStatusInterface(ABC):
         pass
 
     @abstractmethod
-    def fetch_route_status(self) -> Optional[List[RouteCondition] | RouteCondition]:
+    async def fetch_route_status(
+        self,
+    ) -> Optional[List[RouteCondition] | RouteCondition]:
         """
         Fetch route status based on implementation-specific criteria.
 

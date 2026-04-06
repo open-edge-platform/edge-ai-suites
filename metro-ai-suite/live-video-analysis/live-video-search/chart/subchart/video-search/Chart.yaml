@@ -1,0 +1,5 @@
+apiVersion: v2
+name: video-search
+description: Live Video Search video-search subchart
+version: 1.0.0
+appVersion: "1.0.0"

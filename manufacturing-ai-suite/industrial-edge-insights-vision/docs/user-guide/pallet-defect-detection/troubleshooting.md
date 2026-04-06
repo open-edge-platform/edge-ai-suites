@@ -103,6 +103,10 @@ If you experience errors or failures when running an NPU workload with a model t
 
 **Resolution**: Follow the [Export and Optimize Geti Model](./how-to-guides/export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
 
+## Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
+
+This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
+
 ## Unable to parse JSON payload due to missing `jq` package
 
 While running the `sample_start.sh` script, you may encounter
@@ -126,7 +130,7 @@ There are few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternatively, install OpenCL runtime packages in the host system. Refer to the relevant [OpenVINO documentation](https://docs.openvino.ai/2025/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the relevant [OpenVINO documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
 
 ## Deploying on Edge Microvisor Toolkit
 

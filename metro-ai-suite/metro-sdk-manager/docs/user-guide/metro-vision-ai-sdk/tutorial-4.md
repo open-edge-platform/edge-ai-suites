@@ -39,10 +39,10 @@ Before starting this tutorial, ensure you have:
 ## System Requirements
 
 - **Operating System:** Ubuntu 22.04 LTS or Ubuntu 24.04 LTS (Desktop edition required)
-- **Processor:** Intel® Core™, Intel® Core™ Ultra, or Intel® Xeon® processors
+- **Processor:** Intel® Core™, Intel® Core™ Ultra
 - **Memory:** Minimum 8GB RAM (16GB recommended for complex pipelines)
 - **Storage:** 4GB free disk space for models, videos, and intermediate files
-- **Graphics:** Intel integrated graphics or discrete GPU (recommended for acceleration)
+- **Graphics:** Intel integrated graphics (required for acceleration)
 - **Display:** Monitor capable of displaying real-time video output
 
 **Important Display Requirements**
@@ -76,7 +76,7 @@ wget -O models/intel/human-pose-estimation-0001/FP32/human-pose-estimation-0001.
   "https://storage.openvinotoolkit.org/repositories/open_model_zoo/2023.0/models_bin/1/human-pose-estimation-0001/FP32/human-pose-estimation-0001.bin"
 
 wget -O models/intel/human-pose-estimation-0001/human-pose-estimation-0001.json \
-  "https://raw.githubusercontent.com/dlstreamer/dlstreamer/main/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
+  "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/main/samples/gstreamer/model_proc/intel/human-pose-estimation-0001.json"
 ```
 
 ### Step 2: Understand Human Pose Estimation Model
@@ -107,6 +107,7 @@ echo "X11 Auth: $HOME/.Xauthority"
 Execute the pre-built human pose estimation pipeline using DL Streamer:
 
 ```bash
+export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 # Run human pose estimation with DL Streamer container
 docker run -it --rm --net=host \
   -e DISPLAY=$DISPLAY \
@@ -116,7 +117,9 @@ docker run -it --rm --net=host \
   -v /tmp/.X11-unix:/tmp/.X11-unix:rw \
   -v ${PWD}:/home/dlstreamer/data \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
-  intel/dlstreamer:2026.0.0-ubuntu24-rc3 \
+  --group-add $RENDER_GROUP_ID \
+  --device=/dev/dri \
+  intel/dlstreamer:2026.0.0-ubuntu24 \
   bash -c "export MODELS_PATH=/home/dlstreamer/data/models && \
            /opt/intel/dlstreamer/samples/gstreamer/gst_launch/human_pose_estimation/human_pose_estimation.sh \
            /home/dlstreamer/data/face-demographics-walking.mp4"

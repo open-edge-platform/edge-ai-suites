@@ -1,6 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -16,6 +17,12 @@ from backend.routes import (
 )
 from backend.services import get_mqtt_subscriber, shutdown_mqtt_subscriber
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger("app")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,9 +31,7 @@ async def lifespan(app: FastAPI):
     try:
         await get_mqtt_subscriber()
     except Exception as e:
-        import logging
-
-        logging.getLogger("app").warning(f"Failed to initialize MQTT subscriber: {e}")
+        logger.warning(f"Failed to initialize MQTT subscriber: {e}")
 
     yield
 

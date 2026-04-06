@@ -292,7 +292,7 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                    camera_images_count=len(camera_images))
         
         # Prepare content with text prompt and images
-        content = [
+        content: list[dict[str, Any]] = [
             {
                 "type": "text",
                 "text": prompt

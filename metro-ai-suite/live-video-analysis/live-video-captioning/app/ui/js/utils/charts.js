@@ -2,72 +2,62 @@
  * Chart management utilities
  */
 const ChartManager = (function() {
-    const statsCharts = {};
+    let statsChart = null;
+    const datasetIndex = { cpu: 0, ram: 1, gpu: 2 };
+    const maxPoints = 60;
 
-    function createStatChart(elId, label, color) {
+    function createConsolidatedChart(elId, metrics) {
         const ctx = document.getElementById(elId)?.getContext('2d');
         if (!ctx) return null;
-        const gradient = ctx.createLinearGradient(0, 0, 0, 140);
-        gradient.addColorStop(0, `${color}55`);
-        gradient.addColorStop(1, `${color}0f`);
         const colors = ThemeManager.getChartColors();
-        const chart = new Chart(ctx, {
+        const datasets = metrics.map(({ label, color }) => {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 140);
+            gradient.addColorStop(0, `${color}33`);
+            gradient.addColorStop(1, `${color}05`);
+            return { label, data: [], borderColor: color, backgroundColor: gradient, tension: 0.35, fill: true, pointRadius: 0, borderWidth: 2, spanGaps: true };
+        });
+        statsChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ label, data: [], borderColor: color, backgroundColor: gradient, tension: 0.35, fill: true, pointRadius: 0, borderWidth: 2 }] },
+            data: { labels: [], datasets },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
                 scales: {
                     x: { display: false },
-                    y: {
-                        suggestedMin: 0,
-                        suggestedMax: 100,
-                        grid: { color: colors.gridColor },
-                        ticks: {
-                            color: colors.tickColor,
-                        },
-                    },
+                    y: { suggestedMin: 0, suggestedMax: 100, grid: { color: colors.gridColor }, ticks: { color: colors.tickColor } },
                 },
                 plugins: { legend: { display: false } },
             },
         });
-        statsCharts[elId.replace('Chart', '')] = chart;
-        return chart;
+        return statsChart;
     }
 
     function pushStatSample(key, value) {
-        const chart = statsCharts[key];
-        if (!chart) return;
-        const maxPoints = 60;
-        const labels = chart.data.labels;
-        labels.push(new Date().toLocaleTimeString());
-        if (labels.length > maxPoints) labels.shift();
-        const ds = chart.data.datasets[0];
+        if (!statsChart || datasetIndex[key] === undefined) return;
+        const labels = statsChart.data.labels;
+        const ds = statsChart.data.datasets[datasetIndex[key]];
+        // Advance the shared label when this dataset needs a new slot
+        if (ds.data.length >= labels.length) {
+            labels.push(new Date().toLocaleTimeString());
+            if (labels.length > maxPoints) labels.shift();
+        }
         ds.data.push(value);
         if (ds.data.length > maxPoints) ds.data.shift();
-        chart.update('none');
+        statsChart.update('none');
     }
 
     function updateChartColors() {
+        if (!statsChart) return;
         const colors = ThemeManager.getChartColors();
-        Object.values(statsCharts).forEach(chart => {
-            if (chart && chart.options && chart.options.scales && chart.options.scales.y) {
-                chart.options.scales.y.grid.color = colors.gridColor;
-                chart.options.scales.y.ticks.color = colors.tickColor;
-                chart.update('none');
-            }
-        });
-    }
-
-    function getChart(key) {
-        return statsCharts[key];
+        statsChart.options.scales.y.grid.color = colors.gridColor;
+        statsChart.options.scales.y.ticks.color = colors.tickColor;
+        statsChart.update('none');
     }
 
     return {
-        createStatChart,
+        createConsolidatedChart,
         pushStatSample,
-        updateChartColors,
-        getChart
+        updateChartColors
     };
 })();

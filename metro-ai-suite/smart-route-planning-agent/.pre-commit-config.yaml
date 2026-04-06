@@ -6,6 +6,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: (^|/)charts?(/|$)
       - id: check-json
       - id: check-toml
       - id: debug-statements
@@ -24,7 +25,7 @@ repos:
         args: [ --ignore-missing-imports ]
         exclude: ^metro-ai-suite/smart-route-planning-agent/testing/resources/
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.14
+    rev: v0.15.7
     hooks:
       - id: ruff-check
         types_or: [ python, pyi ]
@@ -36,7 +37,17 @@ repos:
     hooks:
       - id: shellcheck
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.9.28
+    rev: 0.10.12
     hooks:
       - id: uv-sync
         args: ["--locked", "--all-packages"]
+  - repo: https://github.com/gruntwork-io/pre-commit
+    rev: v0.1.30
+    hooks:
+      - id: helmlint
+        name: helmlint
+        description: Run helm lint, a linter for helm charts
+        entry: hooks/helmlint.sh
+        language: script
+        files: \.((ya?ml)|(tpl))$
+        require_serial: true

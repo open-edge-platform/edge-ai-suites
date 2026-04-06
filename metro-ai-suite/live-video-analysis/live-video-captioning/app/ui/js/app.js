@@ -11,6 +11,7 @@
         modelNameSelect: document.getElementById('modelNameSelect'),
         pipelineSelect: document.getElementById('pipelineSelect'),
         maxTokensInput: document.getElementById('maxTokensInput'),
+        captionHistoryInput: document.getElementById('captionHistoryInput'),
         rtspInput: document.getElementById('rtspInput'),
         runNameInput: document.getElementById('runNameInput'),
         startBtn: document.getElementById('startBtn'),
@@ -21,6 +22,16 @@
         detectionThresholdField: document.getElementById('detectionThresholdField'),
         detectionModelNameSelect: document.getElementById('detectionModelNameSelect'),
         detectionThresholdInput: document.getElementById('detectionThresholdInput'),
+        frameRateInput: document.getElementById('frameRateInput'),
+        chunkSizeInput: document.getElementById('chunkSizeInput'),
+        frameQualitySelect: document.getElementById('frameQualitySelect'),
+        customWidthInput: document.getElementById('customWidthInput'),
+        customHeightInput: document.getElementById('customHeightInput'),
+        customDimensionsRow: document.getElementById('customDimensionsRow'),
+        alertRulesSection: document.getElementById('alertRulesSection'),
+        alertRulesList: document.getElementById('alertRulesList'),
+        addAlertRuleBtn: document.getElementById('addAlertRuleBtn'),
+        pipelineServerError: document.getElementById('pipelineServerError'),
     };
 
     const state = { selectedRunId: null, runs: new Map() };
@@ -36,6 +47,171 @@
     function setSectionVisible(el, show) {
         if (!el) return;
         el.style.display = show ? '' : 'none';
+    }
+
+    function normalizeCaptionHistory(rawValue, fallback = 3) {
+        const parsed = Number.parseInt(rawValue, 10);
+        if (!Number.isFinite(parsed)) return fallback;
+        return Math.max(0, parsed);
+    }
+
+    function getDefaultCaptionHistory() {
+        return normalizeCaptionHistory(cfg.captionHistory, 3);
+    }
+
+    function getPreferredCaptionHistoryOnLoad() {
+        const settings = SettingsManager.loadSettings();
+        if (settings) {
+            const savedCaptionHistory = settings.captionHistory;
+            if (savedCaptionHistory !== undefined && savedCaptionHistory !== '') {
+                return normalizeCaptionHistory(savedCaptionHistory, getDefaultCaptionHistory());
+            }
+        }
+        return getDefaultCaptionHistory();
+    }
+
+    function applyCaptionHistorySetting() {
+        if (!els.captionHistoryInput) return;
+        const resolved = normalizeCaptionHistory(els.captionHistoryInput.value, getDefaultCaptionHistory());
+        if (els.captionHistoryInput.value !== String(resolved)) {
+            els.captionHistoryInput.value = String(resolved);
+        }
+        MetadataStreamService.setCaptionHistoryLimit(resolved);
+    }
+
+    function handleCaptionHistoryInput() {
+        if (!els.captionHistoryInput) return;
+        const raw = els.captionHistoryInput.value;
+        // Allow transient empty value while user is editing with backspace/delete.
+        if (raw === '') return;
+
+        const parsed = Number.parseInt(raw, 10);
+        if (!Number.isFinite(parsed)) return;
+
+        MetadataStreamService.setCaptionHistoryLimit(Math.max(0, parsed));
+    }
+
+    const ALERT_RULE_DEFAULTS = [];
+    const ALERT_RULES_STORAGE_KEY = 'lvc_alert_rules';
+    const MAX_ALERT_RULES = 3;
+
+    function createAlertRuleRow(substring, color) {
+        const row = document.createElement('div');
+        row.className = 'alert-rule-row';
+
+        // Hidden native color input
+        const colorPicker = document.createElement('input');
+        colorPicker.type = 'color';
+        colorPicker.className = 'alert-rule-color-picker';
+        colorPicker.value = color || '#ff4444';
+        colorPicker.title = 'Pick highlight color';
+        colorPicker.setAttribute('aria-label', 'Highlight color');
+
+        // Visible color swatch that triggers the picker
+        const swatch = document.createElement('button');
+        swatch.type = 'button';
+        swatch.className = 'alert-rule-swatch';
+        swatch.title = 'Click to change color';
+        swatch.style.background = color || '#ff4444';
+        swatch.appendChild(colorPicker);
+        colorPicker.addEventListener('input', () => {
+            swatch.style.background = colorPicker.value;
+            saveAlertRulesToStorage();
+        });
+
+        const substringInput = document.createElement('input');
+        substringInput.type = 'text';
+        substringInput.className = 'alert-rule-substring';
+        substringInput.placeholder = 'Keyword to match…';
+        substringInput.value = substring || '';
+        substringInput.addEventListener('input', () => { saveAlertRulesToStorage(); });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'alert-rule-remove';
+        removeBtn.title = 'Remove rule';
+        removeBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+        removeBtn.addEventListener('click', () => {
+            row.remove();
+            refreshAlertRulesUI();
+            saveAlertRulesToStorage();
+        });
+
+        row.appendChild(swatch);
+        row.appendChild(substringInput);
+        row.appendChild(removeBtn);
+        return row;
+    }
+
+    function refreshAlertRulesUI() {
+        if (!els.alertRulesList || !els.addAlertRuleBtn) return;
+        const rows = els.alertRulesList.querySelectorAll('.alert-rule-row');
+        const count = rows.length;
+        // Show/hide empty state hint
+        let emptyHint = els.alertRulesList.querySelector('.alert-rules-empty');
+        if (count === 0) {
+            if (!emptyHint) {
+                emptyHint = document.createElement('p');
+                emptyHint.className = 'alert-rules-empty';
+                els.alertRulesList.appendChild(emptyHint);
+            }
+        } else if (emptyHint) {
+            emptyHint.remove();
+        }
+        // Show/hide Add Rule button
+        els.addAlertRuleBtn.style.display = count >= MAX_ALERT_RULES ? 'none' : '';
+    }
+
+    function loadAlertRulesFromStorage() {
+        try {
+            const raw = localStorage.getItem(ALERT_RULES_STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) return parsed;
+            }
+        } catch (_e) { /* ignore corrupt data */ }
+        return null;
+    }
+
+    function saveAlertRulesToStorage() {
+        const rules = readAlertRules();
+        try {
+            localStorage.setItem(ALERT_RULES_STORAGE_KEY, JSON.stringify(rules));
+        } catch (_e) { /* storage full or unavailable */ }
+    }
+
+    function initAlertRulesUI() {
+        if (!els.alertRulesList || !els.addAlertRuleBtn) return;
+        els.alertRulesList.innerHTML = '';
+
+        // Load from localStorage, fall back to defaults (empty)
+        const saved = loadAlertRulesFromStorage();
+        const initial = saved !== null ? saved : ALERT_RULE_DEFAULTS;
+        for (const def of initial) {
+            els.alertRulesList.appendChild(createAlertRuleRow(def.substring, def.color));
+        }
+        refreshAlertRulesUI();
+
+        els.addAlertRuleBtn.addEventListener('click', () => {
+            const count = els.alertRulesList.querySelectorAll('.alert-rule-row').length;
+            if (count >= MAX_ALERT_RULES) return;
+            const randomColor = '#' + Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0');
+            els.alertRulesList.appendChild(createAlertRuleRow('', randomColor));
+            refreshAlertRulesUI();
+            saveAlertRulesToStorage();
+        });
+    }
+
+    function readAlertRules() {
+        if (!els.alertRulesList) return [];
+        const rows = els.alertRulesList.querySelectorAll('.alert-rule-row');
+        const rules = [];
+        for (const row of rows) {
+            const substring = (row.querySelector('.alert-rule-substring')?.value || '').trim();
+            const color = row.querySelector('.alert-rule-color-picker')?.value || '#ff4444';
+            if (substring) rules.push({ substring, color });
+        }
+        return rules;
     }
 
     function showDetectionFields(show) {
@@ -201,9 +377,10 @@
             SettingsManager.restoreSelectValues(els);
             toggleDetectionFieldsByText();
         } catch (_err) {
-            setPipelineOptions([ApiService.DEFAULT_PIPELINE]);
-            SettingsManager.restoreSelectValues(els);
-            toggleDetectionFieldsByText();
+            if (els.pipelineServerError) {
+                els.pipelineServerError.textContent = 'Pipeline server not reachable. Please check the logs.';
+                els.pipelineServerError.style.display = '';
+            }
         }
     }
 
@@ -292,9 +469,18 @@
                     prompt: runData.prompt || 'N/A',
                     maxTokens: runData.maxTokens || 'N/A',
                     rtspUrl: runData.rtspUrl || 'N/A',
+                    frameRate: runData.frameRate ?? null,
+                    chunkSize: runData.chunkSize ?? null,
+                    frameWidth: runData.frameWidth ?? null,
+                    frameHeight: runData.frameHeight ?? null,
+                    frameQuality: runData.frameQuality ?? null,
                 };
 
                 const ui = RunCardComponent.createRunElement(run, stopRun);
+                // Restored runs don't have saved alert rules; use defaults
+                ui.alertRules = runData.alertRules ?? [
+                    { substring: 'yes', color: '#ff4444' },
+                ];
                 els.runsContainer.appendChild(ui.wrap);
                 attachRunStreams(run, ui);
                 state.selectedRunId = run.runId;
@@ -346,6 +532,42 @@
                 : 0.5)
             : null;
 
+        // Frame rate, chunk size and frame dimensions
+        const frameRateRaw = (els.frameRateInput?.value || '').toString().trim();
+        const frameRateParsed = Number.parseInt(frameRateRaw, 10);
+        const frameRate = (frameRateRaw !== '' && Number.isFinite(frameRateParsed) && frameRateParsed >= 0) ? frameRateParsed : null;
+
+        const chunkSizeRaw = (els.chunkSizeInput?.value || '').toString().trim();
+        const chunkSizeParsed = Number.parseInt(chunkSizeRaw, 10);
+        const chunkSize = (chunkSizeRaw !== '' && Number.isFinite(chunkSizeParsed) && chunkSizeParsed >= 1) ? chunkSizeParsed : null;
+
+        const QUALITY_PRESETS = { '1280x720': [1280, 720], '640x480': [640, 480], '480x360': [480, 360] };
+        const qualityKey = (els.frameQualitySelect?.value || '').trim();
+        let frameWidth = null;
+        let frameHeight = null;
+        if (qualityKey === 'custom') {
+            const wRaw = Number.parseInt((els.customWidthInput?.value || '').trim(), 10);
+            const hRaw = Number.parseInt((els.customHeightInput?.value || '').trim(), 10);
+            frameWidth = Number.isFinite(wRaw) && wRaw > 0 ? wRaw : null;
+            frameHeight = Number.isFinite(hRaw) && hRaw > 0 ? hRaw : null;
+        } else {
+            const qualityPreset = QUALITY_PRESETS[qualityKey] || null;
+            frameWidth = qualityPreset ? qualityPreset[0] : null;
+            frameHeight = qualityPreset ? qualityPreset[1] : null;
+        }
+
+        // Route to proxy pipeline when Default resolution is selected
+        const PROXY_PIPELINE_MAP = {
+            'GenAI_Pipeline_on_CPU': 'GenAI_Pipeline_on_CPU_Default_Resolution',
+            'GenAI_Pipeline_on_GPU': 'GenAI_Pipeline_on_GPU_Default_Resolution',
+        };
+        const effectivePipelineName = (qualityKey === 'default' && PROXY_PIPELINE_MAP[pipelineName])
+            ? PROXY_PIPELINE_MAP[pipelineName]
+            : pipelineName;
+
+        // Alert color rules (alert mode only, per-run)
+        const alertRules = cfg.alertMode ? readAlertRules() : [];
+
         // Process optional run name
         const rawRunName = (els.runNameInput?.value || '').trim();
         let runName = RunCardComponent.validateAndPrepareRunName(rawRunName);
@@ -358,10 +580,14 @@
         els.startBtn.disabled = true;
         updatePipelineInfo('Starting pipeline...');
         try {
-            const requestBody = { rtspUrl, prompt, detectionModelName, detectionThreshold, modelName, maxNewTokens: maxTokens, pipelineName };
+            const requestBody = { rtspUrl, prompt, detectionModelName, detectionThreshold, modelName, maxNewTokens: maxTokens, pipelineName: effectivePipelineName };
             if (runName) {
                 requestBody.runName = runName;
             }
+            if (frameRate !== null) requestBody.frameRate = frameRate;
+            if (chunkSize !== null) requestBody.chunkSize = chunkSize;
+            if (frameWidth !== null) requestBody.frameWidth = frameWidth;
+            if (frameHeight !== null) requestBody.frameHeight = frameHeight;
             const data = await ApiService.startRun(requestBody);
 
             const run = {
@@ -377,12 +603,19 @@
                 prompt: prompt,
                 maxTokens: maxTokens,
                 rtspUrl: rtspUrl,
+                frameRate: frameRate,
+                chunkSize: chunkSize,
+                frameWidth: frameWidth,
+                frameHeight: frameHeight,
+                frameQuality: qualityKey || null,
+                alertRules: alertRules,
             };
 
             // Hide the hint when first pipeline starts
             if (els.hintEl) els.hintEl.style.display = 'none';
 
             const ui = RunCardComponent.createRunElement(run, stopRun);
+            ui.alertRules = run.alertRules;
             els.runsContainer.appendChild(ui.wrap);
             attachRunStreams(run, ui);
             updatePipelineInfo(`Latest Run: (${run.runId})`);
@@ -401,6 +634,12 @@
             appTitleEl.textContent = 'Live Video Captioning and Alerts';
         }
 
+        // Show alert color rules section only in alert mode
+        if (cfg.alertMode) {
+            setSectionVisible(els.alertRulesSection, true);
+            initAlertRulesUI();
+        }
+
         // Set default RTSP URL from runtime config (before restoring localStorage)
         if (cfg.defaultRtspUrl && els.rtspInput && !els.rtspInput.value) {
             els.rtspInput.value = cfg.defaultRtspUrl;
@@ -414,6 +653,11 @@
             }
         }
 
+        // Resolve caption history for reload: prefer saved UI value, then runtime config default
+        if (els.captionHistoryInput) {
+            els.captionHistoryInput.value = String(getPreferredCaptionHistoryOnLoad());
+        }
+
         ThemeManager.applyTheme(ThemeManager.detectInitialTheme(), els.themeToggle);
         if (els.themeToggle) {
             els.themeToggle.addEventListener('click', () => {
@@ -425,9 +669,28 @@
         // Restore settings from localStorage before loading options
         SettingsManager.restoreSettings(els, cfg);
         SettingsManager.setupSettingsPersistence(els);
+        applyCaptionHistorySetting();
+        SettingsManager.saveSettings(els);
+
+        if (els.captionHistoryInput) {
+            els.captionHistoryInput.addEventListener('change', applyCaptionHistorySetting);
+            els.captionHistoryInput.addEventListener('input', handleCaptionHistoryInput);
+            els.captionHistoryInput.addEventListener('blur', applyCaptionHistorySetting);
+        }
 
         if (els.pipelineSelect) {
             els.pipelineSelect.addEventListener('change', toggleDetectionFieldsByText);
+        }
+
+        function updateCustomDimensionsVisibility() {
+            const isCustom = els.frameQualitySelect?.value === 'custom';
+            if (els.customDimensionsRow) {
+                els.customDimensionsRow.style.display = isCustom ? '' : 'none';
+            }
+        }
+        if (els.frameQualitySelect) {
+            els.frameQualitySelect.addEventListener('change', updateCustomDimensionsVisibility);
+            updateCustomDimensionsVisibility();
         }
 
         loadModels();

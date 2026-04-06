@@ -66,6 +66,10 @@ see the [Environment Variables Guide](./get-started/environment-variables.md) fo
 See [Build from Source](./get-started/build-from-source.md) for instructions on building and
 running with the Docker Compose tool.
 
+### Helm Deployment
+
+See [Deploy with Helm](./get-started/deploy-with-helm.md) for a simple Kubernetes deployment flow.
+
 ## Multi-Node Deployment
 
 The Smart Route Planning Agent works in a multi-node setup with one central Route Planning
@@ -73,25 +77,11 @@ Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
 ### Architecture Overview
 
-```
-                    ┌─────────────────────────────┐
-                    │  Smart Route Planning Agent │
-                    │       (Central Node)        │
-                    └──────────────┬──────────────┘
-                                   │
-           ┌───────────────────────┼───────────────────────┐
-           │                       │                       │
-           ▼                       ▼                       ▼
-┌─────────────────────┐ ┌─────────────────────┐ ┌─────────────────────┐
-│ Smart Traffic       │ │ Smart Traffic       │ │ Smart Traffic       │
-│ Intersection Agent  │ │ Intersection Agent  │ │ Intersection Agent  │
-│ (Edge Node 1)       │ │ (Edge Node 2)       │ │ (Edge Node N)       │
-└─────────────────────┘ └─────────────────────┘ └─────────────────────┘
-```
+![Architecture Overview](./_assets/smart-route-agent-architecture-overview.svg "Architecture Overview")
 
 ### Multi-Node Deployment Prerequisites
 
-1. Deploy the [Smart Traffic Intersection Agent](../../../smart-traffic-intersection-agent/docs/user-guide/get-started.md#quick-start-with-setup-script) on each edge node.
+1. Deploy the [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/get-started.html#quick-start-with-setup-script) on each edge node.
 2. Ensure network connectivity between the central node and edge nodes.
 3. Note the IP address and port of each Smart Traffic Intersection Agent.
 
@@ -143,6 +133,7 @@ live traffic data for route optimization.
 get-started/system-requirements
 get-started/build-from-source
 get-started/environment-variables
+get-started/deploy-with-helm
 
 :::
 hide_directive-->

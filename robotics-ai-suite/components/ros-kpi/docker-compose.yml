@@ -1,0 +1,48 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# These contents may have been developed with support from one or more
+# Intel-operated generative artificial intelligence solutions.
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: ros2-prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    network_mode: host
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: ros2-grafana
+    ports:
+      - "30000:30000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_HTTP_ADDR=0.0.0.0
+      - GF_SERVER_HTTP_PORT=30000
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - HTTP_PROXY=http://proxy-dmz.intel.com:912
+      - HTTPS_PROXY=http://proxy-dmz.intel.com:912
+      - NO_PROXY=localhost,127.0.0.1,prometheus
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    network_mode: host
+
+volumes:
+  prometheus-data:
+  grafana-data:
