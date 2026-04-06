@@ -1,0 +1,40 @@
+{{- $gpu := default (dict) .Values.global.gpu -}}
+{{- $dataprepGpuEnabled := default false (index $gpu "vdmsDataprepEnabled") -}}
+{{- $gpuDevice := default "" (index $gpu "device") -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vdms-dataprep-config
+  labels:
+    {{- include "lvs.dataprep.labels" . | nindent 4 }}
+data:
+  APP_HOST: "vdms-dataprep"
+  VDMS_VDB_HOST: "vdms-vector-db"
+  VDMS_VDB_PORT: "55555"
+  MINIO_ENDPOINT: "minio-service:80"
+  MINIO_SECURE: "false"
+  DEFAULT_BUCKET_NAME: {{ .Values.global.env.defaultBucketName | quote }}
+  DB_COLLECTION: {{ .Values.global.env.vsIndexName | quote }}
+  MULTIMODAL_EMBEDDING_ENDPOINT: "http://multimodal-embedding-serving:8000/embeddings"
+  MULTIMODAL_EMBEDDING_MODEL_NAME: {{ required "global.env.embeddingModelName must be set (use user_values_override.yaml)" .Values.global.env.embeddingModelName | quote }}
+  EMBEDDING_PROCESSING_MODE: {{ .Values.global.env.embeddingProcessingMode | quote }}
+  SDK_USE_OPENVINO: {{ .Values.global.env.sdkUseOpenvino | quote }}
+  VDMS_DATAPREP_DEVICE: {{ ternary $gpuDevice "CPU" $dataprepGpuEnabled | quote }}
+  OV_MODELS_DIR: {{ .Values.global.env.ovModelsDir | quote }}
+  OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $dataprepGpuEnabled | quote }}
+  FRAME_INTERVAL: {{ .Values.global.env.frameInterval | quote }}
+  ENABLE_OBJECT_DETECTION: {{ .Values.global.env.enableObjectDetection | quote }}
+  DETECTION_CONFIDENCE: {{ .Values.global.env.detectionConfidence | quote }}
+  ROI_CONSOLIDATION_ENABLED: {{ .Values.global.env.roiConsolidationEnabled | quote }}
+  ROI_CONSOLIDATION_IOU_THRESHOLD: {{ .Values.global.env.roiConsolidationIouThreshold | quote }}
+  ROI_CONSOLIDATION_CLASS_AWARE: {{ .Values.global.env.roiConsolidationClassAware | quote }}
+  ROI_CONSOLIDATION_CONTEXT_SCALE: {{ .Values.global.env.roiConsolidationContextScale | quote }}
+  FRAMES_TEMP_DIR: {{ .Values.global.env.framesTempDir | quote }}
+  DETECTION_MODEL_DIR: "/app/models/yolox"
+  LOG_LEVEL: "INFO"
+  ALLOW_ORIGINS: "*"
+  ALLOW_METHODS: "*"
+  ALLOW_HEADERS: "*"
+  no_proxy: "{{ .Values.global.proxy.noProxy }},vdms-vector-db,multimodal-embedding-serving,minio-service,localhost"
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}

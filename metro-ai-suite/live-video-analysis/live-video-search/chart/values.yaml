@@ -1,0 +1,478 @@
+global:
+  registry: ""
+  tag: "latest"
+  vssStackTag: ""
+  smartNvrStackTag: ""
+
+  videos:
+    source: "download"
+    hostPath: ""
+
+  volumeHostPath: ""
+  usePvc: true
+  keepPvc: false
+  sharedPvcName: ""
+
+  persistence:
+    rwxEnabled: false
+    storageClassName: ""
+
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: "localhost,127.0.0.1,.svc.cluster.local"
+
+  gpu:
+    multimodalEmbeddingEnabled: false
+    vdmsDataprepEnabled: false
+    key: ""
+    device: ""
+    hostPath: "/dev/dri"
+
+  credentials:
+    minioRootUser: ""
+    minioRootPassword: ""
+    postgresUser: ""
+    postgresPassword: ""
+    mqttUser: ""
+    mqttPassword: ""
+
+  env:
+    embeddingModelName: ""
+    postgresDb: "video_summary_db"
+    minioBucket: "video-summary"
+    defaultBucketName: "vdms-bucket"
+    vsIndexName: "video_frame_embeddings"
+
+    summaryFeature: "FEATURE_OFF"
+    searchFeature: "FEATURE_ON"
+    appFeatureMux: "ATOMIC"
+    cameraConfigFeature: "FEATURE_ON"
+    configSocketAppend: "CONFIG_OFF"
+
+    frameInterval: "15"
+    enableObjectDetection: "true"
+    detectionConfidence: "0.85"
+    roiConsolidationEnabled: "false"
+    roiConsolidationIouThreshold: "0.2"
+    roiConsolidationClassAware: "false"
+    roiConsolidationContextScale: "0.2"
+    framesTempDir: "/tmp/dataprep"
+    embeddingProcessingMode: "sdk"
+    sdkUseOpenvino: "true"
+    ovModelsDir: "/app/ov_models"
+    ovPerformanceMode: "THROUGHPUT"
+    embeddingUseOv: "true"
+    embeddingDevice: "CPU"
+    defaultStartOffsetSec: "0"
+    defaultClipDuration: "-1"
+    defaultNumFrames: "64"
+
+    aggregationEnabled: "true"
+    aggregationSegmentDuration: "8"
+    aggregationMinGap: "0"
+    aggregationMaxResults: "20"
+    aggregationInitialK: "1000"
+    aggregationContextSeekOffsetSeconds: "0"
+
+    dataprepTelemetryUrl: "http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1"
+    searchDataprepTimeoutMs: "90000"
+
+service:
+  app:
+    type: NodePort
+    port: 80
+    nodePort: 31245
+  frigate:
+    type: NodePort
+    port: 5000
+    nodePort: 31500
+  nvrEventRouter:
+    type: NodePort
+    port: 8000
+    nodePort: 31800
+  minioApi:
+    type: NodePort
+    port: 80
+    nodePort: 31401
+  minioConsole:
+    type: NodePort
+    port: 81
+    nodePort: 31402
+  telemetry:
+    type: ClusterIP
+    port: 9273
+
+images:
+  nginx: "nginx:1.27.5"
+  initResources: "curlimages/curl:8.11.1"
+  pipelineManager:
+    repository: "pipeline-manager"
+  vssUi:
+    repository: "vss-ui"
+  videoSearch:
+    repository: "video-search"
+  vdmsDataprep:
+    repository: "vdms-dataprep"
+  multimodalEmbeddingServing:
+    repository: "multimodal-embedding-serving"
+  nvrEventRouter:
+    repository: "nvr-event-router"
+  postgres: "postgres:17.4"
+  minio: "coollabsio/minio:RELEASE.2025-10-15T17-29-55Z"
+  vdmsVectorDb: "intellabs/vdms:v2.12.0"
+  frigate: "ghcr.io/blakeblackshear/frigate:0.15.1"
+  mqttBroker: "eclipse-mosquitto:2.0.21"
+  redis: "redis:7"
+  telemetryCollector: "intel/vippet-collector:2026.0.0-20260217-weekly"
+  rtspServer: "bluenviron/mediamtx:latest"
+  rtspPublisher: "jrottenberg/ffmpeg:6.1-alpine"
+
+persistence:
+  storageClassName: ""
+  minioData:
+    size: 20Gi
+  pgData:
+    size: 20Gi
+  vdmsDb:
+    size: 50Gi
+  sharedData:
+    size: 50Gi
+  ovModels:
+    size: 30Gi
+  dataPrep:
+    size: 20Gi
+  collectorSignals:
+    size: 1Gi
+    storageClassName: ""
+    accessModes:
+      - ReadWriteOnce
+  frigateRecordings:
+    size: 100Gi
+  videos:
+    size: 20Gi
+
+frigate:
+  mode: default
+  usbCameraDevice: "/dev/video0"
+  configs:
+    default: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        backyard:
+          ffmpeg:
+            inputs:
+              - path: /videos/backyard.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+
+        livingroom:
+          ffmpeg:
+            inputs:
+              - path: /videos/livingroom.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+
+        garage:
+          ffmpeg:
+            inputs:
+              - path: /videos/garage.mp4
+                input_args: -re -stream_loop -1 -fflags +genpts
+                roles:
+                  - record
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+    rtsp: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        rtsp-garage:
+          ffmpeg:
+            inputs:
+              - path: rtsp://rtsp-server:8554/rtsp-garage
+                roles:
+                  - record
+            output_args:
+              record: -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+    usb: |
+      mqtt:
+        enabled: true
+        host: mqtt-broker
+        port: 1883
+        topic_prefix: frigate
+        client_id: frigate
+        user: '{FRIGATE_MQTT_USER}'
+        password: '{FRIGATE_MQTT_PASSWORD}'
+
+      logger:
+        default: info
+
+      record:
+        enabled: true
+        retain:
+          days: 0.5
+          mode: all
+
+      cameras:
+        usb-camera:
+          ffmpeg:
+            inputs:
+              - path: /dev/video0
+                input_args: -f v4l2 -input_format mjpeg -video_size 1280x720 -framerate 30
+                roles:
+                  - record
+            output_args:
+              record:
+                -f segment -segment_time 10 -segment_format mp4 -reset_timestamps 1 -strftime 1 -c:v libx264 -preset veryfast -profile:v baseline -level 3.1 -crf 23 -g 50 -pix_fmt yuv420p -movflags +faststart
+          record:
+            enabled: true
+            retain:
+              days: 0.5
+          snapshots:
+            enabled: true
+            retain:
+              default: 1
+      version: 0.15-1
+
+nginx:
+  config: |
+    events {
+        worker_connections 1024;
+    }
+
+    http {
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+
+        server {
+            listen 80;
+            listen [::]:80;
+            client_max_body_size 500M;
+            proxy_read_timeout 1800s;
+            proxy_connect_timeout 300s;
+            proxy_send_timeout 1800s;
+            send_timeout 1800s;
+            keepalive_timeout 1800s;
+
+            location / {
+                proxy_pass "http://${APP_UI}/";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            location /ws/ {
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header Host $host;
+                proxy_pass "http://${APP_MANAGER}/ws/";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+            }
+
+            location /manager/ {
+                proxy_pass "http://${APP_MANAGER}/";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            location /manager/metrics/ws/ {
+                proxy_pass "http://${APP_MANAGER}/metrics/ws/";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_set_header Host $host;
+                proxy_read_timeout 3600s;
+            }
+
+            location /datastore/ {
+                proxy_pass "http://${APP_ASSETS}/";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+            }
+
+            location /nvr-api/ {
+                set $nvr_upstream "nvr-event-router:8000";
+                rewrite ^/nvr-api(/.*)$ $1 break;
+                proxy_pass "http://$nvr_upstream";
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "Upgrade";
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_cache_bypass $http_upgrade;
+            }
+        }
+    }
+
+mqtt:
+  config: |
+    allow_anonymous false
+    listener 1883
+    password_file /mosquitto/config/pwfile
+
+telemetry:
+  enabled: true
+  hostPathMounts: true
+  telegrafConfig: |
+    [agent]
+      interval = "1s"
+      round_interval = true
+      metric_batch_size = 2000
+      metric_buffer_limit = 20000
+      collection_jitter = "0s"
+      flush_interval = "1s"
+      flush_jitter = "0s"
+      precision = "1s"
+      debug = false
+      quiet = true
+      logfile = ""
+
+    [[inputs.cpu]]
+      percpu = false
+      totalcpu = true
+      collect_cpu_time = false
+      report_active = false
+      core_tags = false
+      fieldinclude = ["usage_user"]
+
+    [[inputs.mem]]
+      fieldinclude = ["used_percent"]
+
+    [[inputs.exec]]
+      commands = ["/app/read_cpu_freq.sh"]
+      data_format = "influx"
+      interval = "1s"
+
+    [[inputs.execd]]
+      command = ["python3", "/app/qmassa_reader.py"]
+      data_format = "influx"
+
+    [[inputs.temp]]
+
+    [[processors.starlark]]
+      namepass = ["temp"]
+      source = '''
+    def apply(metric):
+        return metric if metric.tags.get("sensor", "").startswith("coretemp_package_id_") else None
+    '''
+
+    [[inputs.file]]
+      files = ["/app/.collector-signals/dataprep_embeddings_per_second.txt"]
+      data_format = "value"
+      data_type = "float"
+      name_override = "dataprep_embeddings_per_second"
+
+    [[outputs.prometheus_client]]
+      listen = ":9273"
+      metric_version = 1
+      path = "/metrics"
+      collectors_exclude = ["gocollector", "process"]
+      string_as_label = true
+      export_timestamp = true
+
+    [[outputs.websocket]]
+      url = "ws://pipeline-manager:3000/metrics/ws/collector"
+      data_format = "json"
+      read_timeout = "0s"
+
+initResources:
+  enabled: true
+
+smartNvr:
+  vlmServingIp: "pipeline-manager"
+  vlmServingPort: "9766"
+  vssSearchIp: "nginx"
+  vssSearchPort: "80"
+  vssSummaryIp: "nginx"
+  vssSummaryPort: "80"
+  frigateBaseUrl: "http://frigate-vms:5000"
+
+rtspTest:
+  enabled: true

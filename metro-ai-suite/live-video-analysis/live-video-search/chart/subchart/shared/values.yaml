@@ -1,0 +1,45 @@
+global:
+  persistence:
+    rwxEnabled: false
+    storageClassName: ''
+  videos:
+    source: download
+    hostPath: ''
+  keepPvc: false
+  sharedPvcName: ''
+  usePvc: true
+  volumeHostPath: ''
+  credentials:
+    minioRootPassword: ''
+    minioRootUser: ''
+    mqttPassword: ''
+    mqttUser: ''
+    postgresPassword: ''
+    postgresUser: ''
+persistence:
+  collectorSignals:
+    size: 1Gi
+    storageClassName: ''
+    accessModes:
+      - ReadWriteOnce
+  dataPrep:
+    size: 20Gi
+  frigateRecordings:
+    size: 100Gi
+    accessModes:
+      - ReadWriteOnce
+  minioData:
+    size: 20Gi
+  ovModels:
+    size: 30Gi
+  pgData:
+    size: 20Gi
+  sharedData:
+    size: 50Gi
+  storageClassName: ''
+  vdmsDb:
+    size: 50Gi
+  videos:
+    size: 20Gi
+    accessModes:
+      - ReadWriteOnce

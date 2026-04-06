@@ -26,13 +26,16 @@ for _noisy in [
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
-from fastapi import FastAPI, HTTPException, Body
+import base64
+
+from fastapi import FastAPI, File, Form, HTTPException, Body, UploadFile
 from fastapi.responses import JSONResponse
 import os
 
 from pydantic import BaseModel, field_validator
 from typing import Optional, Dict, Union
 
+import asyncio
 import tempfile
 
 from providers.minio_wrapper.minio_client import MinioStore
@@ -68,15 +71,11 @@ class IngestMinioDirRequest(_IngestRequestBase):
     bucket_name: str
     folder_path: str
     meta: dict = {}
-    frame_extract_interval: int = 15
-    do_detect_and_crop: bool = False
 
 class IngestMinioFileRequest(_IngestRequestBase):
     bucket_name: str
     file_path: str
     meta: dict = {}
-    frame_extract_interval: int = 15
-    do_detect_and_crop: bool = False
 
 class IngestTextRequest(_IngestRequestBase):
     bucket_name: Optional[str] = None
@@ -95,6 +94,10 @@ indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visu
 retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
 
 minio_store = MinioStore.from_config()
+
+_frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
+_do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
+logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, do_detect_and_crop={_do_detect_and_crop}")
 
 @app.get("/v1/dataprep/health")
 def health():
@@ -153,38 +156,40 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
         bucket_name = request.bucket_name
         folder_path = request.folder_path
         meta = request.meta
-        frame_extract_interval = request.frame_extract_interval
-        do_detect_and_crop = request.do_detect_and_crop
 
         if not minio_store.client.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
 
         store = MinioStore(minio_store.client, bucket_name)
 
-        proc_files = []
-        metas = []
-        
-        # TODO: Supported file extensions, verify
-        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc', 
-                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md', '.rst')
-        
-        with tempfile.TemporaryDirectory() as temp_dir:
-            for object_name in store.list_object_names(prefix=folder_path, recursive=True):
-                if not object_name.lower().endswith(supported_extensions):
-                    logger.warning(f"Unsupported file type: {object_name}, skipped.")
-                    continue
+        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc',
+                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md')
 
-                local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
-                store.get_file(object_name, local_file_path)
-                
-                file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
-                proc_files.append(local_file_path)
-                metas.append(file_meta)
+        def _blocking_ingest():
+            proc_files = []
+            metas = []
+            with tempfile.TemporaryDirectory() as temp_dir:
+                for object_name in store.list_object_names(prefix=folder_path, recursive=True):
+                    if not object_name.lower().endswith(supported_extensions):
+                        logger.warning(f"Unsupported file type: {object_name}, skipped.")
+                        continue
 
-            if not proc_files:
-                return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
+                    local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
+                    store.get_file(object_name, local_file_path)
 
-            res = indexer.add_embedding(proc_files, metas, frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+                    file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
+                    proc_files.append(local_file_path)
+                    metas.append(file_meta)
+
+                if not proc_files:
+                    return None
+
+                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
+
+        if res is None:
+            return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
 
         return JSONResponse(
             content={"message": f"Files from MinIO directory successfully processed. db returns {res}"},
@@ -202,20 +207,21 @@ async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
         bucket_name = request.bucket_name
         file_path = request.file_path
         meta = request.meta
-        frame_extract_interval = request.frame_extract_interval
-        do_detect_and_crop = request.do_detect_and_crop
 
         if not minio_store.client.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
 
         store = MinioStore(minio_store.client, bucket_name)
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
-            store.get_file(file_path, local_file_path)
-            logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
-            meta["file_path"] = f"minio://{bucket_name}/{file_path}"
-            res = indexer.add_embedding([local_file_path], [meta], frame_extract_interval=frame_extract_interval, do_detect_and_crop=do_detect_and_crop)
+        def _blocking_ingest():
+            with tempfile.TemporaryDirectory() as temp_dir:
+                local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
+                store.get_file(file_path, local_file_path)
+                logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
+                meta["file_path"] = f"minio://{bucket_name}/{file_path}"
+                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
 
         return JSONResponse(
             content={"message": f"File from MinIO successfully processed. db returns {res}"},
@@ -237,7 +243,7 @@ async def ingest_text(request: IngestTextRequest):
             meta["file_path"] = f"minio://{request.bucket_name}/{request.file_path}"
         else:
             logger.info("'bucket_name' and 'file_path' not provided, will ingest as independent text")
-        res = indexer.ingest_text(request.text, meta)
+        res = await asyncio.to_thread(indexer.ingest_text, request.text, meta)
         return JSONResponse(content={"message": f"Text successfully ingested. db returns {res}"}, status_code=200)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -362,6 +368,42 @@ def delete_file_in_db(file_path: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
 
+@app.delete("/v1/dataprep/delete_by_ids")
+def delete_by_ids(ids: list[str] = Body(..., embed=True)):
+    """
+    Delete specific entries by their IDs.
+
+    Args:
+        ids: List of integer IDs to delete.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    try:
+        if not ids:
+            raise HTTPException(status_code=400, detail="'ids' must be a non-empty list.")
+
+        res, removed_ids = indexer.delete_by_ids(ids)
+
+        if not removed_ids:
+            return JSONResponse(
+                content={"message": "No matching IDs found in the database.", "removed_ids": []},
+                status_code=200,
+            )
+
+        return JSONResponse(
+            content={
+                "message": f"Successfully deleted {len(removed_ids)} entries. db returns: {res}",
+                "removed_ids": removed_ids,
+            },
+            status_code=200,
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting by IDs: {str(e)}")
+
+
 @app.delete("/v1/dataprep/delete_all")
 def clear_db():
     """
@@ -419,35 +461,78 @@ async def retrieval(request: RetrievalRequest):
         # Process query or image_base64
         if request.query:
             # Search in both visual and document collections and merge results, return 2*top_k results
-            results = retriever.search(query=request.query, filters=request.filter, top_k=request.max_num_results)
+            results = await asyncio.to_thread(retriever.search, query=request.query, filters=request.filter, top_k=request.max_num_results)
         else:
             try:
-                results = retriever.search(image_base64=request.image_base64, filters=request.filter, top_k=request.max_num_results)
+                results = await asyncio.to_thread(retriever.search, image_base64=request.image_base64, filters=request.filter, top_k=request.max_num_results)
             except Exception as e:
                 logger.error(f"Error processing image_base64: {e}")
                 raise HTTPException(status_code=400, detail=f"Error processing image_base64: {str(e)}")
 
-        # Format results
-        ret = []
-        if results and results['ids']:
-            for i in range(len(results['ids'][0])):
-                ret.append({
-                    "id": results['ids'][0][i],
-                    "distance": results['distances'][0][i],
-                    "meta": results['metadatas'][0][i]
-                })
-
-        # Return the results
-        return JSONResponse(
-            content={
-                "results": ret
-            },
-            status_code=200,
-        )
+        return _format_retrieval_response(results)
     except HTTPException as http_exc:
-        # Re-raise HTTPExceptions to preserve their status code and message
         raise http_exc
     except Exception as e:
         logger.error(f"Error during retrieval: {e}")
         raise HTTPException(status_code=500, detail=f"Error during retrieval: {str(e)}")
+
+
+@app.post("/v1/retrieval/image")
+async def retrieval_by_image(
+    image: UploadFile = File(...),
+    filter: Optional[str] = Form(None),
+    max_num_results: int = Form(10),
+):
+    """
+    Perform image-based retrieval by uploading an image file directly.
+
+    Args:
+        image: The image file to use as query.
+        filter: Optional JSON string of filters (e.g. '{"course": "CS101"}').
+        max_num_results: Maximum number of results to return.
+    """
+    try:
+        if max_num_results <= 0 or max_num_results > 16384:
+            raise HTTPException(status_code=400, detail="max_num_results must be in [1, 16384].")
+
+        content = await image.read()
+        image_b64 = base64.b64encode(content).decode()
+
+        filters = None
+        if filter:
+            import json
+            try:
+                filters = json.loads(filter)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="'filter' must be a valid JSON string.")
+
+        results = await asyncio.to_thread(
+            retriever.search, image_base64=image_b64, filters=filters, top_k=max_num_results,
+        )
+        return _format_retrieval_response(results)
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error during image retrieval: {e}")
+        raise HTTPException(status_code=500, detail=f"Error during image retrieval: {str(e)}")
+
+
+def _format_retrieval_response(results: dict) -> JSONResponse:
+    """Format retrieval results into a JSON response."""
+    ret = []
+    scores = results.get("scores", [[]])[0] if results else []
+    reranker_scores = results.get("reranker_scores", [[]])[0] if results and "reranker_scores" in results else []
+    if results and results['ids']:
+        for i in range(len(results['ids'][0])):
+            item = {
+                "id": results['ids'][0][i],
+                "distance": results['distances'][0][i],
+                "meta": results['metadatas'][0][i],
+            }
+            if i < len(scores):
+                item["score"] = scores[i]
+            if i < len(reranker_scores) and reranker_scores[i] is not None:
+                item["reranker_score"] = reranker_scores[i]
+            ret.append(item)
+    return JSONResponse(content={"results": ret}, status_code=200)
 

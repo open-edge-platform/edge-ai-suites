@@ -94,4 +94,4 @@ if (Test-Path $minioExe) {
     Write-Host "minio.exe downloaded to $minioExe"
 }
 
-Write-Host "Installation complete. Run start_services.py to launch services."
+Write-Host "Installation complete."

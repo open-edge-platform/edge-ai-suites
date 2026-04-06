@@ -201,7 +201,7 @@ if os.path.exists(env_path):
     logger.info(f"Loaded environment variables from {env_path}")
 else:
     logger.info(
-        f".env file not found at {env_path}. Using environment variables from docker-compose."
+        f".env file not found at {env_path}. Using environment variables."
     )
 
 logger.debug(f"Settings: {settings.model_dump()}")

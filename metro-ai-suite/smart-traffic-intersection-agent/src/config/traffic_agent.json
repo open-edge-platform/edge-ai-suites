@@ -27,7 +27,7 @@
   },
   "vlm": {
     "base_url": "http://vlm-openvino-serving:8000",
-    "model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "model": "",
     "timeout_seconds": 300,
     "max_completion_tokens": 1500,
     "temperature": 0.1,

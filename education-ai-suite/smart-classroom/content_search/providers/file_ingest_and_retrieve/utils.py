@@ -115,6 +115,6 @@ def get_file_extension(file_path: str) -> str:
 def is_supported_file(file_path: str) -> bool:
     supported_extensions = {
         "txt", "pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls",
-        "html", "htm", "xml", "md", "rst",
+        "html", "htm", "xml", "md",
     }
     return get_file_extension(file_path) in supported_extensions

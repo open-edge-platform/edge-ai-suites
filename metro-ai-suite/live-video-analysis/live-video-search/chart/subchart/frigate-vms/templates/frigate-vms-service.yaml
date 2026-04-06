@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frigate-vms
+  labels:
+    {{- include "lvs.frigate.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.frigate.type }}
+  ports:
+    - port: {{ .Values.service.frigate.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+      {{- if and (eq .Values.service.frigate.type "NodePort") .Values.service.frigate.nodePort }}
+      nodePort: {{ .Values.service.frigate.nodePort }}
+      {{- end }}
+  selector:
+    app: frigate-vms

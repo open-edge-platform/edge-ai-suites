@@ -24,7 +24,7 @@ distribution.
 
 | Requirement | Details |
 |-------------|---------|
-| ROS2 Humble / Jazzy | See [Getting Started](../../gsg_robot/index.md) |
+| ROS2 Humble / Jazzy | See [Getting Started](../../../gsg_robot/index.md) |
 | Python 3.8+ | Included with Ubuntu 22.04+ |
 | `pidstat` | `sudo apt-get install sysstat` |
 | `psutil`, `matplotlib`, `numpy` | Installed via `uv sync` |
