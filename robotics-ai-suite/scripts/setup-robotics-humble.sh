@@ -168,3 +168,9 @@ run sudo udevadm control --reload-rules || :
 run sudo udevadm trigger --subsystem-match=accel || :
 
 step "Setup complete."
+echo ""
+echo "###########################################"
+echo " Source ROS setup script to use this shell:"
+echo " $ source /opt/ros/humble/setup.bash"
+echo " $ export ROS_DOMAIN_ID=42"
+echo "###########################################"
