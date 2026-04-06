@@ -89,6 +89,49 @@ export USE_PROXY=0
 > defined ``http_proxy`` and ``https_proxy`` environment variables and
 > modify the command above to be `export USE_PROXY=1`
 
+### 3. Express Setup: Prepare your ROS 2 Environment
+
+In order to execute any ROS 2 command in a new shell, you first have to source
+the ROS 2 ``setup.bash`` and set the individual ``ROS_DOMAIN_ID`` for your
+ROS 2 communication graph.
+
+::::{tab-set}
+:::{tab-item} **Jazzy**
+:sync: jazzy
+
+```bash
+source /opt/ros/jazzy/setup.bash
+export ROS_DOMAIN_ID=42
+```
+
+:::
+:::{tab-item} **Humble**
+:sync: humble
+
+```bash
+source /opt/ros/humble/setup.bash
+export ROS_DOMAIN_ID=42
+```
+
+:::
+::::
+
+> **Note:** The value 42 serves just as an example. Use an individual ID for every ROS 2
+> node that is expected to participate in a given ROS 2 graph in order to avoid conflicts
+> in handling messages.
+
+- If you miss to source the ROS 2 setup bash script, you will not be able
+  to execute any ROS 2 command.
+
+- If you forget to set a dedicated ``ROS_DOMAIN_ID``, the ROS 2 command will
+  be executed and may partially behave as expected. But you have to expect a diversity of
+  unexpected behaviors too.
+
+  - Ensure you use the same ``ROS_DOMAIN_ID`` for every ROS 2 node that is
+    expected to participate in a given ROS 2 graph.
+  - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
+    graph, in order to avoid conflicts in message handling.
+
 ## Step-by-step Setup
 
 The Step-by-step Setup will present a series of steps to follow which will configure and install the necessary content on your system. If you prefer to perform the steps automatically, use the [Express Setup](#express-setup) guide.

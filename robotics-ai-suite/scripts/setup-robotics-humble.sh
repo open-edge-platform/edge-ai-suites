@@ -146,8 +146,8 @@ run sudo apt-get install -y ros-humble-collab-slam-lze
 
 step "Adding Intel RealSense apt repository..."
 sudo mkdir -p /etc/apt/keyrings
-curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
+curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
 run sudo apt update
 echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
 
@@ -168,3 +168,9 @@ run sudo udevadm control --reload-rules || :
 run sudo udevadm trigger --subsystem-match=accel || :
 
 step "Setup complete."
+echo ""
+echo "###########################################"
+echo " Source ROS setup script to use this shell:"
+echo " $ source /opt/ros/humble/setup.bash"
+echo " $ export ROS_DOMAIN_ID=42"
+echo "###########################################"
