@@ -67,7 +67,14 @@ pip install django-archive
 patch -p1 < /tmp/save_db.patch
 ```
 
-Expected output should include both files being patched.
+Expected output should include both files being patched. See example below:
+```bash
+root@7e6d608f1613:/# patch -p1 < /tmp/save_db.patch
+patching file tmp/requirements-runtime.txt
+patching file home/scenescape/SceneScape/manager/settings.py
+patch unexpectedly ends in middle of line
+Hunk #1 succeeded at 31 with fuzz 1.
+```
 
 ## 4) Run Archive Command From Correct Directory
 
@@ -90,7 +97,7 @@ tar -tjf /home/scenescape/SceneScape/'<date>-<time>'.tar.bz2 | head
 Exit container if needed, then run on host:
 
 ```bash
-cd /home/intel/Vamsi/Ashish/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
 mkdir -p /tmp/dbexport
 sg docker -c "docker cp metro-vision-ai-app-recipe-web-1:/home/scenescape/SceneScape/'<date>-<time>'.tar.bz2 /tmp/dbexport/'<date>-<time>'.tar.bz2"
 ```
@@ -99,7 +106,7 @@ sg docker -c "docker cp metro-vision-ai-app-recipe-web-1:/home/scenescape/SceneS
 
 ```bash
 mkdir -p /tmp/dbexport/work
-tar -xjf /tmp/dbexport/exampledb.tar.bz2 -C /tmp/dbexport/work
+sudo apt-get install -y bzip2 && tar -xjf /tmp/dbexport/'<date>-<time>'.tar.bz2 -C /tmp/dbexport/work
 ls -lh /tmp/dbexport/work
 ```
 
