@@ -123,8 +123,10 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
 4. **Launch the service with required plugins**:
      ```bash
-     export MODEL_PATH=<path-to-live-video-captioning>
-     # Example: export MODEL_PATH=~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
+     export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
+     # Example paths:
+          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning  (for live-video-captioning and with rag)
+          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag (for live-video-captioning only deployment)
 
      # Run the script to launch the service
      source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH
@@ -139,6 +141,9 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
      Download and convert the required models using the provided script:
      ```bash
+     # export MODEL_PATH with the same directory that exported in previous step.
+     export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
+
      # Parameters:
      # model_name: specify the model identifier from Hugging Face
      # model_type: choose from vlm, vision, or llm
@@ -149,7 +154,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
     **Examples:**
 
-    - For a VLM model:
+     - For a VLM model (required for live-video-captioning):
          ```bash
          ./model_download_scripts/download_models.sh --model OpenGVLab/InternVL2-1B --type vlm --weight-format int8
          ```
@@ -178,11 +183,19 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
     This service exclusively handles the downloading and conversion of models needed for the live-video-captioning sample application. It functions independently and is not tied to the operation of the live-video-captioning application. You can stop or terminate the service once the required models have been prepared.
 
-## Advanced Setup Options
+## Build from Source Reference
 
-For alternative ways to setup the application, see:
+If you want to build the application from source, refer to:
 
 - [Build from Source](./get-started/build-from-source.md)
+
+## Additional Features Reference
+
+If you want to use the application with additional features, refer to:
+
+- [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
+- [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
+- [Enable Embedding Creation with RAG](./embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
 
 ## Testing
 
@@ -226,9 +239,6 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Model Download Microservice Get Started Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md)
-- [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
-- [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
-- [Enable Embedding Creation with RAG](./embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 

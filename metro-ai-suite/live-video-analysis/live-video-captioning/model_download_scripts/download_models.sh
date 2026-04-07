@@ -21,15 +21,15 @@ fi
 set -Eeuo pipefail
 
 # ----------- Defaults / Config -----------
-ROOT=${PWD}
+ROOT="${MODEL_PATH:-$PWD}"
 
-MODEL_DOWNLOAD_PATH=${PWD}/ovms_model
+MODEL_DOWNLOAD_PATH=${ROOT}/ovms_model
 LLM_MODEL_PATH="${ROOT}/llm_models"
 VLM_MODEL_PATH="${ROOT}/ov_models"
 DETECTION_MODEL_PATH="${ROOT}/ov_detection_models"
 
 API_SCHEME="http"
-API_HOST="$(hostname -I 2>/dev/null | awk "{print \$1}" || true)"
+API_HOST="$(ip route get 1 | awk '{print $7}')"
 API_HOST="${API_HOST:-127.0.0.1}"
 API_PORT=8200
 

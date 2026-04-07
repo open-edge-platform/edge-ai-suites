@@ -93,11 +93,17 @@ By following this guide, you will learn how to:
      docker compose down
      ```
 
-## Advanced Setup Options
+## Build from Source Reference
 
-For alternative ways to setup the application, see:
+If you want to build the application from source, refer to:
 
 - [Build from Source](./get-started/build-from-source.md)
+
+## Integration with Live Video Captioning
+
+This sample application can run together with Live Video Captioning to enable embedding creation and RAG-based contextual chat.
+For setup instructions, refer to:
+
 - [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md)
 
 ## Supporting Resources
