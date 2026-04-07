@@ -74,7 +74,7 @@ Update the RTSP URL in the pipeline and replace the placeholders with your camer
 
 ### 3. Update environment variables with RTSP Camera IP
 
-Update `.env` with the correct value for:
+Update `.env` with the RTSP Camera IP for:
 
 ```text
 RTSP_CAMERA_IP
