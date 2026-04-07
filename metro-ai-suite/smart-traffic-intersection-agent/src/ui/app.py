@@ -503,9 +503,6 @@ def create_dashboard_interface():
         with gr.Row():
             with gr.Column(scale=1):
                 gr.HTML(_metrics_panel_html())
-
-        # Auto-refresh status indicator
-        gr.HTML(create_status_indicator_html())
         
         # Invisible Debug panel and debug mode toggle button at the bottom
         with gr.Row(elem_id="footer-actions"):
