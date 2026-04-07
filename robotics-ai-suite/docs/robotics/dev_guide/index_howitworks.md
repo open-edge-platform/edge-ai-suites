@@ -27,11 +27,14 @@ Autonomous Mobile Robot relies on standard Intel® Architecture Linux drivers th
 - Video4Linux2 Driver Framework, a collection of device drivers and an API for supporting real-time video capture on Linux systems (compatible with USB webcams, TV tuners, and similar devices), standardizing video output so programmers can easily add video support to applications.
 - The serial driver, the serial stream as used in Ethernet and USB interfaces.
 
-```{toctree}
-:maxdepth: 1
+<!--hide_directive
+:::{toctree}
+:hidden:
 
 AMR Tools <./how_it_works/robot-tools.md>
 AMR Applications <./how_it_works/robot-apps.md>
 AMR Algorithms <./how_it_works/robot-algorithms.md>
 AMR Middleware <./how_it_works/robot-middleware.md>
-```
+
+:::
+hide_directive-->
