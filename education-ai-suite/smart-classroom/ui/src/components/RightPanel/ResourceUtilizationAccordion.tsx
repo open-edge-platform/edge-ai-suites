@@ -20,7 +20,11 @@ interface GPUMetricConfig {
 
 type GPUMetricsConfig = Record<GPUMetricKey, GPUMetricConfig>;
 
-const ResourceUtilizationAccordion: React.FC = () => {
+interface ResourceUtilizationAccordionProps {
+  activeScreen?: 'main' | 'content-search';
+}
+
+const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> = ({ activeScreen = 'main' }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector(s => s.ui.sessionId);
@@ -336,7 +340,11 @@ const ResourceUtilizationAccordion: React.FC = () => {
           </>
         ) : (
           <div style={{ padding: '20px', textAlign: 'center' }}>
-            <p>{t('accordion.noSessionActive') || "No active session. Upload an audio file and start transcription to begin monitoring."}</p>
+            <p>
+              {activeScreen === 'content-search'
+                ? t('accordion.noSessionActiveContentSearch', 'No active session. Upload files to begin monitoring.')
+                : (t('accordion.noSessionActive') || 'No active session. Upload an audio file and start transcription to begin monitoring.')}
+            </p>
             <small style={{ color: '#666' }}>
               Session ID: {sessionId || 'Not set'}
             </small>

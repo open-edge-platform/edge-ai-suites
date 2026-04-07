@@ -143,7 +143,8 @@
     "frontCamera": "前置摄像头",
     "backCamera": "后置摄像头",
     "boardCamera": "黑板摄像头",
-    "allCameras": "所有摄像头"
+    "allCameras": "所有摄像头",
+    "noSessionActiveContentSearch": "无活动会话。请上传内容以开始搜索。"
   },
   "errors": {
     "projectNameRequired": "项目名称为必填项",
@@ -195,5 +196,34 @@
     "durationMismatch": "⚠️ 音频和视频时长不匹配。请确保两个文件的长度相似。",
     "durationExtractionFailed": "⚠️ 无法提取音频或视频时长。请检查您的文件并重试。",
     "contentPreparationFailed": "内容准备失败。请重试。"
+  },
+  "contentSearch": {
+    "title": "内容搜索",
+    "subtitle": "上传内容后，您可以使用文本或图像进行搜索",
+    "uploadButton": "上传内容",
+    "back": "← 返回",
+    "upload": "上传"
+  },
+  "uploadSection":{
+    "upload": "上传",
+    "dragDrop": "将文件拖放到此处",
+    "orClick": "或点击选择文件",
+    "supportedTypes": "支持的格式：MP4, PPT, DOCX, PDF, JPG, CSV, TXT",
+    "selectFileToAddTags": "选择一个已上传的文件以添加标签。",
+    "addTags": "添加标签",
+    "enterTags": "输入以逗号分隔的标签",
+    "fileName": "文件名",
+    "size": "大小",
+    "type": "类型",
+    "status": "状态",
+    "retry": "重试",
+    "clearAll": "清除所有",
+    "removeFileConfirmation": "删除此文件将停止处理。继续？",
+    "cancel": "取消",
+    "remove": "删除",
+    "pending": "待处理…",
+    "processing": "处理中…",
+    "failed": "失败",
+    "uploaded": "已上传 ✓"
   }
 }
