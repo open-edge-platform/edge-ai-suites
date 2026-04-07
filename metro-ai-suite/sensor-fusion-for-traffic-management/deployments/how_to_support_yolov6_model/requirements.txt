@@ -50,7 +50,7 @@ nvidia-cusolver-cu11==11.4.1.48
 nvidia-cusparse-cu11==11.7.5.86
 nvidia-nccl-cu11==2.21.5
 nvidia-nvtx-cu11==11.8.86
-onnx==1.18.0
+onnx==1.21.0
 onnxsim==0.4.36
 onnxruntime==1.22.0
 opencv-python==4.11.0.86
