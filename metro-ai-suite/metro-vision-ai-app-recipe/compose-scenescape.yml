@@ -246,7 +246,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
       - SUPASS=${SUPASS}
-      - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - EXAMPLEDB=/home/scenescape/SceneScape/${SAMPLE_APP}-ri.tar.bz2
     command: >
       webserver
       --dbhost pgserver
@@ -271,7 +271,7 @@ services:
       - pgserver-media-smart-corridor:/workspace/media
       - pgserver-migrations-smart-corridor:/workspace/migrations
       - ./${SAMPLE_APP}/src/webserver/user_access_config.json:/home/scenescape/SceneScape/user_access_config.json
-      - ./${SAMPLE_APP}/src/webserver/smart-intersection-ri.tar.bz2:/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - ./${SAMPLE_APP}/src/webserver/${SAMPLE_APP}-ri.tar.bz2:/home/scenescape/SceneScape/${SAMPLE_APP}-ri.tar.bz2
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
