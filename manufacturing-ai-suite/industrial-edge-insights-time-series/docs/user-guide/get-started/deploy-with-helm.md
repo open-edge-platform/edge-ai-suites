@@ -189,12 +189,10 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```sh
    export SAMPLE_APP="wind-turbine-anomaly-detection"
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-   mkdir -p $SAMPLE_APP
-   cp -r models tick_scripts udfs $SAMPLE_APP/.
+   rm -f ${SAMPLE_APP}.zip
+   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
 
-   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-
-   kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
    ```
 
 <!--hide_directive:::
@@ -221,12 +219,10 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```sh
    export SAMPLE_APP="weld-anomaly-detection"
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-   mkdir -p $SAMPLE_APP
-   cp -r models tick_scripts udfs $SAMPLE_APP/.
+   rm -f ${SAMPLE_APP}.zip
+   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
 
-   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-time-series-analytics-microservice | head -n 1)
-
-   kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
    ```
 
 <!--hide_directive:::
@@ -253,9 +249,9 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 Run the following command to activate the UDF deployment package:
 
 ```sh
-curl -k -X 'GET' \
-  'https://<HOST_IP>:30001/ts-api/config?restart=true' \
-  -H 'accept: application/json'
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/${SAMPLE_APP}/time-series-analytics-config
+
+curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
 ```
 
 ## Step 6: Verify the Results

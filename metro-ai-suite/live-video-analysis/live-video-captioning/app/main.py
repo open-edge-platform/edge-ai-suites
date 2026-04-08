@@ -16,6 +16,7 @@ from backend.routes import (
     health_router,
 )
 from backend.services import get_mqtt_subscriber, shutdown_mqtt_subscriber
+from backend.services import start_pipeline_health_monitor, stop_pipeline_health_monitor
 
 # Configure logging
 logging.basicConfig(
@@ -33,9 +34,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to initialize MQTT subscriber: {e}")
 
+    # Startup: Begin polling the pipeline server for stale runs
+    start_pipeline_health_monitor()
+
     yield
 
-    # Shutdown: Clean up MQTT subscriber
+    # Shutdown: Clean up pipeline health monitor then MQTT subscriber
+    await stop_pipeline_health_monitor()
     await shutdown_mqtt_subscriber()
 
 

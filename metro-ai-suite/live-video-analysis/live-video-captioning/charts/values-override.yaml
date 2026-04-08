@@ -1,0 +1,87 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# values-override.yaml — User-facing overrides for Live Video Captioning
+#
+# Copy this file, fill in the values marked REQUIRED, and deploy with:
+# From the repository root, first refresh vendored dependencies:
+#   helm dependency update ./charts
+#
+# NOTE: Model download can take 30–60+ minutes depending
+# on network speed.
+#
+#   helm install lvc ./charts \
+#     -f ./charts/values-override.yaml \
+#     -n <your-namespace> --create-namespace
+#
+# Upgrade an existing release:
+#   helm upgrade lvc ./charts \
+#     -f ./charts/values-override.yaml \
+#     -n <your-namespace>
+#
+# Only the values that users typically need to change appear here.
+# Everything else has sensible defaults in values.yaml.
+
+# ─────────────────────────────────────────────────────────────────────────────
+# GLOBAL — must be set for a working deployment
+# ─────────────────────────────────────────────────────────────────────────────
+global:
+  # ❗ REQUIRED: IP or hostname of the worker node reachable by the browser.
+  # In clusters without worker-node external IPs, this is usually the INTERNAL-IP.
+  # Used for WebRTC signaling and TURN server ICE candidate URLs.
+  hostIP: ""             # <-- change to your node IP
+
+  # ❗ REQUIRED: Kubernetes node name to pin all workloads to.
+  # Uses the built-in kubernetes.io/hostname label — no custom node label needed.
+  # Find the name with: kubectl get nodes
+  nodeName: ""             # <-- change to your worker node name
+
+  # Corporate proxy (leave as empty strings if not behind a proxy)
+  httpProxy: ""
+  httpsProxy: ""
+  # Add your RTSP camera host/IP here so DL Streamer bypasses the proxy for stream access.
+  # Example: "192.168.1.50" or "camera.example.com"
+  noProxy: ""
+
+  # StorageClass for all PVCs.  Leave empty to use the cluster default.
+  storageClassName: ""
+
+  # This is the single source of truth — the download job and the wait-for-models
+  # init containers in every pod all derive their configuration from this list.
+  # The outputName must match the captioner_model_name used in the UI / config.json.
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      outputName: "InternVL2-1B"
+      weightFormat: ""           # "" = fp16 (default), "int8", or "int4"
+
+  # Detection models downloaded automatically when the detection pipeline is enabled.
+  detectionModels:
+    - "yolov8s"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# PVC RETENTION
+# ─────────────────────────────────────────────────────────────────────────────
+modelsPvc:
+  size: "50Gi"
+  keepPvc: false
+
+detectionModelsPvc:
+  size: "5Gi"
+  keepPvc: false
+# ─────────────────────────────────────────────────────────────────────────────
+# VIDEO CAPTION SERVICE
+# ─────────────────────────────────────────────────────────────────────────────
+video-caption-service:
+  env:
+    # Default RTSP stream URL shown in the UI on first load.
+    # Leave empty to let the user type it in the dashboard.
+    defaultRtspUrl: ""
+
+    # Enable alert-mode captioning (binary yes/no answers instead of descriptions).
+    alertMode: "false"
+
+    # Enable object-detection pipeline (requires detection models PVC populated).
+    enableDetectionPipeline: "false"
+
+    # Number of previous captions shown in the caption timeline (0 = current only).
+    captionHistory: "3"

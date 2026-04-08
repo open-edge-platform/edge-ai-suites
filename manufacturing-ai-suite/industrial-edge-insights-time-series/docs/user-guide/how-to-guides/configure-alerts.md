@@ -175,7 +175,20 @@ data0
 > **Note:**
 >
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
-> - If doing a Helm-based deployment on a Kubernetes cluster, after making changes to the TICKscript, copy the UDF deployment package using [step 4](../get-started/deploy-with-helm.md#step-4-copy-the-udf-package-for-helm-deployment-to-time-series-analytics-microservice).
+
+#### 2. Upload the UDF deployment package
+
+To copy the TICK script and upload the UDF deployment package run the following commands:
+
+```bash
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git  clone   folder
+cd time-series-analytics-config
+export SAMPLE_APP="wind-turbine-anomaly-detection"
+
+rm -f ${SAMPLE_APP}.zip
+zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
+curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
+```
 
 #### 2. Configuring OPC-UA Alert in config.json
 
@@ -313,12 +326,10 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git  clone   folder
    cd time-series-analytics-config
    export SAMPLE_APP="wind-turbine-anomaly-detection"
-   mkdir -p $SAMPLE_APP
-   cp -r models tick_scripts udfs $SAMPLE_APP/.
+   rm -f ${SAMPLE_APP}.zip
+   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
 
-   POD_NAME=$(kubectl get pods -n ts-sample-app -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep    deployment-time-series-analytics-microservice | head -n 1)
-
-   kubectl cp $SAMPLE_APP $POD_NAME:/tmp/ -n ts-sample-app
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
    ```
 
 3. Configuring OPC-UA Alert in `config.json`

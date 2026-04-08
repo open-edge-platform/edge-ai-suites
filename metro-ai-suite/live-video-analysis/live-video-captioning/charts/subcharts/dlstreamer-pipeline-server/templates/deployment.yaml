@@ -1,0 +1,197 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+DL Streamer Pipeline Server Deployment.
+
+Key Kubernetes specifics translated from docker-compose.yaml:
+  - privileged: true  — required for GPU/device access
+  - supplementalGroups — render group IDs for DRI device access
+  - device_cgroup_rules — mapped to securityContext allowedUnsafeSysctls note
+  - /dev and /run/udev mounts via hostPath
+  - /tmp dir via emptyDir
+  - vol_evam_pipeline_root (tmpfs in compose) via emptyDir
+  - models and detection_models from parent PVCs
+  - config.json and detection_filter.py from ConfigMap
+  - initContainer waits for the models PVC to be populated by the download Job
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "dlstreamer-pipeline-server.fullname" . }}
+  labels:
+    {{- include "dlstreamer-pipeline-server.labels" . | nindent 4 }}
+    app.kubernetes.io/component: dlstreamer-pipeline-server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      {{- include "dlstreamer-pipeline-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "dlstreamer-pipeline-server.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: dlstreamer-pipeline-server
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      securityContext:
+        {{- with .Values.podSecurityContext }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.supplementalGroups }}
+        supplementalGroups:
+          {{- range . }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
+      # initContainers run in order:
+      #   1. wait-for-mqtt   — mirrors compose depends_on: mqtt-broker; ensures
+      #                        the MQTT broker is accepting connections before
+      #                        DL Streamer starts so MQTTPublisher can connect.
+      #   2. wait-for-models — ensures the model download Job has finished before
+      #                        DL Streamer starts.
+      initContainers:
+        - name: wait-for-mqtt
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for MQTT broker at {{ .Values.env.mqttHost }}:{{ .Values.env.mqttPort }} ..."
+              until nc -z {{ .Values.env.mqttHost }} {{ .Values.env.mqttPort }}; do
+                echo "MQTT broker not ready — retrying in 5s..."
+                sleep 5
+              done
+              echo "MQTT broker is ready. Proceeding."
+        - name: wait-for-models
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              {{- if .Values.global.models }}
+              echo "Waiting for model sentinel files..."
+              {{- range .Values.global.models }}
+              until [ -f "/models/{{ .outputName }}/.complete" ]; do
+                echo "  /models/{{ .outputName }}/.complete not found — model not yet downloaded/converted. Retrying in 10s..."
+                sleep 10
+              done
+              echo "  ✔ /models/{{ .outputName }}/.complete ready."
+              {{- end }}
+              echo "All models ready. Proceeding."
+              {{- else }}
+              echo "Waiting for models PVC to be populated..."
+              until [ "$(ls -A /models)" ]; do
+                echo "Models directory is empty — download Job still running. Retrying in 10s..."
+                sleep 10
+              done
+              echo "Models PVC is populated. Proceeding."
+              {{- end }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+      containers:
+        - name: dlstreamer-pipeline-server
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          tty: true
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          ports:
+            - name: rest-api
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.hostPort }}
+              protocol: TCP
+            - name: webrtc
+              containerPort: {{ .Values.service.webrtcContainerPort }}
+              hostPort: {{ .Values.service.webrtcHostPort }}
+              protocol: TCP
+          env:
+            - name: RUN_MODE
+              value: {{ .Values.env.runMode | quote }}
+            - name: ENABLE_RTSP
+              value: {{ .Values.env.enableRtsp | quote }}
+            - name: ENABLE_WEBRTC
+              value: {{ .Values.env.enableWebrtc | quote }}
+            - name: REST_SERVER_PORT
+              value: {{ .Values.env.restServerPort | quote }}
+            - name: DETECTION_DEVICE
+              value: {{ .Values.env.detectionDevice | quote }}
+            - name: ADD_UTCTIME_TO_METADATA
+              value: {{ .Values.env.addUtctimeToMetadata | quote }}
+            - name: LSFEATURE_NAME
+              value: {{ .Values.env.lsfeatureName | quote }}
+            - name: HTTPS
+              value: {{ .Values.env.https | quote }}
+            - name: MTLS_VERIFICATION
+              value: {{ .Values.env.mtlsVerification | quote }}
+            - name: APPEND_PIPELINE_NAME_TO_PUBLISHER_TOPIC
+              value: {{ .Values.env.appendPipelineNameToPublisherTopic | quote }}
+            - name: WEBRTC_SIGNALING_SERVER
+              value: "http://mediamtx:{{ .Values.env.whipServerPort }}"
+            - name: MQTT_HOST
+              value: {{ .Values.env.mqttHost | quote }}
+            - name: MQTT_PORT
+              value: {{ .Values.env.mqttPort | quote }}
+            - name: GST_DEBUG
+              value: {{ .Values.env.gstDebug | quote }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: models
+              mountPath: {{ .Values.modelsPath }}
+              readOnly: true
+            - name: detection-models
+              mountPath: {{ .Values.detectionModelsPath }}
+              readOnly: true
+            - name: pipeline-config
+              mountPath: /home/pipeline-server/config.json
+              subPath: config.json
+              readOnly: true
+            - name: pipeline-config
+              mountPath: /home/pipeline-server/gvapython/publisher/detection_filter.py
+              subPath: detection_filter.py
+              readOnly: true
+            - name: evam-pipeline-root
+              mountPath: /var/cache/pipeline_root
+            - name: dev
+              mountPath: /dev
+            - name: udev
+              mountPath: /run/udev
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "dlstreamer-pipeline-server.modelsPvcName" . }}
+        - name: detection-models
+          persistentVolumeClaim:
+            claimName: {{ include "dlstreamer-pipeline-server.detectionModelsPvcName" . }}
+        - name: pipeline-config
+          configMap:
+            name: {{ include "dlstreamer-pipeline-server.fullname" . }}-config
+        - name: evam-pipeline-root
+          emptyDir: {}
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: udev
+          hostPath:
+            path: /run/udev
+        - name: tmp
+          emptyDir: {}

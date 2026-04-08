@@ -1,0 +1,246 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# values.yaml — Live Video Captioning Helm Chart
+#
+# This file contains ALL default values for the chart and its subcharts.
+# It is structured as follows:
+#   1. global.*            — cross-cutting values shared with all subcharts
+#   2. modelsPvc / detectionModelsPvc  — PVC sizes managed by parent
+#   3. modelsDownload.*    — model download job configuration
+#   4. <subchart-name>.*   — per-subchart overrides (forwarded by Helm automatically)
+#
+# Source subcharts live under ./subcharts/. Running `helm dependency update`
+# vendors them into ./charts/ for installation and packaging.
+#
+# To customise for your deployment, copy values-override.yaml, fill in the
+# mandatory fields, and install with:
+#   helm install lvc ./charts -f ./charts/values-override.yaml
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. GLOBAL VALUES
+# Accessible in every subchart via .Values.global.*
+# ─────────────────────────────────────────────────────────────────────────────
+global:
+  # ------- Node Placement -------------------------------------------------------
+  # Set nodeName to pin all workloads to one specific Kubernetes node.
+  # The chart matches against the built-in kubernetes.io/hostname label.
+  # REQUIRED: set this to the name of your target worker node.
+  #
+  # Type: string
+  nodeName: ""
+
+  # ------- Host IP -------------------------------------------------------------
+  # The IP address (or DNS name) of the worker node that is reachable by the
+  # browser client.  Required for WebRTC ICE/TURN server URLs and the
+  # signaling URL sent to the caption service.
+  #
+  # Type: string  REQUIRED — change to your node's IP
+  hostIP: ""
+
+  # ------- Proxy ---------------------------------------------------------------
+  # Leave empty if the cluster is not behind a corporate proxy.
+  # Type: string
+  httpProxy: ""
+  httpsProxy: ""
+  # Hosts that must bypass the proxy (pod-to-pod traffic + your RTSP camera hosts/IPs).
+  # Add the host/IP of every RTSP stream source so DL Streamer connects directly.
+  # Type: string
+  noProxy: ""
+
+  # ------- Storage Class -------------------------------------------------------
+  # StorageClass for all PVCs.  Leave empty to use the cluster default.
+  # Type: string
+  storageClassName: ""
+
+  # ------- Application Label ---------------------------------------------------
+  # Value for the app.kubernetes.io/part-of label on all workloads.
+  # Override if this chart is embedded inside a larger application.
+  # Type: string
+  partOf: "live-video-captioning"
+
+  # ------- Image Pull Secrets --------------------------------------------------
+  # List of Kubernetes secret names for private registries.
+  # Type: list of strings
+  imagePullSecrets: []
+  # - name: my-registry-secret
+
+  # ------- Models --------------------------------------------------------------
+  # Single source of truth for which VLM models are downloaded and used.
+  # Consumed by the model-download Job AND by the wait-for-models init container
+  # in every subchart that mounts the models PVC.  Change the model here and
+  # every other part of the chart automatically picks up the new value.
+  #
+  # Fields per entry:
+  #   modelId     — HuggingFace repo ID passed to optimum-cli
+  #   outputName  — directory created under /models/ in the PVC; must match the
+  #                 captioner_model_name expected by the caption service
+  #   weightFormat — "" (fp16 default), "int8", or "int4"
+  #
+  # Type: list of objects
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      outputName: "InternVL2-1B"
+      weightFormat: ""
+
+  # Detection models to download when the object-detection pipeline is enabled.
+  # Each entry matches the model argument accepted by DL Streamer's
+  # download_public_models.sh helper and is stored under:
+  #   /ov_detection_models/<model-name>/public/<model-name>
+  #
+  # Type: list of strings
+  detectionModels:
+    - "yolov8s"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. PERSISTENT VOLUME CLAIMS  (managed by parent chart)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# PVC for OpenVINO VLM models (ov_models/).
+# Mounted by dlstreamer-pipeline-server (rw) and video-caption-service (ro).
+modelsPvc:
+  # Type: string  (valid Kubernetes storage size)
+  size: "50Gi"
+  # Preserve the PVC (and downloaded models) across helm upgrade and helm uninstall.
+  # When true, adds helm.sh/resource-policy: keep so the PVC is never deleted by Helm,
+  # preventing costly model re-downloads.  Set to false only when you explicitly want
+  # Helm to delete and reprovision the PVC (e.g. to change storageClass or size).
+  # Type: boolean
+  keepPvc: true
+
+# PVC for OpenVINO object-detection models (ov_detection_models/).
+# Only needed when ENABLE_DETECTION_PIPELINE=true.
+detectionModelsPvc:
+  # Type: string
+  size: "5Gi"
+  # Same keep behaviour as modelsPvc.keepPvc above.
+  # Type: boolean
+  keepPvc: true
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. MODEL DOWNLOAD JOB
+# Runs as a pre-install/pre-upgrade before any pod is scheduled.
+# The list of models to download is taken from global.models (section 1 above).
+# ─────────────────────────────────────────────────────────────────────────────
+modelsDownload:
+  # Container image used to run optimum-cli for model export.
+  # Requires Python 3.x with pip available.
+  image:
+    # Type: string
+    repository: "python"
+    # Type: string
+    tag: "3.12-slim"
+    # Type: string  [Always | IfNotPresent | Never]
+    pullPolicy: IfNotPresent
+
+  # URL of the openvino.genai export-requirements.txt.
+  # Pinned to a specific release tag for reproducibility.
+  # Type: string
+  requirementsUrl: "https://raw.githubusercontent.com/openvinotoolkit/openvino.genai/refs/tags/2025.4.1.0/samples/export-requirements.txt"
+
+  # Optional: HuggingFace access token passed directly as a plain value.
+  # Use this for gated model downloads. Leave empty for public models.
+  # Type: string
+  hfToken: ""
+
+  # Resource requests/limits for the download Job container.
+  # No limits are set so the pod can use as much CPU and memory as the node provides.
+  resources:
+    requests:
+      cpu: "4"
+      memory: "8Gi"
+    limits: {}
+
+  # Seconds after the Job finishes (success or failure) before Kubernetes
+  # deletes the Job and its pod.  0 = destroy immediately.
+  # Type: integer
+  ttlSecondsAfterFinished: 0
+
+  # Maximum seconds the Job may run before Kubernetes kills it.
+  # Guards against a download that hangs indefinitely.
+  # Set to 0 or remove to disable the deadline.
+  # Type: integer
+  activeDeadlineSeconds: 7200
+
+# Detection-model download job.
+# Runs only when the detection pipeline is enabled and detection models are configured.
+detectionModelsDownload:
+  image:
+    # The full Python image (not -slim) is required because the upstream
+    # download_public_models.sh installs opencv-python which needs X11/GL
+    # system libraries (libxcb, libGL, libglib) not present in slim images.
+    repository: "python"
+    tag: "3.12"
+    pullPolicy: IfNotPresent
+
+  # URL of the DL Streamer helper used by the object-detection guide.
+  # Type: string
+  scriptUrl: "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/tags/v2026.0.0/samples/download_public_models.sh"
+
+  resources:
+    requests:
+      cpu: "2"
+      memory: "4Gi"
+    limits:
+      cpu: "4"
+      memory: "8Gi"
+
+  ttlSecondsAfterFinished: 0
+  activeDeadlineSeconds: 7200
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. SUBCHART OVERRIDES
+# Keys MUST match the chart name of each source subchart directory under ./subcharts/.
+# Only values that are overridden at the parent level need to appear here.
+# All other subchart defaults live in ./subcharts/<name>/values.yaml.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── mqtt-broker ──────────────────────────────────────────────────────────────
+mqtt-broker:
+  # Fix the Kubernetes Service name to "mqtt-broker" regardless of release name.
+  # Other subcharts reference MQTT by this name.
+  fullnameOverride: "mqtt-broker"
+
+# ── dlstreamer-pipeline-server ───────────────────────────────────────────────
+dlstreamer-pipeline-server:
+  fullnameOverride: "dlstreamer-pipeline-server"
+
+  # Names of the PVCs created by the parent chart.
+  # Must stay in sync with the PVC names defined above.
+  modelsPvcName: ""       # defaults to <release>-live-video-captioning-models if empty
+  detectionModelsPvcName: "" # defaults to <release>-live-video-captioning-detection-models
+
+# ── mediamtx ─────────────────────────────────────────────────────────────────
+mediamtx:
+  fullnameOverride: "mediamtx"
+
+  # TURN server credentials — shown to the browser for ICE negotiation.
+  # These are NOT secrets by nature (they are sent to the browser), but
+  # set them to non-default values for any non-local deployment.
+  webrtcIceUsername: "lvcuser"
+  webrtcIcePassword: "lvcpass"
+
+# ── coturn ───────────────────────────────────────────────────────────────────
+coturn:
+  fullnameOverride: "coturn"
+
+# ── video-caption-service ────────────────────────────────────────────────────
+video-caption-service:
+  fullnameOverride: "video-caption-service"
+
+  # Names of the PVCs created by the parent chart (read-only mounts).
+  modelsPvcName: ""       # defaults to <release>-live-video-captioning-models
+  detectionModelsPvcName: ""
+
+# ── live-metrics-service ─────────────────────────────────────────────────────
+live-metrics-service:
+  fullnameOverride: "live-metrics-service"
+
+# ── collector ────────────────────────────────────────────────────────────────
+collector:
+  fullnameOverride: "collector"
+
+  # Host path on the node used to emit collector signal files (e.g. fps.txt).
+  # The DaemonSet mounts this host directory at /app/.collector-signals.
+  # Type: string
+  collectorSignalsHostPath: "/tmp/lvc/collector-signals"
