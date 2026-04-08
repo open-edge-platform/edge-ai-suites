@@ -1,0 +1,159 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "video-caption-service.fullname" . }}
+  labels:
+    {{- include "video-caption-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: video-caption-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      {{- include "video-caption-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "video-caption-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: video-caption-service
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # initContainer waits until at least one model directory is present in the
+      # PVC, ensuring the download Job has completed before the service starts.
+      initContainers:
+        - name: wait-for-models
+          image: busybox:1.36
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              {{- if .Values.global.models }}
+              echo "Waiting for model sentinel files..."
+              {{- range .Values.global.models }}
+              until [ -f "/models/{{ .outputName }}/.complete" ]; do
+                echo "  /models/{{ .outputName }}/.complete not found — model not yet downloaded/converted. Retrying in 10s..."
+                sleep 10
+              done
+              echo "  ✔ /models/{{ .outputName }}/.complete ready."
+              {{- end }}
+              echo "All models ready. Proceeding."
+              {{- else }}
+              echo "Waiting for models PVC to be populated..."
+              until [ "$(ls -A /models)" ]; do
+                echo "Models directory is empty — download Job still running. Retrying in 10s..."
+                sleep 10
+              done
+              echo "Models PVC is populated. Proceeding."
+              {{- end }}
+              {{- if eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
+              {{- if .Values.global.detectionModels }}
+              echo "Detection pipeline enabled — waiting for detection model sentinel files..."
+              {{- range .Values.global.detectionModels }}
+              until [ -f "/detection-models/{{ . }}/.complete" ]; do
+                echo "  /detection-models/{{ . }}/.complete not found — detection model not yet downloaded. Retrying in 10s..."
+                sleep 10
+              done
+              echo "  ✔ /detection-models/{{ . }}/.complete ready."
+              {{- end }}
+              echo "All detection models ready. Proceeding."
+              {{- else }}
+              echo "ERROR: detection pipeline enabled but global.detectionModels is empty." >&2
+              exit 1
+              {{- end }}
+              {{- end }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+              readOnly: true
+            - name: detection-models
+              mountPath: /detection-models
+              readOnly: true
+      containers:
+        - name: video-caption-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: dashboard
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.nodePort }}
+              protocol: TCP
+          env:
+            - name: DASHBOARD_PORT
+              value: {{ .Values.env.dashboardPort | quote }}
+            - name: MQTT_BROKER_HOST
+              value: {{ .Values.env.mqttBrokerHost | quote }}
+            - name: MQTT_BROKER_PORT
+              value: {{ .Values.env.mqttBrokerPort | quote }}
+            - name: MQTT_TOPIC_PREFIX
+              value: {{ .Values.env.mqttTopicPrefix | quote }}
+            - name: WEBRTC_PEER_ID
+              value: {{ .Values.env.webrtcPeerId | quote }}
+            - name: WEBRTC_BITRATE
+              value: {{ .Values.env.webrtcBitrate | quote }}
+            # Signaling URL is constructed from global.hostIP + whipServerPort
+            - name: SIGNALING_URL
+              value: "http://{{ .Values.global.hostIP }}:{{ .Values.env.whipServerPort }}"
+            - name: ALERT_MODE
+              value: {{ .Values.env.alertMode | quote }}
+            - name: DEFAULT_RTSP_URL
+              value: {{ .Values.env.defaultRtspUrl | quote }}
+            - name: ENABLE_DETECTION_PIPELINE
+              value: {{ .Values.env.enableDetectionPipeline | quote }}
+            - name: CAPTION_HISTORY
+              value: {{ .Values.env.captionHistory | quote }}
+            - name: PIPELINE_SERVER_URL
+              value: {{ .Values.env.pipelineServerUrl | quote }}
+            - name: METRICS_SERVICE_PORT
+              value: {{ .Values.env.metricsServicePort | quote }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: dashboard
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: dashboard
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: models
+              mountPath: /app/ov_models
+              readOnly: true
+            - name: detection-models
+              mountPath: /app/ov_detection_models
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "video-caption-service.modelsPvcName" . }}
+        - name: detection-models
+          persistentVolumeClaim:
+            claimName: {{ include "video-caption-service.detectionModelsPvcName" . }}

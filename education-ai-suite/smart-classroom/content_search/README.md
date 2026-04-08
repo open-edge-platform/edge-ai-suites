@@ -63,7 +63,7 @@ python .\start_services.py
 
 The launcher automatically performs health checks on all services. When all services are ready, you will see:
 ```
-[launcher] All 6 services are ready. (startup took XXs)
+[launcher] All 5 services are ready. (startup took XXs)
 [launcher] You can use Ctrl+C to stop all services.
 ```
 
@@ -88,9 +88,9 @@ To stop the service and all associated microservices, press `Ctrl` + `C` in the 
 | :--- | :---: | :---: | :--- | :--- |
 | `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. `PROCESSING`, `COMPLETED`, `FAILED`). | [Details](./docs/dev_guide/Content_search_API.md#task-status-polling) |
 | `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`). | [Details](./docs/dev_guide/Content_search_API.md#get-task-list) |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Processes raw text strings or existing text-based objects in MinIO for semantic indexing. | [Details](./docs/dev_guide/Content_search_API.md#text-file-ingestion) |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to MinIO and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Processes raw text strings or existing text-based objects for semantic indexing. | [Details](./docs/dev_guide/Content_search_API.md#text-file-ingestion) |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to local storage and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
 | `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes similarity search across vector collections using natural language or base64 images. | [Details](./docs/dev_guide/Content_search_API.md#retrieve-and-search) |
-| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file directly from MinIO via stream-bridging. | [Details](./docs/dev_guide/Content_search_API.md#resource-download-videoimagedocument) |
+| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file via stream-bridging. | [Details](./docs/dev_guide/Content_search_API.md#resource-download-videoimagedocument) |
 
 For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)

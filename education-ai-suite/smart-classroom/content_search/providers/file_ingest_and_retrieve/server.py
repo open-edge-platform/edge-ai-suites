@@ -38,7 +38,7 @@ from typing import Optional, Dict, Union
 import asyncio
 import tempfile
 
-from providers.minio_wrapper.minio_client import MinioStore
+from providers.local_storage.store import LocalStore
 from providers.file_ingest_and_retrieve.indexer import Indexer
 from providers.file_ingest_and_retrieve.retriever import ChromaRetriever
 from providers.file_ingest_and_retrieve.models import (
@@ -67,12 +67,12 @@ class RetrievalRequest(BaseModel):
     filter: Optional[Dict] = None
     max_num_results: int = 10
 
-class IngestMinioDirRequest(_IngestRequestBase):
+class IngestDirRequest(_IngestRequestBase):
     bucket_name: str
     folder_path: str
     meta: dict = {}
 
-class IngestMinioFileRequest(_IngestRequestBase):
+class IngestFileRequest(_IngestRequestBase):
     bucket_name: str
     file_path: str
     meta: dict = {}
@@ -93,7 +93,7 @@ _document_model = get_document_embedding_model()
 indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
 retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
 
-minio_store = MinioStore.from_config()
+local_store = LocalStore.from_config()
 
 _frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
 _do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
@@ -121,46 +121,47 @@ def info():
             "document_collection_name": indexer.document_collection_name,
             "visual_db_inited": indexer.visual_db_inited,
             "document_db_inited": indexer.document_db_inited,
-            "minio_connected": minio_store.client is not None,
+            "storage_available": local_store is not None,
         }
         return JSONResponse(content=status_info, status_code=200)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error retrieving status info: {str(e)}")
 
 @app.post("/v1/dataprep/ingest")
-async def ingest(request: Union[IngestMinioDirRequest, IngestMinioFileRequest] = Body(...)):
+async def ingest(request: Union[IngestDirRequest, IngestFileRequest] = Body(...)):
     """
     Ingest files from a directory or a single file.
 
     Args:
-        request (Union[IngestMinioDirRequest, IngestMinioFileRequest, IngestFileURLRequest]): The request body containing file_dir, file_path, metadata, frame_extract_interval, and do_detect_and_crop.
+        request: The request body containing file_dir, file_path, metadata,
+                 frame_extract_interval, and do_detect_and_crop.
 
     Returns:
         JSONResponse: A response indicating success or failure.
-    """   
-    if isinstance(request, IngestMinioDirRequest):
-        logger.info(f"Received IngestMinioDirRequest: {request}")
-        return await ingest_minio_dir(request)
-    elif isinstance(request, IngestMinioFileRequest):
-        logger.info(f"Received IngestMinioFileRequest: {request}")
-        return await ingest_minio_file(request)
-    else:
-        raise HTTPException(status_code=422, detail="Invalid request type. Provide either 'bucket_name' for minio, or 'file_url'.")
-
-
-async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
     """
-    Ingest files from a MinIO directory.
+    if isinstance(request, IngestDirRequest):
+        logger.info(f"Received IngestDirRequest: {request}")
+        return await ingest_dir(request)
+    elif isinstance(request, IngestFileRequest):
+        logger.info(f"Received IngestFileRequest: {request}")
+        return await ingest_file(request)
+    else:
+        raise HTTPException(status_code=422, detail="Invalid request type. Provide 'bucket_name' with 'folder_path' or 'file_path'.")
+
+
+async def ingest_dir(request: IngestDirRequest = Body(...)):
+    """
+    Ingest files from a storage directory.
     """
     try:
         bucket_name = request.bucket_name
         folder_path = request.folder_path
         meta = request.meta
 
-        if not minio_store.client.bucket_exists(bucket_name):
+        if not local_store.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
 
-        store = MinioStore(minio_store.client, bucket_name)
+        store = LocalStore(local_store._data_dir, bucket_name)
 
         supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc',
                                 '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md')
@@ -177,7 +178,7 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
                     local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
                     store.get_file(object_name, local_file_path)
 
-                    file_meta = {**meta, "file_path": f"minio://{bucket_name}/{object_name}"}
+                    file_meta = {**meta, "file_path": f"local://{bucket_name}/{object_name}"}
                     proc_files.append(local_file_path)
                     metas.append(file_meta)
 
@@ -189,46 +190,46 @@ async def ingest_minio_dir(request: IngestMinioDirRequest = Body(...)):
         res = await asyncio.to_thread(_blocking_ingest)
 
         if res is None:
-            return JSONResponse(content={"message": "No supported files found in the specified MinIO path."}, status_code=200)
+            return JSONResponse(content={"message": "No supported files found in the specified path."}, status_code=200)
 
         return JSONResponse(
-            content={"message": f"Files from MinIO directory successfully processed. db returns {res}"},
+            content={"message": f"Files from directory successfully processed. db returns {res}"},
             status_code=200,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing files from MinIO: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing files: {str(e)}")
 
 
-async def ingest_minio_file(request: IngestMinioFileRequest = Body(...)):
+async def ingest_file(request: IngestFileRequest = Body(...)):
     """
-    Ingest a single file from MinIO.
+    Ingest a single file from storage.
     """
     try:
         bucket_name = request.bucket_name
         file_path = request.file_path
         meta = request.meta
 
-        if not minio_store.client.bucket_exists(bucket_name):
+        if not local_store.bucket_exists(bucket_name):
             raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
 
-        store = MinioStore(minio_store.client, bucket_name)
+        store = LocalStore(local_store._data_dir, bucket_name)
 
         def _blocking_ingest():
             with tempfile.TemporaryDirectory() as temp_dir:
                 local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
                 store.get_file(file_path, local_file_path)
-                logger.info(f"Successfully downloaded file from MinIO: {local_file_path}")
-                meta["file_path"] = f"minio://{bucket_name}/{file_path}"
+                logger.info(f"Successfully loaded file from storage: {local_file_path}")
+                meta["file_path"] = f"local://{bucket_name}/{file_path}"
                 return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)
 
         return JSONResponse(
-            content={"message": f"File from MinIO successfully processed. db returns {res}"},
+            content={"message": f"File successfully processed. db returns {res}"},
             status_code=200,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing file from MinIO: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 @app.post("/v1/dataprep/ingest_text")
 async def ingest_text(request: IngestTextRequest):
@@ -240,7 +241,7 @@ async def ingest_text(request: IngestTextRequest):
             raise HTTPException(status_code=400, detail="'text' must be a non-empty string.")
         meta = dict(request.meta)
         if request.bucket_name and request.file_path:
-            meta["file_path"] = f"minio://{request.bucket_name}/{request.file_path}"
+            meta["file_path"] = f"local://{request.bucket_name}/{request.file_path}"
         else:
             logger.info("'bucket_name' and 'file_path' not provided, will ingest as independent text")
         res = await asyncio.to_thread(indexer.ingest_text, request.text, meta)
@@ -266,9 +267,8 @@ def get_file_info(file_path: str):
         if not file_path or not isinstance(file_path, str):
             raise HTTPException(status_code=400, detail="Invalid file_path parameter. It must be a non-empty string.")
 
-        # For remote files, we don't check for local existence
-        if not (file_path.startswith("minio://") or file_path.startswith("http")):
-            raise HTTPException(status_code=404, detail="File not found. Only 'minio://' and 'http(s)://' paths are supported.")
+        if not (file_path.startswith("local://") or file_path.startswith("http")):
+            raise HTTPException(status_code=404, detail="File not found. Only 'local://' and 'http(s)://' paths are supported.")
         
         res, ids = indexer.query_file(file_path)
 
@@ -343,8 +343,7 @@ def delete_file_in_db(file_path: str):
         if not file_path or not isinstance(file_path, str):
             raise HTTPException(status_code=400, detail="Invalid file_path parameter. It must be a non-empty string.")
 
-        # For remote files, we don't check for local existence
-        if not (file_path.startswith("minio://") or file_path.startswith("http")):
+        if not (file_path.startswith("local://") or file_path.startswith("http")):
             raise HTTPException(status_code=404, detail="File not found.")
         
         res, ids = indexer.delete_by_file_path(file_path)

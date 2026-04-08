@@ -21,7 +21,7 @@ class AITask(Base):
     created_at = Column(DateTime, default=datetime.now)
 
 class FileAsset(Base):
-    __tablename__ = "minio_file_assets"
+    __tablename__ = "file_assets"
 
     file_hash = Column(String, primary_key=True, index=True) 
     file_name = Column(String, nullable=False)

@@ -11,7 +11,7 @@ Base URL: `http://<host>:8001`
    - [Request Body](#request-body)
    - [Response Format (NDJSON)](#response-format-ndjson)
    - [Example Requests](#example-requests)
-3. [MinIO Output Layout](#minio-output-layout)
+3. [Storage Output Layout](#storage-output-layout)
 4. [Per-chunk Ingestion](#per-chunk-ingestion)
 5. [Error Responses](#error-responses)
 
@@ -41,13 +41,13 @@ curl http://localhost:8001/health
 
 ### `POST /preprocess`
 
-Processes a source video from MinIO and streams progress as each chunk completes:
+Processes a source video from Storage and streams progress as each chunk completes:
 
-1. Download video from MinIO
+1. Download video from Storage
 2. Split into time-based chunks
 3. Sample frames per chunk
 4. Call VLM endpoint to summarize each chunk
-5. Upload chunk summary and metadata back to MinIO
+5. Upload chunk summary and metadata back to Storage
 6. (Optional) Ingest chunk summary into vector database
 7. Yield one NDJSON line per completed chunk, then a final summary line
 
@@ -57,10 +57,10 @@ The response uses **chunked transfer encoding** — the HTTP connection stays op
 
 | Field | Type | Required | Default | Constraints | Description |
 |---|---|---|---|---|---|
-| `minio_video_key` | string | Yes | — | non-empty | MinIO object key of source video |
+| `file_key` | string | Yes | — | non-empty | Storage object key of source video |
 | `job_id` | string | No | auto UUID | — | Caller-provided job id for tracing |
 | `run_id` | string | No | auto UUID | — | Run namespace used in derived output paths |
-| `asset_id` | string | No | filename from `minio_video_key` | — | Asset id used in derived output paths |
+| `asset_id` | string | No | filename from `file_key` | — | Asset id used in derived output paths |
 | `tags` | string[] | No | `null` | — | Optional tags forwarded to the ingestion service meta for each chunk |
 | `chunk_duration_s` | integer | No | `30`* | `>= 1` | Chunk duration (seconds) |
 | `chunk_overlap_s` | integer | No | `4`* | `>= 0` | Overlap between adjacent chunks (seconds) |
@@ -101,7 +101,7 @@ The response body is a stream of newline-delimited JSON lines (`Content-Type: ap
 | `start_time` / `end_time` | Time range in seconds |
 | `reused` | `true` if an existing summary was reused |
 | `ingest_status` | `pending` \| `ok` \| `failed` \| `skipped` — `pending` means ingest is still running in background |
-| `error` | Error message if VLM or MinIO write failed for this chunk; `null` on success |
+| `error` | Error message if VLM or Storage write failed for this chunk; `null` on success |
 
 #### Done line — emitted after all chunks complete and ingestion finishes
 
@@ -123,7 +123,7 @@ The response body is a stream of newline-delimited JSON lines (`Content-Type: ap
 #### Error line — emitted if a fatal error occurs before processing starts
 
 ```json
-{ "type": "error", "message": "S3Error: key not found: ..." }
+{ "type": "error", "message": "RuntimeError: Object not found: ..." }
 ```
 
 > **Note:** Per-chunk errors (e.g., a single chunk VLM failure) do **not** produce an error line — they appear in the `error` field of the corresponding chunk line, and processing continues with the next chunk.
@@ -138,7 +138,7 @@ The response body is a stream of newline-delimited JSON lines (`Content-Type: ap
 curl -N -X POST http://localhost:8001/preprocess \
   -H "Content-Type: application/json" \
   -d '{
-    "minio_video_key": "runs/raw/video/asset_001/demo.mp4",
+    "file_key": "runs/raw/video/asset_001/demo.mp4",
     "chunk_duration_s": 30,
     "chunk_overlap_s": 4,
     "max_num_frames": 8,
@@ -154,7 +154,7 @@ curl -N -X POST http://localhost:8001/preprocess \
 
 ```powershell
 $req = [pscustomobject]@{
-    minio_video_key       = "runs/raw/video/asset_001/demo.mp4"
+    file_key       = "runs/raw/video/asset_001/demo.mp4"
     chunk_duration_s      = 30
     chunk_overlap_s       = 4
     max_num_frames        = 8
@@ -192,7 +192,7 @@ $response.Content -split "`n" | Where-Object { $_ } | ForEach-Object { $_ | Conv
 
 ---
 
-## MinIO Output Layout
+## Storage Output Layout
 
 For each request, the service writes derived artifacts under:
 
@@ -206,14 +206,14 @@ For each request, the service writes derived artifacts under:
 
 ## Per-chunk Ingestion
 
-If `ingest.enabled = true` is set in `config.json`, each chunk's summary is automatically posted to the ingestion service (`POST /v1/dataprep/ingest_text`) after it is written to MinIO. Ingestion runs in a background thread and does not block the next chunk's VLM call.
+If `ingest.enabled = true` is set in `config.json`, each chunk's summary is automatically posted to the ingestion service (`POST /v1/dataprep/ingest_text`) after it is written to Storage. Ingestion runs in a background thread and does not block the next chunk's VLM call.
 
 The request payload sent to the ingestion service for each chunk:
 
 | Field | Description |
 |---|---|
-| `bucket_name` | MinIO bucket name |
-| `file_path` | MinIO object key of `summary.txt` |
+| `bucket_name` | Storage bucket name |
+| `file_path` | Storage object key of `summary.txt` |
 | `text` | Summary text content (the full chunk summary string) |
 | `meta` | Metadata object — see table below |
 
@@ -226,10 +226,10 @@ The `meta` object contains:
 | `chunk_index` | 1-based index |
 | `asset_id` | Video asset identifier |
 | `run_id` | Run UUID |
-| `minio_video_key` | Source video object key |
+| `file_key` | Source video object key |
 | `start_time` / `end_time` | Time range in seconds |
 | `start_frame` / `end_frame` | Frame range |
-| `summary_minio_key` | MinIO key of the summary text file |
+| `summary_key` | Storage key of the summary text file |
 | `reused` | Whether the summary was reused from a previous run |
 
 Enable ingestion in `scripts/config.json`:
@@ -250,7 +250,7 @@ Enable ingestion in `scripts/config.json`:
 
 | Code | Meaning |
 |---|---|
-| `422` | Validation error in request body (e.g., missing `minio_video_key`, invalid numeric range) |
-| `500` | Fatal processing failure before streaming starts (e.g., MinIO config missing, VLM endpoint not configured) |
+| `422` | Validation error in request body (e.g., missing `file_key`, invalid numeric range) |
+| `500` | Fatal processing failure before streaming starts (e.g., Storage config missing, VLM endpoint not configured) |
 
-Per-chunk failures (VLM error, MinIO write error) do **not** return HTTP 500 — they are reported inline in the stream as `"error": "..."` on the corresponding chunk line, and processing continues with remaining chunks.
+Per-chunk failures (VLM error, Storage write error) do **not** return HTTP 500 — they are reported inline in the stream as `"error": "..."` on the corresponding chunk line, and processing continues with remaining chunks.

@@ -37,7 +37,7 @@ class MQTTSubscriber:
         self._client: Optional[mqtt.Client] = None
         self._connected = False
         self._callbacks: dict[str, list[Callable]] = {}  # topic -> list of callbacks
-        self._message_queue: asyncio.Queue = asyncio.Queue()
+        self._message_queue: asyncio.Queue = asyncio.Queue(maxsize=1000)
         self._reconnect_delay = 1
         self._max_reconnect_delay = 30
         self._loop: Optional[asyncio.AbstractEventLoop] = None
@@ -75,9 +75,12 @@ class MQTTSubscriber:
 
             # Put message in queue for async processing
             if self._loop:
-                asyncio.run_coroutine_threadsafe(
-                    self._message_queue.put((topic, payload, time.time())), self._loop
-                )
+                try:
+                    asyncio.run_coroutine_threadsafe(
+                        self._message_queue.put((topic, payload, time.time())), self._loop
+                    )
+                except Exception:
+                    logger.warning("MQTT message queue full, dropping message for topic %s", topic)
         except Exception as e:
             logger.error(f"Error processing MQTT message: {e}")
 

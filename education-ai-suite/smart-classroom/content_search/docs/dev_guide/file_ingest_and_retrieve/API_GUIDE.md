@@ -72,7 +72,7 @@ curl http://localhost:9990/v1/retrieval/health
 
 ### GET /v1/dataprep/info
 
-Returns the current state of the service — collection names, database init status, and MinIO connectivity.
+Returns the current state of the service — collection names, database init status, and storage connectivity.
 
 **Request**
 
@@ -88,7 +88,7 @@ curl http://localhost:9990/v1/dataprep/info
   "document_collection_name": "visual_data_documents",
   "visual_db_inited": true,
   "document_db_inited": true,
-  "minio_connected": true
+  "storage_available": true
 }
 ```
 
@@ -96,19 +96,19 @@ curl http://localhost:9990/v1/dataprep/info
 
 ## Ingest Files
 
-Files must first be uploaded to MinIO before they can be ingested. The service downloads the file, extracts embeddings, and stores them in ChromaDB.
+Files must first be uploaded to storage before they can be ingested. The service downloads the file, extracts embeddings, and stores them in ChromaDB.
 
 **Supported file types:** `.jpg`, `.png`, `.jpeg`, `.mp4`, `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.html`, `.htm`, `.xml`, `.md`
 
 ### POST /v1/dataprep/ingest
 
-Ingest a single file from MinIO
+Ingest a single file or a directory from storage.
 
 #### Request body
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `bucket_name` | string | Yes | — | MinIO bucket name |
+| `bucket_name` | string | Yes | — | storage bucket name |
 | `file_path` | string | Yes | — | Path to the file inside the bucket |
 | `meta` | object | No | `{}` | Extra metadata to store alongside the file |
 
@@ -146,18 +146,18 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest \
 #### Response
 
 ```json
-{ "message": "File from MinIO successfully processed. db returns ..." }
+{ "message": "File successfully processed. db returns ..." }
 ```
 
 ---
 
-Ingest a directory from MinIO, all supported files found under a given folder prefix in MinIO.
+Ingest a directory from storage. All supported files found under a given folder prefix will be processed.
 
 #### Request body
 
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
-| `bucket_name` | string | Yes | — | MinIO bucket name |
+| `bucket_name` | string | Yes | — | storage bucket name |
 | `folder_path` | string | Yes | — | Folder prefix inside the bucket |
 | `meta` | object | No | `{}` | Extra metadata applied to every file ingested from the directory |
 
@@ -191,7 +191,7 @@ curl -X POST http://localhost:9990/v1/dataprep/ingest \
 #### Response
 
 ```json
-{ "message": "Files from MinIO directory successfully processed. db returns ..." }
+{ "message": "Files from storage directory successfully processed. db returns ..." }
 ```
 
 > **Tip:** The service distinguishes between a single-file request and a directory request based on the presence of `file_path` vs `folder_path`.
@@ -209,7 +209,7 @@ Embeds a raw text string as a **single node** (no chunking) and stores it in the
 | Field | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `text` | string | Yes | — | Raw text content to embed and store |
-| `bucket_name` | string | No | — | MinIO bucket name (used to build the `file_path` identifier) |
+| `bucket_name` | string | No | — | storage bucket name (used to build the `file_path` identifier) |
 | `file_path` | string | No | — | Logical path inside the bucket (used to build the `file_path` identifier) |
 | `meta` | object | No | `{}` | Extra metadata to store alongside the text |
 
@@ -281,19 +281,19 @@ Look up all indexed entries for a specific file.
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file_path` | string | Yes | The MinIO URI of the file, e.g. `minio://bucket/path/file.pdf` |
+| `file_path` | string | Yes | The storage URI of the file, e.g. `local://bucket/path/file.pdf` |
 
 #### Example
 
 ```bash
-curl "http://localhost:9990/v1/dataprep/get?file_path=minio://my-bucket/documents/report.pdf"
+curl "http://localhost:9990/v1/dataprep/get?file_path=local://my-bucket/documents/report.pdf"
 ```
 
 #### Response
 
 ```json
 {
-  "file_path": "minio://my-bucket/documents/report.pdf",
+  "file_path": "local://my-bucket/documents/report.pdf",
   "ids_in_db": ["id-1", "id-2", "id-3"]
 }
 ```
@@ -303,7 +303,7 @@ curl "http://localhost:9990/v1/dataprep/get?file_path=minio://my-bucket/document
 | Code | Condition |
 |------|-----------|
 | `400` | `file_path` is missing or not a string |
-| `404` | Path scheme is not `minio://` or `http(s)://` |
+| `404` | Path scheme is not `local://` or `http(s)://` |
 | `200` | File embedding not found in the database (not yet ingested, or id_map out of sync — call `POST /v1/dataprep/recover` to resync) |
 
 ---
@@ -312,18 +312,18 @@ curl "http://localhost:9990/v1/dataprep/get?file_path=minio://my-bucket/document
 
 ### DELETE /v1/dataprep/delete
 
-Remove all indexed entries for a specific file. **The original file in MinIO is not deleted.**
+Remove all indexed entries for a specific file. **The original file in storage is not deleted.**
 
 **Query parameter**
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `file_path` | string | Yes | The MinIO URI of the file to remove from the index |
+| `file_path` | string | Yes | The storage URI of the file to remove from the index |
 
 #### Example
 
 ```bash
-curl -X DELETE "http://localhost:9990/v1/dataprep/delete?file_path=minio://my-bucket/documents/report.pdf"
+curl -X DELETE "http://localhost:9990/v1/dataprep/delete?file_path=local://my-bucket/documents/report.pdf"
 ```
 
 #### Response
@@ -340,7 +340,7 @@ curl -X DELETE "http://localhost:9990/v1/dataprep/delete?file_path=minio://my-bu
 | Code | Condition |
 |------|-----------|
 | `400` | `file_path` is missing or not a string |
-| `404` | Path scheme is not `minio://` or `http(s)://` |
+| `404` | Path scheme is not `local://` or `http(s)://` |
 | `200` | File embedding not found in the database (not yet ingested, or id_map out of sync — call `POST /v1/dataprep/recover` to resync) |
 
 ---
@@ -349,7 +349,7 @@ curl -X DELETE "http://localhost:9990/v1/dataprep/delete?file_path=minio://my-bu
 
 ### DELETE /v1/dataprep/delete_all
 
-Remove **all** entries from the database. **Original files in MinIO are not deleted.**
+Remove **all** entries from the database. **Original files in storage are not deleted.**
 
 #### Example
 
@@ -382,10 +382,10 @@ curl http://localhost:9990/v1/dataprep/list
 ```json
 {
   "visual": {
-    "minio://my-bucket/images/photo.jpg": ["2001"]
+    "local://my-bucket/images/photo.jpg": ["2001"]
   },
   "document": {
-    "minio://my-bucket/docs/report.pdf": ["1001", "1002", "1003"]
+    "local://my-bucket/docs/report.pdf": ["1001", "1002", "1003"]
   }
 }
 ```
@@ -488,7 +488,7 @@ Returns results of course "CS101" whose `tags` array contains `"biology"` **or**
       "id": "abc123",
       "distance": 0.142,
       "meta": {
-        "file_path": "minio://my-bucket/documents/report.pdf",
+        "file_path": "local://my-bucket/documents/report.pdf",
         "page": 3,
         "course": "CS101",
         "tags": ["plants"]
@@ -612,7 +612,7 @@ Same format as `/v1/retrieval`:
       "id": "abc123",
       "distance": 0.142,
       "score": 85.75,
-      "meta": { "file_path": "minio://...", "type": "image" }
+      "meta": { "file_path": "local://...", "type": "image" }
     },
     ...
   ]

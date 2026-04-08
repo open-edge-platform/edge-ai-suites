@@ -6,6 +6,7 @@
 
 INCLUDE ?= default_INCLUDE
 HELM_REGISTRY = oci://registry-1.docker.io/intel
+MAKEFLAGS += --no-print-directory
 
 DOCKER_COMPOSE_FILE = ./docker-compose.yml
 DOCKER_COMPOSE_VALIDATION_FILE=./docker-compose-validation.override.yml
@@ -126,6 +127,69 @@ check_env_variables:
 		esac; \
 	done
 
+wait_for_tsam:
+	@echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
+	max_retries=30; \
+	retry=0; \
+	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:3000/ts-api/health)" != "000" ]; do \
+		retry=$$((retry + 1)); \
+		if [ $$retry -ge $$max_retries ]; then \
+			echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
+			exit 1; \
+		fi; \
+		echo "  Not accessible yet (attempt $$retry/$$max_retries), retrying in 5s..."; \
+		sleep 5; \
+	done; \
+	echo "Time-Series Analytics microservice is accessible."
+
+upload_zip_file:
+	@echo "Creating UDF deployment zip for weld anomaly detection..."
+	@config_dir=$(CURDIR)/configs/time-series-analytics-microservice; \
+	zip_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.zip; \
+	rm -f $$zip_file; \
+	cd $$config_dir && \
+	folders="udfs tick_scripts"; \
+	if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
+	zip -r $$zip_file $$folders && \
+	echo "Created: $$zip_file"
+	@$(MAKE) wait_for_tsam
+	@echo "Uploading UDF deployment zip for weld anomaly detection to Time-Series Analytics microservice..."; \
+	zip_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.zip; \
+	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
+		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+		-F "file=@$$zip_file" \
+		-k); \
+	if [ "$$response" = "200" ]; then \
+		echo "Upload successful (HTTP $$response)."; \
+		$(MAKE) post_config; \
+	else \
+		echo "Upload failed (HTTP $$response). Response:"; \
+		cat /tmp/upload_response.json; \
+		exit 1; \
+	fi
+
+post_config:
+	@config_file=$(CURDIR)/configs/time-series-analytics-microservice/config.json; \
+	if [ ! -f $$config_file ]; then \
+		echo "Error: config.json not found at $$config_file"; \
+		exit 1; \
+	fi; \
+	$(MAKE) wait_for_tsam; \
+	echo "Posting config for weld anomaly detection to Time-Series Analytics microservice..."; \
+	response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
+		-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+		-H 'accept: application/json' \
+		-H 'Content-Type: application/json' \
+		-d @$$config_file \
+		-k); \
+	if [ "$$response" = "200" ]; then \
+		echo "Config posted successfully (HTTP $$response)."; \
+	else \
+		echo "Config post failed (HTTP $$response). Response:"; \
+		cat /tmp/config_response.json; \
+		exit 1; \
+	fi
+
 .PHONY: up
 up: check_env_variables validate_host_ip down
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
@@ -135,7 +199,8 @@ up: check_env_variables validate_host_ip down
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up -d; \
 	else \
 		$(DOCKER_COMPOSE) up -d; \
-	fi;
+	fi; \
+	$(MAKE) upload_zip_file
 
 # Status of the deployed containers
 .PHONY: status
@@ -198,7 +263,6 @@ gen_helm_charts:
 	@cp -f configs/mqtt-broker/*.conf helm/
 	@cp -f configs/telegraf/config/*.conf helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
-	@cp -f configs/time-series-analytics-microservice/config.json helm/
 	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
 	@cp -f configs/nginx/nginx.conf helm/nginx.conf
 	@cp -f configs/dlstreamer-pipeline-server/config.json helm/dlstreamer-pipeline-server.json

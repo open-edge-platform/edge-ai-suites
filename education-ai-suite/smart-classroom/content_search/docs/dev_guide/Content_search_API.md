@@ -105,14 +105,14 @@ Response (200 OK)
         {
             "status": "COMPLETED",
             "payload": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/f52c2905-fb78-4ddd-a89e-9fb673546740/raw/application/default/apple_loop100.h265",
                 "bucket": "content-search",
                 "filename": "apple_loop100.h265",
                 "run_id": "f52c2905-fb78-4ddd-a89e-9fb673546740"
             },
             "result": {
-                "message": "File from MinIO successfully processed. db returns {}"
+                "message": "File successfully processed. db returns {}"
             },
             "progress": 0,
             "task_type": "file_search",
@@ -123,14 +123,14 @@ Response (200 OK)
         {
             "status": "COMPLETED",
             "payload": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c/raw/application/default/apple_loop100.h265",
                 "bucket": "content-search",
                 "filename": "apple_loop100.h265",
                 "run_id": "2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c"
             },
             "result": {
-                "message": "File from MinIO successfully processed. db returns {}"
+                "message": "File successfully processed. db returns {}"
             },
             "progress": 0,
             "task_type": "file_search",
@@ -168,7 +168,7 @@ Response (200 OK):
         "result": {
             "message": "Upload only, no ingest requested",
             "file_info": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
                 "bucket": "content-search",
                 "filename": "phy_class.txt",
@@ -232,8 +232,8 @@ Response (200 OK):
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| file_key | string | Yes | The full path of the file in MinIO (excluding bucket name). |
-| bucket_name | string | No | The MinIO bucket name. Defaults to content-search. |
+| file_key | string | Yes | The full path of the file in storage (excluding bucket name). |
+| bucket_name | string | No | The storage bucket name. Defaults to content-search. |
 | prompt | string | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
 | chunk_duration | integer | No | Duration of each video segment in seconds. Defaults to 30. |
 | meta | object | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
@@ -261,7 +261,7 @@ Response:
 }
 ```
 #### Text file ingestion
-Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO.
+Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in storage.
 
 * URL: /api/v1/object/ingest-text
 * Method: POST
@@ -271,7 +271,7 @@ Primarily processes raw text strings passed in the request body for semantic ind
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
-| `bucket_name` | `string` | No | MinIO bucket name (used to logically group the data or build the identifier). |
+| `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
 | `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
 | `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
@@ -301,7 +301,7 @@ Response:
 ```
 
 #### File upload and ingestion
-A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
+A unified workflow that first saves the file to local storage and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
 
 * URL: /api/v1/object/upload-ingest
 * Method: POST
@@ -338,7 +338,7 @@ Response (200 OK):
 ```
 
 #### Retrieve and Search
-Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references.
+Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and object references.
 
 * URL: /api/v1/object/search
 * Method: POST
@@ -381,14 +381,14 @@ Response (200 OK):
                     "reused": false,
                     "start_time": 0.0,
                     "asset_id": "classroom_8.mp4",
-                    "file_path": "minio://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "file_path": "local://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
                     "run_id": "81802f9e-0a28-4486-bad2-2e05c1086326",
                     "type": "document",
                     "end_time": 0.32,
-                    "summary_minio_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "summary_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
                     "doc_filetype": "text/plain",
                     "chunk_id": "chunk_0001",
-                    "minio_video_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
+                    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
                     "chunk_index": 0,
                     "tags": [
                         "class",
@@ -404,7 +404,7 @@ Response (200 OK):
 }
 ```
 #### Resource Download (Video/Image/Document)
-Download existing resources in Minio.
+Download existing resources from storage.
 
 * URL: /api/v1/object/download/{resource_id}
 * Method: GET

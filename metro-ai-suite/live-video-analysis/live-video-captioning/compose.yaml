@@ -23,7 +23,7 @@ services:
       - app_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-rc2
+    image: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -210,7 +210,7 @@ services:
       - app_network
 
   collector:
-    image: docker.io/intel/vippet-collector:2026.0.0-20260217-weekly
+    image: docker.io/intel/vippet-collector:2026.0.0
     container_name: collector
     ports:
       - "9273:9273"

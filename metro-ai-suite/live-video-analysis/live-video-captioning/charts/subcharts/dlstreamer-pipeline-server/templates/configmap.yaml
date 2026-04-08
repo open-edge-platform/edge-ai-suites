@@ -1,0 +1,19 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+ConfigMap holding:
+  - config.json   : DL Streamer pipeline definitions (read from files/config.json)
+  - detection_filter.py : User GVAPython script for detection-based captioning
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dlstreamer-pipeline-server.fullname" . }}-config
+  labels:
+    {{- include "dlstreamer-pipeline-server.labels" . | nindent 4 }}
+data:
+  config.json: |
+{{ .Files.Get "files/config.json" | indent 4 }}
+  detection_filter.py: |
+{{ .Files.Get "files/detection_filter.py" | indent 4 }}

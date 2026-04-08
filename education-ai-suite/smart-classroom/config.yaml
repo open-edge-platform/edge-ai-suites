@@ -391,15 +391,11 @@ content_search:
   chromadb:
     host: "127.0.0.1"
     port: 9090
-    data_dir: '.\providers\chromadb_wrapper\chroma_data'
+    data_dir: './providers/chromadb_wrapper/chroma_data'
 
-  minio:
-    server: "127.0.0.1:9000"
-    console_address: ":9001"
-    root_user: "minioadmin"
-    root_password: "minioadmin"
+  storage:
+    data_dir: './providers/local_storage/data'
     bucket: "content-search"
-    data_dir: '.\providers\minio_wrapper\minio_data'
 
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"

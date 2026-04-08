@@ -22,7 +22,7 @@ class SearchService:
         self.ingest_text_url = f"{self.base_url}/v1/dataprep/ingest_text"
         self.retrieval_url = f"{self.base_url}/v1/retrieval"
 
-        self.default_bucket = getattr(settings, "MINIO_DEFAULT_BUCKET", None) or os.getenv("MINIO_DEFAULT_BUCKET", "content-search")
+        self.default_bucket = getattr(settings, "STORAGE_DEFAULT_BUCKET", None) or os.getenv("STORAGE_BUCKET", "content-search")
 
     async def trigger_ingest(self, file_path: str, bucket_name: str = None, meta: dict = None, is_directory: bool = False):
         target_bucket = bucket_name or self.default_bucket

@@ -1,0 +1,52 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# collector/values.yaml
+#
+# ⚠️  Security notice:
+# The collector DaemonSet runs with hostPID=true and privileged=true.
+# This is necessary for hardware metrics collection (CPU freq, GPU via qmassa).
+# Ensure your cluster policy (PodSecurityAdmission / OPA) allows this.
+
+fullnameOverride: ""
+
+image:
+  repository: intel/vippet-collector
+  # Type: string
+  tag: "2026.0.0"
+  pullPolicy: IfNotPresent
+
+# live-metrics-service WebSocket URL.
+# Must match live-metrics-service fullnameOverride and port.
+# Type: string
+websocketUrl: "ws://live-metrics-service:9090/ws/collector"
+
+# Host path on the labelled node where collector signal files live.
+# The DaemonSet mounts this host path at /app/.collector-signals.
+# Pre-create this directory on the node before deploying:
+#   mkdir -p /opt/lvc/collector-signals
+# Type: string
+collectorSignalsHostPath: "/tmp/lvc/collector-signals"
+
+podSecurityContext:
+  # Required for hardware access
+  runAsUser: 0
+
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+
+# Run with host PID namespace (required for qmassa GPU monitoring).
+# Type: boolean
+hostPID: true
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+podAnnotations: {}
+podLabels: {}

@@ -108,7 +108,7 @@ To resolve this issue, set the display scale mode to 100%:
 > in the same network and have the same ROS_DOMAIN_ID set.
 
 To prepare the development system follow the instructions to
-[Prepare the Target System](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/robot-vision-control/docs/source/getstarted/prepare_system.md).
+[Prepare the Target System](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**
@@ -183,7 +183,7 @@ kernel mode driver in Linux Kernel 6.7.5 or later.
 For Intel® Core™ Ultra Processors, the recommended operating system for the Autonomous Mobile Robot
 is the [Ubuntu OS version 22.04 LTS (Jammy Jellyfish)](https://releases.ubuntu.com/22.04)
 Desktop image, as described in
-[Prepare the Target System](https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/robot-vision-control/docs/source/getstarted/prepare_system.md).
+[Prepare the Target System](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
 Since this version of the Canonical Ubuntu operating system uses a
 Linux Kernel 6.8, this incompatibility will have an impact if you use the
 Autonomous Mobile Robot on an Intel® Core™ Ultra Processor.
