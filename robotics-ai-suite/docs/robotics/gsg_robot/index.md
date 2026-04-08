@@ -132,6 +132,37 @@ export ROS_DOMAIN_ID=42
   - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
     graph, in order to avoid conflicts in message handling.
 
+## OS Image Composer Setup
+
+An alternative method for setup is to create an OS image pre-configured with ROS 2 and the appropriate repositories. For detailed instructions, see the [os-image-composer installation guide](https://github.com/open-edge-platform/os-image-composer/blob/main/docs/tutorial/installation.md). An abbreviated version follows:
+
+```bash
+# Install Go (Go 1.24+ required) + build dependencies
+sudo apt update && sudo apt install golang-1.24 git systemd-ukify mmdebstrap
+
+# Update go path since 1.24 isn't default
+export PATH=$PATH:/usr/lib/go-1.24/bin
+source ~/.bashrc
+
+# Clone repo
+git clone https://github.com/open-edge-platform/os-image-composer.git
+cd os-image-composer
+
+# Build the tool (output: ./os-image-composer)
+go build -buildmode=pie -ldflags "-s -w" ./cmd/os-image-composer
+
+# Build the live-installer (required for ISO images)
+go build -buildmode=pie -o ./build/live-installer -ldflags "-s -w" ./cmd/live-installer
+
+# Build ISO image
+sudo -E ./os-image-composer build image-templates/ubuntu24-x86_64-robotics-jazzy-iso.yml
+
+# Flash ISO Image to USB drive (modify /dev/sdX to proper USB drive location)
+sudo dd if=builds/robotics-jazzy-ubuntu24-24.04.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+Once complete, the USB Drive can be used to reimage a system to be ready for [AMR Tutorials](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/index_tutorials.html).
+
 ## Step-by-step Setup
 
 The Step-by-step Setup will present a series of steps to follow which will configure and install the necessary content on your system. If you prefer to perform the steps automatically, use the [Express Setup](#express-setup) guide.
