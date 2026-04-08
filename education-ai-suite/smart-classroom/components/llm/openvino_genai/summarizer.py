@@ -32,7 +32,7 @@ class Summarizer(BaseSummarizer):
                             temperature=self.temperature,
                             do_sample=False,
                         )
-                        cfg = model.get_generation_config()
+                    cfg = model.get_generation_config()
                     for attr in dir(cfg):
                         if not attr.startswith("_"):
                             logger.info(f"  {attr}: {getattr(cfg, attr)}")
