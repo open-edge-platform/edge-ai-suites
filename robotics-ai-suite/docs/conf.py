@@ -63,8 +63,8 @@ extensions = [
 ]
 
 breathe_projects = {
-    "rvc_control": "doxygen/rvc_control/xml/",
-    "rvc_vision": "doxygen/rvc_vision/xml/",
+    "rvc_control": "rvc/_assets/doxygen/rvc_control/xml/",
+    "rvc_vision": "rvc/_assets/doxygen/rvc_vision/xml/",
 }
 
 templates_path = ["_templates"]
