@@ -92,10 +92,7 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-make help
-```
-
-```text
+$ make help
 Target               Description
 ------               -----------
 build                Build ITS Planner and related packages

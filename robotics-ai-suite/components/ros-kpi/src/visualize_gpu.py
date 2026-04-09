@@ -32,35 +32,21 @@ Usage
 
 import argparse
 import json
-import os
-import re
 import sys
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import matplotlib
-import matplotlib.dates as mdates
-import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib.dates as mdates  # pylint: disable=import-error
+import matplotlib.pyplot as plt  # pylint: disable=import-error
+import numpy as np  # pylint: disable=import-error
+
+from gpu_engine_defs import ENGINE_CLASSES as _ENGINE_CLASSES, ENG_COLORS as _ENG_COLORS
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Engine-class mapping  (canonical label → regex)
+# Engine-class mapping imported from gpu_engine_defs
 # ──────────────────────────────────────────────────────────────────────────────
-
-_ENGINE_CLASSES: Dict[str, re.Pattern] = {
-    'Render/3D': re.compile(r'render|3d',                      re.I),
-    'Blitter':   re.compile(r'blitter|blt',                    re.I),
-    'Video':     re.compile(r'^video$',                        re.I),
-    'VE':        re.compile(r'videoenhance|video_enhance|ve\b', re.I),
-}
-_ENG_COLORS = {
-    'Render/3D': '#e07b39',
-    'Blitter':   '#4c9de0',
-    'Video':     '#6abf6a',
-    'VE':        '#b565c9',
-}
 
 
 def _classify_engine_key(key: str) -> Optional[str]:
@@ -82,7 +68,7 @@ def load_gpu_log(path: str) -> List[dict]:
     """
     records = []
     try:
-        with open(path) as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -131,9 +117,9 @@ def _canonical_engines(record: dict) -> Dict[str, Dict[str, float]]:
 # Summary printer
 # ──────────────────────────────────────────────────────────────────────────────
 
-def print_summary(records: List[dict]):
+def print_summary(records: List[dict]):  # pylint: disable=too-many-locals
+    """Print a text summary of GPU metrics from a list of records."""
     if not records:
-        print('  No GPU data.')
         return
     source = records[0].get('source', 'sysfs')
     n = len(records)
@@ -142,7 +128,7 @@ def print_summary(records: List[dict]):
     temps = [r['temp_c'] for r in records if r.get('temp_c') is not None]
     pwr_g = [r.get('power_gpu_w', 0) for r in records]
     pwr_p = [r.get('power_pkg_w', 0) for r in records]
-    rc6   = [r.get('rc6_pct', 0) for r in records]
+    rc6 = [r.get('rc6_pct', 0) for r in records]
 
     print(f'\n{"═"*60}')
     print(f'  Intel GPU Summary  ({source})  –  {n} samples')
@@ -159,14 +145,14 @@ def print_summary(records: List[dict]):
         print(f'  RC6 %    : avg={sum(rc6)/n:.1f}')
 
     if source == 'intel_gpu_top':
-        print(f'\n  Engine-class averages:')
+        print('\n  Engine-class averages:')
         for cls in _ENGINE_CLASSES:
             vals = [_canonical_engines(r)[cls]['busy'] for r in records]
             print(f'    {cls:<12}: avg={sum(vals)/n:.1f}%  max={max(vals):.1f}%')
 
     # Per-PID summary
     pid_totals: Dict[int, list] = defaultdict(list)
-    pid_names:  Dict[int, str]  = {}
+    pid_names: Dict[int, str] = {}
     for r in records:
         for c in (r.get('clients') or []):
             pid_totals[c['pid']].append(c['total'])
@@ -175,7 +161,7 @@ def print_summary(records: List[dict]):
         top = sorted(pid_totals.items(),
                      key=lambda kv: sum(kv[1]) / len(kv[1]),
                      reverse=True)[:10]
-        print(f'\n  Top PIDs by avg GPU %:')
+        print('\n  Top PIDs by avg GPU %:')
         for pid, vals in top:
             print(f'    PID {pid:<7} {pid_names[pid]:<28}  avg={sum(vals)/len(vals):.1f}%  max={max(vals):.1f}%')
     print()
@@ -232,7 +218,7 @@ def _wire_legend(fig, legend, handle_artists):
             hit_text, _ = entry['text'].contains(event)
             try:
                 hit_handle, _ = entry['lh'].contains(event)
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 hit_handle = False
             if hit_text or hit_handle:
                 visible = not entry['artists'][0].get_visible()
@@ -242,7 +228,7 @@ def _wire_legend(fig, legend, handle_artists):
                 entry['text'].set_alpha(alpha)
                 try:
                     entry['lh'].set_alpha(alpha)
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     pass
                 fig.canvas.draw()
                 break   # only one entry per click
@@ -254,7 +240,7 @@ def _wire_legend(fig, legend, handle_artists):
 # Individual panels
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _panel_engines(ax, times, records):
+def _panel_engines(ax, times, records):  # pylint: disable=too-many-locals
     """Panel 1: GPU overall busy + per-engine-class lines."""
     busy = [r.get('busy_pct', 0.0) for r in records]
     fill_busy = ax.fill_between(times, busy, alpha=0.12, color='steelblue')
@@ -328,7 +314,7 @@ def _panel_engines_stacked(ax, times, records):
     _wire_legend(ax.get_figure(), leg, handle_map)
 
 
-def _panel_freq(ax, times, records):
+def _panel_freq(ax, times, records):  # pylint: disable=too-many-locals
     """Panel 2: Frequency + RC6."""
     source = records[0].get('source', 'sysfs')
     act_freq = [r.get('act_freq_mhz', 0) for r in records]
@@ -336,7 +322,7 @@ def _panel_freq(ax, times, records):
 
     if source == 'intel_gpu_top':
         req_freq = [r.get('req_freq_mhz', 0) for r in records]
-        rc6_pct  = [r.get('rc6_pct', 0.0) for r in records]
+        rc6_pct = [r.get('rc6_pct', 0.0) for r in records]
         line_act, = ax.plot(times, act_freq, color='darkorange', linewidth=1.3, label='Actual freq')
         line_req, = ax.plot(times, req_freq, color='#f0c040', linewidth=1.0, linestyle='--',
                             label='Requested freq')
@@ -350,7 +336,7 @@ def _panel_freq(ax, times, records):
         l2, lb2 = ax2_rc6.get_legend_handles_labels()
         leg = ax.legend(lines + l2, labels + lb2, loc='upper right', fontsize=7)
         handles = _legend_handles(leg)
-        handle_map = {h: ln for h, ln in zip(handles, [line_act, line_req, line_rc6])}
+        handle_map = dict(zip(handles, [line_act, line_req, line_rc6]))
         _wire_legend(fig, leg, handle_map)
     else:
         cur_freq = [r.get('cur_freq_mhz', 0) for r in records]
@@ -365,7 +351,7 @@ def _panel_freq(ax, times, records):
             sysfs_lines.append(line_max)
         leg = ax.legend(loc='upper right', fontsize=7)
         handles = _legend_handles(leg)
-        handle_map = {h: ln for h, ln in zip(handles, sysfs_lines)}
+        handle_map = dict(zip(handles, sysfs_lines))
         _wire_legend(fig, leg, handle_map)
         ax.set_ylabel('Frequency (MHz)', fontsize=9)
 
@@ -387,6 +373,7 @@ def _panel_temp(ax, times, records):
     line_t, = ax.plot(ts_t, vals_t, color='tomato', linewidth=1.3, label='GPU Temp (°C)')
     # Danger line at 90 °C
     has_thresh = max(vals_t) > 70
+    line_thresh = None
     if has_thresh:
         line_thresh = ax.axhline(90, color='red', linewidth=0.8, linestyle='--',
                                  alpha=0.5, label='90 °C threshold')
@@ -417,13 +404,13 @@ def _panel_power(ax, times, records):
     ax.set_ylabel('Power (W)', fontsize=9)
     leg = ax.legend(loc='upper right', fontsize=7)
     handles = _legend_handles(leg)
-    handle_map = {h: a for h, a in zip(handles, power_artists)}
+    handle_map = dict(zip(handles, power_artists))
     _wire_legend(ax.get_figure(), leg, handle_map)
     ax.grid(True, alpha=0.25)
     _fmt_xaxis(ax, times)
 
 
-def _panel_pids(ax, times, records, top_n: int = 8):
+def _panel_pids(ax, times, records, top_n: int = 8):  # pylint: disable=too-many-locals
     """Panel 5: Per-PID GPU busy% over time (top N by peak)."""
     # Aggregate per PID: list of (timestamp, total_busy%)
     pid_series: Dict[int, List[Tuple[datetime, float]]] = defaultdict(list)
@@ -464,7 +451,7 @@ def _panel_pids(ax, times, records, top_n: int = 8):
     _fmt_xaxis(ax, times)
     leg = ax.legend(loc='upper right', fontsize=7, ncol=2)
     handles = _legend_handles(leg)
-    handle_map = {h: ln for h, ln in zip(handles, pid_lines)}
+    handle_map = dict(zip(handles, pid_lines))
     _wire_legend(ax.get_figure(), leg, handle_map)
 
 
@@ -472,10 +459,11 @@ def _panel_pids(ax, times, records, top_n: int = 8):
 # Stacked-bar per-engine breakdwon per PID (static snapshot chart)
 # ──────────────────────────────────────────────────────────────────────────────
 
-def plot_pid_engine_breakdown(records: List[dict],
-                              top_n: int = 12,
-                              output_file: str = None,
-                              show: bool = False):
+def plot_pid_engine_breakdown(  # pylint: disable=too-many-locals
+        records: List[dict],
+        top_n: int = 12,
+        output_file: str = None,
+        show: bool = False):
     """
     Horizontal stacked-bar chart: one bar per PID showing average % per
     engine class.  Shows only at the end of the session (avg across all
@@ -511,9 +499,9 @@ def plot_pid_engine_breakdown(records: List[dict],
     y_pos = np.arange(len(top_pids))
     left = np.zeros(len(top_pids))
 
-    cls_order = list(reversed(list(_ENGINE_CLASSES)))   # order of barh() calls
-    eng_patches = {}   # cls → [Rectangle]
-    eng_texts   = {}   # cls → [Text]  (bar value labels)
+    cls_order = list(reversed(list(_ENGINE_CLASSES)))  # order of barh() calls
+    eng_patches = {}  # cls → [Rectangle]
+    eng_texts = {}  # cls → [Text]  (bar value labels)
 
     for cls in cls_order:
         vals = np.array([pid_avg[p][cls] for p in top_pids])
@@ -521,10 +509,10 @@ def plot_pid_engine_breakdown(records: List[dict],
                        color=_ENG_COLORS[cls], alpha=0.8, height=0.65)
         eng_patches[cls] = list(bars)
         eng_texts[cls] = []
-        for bar, v in zip(bars, vals):
+        for rect, v in zip(bars, vals):
             if v >= 1.0:
-                cx = bar.get_x() + bar.get_width() / 2
-                txt = ax.text(cx, bar.get_y() + bar.get_height() / 2,
+                cx = rect.get_x() + rect.get_width() / 2
+                txt = ax.text(cx, rect.get_y() + rect.get_height() / 2,
                               f'{v:.1f}%', ha='center', va='center',
                               fontsize=7, color='black')
                 eng_texts[cls].append(txt)
@@ -558,11 +546,12 @@ def plot_pid_engine_breakdown(records: List[dict],
 # Main combined plot
 # ──────────────────────────────────────────────────────────────────────────────
 
-def plot_gpu_full(records: List[dict],
-                  output_file: str = None,
-                  show: bool = False,
-                  stacked_engines: bool = True,
-                  top_pids: int = 8):
+def plot_gpu_full(  # pylint: disable=too-many-locals,too-many-statements
+        records: List[dict],
+        output_file: str = None,
+        show: bool = False,
+        stacked_engines: bool = True,
+        top_pids: int = 8):
     """
     Render the full multi-panel GPU dashboard and optionally save to file.
 
@@ -577,9 +566,9 @@ def plot_gpu_full(records: List[dict],
         print('  No GPU records to plot.')
         return
 
-    source      = records[0].get('source', 'sysfs')
-    has_temp    = any(r.get('temp_c') is not None for r in records)
-    has_power   = source == 'intel_gpu_top' and any(r.get('power_gpu_w', 0) for r in records)
+    source = records[0].get('source', 'sysfs')
+    has_temp = any(r.get('temp_c') is not None for r in records)
+    has_power = source == 'intel_gpu_top' and any(r.get('power_gpu_w', 0) for r in records)
     has_clients = any(r.get('clients') for r in records)
 
     nrows = 2 + has_temp + has_power + has_clients
@@ -664,10 +653,10 @@ def _latest_session_dir(sessions_root: str = 'monitoring_sessions') -> Optional[
     return dirs[0] if dirs else None
 
 
-def main():
+def main():  # pylint: disable=too-many-branches,too-many-statements
+    """Parse CLI arguments and visualise GPU log data."""
     parser = argparse.ArgumentParser(
         description='Visualize Intel GPU metrics from gpu_usage.log',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
     parser.add_argument('log_file', nargs='?', default=None,
@@ -706,18 +695,18 @@ def main():
     elif args.session:
         sess_dir = Path(args.sessions_dir) / args.session
         log_path = sess_dir / 'gpu_usage.log'
-        vis_dir  = sess_dir / 'visualizations'
+        vis_dir = sess_dir / 'visualizations'
     else:
         sess_dir = _latest_session_dir(args.sessions_dir)
         if sess_dir:
             log_path = sess_dir / 'gpu_usage.log'
-            vis_dir  = sess_dir / 'visualizations'
+            vis_dir = sess_dir / 'visualizations'
 
     if log_path is None or not log_path.exists():
         errmsg = (
             f'gpu_usage.log not found at {log_path}.\n'
-            'Run:  make monitor-gpu  or  make monitor-remote REMOTE_IP=<ip> GPU=1\n'
-            'Then: make visualize-gpu'
+            'Run:  uv run python src/monitor_stack.py --gpu  or  uv run python src/monitor_stack.py --remote-ip <ip> --gpu\n'
+            'Then: uv run python src/visualize_gpu.py <session>'
         )
         print(f'[Error] {errmsg}', file=sys.stderr)
         sys.exit(1)

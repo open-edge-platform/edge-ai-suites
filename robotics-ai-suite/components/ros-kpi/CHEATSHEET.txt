@@ -14,46 +14,43 @@ Intel-operated generative artificial intelligence solutions.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ./quickstart              Interactive menu (recommended for beginners)
-make start                Same as ./quickstart
-make quick-check          Quick 30-second health check
+uv run python src/monitor_stack.py --duration 30    Quick 30-second health check
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📊 MONITORING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-make monitor                              Monitor all nodes (60s)
-make monitor NODE=/my_node                Monitor specific node
-make monitor NODE=/my_node DURATION=120   Custom duration
-make quick-check                          Quick 30s check
-make monitor-long                         Extended 5-minute session
+uv run python src/monitor_stack.py                                Monitor all nodes
+uv run python src/monitor_stack.py --node /my_node                Monitor specific node
+uv run python src/monitor_stack.py --node /my_node --duration 120 Custom duration
+uv run python src/monitor_stack.py --duration 30                  Quick 30s check
+uv run python src/monitor_stack.py --duration 300                 Extended 5-minute session
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🤖 SIMULATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Wandering:
-  make wandering                          Run simulation
-  make wandering-record                   Run + record rosbag
-  make wandering-record-plot              Run + record + auto-plot
-  make wandering-benchmark                Benchmark run
-  make analyze-last-wandering             Analyze most recent session
+  bash src/wandering_run.sh --goals 3 --timeout 120
+  bash src/wandering_run.sh --goals 3 --timeout 120 --record
+  bash src/wandering_run.sh --goals 3 --timeout 120 --record --plot
+  (use ./quickstart for multi-run benchmark mode)
 
 Pick-n-Place:
-  make picknplace-run                     Run simulation
-  make picknplace-record                  Run + record rosbag
-  make picknplace-record-plot             Run + record + auto-plot
-  make picknplace-benchmark               Benchmark run
-  make analyze-last-picknplace            Analyze most recent session
+  bash src/picknplace_run.sh --timeout 300
+  bash src/picknplace_run.sh --timeout 300 --record
+  bash src/picknplace_run.sh --timeout 300 --record --plot
+  (use ./quickstart for multi-run benchmark mode)
 
 Analyze:
-  make analyze-bag BAG=<path>             Analyze a specific rosbag
-  make analyze-benchmark                  Analyze benchmark results
+  uv run python src/analyze_rosbag.py <path/to/bag.db3>
+  uv run python src/aggregate_kpi.py <path/to/bench_dir>
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 REMOTE MONITORING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-make monitor-remote REMOTE_IP=192.168.1.100
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📈 DASHBOARDS (Grafana)
@@ -64,9 +61,10 @@ make grafana-open                         Open in browser
 make grafana-status                       Check status
 make grafana-stop                         Stop services
 Export a session to Grafana:
-  make grafana-export SESSION=20260306_154140
-  make grafana-export                      # uses latest session
-  make grafana-export-live                 # live mode
+  uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/20260306_154140
+  uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
+  # Or use the combined orchestrator:
+  ./grafana-monitor.sh --remote-ip <ip>
 
 Metrics served on port 9092 (Prometheus occupies 9090)
 Access: http://localhost:30000 (admin/admin)
@@ -75,14 +73,13 @@ Access: http://localhost:30000 (admin/admin)
 📁 RESULTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-make list-sessions                        List all sessions
-make visualize-last                       Visualize last session
-make pipeline-graph                       Render pipeline graph (PNG)
-make pipeline-graph SESSION=<name>        Specific session graph
-make analyze-session SESSION=20260305_123456
+uv run python src/monitor_stack.py --list-sessions                List all sessions
+uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
+uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json --no-show  Pipeline graph (PNG)
+uv run python src/view_average.py --runs 5                        View KPI averages
 
 Interactive graph (click nodes for topic detail):
-  uv run python src/visualize_graph.py monitoring_sessions/<name> --show
+  uv run python src/visualize_graph.py <session>/graph_timing.csv --show
 
 Results saved in: monitoring_sessions/YYYYMMDD_HHMMSS/
   ├── graph_timing.csv         (topic timing data)
@@ -105,24 +102,24 @@ make check-deps                           Verify installation
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 # Wandering simulation with bag recording
-make wandering-record                              # Record session
-make analyze-last-wandering                        # Analyze results
+bash src/wandering_run.sh --goals 3 --timeout 120 --record   # Record session
+uv run python src/analyze_rosbag.py <session>/rosbag2_*/    # Analyze results
 
 # Pick-n-Place simulation with bag recording
-make picknplace-record                             # Record session
-make analyze-last-picknplace                       # Analyze results
+bash src/picknplace_run.sh --timeout 300 --record            # Record session
+uv run python src/analyze_rosbag.py <session>/rosbag2_*/    # Analyze results
 
 # Monitor a specific node
-ros2 launch nav2_bringup tb3_simulation_launch.py  # Terminal 1
-make monitor NODE=/controller_server DURATION=120  # Terminal 2
+ros2 launch nav2_bringup tb3_simulation_launch.py                                    # Terminal 1
+uv run python src/monitor_stack.py --node /controller_server --duration 120          # Terminal 2
 
 # Remote monitoring
-make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox
 
 # Export to Grafana
 make grafana-start
-make wandering-record
-make grafana-export
+bash src/wandering_run.sh --goals 3 --timeout 120 --record
+uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📚 DOCUMENTATION

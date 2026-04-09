@@ -141,10 +141,13 @@ Intel-operated generative artificial intelligence solutions.
 ────────────────────────────────────────────────────────────────────────────────
 
 # Manual 3-step process:
-make grafana-start                    # Terminal 1: Start Grafana/Prometheus
-make monitor                          # Terminal 2: Start monitoring
-make grafana-export                   # Terminal 3: Export metrics
-make grafana-open                     # Open browser
+make grafana-start                                                    # Terminal 1: Start Grafana/Prometheus
+uv run python src/monitor_stack.py                                    # Terminal 2: Start monitoring
+uv run python src/prometheus_exporter.py --session-dir <session>      # Terminal 3: Export metrics
+make grafana-open                                                      # Open browser
+
+# Or use the combined orchestrator (Prometheus exporter + monitor_stack concurrently):
+./grafana-monitor.sh --remote-ip <ip>
 
 # Check everything is working
 make grafana-status
