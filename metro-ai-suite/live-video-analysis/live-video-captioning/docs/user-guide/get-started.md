@@ -197,7 +197,6 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 If you want to build the application from source, refer to:
 
 - [Build from Source](./get-started/build-from-source.md)
-- [Deploy with Helm](./deploy-with-helm.md)
 
 ## Additional Features Reference
 

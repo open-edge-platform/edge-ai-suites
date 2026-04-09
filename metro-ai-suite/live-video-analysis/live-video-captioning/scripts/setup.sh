@@ -3,7 +3,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-export HOST_IP=$(hostname -I | awk '{print $1}')
+export HOST_IP=$(ip route get 1 | awk '{print $7}')
 
 # Registry handling - ensure consistent formatting with trailing slashes
 # If REGISTRY_URL is set, ensure it ends with a trailing slash
