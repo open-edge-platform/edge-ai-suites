@@ -12,7 +12,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/get-started.md#model-preparation) provided to prepare the model.
+- OpenVINO-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/model-preparation.md) provided to prepare the model.
 
 ## Run the application
 
@@ -31,15 +31,26 @@ By following this guide, you will learn how to:
      ```
 
 3. **Configure Image Registry and Tag**:
+
+     If you prefer to use prebuilt images from Docker Hub, export the variables below.
+
      ```bash
      export REGISTRY="intel/"
      export TAG="latest"
      ```
-    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
 
-4. **Configure and export the environment**:
+     If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
+
+4. **Download/Export Models**:
+
+     Follow the model preparation steps outlined in [Prerequisites](#prerequisites).
+
+5. **Configure and Export the Environment**:
+
+     From the `live-video-analysis/live-video-captioning-rag` directory, use the helper script below to configure and export the application environment.
+
      ```bash
-     # Configure environment variables. By default, the application uses the CPU device for  embedding and LLM.
+     # Configure environment variables. By default, the application uses the CPU device for embedding and LLM.
      # To use GPU, edit `setup_env.sh` and set: DEVICE="GPU"
      # Set LLM_MODEL_ID to your prepared LLM model.
      # Set EMBEDDING_MODEL_NAME to your desired embedding model.
@@ -48,13 +59,10 @@ By following this guide, you will learn how to:
      source scripts/setup_env.sh
      ```
 
-5. **Download/Export Models**:
+6. **Start the Live Video Captioning RAG Application**:
 
-     Follow the model preparation steps outlined in [Prerequisites](#prerequisites).
+     From the `live-video-analysis/live-video-captioning-rag` directory, start the application using Docker Compose:
 
-6. **Start the Application**:
-
-     Start the application using Docker Compose tool:
      ```bash
      docker compose up -d
      ```
@@ -62,7 +70,7 @@ By following this guide, you will learn how to:
      Notes:
      - It will take sometimes for the application to get started. Check the container status and make sure they are in `"healthy/running"` state using `docker ps` command before accessing the application.
 
-7. **Access the application**:
+7. **Access the Application**:
 
      To start the application:
 
@@ -86,18 +94,13 @@ By following this guide, you will learn how to:
         `Example query: "How many students in the classroom?"`<br>
         You should now receive contextual responses from the RAG Chatbot.
 
-8. **Stop the Services**:
+8. **Stop the Live Video Captioning RAG Application**:
 
      Stop the sample application services using below:
+
      ```bash
      docker compose down
      ```
-
-## Build from Source Reference
-
-If you want to build the application from source, refer to:
-
-- [Build from Source](./get-started/build-from-source.md)
 
 ## Integration with Live Video Captioning
 
@@ -110,4 +113,5 @@ For setup instructions, refer to:
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [API Reference](./api-reference.md)
+- [Build from Source](./get-started/build-from-source.md)
 - [Known Issues](./known-issues.md)
