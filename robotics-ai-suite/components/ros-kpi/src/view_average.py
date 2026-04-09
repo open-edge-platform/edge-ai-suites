@@ -36,7 +36,6 @@ import argparse
 import csv
 import json
 import math
-import os
 import re
 import sys
 from collections import defaultdict
@@ -167,6 +166,7 @@ def aggregate_timing(sessions: List[Path]) -> Dict[str, Dict[str, Dict[str, Opti
 
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
+
 def parse_resource_log(log_path: Path) -> Dict[str, Dict[str, List[float]]]:
     """
     Extract per-process (TGID / PID) CPU% and RSS-MB from one pidstat log.
@@ -265,7 +265,7 @@ def print_timing_table(
         freq  = m.get("frequency_hz",       {})
         delta = m.get("delta_time_ms",      {})
         lat   = m.get("latency_mean_ms",    {})
-        proc  = m.get("processing_delay_ms",{})
+        proc  = m.get("processing_delay_ms", {})
 
         topic_display = topic if len(topic) <= col_w else topic[: col_w - 3] + "..."
         print(
@@ -396,9 +396,9 @@ def plot_timing(
         freq = agg[t].get("frequency_hz",        {})
         if lat.get("mean") is not None or proc.get("mean") is not None:
             labels.append(t.lstrip("/"))
-            lat_data.append( (lat.get("mean")  or 0, lat.get("std")  or 0))
+            lat_data.append((lat.get("mean")  or 0, lat.get("std")  or 0))
             proc_data.append((proc.get("mean") or 0, proc.get("std") or 0))
-            freq_data.append( freq.get("mean"))
+            freq_data.append(freq.get("mean"))
 
     if not labels:
         return
@@ -406,7 +406,7 @@ def plot_timing(
     n              = len(labels)
     x              = np.arange(n)
     bar_w          = 0.38
-    sw, sh, dpi    = _screen_inches()
+    sw, sh, _      = _screen_inches()
     _, _, save_dpi = _screen_inches()
     save_dpi       = max(100, save_dpi)
 
@@ -476,7 +476,6 @@ def plot_timing(
                   loc="upper left", fontsize=7.5, ncol=2,
                   frameon=True, framealpha=0.85, title="Latency grades")
     # re-add the bar/threshold legend separately using handles
-    handles, hlabels = ax_lat.get_legend_handles_labels()
     bar_handles  = [bars_lat, bars_proc]
     bar_labels_l = ["Latency mean (ms)", "Processing delay (ms)"]
     ax_lat.add_artist(ax_lat.legend(bar_handles, bar_labels_l,
@@ -575,7 +574,7 @@ def plot_resources(
                          color=cpu_colors, alpha=0.88,
                          error_kw={"elinewidth": 1.2, "alpha": 0.6},
                          height=0.65)
-    for i, (bar, mean, std) in enumerate(zip(bars_c, cpu_means, cpu_stds)):
+    for _, (bar, mean, std) in enumerate(zip(bars_c, cpu_means, cpu_stds)):
         if mean > 0:
             ax_cpu.text(mean + std + cpu_means.max() * 0.01, bar.get_y() + bar.get_height() / 2,
                         f"{mean:.1f}%", va="center", fontsize=8, color="#333")
@@ -600,7 +599,7 @@ def plot_resources(
                          color=rss_colors, alpha=0.88,
                          error_kw={"elinewidth": 1.2, "alpha": 0.6},
                          height=0.65)
-    for i, (bar, mean, std) in enumerate(zip(bars_r, rss_means, rss_stds)):
+    for _, (bar, mean, std) in enumerate(zip(bars_r, rss_means, rss_stds)):
         if mean > 0:
             ax_rss.text(mean + std + rss_means.max() * 0.01, bar.get_y() + bar.get_height() / 2,
                         f"{mean:.0f} MB", va="center", fontsize=8, color="#333")
@@ -912,7 +911,7 @@ def main() -> None:
 
     if not sessions:
         print(f"No monitoring sessions found in '{sessions_dir}'. "
-              "Run 'make monitor' first.")
+              "Run 'uv run python src/monitor_stack.py' first.")
         sys.exit(1)
 
     n_found = len(sessions)

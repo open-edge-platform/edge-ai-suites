@@ -18,9 +18,8 @@ cd ~/Documents/ros2-kpi
 # Interactive launcher - guides you through everything
 ./quickstart
 
-# Or use make shortcuts
-make start     # Interactive menu
-make quick     # Quick 30-second health check
+# Or invoke directly
+uv run python src/monitor_stack.py --duration 30    # Quick 30-second health check
 ```
 
 **That's it!** The interactive launcher handles ROS2 setup automatically and guides you through all features.
@@ -97,9 +96,9 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--list-sessions` | List previous sessions and exit |
 
 ```bash
-make monitor NODE=/slam_toolbox DURATION=120
-make monitor-pid NODE=/slam_toolbox DURATION=120
-make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox --duration 120
+uv run python src/monitor_stack.py --node /slam_toolbox --pid-only --duration 120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox
 ```
 
 ---
@@ -241,9 +240,10 @@ Renders the full ROS2 computation graph as a directed topology diagram. Nodes ar
   - Node processing delay (mean ± std)
 
 ```bash
-make pipeline-graph                           # headless PNG
-make pipeline-graph SESSION=20260306_154140   # specific session
-./src/visualize_graph.py monitoring_sessions/latest --show  # interactive
+uv run python src/visualize_graph.py monitoring_sessions/20260306_154140/graph_timing.csv \
+  --topology monitoring_sessions/20260306_154140/graph_topology.json --no-show   # headless PNG
+uv run python src/visualize_graph.py monitoring_sessions/20260306_154140/graph_timing.csv \
+  --topology monitoring_sessions/20260306_154140/graph_topology.json --show      # interactive
 ```
 
 ---
@@ -252,10 +252,10 @@ make pipeline-graph SESSION=20260306_154140   # specific session
 
 Analyzes SQLite3 ROS2 bag files: per-topic statistics, input/output latency, CPU-cycle estimates, and an optional interactive node traversal.
 
-Edit `db_path` in the script to point to your bag file, then run:
+Accepts a rosbag `.db3` SQLite file as a positional argument:
 
 ```bash
-./src/analyze_rosbag.py
+uv run python src/analyze_rosbag.py path/to/bag.db3
 ```
 
 ---
@@ -272,15 +272,15 @@ Automates a full pick-and-place experiment: launches the `picknplace warehouse` 
 
 1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
 2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `make monitor-gpu DURATION=120` to capture GPU and resource metrics.
+3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
 4. After 120 seconds, sends `SIGINT` to the simulation process (equivalent to Ctrl-C) and waits for both processes to exit cleanly.
 
-Results land in the latest `monitoring_sessions/` directory and can be visualized with the standard make targets:
+Results land in the latest `monitoring_sessions/` directory and can be visualized directly:
 
 ```bash
-make visualize-last          # timeline / resource plots
-make visualize-gpu           # GPU dashboard for the session
-make pipeline-graph          # node topology diagram
+uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
+uv run python src/visualize_resources.py <session>/resource_usage.log --cores --heatmap --show
+uv run python src/visualize_graph.py <session>/graph_timing.csv --show
 ```
 
 ---
@@ -309,8 +309,8 @@ Monitor a ROS2 pipeline running on a **separate machine**.
 | Resource monitor | Runs `ps` and `pidstat` over SSH |
 
 ```bash
-make monitor-remote REMOTE_IP=192.168.1.100
-make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ros NODE=/slam_toolbox
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ros --node /slam_toolbox
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
@@ -478,18 +478,16 @@ extra tools needed**.
 
 ```bash
 # 3-minute session (recommended — DDS discovery takes ~30-60s)
-make monitor-remote REMOTE_IP=10.0.0.1 REMOTE_USER=intel DOMAIN_ID=46 NPU=1 ALGORITHM=wandering DURATION=180
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 --npu --algorithm wandering --duration 180
 
 # Local NPU monitoring
 uv run python src/monitor_stack.py --npu --duration 120
 
 # Combined GPU + NPU
-make monitor-remote REMOTE_IP=10.0.0.1 REMOTE_USER=intel DOMAIN_ID=46 GPU=1 NPU=1 ALGORITHM=wandering DURATION=180
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 --gpu --npu --algorithm wandering --duration 180
 
 # Visualize the latest NPU session
-make visualize-npu
-make visualize-npu ALGORITHM=wandering
-make visualize-npu SESSION=20260313_120000
+uv run python src/visualize_npu.py $(ls -td monitoring_sessions/*/ | head -1)
 ```
 
 ### How it works
@@ -520,7 +518,7 @@ Results are written to `npu_usage.log` (JSON-lines) in each session directory:
 
 ### Dashboard panels
 
-`make visualize-npu` generates `visualizations/npu_dashboard.png` with three panels:
+`uv run python src/visualize_npu.py <session>` generates `visualizations/npu_dashboard.png` with three panels:
 
 1. **NPU Busy %** — utilisation over time with fill
 2. **Clock Frequency** — current vs max (clickable legend)
@@ -545,7 +543,7 @@ found — NPU monitoring skipped.` and continues normally.
 
 ## Session Data Layout
 
-```
+```text
 monitoring_sessions/
 ├── <timestamp>/                   # flat layout (no --algorithm)
 │   ├── session_info.txt
@@ -573,17 +571,18 @@ Visualize ROS2 metrics in real-time with **Grafana** dashboards!
 make grafana-start
 
 # 2. Run a monitoring session
-make monitor DURATION=120
+uv run python src/monitor_stack.py --duration 120
 
-# 3. Check status and open http://localhost:30000 (admin/admin)
+# 3. Export metrics
+uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
+
+# 4. Check status and open http://localhost:30000 (admin/admin)
 make grafana-status
 ```
 
 > **Exporter port**: the metrics server runs on **port 9092** (Prometheus itself occupies port 9090 in host-network mode). Prometheus is pre-configured to scrape `localhost:9092`.
 
-### Features
-
-- **Real-time Metrics**: Topic frequencies, processing delays, CPU/memory usage
+### Dashboard Features
 - **Interactive Dashboards**: 10+ pre-configured panels with auto-refresh
 - **Historical Analysis**: Query and compare metrics over time
 - **Custom Alerts**: Set thresholds and get notifications
@@ -604,7 +603,7 @@ make grafana-status
 
 Use the **Node** dropdown variable at the top of the dashboard to filter the Node Detail row to any single node. Tables show health-threshold coloring (green < 20 ms, yellow < 100 ms, red ≥ 100 ms).
 
-### Prerequisites
+### Grafana Prerequisites
 
 ```bash
 # Install Docker and Docker Compose
@@ -641,9 +640,9 @@ See [docs/GRAFANA_SETUP.md](docs/GRAFANA_SETUP.md) for:
 | Matplotlib display error | `export MPLBACKEND=Agg` for headless systems |
 | Permission denied | `chmod +x src/*.py monitor_stack.py` |
 | Remote: no data | Check SSH key auth and matching `ROS_DOMAIN_ID`; verify with `make check-domain REMOTE_IP=<ip>` |
-| Visualizations not generated | Run `make visualize-last` manually |
+| Visualizations not generated | `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show` |
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 full core. See the **Avg Cores** column in the summary report. |
-| `grafana-export` port in use | Port 9092 conflict: `fuser -k 9092/tcp && make grafana-export SESSION=...` |
+| `grafana-export` port in use | Port 9092 conflict: `fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir <session>` |
 | Graph click popup does nothing | Requires TkAgg backend; don't use `--no-show` flag for interactive mode |
 
 ---
