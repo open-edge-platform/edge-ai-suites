@@ -5,16 +5,6 @@
 
 import argparse
 import torch
-
-# PyTorch 2.6+ changed torch.load default to weights_only=True, which blocks
-# loading ultralytics checkpoints that contain custom classes. Override it here
-# since we trust local model files.
-_torch_load_orig = torch.load
-def _torch_load_unsafe(*args, **kwargs):
-    kwargs.setdefault('weights_only', False)
-    return _torch_load_orig(*args, **kwargs)
-torch.load = _torch_load_unsafe
-
 from ultralytics import YOLO
 
 if __name__ == '__main__':
@@ -27,6 +17,6 @@ if __name__ == '__main__':
 	half=True if args.data_type=="FP16" else False
 
 	model = YOLO(args.model)
-	model.export(format="openvino", dynamic=True, half=half, opset=18)
+	model.export(format="openvino", dynamic=True, half=half)
 
 

@@ -184,7 +184,7 @@ def get_env_values():
     chart_path = _resolve_chart_path(os.getenv("chart_path", None))
     namespace = os.getenv("namespace", None)
     grafana_url = os.getenv("grafana_url", None)
-    wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "180"))  # Default sleep time if not set
+    wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "90"))  # Default sleep time if not set
     target = os.getenv("target", None)
     if not all([FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, chart_path, namespace, grafana_url, wait_time, target]):
         raise EnvironmentError("One or more environment variables are not set.")
@@ -1787,7 +1787,7 @@ def verify_ts_logs(namespace, log_type):
     all_logs_ok = True
 
     for pod_name in relevant_pod_names:
-        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace):
+        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace, tail_lines=50):
             all_logs_ok = False
 
     if all_logs_ok:

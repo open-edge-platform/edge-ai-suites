@@ -114,9 +114,6 @@ class VideoCapWrapper(ImagesCapture):
     def __init__(self, input, loop):
         self.loop = loop
         self.cap = cv2.VideoCapture()
-        # Device nodes (e.g. /dev/video-isx031-a-0) are handled by CameraCapWrapper
-        if input.startswith('/dev/'):
-            raise InvalidInput("Device path - use CameraCapWrapper: {}".format(input))
         status = self.cap.open(input)
         if not status:
            raise InvalidInput("Can't open the video from {}".format(input))
@@ -189,28 +186,18 @@ class CameraCapWrapper(ImagesCapture):
     def __init__(self, input, camera_resolution):
 
         self.cap = cv2.VideoCapture()
-        # Accept both integer indices ("0") and device paths ("/dev/video-isx031-a-0")
         try:
-            device = int(input)
-        except ValueError:
-            if not os.path.exists(input):
-                raise InvalidInput("Can't find the camera {}".format(input))
-            device = input
-
-        status = self.cap.open(device)
-        self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_resolution[0])
-        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_resolution[1])
-        self.cap.set(cv2.CAP_PROP_FPS, 30)
-        if isinstance(device, int):
-            # MJPG and autofocus are only applicable to indexed USB cameras
+            status = self.cap.open(int(input))
+            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_resolution[0])
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_resolution[1])
+            self.cap.set(cv2.CAP_PROP_FPS, 30)
             self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-        else:
-            # ISX031 and similar IPU cameras output UYVY
-            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'UYVY'))
-        if not status:
-            raise OpenError("Can't open the camera from {}".format(input))
+            if not status:
+                raise OpenError("Can't open the camera from {}".format(input))
+        except ValueError:
+            raise InvalidInput("Can't find the camera {}".format(input))
 
     def read(self):
         status, image = self.cap.read()

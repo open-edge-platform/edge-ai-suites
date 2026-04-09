@@ -33,6 +33,41 @@ def generate_unique_id():
     return uuid.uuid4().int & 0x7FFFFFFFFFFFFFFF
 
 
+def file_key_to_path(file_key, bucket_name):
+    """Convert a storage-relative file_key to a full local:// file_path URI."""
+    return f"local://{bucket_name}/{file_key}"
+
+
+def file_path_to_key(file_path):
+    """Convert a full local:// file_path URI to a storage-relative file_key.
+
+    Strips the ``local://<bucket_name>/`` prefix.  If the path does not start
+    with ``local://`` it is returned unchanged.
+    """
+    prefix = "local://"
+    if not file_path.startswith(prefix):
+        return file_path
+    # Strip "local://<bucket_name>/"
+    rest = file_path[len(prefix):]
+    idx = rest.find("/")
+    if idx == -1:
+        return rest
+    return rest[idx + 1:]
+
+
+def extract_bucket_name(file_path):
+    """Extract the bucket name from a ``local://<bucket>/…`` URI.
+
+    Returns ``None`` if the path does not follow the expected scheme.
+    """
+    prefix = "local://"
+    if not file_path.startswith(prefix):
+        return None
+    rest = file_path[len(prefix):]
+    idx = rest.find("/")
+    return rest[:idx] if idx != -1 else rest
+
+
 def encode_image_to_base64(image, format="PNG", add_header=False):
     """
     Encode an image to a base64 string.

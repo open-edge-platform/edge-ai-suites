@@ -180,7 +180,7 @@ fine tuned models.
 
 Automatic downloading of INT8 models is only supported for square input
 shapes and only for detection task. This is a limitation of
-ultralytics/nncf library. Therefore if you possess a quantized model for
+ultralytics/nncf library. Therefore if you posses an quantized model for
 another task or resolution you can still use it.
 
 Resolution of input images (coming from ROS 2 topic) is not tied to the

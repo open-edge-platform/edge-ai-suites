@@ -47,19 +47,24 @@ const TranscriptsTab: React.FC = () => {
   const streamStartedRef = useRef(false);
   const transcriptionStartedRef = useRef(false);
   const finishedRef = useRef(false);
+  const teacherSpeakerRef = useRef<string | null>(null);
   const typewriterControllers = useRef<Map<number, AbortController>>(new Map());
   const finishTimeoutRef = useRef<number | null>(null);
   const mountedRef = useRef(true);
+  const segmentsRef = useRef<typeof segments>([]);
 
   const [segmentDisplayTexts, setSegmentDisplayTexts] = useState<string[]>([]);
   const [groupedSegments, setGroupedSegments] = useState<GroupedSegment[]>([]);
 
   const { segments, currentTypingIndex, teacherSpeaker, detectedLanguage } =
     useAppSelector(s => s.transcript);
+  segmentsRef.current = segments;
+  teacherSpeakerRef.current = teacherSpeaker;
   const { 
     aiProcessing, 
     uploadedAudioPath, 
     sessionId,
+    transcriptionDone,
   } = useAppSelector(s => s.ui);
 
   const detectLanguage = (text: string): SupportedLanguage => {
@@ -115,11 +120,7 @@ const TranscriptsTab: React.FC = () => {
         dispatch(transcriptionComplete());
       }
     }, 150);
-
-    setTimeout(() => {
-      streamStartedRef.current = false;
-      transcriptionStartedRef.current = false;
-    }, 500);
+    // Guards are reset only when sessionId changes (see useEffect below).
   };
 
   useEffect(() => {
@@ -136,7 +137,7 @@ const TranscriptsTab: React.FC = () => {
 
   useEffect(() => {
     if (segments.length === 0) {
-      setGroupedSegments([]);
+      setGroupedSegments(prev => prev.length === 0 ? prev : []);
       return;
     }
 
@@ -267,12 +268,14 @@ const TranscriptsTab: React.FC = () => {
     if (
       !aiProcessing || 
       !uploadedAudioPath || 
-      streamStartedRef.current 
+      streamStartedRef.current ||
+      transcriptionDone
     ) {
       console.log('🎯 Transcript stream prevented:', {
         aiProcessing,
         uploadedAudioPath: !!uploadedAudioPath,
         streamStartedRef: streamStartedRef.current,
+        transcriptionDone,
       });
       return;
     }
@@ -350,15 +353,16 @@ const TranscriptsTab: React.FC = () => {
           else if (ev.type === "done") {
             console.log("📋 Transcript stream done");
 
-            if (segments.length > 0) {
-              const maxEnd = Math.max(...segments.map(s => s.end || 0).filter(end => end > 0));
+            const latestSegments = segmentsRef.current;
+            if (latestSegments.length > 0) {
+              const maxEnd = Math.max(...latestSegments.map(s => s.end || 0).filter(end => end > 0));
               if (maxEnd > 0) {
                 console.log('⏱️ Setting total duration from segments:', maxEnd);
                 dispatch(setTotalDuration(maxEnd));
               }
               
               const speakerStats: { [speaker: string]: number } = {};
-              segments.forEach(segment => {
+              latestSegments.forEach(segment => {
                 if (segment.start !== undefined && segment.end !== undefined) {
                   const duration = segment.end - segment.start;
                   speakerStats[segment.speaker] = (speakerStats[segment.speaker] || 0) + duration;
@@ -374,7 +378,7 @@ const TranscriptsTab: React.FC = () => {
               if (mountedRef.current) {
                 finalizeTranscript();
               }
-            }, teacherSpeaker ? 2500 : 3000);
+            }, teacherSpeakerRef.current ? 2500 : 3000);
 
             break;
           }
@@ -389,12 +393,11 @@ const TranscriptsTab: React.FC = () => {
 
     run();
   }, [
-    aiProcessing, 
-    uploadedAudioPath, 
-    sessionId, 
-    teacherSpeaker, 
-    dispatch,
-    segments
+    aiProcessing,
+    uploadedAudioPath,
+    sessionId,
+    transcriptionDone,
+    dispatch
   ]);
 
   useEffect(() => {
@@ -425,7 +428,7 @@ const TranscriptsTab: React.FC = () => {
         for (let i = 0; i < group.originalSegments.length; i++) {
           const segmentIndex = group.originalSegments[i];
           if (segmentIndex < currentTypingIndex) {
-            displayText += (displayText ? " " : "") + segments[segmentIndex].text;
+            displayText += (displayText ? " " : "") + (segments[segmentIndex]?.text ?? "");
           } else if (segmentIndex === currentTypingIndex) {
             const typingText = segmentDisplayTexts[segmentIndex] || "";
             displayText += (displayText ? " " : "") + typingText;
@@ -438,9 +441,11 @@ const TranscriptsTab: React.FC = () => {
 
     let displayText = "";
     for (const segmentIndex of group.originalSegments) {
-      if (segmentIndex <= currentTypingIndex || segments[segmentIndex].isComplete) {
-        const text = segments[segmentIndex].isComplete 
-          ? segments[segmentIndex].text 
+      const seg = segments[segmentIndex];
+      if (!seg) continue;
+      if (segmentIndex <= currentTypingIndex || seg.isComplete) {
+        const text = seg.isComplete
+          ? seg.text
           : (segmentDisplayTexts[segmentIndex] || "");
         displayText += (displayText ? " " : "") + text;
       }
@@ -449,7 +454,7 @@ const TranscriptsTab: React.FC = () => {
   }, [currentTypingIndex, segments, segmentDisplayTexts]);
 
   const isGroupVisible = useCallback((group: GroupedSegment): boolean => {
-    return group.originalSegments.some(i => i <= currentTypingIndex || segments[i].isComplete);
+    return group.originalSegments.some(i => i <= currentTypingIndex || !!segments[i]?.isComplete);
   }, [currentTypingIndex, segments]);
 
   const isGroupTyping = useCallback((group: GroupedSegment): boolean => {

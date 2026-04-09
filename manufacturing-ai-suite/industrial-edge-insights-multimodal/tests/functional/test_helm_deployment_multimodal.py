@@ -375,8 +375,8 @@ def test_seaweed_s3_stored_images_access_multimodal():
         logger.info("✓ UDF deployment package activated (Steps 4-7 completed)")
 
         # Wait for full microservice readiness
-        logger.info(f"Waiting {wait_time_multi}s for full microservice readiness...")
-        time.sleep(wait_time_multi)
+        logger.info("Waiting up to %ss for full microservice readiness...", wait_time_multi)
+        common_utils.wait_for_pods_ready(multimodal_namespace, wait_time_multi)
         assert helm_utils.verify_pods(multimodal_namespace) is True, "Failed to verify pods after UDF activation."  # nosec B101
         assert helm_utils.verify_ts_logs(multimodal_namespace, "DEBUG") is True, "Failed to verify DEBUG logs."  # nosec B101
         logger.info("✓ All microservices are active and ready")
@@ -533,8 +533,8 @@ def test_vision_metadata_sender_timestamp_multimodal():
         common_utils.wait_for_stability(constants.MULTIMODAL_WAIT_AFTER_UDF_ACTIVATION)
 
         # Wait for full microservice readiness
-        logger.info(f"Waiting {wait_time_multi}s for full microservice readiness...")
-        time.sleep(wait_time_multi)
+        logger.info("Waiting up to %ss for full microservice readiness...", wait_time_multi)
+        common_utils.wait_for_pods_ready(multimodal_namespace, wait_time_multi)
         assert helm_utils.verify_pods(multimodal_namespace) is True, "Failed to verify pods after UDF activation."  # nosec B101
         assert helm_utils.verify_ts_logs(multimodal_namespace, "DEBUG") is True, "Failed to verify DEBUG logs."  # nosec B101
         logger.info("✓ All microservices are active and ready")

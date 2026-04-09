@@ -12,6 +12,8 @@ import torch
 from optimum.intel import OVModelForSequenceClassification
 from transformers import AutoTokenizer
 
+from providers.file_ingest_and_retrieve.utils import extract_bucket_name, file_key_to_path
+
 logger = logging.getLogger(__name__)
 
 RRF_K = 60  # RRF constant — higher means scores drop off more slowly with rank, increasing diversity
@@ -32,9 +34,14 @@ class PostProcessor:
     """Post-processes retrieval results: video dedup, document reranking, slot allocation."""
 
     def __init__(self, reranker_model: str, device: str = "CPU",
-                 dedup_time_threshold: float = 5.0, overfetch_multiplier: int = 3):
+                 dedup_time_threshold: float = 5.0, overfetch_multiplier: int = 3,
+                 video_summary_id_map: dict = None, chroma_client=None,
+                 document_collection_name: str = ""):
         self.dedup_time_threshold = dedup_time_threshold
         self.overfetch_multiplier = overfetch_multiplier
+        self.video_summary_id_map = video_summary_id_map or {}
+        self.chroma_client = chroma_client
+        self.document_collection_name = document_collection_name
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / reranker_model
         if local_path.exists():
@@ -54,7 +61,7 @@ class PostProcessor:
     def process_text_query_results(
         self, query: str, visual_results: dict, doc_results: dict, top_k: int,
     ) -> dict:
-        """Full post-processing for text queries: dedup → rerank → allocate slots."""
+        """Full post-processing for text queries: dedup → attach summaries → rerank → allocate slots."""
         visual_flat = _flatten_chroma_results(visual_results)
         doc_flat = _flatten_chroma_results(doc_results)
         logger.debug("[PostProcessor] Text query: %r | visual candidates: %d | doc candidates: %d | top_k: %d",
@@ -64,7 +71,51 @@ class PostProcessor:
         logger.debug("[PostProcessor] After dedup: %d visual results (removed %d)",
                      len(visual_deduped), len(visual_flat) - len(visual_deduped))
 
-        doc_reranked = self._rerank_documents(query, doc_flat)
+        self._attach_best_summary_texts(visual_deduped)
+
+        summaries, non_summaries = self._split_summaries(doc_flat)
+        logger.debug("[PostProcessor] Doc split: %d summaries, %d non-summaries",
+                     len(summaries), len(non_summaries))
+
+        doc_reranked = self._rerank_documents(query, non_summaries)
+
+        # For summaries whose chunk_text is not already attached to a visual result, construct video results
+        attached_texts = {
+            r["meta"].get("summary_text", "")
+            for r in visual_deduped
+            if r.get("meta", {}).get("summary_text")
+        }
+        constructed_count = 0
+        for s in summaries:
+            meta = s.get("meta", {})
+            chunk_text = meta.get("chunk_text", "")
+            if not chunk_text or chunk_text in attached_texts:
+                continue
+            file_key = meta.get("file_key", "")
+            bucket = extract_bucket_name(meta.get("file_path", ""))
+            if not bucket or not file_key:
+                continue
+            video_fp = file_key_to_path(file_key, bucket)
+            start_time = meta.get("start_time", 0)
+            end_time = meta.get("end_time", 0)
+            mid_time = start_time + (end_time - start_time) / 2
+            video_result = {
+                "id": s["id"],
+                "distance": s["distance"],
+                "meta": {
+                    "file_path": video_fp,
+                    "type": "video",
+                    "original_type": "constructed_from_summary",
+                    "video_pin_second": mid_time,
+                    "summary_text": chunk_text,
+                },
+            }
+            visual_deduped.append(video_result)
+            attached_texts.add(chunk_text)
+            constructed_count += 1
+        if constructed_count:
+            logger.debug("[PostProcessor] Constructed %d video results from unattached summaries",
+                         constructed_count)
 
         groups = {}
         if visual_deduped:
@@ -87,6 +138,7 @@ class PostProcessor:
         deduped = self._dedup_video_frames(visual_flat)
         logger.debug("[PostProcessor] After dedup: %d visual results (removed %d)",
                      len(deduped), len(visual_flat) - len(deduped))
+        self._attach_best_summary_texts(deduped)
         trimmed = deduped[:top_k]
         # Assign RRF scores by rank so distances field is consistent with text query path (higher = better)
         for rank, item in enumerate(trimmed):
@@ -149,6 +201,82 @@ class PostProcessor:
         deduped.sort(key=lambda r: r["distance"])
         return deduped
 
+
+    def _attach_best_summary_texts(self, results: list[dict]) -> None:
+        """Attach the best matched summary text to each video result in-place.
+
+        For each video result, finds the summary whose time range midpoint
+        is closest to the video_pin_second and attaches its chunk_text.
+        Non-video results are skipped.
+        """
+        if not self.video_summary_id_map or not self.chroma_client:
+            return
+
+        # Group video results by file_path to avoid redundant DB lookups
+        video_results_by_file: dict[str, list[dict]] = defaultdict(list)
+        for r in results:
+            meta = r.get("meta", {})
+            if meta.get("type") == "video":
+                file_path = meta.get("file_path", "")
+                video_results_by_file[file_path].append(r)
+
+        for file_path, video_results in video_results_by_file.items():
+            summary_ids = self.video_summary_id_map.get(file_path, [])
+            if not summary_ids:
+                logger.debug("[summary] No summaries found for %s", file_path)
+                continue
+
+            summaries = self.chroma_client.get(
+                ids=summary_ids,
+                output_fields=["id", "meta"],
+                collection_name=self.document_collection_name,
+            )
+            if not summaries:
+                continue
+
+            for r in video_results:
+                video_pin_second = r["meta"].get("video_pin_second", 0)
+                best = self._find_best_summary(video_pin_second, summaries)
+                if best:
+                    chunk_text = best.get("meta", {}).get("chunk_text", "")
+                    if chunk_text:
+                        r["meta"]["summary_text"] = chunk_text
+                        logger.debug("[summary] Attached summary to video t=%.1fs in %s",
+                                     video_pin_second, file_path)
+
+    @staticmethod
+    def _find_best_summary(video_pin_second: float, summaries: list[dict]) -> dict | None:
+        """Find the summary whose time range midpoint is closest to video_pin_second."""
+        best = None
+        best_dist = float("inf")
+        for s in summaries:
+            meta = s.get("meta", {})
+            start_time = meta.get("start_time")
+            end_time = meta.get("end_time")
+            if start_time is None or end_time is None:
+                continue
+            mid_time = start_time + (end_time - start_time) / 2
+            dist = abs(video_pin_second - mid_time)
+            if dist < best_dist:
+                best_dist = dist
+                best = s
+        return best
+
+    @staticmethod
+    def _split_summaries(doc_results: list[dict]) -> tuple[list[dict], list[dict]]:
+        """Split document results into video summaries and non-summaries.
+
+        A document is considered a video summary if its metadata contains
+        a ``summary_key``.  Returns ``(summaries, non_summaries)``.
+        """
+        summaries: list[dict] = []
+        non_summaries: list[dict] = []
+        for r in doc_results:
+            if "summary_key" in r.get("meta", {}):
+                summaries.append(r)
+            else:
+                non_summaries.append(r)
+        return summaries, non_summaries
 
     def _rerank_documents(self, query: str, doc_results: list[dict]) -> list[dict]:
         """Re-score documents with BAAI/bge-reranker-large cross-encoder.
@@ -214,8 +342,9 @@ class PostProcessor:
 
         num_active = len(groups)
         min_per_group = max(1, top_k // (num_active * 2))
-        logger.debug("[slots] groups=%s | top_k=%d | min_per_group=%d",
-                     list(groups.keys()), top_k, min_per_group)
+        group_sizes = {name: len(items) for name, items in groups.items()}
+        logger.debug("[slots] %d group(s): %s | top_k=%d | min_per_group=%d",
+                     num_active, group_sizes, top_k, min_per_group)
 
         # Assign RRF scores
         # visual group: already sorted by distance asc from _dedup_video_frames
@@ -290,6 +419,7 @@ class PostProcessor:
     @staticmethod
     def _to_chroma_format(results: list[dict]) -> dict:
         """Convert flat result list back to ChromaDB nested format for backward compat."""
+        results.sort(key=lambda r: r.get("score", 0.0), reverse=True)
         output = {
             "ids": [[r["id"] for r in results]],
             "metadatas": [[r["meta"] for r in results]],
