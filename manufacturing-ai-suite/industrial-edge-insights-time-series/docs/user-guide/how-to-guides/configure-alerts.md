@@ -185,9 +185,9 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/ap
 cd time-series-analytics-config
 export SAMPLE_APP="wind-turbine-anomaly-detection"
 
-rm -f ${SAMPLE_APP}.zip
-zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
-curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
+rm -f ${SAMPLE_APP}.tar
+tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
+curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
 ```
 
 #### 2. Configuring OPC-UA Alert in config.json
@@ -326,10 +326,10 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git  clone   folder
    cd time-series-analytics-config
    export SAMPLE_APP="wind-turbine-anomaly-detection"
-   rm -f ${SAMPLE_APP}.zip
-   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
+   rm -f ${SAMPLE_APP}.tar
+   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
 
 3. Configuring OPC-UA Alert in `config.json`
