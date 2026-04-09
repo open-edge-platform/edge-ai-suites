@@ -1787,7 +1787,7 @@ def verify_ts_logs(namespace, log_type):
     all_logs_ok = True
 
     for pod_name in relevant_pod_names:
-        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace, tail_lines=50):
+        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace, tail_lines=200):
             all_logs_ok = False
 
     if all_logs_ok:

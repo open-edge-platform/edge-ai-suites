@@ -551,11 +551,18 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
             # Check for log level pattern - support multiple formats:
             # 1. Python logging format: "ERROR -", "INFO -", "DEBUG -"
             # 2. Kapacitor format: "lvl=error", "lvl=info", "lvl=debug"
+            # 3. Uvicorn/Gunicorn format: "INFO:", "DEBUG:", "ERROR:"
+            # 4. Standard logging format: "level=INFO", "level=DEBUG"
             log_pattern_python = f"{log_level_upper} -"
             log_pattern_kapacitor = f"lvl={log_level_upper.lower()}"
+            log_pattern_uvicorn = f"{log_level_upper}:"
+            log_pattern_level_eq = f"level={log_level_upper.lower()}"
             
             logs_upper = logs.upper()
-            found = log_pattern_python in logs_upper or log_pattern_kapacitor.upper() in logs_upper
+            found = (log_pattern_python in logs_upper
+                     or log_pattern_kapacitor.upper() in logs_upper
+                     or log_pattern_uvicorn in logs_upper
+                     or log_pattern_level_eq.upper() in logs_upper)
             
             if found:
                 if log_level_upper == "ERROR":

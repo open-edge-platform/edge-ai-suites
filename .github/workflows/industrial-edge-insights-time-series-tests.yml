@@ -196,7 +196,10 @@ jobs:
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
-                  fname = next((p for p in parts if p.startswith('test_')), parts[0] if parts else 'unknown')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   files[fname]['total'] += 1
                   if tc.find('failure') is not None:
                       files[fname]['failed'] += 1
@@ -269,7 +272,10 @@ jobs:
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
-                  fname = next((p for p in parts if p.startswith('test_')), parts[0] if parts else 'unknown')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   files[fname]['total'] += 1
                   if tc.find('failure') is not None:
                       files[fname]['failed'] += 1
@@ -321,7 +327,12 @@ jobs:
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
-                  fname = next((p for p in parts if p.startswith('test_')), parts[0] if parts else 'unknown')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  # Fall back to the testcase 'name' attribute for collection errors
+                  # where classname may be empty
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   files[fname]['total'] += 1
                   if tc.find('failure') is not None:
                       files[fname]['failed'] += 1
@@ -331,6 +342,18 @@ jobs:
                       files[fname]['skipped'] += 1
                   else:
                       files[fname]['passed'] += 1
+
+              # Also capture testsuite-level errors (e.g. collection errors)
+              # that prevented tests from running
+              for ts in root.findall('.//testsuite'):
+                  ts_errors = int(ts.get('errors', 0))
+                  ts_tests = int(ts.get('tests', 0))
+                  # If there are errors at the testsuite level but no testcases were run,
+                  # report the collection/setup failure
+                  if ts_errors > 0 and ts_tests == 0 and not files:
+                      suite_name = ts.get('name', 'unknown')
+                      files[suite_name] = {'total': ts_errors, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': ts_errors}
+
               return [{'name': n, **c} for n, c in sorted(files.items())]
 
           overall = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
