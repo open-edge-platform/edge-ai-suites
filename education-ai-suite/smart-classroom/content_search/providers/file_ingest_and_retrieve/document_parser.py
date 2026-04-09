@@ -9,9 +9,33 @@ from typing import List, Optional, Dict, Any
 
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter, SemanticSplitterNodeParser
-from llama_index.core.schema import BaseNode
+from llama_index.core.schema import BaseNode, TextNode
 from llama_index.readers.file import UnstructuredReader
 from unstructured.partition.docx import register_picture_partitioner
+
+# ---------------------------------------------------------------------------
+# Monkey-patch: llama-index-readers-file 0.6.0 passes both deprecated
+# ``doc_id`` AND ``id_`` to Document/TextNode constructors, which triggers
+# "'doc_id' is deprecated and 'id_' will be used instead" on every node.
+# Remove the redundant ``doc_id`` kwarg from __init__ until the upstream
+# package drops it.
+# ---------------------------------------------------------------------------
+_orig_document_init = Document.__init__
+_orig_textnode_init = TextNode.__init__
+
+
+def _patched_document_init(self, **data):
+    data.pop("doc_id", None)
+    _orig_document_init(self, **data)
+
+
+def _patched_textnode_init(self, **data):
+    data.pop("doc_id", None)
+    _orig_textnode_init(self, **data)
+
+
+Document.__init__ = _patched_document_init
+TextNode.__init__ = _patched_textnode_init
 
 from providers.file_ingest_and_retrieve.utils import DocxParagraphPicturePartitioner, ensure_directory, is_supported_file
 
@@ -143,7 +167,7 @@ class DocumentParser:
         if not is_supported_file(file_path):
             raise ValueError(
                 f"Unsupported file format: {Path(file_path).suffix}. "
-                f"Supported: txt, pdf, docx, pptx, xlsx, html, htm, xml, md, rst"
+                f"Supported: txt, pdf, docx, pptx, xlsx, html, htm, xml, md"
             )
 
         # Check for legacy formats that need LibreOffice

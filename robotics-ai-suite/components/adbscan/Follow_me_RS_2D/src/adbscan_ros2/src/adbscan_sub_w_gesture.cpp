@@ -291,7 +291,6 @@ public:
     // publisher_ = this->create_publisher<nav2_dynamic_msgs::msg::ObstacleArray>("obstacle_array", 1);
     // publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("turtle1/cmd_vel", 1); // jcao7
     publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 1);
-    i += 0.1;
     publisher_markers_ =
       this->create_publisher<visualization_msgs::msg::MarkerArray>("marker_array", rclcpp::QoS(1));
   }
@@ -394,6 +393,9 @@ private:
     print_info();
 
     Point_xyz new_target_loc;
+    new_target_loc.x = 0;
+    new_target_loc.y = 0;
+    new_target_loc.z = 0;
 
     vector<Point_xyz> point_list = PointCloud2_to_point_xyz(_msg);
 
@@ -561,8 +563,6 @@ private:
     }
 
     publisher_->publish(message);
-    // exit(0); // for debug
-    i += 0.1;
   }
 
   string Lidar_type_;
@@ -580,7 +580,6 @@ private:
   int count_;
   Point_xyz target_loc;
   bool target_found;
-  float i;                                 // this can be used to keep track of iteration
   int nbr_frame_blocked;                   // used for occlusion handling
   clockid_t clk_id = CLOCK_MONOTONIC_RAW;  // CLOCK_REALTIME;
 };

@@ -16,6 +16,8 @@ Download the archive from [DL Streamer assets on GitHub](https://github.com/open
 
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
+> Note: DLStreamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+
 **Run your shell with admin privileges before starting the application**
 
 ### C. Clone Repository

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lvs.frigate.fullname" . }}-frigate
+  labels:
+    {{- include "lvs.frigate.labels" . | nindent 4 }}
+data:
+  config.yml: |
+{{- if eq .Values.frigate.mode "rtsp" }}
+{{ .Values.frigate.configs.rtsp | nindent 4 }}
+{{- else if eq .Values.frigate.mode "usb" }}
+{{ .Values.frigate.configs.usb | nindent 4 }}
+{{- else }}
+{{ .Values.frigate.configs.default | nindent 4 }}
+{{- end }}

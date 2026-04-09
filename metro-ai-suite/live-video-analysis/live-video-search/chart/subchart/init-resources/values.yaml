@@ -1,0 +1,27 @@
+images:
+  initResources: curlimages/curl:8.11.1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+ttlSecondsAfterFinished: 600
+
+resources: {}
+
+initResources:
+  enabled: true
+
+global:
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  videos:
+    source: download
+    hostPath: ''

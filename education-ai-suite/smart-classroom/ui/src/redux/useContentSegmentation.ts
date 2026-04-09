@@ -132,7 +132,6 @@ export const useContentSegmentation = () => {
 
     // Condition 2: AUDIO ONLY (no video)
     if (hasUploadedAudio && !hasUploadedVideo && isMindmapComplete) {
-      console.log('✨ Trigger: Audio-only mode + mindmap complete');
       return true;
     }
 
@@ -148,16 +147,6 @@ export const useContentSegmentation = () => {
 
   useEffect(() => {
     const shouldTrigger = shouldTriggerContentSegmentation();
-    
-    console.log('📊 Content-segmentation trigger check:', {
-      hasUploadedAudio,
-      hasUploadedVideo,
-      isMindmapComplete,
-      videoMetadataProcessed,
-      videoPlaybackMode,
-      shouldTrigger,
-      contentSegmentationStatus
-    });
     
     if (shouldTrigger && 
         sessionId && 
@@ -185,14 +174,7 @@ export const useContentSegmentation = () => {
           
           dispatch(contentSegmentationFailed(userFriendlyError));
         });
-    } else if (!shouldTrigger) {
-      console.log('❌ Content-segmentation not triggered. Waiting for:', {
-        audioReady: hasUploadedAudio ? '✅' : '❌ Audio not uploaded',
-        mindmapDone: isMindmapComplete ? '✅' : '❌ Mindmap not complete',
-        videoIfUploaded: !hasUploadedVideo ? 'N/A (no video)' : (videoMetadataProcessed ? '✅ Processed' : '❌ Metadata not processed'),
-        playbackIfVideoUploaded: !hasUploadedVideo ? 'N/A (no video)' : (videoPlaybackMode ? '✅ Activated' : '❌ Not activated')
-      });
-    }
+    } 
   }, [
     shouldTriggerContentSegmentation(),
     sessionId,

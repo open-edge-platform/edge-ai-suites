@@ -1,7 +1,6 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 chromadb==1.5.5
-minio==7.2.20
 
 fastapi==0.121.3
 fastapi-utils==0.8.0
@@ -45,7 +44,7 @@ pytesseract==0.3.13
 unstructured[all-docs]==0.18.32
 python-docx==1.2.0
 docx2txt==0.9
-
+python-magic==0.4.27
 requests==2.32.4
 tqdm==4.67.0
 numpy>=1.24

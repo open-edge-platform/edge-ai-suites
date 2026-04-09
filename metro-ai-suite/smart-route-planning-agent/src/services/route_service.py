@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from agents import RoutePlanner, RoutePlannerState
 from config import (
     DEFAULT_LOCATION_COORDINATES,
-    DEFAULT_LOCATIONS,
+    LOCATION_PAIRS,
     GPX_DIR,
     MAP_COLORS,
     StaticOptimizerName,
@@ -37,22 +37,22 @@ class RouteService:
         self.alt_route_trackpoints: list[list] = []
         self.route_state: Optional[RoutePlannerState] = None
 
-        self.locations: List[str] = DEFAULT_LOCATIONS
+        self.locations: List[str] = [loc for pair in LOCATION_PAIRS for loc in pair]
         self.location_coordinates: Dict[str, List[float]] = DEFAULT_LOCATION_COORDINATES
 
-    def _load_direct_shortest_route(
+    async def _load_direct_shortest_route(
         self, source: str, destination: str
     ) -> MapDataParser | None:
         """Load the shortest trivial route data using the RoutePlanner agent at startup"""
 
         try:
             # Running the agent for first time - finds direct trivial route.
-            self.route_state = self.route_planner.plan_route(source, destination)
+            self.route_state = await self.route_planner.plan_route(source, destination)
 
             direct_route_name = self.route_state.get("direct_route", {}).get(
                 "route_name", ""
             )
-            map_data_parser = MapDataParser(GPX_DIR / direct_route_name)
+            map_data_parser = await MapDataParser.create(GPX_DIR / direct_route_name)
             self.main_route = map_data_parser.get_route_data()
 
             logger.info(
@@ -69,6 +69,9 @@ class RouteService:
             logger.error(f"Error loading direct route file: {e}")
             self.main_route = None
             return None
+        finally:
+            if "map_data_parser" in locals():
+                map_data_parser.clean()
 
     def _setup_locations(self, map_data_parser: MapDataParser | None) -> None:
         """Setup location lists based on GPX data if available"""
@@ -84,12 +87,12 @@ class RouteService:
                 if name and name != "Unknown":
                     self.location_coordinates[name] = [waypoint["lat"], waypoint["lon"]]
 
-    def _load_alternate_route(self, source: str, destination: str) -> None:
+    async def _load_alternate_route(self, source: str, destination: str) -> None:
         """Load an alternate route using RoutePlanner Agent"""
 
         try:
             # Pass the previous saved route_state and get the updated state as result
-            self.route_state = self.route_planner.plan_route(
+            self.route_state = await self.route_planner.plan_route(
                 source, destination, self.route_state
             )
 
@@ -109,7 +112,7 @@ class RouteService:
                     self.alternate_route_names.append(alternate_route_name)
                     self.new_alt_route_idx = len(self.alternate_route_names) - 1
 
-                temp_parser = MapDataParser(GPX_DIR / alternate_route_name)
+                temp_parser = await MapDataParser.create(GPX_DIR / alternate_route_name)
                 self.alternate_route = temp_parser.get_route_data()
 
             logger.info(
@@ -125,6 +128,9 @@ class RouteService:
         except Exception as e:
             logger.error(f"Error loading alternate route : {e}")
             self.alternate_route = None
+        finally:
+            if "temp_parser" in locals():
+                temp_parser.clean()
 
     def _get_route_trackpoints(self, route: Optional[Dict] = None) -> List[List[float]]:
         """
@@ -222,86 +228,80 @@ class RouteService:
         else:
             return "Real-Time Traffic Scenarios"
 
-    def get_default_locations(self) -> Tuple[str, str]:
-        """Get default start and end locations"""
-        return (
-            self.locations[0] if len(self.locations) > 0 else "Berkeley, California",
-            self.locations[-1]
-            if len(self.locations) > 1
-            else "Santa Clara, California",
-        )
-
-    def create_direct_route_map(
+    async def create_direct_route_map(
         self, start_location: str, end_location: str
-    ) -> tuple[str, float, str]:
+    ) -> tuple[float, str]:
         """Create initial map showing only the main route before AI analysis"""
-        map_data_parser: MapDataParser | None = self._load_direct_shortest_route(
-            start_location, end_location
-        )
+        try:
+            map_data_parser: (
+                MapDataParser | None
+            ) = await self._load_direct_shortest_route(start_location, end_location)
+            self._setup_locations(map_data_parser)
+        finally:
+            if map_data_parser:
+                map_data_parser.clean()  # Clean up parser instance to free memory
 
         # Setup location name and coordinates for the direct route.
-        self._setup_locations(map_data_parser)
-
-        # Get the next data source to be used for route optimization and current route map
-        next_data_source = self._get_next_data_source()
         direct_route_map = self.create_route_map(start_location, end_location)
         distance = (
             self.route_state.get("optimal_route", {}).get("distance", 0.0)
             if self.route_state
             else 0.0
         )
-        return next_data_source, distance, direct_route_map
+        return distance, direct_route_map
 
-    def create_alternate_route_map(
+    async def create_alternate_route_map(
         self, start_location: str, end_location: str
     ) -> tuple[str, str, float, bool, str]:
         """Create map showing alternative route"""
+        try:
+            await self._load_alternate_route(start_location, end_location)
 
-        self._load_alternate_route(start_location, end_location)
+            # Get issue details which triggered alternative route selection
+            alternate_planning_reason: str = self._get_route_issue_detail()
 
-        # Get issue details which triggered alternative route selection
-        alternate_planning_reason: str = self._get_route_issue_detail()
+            # Get the next data source to be used for route optimization
+            next_data_source = self._get_next_data_source()
 
-        # Get the next data source to be used for route optimization
-        next_data_source = self._get_next_data_source()
+            # Get intersection images and lat and long for route incidents (if any) from live traffic data
+            incident_location: Optional[dict[str, Any]] = None
+            if self.route_state and (
+                live_traffic := self.route_state.get("live_traffic", {})
+            ):
+                incident_location = {
+                    "name": live_traffic.get("intersection_name"),
+                    "coords": live_traffic.get("location_coordinates"),
+                }
 
-        # Get intersection images and lat and long for route incidents (if any) from live traffic data
-        incident_location: Optional[dict[str, Any]] = None
-        # intersection_images: Optional[dict[str, str]] = None
-        if self.route_state and (
-            live_traffic := self.route_state.get("live_traffic", {})
-        ):
-            # intersection_images = live_traffic.get("intersection_images")
-            incident_location = {
-                "name": live_traffic.get("intersection_name"),
-                "coords": live_traffic.get("location_coordinates"),
-            }
+            # Get the complete live traffic data for all intersections
+            all_routes: List[LiveTrafficData] = (
+                self.route_state.get("all_routes_data", []) if self.route_state else []
+            )
 
-        # Get the complete live traffic data for all intersections
-        all_routes: List[LiveTrafficData] = (
-            self.route_state.get("all_routes_data", []) if self.route_state else []
-        )
+            # Create alternate route map for the alternate route
+            alternate_map = self.create_route_map(
+                start_location, end_location, incident_location, all_routes
+            )
+            distance = (
+                self.route_state.get("optimal_route", {}).get("distance", 0.0)
+                if self.route_state
+                else 0.0
+            )
+            is_sub_optimal = (
+                self.route_state.get("is_sub_optimal", False)
+                if self.route_state
+                else False
+            )
 
-        # Create alternate route map for the alternate route
-        alternate_map = self.create_route_map(
-            start_location, end_location, incident_location, all_routes
-        )
-        distance = (
-            self.route_state.get("optimal_route", {}).get("distance", 0.0)
-            if self.route_state
-            else 0.0
-        )
-        is_sub_optimal = (
-            self.route_state.get("is_sub_optimal", False) if self.route_state else False
-        )
-
-        return (
-            next_data_source,
-            alternate_planning_reason,
-            distance,
-            is_sub_optimal,
-            alternate_map,
-        )
+            return (
+                next_data_source,
+                alternate_planning_reason,
+                distance,
+                is_sub_optimal,
+                alternate_map,
+            )
+        finally:
+            self.alternate_route = None
 
     def create_route_map(
         self,
@@ -437,10 +437,16 @@ class RouteService:
     ) -> Tuple[bool, str]:
         """Validate route request parameters"""
         if not start_location or not end_location:
-            return False, "Please select both start and end locations."
+            return False, "Please select both source and destination."
 
         if start_location == end_location:
-            return False, "Start and end locations cannot be the same."
+            return False, "Source and destination locations cannot be the same."
+
+        if start_location not in self.locations or end_location not in self.locations:
+            return (
+                False,
+                "Selected locations are not valid. Please select from the dropdown options.",
+            )
 
         return True, ""
 

@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from utils.database import get_db
 from utils.task_service import task_service
 from utils.storage_service import storage_service
-from utils.search_service import search_service
 from utils.asset_service import asset_service
 import urllib.parse
 import mimetypes
@@ -53,7 +52,7 @@ async def ingest_existing_file(
         except:
             meta = {"raw_info": meta}
 
-    minio_payload = {
+    storage_payload = {
         "file_key": file_key,
         "bucket_name": bucket_name,
         "meta": meta,
@@ -63,7 +62,7 @@ async def ingest_existing_file(
         }
     }
 
-    result = await task_service.handle_file_ingest(db, minio_payload, background_tasks)
+    result = await task_service.handle_file_ingest(db, storage_payload, background_tasks)
 
     return resp_200(
         data={

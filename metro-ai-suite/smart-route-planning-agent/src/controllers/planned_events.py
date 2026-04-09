@@ -39,7 +39,7 @@ class PlannedEventsController(RouteStatusInterface):
         # Match for very large areas around ~1x1 Sq.Kms.
         return 0.01
 
-    def fetch_route_status(self) -> Optional[PlannedEventsData]:
+    async def fetch_route_status(self) -> Optional[PlannedEventsData]:
         """
         Fetch the planned events information for the location from data/csv/planned_events.csv
         based on latitude and longitude.

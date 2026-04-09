@@ -70,9 +70,6 @@ spec:
         volumeMounts:
         - name: vol-temp-time-series-analytics-microservice
           mountPath: /tmp
-        - name: time-series-analytics-microservice-config
-          mountPath: /app/config.json
-          subPath: config.json
         - name: dev-dri
           mountPath: /dev/dri
           readOnly: true # Reduce risk while preserving access to GPU/NPU devices
@@ -119,12 +116,11 @@ spec:
           value: "http://model-registry:8111"
         - name: REST_API_ROOT_PATH
           value: "/ts-api"
+        - name: UDF_MAX_FILE_SIZE_MB
+          value: "100"
       volumes:
       - name: vol-temp-time-series-analytics-microservice
         emptyDir: {}
-      - name: time-series-analytics-microservice-config
-        configMap:
-          name: time-series-analytics-microservice-config
       - name: dev-dri
         hostPath:
           path: /dev/dri

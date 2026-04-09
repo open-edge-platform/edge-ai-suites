@@ -9,6 +9,16 @@ from typing_extensions import Annotated
 from config import CongestionLevel, IncidentStatus, WeatherStatus
 
 
+class QueueItem(BaseModel):
+    """Pydantic model for items passed in the data queue between agent and UI"""
+
+    timestamp: float
+    agent_status: str
+    thinking_output: str
+    map_output: str
+    intersection_images: Optional[str] = None
+
+
 class GeoCoordinates(BaseModel):
     """Pydantic model for location information"""
 

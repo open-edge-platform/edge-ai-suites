@@ -1,0 +1,68 @@
+global:
+  proxy:
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  smartNvrStackTag: ''
+
+images:
+  nvrEventRouter:
+    repository: intel/nvr-event-router
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+service:
+  nvrEventRouter:
+    nodePort: 31800
+    port: 8000
+    type: NodePort
+smartNvr:
+  frigateBaseUrl: http://frigate-vms:5000
+  vlmServingIp: pipeline-manager
+  vssSearchIp: nginx
+  vssSearchPort: '80'
+  vssSummaryIp: nginx
+  vssSummaryPort: '80'

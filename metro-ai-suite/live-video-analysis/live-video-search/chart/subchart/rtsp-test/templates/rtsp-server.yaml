@@ -1,0 +1,55 @@
+{{- if and (eq .Values.frigate.mode "rtsp") .Values.rtspTest.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rtsp-server
+  labels:
+    {{- include "lvs.rtsptest.labels" . | nindent 4 }}
+    app: rtsp-server
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: rtsp-server
+  template:
+    metadata:
+      labels:
+        app: rtsp-server
+        {{- include "lvs.rtsptest.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: rtsp-server
+          image: {{ .Values.images.rtspServer }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: 8554
+              name: rtsp
+          {{- with .Values.serverResources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rtsp-server
+  labels:
+    {{- include "lvs.rtsptest.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8554
+      targetPort: rtsp
+      protocol: TCP
+      name: rtsp
+  selector:
+    app: rtsp-server
+{{- end }}

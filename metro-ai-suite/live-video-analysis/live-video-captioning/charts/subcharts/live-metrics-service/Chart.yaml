@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: live-metrics-service
+description: Live Metrics Service — real-time performance metrics WebSocket server.
+type: application
+version: 0.1.0
+appVersion: "latest"
