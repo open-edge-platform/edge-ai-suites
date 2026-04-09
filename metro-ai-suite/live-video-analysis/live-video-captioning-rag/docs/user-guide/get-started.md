@@ -12,7 +12,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/get-started.md#model-preparation) provided to prepare the model.
+- OpenVINO-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/model-preparation.md) provided to prepare the model.
 
 ## Run the application
 
@@ -31,11 +31,15 @@ By following this guide, you will learn how to:
      ```
 
 3. **Configure Image Registry and Tag**:
+
+     If you prefer to use prebuilt images from Docker Hub, export the variables below.
+
      ```bash
      export REGISTRY="intel/"
      export TAG="latest"
      ```
-    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
+
+     If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
 4. **Configure and export the environment**:
      ```bash
@@ -93,12 +97,6 @@ By following this guide, you will learn how to:
      docker compose down
      ```
 
-## Build from Source Reference
-
-If you want to build the application from source, refer to:
-
-- [Build from Source](./get-started/build-from-source.md)
-
 ## Integration with Live Video Captioning
 
 This sample application can run together with Live Video Captioning to enable embedding creation and RAG-based contextual chat.
@@ -110,4 +108,5 @@ For setup instructions, refer to:
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [API Reference](./api-reference.md)
+- [Build from Source](./get-started/build-from-source.md)
 - [Known Issues](./known-issues.md)
