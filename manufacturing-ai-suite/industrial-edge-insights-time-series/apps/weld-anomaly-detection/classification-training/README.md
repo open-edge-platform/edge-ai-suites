@@ -1,6 +1,6 @@
-# Weld Defect Classifier — ML Pipeline
+# Weld Defect Classifier - ML Pipeline
 
-Multi-class machine learning pipeline that classifies weld defects from real-time sensor readings. Accepts sensor data row-by-row and outputs the predicted defect category along with per-class probabilities.
+Multi-class machine learning pipeline that classifies weld defects from sensor readings. The training script loads data from a manifest-driven dataset split, trains on TRAIN+VAL, evaluates on TEST, and exports model artifacts for row-by-row inference.
 
 ---
 
@@ -13,6 +13,7 @@ Multi-class machine learning pipeline that classifies weld defects from real-tim
 - [Required Model Artefacts](#required-model-artefacts)
 - [Setup](#setup)
 - [Training the Model](#training-the-model)
+- [Data Loading Rules](#data-loading-rules)
 - [Running Inference](#running-inference)
   - [Sample Inference Script](#1-sample-inference-script-recommended)
   - [Predictor CLI](#2-predictor-cli)
@@ -25,7 +26,13 @@ Multi-class machine learning pipeline that classifies weld defects from real-tim
 
 ## Overview
 
-The pipeline trains a **RandomForestClassifier** on simulation sensor data and classifies each incoming sensor row into one of 12 weld quality categories — including a "Good Weld" class. It is accelerated by **Intel Extension for Scikit-learn** (`scikit-learn-intelex`), which routes computation through the **oneDAL backend**, enabling inference on Intel CPUs and iGPUs.
+The training pipeline builds a **RandomForestClassifier** for 12 weld quality categories (including **Good Weld**) using manifest-indexed dataset rows. It uses:
+
+- Training split: `TRAIN + VAL`
+- Evaluation split: `TEST`
+- Feature filter: drops rows where `Primary Weld Current < 50.0`
+
+Intel acceleration is enabled via **Intel Extension for Scikit-learn** (`scikit-learn-intelex`) when installed.
 
 ---
 
@@ -60,7 +67,7 @@ Five sensor channels are used — **order must be preserved** when calling the m
 | `Primary Weld Current` | A | Primary welding current |
 | `Secondary Weld Voltage` | V | Secondary welding voltage |
 
-### Key correlations from EDA
+### Key correlations from Exploratory Data Analysis
 
 - **Pressure** is universally **negatively correlated** with CO₂ Flow and Primary Current — rising pressure is a consistent defect indicator.
 - **Excessive Penetration** has the highest CO₂ Flow (mean 18.95 L/min) and highest Secondary Voltage (mean 24.1 V).
@@ -77,10 +84,10 @@ weld_defect_train.py            # Training script — produces model artefacts
 weld_defect_predict.py          # WeldDefectPredictor class + CLI
 weld_defect_inference_sample.py # Standalone sample inference script
 
-weld_defect_model.pkl           # Trained sklearn pipeline  (generated)
-weld_defect_labels.pkl          # LabelEncoder mapping       (generated)
-model_info.json                 # Model metadata             (generated)
-weld_defect_report.txt          # Evaluation report          (generated)
+weld_anomaly_detector.pkl        # Trained sklearn pipeline   (generated)
+weld_anomaly_detector_labels.pkl # LabelEncoder mapping       (generated)
+weld_anomaly_detector.json       # Model metadata             (generated)
+weld_anomaly_detector.txt        # Evaluation report          (generated)
 ```
 
 ---
@@ -89,11 +96,11 @@ weld_defect_report.txt          # Evaluation report          (generated)
 
 Both generated pickle files are required for correct inference in this project:
 
-1. `weld_defect_model.pkl`
+1. `weld_anomaly_detector.pkl`
    - Serialized sklearn pipeline (scaler + classifier)
    - Produces numeric class predictions and probability vectors
 
-2. `weld_defect_labels.pkl`
+2. `weld_anomaly_detector_labels.pkl`
    - Serialized `LabelEncoder`
    - Maps numeric class index back to defect category text
    - Provides correct class order for probability decoding
@@ -106,12 +113,30 @@ Both generated pickle files are required for correct inference in this project:
 
 ### If one file is missing
 
-- Missing `weld_defect_model.pkl`:
+- Missing `weld_anomaly_detector.pkl`:
   Inference cannot run.
-- Missing `weld_defect_labels.pkl`:
+- Missing `weld_anomaly_detector_labels.pkl`:
   You may still get numeric outputs, but category names and per-class probability labels will be wrong or unavailable.
 
-In short: keep `weld_defect_model.pkl` and `weld_defect_labels.pkl` together when deploying.
+In short: keep `weld_anomaly_detector.pkl` and `weld_anomaly_detector_labels.pkl` together when deploying.
+
+### Current inference-script compatibility note
+
+The current inference scripts (`weld_defect_predict.py` and `weld_defect_inference_sample.py`) still default to:
+
+- `weld_defect_model.pkl`
+- `weld_defect_labels.pkl`
+- `model_info.json` (optional in the sample script)
+
+If you train with the current training script, either rename/copy generated artifacts to those names or update the inference script constants.
+
+Example compatibility copy:
+
+```bash
+cp weld_anomaly_detector.pkl weld_defect_model.pkl
+cp weld_anomaly_detector_labels.pkl weld_defect_labels.pkl
+cp weld_anomaly_detector.json model_info.json
+```
 
 ---
 
@@ -133,6 +158,9 @@ pip install -r requirements.txt
 Training data source:
 - https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset
 
+For more detailed dataset information, see:
+- [Intel Robotic Welding Multimodal Dataset (Hugging Face)](https://huggingface.co/datasets/IntelLabs/Intel_Robotic_Welding_Multimodal_Dataset)
+
 After downloading and extracting the dataset, set the training data root to the extracted folder that contains `manifest.csv`.
 
 Example extracted path:
@@ -147,7 +175,30 @@ DATA_DIR=/home/<user>/datasets/intel_robotic_welding_dataset python3.10 weld_def
 
 If `DATA_DIR` is not set, the script uses its built-in default path.
 
-Each CSV contains one defect category and columns: `Pressure`, `CO2 Weld Flow`, `Feed`, `Primary Weld Current`, `Wire Consumed`, `Secondary Weld Voltage`.
+Each source CSV should contain the model features: `Pressure`, `CO2 Weld Flow`, `Feed`, `Primary Weld Current`, `Secondary Weld Voltage`.
+
+---
+
+## Data Loading Rules
+
+`weld_defect_train.py` reads `manifest.csv`, filters rows to `STEEL_TYPE == FE410`, normalizes split names, and resolves folders/CSVs from manifest columns.
+
+Expected manifest fields (case-insensitive aliases are supported):
+
+- Split column: one of `SPLIT`, `SET`, `DATASET`, `SUBSET`
+- Steel column: one of `STEEL_TYPE`, `STEEL`, `MATERIAL`, `MATERIAL_TYPE`, `GRADE`
+- Optional directory columns:
+  - `SUBDIRS` / `SUBDIR` / `PATH`
+  - `DIRECTORY` / `DIR` / `DATA_DIR` / `FOLDER`
+- Optional category column: `CATEGORY` / `CLASS` / `LABEL` / `TARGET` / `DEFECT`
+
+Important behavior:
+
+- Only normalized splits `TRAIN`, `VAL`, `TEST` are used.
+- At least one TRAIN and one VAL source must resolve, otherwise training exits with error.
+- For each manifest row folder, the loader expects exactly one CSV file.
+- TEST rows with classes not seen in TRAIN+VAL are dropped with a warning.
+- Rows with `Primary Weld Current < 50.0` are removed from both train and test sets.
 
 ---
 
@@ -158,26 +209,29 @@ python3.10 weld_defect_train.py
 ```
 
 This will:
-1. Load all 12 defect-category CSV files (3,920 rows total)
-2. Run 5-fold stratified cross-validation
-3. Generate a hold-out classification report → `weld_defect_report.txt`
-4. Retrain on the full dataset
-5. Save `weld_defect_model.pkl`, `weld_defect_labels.pkl`, `model_info.json`
+1. Resolve dataset files from `manifest.csv` for steel type `FE410`
+2. Build TRAIN+VAL training data and TEST evaluation data
+3. Train a `Pipeline(StandardScaler -> RandomForestClassifier)`
+4. Evaluate on TEST and write report to `weld_anomaly_detector.txt`
+5. Save `weld_anomaly_detector.pkl`, `weld_anomaly_detector_labels.pkl`, `weld_anomaly_detector.json`
+
+Model/training configuration in the current script:
+
+- `RandomForestClassifier(n_estimators=60, max_depth=14, min_samples_leaf=8, max_features="sqrt", random_state=42, n_jobs=-1)`
+- Artifact compression: `joblib` with `("xz", 3)`
+- Max allowed model size: `100 MB`
 
 **Sample output:**
 
 ```
-Intel Extension for Scikit-learn: ENABLED (oneDAL backend)
-Loaded 3,920 rows across 12 categories
-
-[1/3] Running 5-fold stratified cross-validation …
-      CV Accuracy: 0.9885 ± 0.0035
-
-[2/3] Training on 80% hold-out split …
-      Hold-out Accuracy: 0.9923
-
-[3/3] Retraining on full dataset …
-Model saved → weld_defect_model.pkl
+Starting weld defect training
+Loaded manifest data (files=..., train+val_rows=..., test_rows=...)
+Training model...
+Evaluating on TEST...
+TEST Accuracy: ...
+Saved report: weld_anomaly_detector.txt
+Saved model artifacts: weld_anomaly_detector.pkl, weld_anomaly_detector_labels.pkl, weld_anomaly_detector.json
+Done
 ```
 
 ---
@@ -223,8 +277,11 @@ The output CSV contains the original columns **plus**:
 The sample script supports explicit device selection through `--device`:
 
 ```bash
-# Automatic target (default)
+# Automatic target
 python weld_defect_inference_sample.py --device auto
+
+# Script default (if --device is omitted): gpu
+python weld_defect_inference_sample.py
 
 # Force CPU offload target
 python weld_defect_inference_sample.py --device cpu
@@ -234,6 +291,7 @@ python weld_defect_inference_sample.py --device gpu
 ```
 
 Notes:
+- Current script default is `--device gpu` when omitted.
 - `auto` uses the default oneDAL target.
 - `cpu` and `gpu` use Intel `target_offload` configuration.
 - If the environment has host-only oneDAL (no DPC backend), the script falls back to host CPU and prints:
@@ -349,31 +407,13 @@ print(result)
 
 ## Model Performance
 
-| Metric | Value |
-|---|---|
-| Algorithm | RandomForestClassifier (300 trees) |
-| 5-fold CV Accuracy | **98.85% ± 0.35%** |
-| Hold-out Accuracy | **99.23%** |
-| Macro F1 | **0.9915** |
-| Weighted F1 | **0.9923** |
-| Training rows | 3,920 across 12 classes |
+This version of the training script does not run cross-validation. It reports TEST-set metrics from manifest splits.
 
-### Per-class hold-out results
+Where to check results:
 
-| Category | Precision | Recall | F1 |
-|---|---|---|---|
-| Burnthrough Weld | 1.000 | 0.970 | 0.985 |
-| Crater Cracks | 0.984 | 0.984 | 0.984 |
-| Excessive Convexity | 1.000 | 1.000 | 1.000 |
-| Excessive Penetration | 0.975 | 1.000 | 0.987 |
-| Good Weld | 1.000 | 1.000 | 1.000 |
-| Lack of Fusion | 0.984 | 0.968 | 0.976 |
-| Overlap | 0.974 | 0.974 | 0.974 |
-| Porosity w/ EP | 1.000 | 1.000 | 1.000 |
-| Porosity w/ Excess. Penet. | 1.000 | 1.000 | 1.000 |
-| Spatter | 0.984 | 1.000 | 0.992 |
-| Undercut | 1.000 | 1.000 | 1.000 |
-| Warping Weld | 1.000 | 1.000 | 1.000 |
+- `weld_anomaly_detector.txt`: full classification report + confusion matrix
+- console output: TEST accuracy
+- `weld_anomaly_detector.json`: metadata (`classes`, `features`, `trained_at`, `intel_patched`, data-source fields)
 
 ---
 

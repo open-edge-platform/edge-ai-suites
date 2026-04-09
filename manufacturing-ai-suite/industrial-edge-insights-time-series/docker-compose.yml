@@ -122,7 +122,6 @@ services:
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
     - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/classification-training/:/tmp/${SAMPLE_APP}/classification-training
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
