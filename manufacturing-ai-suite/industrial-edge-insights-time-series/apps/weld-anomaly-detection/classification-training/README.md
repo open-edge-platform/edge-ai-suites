@@ -10,7 +10,7 @@ Multi-class machine learning pipeline that classifies weld defects from sensor r
 - [Defect Categories](#defect-categories)
 - [Input Features](#input-features)
 - [Project Files](#project-files)
-- [Required Model Artefacts](#required-model-artefacts)
+- [Required Model Artifacts](#required-model-Artifacts)
 - [Setup](#setup)
 - [Training the Model](#training-the-model)
 - [Data Loading Rules](#data-loading-rules)
@@ -80,7 +80,7 @@ Five sensor channels are used — **order must be preserved** when calling the m
 ## Project Files
 
 ```
-weld_defect_train.py            # Training script — produces model artefacts
+weld_defect_train.py            # Training script — produces model Artifacts
 weld_defect_predict.py          # WeldDefectPredictor class + CLI
 weld_defect_inference_sample.py # Standalone sample inference script
 
@@ -92,7 +92,7 @@ weld_anomaly_detector.txt        # Evaluation report          (generated)
 
 ---
 
-## Required Model Artefacts
+## Required Model Artifacts
 
 Both generated pickle files are required for correct inference in this project:
 
