@@ -4,11 +4,10 @@ The backend is a FastAPI application that serves REST APIs.
 
 ## Interactive API docs
 
-When the stack is running, FastAPI provides OpenAPI/Swagger UI at:
+When the stack is running, FastAPI provides OpenAPI specifications and Swagger UI at
+http://<HOST_IP>:4172/docs
 
-- http://<HOST_IP>:4172/docs
-
-(If you run the backend on different host/port, adjust accordingly.)
+If you run the backend on a different host and port, edit accordingly.
 
 ## Route Summary
 
@@ -114,7 +113,7 @@ Processes caption or image-derived content and stores the resulting embedding in
 
 Returned when:
 
-- `image_data` is missing, empty, or whitespace only
+- `image_data` is missing, empty, or has whitespace only
 - `metadata` is not a JSON object
 - the embedding service rejects the payload with a `ValueError`
 
@@ -136,7 +135,7 @@ If embedding processing fails unexpectedly, the backend returns:
 }
 ```
 
-## Related docs
+## Learn More
 
 - [Get Started](./get-started.md)
 - [Known Issues](./known-issues.md)

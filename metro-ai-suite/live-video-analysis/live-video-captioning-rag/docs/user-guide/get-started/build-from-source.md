@@ -1,44 +1,45 @@
 # Build from Source
 
-This guide provides step-by-step instructions for building Live Video Captioning RAG Sample Application from source.
+This guide shows how to build the Live Video Captioning RAG sample application from the source.
 
-## Building the Image
-
-To build the Docker image for `Live Video Captioning RAG` application, follow these steps:
+## Build the Image
 
 1. Ensure you are in the project directory:
+
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
      ```
 
-2. Run the following `docker compose` command:
+2. Build the Docker image:
+
      ```bash
      docker compose build
      ```
 
 ## Run the Application
 
-- Run the application using following command:
+1. Run the application:
+
      ```bash
      source scripts/setup_env.sh
      docker compose up
      ```
 
-- Ensure that the application is running by checking the container status:
+2. Ensure that the application is running by checking the container status:
      ```bash
      docker ps
      ```
 
-- Access the application by opening your web browser and navigate to `http://<host-ip>:4172 to view the dashboard UI.
+3. Open your web browser to access the application. Navigate to `http://<host-ip>:4172 to view the dashboard UI.
 
-- [OPTIONAL] To force a clean rebuild run the following:
+4. [OPTIONAL] To force a clean rebuild:
+
      ```bash
      docker compose up --build
      ```
 
-> **Notes:**_
-> Ensure you have properly setup the environment variables by editing the `scripts/setup_env.sh` and prepare the model in place.
+> **Note:** Ensure you have set up the environment variables properly by editing the `scripts/setup_env.sh` file and prepare the model in place.
 
 ## Next Steps
 
-Proceed to [Run the Application](../get-started.md#run-the-application) for more detailed instructions.
+See [Run the Application](../get-started.md#run-the-application) for instructions.
