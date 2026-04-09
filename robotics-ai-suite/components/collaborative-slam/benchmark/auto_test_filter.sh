@@ -4,12 +4,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-# Intro: test all the benchmark scripts on all datasets and then retest for a given number times on filtered results.
+# Intro: test all benchmark scripts on all datasets and then retest a given number of times on filtered results.
 # Usage: bash benchmark/auto_test_filter.sh arg1 arg2
 # (1) If "arg1" is 'yes' or 'y', it will run all the benchmark scripts on all datasets from scratch and output the results in the result sheet of result.xlsx.
 #     Then run the filter.py to filter the invalid results and calculate the mean values. The output is stored in the mean sheet and filtered sheet in result.xlsx.
 #     Otherwise, the process will not go through these scripts and will directly go to the next part.
-# (2) The second argument "arg2" is a integer number, it will loop such times as following:
+# (2) The second argument "arg2" is an integer number; it controls how many times the following loop runs:
 #     It will run all the benchmark scripts on the datasets which are stored in the filtered sheet of result.xlsx.
 #     Then run the filter.py to update the mean sheet and filter the datasets which may need to be tested again.
 # VIP: remember to change the paths for bag, ground truth and trajectory result saving before running the script
@@ -44,5 +44,5 @@ then
         python3 ./benchmark/filter.py -t 0.6 -m 0.15 -k 1
     done
 else
-    echo "$2 is not a integer number, process exit"
+    echo "$2 is not an integer number, process exit"
 fi

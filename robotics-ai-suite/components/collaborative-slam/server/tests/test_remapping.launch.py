@@ -79,14 +79,14 @@ def args_parse(default_bagfile_dir):
 
     loaded_map_path = os.path.join(bagfile_dir, '../cslam-unit-test/remapping/')
     if not os.path.isfile(os.path.join(loaded_map_path, 'octree.bin')):
-        sys.exit('can not find octree.bin file in "{}"'.format(loaded_map_path))
+        sys.exit('cannot find octree.bin file in "{}"'.format(loaded_map_path))
     if not os.path.isfile(os.path.join(loaded_map_path, 'map.msg')):
-        sys.exit('can not find map.msg file in "{}"'.format(loaded_map_path))
+        sys.exit('cannot find map.msg file in "{}"'.format(loaded_map_path))
 
     exefile_dir = os.path.realpath(args.exefile_dir)
     exefile_path = os.path.join(exefile_dir, 'test_remapping_exe')
     if not os.path.isfile(exefile_path):
-        sys.exit('can not find test_remapping_exe in "{}"'.format(exefile_dir))
+        sys.exit('cannot find test_remapping_exe in "{}"'.format(exefile_dir))
 
     args_dict = dict()
     args_dict.update({'BAG': bagfile_dir})
