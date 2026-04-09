@@ -290,7 +290,6 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         # Write frame bytes to ffmpeg stdin
         ffmpeg_proc.stdin.write(frame.tobytes())
         csv_row["defect_type"] = base_filename.replace("-", "_")     # Add defect type from filename for easier analysis
-        csv_row["Frame ID"] = 13
         if "Date" in csv_row:
             del csv_row["Date"]
         if "Time" in csv_row:
