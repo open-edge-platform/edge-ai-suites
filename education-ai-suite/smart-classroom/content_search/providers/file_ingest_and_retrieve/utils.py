@@ -77,6 +77,7 @@ class DocxParagraphPicturePartitioner:
     Custom partitioner to extract images from DOCX paragraphs.
     This preserves images that might be lost with standard parsing.
     """
+    output_dir: str = os.path.join(os.getcwd(), "logs", "extracted_images")
 
     @classmethod
     def iter_elements(cls, paragraph: Paragraph, opts: DocxPartitionerOptions) -> Iterator[Image]:
@@ -84,8 +85,7 @@ class DocxParagraphPicturePartitioner:
             return
         imgs = paragraph._element.xpath(".//pic:pic")
         if imgs:
-            img_output_dir = "extracted_images"
-            os.makedirs(img_output_dir, exist_ok=True)
+            os.makedirs(cls.output_dir, exist_ok=True)
             for img in imgs:
                 try:
                     embed = img.xpath(".//a:blip/@r:embed")[0]
@@ -93,7 +93,7 @@ class DocxParagraphPicturePartitioner:
                     image_blob = related_part.blob
                     image = PILImage.open(BytesIO(image_blob))
                     image_filename = f"{embed}_{related_part.sha1}.png"
-                    image_path = os.path.join(img_output_dir, image_filename)
+                    image_path = os.path.join(cls.output_dir, image_filename)
                     image.save(image_path)
                     element_metadata = ElementMetadata(image_path=image_path)
                     yield Image(text="IMAGE", metadata=element_metadata)

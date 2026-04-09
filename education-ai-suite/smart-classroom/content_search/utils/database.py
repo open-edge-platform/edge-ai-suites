@@ -3,20 +3,30 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# SQLALCHEMY_DATABASE_URL = os.getenv(
-#     "DATABASE_URL", 
-#     "postgresql://postgres:edu-ai@localhost:5432/postgres"
-# )
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:edu-ai@127.0.0.1:5432/postgres"
+DB_DIR = "sqlite_db"
+DB_NAME = "edu_ai_content_search.db"
+if not os.path.exists(DB_DIR):
+    os.makedirs(DB_DIR)
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SQLALCHEMY_DATABASE_URL = f"sqlite:///./{DB_DIR}/{DB_NAME}"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, 
+    connect_args={"check_same_thread": False}
+)
+
+@event.listens_for(engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

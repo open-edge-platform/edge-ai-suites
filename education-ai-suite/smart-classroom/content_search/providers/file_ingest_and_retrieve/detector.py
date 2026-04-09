@@ -4,6 +4,7 @@
 
 import os
 import subprocess
+from pathlib import Path
 
 from PIL import Image
 import numpy as np
@@ -11,12 +12,9 @@ import openvino as ov
 
 from providers.file_ingest_and_retrieve.yolox_utils import preproc, multiclass_nms, demo_postprocess
 
-MODEL_DIR = "./models"
-
-
 class Detector:
     def __init__(self, device="CPU", conf=0.85, nms=0.45, input_size=(640, 640)):
-        self.model_path = os.path.join(MODEL_DIR, "detection_model")
+        self.model_path = Path(os.getcwd()).parent / "models" / "detection_model"
         self.model_file = os.path.join(self.model_path, "yolox_s.xml")
         self.download_model()
         self.device = device

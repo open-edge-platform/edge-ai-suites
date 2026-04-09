@@ -15,7 +15,7 @@ dependencies = [
     "pydantic==2.9.2",
     "python-dateutil==2.8.2",
     "python-dotenv==1.0.0",
-    "gradio==6.2.0",
+    "gradio==6.7.0",
     "pillow>=12.1.1,<13.0",
     "markdown>=3.4.0",
     "requests==2.32.5",

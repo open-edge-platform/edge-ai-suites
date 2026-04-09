@@ -38,6 +38,10 @@ import tempfile
 from providers.minio_wrapper.minio_client import MinioStore
 from providers.file_ingest_and_retrieve.indexer import Indexer
 from providers.file_ingest_and_retrieve.retriever import ChromaRetriever
+from providers.file_ingest_and_retrieve.models import (
+    get_visual_embedding_model,
+    get_document_embedding_model,
+)
 
 logger = logging.getLogger("visual_data_service")
 
@@ -84,8 +88,11 @@ app = FastAPI()
 
 _collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
 
-indexer = Indexer(collection_name=_collection_name)
-retriever = ChromaRetriever(collection_name=_collection_name)
+_visual_model = get_visual_embedding_model()
+_document_model = get_document_embedding_model()
+
+indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
+retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
 
 minio_store = MinioStore.from_config()
 

@@ -61,8 +61,8 @@ class DocumentParser:
         self,
         chunk_size: int = 250,
         chunk_overlap: int = 50,
-        extract_images: bool = True,
-        image_output_dir: str = "./extracted_images",
+        extract_images: bool = False,
+        image_output_dir: Optional[str] = None,
         ocr_languages: Optional[List[str]] = None,
         use_hi_res_strategy: bool = True,
         embed_model=None,
@@ -76,7 +76,7 @@ class DocumentParser:
         Args:
             chunk_size: Maximum characters per chunk (default: 250). Used only when embed_model is None.
             chunk_overlap: Characters overlap between chunks (default: 50). Used only when embed_model is None.
-            extract_images: Whether to extract images from PDFs (default: True)
+            extract_images: Whether to extract images from PDFs (default: False)
             image_output_dir: Directory to save extracted images (default: './extracted_images')
             ocr_languages: List of OCR languages (default: ['eng', 'chi_sim', 'chi'])
             use_hi_res_strategy: Use high-resolution parsing (slower but more accurate)
@@ -92,7 +92,10 @@ class DocumentParser:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.extract_images = extract_images
-        self.image_output_dir = ensure_directory(image_output_dir)
+        _default_img_dir = os.path.join(os.getcwd(), "logs", "extracted_images")
+        self.image_output_dir = image_output_dir or _default_img_dir
+        if extract_images:
+            ensure_directory(self.image_output_dir)
         self.ocr_languages = ocr_languages or ["eng", "chi_sim", "chi"]
         self.use_hi_res_strategy = use_hi_res_strategy
         self.semantic_min_chunk_size = semantic_min_chunk_size
@@ -155,6 +158,7 @@ class DocumentParser:
                 )
 
         if ext == ".docx":
+            DocxParagraphPicturePartitioner.output_dir = self.image_output_dir
             register_picture_partitioner(DocxParagraphPicturePartitioner)
 
         unstructured_kwargs = {

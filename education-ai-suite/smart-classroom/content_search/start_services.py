@@ -1,197 +1,253 @@
 #!/usr/bin/env python3
+
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-import subprocess
-import time
-import sys
+from __future__ import annotations
+
+import argparse
 import os
-import yaml
-import socket
+import signal
+import subprocess
+import sys
 import threading
+import time
+import yaml
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
-# --- Configuration & Paths ---
-CONTENT_SEARCH_DIR: Path = Path(__file__).resolve().parent
-REPO_ROOT: Path = CONTENT_SEARCH_DIR.parent
-LOGS_DIR: Path = CONTENT_SEARCH_DIR / "logs"
+CONTENT_SEARCH_DIR: Path = Path(__file__).resolve().parent   # …/content_search/
+REPO_ROOT: Path          = CONTENT_SEARCH_DIR.parent         # …/smart-classroom/
 
-def load_config_to_env(config_path):
-    if not os.path.exists(config_path):
-        print(f"Config not found at {config_path}")
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+os.chdir(CONTENT_SEARCH_DIR)
+
+def _load_config_to_env(config_path: str = "config.yaml") -> None:
+    path = REPO_ROOT / config_path
+    if not path.exists():
+        print(f"[launcher] Warning: {config_path} not found at {path}")
         return
 
     try:
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = yaml.safe_load(f)
+        with open(path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
 
-        cs = config.get('content_search', {})
+        cs = data.get("content_search", {})
 
-        # MinIO
-        minio = cs.get('minio', {})
-        os.environ["MINIO_SERVER"] = str(minio.get('server', "127.0.0.1:9000"))
-        os.environ["MINIO_ROOT_USER"] = str(minio.get('root_user', "minioadmin"))
-        os.environ["MINIO_ROOT_PASSWORD"] = str(minio.get('root_password', "minioadmin"))
+        def _set(k, v):
+            if v is not None:
+                os.environ.setdefault(k, str(v))
 
         # ChromaDB
-        chroma = cs.get('chromadb', {})
-        os.environ["CHROMA_HOST"] = str(chroma.get('host', "127.0.0.1"))
-        os.environ["CHROMA_PORT"] = str(chroma.get('port', 9090))
+        chroma = cs.get("chromadb", {})
+        _set("CHROMA_HOST", chroma.get("host", "127.0.0.1"))
+        _set("CHROMA_PORT", chroma.get("port", "9090"))
+        _set("CHROMA_DATA_DIR", chroma.get("data_dir", "./chroma_data"))
+        _set("CHROMA_EXE", chroma.get("chroma_exe"))
 
-        # File Ingest
-        fi = cs.get('file_ingest', {})
-        os.environ["FILE_INGEST_HOST"] = str(fi.get('host_addr', "127.0.0.1"))
-        os.environ["FILE_INGEST_PORT"] = str(fi.get('port', 9990))
+        # MinIO
+        minio = cs.get("minio", {})
+        server_addr = str(minio.get("server", "127.0.0.1:9000"))
+        port = server_addr.rsplit(':', 1)[-1]
+        _set("MINIO_ADDRESS", f":{port}")
+        _set("MINIO_CONSOLE_ADDRESS", minio.get("console_address", ":9001"))
+        _set("MINIO_ROOT_USER", minio.get("root_user", "minioadmin"))
+        _set("MINIO_ROOT_PASSWORD", minio.get("root_password", "minioadmin"))
+        _set("MINIO_DATA_DIR", minio.get("data_dir", "./minio_data"))
+        _set("MINIO_EXE", minio.get("minio_exe"))
+
+        # VLM
+        vlm = cs.get("vlm", {})
+        _set("VLM_HOST", vlm.get("host_addr", "127.0.0.1"))
+        _set("VLM_PORT", vlm.get("port", "9900"))
+        _set("VLM_MODEL_NAME", vlm.get("model_name", "Qwen/Qwen2.5-VL-3B-Instruct"))
+        _set("VLM_DEVICE", vlm.get("device", "CPU"))
 
         # Video Preprocess
-        vp = cs.get('video_preprocess', {})
-        os.environ["VIDEO_PREPROCESS_HOST"] = str(vp.get('host_addr', "127.0.0.1"))
-        os.environ["VIDEO_PREPROCESS_PORT"] = str(vp.get('port', 8001))
+        pre = cs.get("video_preprocess", {})
+        _set("PREPROCESS_HOST", pre.get("host_addr", "127.0.0.1"))
+        _set("PREPROCESS_PORT", pre.get("port", "8001"))
 
-        print(f"Config loaded from: {os.path.abspath(config_path)}")
-        print("Environment variables injected.")
+        # File Ingest
+        ingest = cs.get("file_ingest", {})
+        _set("INGEST_HOST", ingest.get("host_addr", "127.0.0.1"))
+        _set("INGEST_PORT", ingest.get("port", "9990"))
+
+        # Main App Portal
+        _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
+        _set("CS_PORT", cs.get("port", "9011"))
+
+        print(f"[launcher] Config loaded from {config_path} and injected to env.")
     except Exception as e:
-        print(f"Error parsing config: {e}")
+        print(f"[launcher] Error loading config: {e}")
 
-def _build_isolated_env() -> Dict[str, str]:
+def _split_services(values: List[str]) -> List[str]:
+    flat = []
+    for v in values:
+        flat.extend(p.strip().lower() for p in v.split(",") if p.strip())
+    return list(dict.fromkeys(flat))
+
+def _build_env(extra: Optional[Dict[str, str]] = None,
+               extra_pythonpath: Optional[List[str]] = None) -> Dict[str, str]:
     env = os.environ.copy()
     env["PYTHONUNBUFFERED"] = "1"
     env["PYTHONIOENCODING"] = "utf-8"
+    env["PYTHONUTF8"] = "1"
 
-    paths = [str(REPO_ROOT)]
+    paths = [str(CONTENT_SEARCH_DIR), str(REPO_ROOT)] + [str(p) for p in (extra_pythonpath or [])]
     if env.get("PYTHONPATH"):
         paths.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(paths)
 
-    _no_proxy = "localhost,127.0.0.1,::1"
+    _no_proxy_locals = "localhost,127.0.0.1,::1"
     for key in ("no_proxy", "NO_PROXY"):
         existing = env.get(key, "")
-        env[key] = f"{existing},{_no_proxy}" if existing else _no_proxy
+        env[key] = f"{existing},{_no_proxy_locals}" if existing else _no_proxy_locals
+
+    if extra:
+        env.update(extra)
     return env
 
-def _tee_log(name: str, pipe, log_file):
-    try:
-        for line in pipe:
-            msg = f"[{name}] {line.rstrip()}"
-            print(msg, flush=True)
-            log_file.write(msg + "\n")
-            log_file.flush()
-    except Exception:
-        pass
-
-def spawn_service(name: str, cmd: List[str], procs: Dict, log_files: Dict):
-    print(f"  [+] Launching {name}...")
-    log_path = LOGS_DIR / f"{name}_{time.strftime('%Y%m%d_%H%M%S')}.log"
+def _spawn(
+    name: str, cmd: List[str], cwd: Path, logs_dir: Path, procs: Dict, log_files: Dict,
+    extra_env: Optional[Dict[str, str]] = None, extra_pythonpath: Optional[List[str]] = None,
+) -> None:
+    log_path = logs_dir / name / f"{name}_{time.strftime('%Y%m%d_%H%M%S')}.log"
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    lf = log_path.open("w", encoding="utf-8", buffering=1)
-    log_files[name] = lf
+    log_file = log_path.open("w", encoding="utf-8", buffering=1)
+    log_files[name] = log_file
 
     p = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        bufsize=1,
-        env=_build_isolated_env(),
-        creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name == 'nt' else 0
+        cmd, cwd=str(cwd),
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        text=True, bufsize=1,
+        encoding="utf-8", errors="replace",
+        env=_build_env(extra_env, extra_pythonpath),
+        start_new_session=True,
     )
     procs[name] = p
-    threading.Thread(target=_tee_log, args=(name, p.stdout, lf), daemon=True).start()
 
-def is_port_open(host, port):
-    try:
-        target = "127.0.0.1" if host == "localhost" else host
-        with socket.create_connection((target, port), timeout=1):
-            return True
-    except:
-        return False
+    def _tee(pipe, lf) -> None:
+        try:
+            for raw in pipe:
+                msg = f"[{name}] {raw.rstrip()}"
+                print(msg, flush=True)
+                try:
+                    lf.write(msg + "\n"); lf.flush()
+                except Exception: pass
+        except Exception: pass
 
-def wait_for_service(name, host, port, timeout=60):
-    print(f"  [?] Waiting for {name} on {host}:{port}...", end="", flush=True)
-    for _ in range(timeout):
-        if is_port_open(host, port):
-            print(" [READY]")
-            return True
-        print(".", end="", flush=True)
-        time.sleep(1)
-    print(" [FAILED]")
-    return False
+    threading.Thread(target=_tee, args=(p.stdout, log_file), daemon=True).start()
+    print(f"[launcher] Started {name}: pid={p.pid}  logs: {log_path}")
 
-def start_dev_environment():
-    LOGS_DIR.mkdir(parents=True, exist_ok=True)
-    load_config_to_env(os.path.join(os.getcwd(), "..", "config.yaml"))
-    
-    procs = {}
-    log_files = {}
-    python_exe = sys.executable
+def main() -> None:
+    _load_config_to_env()
 
-    print("\nStarting Services with Dynamic Configuration...\n")
+    parser = argparse.ArgumentParser(description="Start services via Environment Variables.")
+    parser.add_argument("--services", nargs="+", default=["chromadb", "minio", "vlm", "preprocess", "ingest", "main_app"])
+    args = parser.parse_args()
 
-    try:
-        # === STAGE 1: Infrastructure ===
-        print("--- STAGE 1: Infrastructure ---")
-        m_srv = os.getenv("MINIO_SERVER", "127.0.0.1:9000").split(':')
-        spawn_service("MinIO", [
-            os.path.abspath(r".\providers\minio_wrapper\minio.exe"), "server", 
-            os.path.abspath(r".\providers\minio_wrapper\minio_data"), 
-            "--address", os.getenv("MINIO_SERVER")
-        ], procs, log_files)
+    requested = _split_services(args.services)
+    logs_dir = CONTENT_SEARCH_DIR / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
 
-        spawn_service("ChromaDB", [
-            python_exe, "-m", "uvicorn", "chromadb.app:app", 
-            "--host", os.getenv("CHROMA_HOST"), "--port", os.getenv("CHROMA_PORT")
-        ], procs, log_files)
+    chroma_exe = os.environ.get("CHROMA_EXE")
+    if not chroma_exe:
+        venv_exe = CONTENT_SEARCH_DIR / "venv_content_search" / "Scripts" / "chroma.exe"
+        chroma_exe = str(venv_exe) if venv_exe.exists() else "chroma"
+    provider_minio = CONTENT_SEARCH_DIR / "providers" / "minio_wrapper" / "minio.exe"
+    minio_exe = str(provider_minio) if provider_minio.exists() else "minio"
 
-        if not wait_for_service("MinIO", m_srv[0], int(m_srv[1])): return
-        if not wait_for_service("ChromaDB", os.getenv("CHROMA_HOST"), int(os.getenv("CHROMA_PORT"))): return
+    services_meta = {
+        "chromadb": {
+            "cmd": [chroma_exe, "run", 
+                    "--host", os.environ.get("CHROMA_HOST", "127.0.0.1"),
+                    "--port", os.environ.get("CHROMA_PORT", "9090"),
+                    "--path", os.environ.get("CHROMA_DATA_DIR", "./chroma_data")],
+            "cwd": CONTENT_SEARCH_DIR,
+        },
+        "minio": {
+            "cmd": [minio_exe, "server", os.environ.get("MINIO_DATA_DIR", "./minio_data"),
+                    "--address", os.environ.get("MINIO_ADDRESS", ":9000"),
+                    "--console-address", os.environ.get("MINIO_CONSOLE_ADDRESS", ":9001")],
+            "cwd": CONTENT_SEARCH_DIR,
+            "extra_env": {
+                "MINIO_ROOT_USER": os.environ.get("MINIO_ROOT_USER", "minioadmin"),
+                "MINIO_ROOT_PASSWORD": os.environ.get("MINIO_ROOT_PASSWORD", "minioadmin")
+            },
+        },
+        "vlm": {
+            "cmd": [sys.executable, "-m", "uvicorn", "providers.vlm_openvino_serving.app:app", 
+                    "--host", os.environ.get("VLM_HOST", "127.0.0.1"), 
+                    "--port", os.environ.get("VLM_PORT", "9900")],
+            "cwd": CONTENT_SEARCH_DIR,
+            "extra_env": {
+                "VLM_MODEL_NAME": os.environ.get("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct"),
+                "VLM_DEVICE": os.environ.get("VLM_DEVICE", "CPU"),
+            },
+        },
+        "preprocess": {
+            "cmd": [sys.executable, "-m", "uvicorn", "providers.video_preprocess.server:app", 
+                    "--host", os.environ.get("PREPROCESS_HOST", "127.0.0.1"), 
+                    "--port", os.environ.get("PREPROCESS_PORT", "8001")],
+            "cwd": CONTENT_SEARCH_DIR,
+        },
+        "ingest": {
+            "cmd": [sys.executable, "-m", "uvicorn", "providers.file_ingest_and_retrieve.server:app", 
+                    "--host", os.environ.get("INGEST_HOST", "127.0.0.1"), 
+                    "--port", os.environ.get("INGEST_PORT", "9990")],
+            "cwd": CONTENT_SEARCH_DIR,
+        },
+        "main_app": {
+            "cmd": [sys.executable, "-m", "uvicorn", "main:app", 
+                    "--host", os.environ.get("CS_HOST", "127.0.0.1"), 
+                    "--port", os.environ.get("CS_PORT", "9011")],
+            "cwd": CONTENT_SEARCH_DIR, 
+        },
+    }
 
-        # === STAGE 2: Core Sub-services ===
-        print("\n--- STAGE 2: Core Sub-services ---")
-        spawn_service("File Ingest Service", [
-            python_exe, "-m", "uvicorn", "providers.file_ingest_and_retrieve.server:app", 
-            "--host", os.getenv("FILE_INGEST_HOST"), "--port", os.getenv("FILE_INGEST_PORT")
-        ], procs, log_files)
+    print(f"[launcher] Starting services from: {CONTENT_SEARCH_DIR}")
+    procs: Dict = {}
+    log_files: Dict = {}
 
-        spawn_service("Video Preprocess Service", [
-            python_exe, "-m", "uvicorn", "providers.video_preprocess.server:app", 
-            "--host", os.getenv("VIDEO_PREPROCESS_HOST"), "--port", os.getenv("VIDEO_PREPROCESS_PORT")
-        ], procs, log_files)
-
-        wait_for_service("File Ingest", os.getenv("FILE_INGEST_HOST"), int(os.getenv("FILE_INGEST_PORT")), timeout=120)
-        wait_for_service("Video Preprocess", os.getenv("VIDEO_PREPROCESS_HOST"), int(os.getenv("VIDEO_PREPROCESS_PORT")), timeout=60)
-
-        # === STAGE 3: Main App ===
-        print("\n--- STAGE 3: Main App ---")
-        spawn_service("MainApp", [python_exe, "main.py"], procs, log_files)
-
-        print("\nAll systems managed. Monitoring status... (Ctrl+C to stop)\n")
-        
-        while True:
-            time.sleep(2)
-            for name, p in list(procs.items()):
-                result = p.poll()
-                if result is not None:
-                    print(f"\n[!] NOTICE: Service [{name}] exited with code {result}")
-                    procs.pop(name)
-
-            if "MainApp" not in procs or not procs:
-                print("\nMain application has finished or all services stopped. Cleaning up...")
-                break
-
-    except KeyboardInterrupt:
-        print("\n\nShutdown signal received.")
-    finally:
-        print("\nCleaning up background processes...")
+    for sname in requested:
+        if sname in services_meta:
+            meta = services_meta[sname]
+            _spawn(sname, meta["cmd"], meta["cwd"], logs_dir, procs, log_files,
+                   meta.get("extra_env"), meta.get("extra_pythonpath"))
+            time.sleep(0.5)
+    def _terminate_all() -> None:
         for name, p in procs.items():
-            try:
-                subprocess.run(['taskkill', '/F', '/T', '/PID', str(p.pid)], 
-                               capture_output=True, timeout=5)
-            except:
-                pass
-        for f in log_files.values():
-            f.close()
-        print("All background processes closed.")
+            if p.poll() is None:
+                try:
+                    if os.name == 'nt': subprocess.run(['taskkill', '/F', '/T', '/PID', str(p.pid)], capture_output=True)
+                    else: os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                except: p.terminate()
+
+    def _handle_sig(signum, frame) -> None:
+        _terminate_all()
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGINT,  _handle_sig)
+    signal.signal(signal.SIGTERM, _handle_sig)
+
+    print("[launcher] All services started. Press Ctrl+C to stop.")
+    try:
+        while True:
+            time.sleep(1.0)
+            for name, p in list(procs.items()):
+                if p.poll() is not None:
+                    print(f"[launcher] {name} exited (code {p.returncode})")
+                    procs.pop(name)
+            if not procs: break
+    except (KeyboardInterrupt, SystemExit):
+        _terminate_all()
+    finally:
+        for lf in log_files.values():
+            try: lf.close()
+            except: pass
 
 if __name__ == "__main__":
-    start_dev_environment()
+    main()
