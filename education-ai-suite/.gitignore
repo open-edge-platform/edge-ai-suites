@@ -9,8 +9,6 @@ __pycache__/
 storage/
 chroma_data/
 minio_data/
-sqlite_db/
-**/local_storage/data/
 
 # Ignore models directory
 models/
