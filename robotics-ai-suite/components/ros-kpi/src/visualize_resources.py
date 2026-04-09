@@ -16,14 +16,13 @@ from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.patches import Rectangle
 import numpy as np
 
 
 def parse_pidstat_log(log_file):
     """
     Parse pidstat log file and extract CPU usage data.
-    
+
     Returns:
         dict: Parsed data with timestamps, PIDs, CPU cores, and utilization
     """
@@ -35,20 +34,20 @@ def parse_pidstat_log(log_file):
         'tgid_commands': {},  # tgid -> command mapping
         'num_cpus': 0,  # total logical CPUs on the monitored system
     }
-    
+
     current_timestamp = None
     monitoring_sessions = []
     current_session = None
     current_tgid_command = {}  # Track TGID commands within each timestamp
-    
+
     # ANSI color code pattern for stripping
     ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-    
+
     with open(log_file, 'r') as f:
         for line in f:
             # Strip ANSI color codes from line
             line = ansi_escape.sub('', line)
-            
+
             # Detect total CPU count from pidstat header, e.g. "(20 CPU)"
             if not data['num_cpus']:
                 cpu_count_match = re.search(r'\((\d+) CPU\)', line)
@@ -64,7 +63,7 @@ def parse_pidstat_log(log_file):
                         'data_points': []
                     }
                     monitoring_sessions.append(current_session)
-            
+
             # Check for timestamp line (pidstat output)
             time_match = re.match(r'^(\d{2}:\d{2}:\d{2} [AP]M)\s+\d+', line)
             if time_match:
@@ -73,26 +72,25 @@ def parse_pidstat_log(log_file):
                     data['timestamps'].append(current_timestamp)
                 # Reset TGID command tracking for new timestamp
                 current_tgid_command = {}
-            
+
             # Parse data lines
             if current_timestamp and re.match(r'^\d{2}:\d{2}:\d{2} [AP]M', line):
                 parts = line.split()
                 if len(parts) >= 12:
                     time_str = parts[0] + ' ' + parts[1]
-                    uid = parts[2]
-                    
+
                     # Detect format based on column count and structure
                     # Thread mode: Time UID TGID TID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
                     #              parts[3] is TGID, parts[4] is TID (could be '-' or thread ID)
                     # PID mode:    Time UID PID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
                     #              parts[3] is PID, parts[4] is %usr (a float percentage)
-                    
+
                     # Simple detection: In thread mode, parts[4] == '-' or is a number (thread ID)
                     # In PID mode, parts[4] is a float percentage like "0.00" or "1.25"
                     # We check if it looks like a TID (dash or integer) vs a percentage
-                    has_threads = (parts[4] == '-' or 
+                    has_threads = (parts[4] == '-' or
                                    (parts[4].isdigit() and len(parts) >= 16))
-                    
+
                     if has_threads:
                         # Thread mode format
                         # Time UID TGID TID %usr %system %guest %wait %CPU CPU minflt/s majflt/s VSZ RSS %MEM Command
@@ -103,24 +101,24 @@ def parse_pidstat_log(log_file):
                             cpu_core = int(parts[10])   # CPU core column
                         except (ValueError, IndexError):
                             cpu_core = 0  # Default if not available
-                        
+
                         # Parse memory stats
                         try:
                             minflt = float(parts[11])  # minor page faults/s
                             majflt = float(parts[12])  # major page faults/s
                             vsz = int(parts[13])       # virtual memory KB
                             rss = int(parts[14])       # resident set size KB
-                            mem_pct = float(parts[15]) # memory %
+                            mem_pct = float(parts[15])  # memory %
                         except (ValueError, IndexError):
                             minflt = majflt = vsz = rss = mem_pct = 0
-                        
+
                         command = ' '.join(parts[16:]) if len(parts) > 16 else ''
-                        
+
                         # If this is a TGID line (TID is '-'), store the command
                         if tid == '-':
                             current_tgid_command[tgid] = command
                             data['tgid_commands'][tgid] = command
-                            
+
                             # Store PID data
                             data['pids'][tgid].append({
                                 'time': time_str,
@@ -138,7 +136,7 @@ def parse_pidstat_log(log_file):
                             full_command = current_tgid_command.get(tgid, command)
                             if tgid in data['tgid_commands']:
                                 full_command = data['tgid_commands'][tgid]
-                            
+
                             # Enhance thread command with TGID info
                             if full_command != command and not command.startswith('|__'):
                                 enhanced_command = f"{full_command} {command}"
@@ -146,7 +144,7 @@ def parse_pidstat_log(log_file):
                                 enhanced_command = f"{full_command} (thread)"
                             else:
                                 enhanced_command = command
-                            
+
                             # Store thread data
                             data['threads'][tid].append({
                                 'time': time_str,
@@ -168,7 +166,7 @@ def parse_pidstat_log(log_file):
                             cpu_core = int(parts[9])   # CPU core column (position 9 in PID mode)
                         except (ValueError, IndexError):
                             cpu_core = 0  # Default if not available
-                        
+
                         # Parse memory stats
                         try:
                             minflt = float(parts[10])
@@ -178,9 +176,9 @@ def parse_pidstat_log(log_file):
                             mem_pct = float(parts[14])
                         except (ValueError, IndexError):
                             minflt = majflt = vsz = rss = mem_pct = 0
-                        
+
                         command = ' '.join(parts[15:]) if len(parts) > 15 else parts[-1]
-                        
+
                         # Store PID data
                         data['pids'][pid].append({
                             'time': time_str,
@@ -193,7 +191,7 @@ def parse_pidstat_log(log_file):
                             'rss': rss,
                             'mem_pct': mem_pct
                         })
-    
+
     return data, monitoring_sessions
 
 
@@ -201,35 +199,35 @@ def aggregate_core_utilization(data):
     """
     Aggregate CPU utilization by core over time.
     Works with both thread mode and PID-only mode.
-    
+
     Returns:
         dict: core -> list of (timestamp, total_cpu%)
     """
     core_usage = defaultdict(lambda: defaultdict(float))
-    
+
     # Aggregate thread data by core and timestamp (if available)
-    for tid, records in data['threads'].items():
+    for _, records in data['threads'].items():
         for record in records:
             time_str = record['time']
             core = record['core']
             cpu_pct = record['cpu']
             core_usage[time_str][core] += cpu_pct
-    
+
     # Aggregate PID data by core and timestamp (if threads not available)
     if not data['threads'] and data['pids']:
-        for pid, records in data['pids'].items():
+        for _, records in data['pids'].items():
             for record in records:
                 time_str = record['time']
                 core = record['core']
                 cpu_pct = record['cpu']
                 core_usage[time_str][core] += cpu_pct
-    
+
     # Convert to final structure
     result = defaultdict(list)
     for time_str in sorted(core_usage.keys()):
         for core, total_cpu in core_usage[time_str].items():
             result[core].append((time_str, total_cpu))
-    
+
     return result
 
 
@@ -238,16 +236,16 @@ def plot_core_utilization(core_data, output_file=None):
     Plot CPU utilization per core over time.
     """
     fig, ax = plt.subplots(figsize=(14, 8))
-    
+
     colors = plt.cm.tab20(np.linspace(0, 1, len(core_data)))
-    
+
     for idx, (core, records) in enumerate(sorted(core_data.items())):
         times = [r[0] for r in records]
         cpus = [r[1] for r in records]
-        
-        ax.plot(range(len(times)), cpus, marker='o', label=f'Core {core}', 
+
+        ax.plot(range(len(times)), cpus, marker='o', label=f'Core {core}',
                 color=colors[idx], linewidth=1.5, markersize=3, alpha=0.7)
-    
+
     ax.axhline(100, color='gray', linestyle='--', linewidth=1.2, alpha=0.6, label='100% = 1 core')
     ax.set_xlabel('Time Index', fontsize=12)
     ax.set_ylabel('CPU Utilization (%)', fontsize=12)
@@ -258,13 +256,13 @@ def plot_core_utilization(core_data, output_file=None):
     )
     ax.grid(True, alpha=0.3)
     legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', ncol=2)
-    
+
     # Make legend interactive
     lined = {}
     for legline, origline in zip(legend.get_lines(), ax.get_lines()):
         legline.set_picker(5)  # 5 pts tolerance
         lined[legline] = origline
-    
+
     def on_pick(event):
         legline = event.artist
         origline = lined[legline]
@@ -272,15 +270,14 @@ def plot_core_utilization(core_data, output_file=None):
         origline.set_visible(visible)
         legline.set_alpha(1.0 if visible else 0.2)
         fig.canvas.draw()
-    
+
     fig.canvas.mpl_connect('pick_event', on_pick)
-    
+
     plt.tight_layout()
-    
+
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         print(f"Core utilization plot saved to {output_file}")
-
 
 
 def plot_pid_utilization(data, top_n=10, output_file=None):
@@ -290,38 +287,38 @@ def plot_pid_utilization(data, top_n=10, output_file=None):
     """
     # Calculate average CPU usage for each thread/PID to find top N
     item_avg = {}
-    
+
     # Use threads if available, otherwise use PIDs
     source_data = data['threads'] if data['threads'] else data['pids']
     item_type = 'TID' if data['threads'] else 'PID'
-    
+
     for item_id, records in source_data.items():
         if records:
             avg_cpu = sum(r['cpu'] for r in records) / len(records)
             item_avg[item_id] = (avg_cpu, records[0]['command'])
-    
+
     if not item_avg:
         print("No data to plot")
         return
-    
+
     # Get top N items
     top_items = sorted(item_avg.items(), key=lambda x: x[1][0], reverse=True)[:top_n]
-    
+
     fig, ax = plt.subplots(figsize=(14, 8))
-    
+
     colors = plt.cm.tab20(np.linspace(0, 1, len(top_items)))
-    
+
     for idx, (item_id, (avg_cpu, command)) in enumerate(top_items):
         records = source_data[item_id]
         times = list(range(len(records)))
         cpus = [r['cpu'] for r in records]
-        
+
         # Use full command name for legend
         label = f'{item_type} {item_id} ({command}) - avg: {avg_cpu:.1f}%'
-        
-        ax.plot(times, cpus, marker='o', label=label, 
+
+        ax.plot(times, cpus, marker='o', label=label,
                 color=colors[idx], linewidth=1.5, markersize=3, alpha=0.7)
-    
+
     ax.axhline(100, color='gray', linestyle='--', linewidth=1.2, alpha=0.6, label='100% = 1 core')
     ax.set_xlabel('Time Index', fontsize=12)
     ax.set_ylabel('CPU Utilization (%)', fontsize=12)
@@ -332,13 +329,13 @@ def plot_pid_utilization(data, top_n=10, output_file=None):
     ax.set_title(title, fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3)
     legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=8)
-    
+
     # Make legend interactive
     lined = {}
     for legline, origline in zip(legend.get_lines(), ax.get_lines()):
         legline.set_picker(5)  # 5 pts tolerance
         lined[legline] = origline
-    
+
     def on_pick(event):
         legline = event.artist
         origline = lined[legline]
@@ -346,15 +343,14 @@ def plot_pid_utilization(data, top_n=10, output_file=None):
         origline.set_visible(visible)
         legline.set_alpha(1.0 if visible else 0.2)
         fig.canvas.draw()
-    
+
     fig.canvas.mpl_connect('pick_event', on_pick)
-    
+
     plt.tight_layout()
-    
+
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         print(f"{'PID' if not data['threads'] else 'Thread'} utilization plot saved to {output_file}")
-
 
 
 def plot_core_heatmap(core_data, data, output_file=None):
@@ -365,16 +361,16 @@ def plot_core_heatmap(core_data, data, output_file=None):
     # Get all unique cores and times
     all_cores = sorted(set(core_data.keys()))
     all_times = sorted(set(t for records in core_data.values() for t, _ in records))
-    
+
     if not all_times or not all_cores:
         print("No data to plot heatmap")
         return
-    
+
     # Use threads if available, otherwise use PIDs
     source_data = data['threads'] if data['threads'] else data['pids']
     item_type = 'Thread' if data['threads'] else 'Process'
     item_label = 'TID' if data['threads'] else 'PID'
-    
+
     # Build lookup table: (time, core) -> list of (id, cpu%, command, memory stats)
     core_item_map = defaultdict(list)
     for item_id, records in source_data.items():
@@ -390,48 +386,48 @@ def plot_core_heatmap(core_data, data, output_file=None):
                 'minflt': record.get('minflt', 0),
                 'majflt': record.get('majflt', 0)
             })
-    
+
     # Create matrix
     matrix = np.zeros((len(all_cores), len(all_times)))
-    
+
     for core_idx, core in enumerate(all_cores):
         time_to_cpu = {t: cpu for t, cpu in core_data[core]}
         for time_idx, time in enumerate(all_times):
             matrix[core_idx, time_idx] = time_to_cpu.get(time, 0)
-    
+
     fig, ax = plt.subplots(figsize=(16, 8))
-    
+
     im = ax.imshow(matrix, aspect='auto', cmap='YlOrRd', interpolation='nearest')
-    
+
     # Set ticks
     ax.set_yticks(range(len(all_cores)))
     ax.set_yticklabels([f'Core {c}' for c in all_cores])
-    
+
     # Set x-axis to show every Nth time
     step = max(1, len(all_times) // 20)
     ax.set_xticks(range(0, len(all_times), step))
-    ax.set_xticklabels([all_times[i] for i in range(0, len(all_times), step)], 
+    ax.set_xticklabels([all_times[i] for i in range(0, len(all_times), step)],
                        rotation=45, ha='right', fontsize=8)
-    
+
     ax.set_xlabel('Time', fontsize=12)
     ax.set_ylabel('CPU Core', fontsize=12)
     title = (
-        f'ROS2 CPU Core Utilization Heatmap\n'
-        f'(Hover to preview | Click for detailed stats | Color scale: 100% = 1 full core)'
+        'ROS2 CPU Core Utilization Heatmap\n'
+        '(Hover to preview | Click for detailed stats | Color scale: 100% = 1 full core)'
     )
     ax.set_title(title, fontsize=14, fontweight='bold')
-    
+
     # Add colorbar
     cbar = plt.colorbar(im, ax=ax)
     cbar.set_label('CPU Utilization (%)', rotation=270, labelpad=20)
-    
+
     # Add hover annotation for interactivity
-    annot = ax.annotate("", xy=(0,0), xytext=(20,20), textcoords="offset points",
+    annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
                         bbox=dict(boxstyle="round", fc="w", alpha=0.95),
                         arrowprops=dict(arrowstyle="->"),
                         fontsize=8)
     annot.set_visible(False)
-    
+
     def on_hover(event):
         if event.inaxes == ax:
             x, y = int(event.xdata + 0.5), int(event.ydata + 0.5)
@@ -439,28 +435,27 @@ def plot_core_heatmap(core_data, data, output_file=None):
                 cpu_val = matrix[y, x]
                 time_val = all_times[x]
                 core_val = all_cores[y]
-                
+
                 # Get items running on this core at this time
                 items = core_item_map.get((time_val, core_val), [])
-                
+
                 # Sort by CPU usage
                 items_sorted = sorted(items, key=lambda t: t['cpu'], reverse=True)
-                
+
                 # Build text
                 text = f"Time: {time_val}\nCore: {core_val}\nTotal CPU: {cpu_val:.1f}%\n"
-                
+
                 if items_sorted:
                     text += f"\nTop {item_type}s ({len(items_sorted)} total):\n"
                     # Show top 3 items for hover
                     for item in items_sorted[:3]:
-                        short_cmd = item['command'][:30] + "..." if len(item['command']) > 30 else item['command']
                         text += f"  {item_label} {item['id']}: {item['cpu']:.1f}% CPU\n"
                     if len(items_sorted) > 3:
                         text += f"  ... and {len(items_sorted) - 3} more\n"
                     text += "\nClick for detailed stats"
                 else:
                     text += f"\nNo active {item_type.lower()}s"
-                
+
                 annot.xy = (x, y)
                 annot.set_text(text)
                 annot.set_visible(True)
@@ -472,10 +467,10 @@ def plot_core_heatmap(core_data, data, output_file=None):
             if annot.get_visible():
                 annot.set_visible(False)
                 fig.canvas.draw_idle()
-    
+
     # Add click event for detailed popup
     detail_window = None
-    
+
     def on_click(event):
         nonlocal detail_window
         if event.inaxes == ax and event.button == 1:  # Left click
@@ -484,17 +479,17 @@ def plot_core_heatmap(core_data, data, output_file=None):
                 cpu_val = matrix[y, x]
                 time_val = all_times[x]
                 core_val = all_cores[y]
-                
+
                 # Get items running on this core at this time
                 items = core_item_map.get((time_val, core_val), [])
                 items_sorted = sorted(items, key=lambda t: t['cpu'], reverse=True)
-                
+
                 # Build detailed popup text
-                detail_text = f"═══════════════════════════════════════════════════\n"
+                detail_text = "═══════════════════════════════════════════════════\n"
                 detail_text += f"  CORE {core_val} PERFORMANCE @ {time_val}\n"
-                detail_text += f"═══════════════════════════════════════════════════\n\n"
+                detail_text += "═══════════════════════════════════════════════════\n\n"
                 detail_text += f"CPU Utilization: {cpu_val:.2f}%\n\n"
-                
+
                 if items_sorted:
                     # Calculate aggregate memory
                     total_rss = sum(item['rss'] for item in items_sorted) / 1024  # MB
@@ -502,19 +497,19 @@ def plot_core_heatmap(core_data, data, output_file=None):
                     total_mem_pct = sum(item['mem_pct'] for item in items_sorted)
                     total_minflt = sum(item['minflt'] for item in items_sorted)
                     total_majflt = sum(item['majflt'] for item in items_sorted)
-                    
-                    detail_text += f"Memory Statistics:\n"
+
+                    detail_text += "Memory Statistics:\n"
                     detail_text += f"  RSS (Resident):  {total_rss:8.1f} MB\n"
                     detail_text += f"  VSZ (Virtual):   {total_vsz:8.1f} MB\n"
                     detail_text += f"  Memory %:        {total_mem_pct:8.2f}%\n"
                     detail_text += f"  Minor Faults/s:  {total_minflt:8.2f}\n"
                     detail_text += f"  Major Faults/s:  {total_majflt:8.2f}\n\n"
-                    
+
                     detail_text += f"Active {item_type}s ({len(items_sorted)}): \n"
                     detail_text += f"{'─' * 49}\n"
                     detail_text += f"{item_label:<8} {'CPU%':>6} {'MEM%':>6} {'RSS(MB)':>10} {'Command'}\n"
                     detail_text += f"{'─' * 49}\n"
-                    
+
                     # Show all items
                     for item in items_sorted:
                         rss_mb = item['rss'] / 1024
@@ -522,20 +517,20 @@ def plot_core_heatmap(core_data, data, output_file=None):
                         detail_text += f"{item['id']:<8} {item['cpu']:>6.2f} {item['mem_pct']:>6.2f} {rss_mb:>10.1f} {cmd}\n"
                 else:
                     detail_text += f"No active {item_type.lower()}s on this core at this time.\n"
-                
+
                 detail_text += f"\n{'─' * 49}\n"
                 detail_text += "Click elsewhere to close\n"
-                
+
                 # Create or update detail window
                 if detail_window is None or not plt.fignum_exists(detail_window.number):
                     detail_window = plt.figure(figsize=(8, 10))
                     detail_window.canvas.manager.set_window_title('Core Performance Details')
                 else:
                     detail_window.clear()
-                
+
                 ax_detail = detail_window.add_subplot(111)
                 ax_detail.axis('off')
-                ax_detail.text(0.05, 0.95, detail_text, 
+                ax_detail.text(0.05, 0.95, detail_text,
                               transform=ax_detail.transAxes,
                               verticalalignment='top',
                               fontfamily='monospace',
@@ -543,16 +538,15 @@ def plot_core_heatmap(core_data, data, output_file=None):
                               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
                 detail_window.canvas.draw()
                 detail_window.show()
-    
+
     fig.canvas.mpl_connect('motion_notify_event', on_hover)
     fig.canvas.mpl_connect('button_press_event', on_click)
-    
+
     plt.tight_layout()
-    
+
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         print(f"Core heatmap saved to {output_file}")
-
 
 
 def plot_pid_to_core_mapping(data, output_file=None):
@@ -563,7 +557,7 @@ def plot_pid_to_core_mapping(data, output_file=None):
     # Use threads if available, otherwise use PIDs
     source_data = data['threads'] if data['threads'] else data['pids']
     item_type = 'TID' if data['threads'] else 'PID'
-    
+
     # Get top items by average CPU usage
     item_avg = {}
     for item_id, records in source_data.items():
@@ -571,52 +565,52 @@ def plot_pid_to_core_mapping(data, output_file=None):
             avg_cpu = sum(r['cpu'] for r in records) / len(records)
             if avg_cpu > 1.0:  # Only show items with >1% avg CPU
                 item_avg[item_id] = (avg_cpu, records[0]['command'])
-    
+
     top_items = sorted(item_avg.items(), key=lambda x: x[1][0], reverse=True)[:15]
-    
+
     if not top_items:
         print(f"No significant {'thread' if data['threads'] else 'process'} data to plot")
         return
-    
+
     fig, ax = plt.subplots(figsize=(16, 10))
-    
+
     colors = plt.cm.tab20(np.linspace(0, 1, len(top_items)))
-    
+
     y_pos = 0
     item_positions = {}
-    
+
     for idx, (item_id, (avg_cpu, command)) in enumerate(top_items):
         records = source_data[item_id]
         item_positions[item_id] = y_pos
-        
+
         for record in records:
             core = record['core']
             time_idx = data['timestamps'].index(record['time']) if record['time'] in data['timestamps'] else 0
-            
+
             # Draw a point
             ax.scatter(time_idx, y_pos, c=[colors[idx]], s=50, alpha=0.6, marker='s')
-            
+
             # Add core number as text for high CPU usage
             if record['cpu'] > 5.0:
                 ax.text(time_idx, y_pos, str(core), fontsize=6, ha='center', va='center')
-        
+
         y_pos += 1
-    
+
     ax.set_yticks(range(len(top_items)))
-    ax.set_yticklabels([f"{item_type} {item_id}\n{item_avg[item_id][1]}" 
+    ax.set_yticklabels([f"{item_type} {item_id}\n{item_avg[item_id][1]}"
                         for item_id, _ in top_items], fontsize=7)
     ax.set_xlabel('Time Index', fontsize=12)
     ax.set_ylabel(f'{item_type}', fontsize=12)
     title = f'{"Thread" if data["threads"] else "Process"}-to-Core Mapping Over Time\n(Numbers indicate CPU core, hover for details)'
     ax.set_title(title, fontsize=14, fontweight='bold')
     ax.grid(True, alpha=0.3, axis='x')
-    
+
     # Add hover annotation for interactivity
-    annot = ax.annotate("", xy=(0,0), xytext=(20,20), textcoords="offset points",
+    annot = ax.annotate("", xy=(0, 0), xytext=(20, 20), textcoords="offset points",
                         bbox=dict(boxstyle="round", fc="yellow", alpha=0.9),
                         arrowprops=dict(arrowstyle="->"))
     annot.set_visible(False)
-    
+
     # Store data for hover lookup
     hover_data = {}
     for idx, (item_id, (avg_cpu, command)) in enumerate(top_items):
@@ -631,20 +625,20 @@ def plot_pid_to_core_mapping(data, output_file=None):
                 'cpu': record['cpu'],
                 'command': command
             }
-    
+
     def on_hover(event):
         if event.inaxes == ax:
             # Find nearest point
             x, y = event.xdata, event.ydata
             closest = None
             min_dist = float('inf')
-            
+
             for (time_idx, y_pos), info in hover_data.items():
                 dist = ((time_idx - x)**2 + (y_pos - y)**2)**0.5
                 if dist < min_dist and dist < 0.5:  # Within half a unit
                     min_dist = dist
                     closest = ((time_idx, y_pos), info)
-            
+
             if closest:
                 (time_idx, y_pos), info = closest
                 annot.xy = (time_idx, y_pos)
@@ -660,15 +654,14 @@ def plot_pid_to_core_mapping(data, output_file=None):
             if annot.get_visible():
                 annot.set_visible(False)
                 fig.canvas.draw_idle()
-    
+
     fig.canvas.mpl_connect('motion_notify_event', on_hover)
-    
+
     plt.tight_layout()
-    
+
     if output_file:
         plt.savefig(output_file, dpi=300, bbox_inches='tight')
         print(f"{'Thread' if data['threads'] else 'Process'}-to-core mapping plot saved to {output_file}")
-
 
 
 def print_summary(data, core_data):
@@ -776,7 +769,8 @@ def plot_gpu(records: list, output_file=None, show=False):
 
     # ── Prefer the dedicated visualize_gpu module ────────────────────────────
     try:
-        import importlib.util, os as _os
+        import importlib.util  # noqa: E402
+        import os as _os  # noqa: E402
         _script_dir = _os.path.dirname(_os.path.abspath(__file__))
         _spec = importlib.util.spec_from_file_location(
             'visualize_gpu',
@@ -961,18 +955,18 @@ def main():
 Examples:
   # Generate all plots
   %(prog)s ros2_log.log
-  
+
   # Generate specific plots
   %(prog)s ros2_log.log --cores --heatmap
-  
+
   # Save plots to files
   %(prog)s ros2_log.log --output-dir ./plots/
-  
+
   # Show top 20 threads
   %(prog)s ros2_log.log --top 20
         """
     )
-    
+
     parser.add_argument('log_file', type=str,
                         help='Path to pidstat log file')
     parser.add_argument('--cores', action='store_true',
@@ -993,41 +987,41 @@ Examples:
                         help='Print summary statistics only')
     parser.add_argument('--gpu-log', type=str, default=None,
                         help='Path to gpu_usage.log (JSON-lines written by monitor_resources --gpu)')
-    
+
     args = parser.parse_args()
-    
+
     # If no specific plots selected, show all
     if not any([args.cores, args.pids, args.heatmap, args.mapping, args.summary]):
         args.cores = True
         args.pids = True
         args.heatmap = True
         args.mapping = True
-    
+
     print(f"Parsing log file: {args.log_file}")
-    data, sessions = parse_pidstat_log(args.log_file)
-    
+    data, _ = parse_pidstat_log(args.log_file)
+
     if not data['threads'] and not data['pids']:
         print("No data found in log file. Make sure the log contains pidstat output.")
         return
-    
+
     # Report what we found
     if data['threads']:
         print(f"Found {len(data['threads'])} threads across {len(data['timestamps'])} time samples")
     elif data['pids']:
         print(f"Found {len(data['pids'])} processes across {len(data['timestamps'])} time samples")
-    
+
     # Aggregate core utilization
     core_data = aggregate_core_utilization(data)
-    
+
     # Print summary
     print_summary(data, core_data)
 
     if data.get('num_cpus'):
         print(f"  System CPU count detected from log: {data['num_cpus']} logical cores")
-    
+
     if args.summary:
         return
-    
+
     # Determine output file paths
     import os
     if args.output_dir:
@@ -1038,20 +1032,20 @@ Examples:
         mapping_out = os.path.join(args.output_dir, 'thread_core_mapping.png')
     else:
         core_out = pid_out = heatmap_out = mapping_out = None
-    
+
     # Generate plots
     if args.cores:
         print("\nGenerating core utilization plot...")
         plot_core_utilization(core_data, core_out)
-    
+
     if args.pids:
         print(f"\nGenerating top {args.top} thread utilization plot...")
         plot_pid_utilization(data, top_n=args.top, output_file=pid_out)
-    
+
     if args.heatmap:
         print("\nGenerating core utilization heatmap...")
         plot_core_heatmap(core_data, data, heatmap_out)
-    
+
     if args.mapping:
         print("\nGenerating thread-to-core mapping...")
         plot_pid_to_core_mapping(data, mapping_out)

@@ -26,7 +26,7 @@ ros2 launch my_robot robot.launch.py
 
 # 3. In a new terminal, run a quick check (30 seconds)
 cd /path/to/ros2-kpi
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 
 # 4. Wait 30 seconds for automatic completion
 
