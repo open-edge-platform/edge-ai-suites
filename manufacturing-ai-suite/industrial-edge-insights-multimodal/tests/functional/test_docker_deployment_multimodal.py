@@ -707,3 +707,5 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     assert all(ts > 0 for ts in timestamps), "Invalid RTP sender timestamp values detected"  # nosec B101
 
     logger.info("✓ Found RTP sender timestamps for %d vision records", len(timestamps))
+
+
