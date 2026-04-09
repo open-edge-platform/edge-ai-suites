@@ -3,11 +3,13 @@ Copyright (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- define "coturn.name" -}}
+{{/* Expand the name of the chart. */}}
+{{- define "vdms-vectordb.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "coturn.fullname" -}}
+{{/* Create a default fully qualified app name. */}}
+{{- define "vdms-vectordb.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -20,21 +22,23 @@ SPDX-License-Identifier: Apache-2.0
 {{- end }}
 {{- end }}
 
-{{- define "coturn.chart" -}}
+{{/* Create chart label value (name-version). */}}
+{{- define "vdms-vectordb.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "coturn.labels" -}}
-helm.sh/chart: {{ include "coturn.chart" . }}
-{{ include "coturn.selectorLabels" . }}
+{{/* Common labels. */}}
+{{- define "vdms-vectordb.labels" -}}
+helm.sh/chart: {{ include "vdms-vectordb.chart" . }}
+{{ include "vdms-vectordb.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: live-video-captioning
 {{- end }}
 
-{{- define "coturn.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "coturn.name" . }}
+{{/* Selector labels. */}}
+{{- define "vdms-vectordb.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "vdms-vectordb.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

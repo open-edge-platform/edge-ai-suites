@@ -1,0 +1,76 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "live-video-captioning-rag.fullname" . }}-config
+  labels:
+    {{- include "live-video-captioning-rag.labels" . | nindent 4 }}
+
+data:
+  LLM_MODEL_ID: {{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
+  LLM_DEVICE: {{ (ternary "GPU" "CPU" (or .Values.global.llmModel.useGPU.enabled .Values.env.llmModel.useGPU.enabled)) | quote }}
+  MAX_TOKENS: {{ .Values.env.maxTokens | quote }}
+  TOP_K: {{ .Values.env.topK | quote }}
+  EMBEDDING_MODEL: {{ coalesce .Values.global.embeddingModel.modelId .Values.env.embeddingModel.modelId .Values.env.embeddingModelId "" | quote }}
+  EMBEDDING_HOST: {{ .Values.env.embeddingHost | quote }}
+  EMBEDDING_HOST_PORT: {{ .Values.env.embeddingHostPort | quote }}
+  VDMS_HOST: {{ .Values.env.vdmsHost | quote }}
+  VDMS_PORT: {{ .Values.env.vdmsPort | quote }}
+  http_proxy: {{ .Values.global.httpProxy | quote }}
+  https_proxy: {{ .Values.global.httpsProxy | quote }}
+  no_proxy: "{{ .Values.global.noProxy }},mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding,live-video-captioning-rag"
+
+  download-models.sh: |
+    #!/bin/bash
+    set -e
+
+    DEFAULT_MODEL={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
+    DEFAULT_MODEL_TYPE={{ coalesce .Values.global.llmModel.modelType .Values.env.llmModel.modelType "llm" | quote }}
+    DEFAULT_WEIGHT_FORMAT={{ coalesce .Values.global.llmModel.weightFormat .Values.env.llmModel.weightFormat "" | quote }}
+    DEFAULT_HF_TOKEN={{ .Values.global.huggingface.apiToken | quote }}
+
+    model="${1:-$DEFAULT_MODEL}"
+    model_type="${2:-$DEFAULT_MODEL_TYPE}"
+    weight_format="${3:-$DEFAULT_WEIGHT_FORMAT}"
+    hf_token="${4:-$DEFAULT_HF_TOKEN}"
+
+    if [ -z "$model" ]; then
+      echo "ERROR: global.llmModel.modelId must be set"
+      exit 1
+    fi
+
+    MODEL_DOWNLOAD_HOST="{{ .Values.global.modelDownload.serviceName }}"
+    MODEL_DOWNLOAD_PORT="{{ .Values.global.modelDownload.port }}"
+    echo "Model download service: $MODEL_DOWNLOAD_HOST:$MODEL_DOWNLOAD_PORT"
+
+    # Validate that model-download service configuration is set
+    if [ -z "$MODEL_DOWNLOAD_HOST" ] || [ -z "$MODEL_DOWNLOAD_PORT" ]; then
+      echo "ERROR: global.modelDownload.serviceName and global.modelDownload.port must be set"
+      echo "Please set these values in chart values.yaml"
+      exit 1
+    fi
+
+    MODEL_DOWNLOAD_BASE_URL="http://${MODEL_DOWNLOAD_HOST}:${MODEL_DOWNLOAD_PORT}/api/v1/"
+    MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL}models/download"
+    DOWNLOAD_MODEL_DIR="downloaded_models/"
+    WEIGHT_FORMAT="$weight_format"
+
+    # Source shared download function
+
+    . /shared/download-model.sh
+
+    # For LLM mode, enforce single-model download. If caller passes CSV,
+    # only the first model id is used.
+    if [ "$model_type" = "llm" ]; then
+      model="$(echo "$model" | cut -d',' -f1 | xargs)"
+      echo "LLM mode: downloading a single model: $model"
+    fi
+
+    # Pass the full modelId as output_name so files are stored under
+    # the provider/model-name path (e.g. microsoft/Phi-3.5-mini-instruct).
+    download_model "$model" "$model_type" "$weight_format" "$hf_token" "$model"
+
+    echo "Model download completed successfully"

@@ -157,7 +157,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Model Download Microservice Get Started Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md)
 - [Build from Source](./get-started/build-from-source.md)
-- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
+- [Deploy with Helm](./deploy-with-helm.md)
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 

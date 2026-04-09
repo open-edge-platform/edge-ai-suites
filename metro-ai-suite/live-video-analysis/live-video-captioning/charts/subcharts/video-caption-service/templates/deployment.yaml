@@ -4,6 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 apiVersion: apps/v1
 kind: Deployment
+{{- $enable_detection := eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
 metadata:
   name: {{ include "video-caption-service.fullname" . }}
   labels:
@@ -36,54 +37,68 @@ spec:
       # initContainer waits until at least one model directory is present in the
       # PVC, ensuring the download Job has completed before the service starts.
       initContainers:
-        - name: wait-for-models
-          image: busybox:1.36
+        - name: download-models
+          image: "python:3.10.12"
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
             - -c
             - |
-              {{- if .Values.global.models }}
-              echo "Waiting for model sentinel files..."
-              {{- range .Values.global.models }}
-              until [ -f "/models/{{ .outputName }}/.complete" ]; do
-                echo "  /models/{{ .outputName }}/.complete not found — model not yet downloaded/converted. Retrying in 10s..."
-                sleep 10
-              done
-              echo "  ✔ /models/{{ .outputName }}/.complete ready."
-              {{- end }}
-              echo "All models ready. Proceeding."
-              {{- else }}
-              echo "Waiting for models PVC to be populated..."
-              until [ "$(ls -A /models)" ]; do
-                echo "Models directory is empty — download Job still running. Retrying in 10s..."
-                sleep 10
-              done
-              echo "Models PVC is populated. Proceeding."
-              {{- end }}
-              {{- if eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
-              {{- if .Values.global.detectionModels }}
-              echo "Detection pipeline enabled — waiting for detection model sentinel files..."
-              {{- range .Values.global.detectionModels }}
-              until [ -f "/detection-models/{{ . }}/.complete" ]; do
-                echo "  /detection-models/{{ . }}/.complete not found — detection model not yet downloaded. Retrying in 10s..."
-                sleep 10
-              done
-              echo "  ✔ /detection-models/{{ . }}/.complete ready."
-              {{- end }}
-              echo "All detection models ready. Proceeding."
-              {{- else }}
-              echo "ERROR: detection pipeline enabled but global.detectionModels is empty." >&2
-              exit 1
-              {{- end }}
-              {{- end }}
+              . /shared/download-model.sh
+{{- range $idx, $model := .Values.global.models }}
+              MODEL_TARGET_DIR="/opt/data/ov_models/{{ $model.outputName }}"
+              if [ -d "$MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                echo "Model output already exists at $MODEL_TARGET_DIR. Skipping download for {{ $model.modelId }}"
+              else
+                download_model "{{ $model.modelId }}" "{{ $model.modelType }}" "{{ $model.weightFormat }}" "$HF_TOKEN" "{{ $model.outputName }}"
+              fi
+{{- end }}
+{{- if eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
+              if [ -n "$DETECTION_MODELS" ]; then
+                echo "Downloading detection models: $DETECTION_MODELS"
+                OLD_IFS="$IFS"
+                IFS=','
+                for det_model in $DETECTION_MODELS; do
+                  det_model="$(echo "$det_model" | xargs)"
+                  if [ -z "$det_model" ]; then
+                    continue
+                  fi
+                  DET_MODEL_TARGET_DIR="/opt/data/detection-models/${det_model}/public"
+                  if [ -d "$DET_MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$DET_MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                    echo "Detection model output already exists at $DET_MODEL_TARGET_DIR. Skipping download for ${det_model}"
+                  else
+                    download_model "$det_model" "vision" "" "$det_model"
+                  fi
+                done
+                IFS="$OLD_IFS"
+              fi
+{{- end }}
+          env:
+            - name: MODEL_DOWNLOAD_HOST
+              value: {{ .Values.global.modelDownload.serviceName | quote }}
+            - name: MODEL_DOWNLOAD_PORT
+              value: {{ .Values.global.modelDownload.port | quote }}
+            - name: HF_TOKEN
+              value: {{ .Values.global.huggingface.apiToken | quote }}
+            - name: ENABLE_DETECTION_PIPELINE
+              value: {{ .Values.env.enableDetectionPipeline | quote }}
+            - name: DETECTION_MODELS
+              value: "{{ .Values.global.detectionModels | join "," }}"
+            - name: http_proxy
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.global.noProxy }},{{ .Values.global.modelDownload.serviceName }}
+
           volumeMounts:
+            - name: scripts-volume
+              mountPath: /config
+            - name: shared-helper
+              mountPath: /shared
             - name: models
-              mountPath: /models
-              readOnly: true
-            - name: detection-models
-              mountPath: /detection-models
-              readOnly: true
+              mountPath: /opt/data
+              readOnly: false
       containers:
         - name: video-caption-service
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -125,6 +140,15 @@ spec:
               value: {{ .Values.env.pipelineServerUrl | quote }}
             - name: METRICS_SERVICE_PORT
               value: {{ .Values.env.metricsServicePort | quote }}
+            {{- if .Values.global.enableRAG }}
+            - name: LIVE_VIDEO_RAG_HOST_PORT
+              value: {{ .Values.env.liveVideoRagHostPort | quote }}
+            - name: ENABLE_EMBEDDING
+              value: "true"
+            {{- else }}
+            - name: ENABLE_EMBEDDING
+              value: "false"
+            {{- end }}
             {{- include "lvc.proxyEnv" . | nindent 12 }}
           livenessProbe:
             httpGet:
@@ -142,18 +166,31 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 10
           volumeMounts:
+            - name: scripts-volume
+              mountPath: /app/config
+            - name: shared-helper
+              mountPath: /app/shared
             - name: models
               mountPath: /app/ov_models
+              subPath: ov_models
               readOnly: true
-            - name: detection-models
+            {{- if $enable_detection }}
+            - name: models
               mountPath: /app/ov_detection_models
+              subPath: detection-models
               readOnly: true
+            {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
+        - name: scripts-volume
+          configMap:
+            name: {{ include "video-caption-service.fullname" . }}-config
+            defaultMode: 0777
+        - name: shared-helper
+          configMap:
+            name: model-download-helper
+            defaultMode: 0777
         - name: models
           persistentVolumeClaim:
             claimName: {{ include "video-caption-service.modelsPvcName" . }}
-        - name: detection-models
-          persistentVolumeClaim:
-            claimName: {{ include "video-caption-service.detectionModelsPvcName" . }}

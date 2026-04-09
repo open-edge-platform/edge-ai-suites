@@ -3,11 +3,13 @@ Copyright (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
-{{- define "dlstreamer-pipeline-server.name" -}}
+{{/* Expand the name of the chart. */}}
+{{- define "live-video-captioning-rag.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "dlstreamer-pipeline-server.fullname" -}}
+{{/* Create a default fully qualified app name. */}}
+{{- define "live-video-captioning-rag.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -20,13 +22,15 @@ SPDX-License-Identifier: Apache-2.0
 {{- end }}
 {{- end }}
 
-{{- define "dlstreamer-pipeline-server.chart" -}}
+{{/* Create chart label value (name-version). */}}
+{{- define "live-video-captioning-rag.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
-{{- define "dlstreamer-pipeline-server.labels" -}}
-helm.sh/chart: {{ include "dlstreamer-pipeline-server.chart" . }}
-{{ include "dlstreamer-pipeline-server.selectorLabels" . }}
+{{/* Common labels. */}}
+{{- define "live-video-captioning-rag.labels" -}}
+helm.sh/chart: {{ include "live-video-captioning-rag.chart" . }}
+{{ include "live-video-captioning-rag.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -34,27 +38,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/part-of: live-video-captioning
 {{- end }}
 
-{{- define "dlstreamer-pipeline-server.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "dlstreamer-pipeline-server.name" . }}
+{{/* Selector labels. */}}
+{{- define "live-video-captioning-rag.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "live-video-captioning-rag.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{/*
-Derive the models PVC name.
-If modelsPvcName is explicitly set use it; otherwise construct the parent-chart default.
-*/}}
-{{- define "dlstreamer-pipeline-server.modelsPvcName" -}}
+{{/* Derive the models PVC name if no override is provided. */}}
+{{- define "live-video-captioning-rag.modelsPvcName" -}}
 {{- if .Values.modelsPvcName }}
 {{- .Values.modelsPvcName }}
 {{- else }}
 {{- printf "%s-live-video-captioning-models" .Release.Name }}
-{{- end }}
-{{- end }}
-
-{{- define "dlstreamer-pipeline-server.detectionModelsPvcName" -}}
-{{- if .Values.detectionModelsPvcName }}
-{{- .Values.detectionModelsPvcName }}
-{{- else }}
-{{- printf "%s-live-video-captioning-detection-models" .Release.Name }}
 {{- end }}
 {{- end }}

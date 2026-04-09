@@ -1,0 +1,81 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vdms-vectordb.fullname" . }}
+  labels:
+    {{- include "vdms-vectordb.labels" . | nindent 4 }}
+    app.kubernetes.io/component: vdms-vectordb
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "vdms-vectordb.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "vdms-vectordb.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: vdms-vectordb
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: vdms-vectordb
+          envFrom:
+            - configMapRef:
+                name: {{ include "vdms-vectordb.fullname" . }}-config
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.service.containerPortName }}
+              containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: vectordb-volume
+              mountPath: /db
+      volumes:
+        - name: vectordb-volume
+          {{- if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ include "vdms-vectordb.fullname" . }}-pvc
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

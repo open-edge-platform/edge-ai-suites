@@ -1,0 +1,63 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "video-caption-service.fullname" . }}-config
+  labels:
+    {{- include "video-caption-service.labels" . | nindent 4 }}
+
+data:
+  download-models.sh: |-
+    #!/bin/bash
+    set -e
+
+    model=$1
+    model_type=$2
+    weight_format=$3
+    hf_token=$4
+    output_name=$5
+    enable_detection=$6
+    detection_models_csv=$7
+
+    MODEL_DOWNLOAD_HOST="{{ .Values.global.modelDownload.serviceName }}"
+    MODEL_DOWNLOAD_PORT="{{ .Values.global.modelDownload.port }}"
+    echo "Model download service: $MODEL_DOWNLOAD_HOST:$MODEL_DOWNLOAD_PORT"
+
+    # Validate that model-download service configuration is set
+    if [ -z "$MODEL_DOWNLOAD_HOST" ] || [ -z "$MODEL_DOWNLOAD_PORT" ]; then
+      echo "ERROR: global.modelDownload.serviceName and global.modelDownload.port must be set"
+      echo "Please set these values in chart values.yaml"
+      exit 1
+    fi
+
+    MODEL_DOWNLOAD_BASE_URL="http://${MODEL_DOWNLOAD_HOST}:${MODEL_DOWNLOAD_PORT}/api/v1/"
+    MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL}models/download"
+    DOWNLOAD_MODEL_DIR="downloaded_models/"
+    WEIGHT_FORMAT="$weight_format"
+
+    # Source shared download function
+
+    . /shared/download-model.sh
+
+    # Download VLM model into a dedicated folder so /app/ov_models can mount cleanly.
+    download_model "$model" "$model_type" "$weight_format" "$hf_token" "$output_name"
+
+    # Download detection models when detection pipeline is enabled.
+    if [ "$enable_detection" = "true" ] && [ -n "$detection_models_csv" ]; then
+      echo "Detection pipeline enabled; downloading detection models: $detection_models_csv"
+      OLD_IFS="$IFS"
+      IFS=','
+      for det_model in $detection_models_csv; do
+        det_model="$(echo "$det_model" | xargs)"
+        if [ -z "$det_model" ]; then
+          continue
+        fi
+        download_model "$det_model" "vision" "" "$det_model"
+      done
+      IFS="$OLD_IFS"
+    fi
+
+    echo "Model download completed successfully"
