@@ -45,12 +45,13 @@ import argparse
 import glob
 import json
 import os
-import re
 import subprocess
 import sys
 import time
 from datetime import datetime
 from typing import Dict, List, Optional
+
+from gpu_engine_defs import ENGINE_CLASSES as _ENGINE_CLASSES, ENG_COLS as _ENG_COLS
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Constants
@@ -70,15 +71,8 @@ _DRM_CARDS = [
     '/sys/class/drm/card1',
 ]
 
-# Engine class definitions: display label → regex matched against JSON key
-_ENGINE_CLASSES: Dict[str, re.Pattern] = {
-    'Render/3D': re.compile(r'render|3d',               re.I),
-    'Blitter':   re.compile(r'blitter|blt',             re.I),
-    'Video':     re.compile(r'^video$',                 re.I),
-    'VE':        re.compile(r'videoenhance|video_enhance|ve\b', re.I),
-}
+# Engine class definitions imported from gpu_engine_defs
 
-_ENG_COLS: List[str] = list(_ENGINE_CLASSES.keys())   # ordered list
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Binary discovery & runner
@@ -92,11 +86,11 @@ def _find_local_igt() -> Optional[str]:
     # Fall back to PATH lookup
     try:
         r = subprocess.run(['which', 'intel_gpu_top'],
-                           capture_output=True, text=True, timeout=3)
+                           capture_output=True, text=True, timeout=3, check=False)
         path = r.stdout.strip()
         if path and os.path.isfile(path):
             return path
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         pass
     return None
 
@@ -106,9 +100,9 @@ def _run_igt_local(igt_bin: str, interval_ms: int) -> str:
     cmd = [igt_bin, '-J', '-s', str(interval_ms), '-n', '2']
     try:
         r = subprocess.run(cmd, capture_output=True, text=True,
-                           timeout=interval_ms // 1000 + 15)
+                           timeout=interval_ms // 1000 + 15, check=False)
         return r.stdout
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return ''
 
 
@@ -121,10 +115,10 @@ def _ssh_run(remote_ip: str, remote_user: str,
              '-o', 'StrictHostKeyChecking=no',
              f'{remote_user}@{remote_ip}', cmd],
             capture_output=True, text=True,
-            timeout=timeout, stdin=subprocess.DEVNULL,
+            timeout=timeout, stdin=subprocess.DEVNULL, check=False,
         )
         return r.stdout if r.returncode == 0 else ''
-    except Exception:
+    except Exception:  # pylint: disable=broad-exception-caught
         return ''
 
 
@@ -177,9 +171,10 @@ def _read_gpu_temp_local() -> Optional[float]:
         pattern = f'{card}/device/hwmon/hwmon*/temp*_input'
         for m in sorted(glob.glob(pattern)):
             try:
-                val = int(open(m).read().strip())
+                with open(m, encoding='utf-8') as fh:
+                    val = int(fh.read().strip())
                 return val / 1000.0       # millidegrees → °C
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 continue
     return None
 
@@ -243,9 +238,9 @@ def _classify_engines(engines_raw: dict) -> Dict[str, Dict[str, float]]:
 # Per-PID client parsing
 # ──────────────────────────────────────────────────────────────────────────────
 
-def _parse_clients(sample: dict) -> List[dict]:
+def _parse_clients(sample: dict) -> List[dict]:  # pylint: disable=too-many-branches,too-many-locals
     """
-    Extract per-PID GPU utilisation from intel_gpu_top JSON "clients" field.
+    Extract per-PID GPU utilization from intel_gpu_top JSON "clients" field.
 
     intel_gpu_top ≥ 1.27 populates "clients" with per-fd / per-process stats.
     Handles both dict-of-dicts and list-of-dicts layouts across versions.
@@ -258,8 +253,10 @@ def _parse_clients(sample: dict) -> List[dict]:
         return []
 
     # Normalise to list
-    items: list = list(clients_raw.values()) if isinstance(clients_raw, dict) \
-                  else list(clients_raw)
+    items: list = (
+        list(clients_raw.values()) if isinstance(clients_raw, dict)
+        else list(clients_raw)
+    )
 
     result = []
     for c in items:
@@ -314,7 +311,7 @@ def _parse_clients(sample: dict) -> List[dict]:
 # Main probe
 # ──────────────────────────────────────────────────────────────────────────────
 
-def collect_snapshot(interval: float = 2.0,
+def collect_snapshot(interval: float = 2.0,  # pylint: disable=too-many-locals,too-many-statements
                      remote_ip: str = None,
                      remote_user: str = 'ubuntu') -> dict:
     """
@@ -396,7 +393,7 @@ def _bar(pct: float, width: int = 12) -> str:
     return '█' * filled + '░' * (width - filled)
 
 
-def print_snapshot(snap: dict):
+def print_snapshot(snap: dict):  # pylint: disable=too-many-locals,too-many-statements
     """Pretty-print one snapshot to stdout."""
     ts = snap.get('ts', '')[:19].replace('T', ' ')
 
@@ -408,43 +405,43 @@ def print_snapshot(snap: dict):
         print('  ▶  sudo setcap cap_perfmon+eip $(which intel_gpu_top)')
         return
 
-    freq_a  = snap['freq_actual_mhz']
-    freq_r  = snap['freq_req_mhz']
-    pwr_g   = snap['power_gpu_w']
-    pwr_p   = snap['power_pkg_w']
-    rc6     = snap['rc6_pct']
-    temp    = snap.get('temp_c')
-    period  = snap.get('period_ms', 0)
+    freq_a = snap['freq_actual_mhz']
+    freq_r = snap['freq_req_mhz']
+    pwr_g = snap['power_gpu_w']
+    pwr_p = snap['power_pkg_w']
+    rc6 = snap['rc6_pct']
+    temp = snap.get('temp_c')
+    period = snap.get('period_ms', 0)
     bin_str = f'  [{snap["igt_bin"]}]' if snap.get('igt_bin') else ''
 
     temp_str = f'  Temp: {temp:.0f} °C' if temp is not None else '  Temp: n/a'
-    pwr_str  = (f'  GPU: {pwr_g:.1f} W   Pkg: {pwr_p:.1f} W'
-                if pwr_g else '  Power: RAPL unavailable')
+    pwr_str = (f'  GPU: {pwr_g:.1f} W   Pkg: {pwr_p:.1f} W'
+               if pwr_g else '  Power: RAPL unavailable')
 
     print(f'\n╔══ Intel GPU  [{ts}]  period={period:.0f} ms{bin_str}')
-    print(f'║')
+    print('║')
     print(f'║  Frequency : {freq_a:>5} MHz actual  /  {freq_r:>5} MHz requested')
     print(f'║  RC6       : {rc6:.1f} %  (idle residency – higher = more idle)')
     print(f'║  Power     :{pwr_str}')
     print(f'║  Temp      :{temp_str}')
-    print(f'║')
-    print(f'║  ── Engine Utilisation ──────────────────────────────────────────')
+    print('║')
+    print('║  ── Engine Utilization ──────────────────────────────────────────')
     print(f'║   {"Engine":<12}  {"Busy":>6}  {"Bar":^14}  {"Sema":>6}  {"Wait":>6}')
     print(f'║   {"─"*12}  {"─"*6}  {"─"*14}  {"─"*6}  {"─"*6}')
 
     eng = snap.get('engines', {})
     for cls in _ENG_COLS:
-        d    = eng.get(cls, {})
+        d = eng.get(cls, {})
         busy = d.get('busy', 0.0)
         sema = d.get('sema', 0.0)
         wait = d.get('wait', 0.0)
-        bar  = _bar(busy)
-        print(f'║   {cls:<12}  {busy:>5.1f}%  [{bar}]  {sema:>5.1f}%  {wait:>5.1f}%')
+        busy_bar = _bar(busy)
+        print(f'║   {cls:<12}  {busy:>5.1f}%  [{busy_bar}]  {sema:>5.1f}%  {wait:>5.1f}%')
 
     clients = snap.get('clients', [])
     if clients:
-        print(f'║')
-        print(f'║  ── Per-PID GPU Usage ───────────────────────────────────────────')
+        print('║')
+        print('║  ── Per-PID GPU Usage ───────────────────────────────────────────')
         # header
         hdr_eng = '  '.join(f'{c:<9}' for c in _ENG_COLS)
         print(f'║   {"PID":>7}  {"Process":<28}  {"Total":>6}  {hdr_eng}')
@@ -460,9 +457,9 @@ def print_snapshot(snap: dict):
             print(f'║   {c["pid"]:>7}  {c["name"]:<28}  {c["total"]:>5.1f}%  {eng_vals}')
             shown += 1
     else:
-        print(f'║')
-        print(f'║  Per-PID data: requires intel_gpu_top ≥ 1.27 with "clients" support')
-        print(f'║  (try: intel_gpu_top --help | grep clients)')
+        print('║')
+        print('║  Per-PID data: requires intel_gpu_top ≥ 1.27 with "clients" support')
+        print('║  (try: intel_gpu_top --help | grep clients)')
 
     print(f'╚{"═" * 68}')
 
@@ -482,15 +479,15 @@ def _csv_header() -> str:
 def _snap_to_csv(snap: dict) -> str:
     if not snap.get('ok'):
         empty = ','.join([''] * (len(_ENG_COLS) + 3 + len(_ENG_COLS)))
-        temp  = snap.get('temp_c', '')
-        return f'{snap.get("ts","")[:19]},,,,,{temp or ""},{empty}'
+        temp = snap.get('temp_c', '')
+        return f'{snap.get("ts", "")[:19]},,,,,{temp or ""},{empty}'
 
     eng = snap.get('engines', {})
     eng_vals = ','.join(
         f'{eng.get(c, {}).get("busy", 0.0):.2f}' for c in _ENG_COLS
     )
     clients = snap.get('clients', [])
-    top     = clients[0] if clients else {}
+    top = clients[0] if clients else {}
     top_eng = ','.join(
         f'{top.get("engines", {}).get(c, 0.0):.2f}' for c in _ENG_COLS
     )
@@ -510,9 +507,10 @@ def _snap_to_csv(snap: dict) -> str:
 # Entry point
 # ──────────────────────────────────────────────────────────────────────────────
 
-def main():
+def main():  # pylint: disable=too-many-branches,too-many-statements
+    """Parse CLI arguments and run the GPU sampling loop."""
     parser = argparse.ArgumentParser(
-        description='Intel GPU PID Analyzer – per-process GPU usage with '
+        description='Intel GPU PID Analyzer \u2013 per-process GPU usage with '
                     'engine breakdown, frequency, temperature and power',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
@@ -547,17 +545,21 @@ def main():
     csv_fp = json_fp = None
     if args.csv:
         write_header = not os.path.exists(args.csv)
-        csv_fp = open(args.csv, 'a', buffering=1)
+        csv_fp = open(  # pylint: disable=consider-using-with
+            args.csv, 'a', buffering=1, encoding='utf-8')
         if write_header:
             csv_fp.write(_csv_header() + '\n')
 
     if args.json_log:
-        json_fp = open(args.json_log, 'a', buffering=1)
+        json_fp = open(  # pylint: disable=consider-using-with
+            args.json_log, 'a', buffering=1, encoding='utf-8')
 
     # ── Print preamble ─────────────────────────────────────────────────────
-    loop     = args.watch or args.duration > 0
-    deadline = time.monotonic() + args.duration if args.duration > 0 \
-               else float('inf')
+    loop = args.watch or args.duration > 0
+    deadline = (
+        time.monotonic() + args.duration if args.duration > 0
+        else float('inf')
+    )
 
     target = f'remote={args.remote_ip}' if args.remote_ip else 'local'
     print(f'Intel GPU PID Analyzer  –  interval={args.interval}s  target={target}')
