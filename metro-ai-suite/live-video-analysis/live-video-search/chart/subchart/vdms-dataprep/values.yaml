@@ -1,0 +1,94 @@
+global:
+  volumeHostPath: ''
+  usePvc: true
+  keepPvc: false
+  sharedPvcName: ''
+  env:
+    defaultBucketName: vdms-bucket
+    detectionConfidence: '0.85'
+    embeddingModelName: ''
+    embeddingProcessingMode: sdk
+    enableObjectDetection: 'true'
+    frameInterval: '15'
+    framesTempDir: /tmp/dataprep
+    ovModelsDir: /app/ov_models
+    ovPerformanceMode: THROUGHPUT
+    roiConsolidationClassAware: 'false'
+    roiConsolidationContextScale: '0.2'
+    roiConsolidationEnabled: 'false'
+    roiConsolidationIouThreshold: '0.2'
+    sdkUseOpenvino: 'true'
+    vsIndexName: video_frame_embeddings
+  gpu:
+    multimodalEmbeddingEnabled: false
+    vdmsDataprepEnabled: false
+    key: ''
+    device: ''
+    hostPath: /dev/dri
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  vssStackTag: ''
+images:
+  vdmsDataprep:
+    repository: intel/vdms-dataprep
+
+imageOverride:
+  registry: 'amr-fm-registry.caas.intel.com/esh-user/egai/'
+  repository: 'vdms-dataprep'
+  tag: '1.3.3-rc1'
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+modelPvc:
+  enabled: true
+  existingClaim: ''
+  storageClassName: ''
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 180

@@ -1,0 +1,101 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# dlstreamer-pipeline-server/values.yaml
+
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  # Type: string
+  repository: intel/dlstreamer-pipeline-server
+  # Type: string
+  tag: "2026.0.0-ubuntu24"
+  # Type: string
+  pullPolicy: IfNotPresent
+
+service:
+  # Type: string
+  type: ClusterIP
+  # Internal container port for the REST API.
+  # Type: integer
+  port: 8080
+  # NodePort for external REST API access.
+  # Type: integer
+  hostPort: 8040
+  # Internal WebRTC/RTSP server port.
+  # Type: integer
+  webrtcContainerPort: 8554
+  # NodePort for WebRTC external access.
+  # Type: integer
+  webrtcHostPort: 8556
+
+# Application environment variables.
+# See compose.yaml for the full set; these are the tunable parameters.
+env:
+  # Type: string
+  runMode: "EVA"
+  # Type: string  [true | false]
+  enableRtsp: "false"
+  # Type: string  [true | false]
+  enableWebrtc: "true"
+  # Internal REST server port (must match service.port).
+  # Type: string
+  restServerPort: "8080"
+  # Inference device for object detection.
+  # Type: string  [CPU | GPU]
+  detectionDevice: "CPU"
+  # Type: string  [true | false]
+  addUtctimeToMetadata: "true"
+  # Type: string
+  lsfeatureName: "EVAM"
+  # Enable SSL/TLS (set to "true" and mount certificates to enable).
+  # Type: string  [true | false]
+  https: "false"
+  # Client certificate verification for mTLS.
+  # Type: string  [true | false]
+  mtlsVerification: "false"
+  # Append pipeline name to MQTT publisher topic.
+  # Type: string  [true | false]
+  appendPipelineNameToPublisherTopic: "false"
+  # MQTT broker service name (must match mqtt-broker fullnameOverride).
+  # Type: string
+  mqttHost: "mqtt-broker"
+  # Type: string
+  mqttPort: "1883"
+  # GStreamer debug level (0=off, 1=error, 5=trace).
+  # Type: string
+  gstDebug: "1"
+  # WebRTC signaling server — mediamtx WHIP port.
+  # Type: string  — set at deploy time from global.hostIP; see deployment.yaml
+  whipServerPort: "8889"
+
+# Names of the parent-chart PVCs for models.
+# When empty the deployment template derives them from the release name.
+# Type: string
+modelsPvcName: ""
+detectionModelsPvcName: ""
+
+# Container paths where models are mounted.
+# Type: string
+modelsPath: "/home/pipeline-server/models"
+detectionModelsPath: "/home/pipeline-server/detection_models"
+
+podSecurityContext: {}
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+
+resources: {}
+
+podAnnotations: {}
+podLabels: {}
+
+# Extra supplemental group IDs for GPU device access.
+# render group IDs differ per Ubuntu version.
+# Type: list of strings
+supplementalGroups:
+  - "109"   # render — Ubuntu 20.04
+  - "110"   # render — Ubuntu 22.04
+  - "992"   # render — Ubuntu 24.04

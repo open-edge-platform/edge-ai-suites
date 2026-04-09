@@ -1,0 +1,93 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Job that downloads OpenVINO VLM models into the models PVC.
+Runs concurrently with other chart resources so that `helm install` returns
+immediately.  Pods that need the models (dlstreamer-pipeline-server,
+video-caption-service) use a wait-for-models init container to block until
+the PVC is populated.
+
+Node affinity is applied so the Job pod lands on the same node as all
+other workloads (ensuring the ReadWriteOnce PVC can be mounted by all pods
+on that node).
+
+The download script is injected via the models-download-script ConfigMap.
+Each model is passed as indexed environment variables (MODEL_0_ID, MODEL_0_NAME …).
+If a model directory already exists in the PVC, it is skipped — re-runs are safe.
+*/}}
+{{- if not .Values.global.models }}
+  {{- fail "global.models must not be empty — at least one VLM model is required for the use case to run" }}
+{{- end }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "live-video-captioning.fullname" . }}-models-download
+  labels:
+    {{- include "live-video-captioning.labels" . | nindent 4 }}
+    app.kubernetes.io/component: model-downloader
+spec:
+  # Do not retry on failure so an error surfaces immediately.
+  backoffLimit: 0
+  # Delete the Job (and its pod) immediately after it finishes (success or failure).
+  ttlSecondsAfterFinished: {{ .Values.modelsDownload.ttlSecondsAfterFinished }}
+  # Kill the Job if it runs longer than this many seconds (guards against hangs).
+  {{- if .Values.modelsDownload.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ .Values.modelsDownload.activeDeadlineSeconds }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "live-video-captioning.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: model-downloader
+    spec:
+      restartPolicy: Never
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      containers:
+        - name: model-downloader
+          image: "{{ .Values.modelsDownload.image.repository }}:{{ .Values.modelsDownload.image.tag }}"
+          imagePullPolicy: {{ .Values.modelsDownload.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - /scripts/download.sh
+          env:
+            # Model export toolchain requirements URL
+            - name: REQUIREMENTS_URL
+              value: {{ .Values.modelsDownload.requirementsUrl | quote }}
+            # Total number of models to process
+            - name: MODEL_COUNT
+              value: {{ len .Values.global.models | quote }}
+            # Per-model indexed environment variables consumed by the bash script
+            {{- range $i, $model := .Values.global.models }}
+            - name: MODEL_{{ $i }}_ID
+              value: {{ $model.modelId | quote }}
+            - name: MODEL_{{ $i }}_NAME
+              value: {{ $model.outputName | quote }}
+            - name: MODEL_{{ $i }}_FORMAT
+              value: {{ $model.weightFormat | default "" | quote }}
+            {{- end }}
+            # Optional HuggingFace token for gated model downloads
+            {{- if .Values.modelsDownload.hfToken }}
+            - name: HF_TOKEN
+              value: {{ .Values.modelsDownload.hfToken | quote }}
+            - name: HUGGINGFACEHUB_API_TOKEN
+              value: {{ .Values.modelsDownload.hfToken | quote }}
+            {{- end }}
+            # Proxy settings forwarded from global values
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: models
+              mountPath: /models
+            - name: download-script
+              mountPath: /scripts
+          resources:
+            {{- toYaml .Values.modelsDownload.resources | nindent 12 }}
+      volumes:
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "live-video-captioning.fullname" . }}-models
+        - name: download-script
+          configMap:
+            name: {{ include "live-video-captioning.fullname" . }}-models-download-script
+            defaultMode: 0755

@@ -78,6 +78,8 @@ spec:
           value: {{ .Values.env.S3_STORAGE_USERNAME }}
         - name: S3_STORAGE_PASS
           value: {{ .Values.env.S3_STORAGE_PASSWORD }}
+        - name: S3_BUCKET_TTL
+          value: {{ .Values.env.S3_BUCKET_TTL }}
       volumes:
       - name: seaweedfs-s3-config-template
         configMap:

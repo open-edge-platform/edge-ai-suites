@@ -12,7 +12,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO toolkit-compatible LLM in `llm_models/`. See the [model preparation steps](../../../live-video-captioning/docs/user-guide/get-started.md#model-preparation) to prepare the model.
+- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/model-preparation.md) provided to prepare the model.
 
 ## Run the Application
 
@@ -34,13 +34,14 @@ By following this guide, you will learn how to:
 
 3. Configure the image registry and tag:
 
+     If you prefer to use prebuilt images from Docker Hub, export the following variables:
+
      ```bash
      export REGISTRY="intel/"
      export TAG="latest"
      ```
-    Skip this step if you prefer to build the sample application from the source. See [Build from Source](./get-started/build-from-source.md) for details.
 
-4. Configure and export the environment:
+     If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
      ```bash
      # Configure environment variables. By default, the application uses the CPU device for  embedding and LLM.
@@ -95,10 +96,6 @@ By following this guide, you will learn how to:
      docker compose down
      ```
 
-## Build from Source
-
-If you want to build the application from the source, see [Build from Source](./get-started/build-from-source.md).
-
 ## Integrate with Live Video Captioning
 
 This sample application can run together with Live Video Captioning to enable embedding creation and RAG-based contextual chat. For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md).
@@ -107,4 +104,5 @@ This sample application can run together with Live Video Captioning to enable em
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [API Reference](./api-reference.md)
+- [Build from Source](./get-started/build-from-source.md)
 - [Known Issues](./known-issues.md)

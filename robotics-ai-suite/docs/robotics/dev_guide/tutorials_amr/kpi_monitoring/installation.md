@@ -8,7 +8,7 @@ SPDX-License-Identifier: Apache-2.0
 
 ## 1. Set Up ROS2
 
-Follow the [Getting Started guide](../../gsg_robot/index.md) to install and
+Follow the [Getting Started guide](../../../gsg_robot/index.md) to install and
 configure ROS2 before continuing.
 
 ## 2. Install Simulation Packages
@@ -18,26 +18,67 @@ Follow the installation steps in each tutorial before running benchmarks:
 - [Wandering AMR Simulation](../simulation/launch-wandering-application-gazebo-sim-waffle.md)
 - [Pick & Place Simulation](../simulation/picknplace.md)
 
-## 3. Install the KPI Monitoring Stack
+## 3. Install the KPI Monitoring Package
 
-Install `uv` (modern Python package manager):
+Install the benchmark framework package for your ROS distribution:
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
+```bash
+sudo apt update
+sudo apt install ros-jazzy-benchmark-framework
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+sudo apt update
+sudo apt install ros-humble-benchmark-framework
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
+This installs the KPI monitoring tools and all required system dependencies.
+
+## 4. Install uv
+
+[uv](https://docs.astral.sh/uv/) is used to manage Python dependencies:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-source $HOME/.cargo/env
 ```
 
-From the component root directory, install all dependencies:
+Then restart your shell (or open a new terminal) so that `uv` is on your `PATH`.
+
+From the benchmarking directory, install Python dependencies:
+
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
 
 ```bash
-make install
+cd /opt/ros/jazzy/benchmarking
+uv sync
 ```
 
-This installs system dependencies (`sysstat`), creates a `uv` virtual
-environment with `--system-site-packages` access (required for ROS2), and
-installs `matplotlib`, `numpy`, and `psutil`.
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
 
-## 4. Set Up Passwordless SSH (Remote Monitoring)
+```bash
+cd /opt/ros/humble/benchmarking
+uv sync
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
+
+## 5. Set Up Passwordless SSH (Remote Monitoring)
 
 Passwordless SSH is required when monitoring a ROS2 system on a remote machine
 (e.g. a robot). Skip this step if you are monitoring locally.

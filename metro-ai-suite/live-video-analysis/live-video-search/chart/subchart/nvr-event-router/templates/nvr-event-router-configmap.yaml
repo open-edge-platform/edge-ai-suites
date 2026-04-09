@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvr-event-router-config
+  labels:
+    {{- include "lvs.nvrrouter.labels" . | nindent 4 }}
+data:
+  MODE: "backend"
+  FRIGATE_BASE_URL: {{ .Values.smartNvr.frigateBaseUrl | quote }}
+  VSS_SEARCH_URL: "http://{{ .Values.smartNvr.vssSearchIp }}:{{ .Values.smartNvr.vssSearchPort }}"
+  VSS_SUMMARY_URL: "http://{{ .Values.smartNvr.vssSummaryIp }}:{{ .Values.smartNvr.vssSummaryPort }}"
+  no_proxy: "{{ .Values.global.proxy.noProxy }},frigate-vms,pipeline-manager,{{ .Values.smartNvr.vlmServingIp }},mqtt-broker,redis,nginx,localhost"
+  MQTT_BROKER: "mqtt-broker"
+  MQTT_PORT: "1883"
+  SCENESCAPE_MQTT_BROKER: "mqtt-broker"
+  SCENESCAPE_MQTT_PORT: "1883"
+  REDIS_HOST: "redis"

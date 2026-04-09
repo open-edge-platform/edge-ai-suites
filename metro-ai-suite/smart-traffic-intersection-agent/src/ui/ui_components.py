@@ -6,17 +6,10 @@ UI Components for the RSU Monitoring System
 import base64
 import io
 from PIL import Image
-from typing import Any, Optional, List, Tuple
+from typing import Optional, List, Tuple
 
-try:
-    from ui.models import MonitoringData
-except (ModuleNotFoundError, ImportError):
-    from models import MonitoringData
-
-try:
-    from ui.config import Config
-except (ModuleNotFoundError, ImportError):
-    from config import Config
+from models import MonitoringData
+from config import Config
 
 
 class ThemeColors:
@@ -43,7 +36,7 @@ class UIComponents:
     """UI component generator class"""
 
     @staticmethod
-    def _render_markdown(md_text: str) -> str:
+    async def _render_markdown(md_text: str) -> str:
         """Render markdown text to HTML. Falls back to simple replacements if markdown package not installed."""
 
         if not md_text:
@@ -59,7 +52,7 @@ class UIComponents:
 
     
     @staticmethod
-    def _get_traffic_density_color(density: int) -> str:
+    async def _get_traffic_density_color(density: int) -> str:
         """Get background color based on traffic density
         
         Args:
@@ -74,8 +67,9 @@ class UIComponents:
             return "#ffff99"  # Yellow for moderate density
         else:
             return "#ffffff"  # Default white for low density
+    
     @staticmethod
-    def create_header(monitoring_data: Optional[MonitoringData] = None) -> str:
+    async def create_header(monitoring_data: Optional[MonitoringData] = None) -> str:
         """Create the header section with system title and status"""
         colors = ThemeColors.get_colors()
         
@@ -96,7 +90,7 @@ class UIComponents:
         """
 
     @staticmethod
-    def create_traffic_summary(monitoring_data: Optional[MonitoringData]) -> str:
+    async def create_traffic_summary(monitoring_data: Optional[MonitoringData]) -> str:
         """Create traffic summary cards"""
         if not monitoring_data:
             return "<p style='text-align: center; color: #ef4444;'>No traffic data available</p>"
@@ -106,10 +100,10 @@ class UIComponents:
         total_pedestrians = monitoring_data.get_total_pedestrians()
         
         # Get background colors for each direction based on traffic density
-        north_bg_color = UIComponents._get_traffic_density_color(data.northbound_density)
-        south_bg_color = UIComponents._get_traffic_density_color(data.southbound_density)
-        east_bg_color = UIComponents._get_traffic_density_color(data.eastbound_density)
-        west_bg_color = UIComponents._get_traffic_density_color(data.westbound_density)
+        north_bg_color = await UIComponents._get_traffic_density_color(data.northbound_density)
+        south_bg_color = await UIComponents._get_traffic_density_color(data.southbound_density)
+        east_bg_color = await UIComponents._get_traffic_density_color(data.eastbound_density)
+        west_bg_color = await UIComponents._get_traffic_density_color(data.westbound_density)
         
         return f"""
         <div style="background: {colors['bg_primary']}; border-radius: 12px; padding: 20px; margin: 10px 0; border: 1px solid {colors['border']}; box-shadow: {colors['shadow']};">
@@ -150,7 +144,7 @@ class UIComponents:
         """
     
     @staticmethod
-    def create_debug_panel(monitoring_data: Optional[MonitoringData]) -> str:
+    async def create_debug_panel(monitoring_data: Optional[MonitoringData]) -> str:
         """
         Create a hidden debug panel which is shown only when the debug checkbox is enabled.
         Contains timestamp info about data and images for each direction.
@@ -193,7 +187,7 @@ class UIComponents:
 
 
     @staticmethod
-    def create_environmental_panel(monitoring_data: Optional[MonitoringData]) -> str:
+    async def create_environmental_panel(monitoring_data: Optional[MonitoringData]) -> str:
         """Create environmental data panel"""
         if not monitoring_data:
             return "<p style='text-align: center; color: #ef4444;'>No environmental data available</p>"
@@ -244,17 +238,6 @@ class UIComponents:
                 daytime_status = "Night time"
                 daytime_icon = "🌙"
         
-        # Format forecast period
-        forecast_period = "Current"
-        if weather.start_time and weather.end_time:
-            try:
-                from datetime import datetime
-                start_dt = datetime.fromisoformat(weather.start_time.replace('Z', '+00:00'))
-                end_dt = datetime.fromisoformat(weather.end_time.replace('Z', '+00:00'))
-                forecast_period = f"{start_dt.strftime('%H:%M')} - {end_dt.strftime('%H:%M')}"
-            except:
-                forecast_period = "Current Hour"
-        
         # Use relative humidity from API if available, otherwise use the estimated value
         display_humidity = weather.relative_humidity if weather.relative_humidity is not None else weather.humidity_percent
         
@@ -265,7 +248,7 @@ class UIComponents:
             <!-- Primary Weather Metrics -->
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 18px;">
                 <div style="text-align: center; background: {colors['bg_card']}; padding: 15px; border-radius: 8px; box-shadow: {colors['shadow']}; border: 1px solid {colors['border']};">
-                    <div style="font-size: 1.5em; color: #fbbf24; font-weight: bold; margin-bottom: 5px;">{int(weather.temperature_fahrenheit)}°{weather.temperature_unit}</div>
+                    <div style="font-size: 1.5em; color: #fbbf24; font-weight: bold; margin-bottom: 5px;">{weather.temperature_fahrenheit}°{weather.temperature_unit}</div>
                     <div style="color: {colors['text_secondary']}; font-size: 0.9em; font-weight: 500;">TEMPERATURE</div>
                 </div>
                 <div style="text-align: center; background: {colors['bg_card']}; padding: 15px; border-radius: 8px; box-shadow: {colors['shadow']}; border: 1px solid {colors['border']};">
@@ -302,7 +285,7 @@ class UIComponents:
         """
 
     @staticmethod
-    def create_alerts_panel(monitoring_data: Optional[MonitoringData]) -> str:
+    async def create_alerts_panel(monitoring_data: Optional[MonitoringData]) -> str:
         """Create alerts panel with structured alerts and recommendations"""
         if not monitoring_data:
             return "<p style='text-align: center; color: #ef4444;'>No alerts data available</p>"
@@ -394,7 +377,7 @@ class UIComponents:
                 </div>
                 """
         
-        analysis_html = UIComponents._render_markdown(monitoring_data.vlm_analysis.analysis)
+        analysis_html = await UIComponents._render_markdown(monitoring_data.vlm_analysis.analysis)
         
         return f"""
         <div style="background: {colors['bg_primary']}; border-radius: 12px; padding: 20px; margin: 10px 0; box-shadow: {colors['shadow']}; border: 1px solid {colors['border']};">
@@ -417,7 +400,7 @@ class UIComponents:
         """
 
     @staticmethod
-    def create_camera_images(monitoring_data: Optional[MonitoringData]) -> List[Tuple[str, str]]:
+    async def create_camera_images(monitoring_data: Optional[MonitoringData]) -> List[Tuple[str, str]]:
         """Create camera images for display in Gradio Gallery"""
         if not monitoring_data or not monitoring_data.camera_images:
             return []
@@ -459,98 +442,12 @@ class UIComponents:
                     continue
         
         return image_list
-
-    @staticmethod
-    def create_camera_grid_html(monitoring_data: Optional[MonitoringData]) -> str:
-        """Create an HTML grid display of camera images"""
-        if not monitoring_data or not monitoring_data.camera_images:
-            return "<p style='text-align: center; color: #ef4444;'>No camera images available</p>"
-        
-        colors = ThemeColors.get_colors()
-        cameras_html = ""
-        
-        # Define camera order for consistent layout - updated for new API format
-        camera_order = ["north_camera", "east_camera", "south_camera", "west_camera"]
-        
-        # If the expected camera keys don't exist, use whatever keys are available
-        available_cameras = list(monitoring_data.camera_images.keys())
-        cameras_to_display = [cam for cam in camera_order if cam in available_cameras] or available_cameras
-        
-        for camera_key in cameras_to_display:
-            if camera_key in monitoring_data.camera_images:
-                camera_data = monitoring_data.camera_images[camera_key]
-                
-                # Handle both CameraData objects and dict structures from API
-                if hasattr(camera_data, 'image_base64'):
-                    # CameraData object
-                    image_base64 = camera_data.image_base64
-                    direction = camera_data.direction
-                    camera_id = camera_data.camera_id
-                elif isinstance(camera_data, dict):
-                    # Dict from API
-                    image_base64 = camera_data.get('image_base64')
-                    direction = camera_data.get('direction', 'unknown')
-                    camera_id = camera_data.get('camera_id', 'unknown')
-                else:
-                    continue
-                
-                if image_base64:
-                    # Create data URL for image
-                    image_src = f"data:image/jpeg;base64,{image_base64}"
-                    border_color = colors['border']
-                    
-                    cameras_html += f"""
-                    <div style="background: {colors['bg_card']}; border-radius: 8px; padding: 15px; text-align: center; 
-                                box-shadow: {colors['shadow']}; width: 100%; border: 1px solid {border_color};">
-                        <h4 style="color: {colors['text_primary']}; margin: 0 0 12px 0; font-size: 0.95em; font-weight: 600;">
-                            {direction.upper()} VIEW - {camera_id}
-                        </h4>
-                        <div style="position: relative; display: block; width: 100%;">
-                            <img src="{image_src}" 
-                                 style="width: 100%; height: 200px; object-fit: cover; 
-                                        border-radius: 6px; border: 2px solid {border_color}; 
-                                        box-shadow: {colors['shadow']}; display: block;" 
-                                 alt="{direction} view">
-                            <div style="position: absolute; top: 8px; right: 8px; 
-                                        background: rgba(220,38,38,0.9); color: white; 
-                                        padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; 
-                                        box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-                                ● LIVE
-                            </div>
-                        </div>
-                    </div>
-                    """
-                else:
-                    cameras_html += f"""
-                    <div style="background: {colors['bg_card']}; border-radius: 8px; padding: 15px; text-align: center;
-                                box-shadow: {colors['shadow']}; width: 100%; border: 1px solid {colors['border']};">
-                        <h4 style="color: {colors['text_primary']}; margin: 0 0 12px 0; font-size: 0.95em; font-weight: 600;">
-                            {direction.upper()} VIEW - {camera_id}
-                        </h4>
-                        <div style="background: {colors['bg_secondary']}; border-radius: 6px; padding: 40px; color: {colors['text_secondary']}; 
-                                    height: 200px; display: flex; flex-direction: column; justify-content: center; 
-                                    align-items: center; border: 2px solid {colors['border']}; box-shadow: {colors['shadow']};">
-                            <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.7;">📷</div>
-                            <div style="font-size: 13px; font-weight: 500;">No image available</div>
-                        </div>
-                    </div>
-                    """
-        
-        return f"""
-        <div style="background: {colors['bg_primary']}; border-radius: 12px; padding: 20px; margin: 10px 0; box-shadow: {colors['shadow']}; border: 1px solid {colors['border']};">
-            <h3 style="color: {colors['text_primary']}; margin: 0 0 20px 0; text-align: center; font-size: 1.2em;">📹 Camera Feeds</h3>
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                {cameras_html}
-            </div>
-        </div>
-        """
     
     @staticmethod
-    def create_system_info(monitoring_data: Optional[MonitoringData] = None) -> str:
+    async def create_system_info(monitoring_data: Optional[MonitoringData] = None) -> str:
         """Create system information footer with current status"""
         # Use UTC and consistent formatting for both current time and last update
         from datetime import datetime, timezone
-        from data_loader import get_last_update_time
 
         colors = ThemeColors.get_colors()
 
@@ -564,8 +461,10 @@ class UIComponents:
         if monitoring_data:
             # Prefer a nicely formatted last update using the data loader helper
             try:
-                last_update = get_last_update_time(monitoring_data) or current_time
-            except Exception:
+                timestamp = datetime.fromisoformat(monitoring_data.timestamp.replace('Z', '+00:00'))
+                last_update = timestamp.strftime("%Y-%m-%d %H:%M:%S UTC")
+                # TODO - Show time since last update in minutes/seconds for better understanding
+            except Exception as e:
                 # Fallback to raw timestamp or current time
                 last_update = monitoring_data.timestamp or current_time
             system_status = "ONLINE"

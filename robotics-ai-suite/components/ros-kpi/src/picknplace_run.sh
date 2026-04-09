@@ -97,6 +97,15 @@ LAUNCH_LOG="$SESSION_DIR/picknplace_launch.log"
 echo "  Session dir: $SESSION_DIR"
 echo ""
 
+# ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
+echo "Killing any leftover simulation processes before starting..."
+_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
+pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
+sleep 2
+pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
+echo "  Pre-run cleanup done."
+echo ""
+
 # ── Process 1: picknplace launch ──────────────────────────────────────────────
 echo "Starting AMR simulation..."
 setsid nohup ros2 launch picknplace warehouse.launch.py \

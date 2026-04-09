@@ -21,8 +21,9 @@ When enabled:
 
 - Docker Engine software and Docker Compose tool are installed.
 - Complete the base setup in [Get Started](./get-started.md).
-- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](../user-guide/get-started.md#model-preparation) to download and convert the models.
-- Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
+
+- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./model-preparation.md) to download and convert the models.
+- Ensure that this is a fresh installation. If you have deployed live-video-captioning or live-video-captioning-rag only, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
 

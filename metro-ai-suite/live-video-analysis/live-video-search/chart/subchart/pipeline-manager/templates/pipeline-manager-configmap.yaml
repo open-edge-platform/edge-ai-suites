@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pipeline-manager-config
+  labels:
+    {{- include "lvs.pipeline.labels" . | nindent 4 }}
+data:
+  no_proxy: "{{ .Values.global.proxy.noProxy }},video-ingestion,vlm-openvino-serving,audio-analyzer,rabbitmq-service,minio-service,postgres-service,ovms-service,vdms-dataprep,video-search,localhost"
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}
+  MINIO_PROTOCOL: "http:"
+  MINIO_HOST: "minio-service"
+  MINIO_PORT: "80"
+  MINIO_BUCKET: {{ .Values.global.env.minioBucket | quote }}
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_NAME: {{ .Values.global.env.postgresDb | quote }}
+  SEARCH_ENDPOINT: "http://video-search:8000"
+  SEARCH_DATAPREP_ENDPOINT: "http://vdms-dataprep:8000"
+  SEARCH_DATAPREP_TIMEOUT_MS: {{ .Values.global.env.searchDataprepTimeoutMs | default "90000" | quote }}
+  SUMMARY_FEATURE: {{ .Values.global.env.summaryFeature | quote }}
+  SEARCH_FEATURE: {{ .Values.global.env.searchFeature | quote }}
+  DATAPREP_TELEMETRY_URL: {{ .Values.global.env.dataprepTelemetryUrl | quote }}
+  TELEMETRY_SIGNAL_DIR: "/app/.collector-signals"

@@ -6,8 +6,6 @@ cython
 screeninfo
 dpnp
 onnx
-onnyxscript
 ultralytics==8.0.43
 pyrealsense2
 openvino-dev
-setuptools<=70.0.0

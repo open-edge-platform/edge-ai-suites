@@ -64,7 +64,7 @@ Follow these steps to correlate detection events in InfluxDB with stored images:
 3. Navigate to the Filer interface:
 
    ```text
-   http://<host_ip>:8887/buckets/dlstreamer-pipeline-results/weld-defect-classification/
+   https://<host_ip>:3000/image-store/buckets/dlstreamer-pipeline-results/weld-defect-classification/
    ```
 
 4. Locate and open the file matching the `img_handle` (e.g., `X7TINNVPNX.jpg`).

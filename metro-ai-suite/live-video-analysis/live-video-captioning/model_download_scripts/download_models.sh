@@ -56,6 +56,45 @@ need_cmd() {
   fi
 }
 
+ensure_model_base_dir_for_current_user() {
+  local dir_path="$1"
+  local dir_label="$2"
+  local uid gid owner_uid owner_gid
+
+  uid="$(id -u)"
+  gid="$(id -g)"
+
+  if [[ ! -d "$dir_path" ]]; then
+    log "Creating ${dir_label} base directory: $dir_path"
+    mkdir -p "$dir_path"
+  fi
+
+  owner_uid="$(stat -c '%u' "$dir_path" 2>/dev/null || echo "")"
+  owner_gid="$(stat -c '%g' "$dir_path" 2>/dev/null || echo "")"
+
+  if [[ -z "$owner_uid" || -z "$owner_gid" ]]; then
+    err "Unable to determine ownership for directory: $dir_path"
+    return 1
+  fi
+
+  if [[ "$owner_uid" != "$uid" || "$owner_gid" != "$gid" ]]; then
+    log "Directory ownership mismatch for $dir_path (found ${owner_uid}:${owner_gid}, expected ${uid}:${gid}). Fixing..."
+
+    if chown -R "${uid}:${gid}" "$dir_path" 2>/dev/null; then
+      log "Ownership updated for: $dir_path"
+    elif have_cmd docker; then
+      log "Direct chown failed; retrying with docker as root for: $dir_path"
+      docker run --rm -u root \
+        -v "${dir_path}:/data" \
+        alpine:latest sh -c "chown -R ${uid}:${gid} /data"
+      log "Ownership updated via docker for: $dir_path"
+    else
+      err "Failed to change ownership for $dir_path and docker is not available for root fallback."
+      return 1
+    fi
+  fi
+}
+
 usage() {
   cat <<EOF
 Usage:
@@ -121,20 +160,11 @@ MAX_ATTEMPTS=$(( (TIMEOUT_MINUTES * 60 + POLL_INTERVAL - 1) / POLL_INTERVAL ))
 
 # Ensure base directories exist
 if [[ "$MODEL_TYPE" == "vlm" ]]; then
-  if [[ ! -d "$VLM_MODEL_PATH" ]]; then
-    log "Creating VLM base directory: $VLM_MODEL_PATH"
-    mkdir -p "$VLM_MODEL_PATH"
-  fi
+  ensure_model_base_dir_for_current_user "$VLM_MODEL_PATH" "VLM"
 elif [[ "$MODEL_TYPE" == "vision" ]]; then
-  if [[ ! -d "$DETECTION_MODEL_PATH" ]]; then
-    log "Creating Vision base directory: $DETECTION_MODEL_PATH"
-    mkdir -p "$DETECTION_MODEL_PATH"
-  fi
+  ensure_model_base_dir_for_current_user "$DETECTION_MODEL_PATH" "Vision"
 elif [[ "$MODEL_TYPE" == "llm" ]]; then
-  if [[ ! -d "$LLM_MODEL_PATH" ]]; then
-    log "Creating LLM base directory: $LLM_MODEL_PATH"
-    mkdir -p "$LLM_MODEL_PATH"
-  fi
+  ensure_model_base_dir_for_current_user "$LLM_MODEL_PATH" "LLM"
 else
   err "Unknown model type: ${MODEL_TYPE}. Please specify a valid type (e.g. --type vlm, --type vision, or --type llm)."
   exit 1

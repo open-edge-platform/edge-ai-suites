@@ -1,0 +1,50 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# live-metrics-service/values.yaml
+
+fullnameOverride: ""
+
+# ⚠️  Do NOT set replicaCount > 1.  live-metrics-service uses hostPort binding,
+# so multiple replicas on the same node will conflict on the port.
+replicaCount: 1
+
+image:
+  repository: intel/live-metrics-service
+  # Type: string
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  # Container port.
+  # Type: integer
+  port: 9090
+  # NodePort exposed on the host.
+  # Type: integer
+  nodePort: 9090
+
+env:
+  # Port the metrics server listens on.
+  # Type: string
+  metricsPort: "9090"
+  # Log verbosity.
+  # Type: string  [DEBUG | INFO | WARNING | ERROR]
+  logLevel: "INFO"
+  # CORS allowed origins.
+  # Type: string
+  corsOrigins: "*"
+
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+podAnnotations: {}
+podLabels: {}

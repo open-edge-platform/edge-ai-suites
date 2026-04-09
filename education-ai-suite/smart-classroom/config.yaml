@@ -385,45 +385,48 @@ va_pipeline:
   hls_base_url: http://127.0.0.1:8888
 
 content_search:
+  host_addr: "127.0.0.1" 
+  port: 9011
+
   chromadb:
-    host: "localhost"
+    host: "127.0.0.1"
     port: 9090
-    data_dir: '.\chromadb_wrapper\chroma_data'
+    data_dir: './providers/chromadb_wrapper/chroma_data'
 
-  minio:
-    server: "127.0.0.1:9000"
-    console_address: ":9001"
-    root_user: "minioadmin"
-    root_password: "minioadmin"
+  storage:
+    data_dir: './providers/local_storage/data'
     bucket: "content-search"
-    minio_exe: 'C:\minio.exe'
-    data_dir: '.\minio_wrapper\minio_data'
 
-  file_ingest:
-    collection_name: "content-search"
-    device: "CPU"
-    visual_embedding_model: "CLIP/clip-vit-b-16"
-    doc_embedding_model: "BAAI/bge-small-en-v1.5"
- 
-  # TODO:below placeholder only
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
+    host_addr: "127.0.0.1"
+    port: 9900
     device: "GPU"
     weight_format: "int8"
-    host: "127.0.0.1"
-    port: 9900
-    timeout_seconds: 300
-    max_new_tokens: null
-    log_level: "info"
-    seed: 42
-    cors_allow_origins: "*"
-    cors_allow_methods: "*"
-    cors_allow_headers: "*"
+    ingest_enabled: true
 
-  video_preprocessing:
+  video_preprocess:
+    host_addr: "127.0.0.1"
     port: 8001
+    vlm_timeout_seconds: 300
     chunk_duration_s: 30
     chunk_overlap_s: 4
     max_num_frames: 8
     frame_width: 0
     frame_height: 0
+
+  file_ingest:
+    host_addr: "127.0.0.1"
+    port: 9990
+    collection_name: "content-search"
+    device: "CPU"
+    visual_embedding_model: "CLIP/clip-vit-b-16"
+    doc_embedding_model: "BAAI/bge-small-en-v1.5"
+    frame_extract_interval: 30      # for video: extract a frame every N frames
+    do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
+    reranker:
+      enabled: true
+      model: "BAAI/bge-reranker-large"
+      device: "GPU"
+      dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
+      overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
