@@ -213,7 +213,10 @@ clinfo | grep -i "Device Name"
     Device Name                                   Intel(R) Iris(R) Xe Graphics
     Device Name                                   Intel(R) Iris(R) Xe Graphics
     Device Name                                   Intel(R) Iris(R) Xe Graphics
-```
+sudo apt install -y clinfo
+# clinfo command to check GPU device
+clinfo | grep -i "Device Name"
+
 
 Follow the below steps only in case the above iGPU driver is not installed.
 
@@ -252,9 +255,7 @@ Follow the below steps only in case the above iGPU driver is not installed.
    dkms status
    ```
 
-   ```text
-    ipu6-drivers/20230621+iotgipu6-0eci8, 5.15.0-1048-intel-iotg, x86_64: installed
-   ```
+   
 
 6. Manually modprobe the installed intel-ipu6 driver.
 

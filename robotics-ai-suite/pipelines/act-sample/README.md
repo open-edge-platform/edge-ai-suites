@@ -35,16 +35,11 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 
 1. Create a Python 3.10 virtual environment with the following command:
 
-```bash
-sudo apt install python3-venv
-python3 -m venv act
-```
+   
 
 2. Activate the virtual environment with the following command:
 
-```bash
-source act/bin/activate
-```
+   
 
 ### Install Intel® Extension for PyTorch
 

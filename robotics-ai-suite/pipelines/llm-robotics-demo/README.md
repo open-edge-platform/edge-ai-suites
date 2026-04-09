@@ -267,7 +267,6 @@ Set the environment variable:
 Modify the loading PATH of models to the exported model path, the
 default path is:
 
-``` console
 # /opt/llm-robotics/LLM/llm_bridge.py:L27
 self.model_path = "/home/intel/ov_models/Phi-4-mini-instruct-int8-ov"
 ```
@@ -304,14 +303,14 @@ ROS2 component, and non-real-time LLM component.
 
 1.  Launch the OpenVINO FunASR server:
 
-    ``` bash
+    
     source /opt/funasr/venv-asr/bin/activate
     python3 /opt/funasr/FunASR/runtime/python/websocket/funasr_wss_server.py --port 10095 --certfile "" --keyfile "" --asr_model /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
     ```
 
 2.  Launch the real-time application:
 
-    ``` bash
+    
     # affinity real time application to core 3
     sudo taskset -c 3 plc_rt_pos_rtmotion
     ```
@@ -319,7 +318,7 @@ ROS2 component, and non-real-time LLM component.
     If the real-time application launches successfully, the terminal
     will show the following:
 
-    ``` console
+    
     Axis 0 initialized.
     Axis 1 initialized.
     Axis 2 initialized.
@@ -334,7 +333,7 @@ ROS2 component, and non-real-time LLM component.
     > [!IMPORTANT]
     > Execute the following commands as privileged user (`root`).
 
-    ``` bash
+    
     source ~/ws_jaka/install/setup.bash
     ros2 launch jaka_moveit_py jaka_motion_planning.launch.py
     ```
@@ -345,7 +344,7 @@ ROS2 component, and non-real-time LLM component.
 
 4.  Launch the LLM application:
 
-    ``` bash
+    
     source /opt/intel/oneapi/setvars.sh
     cd /opt/llm-robotics/LLM/
     source venv-llm/bin/activate
