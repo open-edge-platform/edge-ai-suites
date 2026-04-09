@@ -327,27 +327,26 @@ void univloc_graph_optimizer::optimize_involved(
   const auto insert_multi_camera_edge =
     [&optimizer, &map_vertices, &front_rear_camera_constraint_vertices](
       KeyframeID id1, KeyframeID id2, int id3, const Mat44_t & T_pose) {
-      auto edge = new g2o::EdgeMultiCamera();
-
       // if id1 and id2 are not in the same map, the constraint has no impact
       if (!map_vertices.count(id1)) {
         spdlog::debug("No such map_vertices id1 {} front and rear camera constraint! ", id1);
         return;
       }
 
-      edge->setVertex(0, map_vertices[id1]);
       if (!map_vertices.count(id2)) {
         spdlog::debug("No such map_vertices id2 {} front and rear camera constraint!", id2);
         return;
       }
 
-      edge->setVertex(1, map_vertices[id2]);
       if (!front_rear_camera_constraint_vertices.count(id3)) {
         spdlog::debug(
           "No such front_rear_camera_constraint_vertices front and rear camera constraint!");
         return;
       }
 
+      auto edge = new g2o::EdgeMultiCamera();
+      edge->setVertex(0, map_vertices[id1]);
+      edge->setVertex(1, map_vertices[id2]);
       edge->setVertex(2, front_rear_camera_constraint_vertices[id3]);
 
       ::g2o::Sim3 I_sim3(T_pose.block(0, 0, 3, 3), T_pose.block(0, 3, 3, 1), 1.0);

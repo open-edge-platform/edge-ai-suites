@@ -92,7 +92,7 @@ For EuRoC dataset, we will also calculate the scale percentage error when using 
 - command format: bash benchmark/auto_test_filter.sh arg1 arg2
 (1) If the first argument "arg1" is 'yes' or 'y', it will run all the benchmark scripts on all datasets from scratch and output the results in the result sheet of result.xlsx.
 Then run the filter.py to filter the invalid results and calculate the mean values. The output is stored in the mean sheet and filtered sheet in result.xlsx. Otherwise, the process will not go through these scripts and will directly go to the next part.
-(2) The second argument "arg2" is a integer number, it will loop such times as following: It will run all the benchmark scripts on the datasets which are stored in the filtered sheet of result.xlsx. Then run the filter.py to update the mean sheet and filter the datasets which may need to be tested again.
+(2) The second argument "arg2" is an integer number; it controls how many times the following loop runs: It will run all the benchmark scripts on the datasets which are stored in the filtered sheet of result.xlsx. Then run the filter.py to update the mean sheet and filter the datasets which may need to be tested again.
 ```
 
 ---
