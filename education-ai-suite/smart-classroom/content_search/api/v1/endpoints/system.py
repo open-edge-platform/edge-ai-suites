@@ -37,7 +37,7 @@ async def reconcile_storage_data(db: Session = Depends(get_db)):
     for row in results:
         f_hash, f_name, f_path, f_bucket = row
 
-        local_exists = await storage_service.file_exists(f_path)
+        local_exists = storage_service.file_exists(f_path)
         chroma_exists = await search_service.check_file_exists(f_path, bucket_name=f_bucket)
         print(f"---")
         print(f"HASH: {f_hash}")
@@ -46,10 +46,11 @@ async def reconcile_storage_data(db: Session = Depends(get_db)):
         print(f"local_exists: {local_exists}")
         print(f"chroma_exists: {chroma_exists}")
 
-        if not local_exists or not chroma_exists:
-            print(f"Cleanup starting for: {f_name}")
-            await storage_service.delete_file(f_path)
+        if not local_exists:
             await search_service.delete_file_index(f_path, bucket_name=f_bucket)
+        if not chroma_exists:
+            storage_service.delete_file(f_path)
+        if not local_exists or not local_exists:
             db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash})
             db.commit()
             cleaned_count += 1

@@ -52,6 +52,18 @@ Content-Type: application/json
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
 | 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
 
+### Application Layer Codes (code field)
+
+| Application Code | Semantic Meaning | Description |
+| :--- | :--- | :--- |
+| 20000 | SUCCESS | Task submitted, query successful, or cleanup completed. |
+| 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
+| 40001 | AUTH_FAILED | Invalid username or password. |
+| 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
+| 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
+| 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
+| 50003 | PROCESS_FAILED | Internal processing error (e.g., file system or DB delete failed). |
+
 ---
 ### Task Lifecycle & Status Enum
 The `status` field in the response follow this lifecycle:
