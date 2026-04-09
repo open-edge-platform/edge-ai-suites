@@ -8,7 +8,7 @@ __pycache__/
 # Ignore storage directory
 storage/
 chroma_data/
-minio_data/
+data/
 
 # Ignore models directory
 models/

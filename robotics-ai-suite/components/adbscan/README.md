@@ -156,7 +156,7 @@ This directory contains necessary Python scripts to visualize the bounding boxes
 
 This is a ROS2 package for an AMR algorithm where a robot follows a target person. It contains a ROS2 node which subscribes to pointcloud sensors (LIDAR/RealSense camera), uses the ADBSCAN algorithm to cluster the data and detect the location of the target person, and subsequently publishes the velocity commands for a differential drive robot.
 
-This package contains another version of the follow-me application: gesture-based follow-me. This version integrates a gesture recognition model to the existing implementation to control the movement of the robot with hand gestures of the target person.
+This package supports four demo modes combining two sensor types (2D LiDAR or Intel RealSense depth camera) with optional hand-gesture control and voice audio control via OpenVINO speech recognition.
 Find instructions for this package: [Follow_me_RS_2D package instructions](Follow_me_RS_2D/Readme.md)
 
 ### package/tutorial_follow_me

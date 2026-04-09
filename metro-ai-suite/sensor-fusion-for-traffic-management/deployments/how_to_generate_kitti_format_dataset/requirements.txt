@@ -100,7 +100,7 @@ pure_eval==0.2.3
 puremagic==1.30
 pycparser==2.22
 pyface==8.0.0
-Pygments==2.19.2
+Pygments==2.20.0
 pyparsing==3.2.3
 pypcd==0.1.1
 pyquaternion==0.9.9
@@ -114,7 +114,7 @@ pyzmq==27.0.0
 qtconsole==5.6.1
 QtPy==2.4.3
 referencing==0.36.2
-requests==2.32.4
+requests==2.33.1
 retrying==1.4.1
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1

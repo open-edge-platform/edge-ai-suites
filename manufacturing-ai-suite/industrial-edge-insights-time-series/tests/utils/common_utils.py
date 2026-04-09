@@ -128,6 +128,34 @@ def wait_for_stability(seconds=30):
     time.sleep(seconds)
 
 
+def wait_for_pods_ready(namespace, timeout=90):
+    """Wait for all pods in namespace to reach Ready state using kubectl wait.
+
+    Exits as soon as all pods are Ready (faster than a fixed sleep when pods
+    come up early). Falls back gracefully on error without raising, so the
+    caller's own verify_pods() assertion handles any residual failures.
+    """
+    logger.info("Waiting up to %ss for all pods in '%s' to be Ready...", timeout, namespace)
+    try:
+        result = subprocess.run(
+            ["kubectl", "wait", "--for=condition=Ready", "pods", "--all",
+             "-n", namespace, f"--timeout={timeout}s"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            logger.info("All pods in '%s' are Ready.", namespace)
+            return True
+        logger.warning(
+            "kubectl wait reported not-ready for namespace '%s' (rc=%d): %s",
+            namespace, result.returncode, result.stderr.strip(),
+        )
+        return False
+    except Exception as exc:
+        logger.warning("kubectl wait raised an exception: %s. Continuing.", exc)
+        return False
+
+
 # Backwards compatibility for older imports
 _wait_for_stability = wait_for_stability
 

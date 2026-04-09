@@ -69,6 +69,8 @@ export interface UIState {
     endTime: number;
     topic: string;
   } | null;
+  csProcessing: boolean;
+  transcriptionDone: boolean;
 }
  
 const initialState: UIState = {
@@ -86,6 +88,7 @@ const initialState: UIState = {
   uploadedAudioPath: null,
   shouldStartSummary: false,
   shouldStartMindmap: false,
+  transcriptionDone: false,
   projectLocation: 'storage/',
   activeStream: null,
   frontCamera: '',
@@ -122,6 +125,7 @@ const initialState: UIState = {
   searchError: null,
   contentSegmentationError: null,
   timelineHighlight: null,
+  csProcessing: false,
 };
 
 const uiSlice = createSlice({
@@ -142,6 +146,7 @@ const uiSlice = createSlice({
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
+      state.transcriptionDone = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
       state.contentSegmentationStatus = 'idle';
@@ -176,6 +181,7 @@ const uiSlice = createSlice({
  
     transcriptionComplete(state) {
       console.log('transcriptionComplete reducer called');
+      state.transcriptionDone = true;
       state.summaryEnabled = true;
       state.summaryLoading = true;
       state.summaryComplete = false;
@@ -231,7 +237,7 @@ const uiSlice = createSlice({
       state.aiProcessing = false;
       state.summaryComplete = true;
       state.mindmapEnabled = true;
-      state.mindmapLoading = true;
+      state.mindmapLoading = false;
       state.shouldStartMindmap = true;
       state.audioStatus = 'mindmapping';
  
@@ -488,6 +494,10 @@ const uiSlice = createSlice({
       state.timelineHighlight = action.payload;
     },
 
+    setCsProcessing(state, action: PayloadAction<boolean>) {
+      state.csProcessing = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -569,6 +579,7 @@ export const {
   clearSearchResults,
   setShowSearchResults,
   setTimelineHighlight,
+  setCsProcessing,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;
