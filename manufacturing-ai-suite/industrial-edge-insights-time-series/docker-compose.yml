@@ -85,9 +85,7 @@ services:
       - ia-mqtt-broker
     security_opt:
     - no-new-privileges
-    read_only: false
-    entrypoint: ["sleep","infinity"]
-    user: "root"
+    read_only: true
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:9092/kapacitor/v1/ping || exit 1"]
       interval: 10s

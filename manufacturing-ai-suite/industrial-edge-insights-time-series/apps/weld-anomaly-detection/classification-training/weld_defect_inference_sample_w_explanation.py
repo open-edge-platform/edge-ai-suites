@@ -51,9 +51,9 @@ import numpy as np
 
 # ── Artefact paths ────────────────────────────────────────────────────────────
 _BASE         = Path(__file__).parent
-MODEL_PATH    = _BASE / "weld_defect_model.pkl"
-LABELS_PATH   = _BASE / "weld_defect_labels.pkl"
-INFO_PATH     = _BASE / "model_info.json"
+MODEL_PATH    = _BASE / "weld_anomaly_detector.pkl"
+LABELS_PATH   = _BASE / "weld_anomaly_detector_labels.pkl"
+INFO_PATH     = _BASE / "weld_anomaly_detector.json"
 
 # Feature column names — must match training order exactly
 FEATURES = [

@@ -453,3 +453,120 @@ Every prediction returns a dict with the following fields:
 | `good_weld_probability` | `float` | `P(Good Weld)` |
 | `confidence` | `float` | Probability of the predicted class |
 | `probabilities` | `dict[str, float]` | Per-class probability for all 12 categories |
+| `explanation` | `dict` | Human-readable explanation block with reason + top evidence |
+
+### Explanation object
+
+| Field | Type | Description |
+|---|---|---|
+| `reason` | `str` | Natural-language rationale for predicted class |
+| `top_probabilities` | `list[dict]` | Top-N ranked class probabilities |
+| `top_signal_features` | `list[dict]` | Most influential feature comparisons used in explanation |
+
+### How to read `top_probabilities`
+
+Each item has:
+
+- `category`: class label
+- `probability`: model probability for that class
+
+Interpretation tips:
+
+- The first item should match `predicted_category` and typically has the same value as `confidence`.
+- If rank-1 and rank-2 probabilities are close, the prediction is less decisive.
+- If rank-1 is much larger than the rest, the prediction is more stable.
+- The list is mainly for quick triage and operator visibility into near-miss classes.
+
+Example pattern:
+
+- High certainty: `[0.88, 0.06, 0.03]`
+- Ambiguous case: `[0.41, 0.38, 0.15]`
+
+### How to read `top_signal_features`
+
+Each item includes:
+
+- `feature`: input feature name
+- `value`: observed value from the incoming row
+- `predicted_mean`: class-profile mean for the predicted class
+- `good_weld_mean`: reference mean for Good Weld
+- `evidence_score`: relative support score for predicted class vs Good Weld
+
+Interpretation tips:
+
+- Positive `evidence_score` means the feature is closer to the predicted class profile than to Good Weld.
+- Negative `evidence_score` means the feature is closer to Good Weld than the predicted class.
+- Values near `0` indicate weak or neutral evidence from that feature.
+- These are explanation signals, not SHAP-style causal attributions.
+
+Operational use:
+
+- Use `top_probabilities` to judge prediction certainty.
+- Use `top_signal_features` to understand which sensor channels likely drove the decision.
+- Combine both before triggering automated actions (for example, hard reject vs manual review).
+
+### Example output
+
+```json
+{
+  "predicted_category": "Good Weld",
+  "is_defect": false,
+  "defect_probability": 0.586889,
+  "good_weld_probability": 0.413111,
+  "confidence": 0.413111,
+  "probabilities": {
+    "Burnthrough": 0.062784,
+    "Crater_Cracks": 0.01198,
+    "Excessive_Convexity": 0.061574,
+    "Excessive_Penetration": 0.074546,
+    "Good Weld": 0.413111,
+    "Lack_of_Fusion": 0.050077,
+    "Overlap": 0.000407,
+    "Porosity": 0.0,
+    "Porosity_w_Excessive_Penetration": 0.0,
+    "Spatter": 0.148899,
+    "Undercut": 0.038421,
+    "Warping": 0.138201
+  },
+  "explanation": {
+    "reason": "Classified as Good Weld because key signals (Pressure, CO2 Weld Flow, Feed) align more with Good Weld profile than Good Weld profile.",
+    "top_probabilities": [
+      {
+        "category": "Good Weld",
+        "probability": 0.413111
+      },
+      {
+        "category": "Spatter",
+        "probability": 0.148899
+      },
+      {
+        "category": "Warping",
+        "probability": 0.138201
+      }
+    ],
+    "top_signal_features": [
+      {
+        "feature": "Pressure",
+        "value": 2.91,
+        "predicted_mean": 0.180755,
+        "good_weld_mean": 0.180755,
+        "evidence_score": 0.0
+      },
+      {
+        "feature": "CO2 Weld Flow",
+        "value": 0.0,
+        "predicted_mean": 16.68298,
+        "good_weld_mean": 16.68298,
+        "evidence_score": 0.0
+      },
+      {
+        "feature": "Feed",
+        "value": 6.07,
+        "predicted_mean": 36.491665,
+        "good_weld_mean": 36.491665,
+        "evidence_score": 0.0
+      }
+    ]
+  }
+}
+```

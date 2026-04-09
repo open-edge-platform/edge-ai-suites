@@ -289,9 +289,9 @@
       }
     }
   },
-  "trained_at": "2026-04-02T06:33:53.837071+00:00",
+  "trained_at": "2026-04-09T04:50:31.971074+00:00",
   "algorithm": "RandomForestClassifier",
-  "model_size_mb": 4.2293,
+  "model_size_mb": 4.2305,
   "artifact_compression": {
     "method": "xz",
     "level": 3

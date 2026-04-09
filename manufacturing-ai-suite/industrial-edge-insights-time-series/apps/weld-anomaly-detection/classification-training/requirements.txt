@@ -1,32 +1,9 @@
-# Training requirement: Python 3.10
-aiofiles==25.1.0
-aiosqlite==0.22.1
-asyncua==1.1.8
-certifi==2026.2.25
-cffi==2.0.0
-cryptography==46.0.5
-daal==2025.11.0
-dpctl==0.21.1
-intel-cmplr-lib-rt==2025.3.2
-intel-cmplr-lib-ur==2025.3.2
-intel-cmplr-lic-rt==2025.3.2
-intel-sycl-rt==2025.3.2
+# Training/inference requirement: Python 3.10
+# Minimal set used directly by scripts in this folder.
 joblib==1.5.3
 numpy==2.2.6
 pandas==2.3.3
-pycparser==3.0
-pyOpenSSL==26.0.0
-python-dateutil==2.9.0.post0
-pytz==2026.1.post1
 scikit-learn==1.6.1
+
+# Optional Intel acceleration layer (falls back to standard sklearn if absent).
 scikit-learn-intelex==2025.11.0
-scipy==1.15.3
-six==1.17.0
-sortedcontainers==2.4.0
-tbb==2022.3.1
-tcmlib==1.4.1
-threadpoolctl==3.6.0
-typing_extensions==4.15.0
-tzdata==2025.3
-umf==1.0.3
-wait_for2==0.3.2
