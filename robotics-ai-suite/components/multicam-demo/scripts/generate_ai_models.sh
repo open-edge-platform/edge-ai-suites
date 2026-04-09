@@ -16,8 +16,8 @@ cd ./models/yolov8/ || exit
 i=1
 status=0
 for i in "${yolov8_models[@]}"; do
-  python3 ../../src/mo.py --model="$i".pt --data_type="$datatype"
-  if [[ $? -ne 0 ]]
+  gen_yolov8_model_cmd=$(python3 ../../src/mo.py --model="$i".pt --data_type="$datatype")
+  if [[ "$gen_yolov8_model_cmd" -ne 0 ]]
   then
     status=1
     break

@@ -101,7 +101,7 @@ s|(\n[[:space:]]*-DCMAKE_INSTALL_PREFIX=.*)|\
 		-DCMAKE_BUILD_TYPE=Release \\\
 		-DG2O_BUILD_EXAMPLES=OFF \\\
 		-DG2O_BUILD_APPS=OFF \\\
-		-DG2O_USE_CHOLMOD=OFF \\\
+		-DG2O_USE_CHOLMOD=ON \\\
 		-DG2O_USE_CSPARSE=ON \\\
 		-DBUILD_LGPL_SHARED_LIBS=ON \\\
 		-DG2O_USE_OPENGL=OFF \\\
@@ -109,6 +109,7 @@ s|(\n[[:space:]]*-DCMAKE_INSTALL_PREFIX=.*)|\
 		-DOpenGL_GL_PREFERENCE=LEGACY \\\
 		-DBUILD_WITH_MARCH_NATIVE=ON \\\1|
 }' "3rd/g2o/${ROS_DISTRO_INPUT}/debian/rules"
+        sed -i "s/-march=native/-march=gracemont/g" "3rd/g2o/CMakeLists.txt"
     fi
     build_package "3rd/g2o"
 fi

@@ -1,0 +1,24 @@
+frigate:
+  mode: default
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+serverResources: {}
+
+publisherResources: {}
+
+images:
+  rtspPublisher: jrottenberg/ffmpeg:6.1-alpine
+  rtspServer: bluenviron/mediamtx:latest
+
+rtspTest:
+  enabled: true

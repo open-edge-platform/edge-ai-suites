@@ -3,6 +3,7 @@
 The Live Video Captioning sample application demonstrates real-time video captioning using Intel® DLStreamer and OpenVINO™. It processes RTSP video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model(VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
 
 By following this guide, you will learn how to:
+
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
@@ -20,6 +21,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 ## Run the application
 
 1. **Clone the repository**:
+
      ```bash
      # Clone the latest on mainline
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
@@ -30,20 +32,24 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 > **Note:** Adjust the repo link appropriately in case of forked repo.
 
 2. **Navigate to the Directory**:
+
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
      ```
 
 3. **Configure Image Registry and Tag**:
+
      ```bash
         export REGISTRY="intel/"
         export TAG="latest"
      ```
-    Skip this step if you prefer to build the sample applciation from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
+
+    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to the [Build from Source](./get-started/build-from-source.md) guide for details.
 
 4. **Configure Environment**:
 
-    Create a `.env` file in the repository root:
+    Create an `.env` file in the repository root:
+
      ```bash
      WHIP_SERVER_IP=mediamtx
      WHIP_SERVER_PORT=8889
@@ -59,6 +65,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
      ENABLE_DETECTION_PIPELINE=False
      CAPTION_HISTORY=3
      ```
+
     Notes:
     - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
     - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
@@ -72,6 +79,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 6. **Start the Application**:
 
     Start the application using Docker Compose tool:
+
      ```bash
      docker compose up
      ```
@@ -91,6 +99,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 8. **Stop the Services**:
 
     Stop the sample application services using below:
+
      ```bash
      docker compose down
      ```
@@ -188,6 +197,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 If you want to build the application from source, refer to:
 
 - [Build from Source](./get-started/build-from-source.md)
+- [Deploy with Helm](./deploy-with-helm.md)
 
 ## Additional Features Reference
 
@@ -239,6 +249,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Model Download Microservice Get Started Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md)
+- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 

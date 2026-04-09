@@ -25,6 +25,35 @@ User can enable object detection in the pipeline by following the steps below:
 
 3. Then, now you are ready to deploy the pipeline which enabled with object detection model. You may find those pipelines available under the `Select Pipelines` dropdown menu.
 
+## Helm Chart Behavior
+
+When deploying with the Helm chart, the detection pipeline can now download the
+configured detection models automatically.
+
+Set these values in `charts/values-override.yaml`:
+
+```yaml
+global:
+  detectionModels:
+    - "yolov8s"
+
+video-caption-service:
+  env:
+    enableDetectionPipeline: "true"
+
+detectionModelsDownload:
+  enabled: true
+```
+
+The chart downloads each detection model into:
+
+```text
+ov_detection_models/<model-name>/public/<model-name>
+```
+
+This matches the directory structure expected by the backend detection-model
+discovery logic and the DL Streamer pipeline server.
+
 ## Troubleshooting
 
 ### No detection models in dropdown

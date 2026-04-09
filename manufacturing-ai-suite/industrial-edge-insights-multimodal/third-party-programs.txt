@@ -18,29 +18,30 @@ Docker images pulled from docker hub:
 ====================================
 
 License-Identifier: MIT
-- telegraf:1.34.3
-- influxdb:1.11.8
-- bluenviron/mediamtx:1.11.3    
+- telegraf:1.38.0
+- influxdb:1.12.2
+- bluenviron/mediamtx:1.16.3
 ----------------------------------------------------------------------
 
 License-Identifier: AGPLv3
-- grafana/grafana-oss:12.0.0-ubuntu
+- grafana/grafana-oss:12.4.0-ubuntu
 ----------------------------------------------------------------------
  
 License-Identifier: EPL-2.0/EPL-1.0
-- eclipse-mosquitto:2.0.21
+- eclipse-mosquitto:2.0.22
 ----------------------------------------------------------------------
 
 License-Identifier: 2-clause BSD-like
-- nginx:1.29.1-bookworm-perl
+- nginx:1.29.5-trixie-perl
 ----------------------------------------------------------------------
 
 License-Identifier: Apache 2.0
-- intel/dlstreamer-pipeline-server:3.1.0-ubuntu24
+- intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
+- chrislusf/seaweedfs:4.15
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
-- coturn/coturn:4.7.0
+- coturn/coturn:4.9.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
@@ -55,7 +56,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 configs/time-series-analytics-microservice/udfs/requirements.txt
 ================================================================
 License-Identifier: Apache License 2.0
-catboost==1.2.8
+catboost==1.2.10
 tzdata==2025.2
 ----------------------------------------------------------------------
 
@@ -188,4 +189,5 @@ Link - https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multim
 License-Identifier: Apache License 2.0
 
 ---------------------------------------------------------------------------------------------------------------------------
+
 * Other names and brands may be claimed as the property of others.

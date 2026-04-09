@@ -1,0 +1,9 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: mqtt-broker
+description: Eclipse Mosquitto MQTT broker for Live Video Captioning inter-service messaging.
+type: application
+version: 0.1.0
+appVersion: "2.0"

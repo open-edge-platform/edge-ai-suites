@@ -1,0 +1,116 @@
+global:
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+
+images:
+  telemetryCollector: intel/vippet-collector:2026.0.0-20260217-weekly
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  privileged: true
+
+resources: {}
+
+livenessProbe:
+  tcpSocket:
+    port: metrics
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  tcpSocket:
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  tcpSocket:
+    port: metrics
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+collectorSignals:
+  usePvc: true
+
+service:
+  telemetry:
+    type: ClusterIP
+    port: 9273
+
+telemetry:
+  enabled: true
+  hostPathMounts: true
+  telegrafConfig: |
+    [agent]
+      interval = "1s"
+      round_interval = true
+      metric_batch_size = 2000
+      metric_buffer_limit = 20000
+      collection_jitter = "0s"
+      flush_interval = "1s"
+      flush_jitter = "0s"
+      precision = "1s"
+      debug = false
+      quiet = true
+      logfile = ""
+
+    [[inputs.cpu]]
+      percpu = false
+      totalcpu = true
+      collect_cpu_time = false
+      report_active = false
+      core_tags = false
+      fieldinclude = ["usage_user"]
+
+    [[inputs.mem]]
+      fieldinclude = ["used_percent"]
+
+    [[inputs.exec]]
+      commands = ["/app/read_cpu_freq.sh"]
+      data_format = "influx"
+      interval = "1s"
+
+    [[inputs.execd]]
+      command = ["python3", "/app/qmassa_reader.py"]
+      data_format = "influx"
+
+    [[inputs.temp]]
+
+    [[processors.starlark]]
+      namepass = ["temp"]
+      source = '''
+    def apply(metric):
+        return metric if metric.tags.get("sensor", "").startswith("coretemp_package_id_") else None
+    '''
+
+    [[inputs.file]]
+      files = ["/app/.collector-signals/dataprep_embeddings_per_second.txt"]
+      data_format = "value"
+      data_type = "float"
+      name_override = "dataprep_embeddings_per_second"
+
+    [[outputs.prometheus_client]]
+      listen = ":9273"
+      metric_version = 1
+      path = "/metrics"
+      collectors_exclude = ["gocollector", "process"]
+      string_as_label = true
+      export_timestamp = true
+
+    [[outputs.websocket]]
+      url = "ws://pipeline-manager:3000/metrics/ws/collector"
+      data_format = "json"
+      read_timeout = "0s"

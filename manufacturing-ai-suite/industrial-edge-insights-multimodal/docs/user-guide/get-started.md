@@ -85,6 +85,9 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   Grafana’s minimum refresh interval is 5 seconds.
    > - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
    >   install its dependency packages before it can start running.
+   > - Fusion Analytics starts once the RTP sender timestamp is available in the metadata packet from the DL Streamer Pipeline Server.
+   > - **Known issue:** DL Streamer Pipeline Server may not send RTP sender timestamps for the first ~300 packets.
+   >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal

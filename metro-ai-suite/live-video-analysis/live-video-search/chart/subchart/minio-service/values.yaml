@@ -1,0 +1,58 @@
+global:
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /minio/health/live
+    port: api
+  initialDelaySeconds: 20
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  httpGet:
+    path: /minio/health/ready
+    port: api
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /minio/health/live
+    port: api
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+images:
+  minio: coollabsio/minio:RELEASE.2025-10-15T17-29-55Z
+
+service:
+  minioApi:
+    nodePort: 31401
+    port: 80
+    type: NodePort
+  minioConsole:
+    nodePort: 31402
+    port: 81
+    type: NodePort

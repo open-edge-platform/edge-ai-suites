@@ -1,0 +1,71 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# mediamtx/values.yaml
+
+fullnameOverride: ""
+
+# ⚠️  Do NOT set replicaCount > 1.  mediamtx uses hostPort binding for WebRTC WHIP,
+# so multiple replicas on the same node will conflict on the port.
+replicaCount: 1
+
+image:
+  repository: bluenviron/mediamtx
+  # Type: string
+  tag: "1.11.3"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  # WHIP/WebRTC signaling port.  Browsers connect here.
+  # Type: integer
+  whipContainerPort: 8889
+  # NodePort exposed on the host for browser WebRTC connections.
+  # Type: integer
+  whipNodePort: 8889
+  # Internal API port.
+  # Type: integer
+  apiContainerPort: 9997
+  # UDP port for WebRTC media.
+  # Type: integer
+  mediaUdpPort: 8189
+
+# TURN server credentials.
+# These values are forwarded to the browser for ICE server configuration.
+# They are NOT sensitive secrets — they authenticate the TURN session only.
+# Set non-default values for any non-localhost deployment.
+# Type: string
+webrtcIceUsername: "lvcuser"
+# Type: string
+webrtcIcePassword: "lvcpass"
+
+# MediaMTX application settings.
+env:
+  logLevel: "info"
+  # Enable the HTTP API (used by liveness/readiness probes on port 9997).
+  api: "yes"
+  # Disable unused protocol servers to reduce attack surface.
+  rtsp: "no"
+  rtmp: "no"
+  srt: "no"
+  hls: "no"
+  webrtcTrackGatherTimeout: "30s"
+  webrtcAddress: ":8889"
+  # coturn service name used for TURN URL.
+  # Type: string
+  coturnServiceName: "coturn"
+  coturnPort: "3478"
+
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"
+
+podAnnotations: {}
+podLabels: {}

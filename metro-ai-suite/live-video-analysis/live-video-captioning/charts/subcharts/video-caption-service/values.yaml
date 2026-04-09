@@ -1,0 +1,95 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# video-caption-service/values.yaml
+
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: intel/video-caption-service
+  # Type: string
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  # Container port the FastAPI app listens on.
+  # Type: integer
+  port: 4173
+  # NodePort exposed on the host for browser dashboard access.
+  # Type: integer
+  nodePort: 4173
+
+# Application environment variables.
+# All variables are read by app/backend/config.py.
+env:
+  # Dashboard / app port inside the container.
+  # Type: string
+  dashboardPort: "4173"
+
+  # MQTT broker connection.
+  # Type: string — must match mqtt-broker fullnameOverride
+  mqttBrokerHost: "mqtt-broker"
+  # Type: string
+  mqttBrokerPort: "1883"
+  # Type: string
+  mqttTopicPrefix: "live-video-captioning"
+
+  # WebRTC peer ID used to subscribe to the mediamtx stream.
+  # Type: string
+  webrtcPeerId: "stream"
+
+  # WebRTC stream bitrate in kbps.
+  # Type: string
+  webrtcBitrate: "2048"
+
+  # Enable binary alert-mode responses instead of descriptive captions.
+  # Type: string  [true | false]
+  alertMode: "false"
+
+  # Default RTSP URL pre-filled in the dashboard.  Leave empty.
+  # Type: string
+  defaultRtspUrl: ""
+
+  # Enable the object-detection pipeline (requires detection-models PVC).
+  # Type: string  [true | false]
+  enableDetectionPipeline: "false"
+
+  # Number of previous captions shown in the timeline (0 = current only).
+  # Type: string
+  captionHistory: "3"
+
+  # DL Streamer pipeline server REST URL.
+  # Must match dlstreamer-pipeline-server fullnameOverride.
+  # Type: string
+  pipelineServerUrl: "http://dlstreamer-pipeline-server:8080"
+
+  # Live metrics service port.
+  # Type: string
+  metricsServicePort: "9090"
+
+  # WHIP / signaling URL — uses global.hostIP set by parent.
+  # Constructed in deployment.yaml as http://<hostIP>:<whipPort>.
+  # Type: string — leave empty; computed at deploy time
+  whipServerPort: "8889"
+
+# Names of the parent-chart PVCs for models (read-only mounts).
+# Type: string  — empty = derive from release name
+modelsPvcName: ""
+detectionModelsPvcName: ""
+
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "2Gi"
+  limits:
+    cpu: "4"
+    memory: "4Gi"
+
+podAnnotations: {}
+podLabels: {}

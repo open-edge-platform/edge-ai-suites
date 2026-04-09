@@ -6,6 +6,8 @@
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
 SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-anomaly-detection
+HELM_REGISTRY := oci://registry-1.docker.io/intel
+MAKEFLAGS += --no-print-directory
 
 ifdef app
 ifeq ($(filter $(app),$(SAMPLE_APP_LIST)),)
@@ -60,17 +62,18 @@ include $(ENV_FILE)
 export $(shell sed 's/=.*//' $(ENV_FILE))
 DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
 export DRI_MOUNT_PATH
+$(shell chmod 600 .env helm/values.yaml)
 
 # Build Docker containers
 .PHONY: build
 build:
 	@echo "Building Docker containers..."
-	$(DOCKER_COMPOSE) build;
+	$(DOCKER_COMPOSE) build --pull;
 
 .PHONY: build_copyleft_sources
 build_copyleft_sources:
 	@echo "Building Docker containers including copyleft licensed sources..."
-	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true;
+	$(DOCKER_COMPOSE) build --build-arg COPYLEFT_SOURCES=true --pull;
 
 # Check if multiple particular variables in .env are assigned with values
 .PHONY: check_env_variables
@@ -115,6 +118,69 @@ check_env_variables:
 		esac; \
 	done
 
+wait_for_tsam:
+	@echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
+	max_retries=30; \
+	retry=0; \
+	until [ "$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:3000/ts-api/health)" != "000" ]; do \
+		retry=$$((retry + 1)); \
+		if [ $$retry -ge $$max_retries ]; then \
+			echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
+			exit 1; \
+		fi; \
+		echo "  Not accessible yet (attempt $$retry/$$max_retries), retrying in 5s..."; \
+		sleep 5; \
+	done; \
+	echo "Time-Series Analytics microservice is accessible."
+
+upload_zip_file:
+	@echo "Creating UDF deployment zip for $(SAMPLE_APP)..."
+	@config_dir=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config; \
+	zip_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).zip; \
+	rm -f $$zip_file; \
+	cd $$config_dir && \
+	folders="udfs tick_scripts"; \
+	if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
+	zip -r $$zip_file $$folders && \
+	echo "Created: $$zip_file"
+	@$(MAKE) wait_for_tsam
+	@echo "Uploading UDF deployment zip for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
+	zip_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).zip; \
+	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
+		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+		-F "file=@$$zip_file" \
+		-k); \
+	if [ "$$response" = "200" ]; then \
+		echo "Upload successful (HTTP $$response)."; \
+		$(MAKE) post_config app=$(SAMPLE_APP); \
+	else \
+		echo "Upload failed (HTTP $$response). Response:"; \
+		cat /tmp/upload_response.json; \
+		exit 1; \
+	fi
+
+post_config:
+	@config_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/config.json; \
+	if [ ! -f $$config_file ]; then \
+		echo "Error: config.json not found at $$config_file"; \
+		exit 1; \
+	fi; \
+	$(MAKE) wait_for_tsam; \
+	echo "Posting config for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
+	response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
+		-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+		-H 'accept: application/json' \
+		-H 'Content-Type: application/json' \
+		-d @$$config_file \
+		-k); \
+	if [ "$$response" = "200" ]; then \
+		echo "Config posted successfully (HTTP $$response)."; \
+	else \
+		echo "Config post failed (HTTP $$response). Response:"; \
+		cat /tmp/config_response.json; \
+		exit 1; \
+	fi
+
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: check_env_variables down
 	$(call multi_stream_check,mqtt)
@@ -135,7 +201,8 @@ up_mqtt_ingestion: check_env_variables down
 			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
-	fi;
+	fi; \
+	$(MAKE) upload_zip_file app=$(SAMPLE_APP);
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
@@ -155,7 +222,8 @@ up_opcua_ingestion: check_env_variables down
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
 	else \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=$(num_of_streams) --scale ia-mqtt-publisher=0 -d; \
-	fi;
+	fi; \
+	$(MAKE) upload_zip_file app=$(SAMPLE_APP);
 
 
 # Status of the deployed containers
@@ -198,7 +266,7 @@ down:
 	@echo "Stopping Docker containers...";
 	$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) down -v --remove-orphans
 
-# Push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# To push the docker images to docker registry, ensure to configure DOCKER_REGISTRY in .env
 # and have logged into that. Applies mainly when one is dealing with internal docker registry.
 # If you are using docker hub, ensure to have logged in with `docker login` command
 # before running this command.
@@ -212,7 +280,7 @@ push_images: build
 gen_helm_charts:
 	@echo "Generating Helm packages"
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
-	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "2026.0.0-$(WEEKLY_BUILD_DATE)-weekly"; else echo "2026.0.0"; fi))
+	$(eval version := $(shell if [ -n "$(WEEKLY_BUILD_DATE)" ] && [ "$(WEEKLY_BUILD_DATE)" != '""' ]; then echo "$(IMAGE_SUFFIX)-$(WEEKLY_BUILD_DATE)-weekly"; else echo "$(IMAGE_SUFFIX)"; fi))
 	@cp -f configs/grafana/dashboards/*.yml helm/
 	@cp -f apps/${SAMPLE_APP}/grafana-dashboard.json helm/
 	@cp -f configs/influxdb/config/*.conf helm/
@@ -221,7 +289,6 @@ gen_helm_charts:
 	@rm -rf helm/simulation-data
 	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
-	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
 	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
 	@cp -f configs/nginx/nginx.conf helm/nginx.conf
@@ -233,6 +300,19 @@ gen_helm_charts:
 	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
 	@echo "Helm packages generated with version: ${version}"
 
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts
+	@echo "Packaging Helm chart for ${SAMPLE_APP}"
+	@mkdir -p helm-packages
+	@rm -f helm-packages/*.tgz
+	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
+	echo "Helm chart packaged successfully: $$pkg_file"; \
+	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
+	cd ..
 # Help
 .PHONY: help
 help:
@@ -242,12 +322,10 @@ help:
 	@echo "  make build_copyleft_sources       - Build Docker containers including copyleft licensed sources"
 	@echo "      No parameters required."
 	@echo "  make up_mqtt_ingestion            - Start Docker containers using MQTT ingestion"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection), num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
 	@echo "      Example: make up_mqtt_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
 	@echo "  make up_opcua_ingestion           - Start Docker containers using OPC UA ingestion"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Optional: num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection), num_of_streams (default: 1), number_of_data_points_per_stream, ingestion_interval"
 	@echo "      Example: make up_opcua_ingestion app=wind-turbine-anomaly-detection num_of_streams=2"
 	@echo "  make down                         - Stop Docker containers and remove volumes"
 	@echo "      No parameters required."
@@ -256,10 +334,14 @@ help:
 	@echo "  make check_env_variables          - Validate required .env variables"
 	@echo "      No parameters required."
 	@echo "  make push_images                  - Push the images to docker registry"
-	@echo "      Mandatory: DOCKER_REGISTRY (set in .env or as param)"
+	@echo "      Optional: DOCKER_REGISTRY (set in .env or as param)"
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
-	@echo "      Mandatory: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
 	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection"
+	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Example: make push_helm_charts app=weld-anomaly-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
+
