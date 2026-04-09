@@ -350,12 +350,24 @@ Executes a similarity search across vector collections using either natural lang
 | :--- | :--- | :--- | :--- |
 | query | string | Either | Natural language search query (e.g., "student at desk"). |
 | image_base64 | string | Either | Base64 encoded image string for visual similarity search. |
-| max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
-| filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
+| max_num_results | integer | No | Maximum number of results to return. Defaults to 10. For text queries, up to `2 × max_num_results` may be returned (`top-k` from visual collection + `top-k` from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned.|
+| filter | object | No | Metadata filters (e.g., {"type": ["document"], "tags": ["class"]}), detail sees below |
+
+* Filter Usage Detail
+
+Different filter keys are always combined with `AND`. When a filter value is a `list`, the matching logic depends on the field type:
+
+| Field type | Example fields | List behavior | Operator used |
+| ---------- | -------------- | ------------- | ------------- |
+| Array metadata | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
+| Scalar metadata | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
+
+| Note: Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to distinguish them from native video frame results.
 
 * Example:
 Request:
 ```
+# Example 1: Filter by tags — returns results whose tags array contains "classroom" or "student"
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -363,6 +375,16 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
     "max_num_results": 1,
     "filter": {
         "tags": ["classroom", "student"]
+    }
+}'
+# Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
+curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "student in classroom",
+    "max_num_results": 1,
+    "filter": {
+        "type": ["video", "document"]
     }
 }'
 ```
