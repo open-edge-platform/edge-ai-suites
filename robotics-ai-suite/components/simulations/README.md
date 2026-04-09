@@ -29,6 +29,7 @@ You can list all built packages:
 ```bash
 ls output/|grep -i .deb
 ```
+
 ```text
 ros-jazzy-gazebo-plugins_2.3-1_amd64.deb
 ros-jazzy-picknplace_2.3-1_amd64.deb
@@ -108,6 +109,7 @@ To see a full list of available Makefile targets:
 ```bash
 make help
 ```
+
 ```text
 Target               Description
 ------               -----------
