@@ -24,7 +24,10 @@ class ChromaClientWrapper:
 
     def load_collection(self, collection_name: str):
         try:
-            self.collection = self.client.get_or_create_collection(name=collection_name)
+            self.collection = self.client.get_or_create_collection(
+                name=collection_name,
+                configuration={"hnsw": {"space": "cosine"}},
+            )
             return self.collection
         except Exception as e:
             logger.error(f"Failed to load collection '{collection_name}' (is ChromaDB running?): {e}")
@@ -35,7 +38,10 @@ class ChromaClientWrapper:
             logger.info(f"Collection '{collection_name}' already exists and is loaded.")
             return
         
-        self.collection = self.client.create_collection(name=collection_name)
+        self.collection = self.client.create_collection(
+            name=collection_name,
+            configuration={"hnsw": {"space": "cosine"}},
+        )
 
     def insert(self, data: list, collection_name):
         if not self.collection or self.collection.name != collection_name:

@@ -294,7 +294,7 @@ Point_xyz doDBSCAN(
   if (true) {
     // if (result == ADBSCAN_SUCCESS)
     LiDAR_data_4D_t * velo_n = (LiDAR_data_4D_t *)p_Data;
-    LiDAR_data_3D_t * xyz_n;
+    LiDAR_data_3D_t * xyz_n = NULL;
     INT32_t num_points = LiDAR_data_size / sizeof(LiDAR_data_4D_t);
 
     if (dimension == 3) {

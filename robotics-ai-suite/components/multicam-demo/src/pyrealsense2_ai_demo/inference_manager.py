@@ -18,12 +18,12 @@ from .images_capture import VideoCapture
 from . import perf_visualizer as pv
 
 class InferenceManager(Thread):
-	def __init__(self, model_adapter, input, data_type, async_mode=False, camera_resolution=(1280, 720)):
+	def __init__(self, model_adapter, input, data_type, async_mode=False):
 		super().__init__()
 		self.adapter = model_adapter
 		self.input = input
 		self.data_type = data_type
-		self.cap = VideoCapture(input, True, camera_resolution) if input is not None else None
+		self.cap = VideoCapture(input, True) if input is not None else None
 		self.async_mode = async_mode
 		self.frames_number = 0
 		self.start_time = None

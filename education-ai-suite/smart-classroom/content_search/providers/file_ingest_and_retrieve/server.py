@@ -41,12 +41,14 @@ import tempfile
 from providers.local_storage.store import LocalStore
 from providers.file_ingest_and_retrieve.indexer import Indexer
 from providers.file_ingest_and_retrieve.retriever import ChromaRetriever
+from providers.chromadb_wrapper.chroma_client import ChromaClientWrapper
+from providers.file_ingest_and_retrieve.utils import file_key_to_path, extract_bucket_name
 from providers.file_ingest_and_retrieve.models import (
     get_visual_embedding_model,
     get_document_embedding_model,
 )
 
-logger = logging.getLogger("visual_data_service")
+logger = logging.getLogger("server")
 
 class _IngestRequestBase(BaseModel):
     @field_validator('meta', check_fields=False)
@@ -90,8 +92,34 @@ _collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
 _visual_model = get_visual_embedding_model()
 _document_model = get_document_embedding_model()
 
-indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
-retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model)
+video_summary_id_map = {}
+
+def _recover_video_summary_id_map():
+    """Rebuild video_summary_id_map from the document collection."""
+    video_summary_id_map.clear()
+    _client = ChromaClientWrapper()
+    _doc_collection = f"{_collection_name}_documents"
+    _client.load_collection(_doc_collection)
+    res = _client.query_all(_doc_collection, output_fields=["id", "meta"])
+    if not res:
+        return
+    for item in res:
+        meta = item.get("meta", {})
+        if "summary_key" in meta and "file_key" in meta and "file_path" in meta:
+            bucket = extract_bucket_name(meta["file_path"])
+            if bucket is None:
+                continue
+            video_fp = file_key_to_path(meta["file_key"], bucket)
+            if video_fp not in video_summary_id_map:
+                video_summary_id_map[video_fp] = []
+            video_summary_id_map[video_fp].append(int(item["id"]))
+    if video_summary_id_map:
+        logger.info(f"Recovered video_summary_id_map: {len(video_summary_id_map)} video(s).")
+
+_recover_video_summary_id_map()
+
+indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
+retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
 
 local_store = LocalStore.from_config()
 
@@ -197,6 +225,7 @@ async def ingest_dir(request: IngestDirRequest = Body(...)):
             status_code=200,
         )
     except Exception as e:
+        logger.error(f"Error processing files from directory: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing files: {str(e)}")
 
 
@@ -229,6 +258,7 @@ async def ingest_file(request: IngestFileRequest = Body(...)):
             status_code=200,
         )
     except Exception as e:
+        logger.error(f"Error processing file: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 @app.post("/v1/dataprep/ingest_text")
@@ -247,8 +277,10 @@ async def ingest_text(request: IngestTextRequest):
         res = await asyncio.to_thread(indexer.ingest_text, request.text, meta)
         return JSONResponse(content={"message": f"Text successfully ingested. db returns {res}"}, status_code=200)
     except ValueError as e:
+        logger.error(f"ValueError ingesting text: {e}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
+        logger.error(f"Error ingesting text: {e}")
         raise HTTPException(status_code=500, detail=f"Error ingesting text: {str(e)}")
 
 
@@ -317,6 +349,8 @@ def recover_id_maps():
     """
     try:
         stats = indexer.recover_id_maps()
+        _recover_video_summary_id_map()
+        stats["video_summary_files"] = len(video_summary_id_map)
         return JSONResponse(
             content={
                 "message": "ID maps successfully recovered from database.",
@@ -344,7 +378,7 @@ def delete_file_in_db(file_path: str):
             raise HTTPException(status_code=400, detail="Invalid file_path parameter. It must be a non-empty string.")
 
         if not (file_path.startswith("local://") or file_path.startswith("http")):
-            raise HTTPException(status_code=404, detail="File not found.")
+            raise HTTPException(status_code=404, detail="File path should start with 'local://' or 'http(s)://'.")
         
         res, ids = indexer.delete_by_file_path(file_path)
 

@@ -433,12 +433,10 @@ Search the index using a text query or a base64-encoded image. Returns the top-k
 |-------|------|----------|-------------|
 | `query` | string | One of `query` or `image_base64` | Natural language search query |
 | `image_base64` | string | One of `query` or `image_base64` | Base64-encoded image to search by visual similarity |
-| `filter` | object | No | Metadata filter to narrow results. Scalar fields use direct equality; list fields (e.g. `tags`) is parsed as `"or"`. |
+| `filter` | object | No | Metadata filter to narrow results (see [Filter usage](#filter-usage) below). |
 | `max_num_results` | integer | No (default `10`) | Max results per collection (1–16384). For text queries, up to `2 × max_num_results` may be returned (top-k from visual collection + top-k from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned. |
 
 > **Note:** Provide exactly one of `query` or `image_base64` — not both.
-
-> **For Developer** A placeholder of list fields parsed as `"and"` is added.
 
 **Text search example**
 
@@ -465,7 +463,58 @@ curl -X POST http://localhost:9990/v1/retrieval \
   }"
 ```
 
-**Filtered search example**
+---
+
+#### Filter usage
+
+Different filter keys are always combined with **AND**. When a filter value is a **list**, the matching logic depends on the field type:
+
+| Field type | Example fields | List behavior | Operator used |
+| ---------- | -------------- | ------------- | ------------- |
+| **Array metadata** | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
+| **Scalar metadata** | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
+
+> **For Developer:** A placeholder for list fields parsed as `"and"` (all values must match) is available via the `list_filter_mode` parameter internally.
+
+**Filter by tags** — returns results whose `tags` array contains `"biology"` or `"plants"`:
+
+```bash
+curl -X POST http://localhost:9990/v1/retrieval \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "lecture notes",
+    "filter": { "tags": ["biology", "plants"] },
+    "max_num_results": 5
+  }'
+```
+
+**Filter by type** — available values: `"video"`, `"image"`, `"document"`. If not specified, all types are returned. Example returns only `video` or `document` results:
+
+```bash
+curl -X POST http://localhost:9990/v1/retrieval \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Newton first law",
+    "filter": { "type": ["video", "document"] },
+    "max_num_results": 5
+  }'
+```
+
+> **Note:** Video-type results may appear even when `"video"` is not explicitly selected in the `type` filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have `"original_type": "constructed_from_summary"` in their metadata to distinguish them from native video frame results.
+
+**Filter for constructed summaries** — returns only video results that were constructed from document summaries:
+
+```bash
+curl -X POST http://localhost:9990/v1/retrieval \
+  -H "Content-Type: application/json" \
+  -d '{
+    "query": "Newton first law",
+    "filter": { "original_type": "constructed_from_summary" },
+    "max_num_results": 10
+  }'
+```
+
+**Combined filter** — keys are ANDed together:
 
 ```bash
 curl -X POST http://localhost:9990/v1/retrieval \
@@ -477,31 +526,72 @@ curl -X POST http://localhost:9990/v1/retrieval \
   }'
 ```
 
-Returns results of course "CS101" whose `tags` array contains `"biology"` **or** `"plants"`
+Returns results where `course` equals `"CS101"` **AND** `tags` contains `"biology"` or `"plants"`.
+
+---
 
 #### Response
+
+Results are sorted by `score` descending (highest relevance first). Each result includes:
+
+- `id` — unique identifier of the indexed chunk/frame
+- `distance` — cosine distance (lower = more similar)
+- `meta` — metadata (see fields below)
+- `score` — relevance score (0–100, higher = better)
+- `reranker_score` — (documents only) raw cross-encoder score
+
+The `filter` object accepts any metadata key present in the result's `meta` field (e.g. `type`, `tags`, `course`, `doc_filetype`, `original_type`). See [Filter usage](#filter-usage) for details on how scalar and array fields are matched.
 
 ```json
 {
   "results": [
     {
-      "id": "abc123",
-      "distance": 0.142,
+      "id": "1329366430138679899",
+      "distance": 0.2692107,
       "meta": {
-        "file_path": "local://my-bucket/documents/report.pdf",
-        "page": 3,
-        "course": "CS101",
-        "tags": ["plants"]
-      }
+        "chunk_text": "The scene then transitions to a whiteboard with handwritten notes about Newton's First Law of Motion. The notes explain that objects at rest tend to stay at rest unless an unbalanced force acts upon them, and objects in motion tend to continue moving in a straight",
+        "chunk_index": 0,
+        "type": "document",
+        "doc_filetype": "text/plain"
+      },
+      "score": 97.9,
+      "reranker_score": 3.841796875
     },
-    ...
+    {
+      "id": "3024409473465277050",
+      "distance": 0.2546569,
+      "meta": {
+        "file_path": "local://content-search/runs/6ee69571-ae4b-4ead-bff5-857b463a4b2a/raw/video/default/Newton_law.mp4",
+        "type": "video",
+        "original_type": "constructed_from_summary",
+        "video_pin_second": 509.0,
+        "summary_text": "The video is an animated educational piece about Newton's First Law of Motion, also known as the Law of Inertia. It features a stick figure character who appears to be teaching or explaining the concept."
+      },
+      "score": 74.53
+    },
+    {
+      "id": "3671965433515452952",
+      "distance": 0.7178304,
+      "meta": {
+        "file_path": "local://content-search/runs/6ee69571-ae4b-4ead-bff5-857b463a4b2a/raw/video/default/Newton_law.mp4",
+        "type": "video",
+        "video_pin_second": 394.0,
+        "summary_text": "The video is a whiteboard animation that explains Newton's first law of motion, also known as the law of inertia."
+      },
+      "score": 28.22
+    },
+    {
+      "id": "1670262849434704166",
+      "distance": 0.7549856,
+      "meta": {
+        "file_path": "local://content-search/runs/fdc89165-a89a-4388-ace7-89bfc3a6b562/raw/image/default/test-newton.png",
+        "type": "image"
+      },
+      "score": 24.5
+    }
   ]
 }
 ```
-
-- `id` — unique identifier of the indexed chunk/frame
-- `distance` — similarity distance (lower = more similar)
-- `meta` — metadata stored at ingest time, including the original `file_path`
 
 ---
 

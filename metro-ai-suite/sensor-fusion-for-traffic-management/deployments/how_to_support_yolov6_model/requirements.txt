@@ -65,14 +65,14 @@ protobuf==6.33.5
 psutil==7.0.0
 pycocotools==2.0.8
 pydot==3.0.4
-Pygments==2.19.1
+Pygments==2.20.0
 pymoo==0.6.1.5
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
 pytz==2025.2
 PyYAML==6.0.2
 referencing==0.36.2
-requests==2.32.4
+requests==2.33.1
 rich==14.0.0
 rpds-py==0.25.1
 safetensors==0.5.3

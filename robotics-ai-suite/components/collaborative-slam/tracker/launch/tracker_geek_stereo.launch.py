@@ -63,13 +63,13 @@ def generate_launch_description():
     # Declare parameters
     description = declare_configurable_parameters(configParams)
 
-    # Set stereo-related paramters
+    # Set stereo-related parameters
     description_stereo = set_launch_configuration(params)
     description = description + description_stereo
 
     # Declare and set launch prefix based on the parameter gdb
     description.append(DeclareLaunchArgument('launch_prefix', default_value=''))
-    # I hate openning a new terminal.
+    # I hate opening a new terminal.
     # But there is no way to input any commands to gdb in the current terminal.
     # See discussions at https://github.com/ros2/launch_ros/issues/165
     # You can change `gnome-terminal --` to another terminal, such as `xterm -e`

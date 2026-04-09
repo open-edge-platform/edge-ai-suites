@@ -8,6 +8,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from utils.database import get_db
 import time
+from utils.storage_service import storage_service
+from utils.search_service import search_service
 
 router = APIRouter()
 
@@ -26,3 +28,30 @@ async def health_check(db: Session = Depends(get_db)):
             "database": db_status
         }
     }
+
+@router.post("/reconcile")
+async def reconcile_storage_data(db: Session = Depends(get_db)):
+    results = db.execute(text("SELECT file_hash, file_name, file_path, bucket_name FROM file_assets")).fetchall()
+    total_count = len(results)
+    cleaned_count = 0
+    for row in results:
+        f_hash, f_name, f_path, f_bucket = row
+
+        local_exists = await storage_service.file_exists(f_path)
+        chroma_exists = await search_service.check_file_exists(f_path, bucket_name=f_bucket)
+        print(f"---")
+        print(f"HASH: {f_hash}")
+        print(f"NAME: {f_name}")
+        print(f"PATH: {f_path}")
+        print(f"local_exists: {local_exists}")
+        print(f"chroma_exists: {chroma_exists}")
+
+        if not local_exists or not chroma_exists:
+            print(f"Cleanup starting for: {f_name}")
+            await storage_service.delete_file(f_path)
+            await search_service.delete_file_index(f_path, bucket_name=f_bucket)
+            db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash})
+            db.commit()
+            cleaned_count += 1
+
+    return {"status": "ok", "total": total_count, "cleaned": cleaned_count}

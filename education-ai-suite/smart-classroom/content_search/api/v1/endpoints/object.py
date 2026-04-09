@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session
 from utils.database import get_db
 from utils.task_service import task_service
 from utils.storage_service import storage_service
-from utils.search_service import search_service
 from utils.asset_service import asset_service
 import urllib.parse
 import mimetypes
