@@ -427,3 +427,49 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9
 --header 'Content-Type: application/json'
 ```
 
+#### Cleanup file storage and record
+Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.
+
+* URL: /api/v1/object/cleanup-task/{task_id}
+
+* Method: DELETE
+
+* Pattern: SYNC
+
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `task_id` | `string` | Yes | The unique identifier (UUID) of the task to be cleaned up. |
+
+Request:
+```powershell
+curl --location --request DELETE 'http://127.0.0.1:9011/api/v1/object/cleanup-task/b14b0c14-e768-4536-9d13-ea556f9adc1b'
+```
+Response:
+```powershell
+# example 1: 200 OK - Success
+{
+    "code": 20000,
+    "data": {
+        "task_id": "b14b0c14-e768-4536-9d13-ea556f9adc1b",
+        "status": "COMPLETED"
+    },
+    "message": "Cleanup completed",
+    "timestamp": 1775723734
+}
+# example 2: 200 OK - Task Processing
+{
+    "code": 40000,
+    "data": {},
+    "message": "Task is still processing and cannot be deleted",
+    "timestamp": 1775723800
+}
+# example 3: 200 OK - Task Not Found
+{
+    "code": 50002,
+    "data": {},
+    "message": "Task ID does not exist or has expired",
+    "timestamp": 1775723850
+}
+```
