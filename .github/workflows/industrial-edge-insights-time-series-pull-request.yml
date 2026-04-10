@@ -80,6 +80,13 @@ jobs:
         make up_mqtt_ingestion app=wind-turbine-anomaly-detection
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
+        while IFS= read -r line; do
+          echo "$line"
+          if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
+              echo "⚠️ Found Kapacitor connection attempt - exiting"
+              exit 1
+          fi
+        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
