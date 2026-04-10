@@ -76,7 +76,7 @@ From the setup description explained above, three out of the four
 instances of the AI-based applications are run on a GPU. Therefore, the
 appropriate GPU drivers need to be installed.
 
-Run the below commands to check for the GPU device.
+Check for the GPU device with:
 
 ``` bash
 # Install clinfo
