@@ -78,6 +78,20 @@ jobs:
         echo "Deploying Wind Turbine Anomaly Detection Sample App"
         echo "Deploying using mqtt ingestion"
         make up_mqtt_ingestion app=wind-turbine-anomaly-detection
+        count=0
+        while IFS= read -r line; do
+            echo "$line"
+
+            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
+                ((count++))
+                echo "⚠️ Found Kapacitor connection attempt ($count)"
+
+                if (( count > 5 )); then
+                    echo "🚨 More than 5 attempts detected - exiting"
+                    exit 1
+                fi
+            fi
+        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice -n 5 2>&1)
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
         count=0
@@ -93,7 +107,7 @@ jobs:
                     exit 1
                 fi
             fi
-        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
+        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice -n 5 2>&1)
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -118,7 +132,7 @@ jobs:
                     exit 1
                 fi
             fi
-        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
+        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice -n 5 2>&1)
     - name: Undeploying Weld Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
