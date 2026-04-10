@@ -38,6 +38,11 @@ on:
         - test_docker_deployment_multimodal
         - test_helm_deployment_multimodal
         default: all-tests
+      skip_long_tests:
+        description: 'Skip long-running tests that take 1 hour or more (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
   workflow_call:
     inputs:
       tag:
@@ -55,6 +60,11 @@ on:
         required: false
         type: string
         default: 'all-tests'
+      skip_long_tests:
+        description: 'Skip long-running tests that take 1 hour or more (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
 permissions: {}
 
 
@@ -71,10 +81,12 @@ jobs:
           TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
-          echo "tag    : $TAG"
-          echo "build  : $BUILD"
-          echo "tests  : $TESTS"
+          echo "tag             : $TAG"
+          echo "build           : $BUILD"
+          echo "tests           : $TESTS"
+          echo "skip_long_tests : $SKIP_LONG_TESTS"
 
       - name: Checkout current repository
         id: checkout_current_tag
@@ -150,6 +162,7 @@ jobs:
       - name: Run Time Series Sample Apps functional tests
         env:
           TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Timeseries-specific test files
           TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
@@ -171,14 +184,23 @@ jobs:
           mkdir -p /tmp/test_timeseries_report
           rm -f /tmp/test_timeseries_report/report.html /tmp/test_timeseries_report/junit.xml
 
+          # Build marker expression to skip long-running tests when requested
+          # Note: MARKER_ARGS is intentionally unquoted in pytest commands below
+          # so it word-splits into separate args (-m, not, longrun) or expands to nothing when empty
+          MARKER_ARGS=""
+          if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
+            echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
+            MARKER_ARGS="-m not longrun"
+          fi
+
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
             pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml "${TESTS}.py"
+              --junitxml=/tmp/test_timeseries_report/junit.xml $MARKER_ARGS "${TESTS}.py"
           else
             pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml
+              --junitxml=/tmp/test_timeseries_report/junit.xml $MARKER_ARGS
           fi
           PYTEST_RC=$?
           set -e
@@ -229,6 +251,7 @@ jobs:
         if: always()
         env:
           TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Multimodal-specific test files
           MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal"
@@ -247,14 +270,23 @@ jobs:
           mkdir -p /tmp/test_multimodal_report
           rm -f /tmp/test_multimodal_report/report.html /tmp/test_multimodal_report/junit.xml
 
+          # Build marker expression to skip long-running tests when requested
+          # Note: MARKER_ARGS is intentionally unquoted in pytest commands below
+          # so it word-splits into separate args (-m, not, longrun) or expands to nothing when empty
+          MARKER_ARGS=""
+          if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
+            echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
+            MARKER_ARGS="-m not longrun"
+          fi
+
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
             pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml "${TESTS}.py"
+              --junitxml=/tmp/test_multimodal_report/junit.xml $MARKER_ARGS "${TESTS}.py"
           else
             pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml
+              --junitxml=/tmp/test_multimodal_report/junit.xml $MARKER_ARGS
           fi
           PYTEST_RC=$?
           set -e
@@ -307,6 +339,7 @@ jobs:
           TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
           TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           python3 - <<'PYEOF'
           import xml.etree.ElementTree as ET, os
@@ -315,6 +348,7 @@ jobs:
           tag     = os.environ.get('TAG', 'main')
           build   = os.environ.get('BUILD', 'yes')
           tests   = os.environ.get('TESTS', 'all-tests')
+          skip_long = os.environ.get('SKIP_LONG_TESTS', 'yes')
           event   = os.environ.get('GITHUB_EVENT_NAME', 'unknown')
           ts_exit = os.environ.get('TIMESERIES_EXIT_CODE', '')
           mm_exit = os.environ.get('MULTIMODAL_EXIT_CODE', '')
@@ -365,7 +399,8 @@ jobs:
               out.write(f'- **Event:** {event}\n')
               out.write(f'- **Tag/Branch:** {tag}\n')
               out.write(f'- **Build:** {build}\n')
-              out.write(f'- **Tests:** {tests}\n\n')
+              out.write(f'- **Tests:** {tests}\n')
+              out.write(f'- **Skip Long Tests:** {skip_long}\n\n')
 
               sections = [
                   ('\U0001f3ed Time Series Tests', '/tmp/test_timeseries_report/junit.xml', ts_exit),

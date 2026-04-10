@@ -21,6 +21,7 @@ pytest_plugins = ["conftest_docker"]
 # Set up logger for this module
 logger = logging.getLogger(__name__)
 
+@pytest.mark.longrun
 def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     """TC_DOCKER_021: Testing InfluxDB data retention of 1 hour with OPC-UA plugin (Docker)."""
     logger.info("TC_DOCKER_021: Testing InfluxDB data retention of 1 hour with OPC-UA plugin (Docker).")

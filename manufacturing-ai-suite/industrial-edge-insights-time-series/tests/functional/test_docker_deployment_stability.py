@@ -22,6 +22,7 @@ pytest_plugins = ["conftest_docker"]
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.longrun
 def test_long_run_stability_one_hour(setup_docker_environment):
     """
     Long run test: Run sample app for 1 hour and check for CPU/memory leaks.
@@ -52,6 +53,7 @@ def test_long_run_stability_one_hour(setup_docker_environment):
     logger.info("Long run test completed successfully.")
 
 
+@pytest.mark.longrun
 def test_long_run_stability_one_hour_opcua(setup_docker_environment):
     """
     Long run test: Run sample app with OPCUA for 1 hour and check for CPU/memory leaks.

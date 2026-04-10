@@ -24,6 +24,7 @@ pytest_plugins = ["conftest_helm"]
 # Retrieve environment variables
 FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, release_name_weld, chart_path, namespace, grafana_url, wait_time, target, PROXY_URL = helm_utils.get_env_values()
 
+@pytest.mark.longrun
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
 def test_influxdb_data_retention_with_opcua(setup_helm_environment, telegraf_input_plugin):
     logger.info("TC_001: Testing InfluxDB data retention of 1 hour with opcua plugin.")
