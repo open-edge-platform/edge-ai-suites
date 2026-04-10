@@ -374,7 +374,7 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
     "query": "student in classroom",
-    "max_num_results": 1,
+    "max_num_results": 3,
     "filter": {
         "tags": ["classroom", "student"]
     }
@@ -393,38 +393,47 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 Response (200 OK):
 ```json
 {
-    "code": 20000,
-    "data": {
-        "results": [
-            {
-                "id": "1680138485034402529",
-                "distance": 0.47685748,
-                "meta": {
-                    "start_frame": 0,
-                    "chunk_text": "The video depicts a classroom setting with four individuals seated at desks arranged in a U-shape. The room has a modern design with blue chairs, white tables, and a whiteboard on the right side. The walls are adorned with various posters and a large mirror reflecting part of the room. The lighting is bright, creating a well-lit environment. The individuals appear to be engaged in a discussion or presentation, with one person standing and gesturing towards the others. The overall atmosphere suggests an educational or collaborative activity taking place.",
-                    "reused": false,
-                    "start_time": 0.0,
-                    "asset_id": "classroom_8.mp4",
-                    "file_path": "local://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
-                    "run_id": "81802f9e-0a28-4486-bad2-2e05c1086326",
-                    "type": "document",
-                    "end_time": 0.32,
-                    "summary_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
-                    "doc_filetype": "text/plain",
-                    "chunk_id": "chunk_0001",
-                    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
-                    "chunk_index": 0,
-                    "tags": [
-                        "class",
-                        "student"
-                    ],
-                    "end_frame": 8
-                }
-            }
-        ]
-    },
-    "message": "Search completed",
-    "timestamp": 1774877744
+    "results": [
+        {
+            "id": "2812169905423877667",
+            "distance": 0.66775185,
+            "meta": {
+                "doc_page_number": 33,
+                "doc_languages": "[\"eng\"]",
+                "doc_sequence_number": 528,
+                "doc_file_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\tmp710h0vgt",
+                "doc_filetype": "application/pdf",
+                "chunk_text": "visible objects with a\n\nPHYSICS STUDENT COURSEBOOK",
+                "file_path": "local://content-search/runs/c53139a4-54da-4f2f-82ea-55bd869df6a6/raw/application/default/SW-Physics-Sample.pdf",
+                "chunk_index": 528,
+                "type": "document",
+                "doc_filename": "SW-Physics-Sample.pdf",
+                "doc_last_modified": "2026-04-10T14:47:13"
+            },
+            "score": 0.77,
+            "reranker_score": -4.85546875
+        },
+        {
+            "id": "2526940366872620501",
+            "distance": 1.4668814,
+            "meta": {
+                "file_path": "local://content-search/runs/04849a3b-d701-463a-be28-b4ea2fdf0930/raw/image/default/classroom.jpg",
+                "type": "image"
+            },
+            "score": 0.0
+        },
+        {
+            "id": "3313652334518638473",
+            "distance": 1.5231867,
+            "meta": {
+                "type": "video",
+                "video_pin_second": 22.0,
+                "file_path": "local://content-search/runs/c15647a2-21b5-40c0-a04f-82336b3c57a3/raw/video/default/classroom.mp4",
+                "summary_text": "The video shows four young men sitting at desks in a classroom setting. They appear to be engaged in a discussion or presentation, with one of them standing up and gesturing as he speaks. The room has a whiteboard on the wall and a window with blinds partially open, allowing natural light to enter. The overall atmosphere suggests an educational or professional environment."
+            },
+            "score": 0.0
+        }
+    ]
 }
 ```
 #### Resource Download (Video/Image/Document)
