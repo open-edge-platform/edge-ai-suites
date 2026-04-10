@@ -1622,14 +1622,14 @@ def with_model_registry(chart_path, input):
             logger.error(f"Error copying files: {result.stderr.decode('utf-8')}")
         tar_command = f"tar cf windturbine_anomaly_detector.tar udfs models tick_scripts"
         result = subprocess.run(tar_command, shell=True, capture_output=True, text=True, check=True)
+        logger.info("TAR archive created successfully.")
         if result.stdout:
             logger.info(f"TAR command output: {result.stdout}")
-            logger.info("TAR archive created successfully.")
-        elif result.stderr:
-            logger.error(f"TAR command errors: {result.stderr}")
+        if result.stderr:
+            logger.error(f"TAR command stderr: {result.stderr}")
         
 
-        # Step 2: Upload the ZIP file using kubectl exec to avoid port-forwarding
+        # Step 2: Upload the tar file using kubectl exec to avoid port-forwarding
         # Find the model registry pod
         model_registry_pod_command = (
             f"kubectl get pods -n {namespace} "
