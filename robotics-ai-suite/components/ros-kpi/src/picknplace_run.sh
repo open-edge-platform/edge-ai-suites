@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# These contents may have been developed with support from one or more
+# Intel-operated generative artificial intelligence solutions.
 # picknplace_run.sh  —  Launch the pick-n-place AMR simulation alongside the
 #                       graph monitor, then print a trigger-latency analysis.
 #
@@ -38,7 +43,9 @@ _cleanup() {
   fi
 
   # Graph monitor
-  [[ "$MONITOR_PID" -gt 0 ]] && kill -SIGTERM "$MONITOR_PID" 2>/dev/null || true
+  if [[ "$MONITOR_PID" -gt 0 ]]; then
+    kill -SIGTERM "$MONITOR_PID" 2>/dev/null || true
+  fi
 
   # Launch process group (setsid makes it a session leader)
   if [[ "$LAUNCH_PID" -gt 0 ]]; then
@@ -55,7 +62,9 @@ _cleanup() {
   #    "picknplace" is safe here because the parent Make shell runs "bash
   #    picknplace_run.sh" which DOES contain "picknplace" — so we use the
   #    launch package name "warehouse.launch" instead.
-  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
+  #    "/opt/ros/[a-z]*/lib/" matches installed ROS2 node executables without
+  #    matching scripts installed under /opt/ros/<distro>/benchmarking/.
+  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
   pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
   sleep 2
   pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
@@ -76,6 +85,9 @@ while [[ $# -gt 0 ]]; do
     --record)         RECORD_MODE=1; shift ;;
     --plot)           PLOT_MODE=1; shift ;;
     --output-parent)  OUTPUT_PARENT="$2"; shift 2 ;;
+    -h|--help)
+      sed -n '10,18p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+      trap - EXIT; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -99,7 +111,7 @@ echo ""
 
 # ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
 echo "Killing any leftover simulation processes before starting..."
-_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
+_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
 pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
 sleep 2
 pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true

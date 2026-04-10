@@ -15,19 +15,19 @@ Intel-operated generative artificial intelligence solutions.
 make grafana-start
 
 # 2. Start monitoring (new terminal)
-make monitor
+uv run python src/monitor_stack.py
 
 # 3. Start exporter (new terminal)
-make grafana-export
+uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
 
 # 4. Open browser
 make grafana-open
 ```
 
-## One-Command Demo
+## One-Command Orchestrator
 
 ```bash
-make grafana-demo
+./grafana-monitor.sh --remote-ip <ip>   # Prometheus exporter + monitor_stack together
 ```
 
 ## Common Commands
@@ -58,15 +58,15 @@ uv run python src/monitor_stack.py --session my_session
 
 ## Access Points
 
-- **Grafana**: http://localhost:30000 (admin/admin)
-- **Prometheus**: http://localhost:9090
-- **Metrics Endpoint**: http://localhost:9092/metrics
+- **Grafana**: <http://localhost:30000> (admin/admin)
+- **Prometheus**: <http://localhost:9090>
+- **Metrics Endpoint**: <http://localhost:9092/metrics>
 
 ## Troubleshooting
 
 **No data in Grafana?**
 1. Check exporter is running: `curl http://localhost:9092/metrics`
-2. Check Prometheus targets: http://localhost:9090/targets
+2. Check Prometheus targets: <http://localhost:9090/targets>
 3. Verify monitoring session has data: `ls monitoring_sessions/*/`
 
 **Port conflicts?**

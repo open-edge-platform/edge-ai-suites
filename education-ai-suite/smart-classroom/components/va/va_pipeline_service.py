@@ -197,15 +197,23 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Failed to check log file: {e}")
             return False
 
-    def _check_error(self, log_file: Path) -> bool:
-        """Check if 'ERROR' appears in log file"""
+    def _check_error(self, log_file: Path) -> Optional[str]:
+        """Check if 'ERROR' appears in log file and return error text.
+
+        Returns:
+            The error text from 'ERROR: from element' to end of file,
+            or None if no error found.
+        """
         try:
             with open(log_file, "r") as f:
                 content = f.read()
-                return "ERROR: from element" in content
+                idx = content.find("ERROR: from element")
+                if idx >= 0:
+                    return content[idx:].strip()
+                return None
         except Exception as e:
             self.logger.warning(f"Failed to check log file: {e}")
-            return False
+            return None
 
     def _check_normal_exit(self, log_file: Path) -> bool:
         """Check if pipeline exited normally (has EOS message)"""
@@ -341,12 +349,15 @@ class VideoAnalyticsPipelineService:
                 self.logger.info("Pipeline initialized successfully")
             else:
                 self.logger.warning("Pipeline may not have initialized properly")
-            if self._check_error(log_file):
-                self.logger.error("Errors detected in pipeline log")
-                return False
+            error_text = self._check_error(log_file)
+            if error_text:
+                self.logger.error(f"Errors detected in pipeline log:\n{error_text}")
+                raise RuntimeError(error_text)
 
             return True
 
+        except RuntimeError:
+            raise
         except Exception as e:
             self.logger.error(f"Failed to launch pipeline '{pipeline_name}': {e}")
             return False
@@ -599,7 +610,7 @@ class VideoAnalyticsPipelineService:
             # Verify file exists
             if not Path(source).exists():
                 self.logger.error(f"Source file not found: {source}")
-                return False
+                raise ValueError(f"Source file not found: {source}")
             # Validate file with gst-discoverer
             error_msg = self._validate_file_with_discoverer(source)
             if error_msg:
@@ -703,6 +714,8 @@ class VideoAnalyticsPipelineService:
 
             return True
 
+        except RuntimeError:
+            raise
         except Exception as e:
             self.logger.error(f"Failed to launch pipeline '{pipeline_name}': {e}")
             return False

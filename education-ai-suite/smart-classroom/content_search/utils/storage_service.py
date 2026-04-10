@@ -73,7 +73,7 @@ class StorageService:
             logger.error(f"Failed to read content for {file_key}: {str(e)}")
             raise e
 
-    async def file_exists(self, file_key: str) -> bool:
+    def file_exists(self, file_key: str) -> bool:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         try:
@@ -82,7 +82,7 @@ class StorageService:
             logger.error(f"Error checking existence for {file_key}: {str(e)}")
             return False
 
-    async def delete_file(self, file_key: str, missing_ok: bool = True) -> bool:
+    def delete_file(self, file_key: str, missing_ok: bool = True) -> bool:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         try:
