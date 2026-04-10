@@ -185,22 +185,20 @@ jobs:
           rm -f /tmp/test_timeseries_report/report.html /tmp/test_timeseries_report/junit.xml
 
           # Build marker expression to skip long-running tests when requested
-          # Note: MARKER_ARGS is intentionally unquoted in pytest commands below
-          # so it word-splits into separate args (-m, not, longrun) or expands to nothing when empty
-          MARKER_ARGS=""
+          MARKER_ARGS=()
           if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
             echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
-            MARKER_ARGS="-m not longrun"
+            MARKER_ARGS=(-m "not longrun")
           fi
 
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
             pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml $MARKER_ARGS "${TESTS}.py"
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
           else
             pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml $MARKER_ARGS
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}"
           fi
           PYTEST_RC=$?
           set -e
@@ -271,22 +269,20 @@ jobs:
           rm -f /tmp/test_multimodal_report/report.html /tmp/test_multimodal_report/junit.xml
 
           # Build marker expression to skip long-running tests when requested
-          # Note: MARKER_ARGS is intentionally unquoted in pytest commands below
-          # so it word-splits into separate args (-m, not, longrun) or expands to nothing when empty
-          MARKER_ARGS=""
+          MARKER_ARGS=()
           if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
             echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
-            MARKER_ARGS="-m not longrun"
+            MARKER_ARGS=(-m "not longrun")
           fi
 
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
             pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml $MARKER_ARGS "${TESTS}.py"
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
           else
             pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml $MARKER_ARGS
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}"
           fi
           PYTEST_RC=$?
           set -e
