@@ -1,3 +1,9 @@
+#
+# Apache v2 license
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
 """
 Weld Defect Multi-Class Classifier - Training Script
 ====================================================
@@ -42,7 +48,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # -- Configuration -------------------------------------------------------------
 
-DATA_DIR = Path(os.getenv("DATA_DIR", "/home/ecgv-d19-l3t19/welding_dataset/raid/intel_robotic_welding_dataset"))
+DATA_DIR = Path(os.getenv("DATA_DIR", "/tmp/welding_dataset"))
 MANIFEST_NAME = "manifest.csv"
 TARGET_STEEL_TYPE = "FE410"
 MIN_WELD_CURRENT = 50.0
