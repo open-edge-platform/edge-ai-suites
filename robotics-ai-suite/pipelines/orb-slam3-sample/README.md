@@ -119,8 +119,9 @@ $ echo "deb [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.
 3. Add the Intel RealSense APT repository to your APT sources:
 
 ```
-$ sudo -E wget -O- https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /usr/share/keyrings/librealsense.pgp > /dev/null
-$ sudo echo "deb [signed-by=/usr/share/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+sudo mkdir -p /etc/apt/keyrings
+curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
 ```
 
 4. Update your APT sources:
