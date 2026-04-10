@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+export ROS_DISTRO=humble
+export DH_VERBOSE=1
+
+PKG := ros-$(ROS_DISTRO)-benchmark-framework
+
+%:
+	dh $@ -v
+
+override_dh_auto_configure:
+	:
+
+override_dh_auto_build:
+	:
+
+override_dh_auto_test:
+	:
+
+DESTDIR := debian/$(PKG)/opt/ros/$(ROS_DISTRO)/benchmarking
+
+override_dh_auto_install:
+	install -d $(DESTDIR)/src
+	install -m 644 src/*.py $(DESTDIR)/src/
+	install -m 755 src/*.sh $(DESTDIR)/src/
+	install -m 755 quickstart $(DESTDIR)/
+	install -m 644 Makefile docker-compose.yml pyproject.toml README.md $(DESTDIR)/
+	install -m 755 *.sh $(DESTDIR)/
+	cp -r prometheus grafana $(DESTDIR)/
+
+override_dh_shlibdeps:
+	:

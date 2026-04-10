@@ -43,14 +43,16 @@ Content-Type: application/json
 | 500 | Server Error | System crash; display "Server is busy, please try again". |
 
 ### Application Layer Codes (code field)
+
 | Application Code | Semantic Meaning | Description |
 | :--- | :--- | :--- |
-| 20000 | SUCCESS | Task submitted or query successful. |
+| 20000 | SUCCESS | Task submitted, query successful, or cleanup completed. |
+| 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
 | 40001 | AUTH_FAILED | Invalid username or password. |
-| 40901	| FILE_ALREADY_EXISTS |	File already existed (Hash exist). |
+| 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
-| 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
+| 50003 | PROCESS_FAILED | Internal processing error (e.g., file system or DB delete failed). |
 
 ---
 ### Task Lifecycle & Status Enum
@@ -437,3 +439,49 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9
 --header 'Content-Type: application/json'
 ```
 
+#### Cleanup file storage and record
+Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.
+
+* URL: /api/v1/object/cleanup-task/{task_id}
+
+* Method: DELETE
+
+* Pattern: SYNC
+
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `task_id` | `string` | Yes | The unique identifier (UUID) of the task to be cleaned up. |
+
+Request:
+```powershell
+curl --location --request DELETE 'http://127.0.0.1:9011/api/v1/object/cleanup-task/b14b0c14-e768-4536-9d13-ea556f9adc1b'
+```
+Response:
+```powershell
+# example 1: 200 OK - Success
+{
+    "code": 20000,
+    "data": {
+        "task_id": "b14b0c14-e768-4536-9d13-ea556f9adc1b",
+        "status": "COMPLETED"
+    },
+    "message": "Cleanup completed",
+    "timestamp": 1775723734
+}
+# example 2: 200 OK - Task Processing
+{
+    "code": 40000,
+    "data": {},
+    "message": "Task is still processing and cannot be deleted",
+    "timestamp": 1775723800
+}
+# example 3: 200 OK - Task Not Found
+{
+    "code": 50002,
+    "data": {},
+    "message": "Task ID does not exist or has expired",
+    "timestamp": 1775723850
+}
+```

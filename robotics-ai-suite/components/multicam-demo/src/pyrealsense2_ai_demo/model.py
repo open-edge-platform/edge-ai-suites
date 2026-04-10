@@ -12,8 +12,8 @@ import cv2
 import numpy as np
 from time import perf_counter
 import pathlib
-import openvino.runtime as ov
-from openvino.runtime import Core, Model, AsyncInferQueue
+import openvino as ov
+from openvino import Core, Model, AsyncInferQueue
 
 
 class Model():
@@ -26,6 +26,9 @@ class Model():
 		#if device != "CPU":
 		#	self.ov_model.reshape({0: [1, 3, image_size, image_size]})
 
+		# Limit to 1 GPU execution stream per model so the GPU round-robins
+		# fairly across all concurrent camera streams rather than starving
+		# models that were compiled later.
 		self.compiled_model = self.core.compile_model(self.ov_model, device)
 
 		self.input_layer_ir = self.ov_model.input(0)
