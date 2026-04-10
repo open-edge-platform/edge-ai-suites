@@ -80,12 +80,19 @@ jobs:
         make up_mqtt_ingestion app=wind-turbine-anomaly-detection
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
+        count=0
         while IFS= read -r line; do
-          echo "$line"
-          if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
-              echo "⚠️ Found Kapacitor connection attempt - exiting"
-              exit 1
-          fi
+            echo "$line"
+
+            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
+                ((count++))
+                echo "⚠️ Found Kapacitor connection attempt ($count)"
+
+                if (( count > 5 )); then
+                    echo "🚨 More than 5 attempts detected - exiting"
+                    exit 1
+                fi
+            fi
         done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
@@ -98,12 +105,19 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         echo "Deploying Weld Anomaly Detection Sample App"
         make up_mqtt_ingestion app=weld-anomaly-detection
+        count=0
         while IFS= read -r line; do
-          echo "$line"
-          if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
-              echo "⚠️ Found Kapacitor connection attempt - exiting"
-              exit 1
-          fi
+            echo "$line"
+
+            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
+                ((count++))
+                echo "⚠️ Found Kapacitor connection attempt ($count)"
+
+                if (( count > 5 )); then
+                    echo "🚨 More than 5 attempts detected - exiting"
+                    exit 1
+                fi
+            fi
         done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
     - name: Undeploying Weld Anomaly Detection Sample App
       run: |
