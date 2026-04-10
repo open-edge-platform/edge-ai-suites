@@ -11,7 +11,6 @@ This guide shows how to build the Live Video Captioning RAG sample application f
      ```
 
 2. Build the Docker image:
-
      ```bash
      docker compose build
      ```

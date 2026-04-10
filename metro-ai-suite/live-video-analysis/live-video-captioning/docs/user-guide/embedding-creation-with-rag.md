@@ -21,9 +21,8 @@ When enabled:
 
 - Docker Engine software and Docker Compose tool are installed.
 - Complete the base setup in [Get Started](./get-started.md).
-
 - VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./model-preparation.md) to download and convert the models.
-- Ensure that this is a fresh installation. If you have deployed live-video-captioning or live-video-captioning-rag only, stop those deployments and follow the instructions in this section to deploy both together.
+- Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
 
@@ -54,7 +53,7 @@ When enabled:
 2. Now you are ready to deploy the live-video-captioning with embedding creation and RAG:
 
      ```bash
-     docker compose up
+     docker compose up -d
      ```
 
 ## Verify Services are Running
@@ -106,7 +105,7 @@ docker compose down
      docker volume rm live-video-caption_vdms-db
      ```
 
-## Next Steps
+## Supporting Resources
 
 - [Get Started](./get-started.md) - Base setup and deployment flow
 - [API Reference](./api-reference.md) - Live Video Captioning API endpoints

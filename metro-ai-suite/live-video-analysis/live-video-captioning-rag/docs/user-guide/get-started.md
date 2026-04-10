@@ -32,7 +32,7 @@ By following this guide, you will learn how to:
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
      ```
 
-3. Configure the image registry and tag:
+3. Configure Image Registry and Tag:
 
      If you prefer to use prebuilt images from Docker Hub, export the following variables:
 
@@ -43,8 +43,16 @@ By following this guide, you will learn how to:
 
      If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
+4. Download and export models:
+
+     Follow the model preparation steps in [Prerequisites](#prerequisites).
+
+5. Configure and export the environment:
+
+     From the `live-video-analysis/live-video-captioning-rag` directory, use the helper script below to configure and export the application environment.
+
      ```bash
-     # Configure environment variables. By default, the application uses the CPU device for  embedding and LLM.
+     # Configure environment variables. By default, the application uses the CPU device for embedding and LLM.
      # To use GPU, edit `setup_env.sh` and set: DEVICE="GPU"
      # Set LLM_MODEL_ID to your prepared LLM model.
      # Set EMBEDDING_MODEL_NAME to your desired embedding model.
@@ -53,11 +61,10 @@ By following this guide, you will learn how to:
      source scripts/setup_env.sh
      ```
 
-5. Download or export models by following the model preparation steps in [Prerequisites](#prerequisites).
+6. Start the Live Video Captioning RAG sample application:
 
-6. Start the application:
+     From the `live-video-analysis/live-video-captioning-rag` directory, start the sample application using Docker Compose tool:
 
-     Start the application using the Docker Compose tool:
      ```bash
      docker compose up -d
      ```
@@ -89,16 +96,16 @@ By following this guide, you will learn how to:
         `Example query: "How many students are there in the classroom?"`<br>
         You will now receive contextual responses from the RAG chatbot.
 
-8. Stop the services:
+8. Stop the Live Video Captioning RAG sample application services:
 
-     Stop the sample application services:
      ```bash
      docker compose down
      ```
 
-## Integrate with Live Video Captioning
+## Integration with Live Video Captioning
 
-This sample application can run together with Live Video Captioning to enable embedding creation and RAG-based contextual chat. For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md).
+This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md)
 
 ## Learn More
 

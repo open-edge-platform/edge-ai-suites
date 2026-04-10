@@ -11,7 +11,7 @@ This section shows how to:
 ## Prerequisites
 
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
-- Install Docker Engine: [Installation Guide](https://docs.docker.com/get-docker/).
+- Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
 - OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./model-preparation.md) to prepare the model.
@@ -40,6 +40,8 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 3. Configure the image registry and tag:
 
      If you prefer to use prebuilt images from Docker Hub, export the following variables:
+
+     If you prefer to use prebuilt images from Docker Hub, export the variables below.
 
      ```bash
         export REGISTRY="intel/"
@@ -74,14 +76,14 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
     - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
     - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
 
-5. Download and export the models:
-
     Follow the steps outlined in the [Model Preparation](./model-preparation.md) section.
 
-6. Start the application using Docker Compose tool:
+6. Start the Live Video Captioning application:
+
+    From the `live-video-analysis/live-video-captioning` directory, start the application using Docker Compose:
 
      ```bash
-     docker compose up
+     docker compose up -d
      ```
 
 7. Access the application:
@@ -96,7 +98,7 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 
     > **Note:** If running in a proxy network, add your RTSP stream URLs or IPs to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
-8. Stop the sample application services:
+8. Stop the Live Video Captioning sample application services:
 
      ```bash
      docker compose down
