@@ -39,8 +39,9 @@ is fairly straighforward and the recommended approach. if you require more fine-
    sudo apt-get install apt-transport-https
 
    # Next, add the Intel RealSense GPG key and repository to your system.
-   sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key F6E65AC044F831AC80A06380C8B3A55A6F3EFCDE
-   sudo add-apt-repository "deb https://librealsense.intel.com/Debian/apt-repo $(lsb_release -cs) main"
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
 
    # After adding the repository, update your package lists to include the new sources
    sudo apt update

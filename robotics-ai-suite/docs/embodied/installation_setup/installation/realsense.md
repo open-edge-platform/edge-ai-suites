@@ -14,9 +14,8 @@ ROS is a set of open-source software libraries and tools that help you build rob
 1. Register the server's public key:
 
    ```bash
-
    sudo mkdir -p /etc/apt/keyrings
-   curl -sSf https://librealsense.intel.com/Debian/librealsense.pgp | sudo tee /etc/apt/keyrings/librealsense.pgp > /dev/null
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
    ```
 
 2. Ensure that apt HTTPS support is installed:
@@ -29,9 +28,7 @@ ROS is a set of open-source software libraries and tools that help you build rob
 3. Add the server to the list of repositories:
 
    ```bash
-
-   echo "deb [signed-by=/etc/apt/keyrings/librealsense.pgp] https://librealsense.intel.com/Debian/apt-repo `lsb_release -cs` main" | \
-   sudo tee /etc/apt/sources.list.d/librealsense.list
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
    ```
 
 4. Update your apt repository caches after setting up the repositories:
