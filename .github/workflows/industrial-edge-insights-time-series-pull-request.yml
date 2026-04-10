@@ -91,6 +91,13 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         echo "Deploying Weld Anomaly Detection Sample App"
         make up_mqtt_ingestion app=weld-anomaly-detection
+        while IFS= read -r line; do
+          echo "$line"
+          if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
+              echo "⚠️ Found Kapacitor connection attempt - exiting"
+              exit 1
+          fi
+        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
     - name: Undeploying Weld Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
