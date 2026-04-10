@@ -289,16 +289,16 @@
       }
     }
   },
-  "trained_at": "2026-04-09T04:50:31.971074+00:00",
+  "trained_at": "2026-04-10T09:39:14.211915+00:00",
   "algorithm": "RandomForestClassifier",
-  "model_size_mb": 4.2305,
+  "model_size_mb": 4.2123,
   "artifact_compression": {
     "method": "xz",
     "level": 3
   },
   "intel_patched": true,
   "data_source": {
-    "data_dir": "/home/ecgv-d19-l3t19/welding_dataset/raid/intel_robotic_welding_dataset",
+    "data_dir": "/tmp/welding_dataset",
     "manifest": "manifest.csv",
     "steel_type": "FE410",
     "train_splits_used": [
