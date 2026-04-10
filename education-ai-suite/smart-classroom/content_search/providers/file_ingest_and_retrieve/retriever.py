@@ -18,7 +18,7 @@ from providers.file_ingest_and_retrieve.models import (
 logger = logging.getLogger(__name__)
 
 class ChromaRetriever:
-    def __init__(self, collection_name="default", visual_embedding_model=None, document_embedding_model=None):
+    def __init__(self, collection_name="default", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None):
         self.client = ChromaClientWrapper()
 
         self.visual_collection_name = collection_name
@@ -45,12 +45,17 @@ class ChromaRetriever:
                 device=reranker_device,
                 dedup_time_threshold=dedup_time_threshold,
                 overfetch_multiplier=overfetch_multiplier,
+                video_summary_id_map=video_summary_id_map if video_summary_id_map is not None else {},
+                chroma_client=self.client,
+                document_collection_name=self.document_collection_name,
             )
             self._overfetch_multiplier = overfetch_multiplier
             logger.info("PostProcessor (reranker) enabled.")
         else:
             self._overfetch_multiplier = 1
             logger.info("PostProcessor (reranker) disabled — using simple merge.")
+
+        self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
 
     def get_text_embedding(self, query):
         embedding_tensor = self.visual_embedding_model.handler.encode_text(query)
@@ -85,16 +90,18 @@ class ChromaRetriever:
             elif key == "timestamp_end":
                 conditions.append({"timestamp": {"$lte": value}})
             elif isinstance(value, list):
-                # Use native ChromaDB $contains for array metadata fields (requires chromadb>=1.5.5)
-                contains_exprs = [{key: {"$contains": v}} for v in value]
-                if len(contains_exprs) == 1:
-                    conditions.extend(contains_exprs)
-                elif list_filter_mode == "and":
-                    # Option A: ALL values must be present
-                    conditions.append({"$and": contains_exprs})
+                # Array metadata fields (e.g. tags) use $contains; scalar fields use $eq
+                _ARRAY_FIELDS = {"tags"}
+                if key in _ARRAY_FIELDS:
+                    exprs = [{key: {"$contains": v}} for v in value]
                 else:
-                    # Option B (default): ANY value must be present
-                    conditions.append({"$or": contains_exprs})
+                    exprs = [{key: v} for v in value]
+                if len(exprs) == 1:
+                    conditions.extend(exprs)
+                elif list_filter_mode == "and":
+                    conditions.append({"$and": exprs})
+                else:
+                    conditions.append({"$or": exprs})
             else:
                 conditions.append({key: value})
 
@@ -179,3 +186,14 @@ class ChromaRetriever:
             "distances": [[c[0] for c in combined]],
             "scores": [scores],
         }
+
+    def get_video_summaries(self, file_path):
+
+        ids = self.video_summary_id_map.get(file_path, [])
+        if not ids:
+            return []
+        return self.client.get(
+            ids=ids,
+            output_fields=["id", "meta"],
+            collection_name=self.document_collection_name,
+        )

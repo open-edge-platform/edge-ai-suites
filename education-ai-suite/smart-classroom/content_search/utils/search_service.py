@@ -21,6 +21,8 @@ class SearchService:
         self.ingest_url = f"{self.base_url}/v1/dataprep/ingest"
         self.ingest_text_url = f"{self.base_url}/v1/dataprep/ingest_text"
         self.retrieval_url = f"{self.base_url}/v1/retrieval"
+        self.get_url = f"{self.base_url}/v1/dataprep/get"
+        self.delete_url = f"{self.base_url}/v1/dataprep/delete"
 
         self.default_bucket = getattr(settings, "STORAGE_DEFAULT_BUCKET", None) or os.getenv("STORAGE_BUCKET", "content-search")
 
@@ -70,5 +72,41 @@ class SearchService:
                 logger.error(f"Search service retrieval error at {self.retrieval_url}: {str(e)}")
                 traceback.print_exc()
                 return {"results": [], "error": str(e)}
+
+    async def check_file_exists(self, file_path: str, bucket_name: str = None) -> bool:
+        target_bucket = bucket_name or self.default_bucket
+        target_uri = f"local://{target_bucket}/{file_path.lstrip('/')}"
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    self.get_url,
+                    params={"file_path": target_uri},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return bool(data.get("ids_in_db"))
+                return False
+            except Exception as e:
+                logger.error(f"Error checking chroma existence for {target_uri}: {str(e)}")
+                return False
+
+    async def delete_file_index(self, file_path: str, bucket_name: str = None):
+        target_bucket = bucket_name or self.default_bucket
+        target_uri = f"local://{target_bucket}/{file_path.lstrip('/')}"
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.delete(
+                    self.delete_url,
+                    params={"file_path": target_uri},
+                    timeout=20.0
+                )
+                response.raise_for_status()
+                logger.info(f"Successfully deleted chroma index for {target_uri}")
+                return response.json()
+            except Exception as e:
+                logger.error(f"Error deleting chroma index for {target_uri}: {str(e)}")
+                return {"error": str(e)}
 
 search_service = SearchService()

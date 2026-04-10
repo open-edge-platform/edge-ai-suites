@@ -77,17 +77,37 @@ jobs:
           echo "tests  : $TESTS"
 
       - name: Checkout current repository
+        id: checkout_current_tag
+        continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: ${{ inputs.tag || 'main' }}
           persist-credentials: false
 
+      - name: Checkout current repository - fallback to main
+        if: steps.checkout_current_tag.outcome == 'failure'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          persist-credentials: false
+
       - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
         if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        id: checkout_tag
+        continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: open-edge-platform/edge-ai-libraries
           ref: ${{ inputs.tag || 'main' }}
+          path: edge-ai-libraries
+          persist-credentials: false
+
+      - name: Checkout Time Series Analytics microservice (edge-ai-libraries) - fallback to main
+        if: ${{ (inputs.build != 'no' || inputs.tag == 'main') && steps.checkout_tag.outcome == 'failure' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: open-edge-platform/edge-ai-libraries
+          ref: main
           path: edge-ai-libraries
           persist-credentials: false
 

@@ -8,8 +8,8 @@ Troubleshootings
 
     .. code-block:: bash
     
-       $ sudo -E apt install clinfo
-       $ clinfo
+         sudo -E apt install clinfo
+         clinfo
 
     Verify that the GPU is part of supported platforms:
 

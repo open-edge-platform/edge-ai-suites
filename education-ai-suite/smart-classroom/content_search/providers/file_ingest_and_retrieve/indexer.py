@@ -12,7 +12,7 @@ from PIL import Image
 from providers.chromadb_wrapper.chroma_client import ChromaClientWrapper
 from providers.file_ingest_and_retrieve.document_parser import DocumentParser
 from providers.file_ingest_and_retrieve.detector import Detector
-from providers.file_ingest_and_retrieve.utils import generate_unique_id, encode_image_to_base64
+from providers.file_ingest_and_retrieve.utils import generate_unique_id, encode_image_to_base64, file_key_to_path, extract_bucket_name
 from providers.file_ingest_and_retrieve.models import (
     get_visual_embedding_model,
     get_document_embedding_model,
@@ -24,7 +24,7 @@ def create_chroma_data(embedding, meta=None):
     return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
 
 class Indexer:
-    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None):
+    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None):
         self.client = ChromaClientWrapper()
         run_device = os.getenv("INGEST_DEVICE", "CPU")
         self.visual_collection_name = collection_name
@@ -60,6 +60,10 @@ class Indexer:
             logger.info(f"Document collection '{self.document_collection_name}' already exist.")
             self.document_db_inited = True
             self._recover_id_map(self.document_collection_name, self.document_id_map)
+
+        # Shared map: video file_path -> list of summary embedding IDs.
+        # Owned and recovered externally in server.py
+        self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
 
     def _init_collection(self, collection_name, id_map_dict):
         """Generic method to initialize a collection."""
@@ -99,21 +103,24 @@ class Indexer:
         return {
             "visual": {fp: list(ids) for fp, ids in self.visual_id_map.items()},
             "document": {fp: list(ids) for fp, ids in self.document_id_map.items()},
+            "video_summary": {fp: list(ids) for fp, ids in self.video_summary_id_map.items()},
         }
 
     def recover_id_maps(self):
-        """Clear and rebuild both id_maps by querying the database."""
+        """Clear and rebuild visual/document id_maps by querying the database."""
         self.visual_id_map.clear()
         self.document_id_map.clear()
         self._recover_id_map(self.visual_collection_name, self.visual_id_map)
         self._recover_id_map(self.document_collection_name, self.document_id_map)
         logger.info(
             f"ID maps recovered: {len(self.visual_id_map)} visual file(s), "
-            f"{len(self.document_id_map)} document file(s)."
+            f"{len(self.document_id_map)} document file(s), "
+            f"{len(self.video_summary_id_map)} video summary file(s)."
         )
         return {
             "visual_files": len(self.visual_id_map),
             "document_files": len(self.document_id_map),
+            "video_summary_files": len(self.video_summary_id_map),
         }
 
     def count_files(self):
@@ -152,14 +159,36 @@ class Indexer:
         
     
     def delete_by_file_path(self, file_path):
+        all_ids = []
+        res = None
+
         if file_path in self.visual_id_map:
             ids = self.visual_id_map.pop(file_path)
-            return self.client.delete(collection_name=self.visual_collection_name, ids=ids), ids
+            res = self.client.delete(collection_name=self.visual_collection_name, ids=ids)
+            all_ids.extend(ids)
         if file_path in self.document_id_map:
             ids = self.document_id_map.pop(file_path)
-            return self.client.delete(collection_name=self.document_collection_name, ids=ids), ids
-        logger.warning(f"File {file_path} not found in id_map.")
-        return None, []
+            res = self.client.delete(collection_name=self.document_collection_name, ids=ids)
+            all_ids.extend(ids)
+
+        # Also remove associated summaries (keyed by video file_path)
+        if file_path in self.video_summary_id_map:
+            summary_ids = self.video_summary_id_map.pop(file_path)
+            self.client.delete(collection_name=self.document_collection_name, ids=summary_ids)
+            all_ids.extend(summary_ids)
+            # Clean stale references from document_id_map
+            summary_id_set = set(summary_ids)
+            for fp, fids in list(self.document_id_map.items()):
+                remaining = [i for i in fids if i not in summary_id_set]
+                if remaining:
+                    self.document_id_map[fp] = remaining
+                else:
+                    del self.document_id_map[fp]
+
+        if not all_ids:
+            logger.warning(f"File {file_path} not found in id_map.")
+            return None, []
+        return res, all_ids
 
     def delete_by_ids(self, ids):
         """Delete specific entries by their IDs and update id_maps accordingly.
@@ -190,6 +219,14 @@ class Indexer:
                 self.document_id_map[file_path] = remaining
             elif removed:
                 del self.document_id_map[file_path]
+
+        # Also clean video_summary_id_map
+        for fp, file_ids in list(self.video_summary_id_map.items()):
+            remaining = [i for i in file_ids if i not in id_set]
+            if remaining:
+                self.video_summary_id_map[fp] = remaining
+            else:
+                del self.video_summary_id_map[fp]
 
         res = {}
         if visual_ids:
@@ -225,6 +262,7 @@ class Indexer:
             res_document = self.client.delete(collection_name=self.document_collection_name, ids=document_ids)
             self.document_id_map.clear()
             all_ids.extend(document_ids)
+        self.video_summary_id_map.clear()
         if not all_ids:
             return None, []
         return {"visual": res_visual, "document": res_document}, all_ids
@@ -244,36 +282,39 @@ class Indexer:
     def process_video(self, video_path, meta, frame_extract_interval=15, do_detect_and_crop=True):
         entities = []
         video = VideoFileClip(video_path)
-        frame_counter = 0
-        frame_extract_interval = int(frame_extract_interval)
-        fps = video.fps
-        total_frames = int(video.duration * fps)
-        extracted_count = 0
-        logger.debug(f"Video {video_path}: fps={fps}, total_frames={total_frames}, frame_extract_interval={frame_extract_interval}, "
-                     f"estimated extractions={total_frames // frame_extract_interval + 1}")
-        for frame in video.iter_frames():
-            if frame_counter % frame_extract_interval == 0:
-                extracted_count += 1
-                image = Image.fromarray(frame)
-                seconds = frame_counter / fps
-                meta_data = copy.deepcopy(meta)
-                meta_data["video_pin_second"] = seconds
-                if do_detect_and_crop:
-                    for crop in self.detector.get_cropped_images(image):
-                        embedding = self.get_image_embedding(crop)
-                        if not self.visual_db_inited:
-                            self.init_visual_db_client(len(embedding))
-                        node = create_chroma_data(embedding, meta_data)
-                        entities.append(node)
-                        self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
-                embedding = self.get_image_embedding(image)
-                if not self.visual_db_inited:
-                    self.init_visual_db_client(len(embedding))
-                node = create_chroma_data(embedding, meta_data)
-                entities.append(node)
-                self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
-            frame_counter += 1
-        logger.info(f"Processed video {video_path}: {extracted_count} frames extracted, {len(entities)} embeddings")
+        try:
+            frame_counter = 0
+            frame_extract_interval = int(frame_extract_interval)
+            fps = video.fps
+            total_frames = int(video.duration * fps)
+            extracted_count = 0
+            logger.debug(f"Video {video_path}: fps={fps}, total_frames={total_frames}, frame_extract_interval={frame_extract_interval}, "
+                         f"estimated extractions={total_frames // frame_extract_interval + 1}")
+            for frame in video.iter_frames():
+                if frame_counter % frame_extract_interval == 0:
+                    extracted_count += 1
+                    image = Image.fromarray(frame)
+                    seconds = frame_counter / fps
+                    meta_data = copy.deepcopy(meta)
+                    meta_data["video_pin_second"] = seconds
+                    if do_detect_and_crop:
+                        for crop in self.detector.get_cropped_images(image):
+                            embedding = self.get_image_embedding(crop)
+                            if not self.visual_db_inited:
+                                self.init_visual_db_client(len(embedding))
+                            node = create_chroma_data(embedding, meta_data)
+                            entities.append(node)
+                            self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
+                    embedding = self.get_image_embedding(image)
+                    if not self.visual_db_inited:
+                        self.init_visual_db_client(len(embedding))
+                    node = create_chroma_data(embedding, meta_data)
+                    entities.append(node)
+                    self._update_id_map(self.visual_id_map, meta_data["file_path"], node["id"])
+                frame_counter += 1
+            logger.info(f"Processed video {video_path}: {extracted_count} frames extracted, {len(entities)} embeddings")
+        finally:
+            video.close()
         return entities
 
     def process_image(self, image_path, meta, do_detect_and_crop=True):
@@ -355,6 +396,13 @@ class Indexer:
         node = create_chroma_data(embedding, meta_data)
         file_path = meta_data.get("file_path", "__independent_text__")
         self._update_id_map(self.document_id_map, file_path, node["id"])
+
+        if "summary_key" in meta_data and "file_key" in meta_data and "file_path" in meta_data:
+            bucket = extract_bucket_name(meta_data["file_path"])
+            if bucket:
+                video_fp = file_key_to_path(meta_data["file_key"], bucket)
+                self._update_id_map(self.video_summary_id_map, video_fp, node["id"])
+
         return [node]
 
     def ingest_text(self, text: str, meta: dict) -> dict:

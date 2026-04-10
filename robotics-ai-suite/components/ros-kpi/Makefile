@@ -3,521 +3,76 @@
 #
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
-.PHONY: help monitor monitor-node monitor-pid monitor-remote monitor-remote-pid monitor-remote-grafana monitor-remote-pid-grafana monitor-remote-repeat monitor-long monitor-long-pid quick-check \
-        graph-only resources-threads resources-pid \
-        list-sessions visualize-last visualize-all visualize-gpu visualize-gpu-pid-bar visualize-npu pipeline-graph interactive-heatmap analyze-session compare-sessions \
-        view-average view-average-timing view-average-resources view-average-plot \
-        clean clean-last clean-session install check-deps check-domain docs setup-remote-gpu \
-        monitor-gpu \
-        gpu-pids gpu-pids-watch gpu-pids-remote gpu-pids-csv \
-        grafana-start grafana-stop grafana-pull grafana-export grafana-export-live grafana-status grafana-logs grafana-open \
-        wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
-        picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
-        analyze-benchmark
+ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+ROS_DISTRO ?= humble
+
+ifeq ($(ROS_DISTRO),humble)
+	UBUNTU_CODENAME := jammy
+else
+	UBUNTU_CODENAME := noble
+endif
+
+.PHONY: help install check-deps check-domain setup-remote-gpu \
+        clean clean-last clean-session \
+        grafana-start grafana-stop grafana-pull grafana-status grafana-logs grafana-open \
+        package license-check lint lint-all
+
 
 # Default target
 help:
-	@echo "ROS2 KPI Monitoring Stack - Available Commands"
+	@echo "ROS2 KPI Monitoring — Infrastructure Targets"
 	@echo ""
 	@echo "⚠️  IMPORTANT: Source ROS2 before monitoring:"
-	@echo "   source /opt/ros/humble/setup.bash  (or run: source ./setup_ros2_env.sh)"
-	@echo "   export ROS_DOMAIN_ID=0  (must match target system)"
+	@echo "   source /opt/ros/$(ROS_DISTRO)/setup.bash  (or: source ./setup_ros2_env.sh)"
+	@echo "   export ROS_DOMAIN_ID=46"
 	@echo ""
-	@echo "MONITORING (Thread Mode - detailed TID tracking):"
-	@echo "  make monitor              - Start full monitoring (60s, graph + resources)"
-	@echo "  make monitor-gpu          - Full local monitoring + Intel GPU (60s)"
-	@echo "  make monitor-node NODE=<name> - Narrow discovery to one node (proc delay works for all nodes)"
-	@echo "  make quick-check          - Quick 30-second monitoring session"
-	@echo "  make monitor-long         - Extended 5-minute monitoring session"
-	@echo "  make graph-only           - Monitor only graph/timing"
-	@echo "  make resources-threads    - Monitor only system resources (with threads)"
+	@echo "QUICK START:"
+	@echo "  ./quickstart                              - Interactive menu"
 	@echo ""
-	@echo "MONITORING (PID Mode - process-level only):"
-	@echo "  make monitor-pid          - Full monitoring with PIDs only"
-	@echo "  make monitor-long-pid     - Extended monitoring with PIDs only (5 min)"
-	@echo "  make resources-pid        - Monitor system resources (PIDs only)"
+	@echo "MONITORING (run directly with uv):"
+	@echo "  uv run python src/monitor_stack.py --help"
+	@echo "  uv run python src/monitor_stack.py --duration 60"
+	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --duration 60"
+	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --gpu --npu"
+	@echo "  uv run python src/monitor_stack.py --pid-only --duration 300"
 	@echo ""
-	@echo "REMOTE MONITORING (from a second machine):"
-	@echo "  make monitor-remote REMOTE_IP=<ip>   - Full remote monitoring (threads)"
-	@echo "  make monitor-remote REMOTE_IP=<ip> GPU=1            - + Intel GPU metrics"
-	@echo "  make monitor-remote REMOTE_IP=<ip> NPU=1            - + Intel NPU metrics (no caps needed)"
-	@echo "  make monitor-remote REMOTE_IP=<ip> GPU=1 NPU=1      - + both GPU and NPU"
-	@echo "  make monitor-remote-pid REMOTE_IP=<ip> - Full remote monitoring (PIDs only)"
-	@echo "  make monitor-remote-pid-grafana REMOTE_IP=<ip> - PID-only remote monitoring + live Grafana export"
-	@echo "  Any target accepts: REMOTE_IP=<ip> REMOTE_USER=<user> DOMAIN_ID=<id>"
-	@echo "  Example: make monitor NODE=/slam_toolbox REMOTE_IP=192.168.1.100"
-	@echo "  Note: requires SSH key auth and matching ROS_DOMAIN_ID"
+	@echo "VISUALIZATION:"
+	@echo "  uv run python src/visualize_timing.py <session>/graph_timing.csv --help"
+	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
+	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
+	@echo "  uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
+	@echo "  uv run python demo_interactive_heatmap.py [SESSION_DIR]"
 	@echo ""
-	@echo "WANDERING SIMULATION (see also: make -f src/Makefile help):"
-	@echo "  make wandering               - Single run + graph monitor + trigger-latency"
-	@echo "  make wandering-record        - + record KPI rosbag"
-	@echo "  make wandering-benchmark     - RUNS x TIMEOUT-s runs, then aggregate KPIs"
-	@echo "  make wandering-benchmark RUNS=5 TIMEOUT=180"
-	@echo "  Sessions -> monitoring_sessions/wandering/"
+	@echo "ANALYSIS:"
+	@echo "  uv run python src/view_average.py --help"
+	@echo "  uv run python src/analyze_trigger_latency.py --help"
+	@echo "  uv run python src/analyze_rosbag.py <path/to/bag.db3>"
+	@echo "  uv run python src/gpu_pid_analyzer.py --help"
 	@echo ""
-	@echo "PICKNPLACE SIMULATION (see also: make -f src/Makefile help):"
-	@echo "  make picknplace-run          - Single run + graph monitor + trigger-latency"
-	@echo "  make picknplace-record       - + record KPI rosbag"
-	@echo "  make picknplace-benchmark    - RUNS runs (up to PN_TIMEOUT=300s each), then aggregate"
-	@echo "  Sessions -> monitoring_sessions/picknplace/"
+	@echo "SIMULATIONS:"
+	@echo "  bash src/wandering_run.sh --help"
+	@echo "  bash src/picknplace_run.sh --help"
 	@echo ""
-	@echo "BENCHMARKING:"
-	@echo "  make analyze-benchmark BENCH=<path>  - Re-aggregate KPIs from a bench dir"
-	@echo "  Params: RUNS=25  TIMEOUT=120  PN_TIMEOUT=300  PAUSE=30  NODE=<filter>"
-	@echo "  Full target list: make -f src/Makefile help"
+	@echo "GRAFANA + PROMETHEUS:"
+	@echo "  ./start_grafana.sh                        - Start stack"
+	@echo "  ./stop_grafana.sh                         - Stop stack"
+	@echo "  uv run python src/prometheus_exporter.py --help"
+	@echo "  ./grafana-monitor.sh --remote-ip <ip>     - Monitor + live Grafana export"
+	@echo "  ./grafana-monitor.sh --help"
 	@echo ""
-	@echo "VISUALIZATION & ANALYSIS:"
-	@echo "  make list-sessions        - List all previous monitoring sessions"
-	@echo "  make visualize-last       - Re-visualize the last monitoring session"
-	@echo "  make visualize-last ALGORITHM=<name>  - ... latest session for that algorithm"
-	@echo "  make visualize-all        - Visualize all plots from last session"
-	@echo "  make visualize-all ALGORITHM=<name>   - ... latest session for that algorithm"
-	@echo "  make visualize-gpu        - Full GPU dashboard (engine/freq/temp/power/PID) from last session"
-	@echo "  make visualize-gpu SESSION=<name>  - ... from specific session"
-	@echo "  make visualize-gpu ALGORITHM=<name>  - ... latest session for that algorithm"
-	@echo "  make visualize-gpu-pid-bar - Per-PID engine breakdown bar chart from last session"
-	@echo "  make visualize-npu        - NPU dashboard (busy/freq/memory) from last session"
-	@echo "  make visualize-npu SESSION=<name>  - ... from specific session"
-	@echo "  make visualize-npu ALGORITHM=<name>  - ... latest session for that algorithm"
-	@echo "  make pipeline-graph       - rqt_graph-style Node->Topic->Node directed graph + KPIs"
-	@echo "  make pipeline-graph SHOW=save              - ... save PNG only (no window)"
-	@echo "  make pipeline-graph SESSION=<name>         - ... from specific session"
-	@echo "  make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3          - Run N monitoring sessions back-to-back"
-	@echo "  make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=5 DURATION=120 PAUSE=10  - ... with custom timing"
-	@echo "  make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3 GPU=1 ALGORITHM=slam DOMAIN_ID=46  - ... + GPU + grouping"
-	@echo "  make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3 NPU=1 ALGORITHM=slam DOMAIN_ID=46  - ... + NPU + grouping"
-	@echo "  make monitor-remote-repeat REMOTE_IP=<ip> REPEAT=3 GPU=1 NPU=1 ALGORITHM=slam DOMAIN_ID=46  - ... + GPU + NPU"
-	@echo "  make pipeline-graph INCLUDE_SYSTEM=1      - ... also show /rosout /clock /parameter_events /_action"
-	@echo "  make pipeline-graph INCLUDE_MONITORS=1     - ... include rviz/rqt observer nodes"
-	@echo "  make pipeline-graph INCLUDE_ISOLATED=1     - ... include topic boxes with no edges"
-	@echo "  Note: Node boxes show proc delay (Δms) automatically when topology JSON is present"
-	@echo "  make interactive-heatmap  - Interactive core heatmap (click for details)"
-	@echo "  make analyze-session SESSION=<name> - Analyze specific session"
-	@echo "  make compare-sessions     - Compare multiple sessions"
-	@echo "  make view-average         - Average KPIs across last 5 sessions"
-	@echo "  make view-average RUNS=10 - Average across last N sessions"
-	@echo "  make view-average-timing  - Timing averages only"
-	@echo "  make view-average-resources - Resource averages only"
-	@echo "  make view-average-plot    - Averages + save bar-chart PNGs"
-	@echo ""
-	@echo "GRAFANA DASHBOARDS:"
-	@echo "  make grafana-start        - Start Grafana/Prometheus stack"
-	@echo "  make grafana-stop         - Stop Grafana/Prometheus stack"
-	@echo "  make grafana-status       - Check dashboard stack status"
-	@echo ""
-	@echo "UTILITIES:"
-	@echo "  make clean                - Remove all monitoring session data"
-	@echo "  make clean-last           - Remove the most recent session"
-	@echo "  make clean-session SESSION=<name> - Remove specific session"
-	@echo "  make install              - Install required dependencies"
-	@echo "  make setup-remote-gpu REMOTE_IP=<ip>  - Grant CAP_PERFMON so intel_gpu_top can use PMU"
-	@echo "  make check-deps           - Verify all dependencies (uv, ROS2, Python packages)"
-	@echo "  make check-domain         - Check ROS_DOMAIN_ID matches on local + remote"
-	@echo "  make check-domain REMOTE_IP=<ip> REMOTE_USER=<user>"
-	@echo "  make docs                 - Build PDF versions of all documentation"
-	@echo ""
-	@echo "INTEL GPU PID ANALYSIS:"
-	@echo "  make gpu-pids             - One-shot GPU snapshot (engines, freq, temp, watts, per-PID)"
-	@echo "  make gpu-pids-watch       - Live GPU monitor (refresh every 2 s, Ctrl-C to stop)"
-	@echo "  make gpu-pids-csv         - 60 s capture → gpu_pids.csv"
-	@echo "  make gpu-pids INTERVAL=1  - Custom sampling interval (seconds)"
-	@echo "  make gpu-pids-remote REMOTE_IP=<ip>         - Remote GPU PID analysis"
-	@echo "  make gpu-pids-remote REMOTE_IP=<ip> REMOTE_USER=<user> INTERVAL=1"
-	@echo "  Reported: Render/3D  Blitter  Video  VE  Freq(MHz)  Temp(C)  Watts"
-	@echo "  Requires: sudo apt install intel-gpu-tools"
-	@echo "            sudo setcap cap_perfmon+eip \$$(which intel_gpu_top)"
-	@echo ""
-	@echo "Examples:"
-	@echo "  make monitor NODE=/slam_toolbox DURATION=120  # scope graph discovery to one node"
-	@echo "  make monitor DURATION=120                     # all nodes (proc delay for all)"
-	@echo "  make monitor-pid DURATION=120"
-	@echo "  make quick-check"
-	@echo "  make wandering-benchmark RUNS=5 TIMEOUT=180"
-	@echo "  make picknplace-benchmark RUNS=5"
-	@echo "  make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421"
-	@echo "  make analyze-session SESSION=20260211_202949"
-
-# Full monitoring with optional parameters (defaults to 60 seconds)
-#   make monitor
-#   make monitor ALGORITHM=slam_toolbox
-#   make monitor ALGORITHM=nav2 DURATION=120 NODE=/controller_server
-monitor:
-	@echo "Starting monitoring stack ($(if $(DURATION),$(DURATION)s,until Ctrl+C))..."
-	@if [ -n "$(NODE)" ]; then \
-		uv run python src/monitor_stack.py --node $(NODE) $(if $(DURATION),--duration $(DURATION)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) $(if $(ALGORITHM),--algorithm '$(ALGORITHM)'); \
-	else \
-		uv run python src/monitor_stack.py $(if $(DURATION),--duration $(DURATION)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) $(if $(ALGORITHM),--algorithm '$(ALGORITHM)'); \
-	fi
-
-# Monitor specific node (shortcut)
-monitor-node:
-	@if [ -z "$(NODE)" ]; then \
-		echo "Error: Please specify NODE=<node_name>"; \
-		exit 1; \
-	fi
-	@uv run python src/monitor_stack.py --node $(NODE) $(if $(DURATION),--duration $(DURATION)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) $(if $(ALGORITHM),--algorithm '$(ALGORITHM)')
-
-# Monitor PIDs only (no thread details)
-monitor-pid:
-	@echo "Starting monitoring stack (PID-only mode, $(if $(DURATION),$(DURATION)s,until Ctrl+C))..."
-	@uv run python src/monitor_stack.py $(if $(DURATION),--duration $(DURATION)) --pid-only $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) $(if $(ALGORITHM),--algorithm '$(ALGORITHM)')
-
-# Remote monitoring - full (thread mode) - requires REMOTE_IP
-monitor-remote:
-	@if [ -z "$(REMOTE_IP)" ]; then \
-		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make monitor-remote REMOTE_IP=192.168.1.100"; \
-		exit 1; \
-	fi
-	@echo "Starting remote monitoring of $(REMOTE_IP) ($(if $(DURATION),$(DURATION)s,until Ctrl+C))..."
-	@uv run python src/monitor_stack.py \
-		--remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
-		$(if $(DURATION),--duration $(DURATION)) \
-		$(if $(NODE),--node $(NODE)) \
-		$(if $(INTERVAL),--interval $(INTERVAL)) \
-		$(if $(ALGORITHM),--algorithm '$(ALGORITHM)') \
-		$(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)) \
-		$(if $(GPU),--gpu) \
-		$(if $(NPU),--npu)
-monitor-remote-pid:
-	@if [ -z "$(REMOTE_IP)" ]; then \
-		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make monitor-remote-pid REMOTE_IP=192.168.1.100"; \
-		exit 1; \
-	fi
-	@echo "Starting remote PID monitoring of $(REMOTE_IP)..."
-	@uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
-		--pid-only $(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(ALGORITHM),--algorithm '$(ALGORITHM)') $(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID))
-
-# Local full monitoring + Intel GPU
-monitor-gpu:
-	@echo "Starting local monitoring with Intel GPU ($(if $(DURATION),$(DURATION)s,until Ctrl+C))..."
-	@echo "  Requires: sudo setcap cap_perfmon+eip $$(which intel_gpu_top)"
-	@uv run python src/monitor_stack.py --gpu \
-		$(if $(DURATION),--duration $(DURATION)) \
-		$(if $(INTERVAL),--interval $(INTERVAL)) \
-		$(if $(NODE),--node $(NODE)) \
-		$(if $(ALGORITHM),--algorithm '$(ALGORITHM)')
-
-# Quick 30-second check
-quick-check:
-	@echo "Running quick 30-second monitoring check..."
-	@uv run python src/monitor_stack.py --duration 30 --interval 2
-
-# Extended monitoring session (5 minutes) - Thread mode
-monitor-long:
-	@echo "Running extended monitoring session (5 minutes, with threads)..."
-	@uv run python src/monitor_stack.py --duration 300 --interval 5 $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# Extended monitoring session (5 minutes) - PID mode
-monitor-long-pid:
-	@echo "Running extended monitoring session (5 minutes, PID-only)..."
-	@uv run python src/monitor_stack.py --duration 300 --interval 5 --pid-only $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# Graph monitoring only
-graph-only:
-	@uv run python src/monitor_stack.py --graph-only $(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# Resource monitoring only (with thread details)
-resources-threads:
-	@uv run python src/monitor_stack.py --resources-only $(if $(DURATION),--duration $(DURATION)) $(if $(INTERVAL),--interval $(INTERVAL)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# Resource monitoring only (PIDs, no threads)
-resources-pid:
-	@uv run python src/monitor_stack.py --resources-only --pid-only $(if $(DURATION),--duration $(DURATION)) $(if $(REMOTE_IP),--remote-ip $(REMOTE_IP)) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER))
-
-# List all previous sessions
-list-sessions:
-	@uv run python src/monitor_stack.py --list-sessions
-
-# Visualize the most recent session
-# Finds the latest session in both flat (monitoring_sessions/<ts>/) and
-# algorithm-grouped (monitoring_sessions/<algo>/<ts>/) layouts.
-# Override with: make visualize-last ALGORITHM=slam_toolbox
-visualize-last:
-	@echo "Re-visualizing last monitoring session..."
-	@SESS_DIR=$$(if [ -n "$(ALGORITHM)" ]; then \
-	               ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	             else \
-	               ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	             fi); \
-	if [ -n "$$SESS_DIR" ]; then \
-		echo "Processing session: $$SESS_DIR"; \
-		if [ -f "$$SESS_DIR/graph_timing.csv" ]; then \
-			uv run python src/visualize_timing.py "$$SESS_DIR/graph_timing.csv" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--delays --frequencies --show; \
-		fi; \
-		if [ -f "$$SESS_DIR/resource_usage.log" ]; then \
-			uv run python src/visualize_resources.py "$$SESS_DIR/resource_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--cores --heatmap --top 10 --show; \
-		fi; \
-		if [ -f "$$SESS_DIR/gpu_usage.log" ]; then \
-			uv run python src/visualize_gpu.py "$$SESS_DIR/gpu_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--save --show; \
-		fi; \
-		if [ -f "$$SESS_DIR/npu_usage.log" ]; then \
-			uv run python src/visualize_npu.py "$$SESS_DIR/npu_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations"; \
-		fi; \
-		echo "Visualizations updated in: $$SESS_DIR/visualizations/"; \
-	else \
-		echo "No monitoring sessions found."; \
-	fi
-
-# Visualize all plots from the last session
-visualize-all:
-	@echo "Generating all visualizations from last session..."
-	@SESS_DIR=$$(if [ -n "$(ALGORITHM)" ]; then \
-	               ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	             else \
-	               ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	             fi); \
-	if [ -n "$$SESS_DIR" ]; then \
-		echo "Processing session: $$SESS_DIR"; \
-		if [ -f "$$SESS_DIR/graph_timing.csv" ]; then \
-			uv run python src/visualize_timing.py "$$SESS_DIR/graph_timing.csv" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--timestamps --frequencies --delays --inter-arrival \
-				--io-correlation --categories --activity-heatmap --delay-heatmap --show; \
-		fi; \
-		if [ -f "$$SESS_DIR/resource_usage.log" ]; then \
-			uv run python src/visualize_resources.py "$$SESS_DIR/resource_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--cores --pids --heatmap --mapping --top 20 --show; \
-		fi; \
-		if [ -f "$$SESS_DIR/gpu_usage.log" ]; then \
-			uv run python src/visualize_gpu.py "$$SESS_DIR/gpu_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations" \
-				--save --show --pid-bar; \
-		fi; \
-		if [ -f "$$SESS_DIR/npu_usage.log" ]; then \
-			uv run python src/visualize_npu.py "$$SESS_DIR/npu_usage.log" \
-				--output-dir "$$SESS_DIR/visualizations"; \
-		fi; \
-		echo "All visualizations saved to: $$SESS_DIR/visualizations/"; \
-	else \
-		echo "No monitoring sessions found."; \
-	fi
-
-# ─────────────────────────────────────────────────────────────────────────────
-# GPU-specific visualization targets
-#
-#   make visualize-gpu                         # latest session, save + interactive
-#   make visualize-gpu SESSION=20260312_134253  # specific session
-#   make visualize-gpu-pid-bar                 # per-PID engine breakdown only
-# ─────────────────────────────────────────────────────────────────────────────
-visualize-gpu:
-	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
-	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
-	               elif [ -n "$(ALGORITHM)" ]; then \
-	                 ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               else \
-	                 ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               fi); \
-	if [ -z "$$SESSION_DIR" ]; then \
-		echo "Error: No monitoring session found. Run 'make monitor-gpu' first."; exit 1; \
-	fi; \
-	GPU_LOG="$$SESSION_DIR/gpu_usage.log"; \
-	if [ ! -f "$$GPU_LOG" ]; then \
-		echo "Error: $$GPU_LOG not found.  Run 'make monitor-remote GPU=1' or 'make monitor-gpu' first."; exit 1; \
-	fi; \
-	mkdir -p "$$SESSION_DIR/visualizations"; \
-	echo "GPU log: $$GPU_LOG"; \
-	uv run python src/visualize_gpu.py "$$GPU_LOG" \
-		--output-dir "$$SESSION_DIR/visualizations" \
-		--save --show $(if $(TOP),--top $(TOP)) $(if $(LINES),--lines $(LINES))
-
-visualize-gpu-pid-bar:
-	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
-	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
-	               elif [ -n "$(ALGORITHM)" ]; then \
-	                 ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               else \
-	                 ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               fi); \
-	if [ -z "$$SESSION_DIR" ]; then \
-		echo "Error: No monitoring session found."; exit 1; \
-	fi; \
-	GPU_LOG="$$SESSION_DIR/gpu_usage.log"; \
-	if [ ! -f "$$GPU_LOG" ]; then \
-		echo "Error: $$GPU_LOG not found."; exit 1; \
-	fi; \
-	mkdir -p "$$SESSION_DIR/visualizations"; \
-	uv run python src/visualize_gpu.py "$$GPU_LOG" \
-		--output-dir "$$SESSION_DIR/visualizations" \
-		--save --show --pid-bar $(if $(TOP),--top $(TOP))
-
-# NPU dashboard: busy %, clock frequency, memory utilization
-visualize-npu:
-	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
-	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
-	               elif [ -n "$(ALGORITHM)" ]; then \
-	                 ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               else \
-	                 ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               fi); \
-	if [ -z "$$SESSION_DIR" ]; then \
-		echo "Error: No monitoring session found. Run 'make monitor-remote NPU=1' first."; exit 1; \
-	fi; \
-	NPU_LOG="$$SESSION_DIR/npu_usage.log"; \
-	if [ ! -f "$$NPU_LOG" ]; then \
-		echo "Error: $$NPU_LOG not found. Run 'make monitor-remote NPU=1' or add --npu to your monitor command."; exit 1; \
-	fi; \
-	mkdir -p "$$SESSION_DIR/visualizations"; \
-	echo "NPU log: $$NPU_LOG"; \
-	uv run python src/visualize_npu.py "$$NPU_LOG" \
-		--output-dir "$$SESSION_DIR/visualizations"
-
-# ─────────────────────────────────────────────────────────────────────────────
-# rqt_graph-style pipeline view – Node → Topic → Node directed graph + KPIs
-#
-#   make pipeline-graph                         # latest session, interactive window
-#   make pipeline-graph SHOW=save               # save PNG only (no window)
-#   make pipeline-graph SESSION=20260304_150959 # specific session
-#   make pipeline-graph INCLUDE_SYSTEM=1        # also show /rosout /clock /parameter_events /_action etc
-#   make pipeline-graph INCLUDE_MONITORS=1      # show rviz/rqt/monitor observer nodes
-#   make pipeline-graph INCLUDE_ISOLATED=1      # show topic boxes with no edges
-# ─────────────────────────────────────────────────────────────────────────────
-pipeline-graph:
-	@SESSION_DIR=$$(if [ -n "$(SESSION)" ]; then \
-	                 find monitoring_sessions -mindepth 1 -maxdepth 2 -name "$(SESSION)" -type d 2>/dev/null | head -1; \
-	               elif [ -n "$(ALGORITHM)" ]; then \
-	                 ls -td monitoring_sessions/$(ALGORITHM)/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               else \
-	                 ls -td monitoring_sessions/[0-9]*/ monitoring_sessions/*/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'; \
-	               fi); \
-	if [ -z "$$SESSION_DIR" ]; then \
-		echo "Error: No monitoring session found. Run 'make monitor' first."; exit 1; \
-	fi; \
-	CSV="$$SESSION_DIR/graph_timing.csv"; \
-	TOPO="$$SESSION_DIR/graph_topology.json"; \
-	VIS_DIR="$$SESSION_DIR/visualizations"; \
-	mkdir -p "$$VIS_DIR"; \
-	if [ ! -f "$$CSV" ]; then \
-		echo "Error: $$CSV not found."; exit 1; \
-	fi; \
-	echo "Session  : $$SESSION_DIR"; \
-	echo "CSV      : $$CSV"; \
-	if [ -f "$$TOPO" ]; then echo "Topology : $$TOPO (full Node→Topic→Node graph)"; \
-	else echo "Topology : not found (topic-only view; re-run monitor to generate graph_topology.json)"; fi; \
-	uv run python src/visualize_graph.py "$$CSV" \
-		$$([ -f "$$TOPO" ] && echo "--topology $$TOPO") \
-		--output-dir "$$VIS_DIR" \
-		$(if $(INCLUDE_SYSTEM),--include-system) \
-		$(if $(INCLUDE_MONITORS),--include-monitors) \
-		$(if $(INCLUDE_ISOLATED),--include-isolated) \
-		$(if $(filter save,$(SHOW)),--no-show,--show); \
-	echo "Pipeline graph -> $$VIS_DIR/pipeline_graph.png"
-
-# Interactive heatmap with click details
-interactive-heatmap:
-	@echo "Opening interactive core heatmap..."
-	@LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
-	if [ -n "$$LAST_SESSION" ]; then \
-		echo "Session: $$LAST_SESSION"; \
-		echo ""; \
-		echo "Instructions:"; \
-		echo "  • HOVER over cells to preview activity"; \
-		echo "  • CLICK on cells for detailed memory & performance stats"; \
-		echo ""; \
-		uv run python demo_interactive_heatmap.py; \
-	else \
-		echo "No monitoring sessions found. Run 'make monitor' first."; \
-	fi
-
-# Analyze a specific session
-analyze-session:
-	@if [ -z "$(SESSION)" ]; then \
-		echo "Error: Please specify SESSION=<session_name>"; \
-		echo "Use 'make list-sessions' to see available sessions"; \
-		exit 1; \
-	fi
-	@if [ ! -d "monitoring_sessions/$(SESSION)" ]; then \
-		echo "Error: Session '$(SESSION)' not found"; \
-		exit 1; \
-	fi
-	@echo "Analyzing session: $(SESSION)"
-	@if [ -f "monitoring_sessions/$(SESSION)/graph_timing.csv" ]; then \
-		echo ""; \
-		echo "=== TIMING ANALYSIS ==="; \
-		uv run python src/visualize_timing.py "monitoring_sessions/$(SESSION)/graph_timing.csv" --summary; \
-	fi
-	@if [ -f "monitoring_sessions/$(SESSION)/resource_usage.log" ]; then \
-		echo ""; \
-		echo "=== RESOURCE ANALYSIS ==="; \
-		uv run python src/visualize_resources.py "monitoring_sessions/$(SESSION)/resource_usage.log" --summary; \
-	fi
-
-# Compare multiple sessions (shows summary of last 5)
-compare-sessions:
-	@echo "Comparing recent monitoring sessions..."
-	@echo ""
-	@SESSIONS=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n5 | xargs -I{} basename {}); \
-	for session in $$SESSIONS; do \
-		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
-		echo "Session: $$session"; \
-		if [ -f "monitoring_sessions/$$session/session_info.txt" ]; then \
-			cat "monitoring_sessions/$$session/session_info.txt" | head -n5; \
-		fi; \
-		if [ -f "monitoring_sessions/$$session/graph_timing.csv" ]; then \
-			LINES=$$(wc -l < "monitoring_sessions/$$session/graph_timing.csv"); \
-			echo "Graph data points: $$LINES"; \
-		fi; \
-		if [ -f "monitoring_sessions/$$session/resource_usage.log" ]; then \
-			SIZE=$$(du -h "monitoring_sessions/$$session/resource_usage.log" | cut -f1); \
-			echo "Resource log size: $$SIZE"; \
-		fi; \
-		echo ""; \
-	done
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Cross-session KPI averages
-#
-#   make view-average               # timing + resources, last 5 sessions
-#   make view-average RUNS=10       # last N sessions
-#   make view-average-timing        # graph timing only
-#   make view-average-resources     # resource log only
-#   make view-average-plot          # save bar-chart PNGs
-#   make view-average-plot RUNS=10 SHOW=show  # open windows too
-# ─────────────────────────────────────────────────────────────────────────────
-view-average:
-	@uv run python src/view_average.py \
-		--runs $(if $(RUNS),$(RUNS),5) \
-		--sessions-dir $(if $(SESSIONS_DIR),$(SESSIONS_DIR),$(if $(ALGORITHM),monitoring_sessions/$(ALGORITHM),monitoring_sessions)) \
-		$(if $(TOP),--top $(TOP))
-
-view-average-timing:
-	@uv run python src/view_average.py \
-		--runs $(if $(RUNS),$(RUNS),5) \
-		--sessions-dir $(if $(SESSIONS_DIR),$(SESSIONS_DIR),$(if $(ALGORITHM),monitoring_sessions/$(ALGORITHM),monitoring_sessions)) \
-		--timing-only
-
-view-average-resources:
-	@uv run python src/view_average.py \
-		--runs $(if $(RUNS),$(RUNS),5) \
-		--sessions-dir $(if $(SESSIONS_DIR),$(SESSIONS_DIR),$(if $(ALGORITHM),monitoring_sessions/$(ALGORITHM),monitoring_sessions)) \
-		--resources-only \
-		$(if $(TOP),--top $(TOP))
-
-view-average-plot:
-	@uv run python src/view_average.py \
-		--runs $(if $(RUNS),$(RUNS),5) \
-		--sessions-dir $(if $(SESSIONS_DIR),$(SESSIONS_DIR),$(if $(ALGORITHM),monitoring_sessions/$(ALGORITHM),monitoring_sessions)) \
-		--plot \
-		$(if $(filter show,$(SHOW)),--show) \
-		$(if $(OUTPUT_DIR),--output-dir $(OUTPUT_DIR)) \
-		$(if $(TOP),--top $(TOP))
-
-view-average-tables:
-	@uv run python src/view_average.py \
-		--runs $(if $(RUNS),$(RUNS),5) \
-		--sessions-dir $(if $(SESSIONS_DIR),$(SESSIONS_DIR),$(if $(ALGORITHM),monitoring_sessions/$(ALGORITHM),monitoring_sessions)) \
-		--save-tables \
-		$(if $(OUTPUT_DIR),--output-dir $(OUTPUT_DIR)) \
-		$(if $(TOP),--top $(TOP))
+	@echo "INFRASTRUCTURE (make targets):"
+	@echo "  make install                              - Install all dependencies"
+	@echo "  make check-deps                           - Check all dependencies"
+	@echo "  make check-domain [REMOTE_IP=<ip>]        - Verify ROS_DOMAIN_ID matches"
+	@echo "  make setup-remote-gpu REMOTE_IP=<ip>      - Grant CAP_PERFMON for intel_gpu_top"
+	@echo "  make clean                                - Remove all monitoring sessions"
+	@echo "  make clean-last                           - Remove most recent session"
+	@echo "  make clean-session SESSION=<name>         - Remove specific session"
+	@echo "  make grafana-start / grafana-stop         - Grafana stack lifecycle"
+	@echo "  make grafana-status                       - Check Grafana stack status"
+	@echo "  make package [ROS_DISTRO=jazzy]           - Build Debian package"
+	@echo "  make lint / license-check                 - Code quality checks"
 
 # Clean all monitoring data
 clean:
@@ -590,7 +145,7 @@ install:
 	@echo "   export ROS_DOMAIN_ID=0"
 
 # Grant CAP_PERFMON to the pre-built intel_gpu_top on the remote machine
-# Run once after 'make monitor-remote' or building the binary.
+# Run once after setting up the remote machine for GPU monitoring.
 # Requires the user to have sudo access on the remote.
 setup-remote-gpu:
 	@if [ -z "$(REMOTE_IP)" ]; then \
@@ -751,10 +306,10 @@ check-deps:
 	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Next steps:"
-	@echo "  • make quick-check                           # Quick local test"
-	@echo "  • make monitor NODE=/my_node                 # Monitor specific node"
+	@echo "  • uv run python src/monitor_stack.py --duration 30       # Quick local test"
+	@echo "  • uv run python src/monitor_stack.py --node /my_node     # Monitor specific node"
 	@if [ -n "$(REMOTE_IP)" ]; then \
-		echo "  • make monitor-remote REMOTE_IP=$(REMOTE_IP)   # Monitor remote system"; \
+		echo "  • uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP)   # Monitor remote system"; \
 	fi
 
 # Build PDF documentation
@@ -850,7 +405,7 @@ grafana-export:
 		LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
 		if [ -z "$$LAST_SESSION" ]; then \
 			echo "❌ No monitoring sessions found"; \
-			echo "Run 'make monitor' first to create a session"; \
+			echo "Run 'uv run python src/monitor_stack.py' first to create a session"; \
 			exit 1; \
 		fi; \
 		echo "📊 Exporting metrics from latest session: $$LAST_SESSION"; \
@@ -872,7 +427,7 @@ grafana-export-live:
 monitor-remote-grafana:
 	@if [ -z "$(REMOTE_IP)" ]; then \
 		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make monitor-remote-grafana REMOTE_IP=192.168.1.100"; \
+		echo "Example: ./grafana-monitor.sh --remote-ip 192.168.1.100"; \
 		exit 1; \
 	fi
 	@echo "🚀 Starting remote monitoring + live Grafana export..."
@@ -903,15 +458,15 @@ monitor-remote-grafana:
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
 		echo "   Avg plots   : monitoring_sessions/average_5/"; \
-		echo "   Pipeline    : make pipeline-graph"; \
-		echo "   Avg review  : make view-average-plot"; \
+		echo "   Pipeline    : uv run python src/visualize_graph.py <session>/graph_timing.csv --show"; \
+			echo "   Avg review  : uv run python src/view_average.py --runs 5"; \
 	fi
 
 # Remote PID-only monitoring + live Grafana export
 monitor-remote-pid-grafana:
 	@if [ -z "$(REMOTE_IP)" ]; then \
 		echo "Error: Please specify REMOTE_IP=<ip_address>"; \
-		echo "Example: make monitor-remote-pid-grafana REMOTE_IP=192.168.1.100"; \
+		echo "Example: ./grafana-monitor.sh --remote-ip 192.168.1.100 --pid-only"; \
 		exit 1; \
 	fi
 	@echo "🚀 Starting remote PID monitoring + live Grafana export..."
@@ -943,7 +498,7 @@ monitor-remote-pid-grafana:
 	SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
-		echo "   Pipeline    : make pipeline-graph"; \
+		echo "   Pipeline    : uv run python src/visualize_graph.py $$SESSION_DIR/graph_timing.csv --show"; \
 	fi
 
 # Run remote monitoring N times back-to-back (e.g. once per algorithm run)
@@ -1011,8 +566,8 @@ monitor-remote-repeat:
 	echo "📁 Cross-session average (last $$REPEAT runs):"; \
 	uv run python src/view_average.py --plot --runs $$REPEAT --no-show \
 		--output-dir monitoring_sessions/average_$${REPEAT} 2>/dev/null || true; \
-	echo "   make view-average-plot RUNS=$$REPEAT"; \
-	echo "   make pipeline-graph"
+	echo "   uv run python src/view_average.py --runs $$REPEAT"; \
+	echo "   uv run python src/visualize_graph.py <session>/graph_timing.csv --show"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking — delegate to src/Makefile
@@ -1046,7 +601,7 @@ analyze-benchmark:
 			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
 		else \
 			echo "⚠️  Metrics exporter not running"; \
-			echo "   Start with: make grafana-export"; \
+			echo "   Start with: uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)"; \
 		fi; \
 	else \
 		echo "⚠️  Services not running"; \
@@ -1068,4 +623,44 @@ grafana-open:
 		echo "Open http://localhost:30000 in your browser"; \
 	fi
 
+# ═══════════════════════════════════════════════════════════════
+# PACKAGING
+# Build Debian packages matching sibling-repo convention.
+# Usage: ROS_DISTRO=humble make package
+#        ROS_DISTRO=jazzy  make package
+# ═══════════════════════════════════════════════════════════════
+
+package:
+	@# Help: Build Debian package inside Docker (produces ros-<distro>-benchmark-framework_*.deb)
+	docker run --rm -t --platform linux/amd64 \
+		-v $(ROOT_DIR):/src \
+		-w /src \
+		-e DEBIAN_FRONTEND=noninteractive \
+		amd64/ros:$(ROS_DISTRO)-ros-base \
+		bash -c " \
+			apt-get -qq update && apt-get install -qq -y equivs devscripts python3-hatchling && \
+			rm -rf debian && cp -r $(ROS_DISTRO)/debian ./debian && \
+			chmod +x debian/rules && \
+			mk-build-deps -i --host-arch amd64 --build-arch amd64 \
+				-t 'apt-get -y -q -o Debug::pkgProblemResolver=yes --no-install-recommends --allow-downgrades' debian/control && \
+			DEB_BUILD_OPTIONS='nocheck' dpkg-buildpackage -us -uc && \
+			rm -rf debian && \
+			mkdir -p /src/output && mv ../*.deb /src/output/"
+
+license-check:
+	@# Help: Perform a REUSE license check
+	docker run --rm --volume $(ROOT_DIR):/data fsfe/reuse:5.0.2 lint
+
+lint:
+	@# Help: Run linters (YAML, JSON, Python, Bash, Markdown, GitHub Actions)
+	$(MAKE) lint-all
+
+lint-all:
+	@# Help: Run super-linter over entire repository
+	docker run --rm --platform linux/amd64 \
+		-e SHELL=/bin/bash \
+		-e RUN_LOCAL=true \
+		--env-file ".github/linters/super-linter.env" \
+		-v $(ROOT_DIR):/tmp/lint \
+		ghcr.io/super-linter/super-linter:slim-v7
 

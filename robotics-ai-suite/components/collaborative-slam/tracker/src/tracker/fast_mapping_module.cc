@@ -212,7 +212,7 @@ void fast_mapping_module::run()
         univloc_msgs::Octree octree_msg;
         std::scoped_lock lock(octree_mutex_);
         octree_->toROSMsg(octree_msg);
-        univloc_tracker::Client::get_instance().send_octree_to_server(octree_msg);
+        univloc_tracker::Client::get_instance().send_octree_to_server(std::move(octree_msg));
       } else if (map_msg->is_merged_octree && !map_msg->octree.empty()) {
         spdlog::info("Received merged octree from server");
 
