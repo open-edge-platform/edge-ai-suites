@@ -8,8 +8,8 @@ run-name: "[Industrial Edge Insights Time Series and Multimodal] PR workflow (by
 on:
   pull_request:
     paths:
-      - 'manufacturing-ai-suite/industrial-edge-insights-time-series/*'
-      - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/*'
+      - 'manufacturing-ai-suite/industrial-edge-insights-time-series/**'
+      - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/**'
   workflow_call:
   workflow_dispatch:
 
