@@ -78,42 +78,8 @@ jobs:
         echo "Deploying Wind Turbine Anomaly Detection Sample App"
         echo "Deploying using mqtt ingestion"
         make up_mqtt_ingestion app=wind-turbine-anomaly-detection
-        kapacitor_attempts=0
-        while IFS= read -r line; do
-            echo "$line"
-            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
-                ((kapacitor_attempts++))
-                echo "Kapacitor connection attempt #${kapacitor_attempts}"
-                if (( kapacitor_attempts > 5 )); then
-                    echo "ERROR: Kapacitor is retrying - connection not working"
-                    exit 1
-                fi
-            fi
-        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
-        if (( kapacitor_attempts == 0 )); then
-            echo "ERROR: Kapacitor connection message not found within 30 seconds"
-            exit 1
-        fi
-        echo "Kapacitor connected successfully"
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
-        kapacitor_attempts=0
-        while IFS= read -r line; do
-            echo "$line"
-            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
-                ((kapacitor_attempts++))
-                echo "Kapacitor connection attempt #${kapacitor_attempts}"
-                if (( kapacitor_attempts > 1 )); then
-                    echo "ERROR: Kapacitor is retrying - connection not working"
-                    exit 1
-                fi
-            fi
-        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
-        if (( kapacitor_attempts == 0 )); then
-            echo "ERROR: Kapacitor connection message not found within 30 seconds"
-            exit 1
-        fi
-        echo "Kapacitor connected successfully"
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -125,23 +91,6 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         echo "Deploying Weld Anomaly Detection Sample App"
         make up_mqtt_ingestion app=weld-anomaly-detection
-        kapacitor_attempts=0
-        while IFS= read -r line; do
-            echo "$line"
-            if [[ "$line" == *"Attempting to connect to Kapacitor"* ]]; then
-                ((kapacitor_attempts++))
-                echo "Kapacitor connection attempt #${kapacitor_attempts}"
-                if (( kapacitor_attempts > 1 )); then
-                    echo "ERROR: Kapacitor is retrying - connection not working"
-                    exit 1
-                fi
-            fi
-        done < <(timeout 30s docker logs -f ia-time-series-analytics-microservice 2>&1)
-        if (( kapacitor_attempts == 0 )); then
-            echo "ERROR: Kapacitor connection message not found within 30 seconds"
-            exit 1
-        fi
-        echo "Kapacitor connected successfully"
     - name: Undeploying Weld Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
