@@ -27,7 +27,7 @@ from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
 import numpy as np
 import joblib
-from sklearnex import patch_sklearn, config_context, set_config
+from sklearnex import patch_sklearn, config_context
 patch_sklearn()
 
 warnings.filterwarnings(
@@ -68,7 +68,7 @@ class AnomalyDetectorHandler(Handler):
         label_path = os.path.abspath(label_path)
         self.pipeline = joblib.load(model_path)
         self.le       = joblib.load(label_path)
-        self.device = os.getenv('DEVICE', 'gpu').strip().lower() or 'gpu'
+        self.device = os.getenv('DEVICE', 'auto').strip().lower() or 'auto'
         logger.info(f"on device: {self.device}")
         global MODEL_WITH_EXPLANATION
         if MODEL_WITH_EXPLANATION:
@@ -263,7 +263,7 @@ class AnomalyDetectorHandler(Handler):
                         data_prediction,
                     )
 
-                    point.fieldsString["prediction_details"] = str(data_prediction)
+                    point.fieldsString["prediction_details"] = json.dumps(data_prediction)
 
                     if bad_defect > 50:
                         point.fieldsDouble["anomaly_status"] = 1.0 

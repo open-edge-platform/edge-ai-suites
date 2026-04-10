@@ -11,11 +11,11 @@ Features  : Pressure, CO2 Weld Flow, Feed, Primary Weld Current,
             Secondary Weld Voltage
 Target    : Defect category (12 classes)
 Outputs   :
-  - weld_defect_model.pkl   - trained pipeline (scaler + classifier)
-  - weld_defect_labels.pkl  - label-encoder mapping
-  - weld_defect_report.txt  - classification report on VAL split
-  - model_info.json         - metadata consumed by inference scripts
-
+  - weld_anomaly_detector.pkl         - trained pipeline (scaler + classifier)
+  - weld_anomaly_detector_labels.pkl  - label-encoder mapping
+  - weld_anomaly_detector.txt         - classification report on VAL split
+  - weld_anomaly_detector.json        - metadata consumed by inference scripts
+  
 Intel Acceleration
 ------------------
 Uses Intel Extension for Scikit-learn (scikit-learn-intelex) which patches
