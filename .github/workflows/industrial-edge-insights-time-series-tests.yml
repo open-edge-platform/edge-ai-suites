@@ -191,40 +191,60 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
+          # List tests that will be collected (helps debug which tests run/are skipped)
+          echo ""
+          echo "========== Collecting tests =========="
+          if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          fi
+          echo "======================================"
+          echo ""
+
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
-            pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
               --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
           else
-            pytest -q -vv --self-contained-html --html=/tmp/test_timeseries_report/report.html \
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
               --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}"
           fi
           PYTEST_RC=$?
           set -e
           echo "TIMESERIES_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
 
-          # Print test results summary
+          # Print test results summary with failure details
           python3 - <<'PYEOF'
           import xml.etree.ElementTree as ET, os
           from collections import defaultdict
           xml_path = '/tmp/test_timeseries_report/junit.xml'
           if not os.path.exists(xml_path):
-              print("No test results found")
+              print("No test results found (JUnit XML not generated)")
           else:
               root = ET.parse(xml_path).getroot()
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              failures = []
+              errors = []
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
                   fname = next((p for p in parts if p.startswith('test_')), None)
                   if not fname:
                       raw_name = tc.get('name', parts[0] if parts else 'unknown')
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
-                  if tc.find('failure') is not None:
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
                       files[fname]['failed'] += 1
-                  elif tc.find('error') is not None:
+                      msg = fail_el.get('message', '')[:200]
+                      failures.append(f"  FAILED  {test_id}\n          {msg}")
+                  elif err_el is not None:
                       files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      errors.append(f"  ERROR   {test_id}\n          {msg}")
                   elif tc.find('skipped') is not None:
                       files[fname]['skipped'] += 1
                   else:
@@ -233,6 +253,12 @@ jobs:
               print('-' * 80)
               for fname, c in sorted(files.items()):
                   print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+              if failures:
+                  print(f"\n--- Failures ({len(failures)}) ---")
+                  print('\n'.join(failures))
+              if errors:
+                  print(f"\n--- Errors ({len(errors)}) ---")
+                  print('\n'.join(errors))
               print()
           PYEOF
           deactivate
@@ -275,40 +301,60 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
+          # List tests that will be collected (helps debug which tests run/are skipped)
+          echo ""
+          echo "========== Collecting tests =========="
+          if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          fi
+          echo "======================================"
+          echo ""
+
           # Run specific test file if selected, otherwise run all tests
           set +e
           if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
-            pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
               --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
           else
-            pytest -q -vv --self-contained-html --html=/tmp/test_multimodal_report/report.html \
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
               --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}"
           fi
           PYTEST_RC=$?
           set -e
           echo "MULTIMODAL_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
 
-          # Print test results summary
+          # Print test results summary with failure details
           python3 - <<'PYEOF'
           import xml.etree.ElementTree as ET, os
           from collections import defaultdict
           xml_path = '/tmp/test_multimodal_report/junit.xml'
           if not os.path.exists(xml_path):
-              print("No test results found")
+              print("No test results found (JUnit XML not generated)")
           else:
               root = ET.parse(xml_path).getroot()
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              failures = []
+              errors = []
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
                   fname = next((p for p in parts if p.startswith('test_')), None)
                   if not fname:
                       raw_name = tc.get('name', parts[0] if parts else 'unknown')
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
-                  if tc.find('failure') is not None:
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
                       files[fname]['failed'] += 1
-                  elif tc.find('error') is not None:
+                      msg = fail_el.get('message', '')[:200]
+                      failures.append(f"  FAILED  {test_id}\n          {msg}")
+                  elif err_el is not None:
                       files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      errors.append(f"  ERROR   {test_id}\n          {msg}")
                   elif tc.find('skipped') is not None:
                       files[fname]['skipped'] += 1
                   else:
@@ -317,6 +363,12 @@ jobs:
               print('-' * 80)
               for fname, c in sorted(files.items()):
                   print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+              if failures:
+                  print(f"\n--- Failures ({len(failures)}) ---")
+                  print('\n'.join(failures))
+              if errors:
+                  print(f"\n--- Errors ({len(errors)}) ---")
+                  print('\n'.join(errors))
               print()
           PYEOF
           deactivate
@@ -351,10 +403,11 @@ jobs:
 
           def parse_junit(xml_path):
               if not os.path.exists(xml_path):
-                  return None
+                  return None, []
               from collections import defaultdict
               root = ET.parse(xml_path).getroot()
               files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              issue_details = []
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
                   fname = next((p for p in parts if p.startswith('test_')), None)
@@ -363,11 +416,18 @@ jobs:
                   if not fname:
                       raw_name = tc.get('name', parts[0] if parts else 'unknown')
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
-                  if tc.find('failure') is not None:
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
                       files[fname]['failed'] += 1
-                  elif tc.find('error') is not None:
+                      msg = fail_el.get('message', '')[:200]
+                      issue_details.append(('FAIL', test_id, msg))
+                  elif err_el is not None:
                       files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      issue_details.append(('ERROR', test_id, msg))
                   elif tc.find('skipped') is not None:
                       files[fname]['skipped'] += 1
                   else:
@@ -384,7 +444,7 @@ jobs:
                       suite_name = ts.get('name', 'unknown')
                       files[suite_name] = {'total': ts_errors, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': ts_errors}
 
-              return [{'name': n, **c} for n, c in sorted(files.items())]
+              return [{'name': n, **c} for n, c in sorted(files.items())], issue_details
 
           overall = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
 
@@ -404,7 +464,7 @@ jobs:
               ]
               for title, xml_path, exit_code in sections:
                   out.write(f'### {title}\n')
-                  results = parse_junit(xml_path)
+                  results, issues = parse_junit(xml_path)
                   if results is None:
                       out.write('\u23ed\ufe0f **Status:** SKIPPED (not run)\n\n')
                       continue
@@ -420,6 +480,14 @@ jobs:
                       for k in sec:
                           sec[k] += r[k]
                   out.write(f"| **Total** | **{sec['total']}** | **{sec['passed']}** | **{sec['failed']}** | **{sec['skipped']}** | **{sec['errors']}** |\n\n")
+                  if issues:
+                      out.write('<details><summary>\u274c Failure/Error Details</summary>\n\n')
+                      out.write('| Status | Test | Message |\n')
+                      out.write('|--------|------|--------|\n')
+                      for kind, test_id, msg in issues:
+                          safe_msg = msg.replace('|', '\\|').replace('\n', ' ')
+                          out.write(f'| {kind} | `{test_id}` | {safe_msg} |\n')
+                      out.write('\n</details>\n\n')
                   for k in overall:
                       overall[k] += sec[k]
 
