@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import { csUploadIngest, csQueryTask, csIngest, createSession, startMonitoring } from "../../services/api";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "PENDING"
@@ -71,6 +71,18 @@ const UploadSection: React.FC = () => {
       selectAllRef.current.indeterminate = someSelected && !allSelected;
     }
   }, [someSelected, allSelected]);
+
+  // Track uploads status for search section
+  useEffect(() => {
+    // Track if there are any uploads
+    dispatch(setCsHasUploads(entries.length > 0));
+    
+    // Enable search when ANY file is uploaded (COMPLETED or ALREADY_EXISTS)
+    const anyUploaded = entries.some(
+      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+    );
+    dispatch(setCsUploadsComplete(anyUploaded));
+  }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
     const next = !allSelected;

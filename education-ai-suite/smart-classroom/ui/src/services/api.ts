@@ -5,6 +5,7 @@ import {
   setVideoAnalyticsActive,
   setVideoPlaybackMode
 } from "../redux/slices/uiSlice";
+import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
 export type ProjectConfig = { 
   name: string; 
@@ -1015,12 +1016,34 @@ export async function searchContent(sessionId: string, query: string, topK: numb
         top_k: topK
       }),
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Search failed: ${response.status} - ${errorText}`);
     }
-
     return await response.json();
   });
+}
+
+// Content Search API - search for objects
+export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]> {
+  try {
+    const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Content search failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('csSearch error:', error);
+    return [];
+  }
 }
