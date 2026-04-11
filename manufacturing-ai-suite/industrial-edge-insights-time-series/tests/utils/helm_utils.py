@@ -2213,13 +2213,13 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         
         if sample_app == constants.WIND_SAMPLE_APP:
             os.chdir('../' + constants.HELM_TIMESERIES)
-            logger.info(f"Current working directory: {os.getcwd()}")
+            logger.debug(f"Current working directory: {os.getcwd()}")
             file_path = f'{os.getcwd()}/tick_scripts/windturbine_anomaly_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt"
         elif sample_app == constants.WELD_SAMPLE_APP:
             os.chdir('../' + constants.HELM_WELD)
-            logger.info(f"Current working directory: {os.getcwd()}")
+            logger.debug(f"Current working directory: {os.getcwd()}")
             file_path = f'{os.getcwd()}/tick_scripts/weld_anomaly_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt_weld"
