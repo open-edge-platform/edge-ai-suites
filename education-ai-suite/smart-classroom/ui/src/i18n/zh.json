@@ -225,5 +225,42 @@
     "processing": "处理中…",
     "failed": "失败",
     "uploaded": "已上传 ✓"
+  },
+  "searchSection": {
+    "title": "搜索",
+    "textSearch": "文本搜索",
+    "imageSearch": "图像搜索",
+    "yourQuestion": "您的问题",
+    "placeholder": "描述您要查找的内容...",
+    "dragDropImage": "拖放图像以进行搜索",
+    "orClickBrowse": "或点击浏览",
+    "selectSearchType": "选择搜索类型",
+    "documents": "文档",
+    "images": "图像",
+    "videos": "视频",
+    "selectAtLeastOneType": "请至少选择一种类型",
+    "filterByLabel": "按标签筛选",
+    "topResults": "最佳结果：",
+    "searching": "正在搜索...",
+    "search": "搜索",
+    "reset": "重置",
+    "searchNotAvailable": "搜索不可用。",
+    "filesStillUploading": "文件仍在上传中...",
+    "uploadFilesToEnable": "上传文件以启用搜索。"
+  },
+  "resultSection": {
+    "title": "结果",
+    "subtitle": "按相似度排序（最高排名优先）",
+    "all": "全部",
+    "documents": "文档",
+    "images": "图像",
+    "videos": "视频",
+    "noResults": "未找到结果。",
+    "noResultsHint": "尝试不同的问题或调整搜索筛选条件。",
+    "type": "类型：",
+    "time": "时间：",
+    "relevance": "相关性：",
+    "labels": "标签",
+    "score": "分数"
   }
 }

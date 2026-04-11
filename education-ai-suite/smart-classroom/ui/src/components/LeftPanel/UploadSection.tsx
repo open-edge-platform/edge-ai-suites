@@ -72,16 +72,17 @@ const UploadSection: React.FC = () => {
     }
   }, [someSelected, allSelected]);
 
-  // Track uploads status for search section
+  // Track uploads status for search section — only set true reactively;
+  // false is set explicitly on user-initiated clear to avoid resetting
+  // SearchSection due to transient remounts (StrictMode or navigation).
   useEffect(() => {
-    // Track if there are any uploads
-    dispatch(setCsHasUploads(entries.length > 0));
-    
-    // Enable search when ANY file is uploaded (COMPLETED or ALREADY_EXISTS)
-    const anyUploaded = entries.some(
-      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
-    );
-    dispatch(setCsUploadsComplete(anyUploaded));
+    if (entries.length > 0) {
+      dispatch(setCsHasUploads(true));
+      const anyUploaded = entries.some(
+        (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+      );
+      dispatch(setCsUploadsComplete(anyUploaded));
+    }
   }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
@@ -209,24 +210,27 @@ const UploadSection: React.FC = () => {
       }));
       setEntries((prev) => [...prev, ...newEntries]);
 
-      // Ensure session + monitoring
-      if (!sessionIdRef.current) {
-        try {
-          const res = await createSession();
-          sessionIdRef.current = res.sessionId;
-          dispatch(setSessionId(res.sessionId));
-        } catch (e) {
-          console.warn("Could not create session for metrics:", e);
+      // Ensure session + monitoring — run without blocking uploads
+      const ensureSessionAndMonitoring = async () => {
+        if (!sessionIdRef.current) {
+          try {
+            const res = await createSession();
+            sessionIdRef.current = res.sessionId;
+            dispatch(setSessionId(res.sessionId));
+          } catch (e) {
+            console.warn("Could not create session for metrics:", e);
+          }
         }
-      }
-      if (sessionIdRef.current && !monitoringActiveRef.current) {
-        try {
-          await startMonitoring(sessionIdRef.current);
-          dispatch(setMonitoringActive(true));
-        } catch (e) {
-          console.warn("Could not start monitoring:", e);
+        if (sessionIdRef.current && !monitoringActiveRef.current) {
+          try {
+            await startMonitoring(sessionIdRef.current);
+            dispatch(setMonitoringActive(true));
+          } catch (e) {
+            console.warn("Could not start monitoring:", e);
+          }
         }
-      }
+      };
+      ensureSessionAndMonitoring();
 
       await Promise.all(
         newEntries.map(async (entry) => {
@@ -298,7 +302,14 @@ const UploadSection: React.FC = () => {
       clearInterval(pollTimers.current[id]);
       delete pollTimers.current[id];
     }
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setEntries((prev) => {
+      const next = prev.filter((e) => e.id !== id);
+      if (next.length === 0) {
+        dispatch(setCsHasUploads(false));
+        dispatch(setCsUploadsComplete(false));
+      }
+      return next;
+    });
     setConfirmRemoveId(null);
   };
 
@@ -510,6 +521,8 @@ return (
                 Object.values(pollTimers.current).forEach(clearInterval);
                 pollTimers.current = {};
                 setEntries([]);
+                dispatch(setCsHasUploads(false));
+                dispatch(setCsUploadsComplete(false));
               }}
             >
                 {t("uploadSection.clearAll")}

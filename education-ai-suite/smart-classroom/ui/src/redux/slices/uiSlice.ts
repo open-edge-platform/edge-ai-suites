@@ -520,9 +520,13 @@ const uiSlice = createSlice({
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedCsHasUploads = state.csHasUploads;
+      const preservedCsUploadsComplete = state.csUploadsComplete;
       Object.assign(state, initialState);
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.csHasUploads = preservedCsHasUploads;
+      state.csUploadsComplete = preservedCsUploadsComplete;
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
