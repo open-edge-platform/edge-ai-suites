@@ -146,13 +146,17 @@ const UploadSection: React.FC = () => {
       const timer = setInterval(async () => {
         try {
           const result = await csQueryTask(taskId);
-          const status = (result.status?.toUpperCase() ?? "PROCESSING") as TaskStatus;
+          let status = (result.status?.toUpperCase() ?? "PROCESSING") as TaskStatus;
           const progress =
             status === "COMPLETED"
               ? 100
               : typeof result.progress === "number"
               ? result.progress
               : 0;
+
+          if (progress === 100 && !["FAILED"].includes(status)) {
+            status = "COMPLETED";
+          }
 
           const fileKey =
             (result.result?.file_info as any)?.file_key ??
