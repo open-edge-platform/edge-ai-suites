@@ -90,7 +90,15 @@ class PreprocessRequest(BaseModel):
     chunk_overlap_s: int = Field(default=DEFAULT_CHUNK_OVERLAP_S, ge=0, description="Chunk overlap in seconds")
     max_num_frames: int = Field(default=DEFAULT_MAX_NUM_FRAMES, ge=1, description="Max sampled frames per chunk")
 
-    prompt: str = Field("Please summarize this video.", description="Prompt used per chunk")
+    prompt: str = Field(
+        "Please summarize this classroom video segment. "
+        "Focus on the teaching activities, lecture topics, "
+        "key knowledge points being explained, "
+        "any content written or displayed on the blackboard/screen, "
+        "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
+        "and notable student-teacher interactions.",
+        description="Prompt used per chunk",
+    )
     max_completion_tokens: int = Field(500, ge=1, description="VLM max completion tokens")
 
     vlm_endpoint: Optional[str] = Field(None, description="Override VLM endpoint URL")

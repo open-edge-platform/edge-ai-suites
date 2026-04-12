@@ -45,12 +45,12 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         chroma = cs.get("chromadb", {})
         _set("CHROMA_HOST", chroma.get("host", "127.0.0.1"))
         _set("CHROMA_PORT", chroma.get("port", "9090"))
-        _set("CHROMA_DATA_DIR", chroma.get("data_dir", "./chroma_data"))
+        _set("CHROMA_DATA_DIR", chroma.get("data_dir", "./data/chroma_data"))
         _set("CHROMA_EXE", chroma.get("chroma_exe"))
 
         # Local Storage
         storage = cs.get("storage", {})
-        _set("STORAGE_DATA_DIR", storage.get("data_dir", "./providers/local_storage/data"))
+        _set("STORAGE_DATA_DIR", storage.get("data_dir", "./data/local_storage"))
         _set("STORAGE_BUCKET", storage.get("bucket", "content-search"))
 
         # VLM
@@ -191,7 +191,7 @@ def main() -> None:
             "cmd": [chroma_exe, "run",
                     "--host", _env("CHROMA_HOST", "127.0.0.1"),
                     "--port", _env("CHROMA_PORT", "9090"),
-                    "--path", _env("CHROMA_DATA_DIR", "./chroma_data")],
+                    "--path", _env("CHROMA_DATA_DIR", "./data/chroma_data")],
             "cwd": CONTENT_SEARCH_DIR,
             "health": (_env("CHROMA_HOST", "127.0.0.1"), int(_env("CHROMA_PORT", "9090")), ""),
             "health_timeout": 60,

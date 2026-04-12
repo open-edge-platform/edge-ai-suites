@@ -391,10 +391,10 @@ content_search:
   chromadb:
     host: "127.0.0.1"
     port: 9090
-    data_dir: './providers/chromadb_wrapper/chroma_data'
+    data_dir: './data/chroma_data'
 
   storage:
-    data_dir: './providers/local_storage/data'
+    data_dir: './data/local_storage'
     bucket: "content-search"
 
   vlm:
