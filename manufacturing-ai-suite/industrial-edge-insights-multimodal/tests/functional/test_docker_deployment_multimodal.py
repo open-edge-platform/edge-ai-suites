@@ -715,8 +715,8 @@ def test_s3_stored_images_access(setup_multimodal_environment):
 
 
 def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
-    """TC_018: Validate RTP sender timestamps in vision measurement stored in InfluxDB"""
-    logger.info("TC_018: Verifying RTP sender timestamps persisted in InfluxDB vision measurement")
+    """TC_019: Validate RTP sender timestamps in vision measurement stored in InfluxDB"""
+    logger.info("TC_019: Verifying RTP sender timestamps persisted in InfluxDB vision measurement")
 
     context = setup_multimodal_environment
     context["deploy_multimodal"]()

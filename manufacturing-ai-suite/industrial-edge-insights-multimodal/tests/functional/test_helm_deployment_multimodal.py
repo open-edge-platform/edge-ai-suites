@@ -32,7 +32,7 @@ pytest_plugins = ["conftest_helm"]
 ) = helm_utils.get_multimodal_env_values()
 
 def test_gen_chart():
-    logger.info("TC001: Generating helm chart for multimodal.")
+    logger.info("TC_001: Generating helm chart for multimodal.")
     # Use generic chart path - the function will determine the correct path
     result = helm_utils.generate_helm_chart(chart_path_multi, constants.MULTIMODAL_SAMPLE_APP)
     logger.info(f"generate_helm_chart result: {result}")
