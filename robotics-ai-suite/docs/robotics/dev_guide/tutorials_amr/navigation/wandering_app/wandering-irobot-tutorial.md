@@ -36,7 +36,10 @@ connection. Output on the robot with the configuration from the image
 above:
 
 ```bash
-$ ping -c 3 192.168.99.2
+ping -c 3 192.168.99.2
+```
+
+```text
 PING 192.168.99.2 (192.168.99.2) 56(84) bytes of data.
 64 bytes from 192.168.99.2: icmp_seq=1 ttl=64 time=1.99 ms
 64 bytes from 192.168.99.2: icmp_seq=2 ttl=64 time=2.31 ms

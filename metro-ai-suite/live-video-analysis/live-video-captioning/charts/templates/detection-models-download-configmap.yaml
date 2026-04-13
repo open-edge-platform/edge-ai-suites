@@ -1,0 +1,99 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+ConfigMap holding the detection-model download shell script.
+The script follows the object-detection guide and invokes the DL Streamer
+download_public_models.sh helper for each configured detection model.
+*/}}
+{{- $detectionEnabled := eq (lower (toString (index .Values "video-caption-service" "env" "enableDetectionPipeline"))) "true" -}}
+{{- if and $detectionEnabled .Values.global.detectionModels }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "live-video-captioning.fullname" . }}-detection-models-download-script
+  labels:
+    {{- include "live-video-captioning.labels" . | nindent 4 }}
+data:
+  download.sh: |
+    #!/bin/bash
+    set -euo pipefail
+
+    echo "=== Detection Model Download Job ==="
+    echo "Detection model count: ${DETECTION_MODEL_COUNT}"
+    echo ""
+
+    # Remove filesystem artifacts created by the ext4 formatter on fresh PVCs.
+    rm -rf /detection_models/lost+found
+
+    MISSING=0
+    i=0
+    while [ "${i}" -lt "${DETECTION_MODEL_COUNT}" ]; do
+      name_var="DETECTION_MODEL_${i}_NAME"
+      MODEL_NAME="${!name_var}"
+      if [ ! -f "/detection_models/${MODEL_NAME}/.complete" ]; then
+        MISSING=$(( MISSING + 1 ))
+      fi
+      i=$(( i + 1 ))
+    done
+
+    if [ "${MISSING}" -eq 0 ]; then
+      echo "All ${DETECTION_MODEL_COUNT} detection model(s) already exist in the PVC."
+      echo "=== Detection model download complete. ==="
+      exit 0
+    fi
+
+    echo "${MISSING} detection model(s) missing — installing prerequisites..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update
+    # libgl1 and libglib2.0-0 are needed because the upstream helper installs
+    # opencv-python (not headless) which links against these system libraries.
+    apt-get install -y --no-install-recommends curl git ca-certificates \
+      libgl1 libglib2.0-0
+    rm -rf /var/lib/apt/lists/*
+
+    SCRIPT_PATH="/tmp/download_public_models.sh"
+    curl -fsSL "${DETECTION_SCRIPT_URL}" -o "${SCRIPT_PATH}"
+    chmod +x "${SCRIPT_PATH}"
+
+    FAILED=0
+    i=0
+    while [ "${i}" -lt "${DETECTION_MODEL_COUNT}" ]; do
+      name_var="DETECTION_MODEL_${i}_NAME"
+      MODEL_NAME="${!name_var}"
+      OUTPUT_PATH="/detection_models/${MODEL_NAME}"
+
+      echo "[$(( i + 1 ))/${DETECTION_MODEL_COUNT}] Processing detection model: ${MODEL_NAME}"
+
+      if [ -f "${OUTPUT_PATH}/.complete" ]; then
+        echo "  Already complete — skipping."
+      else
+        mkdir -p "${OUTPUT_PATH}"
+        if MODELS_PATH="${OUTPUT_PATH}" bash "${SCRIPT_PATH}" "${MODEL_NAME}"; then
+          if [ -d "${OUTPUT_PATH}/public/${MODEL_NAME}" ]; then
+            touch "${OUTPUT_PATH}/.complete"
+            echo "  ✔ Detection model '${MODEL_NAME}' downloaded successfully."
+          else
+            echo "  ERROR: expected output directory ${OUTPUT_PATH}/public/${MODEL_NAME} not found." >&2
+            FAILED=$(( FAILED + 1 ))
+          fi
+        else
+          echo "  ERROR: download failed for detection model ${MODEL_NAME}." >&2
+          FAILED=$(( FAILED + 1 ))
+        fi
+      fi
+
+      i=$(( i + 1 ))
+    done
+
+    if [ "${FAILED}" -ne 0 ]; then
+      echo "" >&2
+      echo "ERROR: ${FAILED} detection model(s) failed to download." >&2
+      exit 1
+    fi
+
+    echo ""
+    echo "==============================================================="
+    echo "  All ${DETECTION_MODEL_COUNT} detection model(s) downloaded."
+    echo "==============================================================="
+{{- end }}

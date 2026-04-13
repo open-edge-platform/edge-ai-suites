@@ -126,6 +126,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 For alternative ways to setup the application, see:
 
 - [Build from Source](./get-started/build-from-source.md)
+- [Deploy with Helm](./deploy-with-helm.md)
 
 ## Testing
 
@@ -168,6 +169,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 ## Supporting Resources
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
 - [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
 - [API Reference](./api-reference.md)

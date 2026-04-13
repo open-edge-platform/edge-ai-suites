@@ -3,11 +3,13 @@
  */
 const MetadataStreamService = (function() {
     let metadataSource = null;
+    let reconnectTimer = null;
     const runUIs = new Map();
     const lastCaptionTime = new Map();
     const captionHistoryByRun = new Map();
     const MAX_CAPTION_BUFFER = 20;
     let captionHistoryCount = null;
+    let onRunErrorCallback = null;
 
     function normalizeCaptionHistory(value, fallback = 3) {
         const parsed = Number.parseInt(value, 10);
@@ -137,6 +139,20 @@ const MetadataStreamService = (function() {
 
             try {
                 const msg = JSON.parse(event.data);
+
+                // Handle run-status heartbeats emitted when no MQTT message arrives.
+                // Each heartbeat carries {type:"status", runs:{runId: status, ...}}.
+                if (msg.type === 'status' && msg.runs) {
+                    for (const [runId, status] of Object.entries(msg.runs)) {
+                        if (status !== 'error') continue;
+                        const ui = runUIs.get(runId);
+                        if (!ui || ui._errorStateShown) continue;
+                        ui._errorStateShown = true;
+                        if (onRunErrorCallback) onRunErrorCallback(runId, ui);
+                    }
+                    return;
+                }
+
                 const runId = msg.runId;
 
                 if (!runId) {
@@ -228,9 +244,14 @@ const MetadataStreamService = (function() {
 
         metadataSource.onerror = (event) => {
             console.error('Metadata stream error:', event);
-            // EventSource will automatically try to reconnect
-            // Reset the connection after a delay if it keeps failing
-            setTimeout(() => {
+            // Cancel any pending reconnect before scheduling a new one to prevent
+            // multiple concurrent EventSource instances on rapid error bursts.
+            if (reconnectTimer) {
+                clearTimeout(reconnectTimer);
+                reconnectTimer = null;
+            }
+            reconnectTimer = setTimeout(() => {
+                reconnectTimer = null;
                 if (metadataSource && metadataSource.readyState === EventSource.CLOSED) {
                     console.log('Reconnecting metadata stream...');
                     metadataSource = null;
@@ -255,6 +276,10 @@ const MetadataStreamService = (function() {
         runUIs.delete(runId);
         lastCaptionTime.delete(runId);
         captionHistoryByRun.delete(runId);
+    }
+
+    function setOnRunError(callback) {
+        onRunErrorCallback = callback;
     }
 
     function getLastCaptionTime(runId) {
@@ -296,6 +321,7 @@ const MetadataStreamService = (function() {
         initMultiplexedMetadataStream,
         registerRunUI,
         unregisterRunUI,
+        setOnRunError,
         getLastCaptionTime,
         getRunUIs,
         setCaptionHistoryLimit,

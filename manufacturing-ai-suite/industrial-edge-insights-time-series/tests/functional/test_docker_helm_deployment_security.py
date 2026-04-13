@@ -36,85 +36,147 @@ if not all([release_name, chart_path, namespace, grafana_url, target]):
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])    
 def test_authentication_influx_grafana(setup_helm_environment, telegraf_input_plugin):
     logger.info("TC_001: Verify influxdb authentication and grafana authentication w.r.t. username password provided in values.yaml")
-    assert helm_utils.verify_pods(namespace) == True, "Failed to verify pods in the namespace."
+    pods_result = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result: {pods_result}")
+    assert pods_result == True, "Failed to verify pods in the namespace."
     # Access the test cases dictionary
-    assert helm_utils.setup_sample_app_udf_deployment_package(chart_path) == True, "Failed to activate UDF deployment package."
+    setup_result = helm_utils.setup_sample_app_udf_deployment_package(chart_path)
+    logger.info(f"setup_sample_app_udf_deployment_package result: {setup_result}")
+    assert setup_result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
     time.sleep(wait_time)  # Wait for the pods to stabilize
-    assert helm_utils.verify_ts_logs(namespace, "DEBUG") is True, "Failed to verify pod logs for MQTT input plugin."
+    ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
+    logger.info(f"verify_ts_logs result: {ts_logs_result}")
+    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
     # Access the test cases dictionary
     influxdb_username, influxdb_password = security_utils.fetch_credentials(chart_path, "influxdb")
     logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: {influxdb_password}")
-    assert security_utils.influxdb_login(namespace, chart_path) == True, "Failed to login to InfluxDB with provided credentials."
+    influxdb_login_result = security_utils.influxdb_login(namespace, chart_path)
+    logger.info(f"influxdb_login result: {influxdb_login_result}")
+    assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
     grafana_username, grafana_password = security_utils.fetch_credentials(chart_path, "grafana")
     logger.info("Successfully retrieved Grafana credentials.")
-    assert asyncio.run(security_utils.login_to_grafana(grafana_url, grafana_username, grafana_password)) == True, "Failed to login to Grafana with provided credentials."
+    grafana_login_result = asyncio.run(security_utils.login_to_grafana(grafana_url, grafana_username, grafana_password))
+    logger.info(f"login_to_grafana result: {grafana_login_result}")
+    assert grafana_login_result == True, "Failed to login to Grafana with provided credentials."
 
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])    
 def test_nmap_open_ports_opcua(setup_helm_environment, telegraf_input_plugin):
     logger.info("TC_002: Verify nmap open ports functionality with opcua.")
-    assert helm_utils.verify_pods(namespace) == True, "Failed to verify pods in the namespace."
-    assert helm_utils.setup_sample_app_udf_deployment_package(chart_path) == True, "Failed to activate UDF deployment package."
+    pods_result = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result: {pods_result}")
+    assert pods_result == True, "Failed to verify pods in the namespace."
+    setup_result = helm_utils.setup_sample_app_udf_deployment_package(chart_path)
+    logger.info(f"setup_sample_app_udf_deployment_package result: {setup_result}")
+    assert setup_result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
     time.sleep(wait_time)  # Wait for the pods to stabilize
-    assert helm_utils.verify_ts_logs(namespace, "DEBUG") is True, "Failed to verify pod logs for MQTT input plugin."
+    ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
+    logger.info(f"verify_ts_logs result: {ts_logs_result}")
+    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
     exposed_ports = security_utils.find_exposed_ports_helm(namespace)
-    assert security_utils.check_nmap(target, exposed_ports) == True, "Failed to find open ports on the target."
+    nmap_result = security_utils.check_nmap(target, exposed_ports)
+    logger.info(f"check_nmap result: {nmap_result}")
+    assert nmap_result == True, "Failed to find open ports on the target."
 
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_MQTT_PLUGIN])    
 def test_nmap_open_ports_mqtt(setup_helm_environment, telegraf_input_plugin):
     logger.info("TC_003: Verify nmap open ports functionality with mqtt.")
-    assert helm_utils.verify_pods(namespace) == True, "Failed to verify pods in the namespace."
-    assert helm_utils.setup_sample_app_udf_deployment_package(chart_path) == True, "Failed to activate UDF deployment package."
+    pods_result = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result: {pods_result}")
+    assert pods_result == True, "Failed to verify pods in the namespace."
+    setup_result = helm_utils.setup_sample_app_udf_deployment_package(chart_path)
+    logger.info(f"setup_sample_app_udf_deployment_package result: {setup_result}")
+    assert setup_result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
     time.sleep(wait_time)  # Wait for the pods to stabilize
-    assert helm_utils.verify_ts_logs(namespace, "DEBUG") is True, "Failed to verify pod logs for MQTT input plugin."
+    ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
+    logger.info(f"verify_ts_logs result: {ts_logs_result}")
+    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
     exposed_ports = security_utils.find_exposed_ports_helm(namespace)
-    assert security_utils.check_nmap(target, exposed_ports) == True, "Failed to find open ports on the target."
+    nmap_result = security_utils.check_nmap(target, exposed_ports)
+    logger.info(f"check_nmap result: {nmap_result}")
+    assert nmap_result == True, "Failed to find open ports on the target."
 
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
 def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     logger.info("TC_004: Verify that credentials are not present in pod logs.")
-    assert helm_utils.verify_pods(namespace) == True, "Failed to verify pods in the namespace."
-    assert helm_utils.setup_sample_app_udf_deployment_package(chart_path) == True, "Failed to activate UDF deployment package."
+    pods_result = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result: {pods_result}")
+    assert pods_result == True, "Failed to verify pods in the namespace."
+    setup_result = helm_utils.setup_sample_app_udf_deployment_package(chart_path)
+    logger.info(f"setup_sample_app_udf_deployment_package result: {setup_result}")
+    assert setup_result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
     time.sleep(wait_time)  # Wait for the pods to stabilize
-    assert helm_utils.verify_ts_logs(namespace, "DEBUG") is True, "Failed to verify pod logs for MQTT input plugin."
+    ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
+    logger.info(f"verify_ts_logs result: {ts_logs_result}")
+    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
     influxdb_creds = security_utils.fetch_credentials(chart_path, "influxdb")
     grafana_creds = security_utils.fetch_credentials(chart_path, "grafana")
-    assert security_utils.verify_pods_creds(namespace, influxdb_creds, grafana_creds) == True, "Credentials found in pod logs."
+    pods_creds_result = security_utils.verify_pods_creds(namespace, influxdb_creds, grafana_creds)
+    logger.info(f"verify_pods_creds result: {pods_creds_result}")
+    assert pods_creds_result == True, "Credentials found in pod logs."
 
 def test_data_integrity():
     logger.info("TC_005: Verify data integrity in the system.")
-    assert security_utils.verify_docker_file_integrity() == True, "Docker-compose file integrity verification failed."
-    assert security_utils.verify_helm_file_integrity() == True, "Helm files integrity verification failed."
-    assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release."
-    assert helm_utils.check_pods(namespace) == True, "Pods are still running after cleanup."
+    docker_file_integrity_result = security_utils.verify_docker_file_integrity()
+    logger.info(f"verify_docker_file_integrity result: {docker_file_integrity_result}")
+    assert docker_file_integrity_result == True, "Docker-compose file integrity verification failed."
+    helm_file_integrity_result = security_utils.verify_helm_file_integrity()
+    logger.info(f"verify_helm_file_integrity result: {helm_file_integrity_result}")
+    assert helm_file_integrity_result == True, "Helm files integrity verification failed."
+    uninstall_result = helm_utils.uninstall_helm_charts(release_name, namespace)
+    logger.info(f"uninstall_helm_charts result: {uninstall_result}")
+    assert uninstall_result == True, "Failed to uninstall Helm release."
+    check_pods_result = helm_utils.check_pods(namespace)
+    logger.info(f"check_pods result: {check_pods_result}")
+    assert check_pods_result == True, "Pods are still running after cleanup."
     logger.info("Helm release is uninstalled if it exists")
     case = helm_utils.password_test_cases["test_case_3"]
     logger.info("Validating pod logs with respect to log level : debug")
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
-    assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
+    update_yaml_result = helm_utils.update_values_yaml(values_yaml_path, case)
+    logger.info(f"update_values_yaml result: {update_yaml_result}")
+    assert update_yaml_result == True, "Failed to update values.yaml."
     logger.info(f"Helm will be installed with, Release Name: {release_name}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
-    assert helm_utils.helm_install(release_name, chart_path, namespace, constants.TELEGRAF_MQTT_PLUGIN, continuous_simulator_ingestion="false") == True, "Failed to install Helm release."
+    helm_install_result = helm_utils.helm_install(release_name, chart_path, namespace, constants.TELEGRAF_MQTT_PLUGIN, continuous_simulator_ingestion="false")
+    logger.info(f"helm_install result: {helm_install_result}")
+    assert helm_install_result == True, "Failed to install Helm release."
     time.sleep(5)  # Wait for the pods to stabilize
-    assert helm_utils.verify_pods(namespace) is True, "Failed to verify pods."
+    pods_result = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result: {pods_result}")
+    assert pods_result is True, "Failed to verify pods."
     logger.info("All pods are running")
-    assert helm_utils.setup_sample_app_udf_deployment_package(chart_path) == True, "Failed to activate UDF deployment package."
+    setup_result = helm_utils.setup_sample_app_udf_deployment_package(chart_path)
+    logger.info(f"setup_sample_app_udf_deployment_package result: {setup_result}")
+    assert setup_result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and Wait for {wait_time} seconds for pods to stabilize")
     time.sleep(wait_time)  # Wait for the pods to stabilize
-    assert helm_utils.verify_pods(namespace) is True, "Failed to verify pods for Case 3."
-    assert helm_utils.verify_ts_logs(namespace, "DEBUG") is True, "Failed to verify pod logs for MQTT input plugin."
+    pods_result_2 = helm_utils.verify_pods(namespace)
+    logger.info(f"verify_pods result (case 3): {pods_result_2}")
+    assert pods_result_2 is True, "Failed to verify pods for Case 3."
+    ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
+    logger.info(f"verify_ts_logs result: {ts_logs_result}")
+    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
     first_wind_speed, last_wind_speed, total_records = security_utils.fetch_wind_turbine_data()
     assert first_wind_speed is not None or last_wind_speed is not None or total_records is not None, "Failed to fetch wind turbine data."
     logger.info(f"First wind speed: {first_wind_speed}, Last wind speed: {last_wind_speed}, Total records: {total_records} and wait for few {wait_time + 300} seconds to finish 1st set of ingestion data")
     time.sleep(wait_time + 300)
-    assert security_utils.influxdb_login(namespace, chart_path) == True, "Failed to login to InfluxDB with provided credentials."
+    influxdb_login_result = security_utils.influxdb_login(namespace, chart_path)
+    logger.info(f"influxdb_login result: {influxdb_login_result}")
+    assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
     logger.info("Verifying data integrity in InfluxDB.")
-    assert security_utils.verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last_wind_speed, total_records) == True, "Data integrity verification failed in InfluxDB."
+    data_integrity_result = security_utils.verify_data_integrity_influxdb(chart_path, namespace, first_wind_speed, last_wind_speed, total_records)
+    logger.info(f"verify_data_integrity_influxdb result: {data_integrity_result}")
+    assert data_integrity_result == True, "Data integrity verification failed in InfluxDB."
     time.sleep(5)
-    assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release after data integrity test."
-    assert helm_utils.check_pods(namespace) == True, "Pods are still running after cleanup."
+    uninstall_result_2 = helm_utils.uninstall_helm_charts(release_name, namespace)
+    logger.info(f"uninstall_helm_charts result: {uninstall_result_2}")
+    assert uninstall_result_2 == True, "Failed to uninstall Helm release after data integrity test."
+    check_pods_result_2 = helm_utils.check_pods(namespace)
+    logger.info(f"check_pods result: {check_pods_result_2}")
+    assert check_pods_result_2 == True, "Pods are still running after cleanup."
 
 @pytest.mark.docker_security   
 def test_nmap_open_ports_opcua_docker(setup_docker_environment):
@@ -153,12 +215,16 @@ def test_authentication_influx_grafana_docker(setup_docker_environment):
     # Test InfluxDB authentication using Docker-specific function
     influxdb_username, influxdb_password = security_utils.fetch_docker_credentials("influxdb")
     logger.info("Successfully retrieved InfluxDB credentials.")
-    assert security_utils.influxdb_login_docker() == True, "Failed to login to InfluxDB with provided credentials."
+    influxdb_login_result = security_utils.influxdb_login_docker()
+    logger.info(f"influxdb_login_docker result: {influxdb_login_result}")
+    assert influxdb_login_result == True, "Failed to login to InfluxDB with provided credentials."
     
     # Test Grafana authentication using Docker-specific function
     grafana_username, grafana_password = security_utils.fetch_docker_credentials("grafana")
     logger.info("Successfully retrieved Grafana credentials.")
-    assert asyncio.run(security_utils.login_to_grafana_docker(port=context["docker_grafana_port"])) == True, "Failed to login to Grafana with provided credentials."
+    grafana_login_result = asyncio.run(security_utils.login_to_grafana_docker(port=context["docker_grafana_port"]))
+    logger.info(f"login_to_grafana_docker result: {grafana_login_result}")
+    assert grafana_login_result == True, "Failed to login to Grafana with provided credentials."
     
     logger.info("Successfully completed authentication tests for Docker deployment.")
 
@@ -202,6 +268,7 @@ def test_verify_sensitive_data_in_mqtt_logs(setup_docker_environment):
     logger.info(f"Verification results: {safe_results}")
     
     # Check if verification was successful
+    logger.info(f"Credential verification results: success={results['success']}, env_read={results.get('env_variables_read')}, deploy={results.get('deployment_success')}, containers_up={results.get('containers_up')}, creds_in_logs={results.get('credentials_in_logs')}")
     assert results["success"], f"Credential verification failed at step: {results.get('failed_step', 'unknown')}"
     
     logger.info("Successfully verified MQTT deployment with credentials in logs")
@@ -253,6 +320,7 @@ def test_verify_sensitive_data_in_opcua_logs(setup_docker_environment):
     logger.info(f"Verification results: {safe_results}")
     
     # Check if verification was successful
+    logger.info(f"Credential verification results: success={results['success']}, env_read={results.get('env_variables_read')}, deploy={results.get('deployment_success')}, containers_up={results.get('containers_up')}, creds_in_logs={results.get('credentials_in_logs')}")
     assert results["success"], f"Credential verification failed at step: {results.get('failed_step', 'unknown')}"
     
     logger.info("Successfully verified OPCUA deployment with credentials in logs")

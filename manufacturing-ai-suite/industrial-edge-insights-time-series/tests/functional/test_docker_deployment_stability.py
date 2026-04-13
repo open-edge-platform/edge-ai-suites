@@ -22,6 +22,7 @@ pytest_plugins = ["conftest_docker"]
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.longrun
 def test_long_run_stability_one_hour(setup_docker_environment):
     """
     Long run test: Run sample app for 1 hour and check for CPU/memory leaks.
@@ -43,15 +44,19 @@ def test_long_run_stability_one_hour(setup_docker_environment):
     logger.info(f"Final resource usage: {final_stats}")
 
     # Compare stats and assert no significant leaks (define your own threshold)
-    assert docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200), \
+    leak_check = docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200)
+    logger.info(f"Resource leak check result: {leak_check}, initial: {initial_stats}, final: {final_stats}")
+    assert leak_check, \
     "Significant CPU or memory leak detected after 1 hour run."
 
     # Assert all containers are still running
     containers = docker_utils.get_the_deployed_containers()
+    logger.info(f"Containers found after 1 hour run: {len(containers) if containers else 0}")
     assert containers, "No containers found after 1 hour run."
     logger.info("Long run test completed successfully.")
 
 
+@pytest.mark.longrun
 def test_long_run_stability_one_hour_opcua(setup_docker_environment):
     """
     Long run test: Run sample app with OPCUA for 1 hour and check for CPU/memory leaks.
@@ -73,10 +78,13 @@ def test_long_run_stability_one_hour_opcua(setup_docker_environment):
     logger.info(f"Final resource usage: {final_stats}")
 
     # Compare stats and assert no significant leaks (define your own threshold)
-    assert docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200), \
+    leak_check = docker_utils.check_resource_leak(initial_stats, final_stats, memory_leak_threshold_mb=200)
+    logger.info(f"Resource leak check result: {leak_check}, initial: {initial_stats}, final: {final_stats}")
+    assert leak_check, \
         "Significant CPU or memory leak detected after 1 hour run (OPCUA)."
 
     # Assert all containers are still running
     containers = docker_utils.get_the_deployed_containers()
+    logger.info(f"Containers found after 1 hour run (OPCUA): {len(containers) if containers else 0}")
     assert containers, "No containers found after 1 hour run (OPCUA)."
     logger.info("Long run test (OPCUA) completed successfully.")

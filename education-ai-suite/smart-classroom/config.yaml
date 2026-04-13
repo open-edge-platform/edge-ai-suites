@@ -391,15 +391,11 @@ content_search:
   chromadb:
     host: "127.0.0.1"
     port: 9090
-    data_dir: '.\providers\chromadb_wrapper\chroma_data'
+    data_dir: './data/chroma_data'
 
-  minio:
-    server: "127.0.0.1:9000"
-    console_address: ":9001"
-    root_user: "minioadmin"
-    root_password: "minioadmin"
+  storage:
+    data_dir: './data/local_storage'
     bucket: "content-search"
-    data_dir: '.\providers\minio_wrapper\minio_data'
 
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
@@ -429,7 +425,6 @@ content_search:
     frame_extract_interval: 30      # for video: extract a frame every N frames
     do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
     reranker:
-      enabled: true
       model: "BAAI/bge-reranker-large"
       device: "GPU"
       dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged

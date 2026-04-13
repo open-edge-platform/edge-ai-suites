@@ -20,6 +20,7 @@ export const useContentSegmentation = () => {
   const videoStatus = useAppSelector((s) => s.ui.videoStatus);
   const videoPlaybackMode = useAppSelector((s) => s.ui.videoPlaybackMode);
   const videoMetadataProcessed = useAppSelector((s) => s.mediaValidation.videoMetadataProcessed);
+  const transcriptionDone = useAppSelector((s) => s.ui.transcriptionDone);
 
   console.log('🚀 useContentSegmentation hook is RUNNING');
 
@@ -37,8 +38,11 @@ export const useContentSegmentation = () => {
     uploadedVideoFiles.board
   );
 
-  // Check if mindmap processing is complete
+  // Check if mindmap processing is complete (success or failure)
   const isMindmapComplete = audioStatus === "complete" || audioStatus === "error";
+
+  // Check if transcription succeeded
+  const isTranscriptionSuccessful = transcriptionDone;
 
   // Debug logging for conditions
   useEffect(() => {
@@ -125,21 +129,20 @@ export const useContentSegmentation = () => {
   }, [hasUploadedVideo, sessionId, videoMetadataProcessed, dispatch, uploadedVideoFiles]);
 
   const shouldTriggerContentSegmentation = () => {
-    // Condition 1: Must have audio and mindmap complete
-    if (!hasUploadedAudio || !isMindmapComplete) {
+    // Condition 1: Must have audio, successful transcription, and mindmap complete
+    if (!hasUploadedAudio || !isTranscriptionSuccessful || !isMindmapComplete) {
       return false;
     }
 
     // Condition 2: AUDIO ONLY (no video)
-    if (hasUploadedAudio && !hasUploadedVideo && isMindmapComplete) {
-      console.log('✨ Trigger: Audio-only mode + mindmap complete');
+    if (hasUploadedAudio && !hasUploadedVideo && isTranscriptionSuccessful && isMindmapComplete) {
       return true;
     }
 
     // Condition 3: AUDIO + VIDEO (both uploaded)
-    // Requires: mindmap complete + video metadata processed + playback mode activated
-    if (hasUploadedAudio && hasUploadedVideo && isMindmapComplete && videoMetadataProcessed && videoPlaybackMode) {
-      console.log('✨ Trigger: Audio+Video mode + mindmap complete + playback mode activated');
+    // Requires: transcription successful + mindmap complete + video metadata processed + playback mode activated
+    if (hasUploadedAudio && hasUploadedVideo && isTranscriptionSuccessful && isMindmapComplete && videoMetadataProcessed && videoPlaybackMode) {
+      console.log('✨ Trigger: Audio+Video mode + transcription done + mindmap complete + playback mode activated');
       return true;
     }
 
@@ -148,16 +151,6 @@ export const useContentSegmentation = () => {
 
   useEffect(() => {
     const shouldTrigger = shouldTriggerContentSegmentation();
-    
-    console.log('📊 Content-segmentation trigger check:', {
-      hasUploadedAudio,
-      hasUploadedVideo,
-      isMindmapComplete,
-      videoMetadataProcessed,
-      videoPlaybackMode,
-      shouldTrigger,
-      contentSegmentationStatus
-    });
     
     if (shouldTrigger && 
         sessionId && 
@@ -185,14 +178,7 @@ export const useContentSegmentation = () => {
           
           dispatch(contentSegmentationFailed(userFriendlyError));
         });
-    } else if (!shouldTrigger) {
-      console.log('❌ Content-segmentation not triggered. Waiting for:', {
-        audioReady: hasUploadedAudio ? '✅' : '❌ Audio not uploaded',
-        mindmapDone: isMindmapComplete ? '✅' : '❌ Mindmap not complete',
-        videoIfUploaded: !hasUploadedVideo ? 'N/A (no video)' : (videoMetadataProcessed ? '✅ Processed' : '❌ Metadata not processed'),
-        playbackIfVideoUploaded: !hasUploadedVideo ? 'N/A (no video)' : (videoPlaybackMode ? '✅ Activated' : '❌ Not activated')
-      });
-    }
+    } 
   }, [
     shouldTriggerContentSegmentation(),
     sessionId,
@@ -200,6 +186,7 @@ export const useContentSegmentation = () => {
     dispatch,
     hasUploadedAudio,
     hasUploadedVideo,
+    isTranscriptionSuccessful,
     isMindmapComplete,
     videoMetadataProcessed,
     videoPlaybackMode

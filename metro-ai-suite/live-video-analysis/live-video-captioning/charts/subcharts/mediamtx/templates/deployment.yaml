@@ -1,0 +1,98 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{/*
+mediamtx uses hostPort binding for WebRTC WHIP — only one pod can bind a given
+host port per node.  Ensure replicaCount is always 1.
+*/}}
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "mediamtx replicaCount must be 1: multiple replicas conflict on the host TCP port." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mediamtx.fullname" . }}
+  labels:
+    {{- include "mediamtx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mediamtx
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      {{- include "mediamtx.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "mediamtx.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mediamtx
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: mediamtx
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: whip
+              containerPort: {{ .Values.service.whipContainerPort }}
+              hostPort: {{ .Values.service.whipNodePort }}
+              protocol: TCP
+            - name: media-udp
+              containerPort: {{ .Values.service.mediaUdpPort }}
+              protocol: UDP
+            - name: api
+              containerPort: {{ .Values.service.apiContainerPort }}
+              protocol: TCP
+          env:
+            - name: MTX_LOGLEVEL
+              value: {{ .Values.env.logLevel | quote }}
+            - name: MTX_API
+              value: {{ .Values.env.api | quote }}
+            - name: MTX_RTSP
+              value: {{ .Values.env.rtsp | quote }}
+            - name: MTX_RTMP
+              value: {{ .Values.env.rtmp | quote }}
+            - name: MTX_SRT
+              value: {{ .Values.env.srt | quote }}
+            - name: MTX_HLS
+              value: {{ .Values.env.hls | quote }}
+            - name: MTX_WEBRTCTRACKGATHERTIMEOUT
+              value: {{ .Values.env.webrtcTrackGatherTimeout | quote }}
+            - name: MTX_WEBRTCADDRESS
+              value: {{ .Values.env.webrtcAddress | quote }}
+            # TURN server ICE URL — uses the node IP or hostname that browsers can reach.
+            - name: MTX_WEBRTCICESERVERS2_0_URL
+              value: "turn:{{ .Values.global.hostIP }}:{{ .Values.env.coturnPort }}"
+            - name: MTX_WEBRTCICESERVERS2_0_USERNAME
+              value: {{ .Values.webrtcIceUsername | quote }}
+            - name: MTX_WEBRTCICESERVERS2_0_PASSWORD
+              value: {{ .Values.webrtcIcePassword | quote }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            tcpSocket:
+              port: api
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}

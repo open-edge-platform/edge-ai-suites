@@ -9,6 +9,7 @@ const POLL_MS = 3000;
 const MetricsPoller: React.FC = () => {
   const sessionId = useAppSelector(s => s.ui.sessionId);
   const aiProcessing = useAppSelector(s => s.ui.aiProcessing);
+  const csProcessing = useAppSelector(s => s.ui.csProcessing);
   const summaryStatus = useAppSelector(s => s.summary.status);
   const dispatch = useAppDispatch();
 
@@ -17,36 +18,38 @@ const MetricsPoller: React.FC = () => {
   const lastSessionRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (lastSessionRef.current !== sessionId) {
+    const effectiveSessionId = sessionId;
+
+    if (lastSessionRef.current !== effectiveSessionId) {
       if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
       finalFetchDoneRef.current = false;
-      lastSessionRef.current = sessionId ?? null;
+      lastSessionRef.current = effectiveSessionId;
     }
 
-    if (!sessionId) {
+    if (!effectiveSessionId) {
       if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
       finalFetchDoneRef.current = false;
       return; // keep previous metrics visible
     }
 
-    if (summaryStatus === 'done') {
+    if (summaryStatus === 'done' && !aiProcessing && !csProcessing) {
       if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
       if (!finalFetchDoneRef.current) {
         (async () => {
-          try { dispatch(setMetrics(await getResourceMetrics(sessionId))); } catch {}
+          try { dispatch(setMetrics(await getResourceMetrics(effectiveSessionId))); } catch {}
           finally { finalFetchDoneRef.current = true; }
         })();
       }
       return; 
     }
 
-    const shouldPoll = aiProcessing || summaryStatus === 'streaming';
+    const shouldPoll = aiProcessing || csProcessing || summaryStatus === 'streaming';
     if (!shouldPoll) return;
 
     let cancelled = false;
     const poll = async () => {
       if (cancelled) return;
-      try { dispatch(setMetrics(await getResourceMetrics(sessionId))); } catch (e) { console.warn('Metrics poll error:', e); }
+      try { dispatch(setMetrics(await getResourceMetrics(effectiveSessionId))); } catch (e) { console.warn('Metrics poll error:', e); }
       finally { if (!cancelled) timeoutRef.current = window.setTimeout(poll, POLL_MS); }
     };
     poll();
@@ -55,7 +58,7 @@ const MetricsPoller: React.FC = () => {
       cancelled = true;
       if (timeoutRef.current) { clearTimeout(timeoutRef.current); timeoutRef.current = null; }
     };
-  }, [sessionId, aiProcessing, summaryStatus, dispatch]);
+  }, [sessionId, aiProcessing, csProcessing, summaryStatus, dispatch]);
 
   return null;
 };

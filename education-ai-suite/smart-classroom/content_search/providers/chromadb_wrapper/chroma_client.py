@@ -7,6 +7,10 @@ import logging
 import chromadb
 import os
 
+logger = logging.getLogger(__name__)
+
+_MAX_BATCH_SIZE = 5000
+
 class ChromaClientWrapper:
     def __init__(self, host: str = None, port: int = None):
 
@@ -24,7 +28,10 @@ class ChromaClientWrapper:
 
     def load_collection(self, collection_name: str):
         try:
-            self.collection = self.client.get_or_create_collection(name=collection_name)
+            self.collection = self.client.get_or_create_collection(
+                name=collection_name,
+                configuration={"hnsw": {"space": "cosine"}},
+            )
             return self.collection
         except Exception as e:
             logger.error(f"Failed to load collection '{collection_name}' (is ChromaDB running?): {e}")
@@ -35,22 +42,27 @@ class ChromaClientWrapper:
             logger.info(f"Collection '{collection_name}' already exists and is loaded.")
             return
         
-        self.collection = self.client.create_collection(name=collection_name)
+        self.collection = self.client.create_collection(
+            name=collection_name,
+            configuration={"hnsw": {"space": "cosine"}},
+        )
 
     def insert(self, data: list, collection_name):
         if not self.collection or self.collection.name != collection_name:
             self.load_collection(collection_name)
-        
-        ids = [item['id'] for item in data]
+
+        ids = [str(item['id']) for item in data]
         vectors = [item['vector'] for item in data]
         metas = [item['meta'] for item in data]
 
-        self.collection.add(
-            ids=[str(i) for i in ids],
-            embeddings=vectors,
-            metadatas=metas
-        )
-        
+        for start in range(0, len(ids), _MAX_BATCH_SIZE):
+            end = start + _MAX_BATCH_SIZE
+            self.collection.add(
+                ids=ids[start:end],
+                embeddings=vectors[start:end],
+                metadatas=metas[start:end],
+            )
+
         return {"insert_count": len(ids)}
     
     def delete(self, ids: list, collection_name: str):

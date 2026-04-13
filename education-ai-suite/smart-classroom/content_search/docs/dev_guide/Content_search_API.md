@@ -43,14 +43,16 @@ Content-Type: application/json
 | 500 | Server Error | System crash; display "Server is busy, please try again". |
 
 ### Application Layer Codes (code field)
+
 | Application Code | Semantic Meaning | Description |
 | :--- | :--- | :--- |
-| 20000 | SUCCESS | Task submitted or query successful. |
+| 20000 | SUCCESS | Task submitted, query successful, or cleanup completed. |
+| 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
 | 40001 | AUTH_FAILED | Invalid username or password. |
-| 40901	| FILE_ALREADY_EXISTS |	File already existed (Hash exist). |
+| 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
-| 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
+| 50003 | PROCESS_FAILED | Internal processing error (e.g., file system or DB delete failed). |
 
 ---
 ### Task Lifecycle & Status Enum
@@ -90,8 +92,8 @@ stateDiagram-v2
 Query Parameters:
 | Parameter | Type    | Required | Default | Description                                         |
 | :-------- | :------ | :------- | :------ | :-------------------------------------------------- |
-| `status`  | string  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
-| `limit`   | integer | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
+| `status`  | `string`  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `limit`   | `integer` | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
 
 Request:
 ```
@@ -105,14 +107,14 @@ Response (200 OK)
         {
             "status": "COMPLETED",
             "payload": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/f52c2905-fb78-4ddd-a89e-9fb673546740/raw/application/default/apple_loop100.h265",
                 "bucket": "content-search",
                 "filename": "apple_loop100.h265",
                 "run_id": "f52c2905-fb78-4ddd-a89e-9fb673546740"
             },
             "result": {
-                "message": "File from MinIO successfully processed. db returns {}"
+                "message": "File successfully processed. db returns {}"
             },
             "progress": 0,
             "task_type": "file_search",
@@ -123,14 +125,14 @@ Response (200 OK)
         {
             "status": "COMPLETED",
             "payload": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c/raw/application/default/apple_loop100.h265",
                 "bucket": "content-search",
                 "filename": "apple_loop100.h265",
                 "run_id": "2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c"
             },
             "result": {
-                "message": "File from MinIO successfully processed. db returns {}"
+                "message": "File successfully processed. db returns {}"
             },
             "progress": 0,
             "task_type": "file_search",
@@ -168,7 +170,7 @@ Response (200 OK):
         "result": {
             "message": "Upload only, no ingest requested",
             "file_info": {
-                "source": "minio",
+                "source": "local",
                 "file_key": "runs/9e96f16a-9689-4c25-a515-04a1040b193f/raw/text/default/phy_class.txt",
                 "bucket": "content-search",
                 "filename": "phy_class.txt",
@@ -232,11 +234,11 @@ Response (200 OK):
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| file_key | string | Yes | The full path of the file in MinIO (excluding bucket name). |
-| bucket_name | string | No | The MinIO bucket name. Defaults to content-search. |
-| prompt | string | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
-| chunk_duration | integer | No | Duration of each video segment in seconds. Defaults to 30. |
-| meta | object | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
+| `file_key` | `string` | Yes | The full path of the file in storage (excluding bucket name). |
+| `bucket_name` | `string` | No | The storage bucket name. Defaults to content-search. |
+| `prompt` | `string` | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
+| `chunk_duration` | `integer` | No | Duration of each video segment in seconds. Defaults to 30. |
+| `meta` | `object` | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
 
 Request:
 ```
@@ -261,7 +263,7 @@ Response:
 }
 ```
 #### Text file ingestion
-Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in MinIO.
+Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in storage.
 
 * URL: /api/v1/object/ingest-text
 * Method: POST
@@ -271,7 +273,7 @@ Primarily processes raw text strings passed in the request body for semantic ind
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
 | `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
-| `bucket_name` | `string` | No | MinIO bucket name (used to logically group the data or build the identifier). |
+| `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
 | `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
 | `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
 
@@ -301,7 +303,7 @@ Response:
 ```
 
 #### File upload and ingestion
-A unified workflow that first saves the file to MinIO and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
+A unified workflow that first saves the file to local storage and then immediately initiates the ingestion pipeline. Features full content indexing and AI-driven Video Summarization for supported video formats.
 
 * URL: /api/v1/object/upload-ingest
 * Method: POST
@@ -311,10 +313,10 @@ A unified workflow that first saves the file to MinIO and then immediately initi
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| file | Binary | Yes | The video file to be uploaded. |
-| prompt | string | No | Summarization instructions (passed as a Form field). |
-| chunk_duration | integer | No | Segment duration in seconds (passed as a Form field). |
-| meta | string | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
+| `file` | `Binary` | Yes | The video file to be uploaded. |
+| `prompt` | `string` | No | Summarization instructions (passed as a Form field). |
+| `chunk_duration` | `integer` | No | Segment duration in seconds (passed as a Form field). |
+| `meta` | `string` | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
 
 * Example:
 Request:
@@ -338,7 +340,7 @@ Response (200 OK):
 ```
 
 #### Retrieve and Search
-Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and MinIO object references.
+Executes a similarity search across vector collections using either natural language queries or base64-encoded images. Returns ranked results with associated metadata and object references.
 
 * URL: /api/v1/object/search
 * Method: POST
@@ -348,14 +350,26 @@ Executes a similarity search across vector collections using either natural lang
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| query | string | Either | Natural language search query (e.g., "student at desk"). |
-| image_base64 | string | Either | Base64 encoded image string for visual similarity search. |
-| max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
-| filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
+| `query` | `string` | Either | Natural language search query (e.g., "student at desk"). |
+| `image_base64` | `string` | Either | Base64 encoded image string for visual similarity search. |
+| `max_num_results` | `integer` | No | Maximum number of results to return. Defaults to 10. For text queries, up to `2 × max_num_results` may be returned (`top-k` from visual collection + `top-k` from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned.|
+| `filter` | `object` | No | Metadata filters (e.g., {"type": ["document"], "tags": ["class"]}), detail sees below |
+
+* Filter Usage Detail
+
+Different filter keys are always combined with `AND`. When a filter value is a `list`, the matching logic depends on the field type:
+
+| Field type | Example fields | List behavior | Operator used |
+| ---------- | -------------- | ------------- | ------------- |
+| `Array metadata` | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
+| `Scalar metadata` | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
+
+| Note: Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to distinguish them from native video frame results.
 
 * Example:
 Request:
 ```
+# Example 1: Filter by tags — returns results whose tags array contains "classroom" or "student"
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -363,6 +377,16 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
     "max_num_results": 1,
     "filter": {
         "tags": ["classroom", "student"]
+    }
+}'
+# Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
+curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "student in classroom",
+    "max_num_results": 1,
+    "filter": {
+        "type": ["video", "document"]
     }
 }'
 ```
@@ -381,14 +405,14 @@ Response (200 OK):
                     "reused": false,
                     "start_time": 0.0,
                     "asset_id": "classroom_8.mp4",
-                    "file_path": "minio://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "file_path": "local://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
                     "run_id": "81802f9e-0a28-4486-bad2-2e05c1086326",
                     "type": "document",
                     "end_time": 0.32,
-                    "summary_minio_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
+                    "summary_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
                     "doc_filetype": "text/plain",
                     "chunk_id": "chunk_0001",
-                    "minio_video_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
+                    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
                     "chunk_index": 0,
                     "tags": [
                         "class",
@@ -404,7 +428,7 @@ Response (200 OK):
 }
 ```
 #### Resource Download (Video/Image/Document)
-Download existing resources in Minio.
+Download existing resources from storage.
 
 * URL: /api/v1/object/download/{resource_id}
 * Method: GET
@@ -415,3 +439,49 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9
 --header 'Content-Type: application/json'
 ```
 
+#### Cleanup file storage and record
+Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.
+
+* URL: /api/v1/object/cleanup-task/{task_id}
+
+* Method: DELETE
+
+* Pattern: SYNC
+
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `task_id` | `string` | Yes | The unique identifier (UUID) of the task to be cleaned up. |
+
+Request:
+```powershell
+curl --location --request DELETE 'http://127.0.0.1:9011/api/v1/object/cleanup-task/b14b0c14-e768-4536-9d13-ea556f9adc1b'
+```
+Response:
+```powershell
+# example 1: 200 OK - Success
+{
+    "code": 20000,
+    "data": {
+        "task_id": "b14b0c14-e768-4536-9d13-ea556f9adc1b",
+        "status": "COMPLETED"
+    },
+    "message": "Cleanup completed",
+    "timestamp": 1775723734
+}
+# example 2: 200 OK - Task Processing
+{
+    "code": 40000,
+    "data": {},
+    "message": "Task is still processing and cannot be deleted",
+    "timestamp": 1775723800
+}
+# example 3: 200 OK - Task Not Found
+{
+    "code": 50002,
+    "data": {},
+    "message": "Task ID does not exist or has expired",
+    "timestamp": 1775723850
+}
+```

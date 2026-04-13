@@ -112,14 +112,11 @@ services:
       REST_API_ROOT_PATH: "/ts-api"
       ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}
       BENCHMARK_TOTAL_PTS: ${BENCHMARK_TOTAL_PTS:-100}
+      UDF_MAX_FILE_SIZE_MB: 100
     networks:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:

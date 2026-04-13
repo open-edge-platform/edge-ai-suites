@@ -34,9 +34,6 @@ Usage
 
   # Explicit topology file
   python src/visualize_graph.py <csv> --topology <session_dir>/graph_topology.json
-
-  # Per-session via Makefile
-  make pipeline-graph [SESSION=<name>] [SHOW=no-show]
 """
 
 import argparse
@@ -44,15 +41,13 @@ import csv
 import json
 import os
 import sys
-import math
 from collections import defaultdict
-from datetime import datetime
 from pathlib import Path
 
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
+from matplotlib.patches import FancyBboxPatch
 import numpy as np
 
 
@@ -105,7 +100,7 @@ CAT_HEADER_COLOR = {
 #  Internal / system topic filter
 # ──────────────────────────────────────────────────────────────────────────────
 
-import re as _re
+import re as _re  # noqa: E402
 
 # Topics matching this pattern carry no pipeline-level information and only
 # add visual clutter (ROS2 service interfaces, lifecycle events, action
@@ -212,6 +207,7 @@ def _fmt_hz(v):
     if v >= 100:  return f'{v:.0f} Hz'
     if v >= 10:   return f'{v:.1f} Hz'
     return f'{v:.2f} Hz'
+
 
 def _fmt_ms(v):
     if v is None: return 'N/A'
@@ -566,7 +562,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
             raise RuntimeError("No Tk root available")
 
         # Destroy previous window for this node if it exists
-        win_name = f'nd_{nname.replace("/","_").replace(" ","_")}'
+        win_name = f'nd_{nname.replace("/", "_").replace(" ", "_")}'
         for child in root.winfo_children():
             if getattr(child, '_node_detail_key', None) == win_name:
                 try:
@@ -655,7 +651,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
                 else:
                     lat_s = '—'
 
-                h_color, h_sym = HEALTH_COLORS.get(health, ('#eeeeee', '?'))
+                _, h_sym = HEALTH_COLORS.get(health, ('#eeeeee', '?'))
 
                 _row(top, bg,
                      [tname, f'{mc:,}', freq_s, lat_s, h_sym],
@@ -673,7 +669,7 @@ def _open_node_detail(nname: str, nd: dict, cat: str, topics_to_show: dict,
         top.focus_set()
         return   # success – done
 
-    except Exception as _tk_err:
+    except Exception:
         # Tk not reachable (Qt backend, etc.) – fall back to matplotlib figure
         pass
 
@@ -808,18 +804,18 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
     # ── Early-exit: nothing to draw ──────────────────────────────────────────
     if not nodes and not topics_to_show:
         print('\n  ⚠  No nodes or topics to display.')
-        if filtered_mnodes and not filter_monitor_nodes is False:
-            print(f'     (Only the ros2_graph_monitor node was found in this session —')
-            print(f'      the ROS2 pipeline was not running when monitoring started.)')
+        if filtered_mnodes and filter_monitor_nodes is not False:
+            print('     (Only the ros2_graph_monitor node was found in this session —')
+            print('      the ROS2 pipeline was not running when monitoring started.)')
         print()
         print('  How to fix:')
         print('    1. Start your ROS2 launch file first.')
-        print('    2. Then run:  make monitor   (or make monitor-remote REMOTE_IP=<ip>)')
-        print('    3. Then:      make pipeline-graph')
+        print('    2. Then run:  uv run python src/monitor_stack.py   (or with --remote-ip <ip>)')
+        print('    3. Then:      uv run python src/visualize_graph.py <session>/graph_timing.csv --show')
         if filtered_mnodes:
             print()
-            print(f'  To see the raw observer-only data anyway:')
-            print(f'    make pipeline-graph INCLUDE_MONITORS=1 INCLUDE_INTERNAL=1 INCLUDE_ISOLATED=1')
+            print('  To see the raw observer-only data anyway:')
+            print('    uv run python src/visualize_graph.py <session>/graph_timing.csv --include-monitors --show')
 
         # Render a minimal figure with the explanation text rather than a
         # blank dark canvas, so the window that opens is informative.
@@ -832,8 +828,8 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
             'The pipeline was likely not running when monitoring started.\n\n'
             'Steps:\n'
             '  1. Start your ROS2 launch file first\n'
-            '  2. make monitor   (or make monitor-remote REMOTE_IP=<ip>)\n'
-            '  3. make pipeline-graph\n\n'
+            '  2. uv run python src/monitor_stack.py\n'
+            '  3. uv run python src/visualize_graph.py <session>/graph_timing.csv --show\n\n'
             f'Session: {session_label}'
         )
         ax.text(0.5, 0.5, msg, ha='center', va='center', fontsize=13,
@@ -1093,7 +1089,7 @@ def render_graph(topology: dict, metrics: dict, meta: dict,
                 _open_node_detail(nname, nd, cat, topics_to_show, main_fig=fig)
                 return
         # Fall back to topic artists (print tooltip text to console)
-        for patch, tname, info in topic_artists:
+        for patch, _, info in topic_artists:
             if patch.contains(event)[0]:
                 print(f'\n{"─"*60}\n{info}\n{"─"*60}')
                 return

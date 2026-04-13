@@ -1,0 +1,120 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+ConfigMap holding the model-download shell script.
+The Job mounts this ConfigMap and executes the script.
+Each model is passed as indexed environment variables so the bash script
+can iterate without Helm template directives inside the shell string.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "live-video-captioning.fullname" . }}-models-download-script
+  labels:
+    {{- include "live-video-captioning.labels" . | nindent 4 }}
+data:
+  download.sh: |
+    #!/bin/bash
+    # -u: treat unset variables as errors
+    # -o pipefail: a pipe fails if any command in it fails
+    # NOTE: -e is intentionally omitted so the loop can count all failures
+    #       instead of aborting on the first one.
+    set -uo pipefail
+
+    echo "=== Model Download Job ==="
+    echo "Model count: ${MODEL_COUNT}"
+    echo ""
+
+    # Remove filesystem artifacts created by the ext4 formatter when the PVC
+    # was first provisioned.  lost+found is an empty recovery directory that
+    # would otherwise appear as a spurious entry in the model listing UI.
+    rm -rf /models/lost+found
+
+    # Enable fast HuggingFace transfers when the hf_transfer package is available.
+    export HF_HUB_ENABLE_HF_TRANSFER="${HF_HUB_ENABLE_HF_TRANSFER:-1}"
+
+    # First pass: check which models are missing.
+    # A model is considered complete only when its .complete sentinel file exists.
+    # A directory without .complete means a previous conversion was interrupted.
+    MISSING=0
+    i=0
+    while [ "${i}" -lt "${MODEL_COUNT}" ]; do
+      name_var="MODEL_${i}_NAME"
+      OUTPUT_NAME="${!name_var}"
+      if [ ! -f "/models/${OUTPUT_NAME}/.complete" ]; then
+        MISSING=$(( MISSING + 1 ))
+      fi
+      i=$(( i + 1 ))
+    done
+
+    if [ "${MISSING}" -eq 0 ]; then
+      echo "All ${MODEL_COUNT} model(s) already exist in the PVC — nothing to download."
+      echo ""
+      echo "=== All models processed successfully. ==="
+      exit 0
+    fi
+
+    # Install the export toolchain only when at least one model needs downloading.
+    echo "${MISSING} model(s) missing — installing export toolchain..."
+    echo "Requirements URL: ${REQUIREMENTS_URL}"
+    pip install --quiet -r "${REQUIREMENTS_URL}"
+    echo "Toolchain installed."
+    echo ""
+
+    FAILED=0
+    i=0
+    while [ "${i}" -lt "${MODEL_COUNT}" ]; do
+      # Bash indirect variable expansion to read MODEL_N_* env vars.
+      id_var="MODEL_${i}_ID"
+      name_var="MODEL_${i}_NAME"
+      fmt_var="MODEL_${i}_FORMAT"
+      MODEL_ID="${!id_var}"
+      OUTPUT_NAME="${!name_var}"
+      WEIGHT_FORMAT="${!fmt_var}"
+      OUTPUT_PATH="/models/${OUTPUT_NAME}"
+
+      echo "[$(( i + 1 ))/${MODEL_COUNT}] Processing: ${MODEL_ID} -> ${OUTPUT_PATH}"
+
+      if [ -f "${OUTPUT_PATH}/.complete" ]; then
+        echo "  Already complete — skipping."
+      else
+        # Remove any partial directory from a previous interrupted conversion.
+        rm -rf "${OUTPUT_PATH}"
+        echo "  Downloading ..."
+        model_failed=0
+        if [ -n "${WEIGHT_FORMAT}" ]; then
+          optimum-cli export openvino \
+            --model "${MODEL_ID}" \
+            --weight-format "${WEIGHT_FORMAT}" \
+            "${OUTPUT_PATH}" \
+            --trust-remote-code \
+          || { echo "  ERROR: download failed for ${MODEL_ID}." >&2; FAILED=$(( FAILED + 1 )); model_failed=1; }
+        else
+          optimum-cli export openvino \
+            --model "${MODEL_ID}" \
+            "${OUTPUT_PATH}" \
+            --trust-remote-code \
+          || { echo "  ERROR: download failed for ${MODEL_ID}." >&2; FAILED=$(( FAILED + 1 )); model_failed=1; }
+        fi
+        if [ "${model_failed}" -eq 0 ] && [ -d "${OUTPUT_PATH}" ]; then
+          touch "${OUTPUT_PATH}/.complete"
+          echo "  ✔ Model '${OUTPUT_NAME}' downloaded and converted to OpenVINO IR format successfully."
+        fi
+      fi
+
+      i=$(( i + 1 ))
+    done
+
+    if [ "${FAILED}" -ne 0 ]; then
+      echo "" >&2
+      echo "ERROR: ${FAILED} model(s) failed to download." >&2
+      exit 1
+    fi
+
+    echo ""
+    echo "================================================================"
+    echo "  All ${MODEL_COUNT} model(s) downloaded and converted."
+    echo "  The model download job is complete — exiting now."
+    echo "================================================================"
+    exit 0

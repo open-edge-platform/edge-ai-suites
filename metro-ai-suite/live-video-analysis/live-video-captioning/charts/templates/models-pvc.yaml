@@ -1,0 +1,42 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+PVC for OpenVINO VLM models (ov_models/).
+Mounted read-only by dlstreamer-pipeline-server and video-caption-service.
+
+When modelsPvc.keepPvc is true (default):
+  - No hook — Helm manages the PVC as a regular resource on every install and
+    upgrade, automatically creating it if it does not exist.
+  - helm.sh/resource-policy: keep — Helm skips the PVC on uninstall.
+  - Models survive helm upgrade and helm uninstall.
+
+When modelsPvc.keepPvc is false:
+  - helm.sh/hook: pre-install,pre-upgrade — Helm processes the PVC on every run.
+  - hook-delete-policy: before-hook-creation — the PVC (and its data) is deleted
+    and recreated on every upgrade, triggering a fresh model download.
+*/}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "live-video-captioning.fullname" . }}-models
+  labels:
+    {{- include "live-video-captioning.labels" . | nindent 4 }}
+    app.kubernetes.io/component: storage
+  annotations:
+    {{- if .Values.modelsPvc.keepPvc }}
+    "helm.sh/resource-policy": keep
+    {{- else }}
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-15"
+    "helm.sh/hook-delete-policy": before-hook-creation
+    {{- end }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- if .Values.global.storageClassName }}
+  storageClassName: {{ .Values.global.storageClassName | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.modelsPvc.size | quote }}

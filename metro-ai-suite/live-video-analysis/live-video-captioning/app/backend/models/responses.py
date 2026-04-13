@@ -10,6 +10,7 @@ class RunInfo(BaseModel):
     pipelineId: str
     peerId: str
     mqttTopic: str
+    status: str = "running"
     modelName: Optional[str] = None
     pipelineName: Optional[str] = None
     runName: Optional[str] = None

@@ -42,7 +42,7 @@ We used the tool obj2pcd offered in the libpcd tool ``pcl_obj2pcd`` installable 
 
 .. code-block:: bash
 
-    $ sudo apt install pcl-tools
+  sudo apt install pcl-tools
 
 Here the step by step procedure:
 
@@ -86,9 +86,9 @@ Verify that the PCD file has enough points using the pcl_viewer tool which comes
 
 .. code-block:: bash
 
-  $ pcl_viewer <pcdFilename.pcd>
+  pcl_viewer <pcdFilename.pcd>
 
-As show in following image  
+As shown in the following image  
 
 
 .. image:: ../../images/html/pcl_viewer.png
