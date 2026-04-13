@@ -8,8 +8,8 @@ run-name: "[Industrial Edge Insights Time Series and Multimodal] PR workflow (by
 on:
   pull_request:
     paths:
-      - 'manufacturing-ai-suite/industrial-edge-insights-time-series/*'
-      - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/*'
+      - 'manufacturing-ai-suite/industrial-edge-insights-time-series/**'
+      - 'manufacturing-ai-suite/industrial-edge-insights-multimodal/**'
   workflow_call:
   workflow_dispatch:
 
@@ -78,8 +78,40 @@ jobs:
         echo "Deploying Wind Turbine Anomaly Detection Sample App"
         echo "Deploying using mqtt ingestion"
         make up_mqtt_ingestion app=wind-turbine-anomaly-detection
+        timeout 30s bash -c '
+          docker logs -f ia-time-series-analytics-microservice 2>&1 |
+          while read -r line; do
+            echo "$line"
+            if [[ "$line" == *"Kapacitor Tasks Enabled Successfully"* ]]; then
+              exit 0
+            fi
+          done
+        '
+
+        if [[ $? -eq 0 ]]; then
+            echo "✅ Found success log"
+        else
+            echo "❌ Not found within 30s"
+            exit 1
+        fi
         echo "Deploying using opcua ingestion"
         make up_opcua_ingestion app=wind-turbine-anomaly-detection
+        timeout 30s bash -c '
+          docker logs -f ia-time-series-analytics-microservice 2>&1 |
+          while read -r line; do
+            echo "$line"
+            if [[ "$line" == *"Kapacitor Tasks Enabled Successfully"* ]]; then
+              exit 0
+            fi
+          done
+        '
+
+        if [[ $? -eq 0 ]]; then
+            echo "✅ Found success log"
+        else
+            echo "❌ Not found within 30s"
+            exit 1
+        fi
     - name: Undeploying Wind Turbine Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"
@@ -91,6 +123,22 @@ jobs:
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         echo "Deploying Weld Anomaly Detection Sample App"
         make up_mqtt_ingestion app=weld-anomaly-detection
+        timeout 30s bash -c '
+          docker logs -f ia-time-series-analytics-microservice 2>&1 |
+          while read -r line; do
+            echo "$line"
+            if [[ "$line" == *"Kapacitor Tasks Enabled Successfully"* ]]; then
+              exit 0
+            fi
+          done
+        '
+
+        if [[ $? -eq 0 ]]; then
+            echo "✅ Found success log"
+        else
+            echo "❌ Not found within 30s"
+            exit 1
+        fi
     - name: Undeploying Weld Anomaly Detection Sample App
       run: |
         cd "${{ github.workspace }}"

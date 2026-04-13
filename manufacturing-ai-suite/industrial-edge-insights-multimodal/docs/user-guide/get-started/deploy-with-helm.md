@@ -137,10 +137,10 @@ this sample application in Kubernetes environment:
 
    ```bash
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice # path relative to git clone folder
-   rm -f weld_anomaly_detector.zip
-   zip -r weld_anomaly_detector udfs/ models/ tick_scripts/
+   rm -f weld_anomaly_detector.tar
+   tar cf weld_anomaly_detector.tar udfs/ models/ tick_scripts/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.zip" -k
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@weld_anomaly_detector.tar" -k
    ```
 
 > **Note:**

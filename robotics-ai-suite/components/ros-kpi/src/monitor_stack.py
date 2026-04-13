@@ -132,7 +132,7 @@ class MonitoringSession:
                  '-o', 'StrictHostKeyChecking=no',
                  f'{self.remote_user}@{self.remote_ip}',
                  # Login shell so .bashrc / launch-sourced exports are visible
-                 'bash -l -c "echo \${ROS_DOMAIN_ID:-not_set}"'],
+                 r'bash -l -c "echo ${ROS_DOMAIN_ID:-not_set}"'],
                 capture_output=True, text=True, timeout=10,
                 stdin=subprocess.DEVNULL,
             )
@@ -157,16 +157,16 @@ class MonitoringSession:
                 remote_domain = self._get_remote_domain_id()
                 local_domain  = env.get('ROS_DOMAIN_ID', '0')
                 if remote_domain is not None and str(remote_domain) != str(local_domain):
-                    print(f"   ⚠  ROS_DOMAIN_ID mismatch detected:")
+                    print("   ⚠  ROS_DOMAIN_ID mismatch detected:")
                     print(f"      local={local_domain}  remote={remote_domain}")
                     print(f"      Setting ROS_DOMAIN_ID={remote_domain} for monitoring processes.")
                     env['ROS_DOMAIN_ID'] = str(remote_domain)
                 elif remote_domain is not None:
                     print(f"   ✅ ROS_DOMAIN_ID={remote_domain} matches on both machines.")
                 else:
-                    print(f"   ℹ  Could not detect remote ROS_DOMAIN_ID (SSH auth issue?).")
+                    print("   ℹ  Could not detect remote ROS_DOMAIN_ID (SSH auth issue?).")
                     print(f"      Using local ROS_DOMAIN_ID={local_domain}.")
-                    print(f"      Tip: use --ros-domain-id <id> to set it explicitly.")
+                    print("      Tip: use --ros-domain-id <id> to set it explicitly.")
 
             env['ROS_LOCALHOST_ONLY'] = '0'
             # CycloneDDS: explicit unicast peer + disable multicast (works across subnets)
@@ -193,7 +193,7 @@ class MonitoringSession:
         print("\n🚀 Starting monitoring processes...")
         if self.remote_ip:
             print(f"   🌐 Monitoring remote system: {self.remote_user}@{self.remote_ip}")
-            print(f"      Ensure ROS_DOMAIN_ID matches on both machines.")
+            print("      Ensure ROS_DOMAIN_ID matches on both machines.")
 
         # Start graph monitor if enabled
         if self.monitor_graph:
@@ -216,7 +216,7 @@ class MonitoringSession:
             # Skip the interactive countdown when launched programmatically
             cmd.append("--no-countdown")
 
-            print(f"   📊 Starting graph monitor...")
+            print("   📊 Starting graph monitor...")
             print(f"      Logging to: {self.graph_log}")
 
             process = subprocess.Popen(
@@ -260,7 +260,7 @@ class MonitoringSession:
                 cmd.extend(["--remote-ip", self.remote_ip,
                              "--remote-user", self.remote_user])
 
-            print(f"   💻 Starting resource monitor...")
+            print("   💻 Starting resource monitor...")
             print(f"      Logging to: {self.resource_log}")
 
             process = subprocess.Popen(
@@ -281,8 +281,8 @@ class MonitoringSession:
                 daemon=True
             ).start()
 
-        print(f"\n✅ All monitors started. Collecting data...")
-        print(f"   Press Ctrl+C to stop monitoring and generate visualizations.\n")
+        print("\n✅ All monitors started. Collecting data...")
+        print("   Press Ctrl+C to stop monitoring and generate visualizations.\n")
 
     def _stream_output(self, process: subprocess.Popen, label: str):
         """Stream process output with label."""
@@ -428,11 +428,10 @@ class MonitoringSession:
         print(f"\n📊 Session complete! Results saved to: {self.output_dir}")
         print(f"   Visualizations: {self.visualization_dir}")
 
-        # Remind the user how to compare across runs rather than doing it automatically
-        algo_hint = f" ALGORITHM={self.algorithm}" if self.algorithm else ""
-        print(f"\n💡 To compare across multiple runs:")
-        print(f"   make view-average{algo_hint}          # avg KPIs across last 5 sessions")
-        print(f"   make view-average-plot{algo_hint}     # same + save bar-chart PNGs")
+        print("\n\U0001f4a1 To compare across multiple runs:")
+        algo_flag = f" --algorithm {self.algorithm}" if self.algorithm else ""
+        print(f"   uv run python src/view_average.py{algo_flag}          # avg KPIs across last 5 sessions")
+        print(f"   uv run python src/view_average.py{algo_flag} --plot   # same + save bar-chart PNGs")
 
     def run(self):
         """Run the complete monitoring session."""

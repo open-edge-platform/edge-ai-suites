@@ -25,4 +25,5 @@ dependencies = [
     "requests",
     "rich",
     "typing-extensions",
+    "websockets>=16.0"
 ]

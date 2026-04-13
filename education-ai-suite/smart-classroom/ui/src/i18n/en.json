@@ -143,7 +143,8 @@
       "frontCamera": "Front",
       "backCamera": "Back",
       "boardCamera": "Board",
-      "allCameras": "All"
+      "allCameras": "All",
+      "noSessionActiveContentSearch": "No active session. Upload content to begin searching."
     },
     "errors": {
       "projectNameRequired": "Project name is required",
@@ -194,6 +195,72 @@
     "durationMismatch":"⚠️ Audio and video durations don't match. Please ensure both files have similar lengths.",
     "durationExtractionFailed":"⚠️ Unable to extract audio or video duration. Please check your files and try again.",
     "contentPreparationFailed":"Content preparation failed. Please try again."
+  },
+  "contentSearch": {
+    "title": "Content Search",
+    "subtitle": "Upload content, then search with text or an image",
+    "uploadButton": "Upload Content",
+    "back": "← Back",
+    "upload": "Upload"
+  },
+  "uploadSection":{
+    "upload":"Upload",
+    "dragDrop":"Drag & drop your files here",
+    "orClick":"or click to browse",
+    "supportedTypes":"Supported: MP4, PPT, DOCX, PDF, JPG, CSV, TXT",
+    "selectFileToAddTags":"Select an uploaded file to add tags.",
+    "addTags":"Add Tags",
+    "enterTags":"Enter tags separated by commas",
+    "fileName":"File Name",
+    "size":"Size",
+    "type":"Type",
+    "status":"Status",
+    "retry":" ↻ Retry",
+    "clearAll":"Clear All",
+    "removeFileConfirmation":"Removing this file will stop processing. Continue?",
+    "cancel":"Cancel",
+    "remove":"Remove",
+    "pending":"Pending...",
+    "processing":"Processing...",
+    "failed":"Failed",
+    "uploaded":"Uploaded ✓"
+  },
+  "searchSection": {
+    "title": "Search",
+    "textSearch": "Text Search",
+    "imageSearch": "Image Search",
+    "yourQuestion": "Your Question",
+    "placeholder": "Describe what you're looking for...",
+    "dragDropImage": "Drag & Drop an image to Search",
+    "orClickBrowse": "or click to browse",
+    "selectSearchType": "Select search types",
+    "documents": "Documents",
+    "images": "Images",
+    "videos": "Videos",
+    "selectAtLeastOneType": "Please select at least one type",
+    "filterByLabel": "Filter by labels",
+    "topResults": "Top Results:",
+    "searching": "Searching...",
+    "search": "Search",
+    "reset": "Reset",
+    "searchNotAvailable": "Search is not available.",
+    "filesStillUploading": "Files are still uploading...",
+    "uploadFilesToEnable": "Upload files to enable search."
+  },
+  "resultSection": {
+    "title": "Results",
+    "subtitle": "Sorted by similarity (highest-ranked first)",
+    "all": "All",
+    "documents": "Documents",
+    "images": "Images",
+    "videos": "Videos",
+    "noResults": "No result found.",
+    "noResultsHint": "Try a different question or adjust your search filters.",
+    "type": "Type:",
+    "time": "Time:",
+    "relevance": "Relevance:",
+    "labels": "Labels",
+    "score": "Score"
   }
 }
  

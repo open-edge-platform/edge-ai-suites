@@ -1620,16 +1620,16 @@ def with_model_registry(chart_path, input):
             logger.info("Files copied successfully to 'wind-turbine-anomaly-detection' directory.")
         elif result.stderr:
             logger.error(f"Error copying files: {result.stderr.decode('utf-8')}")
-        zip_command = f"zip -r windturbine_anomaly_detector.zip udfs models tick_scripts"
-        result = subprocess.run(zip_command, shell=True, capture_output=True, text=True, check=True)
+        tar_command = f"tar cf windturbine_anomaly_detector.tar udfs models tick_scripts"
+        result = subprocess.run(tar_command, shell=True, capture_output=True, text=True, check=True)
+        logger.info("TAR archive created successfully.")
         if result.stdout:
-            logger.info(f"ZIP command output: {result.stdout}")
-            logger.info("ZIP archive created successfully.")
-        elif result.stderr:
-            logger.error(f"ZIP command errors: {result.stderr}")
+            logger.info(f"TAR command output: {result.stdout}")
+        if result.stderr:
+            logger.error(f"TAR command stderr: {result.stderr}")
         
 
-        # Step 2: Upload the ZIP file using kubectl exec to avoid port-forwarding
+        # Step 2: Upload the tar file using kubectl exec to avoid port-forwarding
         # Find the model registry pod
         model_registry_pod_command = (
             f"kubectl get pods -n {namespace} "
@@ -1644,16 +1644,16 @@ def with_model_registry(chart_path, input):
             logger.error("Model registry pod not found.")
             return False
 
-        # Copy the ZIP file to the model registry pod first
+        # Copy the TAR file to the model registry pod first
         kubectl_cp_command = [
-            'kubectl', 'cp', 'windturbine_anomaly_detector.zip',
-            f'{model_registry_pod}:/tmp/windturbine_anomaly_detector.zip',
+            'kubectl', 'cp', 'windturbine_anomaly_detector.tar',
+            f'{model_registry_pod}:/tmp/windturbine_anomaly_detector.tar',
             '-n', namespace
         ]
-        logger.info(f"Copying ZIP file to model registry pod: {' '.join(kubectl_cp_command)}")
+        logger.info(f"Copying TAR file to model registry pod: {' '.join(kubectl_cp_command)}")
         result = subprocess.run(kubectl_cp_command, capture_output=True, text=True)
         if result.returncode != 0:
-            logger.error(f"Error copying ZIP file to pod: {result.stderr}")
+            logger.error(f"Error copying TAR file to pod: {result.stderr}")
             return False
 
         # Upload using curl from within the pod (in-cluster call)
@@ -1663,7 +1663,7 @@ def with_model_registry(chart_path, input):
             '-H', 'Content-Type: multipart/form-data',
             '-F', 'name="windturbine_anomaly_detector"',
             '-F', 'version="1.0"',
-            '-F', 'file=@/tmp/windturbine_anomaly_detector.zip;type=application/zip'
+            '-F', 'file=@/tmp/windturbine_anomaly_detector.tar;type=application/x-tar'
         ]
         logger.info(f"Uploading model via kubectl exec: {' '.join(upload_command)}")
         result = subprocess.run(upload_command, capture_output=True, text=True)

@@ -21,9 +21,9 @@ Press `Ctrl+C` when done. Visualizations are auto-generated!
 uv run python src/monitor_stack.py --node /your_node_name
 ```
 
-### 3. Using Make (Even Easier!)
+### 3. Named Session
 ```bash
-make monitor NODE=/slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox --session experiment_1
 ```
 
 ---
@@ -32,7 +32,7 @@ make monitor NODE=/slam_toolbox
 
 ### Quick Performance Check (30 seconds)
 ```bash
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 ```
 
 ### Long-Term Monitoring of Specific Node
@@ -55,9 +55,6 @@ uv run python src/monitor_stack.py --node /problematic_node --session debug
 # Monitor a ROS2 pipeline running on another machine
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100
 
-# Or via make
-make monitor-remote REMOTE_IP=192.168.1.100
-make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox
 ```
 > Requires SSH key auth to the remote host and matching `ROS_DOMAIN_ID`.
 
@@ -80,13 +77,13 @@ uv run python src/monitor_stack.py --session after_optimization --duration 120
 - Tracks individual threads (TIDs)
 - Shows per-thread CPU usage and core affinity
 - More overhead but detailed insights
-- Use: `make monitor`, `make resources-threads`
+- Use: `uv run python src/monitor_stack.py`, `uv run python src/monitor_stack.py --resources-only`
 
 ### PID Mode (Lighter - Process Level)
 - Tracks processes (PIDs) only
 - Lower monitoring overhead
 - Good for production/long-term monitoring
-- Use: `make monitor-pid`, `make resources-pid`
+- Use: `uv run python src/monitor_stack.py --pid-only`, `uv run python src/monitor_stack.py --resources-only --pid-only`
 
 ---
 
@@ -94,19 +91,19 @@ uv run python src/monitor_stack.py --session after_optimization --duration 120
 
 | Command | What It Does |
 |---------|-------------|
-| `make monitor` | Start full monitoring with threads (graph + resources) |
-| `make monitor-pid` | Start full monitoring with PIDs only (lighter) |
-| `make monitor NODE=/node_name` | Monitor specific node with threads |
-| `make monitor-remote REMOTE_IP=<ip>` | Monitor ROS2 pipeline on a remote machine |
-| `make monitor-remote-pid REMOTE_IP=<ip>` | Remote monitoring, PID mode |
-| `make quick-check` | 30-second performance check |
-| `make monitor-long` | Extended 5-minute monitoring with threads |
-| `make monitor-long-pid` | Extended 5-minute monitoring with PIDs only |
-| `make list-sessions` | Show all previous sessions |
-| `make visualize-last` | Re-generate visualizations for last session |
-| `make graph-only` | Monitor only timing/graph data |
-| `make resources-threads` | Monitor only CPU/memory with thread details |
-| `make resources-pid` | Monitor only CPU/memory with PIDs only |
+| `uv run python src/monitor_stack.py` | Start full monitoring with threads (graph + resources) |
+| `uv run python src/monitor_stack.py --pid-only` | Start full monitoring with PIDs only (lighter) |
+| `uv run python src/monitor_stack.py --node /node_name` | Monitor specific node with threads |
+| `uv run python src/monitor_stack.py --remote-ip <ip>` | Monitor ROS2 pipeline on a remote machine |
+| `uv run python src/monitor_stack.py --remote-ip <ip> --pid-only` | Remote monitoring, PID mode |
+| `uv run python src/monitor_stack.py --duration 30` | 30-second performance check |
+| `uv run python src/monitor_stack.py --duration 300` | Extended 5-minute monitoring with threads |
+| `uv run python src/monitor_stack.py --duration 300 --pid-only` | Extended 5-minute monitoring with PIDs only |
+| `uv run python src/monitor_stack.py --list-sessions` | Show all previous sessions |
+| `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show` | Re-generate timing visualizations |
+| `uv run python src/monitor_stack.py --graph-only` | Monitor only timing/graph data |
+| `uv run python src/monitor_stack.py --resources-only` | Monitor only CPU/memory with thread details |
+| `uv run python src/monitor_stack.py --resources-only --pid-only` | Monitor only CPU/memory with PIDs only |
 | `make clean` | Delete all monitoring data |
 | `make clean-last` | Delete the most recent session |
 
@@ -116,7 +113,7 @@ uv run python src/monitor_stack.py --session after_optimization --duration 120
 
 All monitoring data goes to: `monitoring_sessions/<session_name>/`
 
-```
+```text
 monitoring_sessions/
 └── 20260209_143022/              # Auto-generated timestamp
     ├── session_info.txt          # Session details
@@ -194,17 +191,17 @@ uv run python src/monitor_stack.py --node /slam_toolbox
 
 1. **Always name your sessions** for experiments:
    ```bash
-   make monitor NODE=/node_name SESSION=experiment_1
+   uv run python src/monitor_stack.py --node /node_name --session experiment_1
    ```
 
-2. **Use quick-check** before long sessions to verify setup:
+2. **Quick check** before long sessions to verify setup:
    ```bash
-   make quick-check
+   uv run python src/monitor_stack.py --duration 30
    ```
 
 3. **Review previous sessions** to track performance over time:
    ```bash
-   make list-sessions
+   uv run python src/monitor_stack.py --list-sessions
    ```
 
 4. **Clean old data** to save disk space:
@@ -214,7 +211,7 @@ uv run python src/monitor_stack.py --node /slam_toolbox
 
 5. **Re-visualize** if you want different plot options:
    ```bash
-   make visualize-last
+   uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
    ```
 
 ---
@@ -231,7 +228,7 @@ uv run python src/monitor_stack.py --node /slam_toolbox
 
 ### Visualizations not generated
 - Check if log files were created in the session directory
-- Run visualization manually: `make visualize-last`
+- Run visualization manually: `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show`
 
 ### Permission denied
 - Run `chmod +x quickstart auto-setup.sh` for shell scripts

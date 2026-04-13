@@ -1,0 +1,592 @@
+/* ─── Upload Section ─────────────────────────────────────── */
+
+.cs-section {
+  padding: 14px 14px 10px;
+  border-bottom: 1px solid #e6e7e8;
+}
+
+.cs-section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.cs-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  letter-spacing: 0.04em;
+  font-family: var(--font-display);
+}
+
+/* ─── Drop Zone ──────────────────────────────────────────── */
+
+.cs-dropzone {
+  border: 2px dashed #b0bec5;
+  border-radius: 8px;
+  background: #f5f8fa;
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+  outline: none;
+}
+
+.cs-dropzone:hover,
+.cs-dropzone:focus {
+  border-color: #0071c5;
+  background: #eaf3fb;
+}
+
+.cs-dropzone--active {
+  border-color: #0071c5;
+  background: #daeeff;
+}
+
+.cs-dropzone-icon {
+  font-size: 24px;
+  color: #0071c5;
+  line-height: 1;
+}
+
+.cs-dropzone-text {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: #37474f;
+  font-family: var(--font-display);
+}
+
+.cs-dropzone-hint {
+  margin: 0;
+  font-size: 11px;
+  color: #90a4ae;
+  font-family: var(--font-text);
+}
+
+.cs-browse-btn {
+  margin-top: 4px;
+  background: #0071c5;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 18px;
+  font-size: 12px;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.cs-browse-btn:hover {
+  background: #005fa3;
+}
+
+.cs-supported-types {
+  margin: 6px 6px 6px 6px;
+  font-size: 11px;
+  color: #000000;
+  text-align: left;
+  pointer-events: none;
+}
+
+/* ─── File Table ─────────────────────────────────────────── */
+
+.cs-file-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.cs-file-table thead {
+  background: #f1f3f5;
+}
+
+.cs-file-table th {
+  font-size: 12px;
+  font-weight: 600;
+  color: #37474f;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+  font-family: var(--font-display);
+}
+
+.cs-file-table td {
+  font-size: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eeeeee;
+  font-family: var(--font-text);
+  vertical-align: middle;
+}
+
+.cs-file-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Row states */
+.cs-row-processing    { background: #ffffff; }
+.cs-row-completed     { background: #ffffff; }
+.cs-row-failed        { background: #fff5f5; }
+.cs-row-already_exists { background: #ffffff; }
+.cs-row-selected      { background: #eaf3fb !important; }
+
+/* Filename */
+.cs-file-name {
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Column widths */
+.cs-col-check  { width: 28px; text-align: center; }
+.cs-col-name   { text-align: left; }
+.cs-col-type   { width: 44px; text-align: center; color: #607d8b; font-size: 11px; }
+.cs-col-size   { width: 56px; text-align: right;  color: #607d8b; }
+.cs-col-status { padding-right: 6px; }
+.cs-col-remove { width: 24px; text-align: center; }
+
+/* Checkbox */
+.cs-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: #0071c5;
+  cursor: pointer;
+}
+
+/* ─── Status Badge ───────────────────────────────────────── */
+
+.cs-status-badge {
+  display: block;
+  width: 100%;
+  font-size: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  padding: 4px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.cs-status-badge--pending,
+.cs-status-badge--processing {
+  background: #e3f2fd;
+  color: #0071c5;
+}
+
+.cs-status-badge--completed {
+  background: #58a15e;
+  color: #ffffff;
+}
+
+.cs-status-badge--failed {
+  background: #ffebee;
+  color: #c62828;
+}
+
+.cs-status-badge--already_exists {
+  background: #58a15e;
+  color: #ffffff;
+}
+
+/* ─── Progress Bar ───────────────────────────────────────── */
+
+.cs-progress-bar--animated {
+  background: #0071c5;
+  animation: cs-progress-pulse 1.4s ease-in-out infinite;
+  background-size: 200% 100%;
+  background-image: linear-gradient(90deg, #0071c5 0%, #42a5f5 50%, #0071c5 100%);
+}
+
+.cs-progress-bar--complete {
+  background: #37803a;
+}
+
+@keyframes cs-progress-pulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Error / Retry / Remove ─────────────────────────────── */
+
+.cs-failed-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.cs-failed-msg {
+  font-size: 10px;
+  color: #c62828;
+  line-height: 1.3;
+  word-break: break-word;
+}
+
+.cs-retry-btn {
+  background: none;
+  border: 1px solid #e57373;
+  color: #c62828;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  cursor: pointer;
+  width: 100%;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.cs-retry-btn:hover {
+  background: #fdecea;
+}
+
+.cs-remove-btn {
+  background: none;
+  border: none;
+  color: #e51111;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.cs-remove-btn:hover {
+  color: #c62828;
+}
+
+/* ─── Remove Confirmation Modal ──────────────────────────── */
+
+.cs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.cs-modal {
+  background: #fff;
+  padding: 18px 20px;
+  border-radius: 6px;
+  width: 320px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+  font-size: 13px;
+}
+
+.cs-modal-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.cs-modal-actions button {
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.cs-modal-actions button:first-child {
+  background: #e0e0e0;
+}
+
+.cs-danger-btn {
+  background: #0071c5;
+  color: white;
+}
+
+.cs-danger-btn:hover {
+  background: #005fa3;
+}
+/* ───────── Upload Card ───────── */
+
+.cs-upload-card {
+  width: 100%;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+}
+
+/* ───────── Header ───────── */
+
+.cs-upload-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cs-upload-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2b2b2b;
+}
+
+
+/* ───────── Modern Dropzone ───────── */
+
+.cs-dropzone-modern {
+  border: 1.5px dashed #b7bcc3;
+  border-radius: 4px;
+  padding: 42px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.cs-dropzone-modern:hover {
+  border-color: #1976d2;
+  background: #fafcff;
+}
+
+.cs-dropzone-modern--active {
+  border-color: #1976d2;
+  background: #f5faff;
+}
+
+/* ───────── Upload Icon ───────── */
+
+.cs-upload-icon {
+  font-size: 48px;
+  color: #6f7680;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+/* ───────── Text ───────── */
+
+.cs-upload-main-text {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.cs-upload-link-text {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #666;
+}
+
+.cs-upload-link-text span {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* ───────── Table ───────── */
+
+.cs-file-table {
+  width: 100%;
+  margin-top: 16px;
+  border-collapse: collapse;
+}
+
+.cs-file-table th,
+.cs-file-table td {
+  padding: 10px;
+  font-size: 14px;
+  border-bottom: 1px solid #eee;
+}
+
+/* ───────── Status (duplicate block removed — see primary above) ───────── */
+
+/* ───────── Remove Button ───────── */
+
+.cs-remove-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* ───────── Staged status badge ───────── */
+
+.cs-status-badge--staged {
+  background: #f0f0f0;
+  color: #555;
+}
+
+/* ───────── Metadata / Tag Editor Panel ───────── */
+
+.cs-meta-panel {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f7f9fc;
+  border: 1px solid #dde3ea;
+  border-radius: 6px;
+}
+
+.cs-meta-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+  font-style: italic;
+}
+
+.cs-meta-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #2b2b2b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cs-meta-row {
+  margin-bottom: 8px;
+}
+
+
+
+.cs-meta-input {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  outline: none;
+  box-sizing: border-box;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.cs-meta-input:focus {
+  border-color: #1976d2;
+}
+
+.cs-meta-input--tags {
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%23999'%3E%3Cpath d='M21.41 11.58l-9-9A2 2 0 0011 2H4a2 2 0 00-2 2v7a2 2 0 00.59 1.42l9 9a2 2 0 002.82 0l7-7a2 2 0 000-2.84z'/%3E%3C/svg%3E") no-repeat 10px center;
+  padding-left: 28px;
+}
+
+.cs-meta-input:disabled {
+  background: #f4f4f4;
+  color: #aaa;
+  cursor: not-allowed;
+  border-color: #e0e0e0;
+}
+
+/* ───────── Tag Chips (editor) ───────── */
+
+.cs-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cs-chip-file-label {
+  font-size: 11px;
+  color: #888;
+  margin-right: 2px;
+}
+
+.cs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e3edf8;
+  color: #1256a0;
+  border-radius: 12px;
+  padding: 2px 8px 2px 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.cs-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1256a0;
+  font-size: 13px;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.6;
+}
+
+.cs-chip-remove:hover {
+  opacity: 1;
+}
+
+/* ───────── Tag Chips (table row) ───────── */
+
+.cs-row-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+}
+
+.cs-row-chip {
+  background: #e3edf8;
+  color: #1256a0;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+/* ───────── Table Footer / Clear All ───────── */
+
+.cs-table-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.cs-clear-all-btn {
+  background: none;
+  border: 1px solid #d32f2f;
+  color: #d32f2f;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cs-clear-all-btn:hover {
+  background: #d32f2f;
+  color: #fff;
+}
+
+/* ─── Media Queries ──────────────────────────────────────── */
+
+/* Narrow left panel (< 260px) — tighten columns */
+@media (max-width: 260px) {
+  .cs-col-type   { display: none; }
+  .cs-col-size   { display: none; }
+  .cs-col-status { width: 64px; }
+  .cs-file-name  { max-width: 72px; }
+  .cs-status-badge { font-size: 9px; padding: 2px 4px; }
+}
+
+/* Medium panel (261px – 340px) */
+@media (min-width: 261px) and (max-width: 340px) {
+  .cs-col-type   { display: none; }
+  .cs-col-size   { width: 44px; font-size: 10px; }
+  .cs-col-status { width: 72px; }
+  .cs-file-name  { max-width: 90px; }
+  .cs-status-badge { font-size: 9px; }
+}
+
+/* Normal panel (341px+) — default styles apply, nothing overridden */
