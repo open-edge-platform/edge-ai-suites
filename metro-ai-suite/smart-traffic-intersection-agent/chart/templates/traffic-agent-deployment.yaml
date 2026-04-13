@@ -49,9 +49,9 @@ spec:
             - name: HTTPS_PROXY
               value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},live-metrics-service{{- end }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
             - name: NO_PROXY
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},live-metrics-service{{- end }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
             # MQTT configuration
             - name: MQTT_HOST
               value: {{ include "stia.mqttHost" . | quote }}
@@ -90,7 +90,7 @@ spec:
             # Live metrics WebSocket URL (connects to live-metrics-service subchart)
             {{- if index .Values "live-metrics-service" "enabled" }}
             - name: METRICS_WS_URL
-              value: "ws://live-metrics-service:9090/ws/clients"
+              value: "ws://{{ .Release.Name }}-live-metrics-service:9090/ws/clients"
             {{- end }}
           {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
           volumeMounts:

@@ -244,7 +244,7 @@ print_all_service_host_endpoints() {
     echo -e "SERVICE ENDPOINTS"
     echo -e "=======================================================${NC}"
     
-    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep -E "${PROJECT_NAME}|nginx-reverse-proxy");
+    for CONTAINER_NAME in $(docker ps --format '{{.Names}}' | grep -E "^${PROJECT_NAME}");
     do
         # Set/print service name and the host port based on corresponding container name
         case "$CONTAINER_NAME" in
@@ -337,15 +337,19 @@ restart_service() {
         agent)
             echo -e "${BLUE}==> Restarting Traffic Intersection Agent Backend/UI ...${NC}"
             
+            # Restart only the agent-specific services (exclude nginx override which requires RI compose)
+            local AGENT_SERVICES="traffic-agent vlm-openvino-serving live-metrics-service collector"
+            
             # Stop the Traffic Intersection Agent Backend/UI Service
-            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME stop $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME rm -f $AGENT_SERVICES
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             
-            docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate $AGENT_SERVICES
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Traffic Intersection Agent Backend/UI restarted successfully!${NC}"

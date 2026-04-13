@@ -99,7 +99,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
 ### Step 6: Configure GPU Support (Optional)
 
@@ -160,8 +160,8 @@ When live metrics is enabled (the default), you will also see:
 
 | Pod | Description |
 | --- | ----------- |
-| `live-metrics-service-*` | WebSocket relay for live system metrics |
-| `collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
+| `<release>-live-metrics-service-*` | WebSocket relay for live system metrics |
+| `<release>-collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
 
 Wait until all pods show `Running` and `READY 1/1`:
 
@@ -191,8 +191,6 @@ Then open your browser at:
 http://<node-ip>:<backend-node-port>   # Backend API
 http://<node-ip>:<ui-node-port>         # Gradio UI
 ```
-
-> **Important:** When live metrics is enabled, you **must** use the IP of the node where the traffic-agent pod is running. The live-metrics service uses `hostPort` (port 9090) and is co-located with the traffic-agent via pod affinity, so the System Telemetry panel will only connect if the browser accesses the UI on that node's IP.
 
 #### Using Port-Forward (ClusterIP)
 
@@ -312,9 +310,6 @@ The live-metrics service is packaged as a Helm subchart. Keys must be nested und
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `live-metrics-service.enabled` | Deploy the live-metrics WebSocket relay | `true` |
-| `live-metrics-service.fullnameOverride` | Fixed K8s resource name for predictable DNS | `live-metrics-service` |
-
-The live-metrics pod uses `hostPort: 9090` and pod affinity to co-locate with the traffic-agent. Additional subchart values (image, ports, env) are defined in `chart/subcharts/live-metrics-service/values.yaml`.
 
 ### Collector / Telegraf Settings (Subchart)
 
@@ -323,10 +318,6 @@ The collector is packaged as a Helm subchart. Keys must be nested under `collect
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `collector.enabled` | Deploy the Telegraf collector (requires `live-metrics-service.enabled=true`) | `true` |
-| `collector.fullnameOverride` | Fixed K8s resource name for predictable DNS | `collector` |
-| `collector.websocketUrl` | WebSocket URL for the live-metrics relay | `ws://live-metrics-service:9090/ws/collector` |
-
-Additional subchart values (image, security context) are defined in `chart/subcharts/collector/values.yaml`.
 
 ---
 

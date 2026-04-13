@@ -1,10 +1,14 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
+import asyncio
 import logging
+import os
 import sys
 
+import aiohttp
 import gradio as gr
+from fastapi import WebSocket, WebSocketDisconnect
 
 from config import Config
 from data_loader import update_components, fetch_intersection_data
@@ -93,55 +97,59 @@ def _metrics_panel_html():
     """
 
 
-def _metrics_script_html(metrics_ws_url: str):
-    """Return a <script> tag for Chart.js + Telegraf metrics — rendered via gr.HTML()."""
-    return f"""<script>
-    (function() {{
+def _metrics_js():
+    """Return JavaScript code for Chart.js + Telegraf metrics.
+
+    Executed on page load via the Gradio ``js`` parameter (evaluated by
+    ``new Function()``, so raw JS — no ``<script>`` wrapper needed).
+    """
+    return """
+    (function() {
       /* Prevent duplicate initialization */
       if (window.__metricsInitialized) return;
       window.__metricsInitialized = true;
 
       /* ── Chart.js loader ── */
-      function loadChartJs(cb) {{
+      function loadChartJs(cb) {
         if (window.Chart) return cb();
         var s = document.createElement('script');
         s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js';
         s.onload = cb;
         document.head.appendChild(s);
-      }}
+      }
 
-      function initMetrics(tries) {{
+      function initMetrics(tries) {
         var el = document.getElementById('cpuVal');
-        if (!el) {{
-          if ((tries||0) < 100) setTimeout(function(){{ initMetrics((tries||0)+1); }}, 300);
+        if (!el) {
+          if ((tries||0) < 100) setTimeout(function(){ initMetrics((tries||0)+1); }, 300);
           return;
-        }}
+        }
 
-        loadChartJs(function() {{
+        loadChartJs(function() {
           /* ── Chart manager (mirrors LVC ChartManager) ── */
-          var statsCharts = {{}};
+          var statsCharts = {};
           var maxPoints = 60;
 
-          function createStatChart(elId, label, color) {{
+          function createStatChart(elId, label, color) {
             var canvas = document.getElementById(elId);
             if (!canvas) return;
             var ctx = canvas.getContext('2d');
             var gradient = ctx.createLinearGradient(0, 0, 0, 80);
             gradient.addColorStop(0, color + '55');
             gradient.addColorStop(1, color + '0f');
-            var chart = new Chart(ctx, {{
+            var chart = new Chart(ctx, {
               type: 'line',
-              data: {{ labels: [], datasets: [{{ label: label, data: [], borderColor: color, backgroundColor: gradient, tension: 0.35, fill: true, pointRadius: 0, borderWidth: 2 }}] }},
-              options: {{
+              data: { labels: [], datasets: [{ label: label, data: [], borderColor: color, backgroundColor: gradient, tension: 0.35, fill: true, pointRadius: 0, borderWidth: 2 }] },
+              options: {
                 responsive: true, maintainAspectRatio: false, animation: false,
-                scales: {{ x: {{ display: false }}, y: {{ suggestedMin: 0, suggestedMax: 100, grid: {{ color: '#e5e7eb' }}, ticks: {{ color: '#9ca3af', font: {{ size: 10 }} }} }} }},
-                plugins: {{ legend: {{ display: false }} }}
-              }}
-            }});
+                scales: { x: { display: false }, y: { suggestedMin: 0, suggestedMax: 100, grid: { color: '#e5e7eb' }, ticks: { color: '#9ca3af', font: { size: 10 } } } },
+                plugins: { legend: { display: false } }
+              }
+            });
             statsCharts[elId.replace('Chart', '')] = chart;
-          }}
+          }
 
-          function pushSample(key, value) {{
+          function pushSample(key, value) {
             var chart = statsCharts[key];
             if (!chart) return;
             chart.data.labels.push(new Date().toLocaleTimeString());
@@ -150,7 +158,7 @@ def _metrics_script_html(metrics_ws_url: str):
             ds.data.push(value);
             if (ds.data.length > maxPoints) ds.data.shift();
             chart.update('none');
-          }}
+          }
 
           createStatChart('cpuChart', 'CPU %', '#1ad0ff');
           createStatChart('ramChart', 'RAM %', '#8ca0c2');
@@ -168,157 +176,150 @@ def _metrics_script_html(metrics_ws_url: str):
           var collectorStatus    = document.getElementById('collectorStatus');
           var collectorStatusDot = document.getElementById('collectorStatusDot');
 
-          var gpuEngineData = {{}};
+          var gpuEngineData = {};
           var gpuPowerValue = null;
           var pkgPowerValue = null;
 
           /* ── Telegraf metric processor (same as LVC) ── */
-          function processMetrics(metrics) {{
+          function processMetrics(metrics) {
             gpuPowerValue = null;
             pkgPowerValue = null;
 
-            metrics.forEach(function(metric) {{
+            metrics.forEach(function(metric) {
               var name   = metric.name || '';
-              var fields = metric.fields || {{}};
-              var tags   = metric.tags || {{}};
+              var fields = metric.fields || {};
+              var tags   = metric.tags || {};
 
-              switch (name) {{
+              switch (name) {
                 case 'cpu':
-                  if (fields.usage_user !== undefined) {{
+                  if (fields.usage_user !== undefined) {
                     var cpu = fields.usage_user;
                     pushSample('cpu', cpu);
                     if (cpuVal) cpuVal.textContent = cpu.toFixed(1) + '%';
-                  }}
+                  }
                   break;
 
                 case 'mem':
-                  if (fields.used_percent !== undefined) {{
+                  if (fields.used_percent !== undefined) {
                     var mem = fields.used_percent;
                     pushSample('ram', mem);
                     if (ramVal) ramVal.textContent = mem.toFixed(1) + '%';
-                  }}
+                  }
                   break;
 
                 case 'gpu_engine_usage':
-                  if (fields.usage !== undefined && tags.engine) {{
+                  if (fields.usage !== undefined && tags.engine) {
                     gpuEngineData[tags.engine.toUpperCase()] = fields.usage;
-                  }}
+                  }
                   break;
 
                 case 'gpu_frequency':
-                  if (fields.value !== undefined && tags.type === 'cur_freq') {{
-                    if (gpuFreq) {{ gpuFreq.textContent = 'Freq: ' + fields.value + ' MHz'; gpuFreq.style.display = 'block'; }}
-                  }}
+                  if (fields.value !== undefined && tags.type === 'cur_freq') {
+                    if (gpuFreq) { gpuFreq.textContent = 'Freq: ' + fields.value + ' MHz'; gpuFreq.style.display = 'block'; }
+                  }
                   break;
 
                 case 'gpu_power':
-                  if (fields.value !== undefined) {{
+                  if (fields.value !== undefined) {
                     if (tags.type === 'gpu_cur_power') gpuPowerValue = fields.value;
                     else if (tags.type === 'pkg_cur_power') pkgPowerValue = fields.value;
-                  }}
+                  }
                   break;
 
                 case 'temp':
-                  if (fields.temp !== undefined) {{
+                  if (fields.temp !== undefined) {
                     var sensor = tags.sensor || '';
-                    if (gpuTemp && sensor.indexOf('package') >= 0) {{
+                    if (gpuTemp && sensor.indexOf('package') >= 0) {
                       gpuTemp.textContent = 'Temp: ' + fields.temp + '°C';
                       gpuTemp.style.display = 'block';
-                    }}
-                  }}
+                    }
+                  }
                   break;
-              }}
-            }});
+              }
+            });
 
             /* GPU power display */
-            if (gpuPower && gpuPowerValue !== null) {{
+            if (gpuPower && gpuPowerValue !== null) {
               var pwr = 'Power: ' + gpuPowerValue.toFixed(1) + 'W';
               if (pkgPowerValue !== null) pwr += ' (Pkg: ' + pkgPowerValue.toFixed(1) + 'W)';
               gpuPower.textContent = pwr;
               gpuPower.style.display = 'block';
-            }}
+            }
 
             /* GPU engines display */
             var engineNames = Object.keys(gpuEngineData);
-            if (gpuEngines && engineNames.length > 0) {{
-              gpuEngines.textContent = engineNames.map(function(n){{ return n + ': ' + gpuEngineData[n].toFixed(1) + '%'; }}).join(' | ');
+            if (gpuEngines && engineNames.length > 0) {
+              gpuEngines.textContent = engineNames.map(function(n){ return n + ': ' + gpuEngineData[n].toFixed(1) + '%'; }).join(' | ');
               gpuEngines.style.display = 'block';
-            }}
+            }
 
             /* Overall GPU usage = max engine */
-            var engineMetrics = metrics.filter(function(m){{ return m.name === 'gpu_engine_usage'; }});
-            if (engineMetrics.length > 0) {{
-              var maxGpu = Math.max.apply(null, engineMetrics.map(function(m){{ return m.fields.usage || 0; }}));
+            var engineMetrics = metrics.filter(function(m){ return m.name === 'gpu_engine_usage'; });
+            if (engineMetrics.length > 0) {
+              var maxGpu = Math.max.apply(null, engineMetrics.map(function(m){ return m.fields.usage || 0; }));
               pushSample('gpu', maxGpu);
               if (gpuVal) gpuVal.textContent = maxGpu.toFixed(1) + '%';
               if (gpuError) gpuError.style.display = 'none';
-            }}
-          }}
+            }
+          }
 
           /* ── WebSocket ── */
-          var rawUrl = "{metrics_ws_url}";
+          /* Connect to metrics via same host:port as the UI page */
           var browserHost = window.location.hostname;
-          /* Extract port from configured URL and rebuild using browser's hostname */
-          try {{
-            var parsed = new URL(rawUrl);
-            var wsPort = parsed.port || '9090';
-            var wsPath = parsed.pathname || '/ws/clients';
-            var wsProto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
-            var WS_URL = wsProto + '//' + browserHost + ':' + wsPort + wsPath;
-          }} catch(e) {{
-            var WS_URL = rawUrl.replace('localhost', browserHost).replace('127.0.0.1', browserHost);
-          }}
+          var browserPort = window.location.port || (location.protocol === 'https:' ? '443' : '80');
+          var wsProto = (location.protocol === 'https:') ? 'wss:' : 'ws:';
+          var WS_URL = wsProto + '//' + browserHost + ':' + browserPort + '/ws/metrics';
 
           var socket = null;
           var backoff = 1000;
           var maxAttempts = 10;
           var attempts = 0;
 
-          function connect(url) {{
+          function connect(url) {
             if (socket && (socket.readyState === 0 || socket.readyState === 1)) return;
             console.log('[metrics] connecting to', url);
             socket = new WebSocket(url);
 
-            socket.onopen = function() {{
+            socket.onopen = function() {
               console.log('[metrics] connected');
               attempts = 0;
               backoff = 1000;
-              if (collectorStatus) {{ collectorStatus.textContent = 'Connected'; collectorStatus.className = 'status-connected'; }}
+              if (collectorStatus) { collectorStatus.textContent = 'Connected'; collectorStatus.className = 'status-connected'; }
               if (collectorStatusDot) collectorStatusDot.classList.add('active');
-            }};
+            };
 
-            socket.onmessage = function(ev) {{
-              try {{
+            socket.onmessage = function(ev) {
+              try {
                 var msg = JSON.parse(ev.data);
                 if (msg.metrics && Array.isArray(msg.metrics)) processMetrics(msg.metrics);
-              }} catch (e) {{ console.warn('[metrics] parse error:', e); }}
-            }};
+              } catch (e) { console.warn('[metrics] parse error:', e); }
+            };
 
-            socket.onclose = function(ev) {{
+            socket.onclose = function(ev) {
               console.log('[metrics] closed', ev.code);
-              if (collectorStatus) {{ collectorStatus.textContent = 'Disconnected'; collectorStatus.className = 'status-disconnected'; }}
+              if (collectorStatus) { collectorStatus.textContent = 'Disconnected'; collectorStatus.className = 'status-disconnected'; }
               if (collectorStatusDot) collectorStatusDot.classList.remove('active');
-              if (attempts < maxAttempts) {{
+              if (attempts < maxAttempts) {
                 attempts++;
-                setTimeout(function(){{ backoff = Math.min(backoff * 2, 15000); connect(WS_URL); }}, backoff);
-              }}
-            }};
+                setTimeout(function(){ backoff = Math.min(backoff * 2, 15000); connect(WS_URL); }, backoff);
+              }
+            };
 
-            socket.onerror = function() {{
-              try {{ socket.close(); }} catch(ex) {{}}
-            }};
-          }}
+            socket.onerror = function() {
+              try { socket.close(); } catch(ex) {}
+            };
+          }
 
           connect(WS_URL);
 
-          window.addEventListener('beforeunload', function() {{
+          window.addEventListener('beforeunload', function() {
             if (socket) socket.close();
-          }});
-        }});
-      }}
+          });
+        });
+      }
       initMetrics(0);
-    }})();
-    </script>"""
+    })();
+    """
 
 def _device_security_panel_html():
     """Static Device Security State panel — hardcoded for now, configurable via CLI/env later."""
@@ -466,7 +467,6 @@ def create_dashboard_interface():
         css=css,
         title=Config.get_app_title(),
         theme=gr.themes.Base() if Config.get_ui_theme() == "light" else gr.themes.Monochrome(),
-        head=_metrics_script_html(Config.get_metrics_ws_url()),
     ) as interface:
 
         # Header component (full width)
@@ -538,6 +538,55 @@ def create_dashboard_interface():
 
     return interface
 
+
+def _mount_metrics_proxy(app):
+    """Mount a WebSocket proxy on the Gradio FastAPI app for live metrics."""
+    metrics_ws_url = os.getenv(
+        "METRICS_WS_URL", "ws://live-metrics-service:9090/ws/clients"
+    )
+
+    @app.websocket("/ws/metrics")
+    async def ws_metrics_proxy(websocket: WebSocket):
+        await websocket.accept()
+        session = None
+        try:
+            session = aiohttp.ClientSession()
+            async with session.ws_connect(metrics_ws_url) as upstream:
+
+                async def forward_to_client():
+                    async for msg in upstream:
+                        if msg.type == aiohttp.WSMsgType.TEXT:
+                            await websocket.send_text(msg.data)
+                        elif msg.type == aiohttp.WSMsgType.BINARY:
+                            await websocket.send_bytes(msg.data)
+                        elif msg.type in (
+                            aiohttp.WSMsgType.CLOSED,
+                            aiohttp.WSMsgType.ERROR,
+                        ):
+                            break
+
+                async def forward_to_upstream():
+                    try:
+                        while True:
+                            data = await websocket.receive_text()
+                            await upstream.send_str(data)
+                    except WebSocketDisconnect:
+                        pass
+
+                await asyncio.gather(forward_to_client(), forward_to_upstream())
+        except WebSocketDisconnect:
+            logger.debug("Metrics proxy client disconnected")
+        except Exception as e:
+            logger.error(f"Metrics proxy error: {e}")
+            try:
+                await websocket.close(code=1011, reason="Metrics service unavailable")
+            except Exception:
+                pass
+        finally:
+            if session:
+                await session.close()
+
+
 def main():
     """Main application entry point"""
     logger.info("Starting Smart Traffic Intersection Agent Dashboard...")
@@ -552,13 +601,26 @@ def main():
         
         # Enable request queuing for scaling
         interface.queue(default_concurrency_limit=5, max_size=20)
-        interface.launch(
+
+        # Launch without blocking so we can mount the metrics proxy on the
+        # final FastAPI app that launch() creates (launch replaces self.app).
+        _, local_url, _ = interface.launch(
             server_name=Config.get_app_host(),
             server_port=Config.get_app_port(),
             share=False,
             show_error=True,
-            quiet=False
+            quiet=False,
+            js=_metrics_js(),
+            prevent_thread_lock=True,
         )
+
+        # Mount the WebSocket proxy *after* launch() so we attach to the
+        # actual FastAPI app instance that uvicorn is serving.
+        _mount_metrics_proxy(interface.server_app)
+        logger.info("Metrics WebSocket proxy mounted at /ws/metrics")
+
+        # Block the main thread so the server keeps running.
+        interface.block_thread()
         
     except KeyboardInterrupt:
         logger.info("Application stopped by user")

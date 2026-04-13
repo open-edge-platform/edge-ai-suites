@@ -50,7 +50,7 @@ spec:
               protocol: TCP
           env:
             - name: WEBSOCKET_URL
-              value: {{ .Values.websocketUrl | quote }}
+              value: "ws://{{ .Release.Name }}-live-metrics-service:9090/ws/collector"
             {{- include "collector.proxyEnv" . | nindent 12 }}
           volumeMounts:
             - name: telegraf-config

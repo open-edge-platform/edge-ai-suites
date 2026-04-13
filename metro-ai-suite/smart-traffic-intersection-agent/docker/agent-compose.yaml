@@ -71,8 +71,8 @@ services:
       HTTP_PROXY: ${http_proxy}
       https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
-      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
-      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving,live-metrics-service
+      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving,live-metrics-service
       
       # MQTT configuration (connects to broker service)
       MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
@@ -98,7 +98,7 @@ services:
       MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-}
       TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 
-      # Live metrics WebSocket URL (connects to live-metrics-service)
+      # Live metrics WebSocket URL (internal, proxied through traffic-agent)
       METRICS_WS_URL: ws://live-metrics-service:9090/ws/clients
 
     volumes:
@@ -120,16 +120,15 @@ services:
     image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
     build:
       context: ${APP_DIR:-..}/../live-video-analysis/live-metrics-service
-    container_name: live-metrics-service
     environment:
-      - METRICS_PORT=${METRICS_PORT:-9090}
+      - METRICS_PORT=9090
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - CORS_ORIGINS=${CORS_ORIGINS:-*}
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=localhost,127.0.0.1,collector,${no_proxy}
     ports:
-      - "${METRICS_PORT:-9090}:9090"
+      - "9090"
     networks:
       - scenescape
     healthcheck:
@@ -143,9 +142,8 @@ services:
   # Live System Metrics - collector (Telegraf)
   collector:
     image: docker.io/intel/vippet-collector:2026.0.0
-    container_name: collector
     ports:
-      - "${PROMETHEUS_PORT:-9273}:9273"
+      - "9273"
     privileged: true
     devices:
       - "/sys:/sys"
@@ -167,6 +165,10 @@ services:
     networks:
       - scenescape
     restart: unless-stopped
+
+  # Override RI nginx to avoid hardcoded container_name conflict in multi-instance deployments
+  nginx:
+    container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy
 
 volumes:
   ov-models:

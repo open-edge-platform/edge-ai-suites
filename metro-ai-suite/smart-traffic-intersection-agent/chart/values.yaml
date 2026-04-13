@@ -157,8 +157,8 @@ tls:
 live-metrics-service:
   # Set to false to skip deploying the live-metrics relay
   enabled: true
-  # Fix the K8s Service name so other templates can reference it by a known DNS name
-  fullnameOverride: "live-metrics-service"
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
 
 # =============================================================================
 # Collector / Telegraf (subchart)
@@ -168,8 +168,7 @@ collector:
   # Set to false to skip deploying the Telegraf collector.
   # Requires live-metrics-service.enabled=true to function.
   enabled: true
-  # Fix the K8s resource names for predictable DNS
-  fullnameOverride: "collector"
-  # The WebSocket URL must match the live-metrics-service name and port.
-  # Override if you change the fullnameOverride or port above.
-  websocketUrl: "ws://live-metrics-service:9090/ws/collector"
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+  # The WebSocket URL is constructed dynamically in the collector deployment template
+  # to use the release-scoped live-metrics-service name.
