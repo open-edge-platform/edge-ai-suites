@@ -107,6 +107,9 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
+```
+
+```text
 make help
 Target               Description
 ------               -----------
