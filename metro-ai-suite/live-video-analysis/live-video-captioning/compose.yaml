@@ -140,7 +140,10 @@ services:
 
   video-caption-service:
     image: ${REGISTRY:-}video-caption-service:${TAG:-latest}
-    build: ./app
+    build:
+      context: ./app
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: video-caption-service
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,${no_proxy}
@@ -185,7 +188,10 @@ services:
 
   live-metrics-service:
     image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
-    build: ../live-metrics-service
+    build:
+      context: ../live-metrics-service
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-metrics-service
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${no_proxy}
