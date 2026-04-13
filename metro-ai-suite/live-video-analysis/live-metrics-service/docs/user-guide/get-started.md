@@ -35,6 +35,12 @@ docker compose up
 
 **Option B: Build locally**
 
+[Optional] To include third-party copyleft source packages in the built image, export the environment variable before building:
+
+```bash
+export COPYLEFT_SOURCES=true
+```
+
 ```bash
 docker compose up --build
 ```
