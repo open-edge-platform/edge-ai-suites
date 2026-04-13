@@ -1,15 +1,15 @@
 # System Requirements
 
-This page summarizes the recommended environment for running Live Video Captioning RAG with Live Video Captioning.
+This section shows the Intel-recommended environment for running the Live Video Captioning RAG sample application with Live Video Captioning sample application.
 
-Please refer to the [Live Video Captioning System Requirements](../../../../live-video-captioning/docs/user-guide/get-started/system-requirements.md) for more details.
+See [Live Video Captioning System Requirements](../../../../live-video-captioning/docs/user-guide/get-started/system-requirements.md) for details.
 
 # Model Requirements
 
-LLM models directory must be present under `llm_models` together with OpenVINO IR artifaces. For example:
+Large Language Models (LLMs) and their corresponding OpenVINO™ Intermediate Representation (IR) artifacts must be present in the `llm_models` directory. For example:
 - `openvino_language_model.xml`
 - `openvino_vision_embeddings_model.xml`
 
 ## Validation
 
-Proceed to [Live Video Captioning Get Started](../../../../live-video-captioning/docs/user-guide/get-started.md) once docker is installed.
+See [Live Video Captioning Get Started](../../../../live-video-captioning/docs/user-guide/get-started.md) after you have installed Docker software.

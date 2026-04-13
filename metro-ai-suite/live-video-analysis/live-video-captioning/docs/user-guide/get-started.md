@@ -1,43 +1,45 @@
 # Get Started
 
-The Live Video Captioning sample application demonstrates real-time video captioning using Intel® DLStreamer and OpenVINO™. It processes RTSP video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model(VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
+The Live Video Captioning sample application demonstrates real-time video captioning using Deep Learning Streamer (DL Streamer) and OpenVINO™ toolkit. The sample application processes the Real-Time Streaming Protocol (RTSP) video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model (VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
 
-By following this guide, you will learn how to:
 
-- **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
+This section shows how to:
+- **Set up the sample application**: Use Docker Compose tool to deploy the application quickly in your environment.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
 
 ## Prerequisites
 
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
-- Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
-- Install Docker Compose: [Installation Guide](https://docs.docker.com/compose/install/).
+- Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
+- Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
-- OpenVINO-compatible VLM in `ov_models/`. User may follow the steps outlined in [Model Preparation](./model-preparation.md) provided to prepare the model.
+- OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./model-preparation.md) to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
-when object detection in the pipeline is enabled. Please refer to the [Object Detection Pipeline configuration](./object-detection-pipeline.md) guide for information on how to enable it.
+when object detection in the pipeline is enabled. See [Object Detection Pipeline configuration](./object-detection-pipeline.md) to enable.
 
-## Run the application
+## Run the Application
 
-1. **Clone the repository**:
+1. Clone the repository:
 
      ```bash
-     # Clone the latest on mainline
+     # Clone the latest on the mainline
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
      # Alternatively, clone a specific release branch
      git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b <release-tag>
      ```
 
-> **Note:** Adjust the repo link appropriately in case of forked repo.
+     > **Note:** If the repository is forked, edit the link.
 
-2. **Navigate to the Directory**:
+2. Navigate to the directory:
 
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
      ```
 
-3. **Configure Image Registry and Tag**:
+3. Configure the image registry and tag:
+
+     If you prefer to use prebuilt images from Docker Hub, export the following variables:
 
      If you prefer to use prebuilt images from Docker Hub, export the variables below.
 
@@ -48,7 +50,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 
     If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
-4. **Configure Environment**:
+4. Configure the environment:
 
     Create an `.env` file in the repository root:
 
@@ -72,13 +74,11 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
     - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
     - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
     - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
-    - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows current + `CAPTION_HISTORY` previous entries (`0` means only current). This value can be changed from the UI also.
-
-5. **Download/Export Models**:
+    - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
 
     Follow the steps outlined in the [Model Preparation](./model-preparation.md) section.
 
-6. **Start the Live Video Captioning Application**:
+6. Start the Live Video Captioning application:
 
     From the `live-video-analysis/live-video-captioning` directory, start the application using Docker Compose:
 
@@ -86,21 +86,19 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
      docker compose up -d
      ```
 
-7. **Access the Application**:
+7. Access the application:
 
     To start processing video with live captioning:
 
-    1. Open the dashboard at `http://<HOST_IP>:4173`.
-    2. Enter an RTSP URL for your video stream.
-    3. Select a VLM model from the dropdown.
-    4. Customize the prompt and maximum tokens as needed.
-    5. Click **Start** to begin captioning.
+    a. Open the dashboard at `http://<HOST_IP>:4173`.
+    b. Enter an RTSP URL for your video stream.
+    c. Select a VLM model from the dropdown.
+    d. Customize the prompt and maximum tokens as needed.
+    e. Click **Start** to begin captioning.
 
-    > **Note:** If running in a proxy network, ensure that your RTSP stream URLs or IPs are added to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
+    > **Note:** If running in a proxy network, add your RTSP stream URLs or IPs to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
-8. **Stop the Live Video Captioning Application**:
-
-    Stop the sample application services using below:
+8. Stop the Live Video Captioning sample application services:
 
      ```bash
      docker compose down
@@ -108,7 +106,7 @@ when object detection in the pipeline is enabled. Please refer to the [Object De
 
 ## Additional Features Reference
 
-If you want to use the application with additional features, refer to:
+If you want to use the application with additional features, see:
 
 - [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
 - [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
@@ -152,7 +150,7 @@ uv run pytest --cov=backend --cov=main --cov-report=html
 
 Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
-## Supporting Resources
+## Learn More
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Model Download Microservice Get Started Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md)

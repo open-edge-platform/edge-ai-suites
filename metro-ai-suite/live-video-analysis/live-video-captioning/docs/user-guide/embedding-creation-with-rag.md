@@ -11,22 +11,22 @@ When enabled:
 
 ## How Data Flows
 
-1. Live Video Captioning receives metadata from MQTT which published by DLSPS.
+1. Live Video Captioning receives metadata from MQTT, which are published by DL Streamer Pipeline Server.
 2. With `ENABLE_EMBEDDING=true`, frame blobs are forwarded to `live-video-captioning-rag` at `/api/embeddings`.
 3. RAG service generates embeddings through `multimodal-embedding-serving`.
-4. Embeddings + metadata are stored in `vdms-vector-db`.
+4. Embeddings and metadata are stored in `vdms-vector-db`.
 5. RAG chat (`/api/chat`) retrieves relevant context and generates answers with the configured LLM.
 
 ## Prerequisites
 
-- Docker and Docker Compose are installed.
+- Docker Engine software and Docker Compose tool are installed.
 - Complete the base setup in [Get Started](./get-started.md).
-- VLM models are prepared for the captioning pipeline (`ov_models/`) and LLM models are prepared for the RAG pipeline (`llm_models/`). Please refer to [Model Preparation section](./model-preparation.md) to download and convert the models.
-- Ensure this is a fresh installation. If you previously deployed only live-video-captioning or only live-video-captioning-rag, stop those deployments and follow this guide to deploy both together.
+- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./model-preparation.md) to download and convert the models.
+- Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
 
-1. From the `live-video-captioning` directory, use the provided helper script to setup the environment variables:
+1. From the `live-video-captioning` directory, use the provided helper script to set up the environment variables:
 
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
@@ -42,21 +42,23 @@ When enabled:
 	     - `vdms-vector-db`
 	     - `live-video-captioning-rag`
 
-     Notes:
+     > **Notes**:
      - Update the helper script values to use your preferred embedding and LLM models.
-     - For gated models, please export your HF_TOKEN before running the `setup_embeddings.sh` script above:
+     - For gated models, export your HF_TOKEN before running the `setup_embeddings.sh` script above:
+	 
        ```bash
        export HF_TOKEN=<your-huggingface-token>
        ```
 
-2. Then, now you are ready to deploy the live-video-captioning with embedding creation and RAG.
+2. Now you are ready to deploy the live-video-captioning with embedding creation and RAG:
+
      ```bash
      docker compose up -d
      ```
 
-## Verify Services Are Running
+## Verify Services are Running
 
-Make sure that all the services containers are up and running using `docker ps` command. Make sure the state are in `healthy` state before proceed.
+Ensure that all the services containers are up and running, using the `docker ps` command. Ensure that the state is `healthy` before proceeding.
 
 Optionally, you may verify health endpoints:
 
@@ -65,14 +67,14 @@ curl -f http://<HOST_IP>:4173/api/health
 curl -f http://<HOST_IP>:4172/api/health
 ```
 
-## Run End-to-End with Embedding + RAG
+## Run End-to-End with Embedding and RAG
 
-1. Open Live Video Captioning UI at `http://<HOST_IP>:4173`.
+1. Open the Live Video Captioning UI at `http://<HOST_IP>:4173`.
 2. Start a captioning run with a valid RTSP stream.
-3. Confirm captions are being generated.
+3. Confirm that captions are being generated.
 4. Click the `chat icon` in the top bar (visible only when embedding is enabled).
-5. This opens Live Caption RAG dashboard at `http://<HOST_IP>:4172`.
-6. Ask questions related to current or recent scene context.
+5. This opens the Live Caption RAG dashboard at `http://<HOST_IP>:4172`.
+6. Ask questions related to the current or recent scene.
 
 ## Stop the Services
 
@@ -82,22 +84,23 @@ docker compose down
 
 ## Troubleshooting
 
-### Chat icon not visible in live captioning UI
+### Chat Icon is not Visible in Live Captioning UI
 
-- Ensure `ENABLE_EMBEDDING=true` and `COMPOSE_PROFILES=EMBEDDING` is exported before startup.
+- Ensure `ENABLE_EMBEDDING=true` and `COMPOSE_PROFILES=EMBEDDING` are exported before startup.
 
-### RAG page does not open or is unreachable
+### RAG Page Does not Open or is Unreachable
 
-- Confirm `live-video-captioning-rag` container is running.
-- Confirm port mapping `${LIVE_VIDEO_RAG_HOST_PORT:-4172}:4172` is available.
+- Confirm that `live-video-captioning-rag` container is running.
+- Confirm that port mapping `${LIVE_VIDEO_RAG_HOST_PORT:-4172}:4172` is available.
 - Check `http://localhost:4172/api/health`.
 
-### Embeddings not being stored
+### Embeddings are Not Being Stored
 
-- Ensure caption pipeline is actively running (no run means no ingestion).
-- Verify embedding service health on `http://localhost:9777/health`.
-- Verify VDMS container is running.
-- If containers is running still no embeddings stored. Remove the volume and restart the services.
+- Ensure that the caption pipeline is actively running (not running means no ingestion).
+- Verify the embedding service health on `http://localhost:9777/health`.
+- Verify that the VDMS container is running.
+- If containers are running but no embeddings are stored, remove the volume and restart the services:
+
      ```bash
      docker volume rm live-video-caption_vdms-db
      ```
