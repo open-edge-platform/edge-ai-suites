@@ -2641,30 +2641,46 @@ def invoke_make_check_env_variables_in_current_dir():
         return False
 
 
-def invoke_make_up_in_current_dir():
-    """Execute 'make up' command in the current directory without changing directories"""
-    try:
-        logger.info("Executing 'make up' command")
-        result = run_command("make up")
-        
-        if result != 0:  # Command failed
-            logger.error(f"make up failed with exit code: {result}")
-            # Get more detailed error information
+def invoke_make_up_in_current_dir(max_retries=2, retry_delay=30):
+    """Execute 'make up' command in the current directory without changing directories.
+
+    Retries up to max_retries times on failure. 'make up' calls 'make down' as its
+    first step so retrying is safe — each attempt starts from a clean state. This
+    guards against transient race conditions where the TSAM REST API is slow to
+    start on the first attempt.
+    """
+    for attempt in range(1, max_retries + 1):
+        try:
+            logger.info(f"Executing 'make up' command (attempt {attempt}/{max_retries})")
+            result = run_command("make up")
+
+            if result == 0:
+                logger.info("make up succeeded")
+                return True
+
+            logger.error(f"make up failed with exit code: {result} (attempt {attempt}/{max_retries})")
+            # Capture stderr for diagnostics
             error_result = subprocess.run(
-                ["make", "up"], 
-                capture_output=True, 
+                ["make", "up"],
+                capture_output=True,
                 text=True,
                 cwd=os.getcwd()
             )
             if error_result.stderr:
                 logger.error(f"Error output: {error_result.stderr}")
-            return False
-            
-        logger.info("make up succeeded")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to run make up: {str(e)}")
-        return False
+
+            if attempt < max_retries:
+                logger.info(f"Retrying 'make up' in {retry_delay}s...")
+                time.sleep(retry_delay)
+
+        except Exception as e:
+            logger.error(f"Failed to run make up (attempt {attempt}/{max_retries}): {str(e)}")
+            if attempt < max_retries:
+                logger.info(f"Retrying 'make up' in {retry_delay}s...")
+                time.sleep(retry_delay)
+
+    logger.error(f"'make up' failed after {max_retries} attempts.")
+    return False
 
 
 def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):

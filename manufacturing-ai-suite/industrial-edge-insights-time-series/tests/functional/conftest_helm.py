@@ -125,7 +125,7 @@ def setup_multimodal_helm_environment():
     time.sleep(3)
     yield
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=60)
+    # Use extended timeout for cleanup to ensure TSAM dual-service (Kapacitor + REST API) terminates cleanly
+    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=120)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning("Pods still running after 120s cleanup timeout - continuing anyway for CI/CD compatibility")
