@@ -40,11 +40,13 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
+```
+
+```text
 ls | grep -i .deb
 ros-jazzy-adbscan-ros2_2.3-1_amd64.deb
 ros-jazzy-follow-me-interfaces_2.3-1_amd64.deb
 ros-jazzy-adbscan-follow-me-rs2d_2.3-1_amd64.deb
-...
 ```
 
 The `*build-deps*.deb` packages are generated during the build process and installation of such packages can be skipped on the target platform.
@@ -116,6 +118,9 @@ To see a full list of available Makefile targets:
 
 ```bash
 make help
+```
+
+```text
 Target               Description
 ------               -----------
 clean                Clean up all build artifacts
