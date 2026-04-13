@@ -92,6 +92,7 @@ clinfo | grep -i "Device Name"
     Device Name                                   Intel(R) UHD Graphics
     Device Name                                   Intel(R) UHD Graphics
     Device Name                                   Intel(R) UHD Graphics
+```
 
 If no GPU device is listed, then the GPU driver is not installed.
 
