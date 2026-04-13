@@ -206,7 +206,7 @@ async def ingest_dir(request: IngestDirRequest = Body(...)):
                     local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
                     store.get_file(object_name, local_file_path)
 
-                    file_meta = {**meta, "file_path": f"local://{bucket_name}/{object_name}"}
+                    file_meta = {**meta, "file_path": f"local://{bucket_name}/{object_name}", "file_name": os.path.basename(object_name)}
                     proc_files.append(local_file_path)
                     metas.append(file_meta)
 
@@ -249,6 +249,7 @@ async def ingest_file(request: IngestFileRequest = Body(...)):
                 store.get_file(file_path, local_file_path)
                 logger.info(f"Successfully loaded file from storage: {local_file_path}")
                 meta["file_path"] = f"local://{bucket_name}/{file_path}"
+                meta["file_name"] = os.path.basename(file_path)
                 return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)

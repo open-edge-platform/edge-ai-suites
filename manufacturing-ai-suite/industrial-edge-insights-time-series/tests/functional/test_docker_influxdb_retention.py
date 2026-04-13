@@ -21,6 +21,7 @@ pytest_plugins = ["conftest_docker"]
 # Set up logger for this module
 logger = logging.getLogger(__name__)
 
+@pytest.mark.longrun
 def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     """TC_DOCKER_021: Testing InfluxDB data retention of 1 hour with OPC-UA plugin (Docker)."""
     logger.info("TC_DOCKER_021: Testing InfluxDB data retention of 1 hour with OPC-UA plugin (Docker).")
@@ -30,7 +31,9 @@ def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     
     # Start services with OPC-UA ingestion using the fixture's helper function
     logger.info("Starting services with OPC-UA ingestion")
-    assert context["deploy_opcua"]() is True
+    deploy_opcua_result = context["deploy_opcua"]()
+    logger.info(f"deploy_opcua result: {deploy_opcua_result}")
+    assert deploy_opcua_result is True
 
     # Wait for containers to stabilize
     logger.info("Waiting for containers to stabilize...")
@@ -39,6 +42,7 @@ def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     # Check container status
     logger.info("Checking container status")
     status = docker_utils.check_make_status()
+    logger.info(f"Container status check result: {status}")
     assert status, "Containers are not running as expected"
     
 
@@ -47,7 +51,9 @@ def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     time.sleep(120)
 
     # Check logs for INFO level
-    assert docker_utils.check_loglevel_in_container("INFO") is True
+    loglevel_result = docker_utils.check_loglevel_in_container("INFO")
+    logger.info(f"check_loglevel_in_container result: {loglevel_result}")
+    assert loglevel_result is True
 
     influxdb_retention_duration = "1h"
     logger.info(f"InfluxDB Retention Duration : {influxdb_retention_duration}")
@@ -60,6 +66,7 @@ def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     logger.info("Executing InfluxDB commands")
     result = docker_utils.execute_influxdb_commands()
     logger.info("Verify if InfluxDB commands executed successfully for OPC-UA input plugin")
+    logger.info(f"InfluxDB command result: {result}")
     assert result is not None and result != "", "InfluxDB commands did not execute successfully"
     
 
@@ -85,4 +92,5 @@ def test_influxdb_data_retention_with_opcua_docker(setup_docker_environment):
     else:
         logger.info("InfluxDB command is not fetched properly")
         success = False
+    logger.info(f"InfluxDB retention success: {success}, response before: {response}, response after: {response1}")
     assert success is True, "InfluxDB retention duration is not working as expected for OPC-UA input plugin"

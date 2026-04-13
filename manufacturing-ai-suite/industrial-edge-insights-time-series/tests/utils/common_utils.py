@@ -166,11 +166,11 @@ def _run_command(cmd):
 def _check_and_set_working_directory():
     """Check current working directory and change to wind turbine directory."""
     current_dir = os.getcwd()
-    logger.info(f"Current working directory: {current_dir}")
+    logger.debug(f"Current working directory: {current_dir}")
     
     # Check if we're already in or below the target directory
     if "edge-ai-suites" in current_dir:
-        logger.info("Already in edge-ai-suites directory structure")
+        logger.debug("Already in edge-ai-suites directory structure")
         
         # Split the path and find where the target directory starts
         parts = current_dir.split(os.sep)
@@ -190,12 +190,12 @@ def _check_and_set_working_directory():
         # If not in edge-ai-suites structure, use constants to build path
         target_dir = constants.EDGE_AI_SUITES_DIR
     
-    logger.info(f"Target directory: {target_dir}")
+    logger.debug(f"Target directory: {target_dir}")
     
     if os.path.exists(target_dir):
         original_dir = current_dir
         os.chdir(target_dir)
-        logger.info(f"Changed working directory to: {os.getcwd()}")
+        logger.debug(f"Changed working directory to: {os.getcwd()}")
         return True, original_dir
     else:
         logger.error(f"Target directory does not exist: {target_dir}")
@@ -206,7 +206,7 @@ def _invoke_make_down():
     try:
         success, original_dir = _check_and_set_working_directory()
         if not success:
-            logger.info("Failed to set working directory for make down")
+            logger.debug("Failed to set working directory for make down")
             return False
         
         result = _run_command("make down")
@@ -215,10 +215,10 @@ def _invoke_make_down():
         os.chdir(original_dir)
         
         if result != 0:  # Command failed
-            logger.info("make down failed")
+            logger.debug("make down failed")
             return False
         
-        logger.info("make down succeeded")
+        logger.debug("make down succeeded")
         return True
         
     except Exception as e:
@@ -230,7 +230,7 @@ def _invoke_make_up_opcua_ingestion():
     try:
         success, original_dir = _check_and_set_working_directory()
         if not success:
-            logger.info("Failed to set working directory for OPC-UA ingestion")
+            logger.debug("Failed to set working directory for OPC-UA ingestion")
             return False
             
         result = _run_command("make up_opcua_ingestion")
@@ -239,10 +239,10 @@ def _invoke_make_up_opcua_ingestion():
         os.chdir(original_dir)
         
         if result != 0:  # Command failed
-            logger.info("make up_opcua_ingestion failed")
+            logger.debug("make up_opcua_ingestion failed")
             return False
         
-        logger.info("make up_opcua_ingestion succeeded")
+        logger.debug("make up_opcua_ingestion succeeded")
         return True
         
     except Exception as e:
@@ -412,20 +412,20 @@ def update_alert_in_tick_script(file_path, setup):
         # Remove the specific alert section
         
         content = remove_alert_pattern1.sub('', content)
-        logger.info("Removed MQTT alert pattern from the .tick file.")
+        logger.debug("Removed MQTT alert pattern from the .tick file.")
         content = remove_alert_pattern2.sub('', content)
-        logger.info("Removed OPCUA alert pattern from the .tick file.")
+        logger.debug("Removed OPCUA alert pattern from the .tick file.")
         
         # Append the new alert script
         if setup == "mqtt":
             content += new_alert_script1
-            logger.info("Added new MQTT alert script to the .tick file.")
+            logger.debug("Added new MQTT alert script to the .tick file.")
         elif setup == "opcua":
             content += new_alert_script2
-            logger.info("Added new OPCUA alert script to the .tick file.")
+            logger.debug("Added new OPCUA alert script to the .tick file.")
         elif setup == "mqtt_weld":
             content += new_alert_script3
-            logger.info("Added new MQTT Weld alert script to the .tick file.")
+            logger.debug("Added new MQTT Weld alert script to the .tick file.")
         else:
             logger.error(f"Invalid setup type: {setup}. Use 'mqtt' or 'opcua' or 'mqtt_weld'.")
             return False
@@ -434,7 +434,7 @@ def update_alert_in_tick_script(file_path, setup):
         with open(file_path, 'w') as file:
             file.write(content)
 
-        logger.info("Alert configuration updated successfully.")
+        logger.debug("Alert configuration updated successfully.")
         return True
 
     except FileNotFoundError:
@@ -460,7 +460,7 @@ def update_log_level(level):
             else:
                 f.write(line)
     
-    logger.info(f"Updated LOG_LEVEL to {level}")
+    logger.debug(f"Updated LOG_LEVEL to {level}")
     
 def check_logs_by_level(resource_name, log_level, resource_type="container", namespace=None, tail_lines=10, monitor_duration=10, update_config=False):
     """
@@ -501,7 +501,7 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
         if resource_type == "container":
             # Handle configuration update if requested
             if update_config:
-                logger.info(f"\n--- Testing {log_level_upper} with config update ---")
+                logger.debug(f"\n--- Testing {log_level_upper} with config update ---")
                 
                 # Update .env file
                 update_log_level(log_level_upper)
@@ -551,11 +551,18 @@ def check_logs_by_level(resource_name, log_level, resource_type="container", nam
             # Check for log level pattern - support multiple formats:
             # 1. Python logging format: "ERROR -", "INFO -", "DEBUG -"
             # 2. Kapacitor format: "lvl=error", "lvl=info", "lvl=debug"
+            # 3. Uvicorn/Gunicorn format: "INFO:", "DEBUG:", "ERROR:"
+            # 4. Standard logging format: "level=INFO", "level=DEBUG"
             log_pattern_python = f"{log_level_upper} -"
             log_pattern_kapacitor = f"lvl={log_level_upper.lower()}"
+            log_pattern_uvicorn = f"{log_level_upper}:"
+            log_pattern_level_eq = f"level={log_level_upper.lower()}"
             
             logs_upper = logs.upper()
-            found = log_pattern_python in logs_upper or log_pattern_kapacitor.upper() in logs_upper
+            found = (log_pattern_python in logs_upper
+                     or log_pattern_kapacitor.upper() in logs_upper
+                     or log_pattern_uvicorn in logs_upper
+                     or log_pattern_level_eq.upper() in logs_upper)
             
             if found:
                 if log_level_upper == "ERROR":
@@ -641,7 +648,7 @@ def check_individual_log_level(container_name, log_level, update_config=False, r
         if restart_container:
             # Import docker_utils here to avoid circular imports
             from . import docker_utils
-            logger.info(f"Restarting container {container_name} for log level {log_level}...")
+            logger.debug(f"Restarting container {container_name} for log level {log_level}...")
             restart_exit_code = docker_utils.restart_container(container_name)
             if restart_exit_code != 0:
                 logger.error(f"Failed to restart container {container_name}, exit code: {restart_exit_code}")
@@ -943,7 +950,7 @@ def setup_multimodal_environment():
     Returns:
         bool: True if setup was successful, False otherwise
     """
-    logger.info("Setting up multimodal environment...")
+    logger.debug("Setting up multimodal environment...")
     
     try:
         # Update HOST_IP in .env file
