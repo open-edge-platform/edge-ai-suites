@@ -189,10 +189,10 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```sh
    export SAMPLE_APP="wind-turbine-anomaly-detection"
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-   rm -f ${SAMPLE_APP}.zip
-   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
+   rm -f ${SAMPLE_APP}.tar
+   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
 
 <!--hide_directive:::
@@ -219,10 +219,10 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```sh
    export SAMPLE_APP="weld-anomaly-detection"
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config # path relative to git clone folder
-   rm -f ${SAMPLE_APP}.zip
-   zip -r ${SAMPLE_APP}.zip models/ tick_scripts/ udfs/
+   rm -f ${SAMPLE_APP}.tar
+   tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
 
-   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.zip" -k
+   curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
 
 <!--hide_directive:::
