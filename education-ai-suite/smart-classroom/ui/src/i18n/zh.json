@@ -218,13 +218,16 @@
     "status": "状态",
     "retry": "重试",
     "clearAll": "清除所有",
+    "uploadFiles": "上传文件",
     "removeFileConfirmation": "删除此文件将停止处理。继续？",
     "cancel": "取消",
     "remove": "删除",
     "pending": "待处理…",
+    "staged": "就绪",
     "processing": "处理中…",
     "failed": "失败",
-    "uploaded": "已上传 ✓"
+    "uploaded": "已上传 ✓",
+    "alreadyExists": "已存在"
   },
   "searchSection": {
     "title": "搜索",

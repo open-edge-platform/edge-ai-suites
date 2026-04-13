@@ -217,13 +217,16 @@
     "status":"Status",
     "retry":" ↻ Retry",
     "clearAll":"Clear All",
+    "uploadFiles":"Upload Files",
     "removeFileConfirmation":"Removing this file will stop processing. Continue?",
     "cancel":"Cancel",
     "remove":"Remove",
     "pending":"Pending...",
+    "staged":"Ready",
     "processing":"Processing...",
     "failed":"Failed",
-    "uploaded":"Uploaded ✓"
+    "uploaded":"Uploaded ✔",
+    "alreadyExists":"Already Exists"
   },
   "searchSection": {
     "title": "Search",

@@ -835,6 +835,24 @@ export async function csQueryTask(taskId: string): Promise<{
   });
 }
 
+export async function csCleanupTask(
+  taskId: string
+): Promise<{ code: number; task_id: string; status: string; message: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/cleanup-task/${encodeURIComponent(taskId)}`,
+      { method: 'DELETE' }
+    );
+    const data = await res.json().catch(() => ({}));
+    return {
+      code: data.code ?? 20000,
+      task_id: data.data?.task_id ?? taskId,
+      status: data.data?.status ?? 'COMPLETED',
+      message: data.message ?? '',
+    };
+  });
+}
+
 export async function createSession(): Promise<{ sessionId: string }> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/create-session`, {

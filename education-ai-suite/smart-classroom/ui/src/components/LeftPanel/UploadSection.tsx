@@ -1,11 +1,12 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
-import { csUploadIngest, csQueryTask, csIngest, createSession, startMonitoring } from "../../services/api";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
+  | "STAGED"
   | "PENDING"
   | "PROCESSING"
   | "COMPLETED"
@@ -27,7 +28,7 @@ interface UploadEntry {
   tags: string[];
 }
 
-const POLL_INTERVAL_MS = 1000;
+const POLL_INTERVAL_MS = 3000;
 
 function genId() {
   return Math.random().toString(36).slice(2);
@@ -46,6 +47,7 @@ function isAllowed(filename: string): boolean {
 }
 
 const TERMINAL: TaskStatus[] = ["COMPLETED", "FAILED", "ALREADY_EXISTS"];
+const ACTIVE: TaskStatus[] = ["PROCESSING", "PENDING"];
 
 const UploadSection: React.FC = () => {
   const { t } = useTranslation();
@@ -101,47 +103,47 @@ const UploadSection: React.FC = () => {
 
   const selectedEntries = entries.filter((e) => e.selected);
 
-  // Add a chip tag on Enter or comma — only if all selected are in terminal state
+  // Add a chip tag on Enter or comma — available whenever a file is selected
   const handleTagKeyDown = (ev: React.KeyboardEvent<HTMLInputElement>) => {
     if (ev.key !== "Enter" && ev.key !== ",") return;
     ev.preventDefault();
     const tag = tagInput.trim().replace(/,$/, "");
     if (!tag) return;
 
-    // Update tags locally and capture updated entries for re-ingest
-    let updatedEntries: UploadEntry[] = [];
-    setEntries((prev) => {
-      const next = prev.map((e) =>
-        e.selected && !e.tags.includes(tag) ? { ...e, tags: [...e.tags, tag] } : e
-      );
-      updatedEntries = next.filter((e) => e.selected && e.fileKey);
-      return next;
-    });
+    // Update tags locally; re-stage any completed files so Upload button picks them up
+    setEntries((prev) =>
+      prev.map((e) => {
+        if (!e.selected || e.tags.includes(tag)) return e;
+        const updated = { ...e, tags: [...e.tags, tag] };
+        // If already uploaded, move back to STAGED so user confirms re-ingest via Upload button
+        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
+          updated.status = "STAGED";
+        }
+        return updated;
+      })
+    );
     setTagInput("");
-
-    // Re-ingest each selected file with the latest tags
-    updatedEntries.forEach((e) => {
-      if (!e.fileKey) return;
-      const updatedTags = e.tags.includes(tag) ? e.tags : [...e.tags, tag];
-      csIngest(e.fileKey, { tags: updatedTags }).catch((err) =>
-        console.warn(`Re-ingest failed for ${e.filename}:`, err)
-      );
-    });
   };
 
   const removeTag = (entryId: string, tag: string) => {
     setEntries((prev) =>
-      prev.map((e) =>
-        e.id === entryId ? { ...e, tags: e.tags.filter((t) => t !== tag) } : e
-      )
+      prev.map((e) => {
+        if (e.id !== entryId) return e;
+        const updated = { ...e, tags: e.tags.filter((t) => t !== tag) };
+        // Re-stage if already uploaded so the Upload button triggers re-ingest
+        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
+          updated.status = "STAGED";
+        }
+        return updated;
+      })
     );
   };
 
-  const pollTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+  const pollTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({}); 
 
   // Drive csProcessing flag: true while any entry is actively uploading/processing
   useEffect(() => {
-    const anyActive = entries.some((e) => !TERMINAL.includes(e.status));
+    const anyActive = entries.some((e) => ACTIVE.includes(e.status));
     dispatch(setCsProcessing(anyActive));
   }, [entries, dispatch]);
 
@@ -167,10 +169,6 @@ const UploadSection: React.FC = () => {
               ? result.progress
               : 0;
 
-          if (progress === 100 && !["FAILED"].includes(status)) {
-            status = "COMPLETED";
-          }
-
           const fileKey =
             (result.result?.file_info as any)?.file_key ??
             (result.result as any)?.file_key ??
@@ -191,9 +189,9 @@ const UploadSection: React.FC = () => {
     [updateEntry]
   );
 
-  // Upload files immediately on drop/browse
+  // Stage files locally — upload is triggered explicitly by the user
   const processFiles = useCallback(
-    async (files: File[]) => {
+    (files: File[]) => {
       const newEntries: UploadEntry[] = files.map((f) => ({
         id: genId(),
         file: f,
@@ -202,57 +200,81 @@ const UploadSection: React.FC = () => {
         fileSize: f.size,
         taskId: null,
         fileKey: null,
-        status: "PROCESSING" as TaskStatus,
+        status: "STAGED" as TaskStatus,
         progress: 0,
         error: null,
         selected: false,
         tags: [],
       }));
       setEntries((prev) => [...prev, ...newEntries]);
+    },
+    []
+  );
 
-      // Ensure session + monitoring — run without blocking uploads
-      const ensureSessionAndMonitoring = async () => {
-        if (!sessionIdRef.current) {
-          try {
-            const res = await createSession();
-            sessionIdRef.current = res.sessionId;
-            dispatch(setSessionId(res.sessionId));
-          } catch (e) {
-            console.warn("Could not create session for metrics:", e);
-          }
-        }
-        if (sessionIdRef.current && !monitoringActiveRef.current) {
-          try {
-            await startMonitoring(sessionIdRef.current);
-            dispatch(setMonitoringActive(true));
-          } catch (e) {
-            console.warn("Could not start monitoring:", e);
-          }
-        }
-      };
-      ensureSessionAndMonitoring();
+  // Upload all staged files (with their tags) when user clicks the Upload button
+  const handleUploadAll = useCallback(async () => {
+    // Read staged entries directly from current state
+    const stagedEntries = entries.filter((e) => e.status === "STAGED");
+    if (!stagedEntries.length) return;
 
-      await Promise.all(
-        newEntries.map(async (entry) => {
-          try {
-            const res = await csUploadIngest(entry.file);
+    // Mark all staged entries as PROCESSING upfront
+    setEntries((prev) =>
+      prev.map((e) =>
+        e.status === "STAGED" ? { ...e, status: "PROCESSING" as TaskStatus } : e
+      )
+    );
+
+    // Ensure session + monitoring without blocking uploads
+    const ensureSessionAndMonitoring = async () => {
+      if (!sessionIdRef.current) {
+        try {
+          const res = await createSession();
+          sessionIdRef.current = res.sessionId;
+          dispatch(setSessionId(res.sessionId));
+        } catch (e) {
+          console.warn("Could not create session for metrics:", e);
+        }
+      }
+      if (sessionIdRef.current && !monitoringActiveRef.current) {
+        try {
+          await startMonitoring(sessionIdRef.current);
+          dispatch(setMonitoringActive(true));
+        } catch (e) {
+          console.warn("Could not start monitoring:", e);
+        }
+      }
+    };
+    ensureSessionAndMonitoring();
+
+    await Promise.all(
+      stagedEntries.map(async (entry) => {
+        try {
+          const meta = entry.tags.length ? { tags: entry.tags } : undefined;
+          // If file already exists on server (re-staged with new tags), re-ingest with updated tags
+          // Otherwise do a fresh upload+ingest
+          if (entry.fileKey) {
+            const ingestRes = await csIngest(entry.fileKey, meta ?? {});
+            updateEntry(entry.id, { taskId: ingestRes.task_id, status: "PROCESSING", fileKey: entry.fileKey });
+            startPolling(entry.id, ingestRes.task_id);
+          } else {
+            const res = await csUploadIngest(entry.file, meta);
             if (res.status === "ALREADY_EXISTS") {
-              updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, fileKey: res.file_key ?? null });
+              // File was already fully processed in a previous session — no new task created
+              updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100 });
             } else {
               updateEntry(entry.id, { taskId: res.task_id, status: "PROCESSING", fileKey: res.file_key ?? null });
               startPolling(entry.id, res.task_id);
             }
-          } catch (err: any) {
-            updateEntry(entry.id, {
-              status: "FAILED",
-              error: err?.message ?? "Upload failed",
-            });
           }
-        })
-      );
-    },
-    [updateEntry, startPolling, dispatch]
-  );
+        } catch (err: any) {
+          updateEntry(entry.id, {
+            status: "FAILED",
+            error: err?.message ?? "Upload failed",
+          });
+        }
+      })
+    );
+  }, [entries, updateEntry, startPolling, dispatch]);
 
   const handleRetry = useCallback(
     async (entry: UploadEntry) => {
@@ -261,7 +283,8 @@ const UploadSection: React.FC = () => {
         const meta = entry.tags.length ? { tags: entry.tags } : undefined;
         const res = await csUploadIngest(entry.file, meta);
         if (res.status === "ALREADY_EXISTS") {
-          updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, fileKey: res.file_key ?? null });
+          // Already fully processed — no new background task, treat as terminal
+          updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100 });
         } else {
           updateEntry(entry.id, { taskId: res.task_id, status: "PROCESSING", fileKey: res.file_key ?? null });
           startPolling(entry.id, res.task_id);
@@ -298,10 +321,17 @@ const UploadSection: React.FC = () => {
   const confirmRemove = () => {
     const id = confirmRemoveId;
     if (!id) return;
+
+    // Stop polling
     if (pollTimers.current[id]) {
       clearInterval(pollTimers.current[id]);
       delete pollTimers.current[id];
     }
+
+    // Read the entry synchronously before setEntries batches the update
+    const removedEntry = entries.find((e) => e.id === id);
+
+    // Remove from UI
     setEntries((prev) => {
       const next = prev.filter((e) => e.id !== id);
       if (next.length === 0) {
@@ -311,21 +341,28 @@ const UploadSection: React.FC = () => {
       return next;
     });
     setConfirmRemoveId(null);
+
+    // Call backend cleanup if the file was uploaded (has a taskId)
+    if (removedEntry?.taskId) {
+      csCleanupTask(removedEntry.taskId).catch((err) =>
+        console.warn(`Cleanup failed for task ${removedEntry!.taskId}:`, err)
+      );
+    }
   };
 
   const getStatusLabel = (s: TaskStatus) => {
     switch (s) {
+      case "STAGED":         return t("uploadSection.staged");
       case "PENDING":        return t("uploadSection.pending");
       case "PROCESSING":     return t("uploadSection.processing");
       case "COMPLETED":      return t("uploadSection.uploaded");
       case "FAILED":         return t("uploadSection.failed");
-      case "ALREADY_EXISTS": return t("uploadSection.uploaded");
+      case "ALREADY_EXISTS": return t("uploadSection.alreadyExists");
     }
   };
 
-  const canAddTags =
-    selectedEntries.length > 0 &&
-    selectedEntries.every((e) => TERMINAL.includes(e.status));
+  // Tags can be added to any selected file, even before upload
+  const canAddTags = selectedEntries.length > 0;
 
 return (
   <>
@@ -396,13 +433,8 @@ return (
                 <input
                   type="text"
                   className="cs-meta-input cs-meta-input--tags"
-                  placeholder={
-                    canAddTags
-                      ? "Add tag — press Enter or comma"
-                      : "Tags available after upload completes"
-                  }
+                  placeholder="Add tag — press Enter or comma"
                   value={tagInput}
-                  disabled={!canAddTags}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
                 />
@@ -468,12 +500,20 @@ return (
                         <span className="cs-failed-msg" title={entry.error ?? ""}>
                           Upload of &apos;{entry.filename}&apos; failed. Please try again
                         </span>
-                        <button
-                          className="cs-retry-btn"
-                          onClick={() => handleRetry(entry)}
-                        >
-                        {t("uploadSection.retry")}
-                        </button>
+                        <div className="cs-failed-actions">
+                          <button
+                            className="cs-retry-btn"
+                            onClick={() => handleRetry(entry)}
+                          >
+                            {t("uploadSection.retry")}
+                          </button>
+                          <button
+                            className="cs-retry-btn cs-retry-btn--remove"
+                            onClick={() => setConfirmRemoveId(entry.id)}
+                          >
+                            {t("uploadSection.remove")}
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <>
@@ -482,32 +522,20 @@ return (
                         >
                           {getStatusLabel(entry.status)}
                         </span>
-                        {(entry.status === "PROCESSING" || entry.status === "PENDING") && (
-                          <div className="cs-progress-track">
-                            <div
-                              className="cs-progress-bar cs-progress-bar--animated"
-                              style={{ width: `${entry.progress || 100}%` }}
-                            />
-                          </div>
-                        )}
-                        {(entry.status === "COMPLETED" || entry.status === "ALREADY_EXISTS") && (
-                          <div className="cs-progress-track">
-                            <div
-                              className="cs-progress-bar cs-progress-bar--complete"
-                              style={{ width: "100%" }}
-                            />
-                          </div>
-                        )}
                       </>
                     )}
                   </td>
                   <td className="cs-col-remove">
-                    <button
-                      className="cs-remove-btn"
-                      onClick={() => setConfirmRemoveId(entry.id)}
-                    >
-                      🗑
-                    </button>
+                    {entry.status !== "FAILED" && (
+                      <button
+                        className="cs-remove-btn"
+                        disabled={ACTIVE.includes(entry.status)}
+                        onClick={() => setConfirmRemoveId(entry.id)}
+                        title={ACTIVE.includes(entry.status) ? "Cannot remove while uploading" : "Remove file"}
+                      >
+                        🗑
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -517,6 +545,7 @@ return (
           <div className="cs-table-footer">
             <button
               className="cs-clear-all-btn"
+              disabled={entries.some((e) => ACTIVE.includes(e.status))}
               onClick={() => {
                 Object.values(pollTimers.current).forEach(clearInterval);
                 pollTimers.current = {};
@@ -525,7 +554,14 @@ return (
                 dispatch(setCsUploadsComplete(false));
               }}
             >
-                {t("uploadSection.clearAll")}
+              {t("uploadSection.clearAll")}
+            </button>
+            <button
+              className="cs-upload-all-btn"
+              disabled={!entries.some((e) => e.status === "STAGED")}
+              onClick={handleUploadAll}
+            >
+              {t("uploadSection.uploadFiles")}
             </button>
           </div>
         </>
