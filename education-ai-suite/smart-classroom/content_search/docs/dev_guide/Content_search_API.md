@@ -327,7 +327,7 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
 ```
 Response (200 OK):
 ```json
-// # example 1: Normal upload and ingest
+// example 1: Normal upload and ingest
 {
     "code": 20000,
     "data": {
@@ -338,7 +338,7 @@ Response (200 OK):
     "message": "Upload and Ingest started",
     "timestamp": 1774878113
 }
-// # example 2: File already exists, return the existed taskid
+// example 2: File already exists, return the existed taskid
 {
     "code": 40901,
     "data": {
@@ -472,8 +472,8 @@ Request:
 curl --location --request DELETE 'http://127.0.0.1:9011/api/v1/object/cleanup-task/b14b0c14-e768-4536-9d13-ea556f9adc1b'
 ```
 Response:
-```powershell
-# example 1: 200 OK - Success
+```json
+// example 1: 200 OK - Success
 {
     "code": 20000,
     "data": {
@@ -483,14 +483,14 @@ Response:
     "message": "Cleanup completed",
     "timestamp": 1775723734
 }
-# example 2: 200 OK - Task Processing
+// example 2: 200 OK - Task Processing
 {
     "code": 40000,
     "data": {},
     "message": "Task is still processing and cannot be deleted",
     "timestamp": 1775723800
 }
-# example 3: 200 OK - Task Not Found
+// example 3: 200 OK - Task Not Found
 {
     "code": 50002,
     "data": {},
