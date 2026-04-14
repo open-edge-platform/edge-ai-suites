@@ -8,6 +8,46 @@ Intel-operated generative artificial intelligence solutions.
 -->
 # Summary of Improvements
 
+## 🗓️ April 2026 — Latest Updates
+
+### Structured Benchmark Results Output
+`analyze_trigger_latency.py` now emits a structured JSON (via `--json-out`) and
+prints a compact **Performance Summary** table after every analysis run.
+
+**JSON output** (`build_performance_kpi`):
+- Top-level fields: `throughput_hz`, `mean_latency_ms`, `mean/max/min_jitter_ms`,
+  `jitter_stdev_ms`, `cpu_mean_pct`, `cpu_max_pct`
+- `per_node` block — per-node throughput, latency, jitter, primary input/output,
+  pipeline stage
+- `pairs` list — full scalar stats per (node, input, output) including `fps`,
+  `jitter_mean_ms`, `jitter_max_ms`
+- `metadata` block — `name`, `datetime`, `hostname`, `arch`, `os`, `data_path`
+
+**Terminal summary** (`print_performance_summary`) — printed automatically after
+every run:
+```text
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Performance Summary
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Component              Input → Output         Throughput  Latency     p90
+  controller_server      plan → cmd_vel           80.1 Hz   12.5 ms   25.3 ms
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### Cross-Run Aggregate Summary
+`aggregate_kpi.py` now shows a **Throughput (Hz)** column in the detailed
+report and appends a compact `Aggregate Summary` table at the end:
+```text
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Aggregate Summary  |  bench_20260318_120000  |  25 runs
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Component            Output        Throughput  Mean Latency  Worst p90
+  controller_server    /cmd_vel        79.4 Hz      13.1 ms     28.4 ms
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
 ## 🗓️ March 2026 — Latest Updates
 
 ### CPU% Clarity in Resource Reports
@@ -17,7 +57,7 @@ Intel-operated generative artificial intelligence solutions.
 - **Reference line** at 100% (dashed gray, "= 1 core") on all CPU utilization and heatmap plots
 
 ### Interactive Pipeline Graph — Click to See Node Details
-`visualize_graph.py` (`make pipeline-graph --show`) now supports clicking on nodes:
+`visualize_graph.py` (`uv run python src/visualize_graph.py <session>/graph_timing.csv --show`) now supports clicking on nodes:
 - Opens a **Tkinter popup** with publishers and subscribers for that node
 - Each topic row shows: message count, frequency (Hz), latency mean ± std
 - Color-coded health dots: green < 20 ms, yellow < 100 ms, orange < 500 ms, red ≥ 500 ms
@@ -33,7 +73,7 @@ The Grafana dashboard now includes a **Node Detail** row:
 Prometheus runs in host-network mode and occupies port 9090. The KPI exporter now defaults to **port 9092** to avoid the conflict:
 - `prometheus/prometheus.yml` scrape target updated to `localhost:9092`
 - `Makefile` `grafana-export` and `grafana-export-live` targets updated
-- `make grafana-export SESSION=<name>` auto-kills stale processes on that port before binding
+- `uv run python src/prometheus_exporter.py` auto-kills stale processes on that port before binding
 
 ---
 
@@ -45,14 +85,6 @@ Your ROS2 monitoring stack now has **3 cleaner ways to run**:
 Single Python script that manages everything:
 ```bash
 uv run python src/monitor_stack.py --node /your_node
-```
-
-### 2. 🔨 Makefile Commands
-Simple, memorable commands:
-```bash
-make monitor NODE=/your_node
-make quick-check
-make list-sessions
 ```
 
 ---
@@ -99,12 +131,6 @@ uv run python src/monitor_stack.py --node /slam_toolbox
 # Press Ctrl+C when done - everything is automatic!
 ```
 
-**Or even simpler:**
-
-```bash
-make monitor NODE=/slam_toolbox
-```
-
 **Benefits:**
 - ✅ Single command does everything
 - ✅ Automatic file organization
@@ -119,7 +145,7 @@ make monitor NODE=/slam_toolbox
 ## 🎯 Key Features of the New Stack
 
 ### 1. Automatic Session Management
-```
+```text
 monitoring_sessions/
 └── 20260209_143022/          # Auto-timestamped
     ├── session_info.txt      # What you monitored
@@ -142,9 +168,6 @@ monitoring_sessions/
 ```bash
 # See all past monitoring sessions
 uv run python src/monitor_stack.py --list-sessions
-
-# Or with make
-make list-sessions
 ```
 
 ### 5. Flexible Control
@@ -174,13 +197,13 @@ uv run python src/monitor_stack.py --session my_experiment
 
 ### Example 1: Quick Performance Check
 ```bash
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 ```
 Runs a 30-second monitoring session and shows you the results.
 
 ### Example 2: Debug a Node
 ```bash
-make monitor NODE=/problematic_node
+uv run python src/monitor_stack.py --node /problematic_node
 # Let it run while reproducing the issue
 # Press Ctrl+C
 # Check monitoring_sessions/*/visualizations/
@@ -196,10 +219,10 @@ uv run python src/monitor_stack.py --node /critical_node --session production_te
 ### Example 4: Compare Performance
 ```bash
 # Before optimization
-make monitor NODE=/controller_server SESSION=before
+uv run python src/monitor_stack.py --node /controller_server --session before
 
 # After optimization
-make monitor NODE=/controller_server SESSION=after
+uv run python src/monitor_stack.py --node /controller_server --session after
 
 # Compare the visualization folders
 ```
@@ -208,10 +231,10 @@ make monitor NODE=/controller_server SESSION=after
 
 ## 📁 File Structure
 
-### Current File Structure:
-```
+### Current File Structure
+```text
 ros2-kpi/
-├── Makefile              # Make targets
+├── Makefile              # Infrastructure targets (install, grafana, clean, lint)
 ├── quickstart            # Interactive menu
 │
 ├── src/
@@ -225,8 +248,8 @@ ros2-kpi/
 └── README.md                 # Full documentation
 ```
 
-### Output Structure:
-```
+### Output Structure
+```text
 monitoring_sessions/
 ├── 20260209_143022/
 │   ├── session_info.txt
@@ -247,13 +270,13 @@ monitoring_sessions/
 
 ## 🎓 Learning Curve
 
-### For Quick Tasks:
-Just remember: `make monitor`
+### For Quick Tasks
+Just remember: `uv run python src/monitor_stack.py`
 
-### For Specific Nodes:
-`make monitor NODE=/node_name`
+### For Specific Nodes
+`uv run python src/monitor_stack.py --node /node_name`
 
-### For Everything Else:
+### For Everything Else
 Check `uv run python src/monitor_stack.py --help` or `make help`
 
 ---
@@ -266,8 +289,6 @@ uv run python src/ros2_graph_monitor.py --node /my_node --log my_timing.csv
 uv run python src/monitor_resources.py --memory --log my_resources.log
 ```
 
-The `make monitor` stack is a convenience layer on top.
-
 ---
 
 ## 💡 Recommended Workflow
@@ -277,13 +298,9 @@ The `make monitor` stack is a convenience layer on top.
    ros2 launch my_robot robot.launch.py
    ```
 
-2. **Start monitoring (pick one):**
+2. **Start monitoring:**
    ```bash
-   # Option 1: Python
    uv run python src/monitor_stack.py --node /my_critical_node
-
-   # Option 2: Make
-   make monitor NODE=/my_critical_node
    ```
 
 3. **Let it run, then press Ctrl+C**
@@ -296,7 +313,7 @@ The `make monitor` stack is a convenience layer on top.
 
 5. **Review session history:**
    ```bash
-   make list-sessions
+   uv run python src/monitor_stack.py --list-sessions
    ```
 
 ---
@@ -327,12 +344,12 @@ The `make monitor` stack is a convenience layer on top.
 
 1. Try a quick test:
    ```bash
-   make quick-check
+   uv run python src/monitor_stack.py --duration 30
    ```
 
 2. Monitor your specific node:
    ```bash
-   make monitor NODE=/your_node_name
+   uv run python src/monitor_stack.py --node /your_node_name
    ```
 
 3. Explore the session outputs in `monitoring_sessions/`

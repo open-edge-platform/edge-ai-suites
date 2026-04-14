@@ -1,4 +1,9 @@
 #!/bin/bash
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# These contents may have been developed with support from one or more
+# Intel-operated generative artificial intelligence solutions.
 # wandering_run.sh  —  Launch the wandering simulation alongside the graph
 #                       monitor, then print a trigger-latency analysis at the end.
 #
@@ -37,7 +42,9 @@ _cleanup() {
   fi
 
   # Graph monitor
-  [[ "$MONITOR_PID" -gt 0 ]] && kill -SIGTERM "$MONITOR_PID" 2>/dev/null || true
+  if [[ "$MONITOR_PID" -gt 0 ]]; then
+    kill -SIGTERM "$MONITOR_PID" 2>/dev/null || true
+  fi
 
   # Launch process group (setsid makes it a session leader)
   if [[ "$LAUNCH_PID" -gt 0 ]]; then
@@ -55,8 +62,9 @@ _cleanup() {
   #    full path "bash .../ros2-kpi/src/wandering_run.sh").  Using "ros2 " (ros2
   #    followed by a space) matches only actual ros2 CLI invocations like
   #    "ros2 launch" and "ros2 bag" without matching the path substring "ros2-kpi".
-  #    Similarly, "/opt/ros/" catches all installed ROS2 nodes by their install path.
-  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
+  #    Similarly, "/opt/ros/[a-z]*/lib/" catches installed ROS2 node executables
+  #    without matching scripts installed under /opt/ros/<distro>/benchmarking/.
+  _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
   pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
   sleep 2
   pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
@@ -79,6 +87,9 @@ while [[ $# -gt 0 ]]; do
     --record)         RECORD_MODE=1; shift ;;
     --plot)           PLOT_MODE=1; shift ;;
     --output-parent)  OUTPUT_PARENT="$2"; shift 2 ;;
+    -h|--help)
+      sed -n '10,18p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+      trap - EXIT; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -110,7 +121,7 @@ echo ""
 
 # ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
 echo "Killing any leftover simulation processes before starting..."
-_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
+_SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
 pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
 sleep 2
 pkill -SIGKILL -f "$_SWEEP" 2>/dev/null || true
@@ -183,9 +194,11 @@ while true; do
     RAW_TS=$(grep 'Goal was reached' "$LAUNCH_LOG" 2>/dev/null \
              | sed -n "${GOAL_ARRIVALS}p" \
              | grep -oP '\[\K[0-9]+(?=\.[0-9]+\])')
-    ARRIVAL_TS=$( [[ -n "${RAW_TS:-}" ]] \
-                  && date -d "@${RAW_TS}" '+%H:%M:%S' \
-                  || date '+%H:%M:%S' )
+    if [[ -n "${RAW_TS:-}" ]]; then
+      ARRIVAL_TS=$(date -d "@${RAW_TS}" '+%H:%M:%S')
+    else
+      ARRIVAL_TS=$(date '+%H:%M:%S')
+    fi
     echo "  ✔ Goal #${GOAL_ARRIVALS} at ${ARRIVAL_TS}"
   done
 

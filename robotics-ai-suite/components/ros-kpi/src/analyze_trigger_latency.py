@@ -48,9 +48,11 @@ from __future__ import annotations
 import argparse
 import bisect
 import csv
+import datetime
 import json
-import os
+import platform
 import re
+import socket
 import statistics
 import sys
 from collections import defaultdict
@@ -174,6 +176,17 @@ def load_topology(topo_path: Path) -> Tuple[dict, dict]:
     return topo.get('nodes', {}), topo.get('topics', {})
 
 
+def _compute_topic_fps(topic_times: Dict[str, List[float]]) -> Dict[str, float]:
+    """Return {topic: measured_fps} derived from observed message timestamps."""
+    fps_map: Dict[str, float] = {}
+    for topic, times in topic_times.items():
+        if len(times) >= 2:
+            duration = times[-1] - times[0]
+            if duration > 0:
+                fps_map[topic] = (len(times) - 1) / duration
+    return fps_map
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  Core analysis
 # ──────────────────────────────────────────────────────────────────────────────
@@ -236,7 +249,7 @@ def analyze_node(
                 continue
 
             # The most-likely trigger = smallest non-zero latency
-            best_in = min(trigger_candidates, key=lambda k: trigger_candidates[k][1])
+            best_in = min(trigger_candidates, key=lambda k, tc=trigger_candidates: tc[k][1])
             events.append({
                 'out_ts':      ot,
                 'best_input':  best_in,
@@ -274,6 +287,15 @@ def analyze_node(
                 ),
                 'events':     events,   # full event list for CSV export / plot
             }
+            # Throughput: measured fps of the output topic
+            _out_ts_list = topic_times.get(out_t, [])
+            if len(_out_ts_list) >= 2:
+                _dur = _out_ts_list[-1] - _out_ts_list[0]
+                pair_result['fps'] = (len(_out_ts_list) - 1) / _dur if _dur > 0 else None
+            else:
+                pair_result['fps'] = None
+            pair_result['jitter_mean_ms'] = pair_result['stdev_ms']
+            pair_result['jitter_max_ms']  = pair_result['max_ms'] - pair_result['mean_ms']
             results.append(pair_result)
 
     return results
@@ -447,10 +469,8 @@ def plot_trigger_timeline(
         coloured by which input topic triggered it.
     """
     try:
-        import matplotlib
         import matplotlib.pyplot as plt
         import matplotlib.patches as mpatches
-        import numpy as np
     except ImportError:
         print('  matplotlib not available – skipping plot')
         return
@@ -552,6 +572,150 @@ def find_latest_session(sessions_root: Path) -> Optional[Path]:
     if not candidates:
         return None
     return max(candidates, key=lambda d: d.stat().st_mtime)
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  Structured KPI output (standard benchmark format)
+# ──────────────────────────────────────────────────────────────────────────────
+
+_PIPELINE_ORDER_ATL = ['Sensor', 'Perception', 'Planning', 'Control', 'Other']
+
+
+def _classify_node(node: str) -> str:
+    """Return the pipeline stage for a node name."""
+    n = node.split('/')[-1]
+    if n in ('ros_gz_bridge', 'robot_state_publisher'):
+        return 'Sensor'
+    if n in ('rtabmap', 'local_costmap', 'global_costmap'):
+        return 'Perception'
+    if n in ('route_server', 'behavior_server', 'planner_server', 'bt_navigator'):
+        return 'Planning'
+    if n in ('controller_server', 'velocity_smoother', 'collision_monitor', 'docking_server'):
+        return 'Control'
+    return 'Other'
+
+
+def build_performance_kpi(
+    all_results: List[dict],
+    session_dir: Path,
+    topic_times: Dict[str, List[float]],  # noqa: ARG001 — kept for API symmetry
+) -> dict:
+    """
+    Build a structured per-session KPI dict using standard benchmark metric keys.
+
+    Top-level BasicPerformanceMetrics.* keys summarizes the dominant (highest
+    trigger-count) pair in the session.  Per-node breakdowns are stored under
+    'per_node'.  The full scalar pair list is kept under 'pairs' for downstream
+    aggregation by aggregate_kpi.py.
+    """
+    _SCALAR_KEYS = (
+        'node', 'input', 'output', 'n',
+        'mean_ms', 'stdev_ms', 'min_ms', 'p50_ms', 'p90_ms', 'p99_ms', 'max_ms',
+        'trigger_count', 'fps', 'jitter_mean_ms', 'jitter_max_ms',
+    )
+
+    # De-duplicate: best (lowest mean) per (node, input, output)
+    seen: dict = {}
+    for r in all_results:
+        k = (r['node'], r['input'], r['output'])
+        if k not in seen or r['mean_ms'] < seen[k]['mean_ms']:
+            seen[k] = r
+    deduped = list(seen.values())
+
+    # System-level summary from the dominant (highest trigger_count) pair
+    if deduped:
+        dominant     = max(deduped, key=lambda r: r.get('trigger_count', 0))
+        sys_fps      = dominant.get('fps')
+        sys_lat      = dominant['mean_ms']
+        sys_jit_mean = dominant.get('jitter_mean_ms', dominant['stdev_ms'])
+        sys_jit_max  = dominant.get('jitter_max_ms', dominant['max_ms'] - dominant['mean_ms'])
+        all_jitters  = [r.get('jitter_mean_ms', r['stdev_ms']) for r in deduped]
+        sys_jit_min  = min(all_jitters)
+        sys_jit_std  = statistics.stdev(all_jitters) if len(all_jitters) > 1 else 0.0
+    else:
+        sys_fps = sys_lat = sys_jit_mean = sys_jit_max = sys_jit_min = sys_jit_std = None
+
+    # Per-node summary
+    by_node: Dict[str, List[dict]] = defaultdict(list)
+    for r in deduped:
+        by_node[r['node']].append(r)
+
+    per_node: dict = {}
+    for node_name, pairs in sorted(by_node.items()):
+        primary = max(pairs, key=lambda r: r.get('trigger_count', 0))
+        per_node[node_name] = {
+            'throughput_hz':    primary.get('fps'),
+            'mean_latency_ms':  primary['mean_ms'],
+            'mean_jitter_ms':   primary.get('jitter_mean_ms', primary['stdev_ms']),
+            'max_jitter_ms':    primary.get('jitter_max_ms',
+                                            primary['max_ms'] - primary['mean_ms']),
+            'num_samples':      primary['n'],
+            'primary_input':    primary['input'],
+            'primary_output':   primary['output'],
+            'pipeline_stage':   _classify_node(node_name),
+        }
+
+    return {
+        'throughput_hz':    sys_fps,
+        'mean_latency_ms':  sys_lat,
+        'max_jitter_ms':    sys_jit_max,
+        'min_jitter_ms':    sys_jit_min,
+        'mean_jitter_ms':   sys_jit_mean,
+        'jitter_stdev_ms':  sys_jit_std,
+        'cpu_mean_pct':     None,
+        'cpu_max_pct':      None,
+        'per_node': per_node,
+        'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
+        'metadata': {
+            'name':      session_dir.name,
+            'datetime':  datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'hostname':  socket.gethostname(),
+            'arch':      platform.machine(),
+            'os':        f'{platform.system()} {platform.release()}',
+            'data_path': str(session_dir),
+        },
+    }
+
+
+def print_performance_summary(all_results: List[dict]) -> None:
+    """Print a compact ranked performance summary table (throughput + latency per component)."""
+    if not all_results:
+        return
+
+    # Best (highest trigger_count) pair per (node, output)
+    by_node_out: Dict[tuple, dict] = {}
+    for r in all_results:
+        k = (r['node'], r['output'])
+        if k not in by_node_out or r.get('trigger_count', 0) > by_node_out[k].get('trigger_count', 0):
+            by_node_out[k] = r
+
+    ranked = sorted(
+        by_node_out.values(),
+        key=lambda r: (
+            _PIPELINE_ORDER_ATL.index(_classify_node(r['node']))
+            if _classify_node(r['node']) in _PIPELINE_ORDER_ATL
+            else len(_PIPELINE_ORDER_ATL),
+            r['mean_ms'],
+        ),
+    )
+
+    W = 104
+    print()
+    print('━' * W)
+    print('  Performance Summary')
+    print('━' * W)
+    print(f"  {'Component':<28} {'Input → Output':<44} {'Throughput':>12}  {'Latency':>9}  {'p90':>9}")
+    print('━' * W)
+    for r in ranked:
+        nd   = r['node'].split('/')[-1][:26]
+        inp  = r['input'].split('/')[-1][:18]
+        out  = r['output'].split('/')[-1][:18]
+        io   = f'{inp} → {out}'
+        fps  = r.get('fps')
+        fps_s = f'{fps:.1f} Hz' if fps is not None else '—'
+        h    = _health(r['mean_ms'])
+        print(f"  {h} {nd:<26} {io:<44} {fps_s:>12}  {r['mean_ms']:>7.1f} ms  {r['p90_ms']:>7.1f} ms")
+    print('━' * W)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -671,11 +835,11 @@ def main() -> None:
             )
             if candidates:
                 topo_path = candidates[0]
-                print(f'\n  ℹ  No topology in bag dir — using nearest session:')
+                print('\n  ℹ  No topology in bag dir — using nearest session:')
                 print(f'     {topo_path}')
-                print(f'     (pass --topology <path> to override)')
+                print('     (pass --topology <path> to override)')
             else:
-                print(f'ERROR: graph_topology.json not found.', file=sys.stderr)
+                print('ERROR: graph_topology.json not found.', file=sys.stderr)
                 print(f'  Looked in: {bag_dir}', file=sys.stderr)
                 print('  Fix: run a --analyze session first, or pass --topology <path>',
                       file=sys.stderr)
@@ -722,7 +886,7 @@ def main() -> None:
         topic_times = load_topic_timestamps(csv_path)
         print(f' {len(topic_times)} topics loaded.')
 
-    nodes, topics = load_topology(topo_path)
+    nodes, _ = load_topology(topo_path)
     filter_internal = not args.no_filter
 
     # ── Analyse each node ────────────────────────────────────────────────────
@@ -752,6 +916,8 @@ def main() -> None:
     if not args.summary_only:
         print_results(all_results, node_filter=args.node)
 
+    print_performance_summary(all_results)
+
     # ── Export CSV ───────────────────────────────────────────────────────────
     if args.export_csv:
         export_path = session_dir / 'trigger_events.csv'
@@ -759,18 +925,7 @@ def main() -> None:
 
     # ── JSON output (for benchmark aggregation) ──────────────────────────────
     if args.json_out:
-        _SCALAR_KEYS = ('node','input','output','n','mean_ms','stdev_ms',
-                        'min_ms','p50_ms','p90_ms','p99_ms','max_ms','trigger_count')
-        # Deduplicate: keep best (lowest mean) per (node, input, output)
-        seen: dict = {}
-        for r in all_results:
-            k = (r['node'], r['input'], r['output'])
-            if k not in seen or r['mean_ms'] < seen[k]['mean_ms']:
-                seen[k] = r
-        payload = {
-            'session': str(session_dir),
-            'pairs': [{k: r[k] for k in _SCALAR_KEYS} for r in seen.values()],
-        }
+        payload = build_performance_kpi(all_results, session_dir, topic_times)
         json_path = Path(args.json_out)
         json_path.parent.mkdir(parents=True, exist_ok=True)
         with open(json_path, 'w') as _jf:

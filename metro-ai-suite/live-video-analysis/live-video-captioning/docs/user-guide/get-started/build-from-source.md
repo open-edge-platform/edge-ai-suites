@@ -18,8 +18,12 @@ To build the Docker image for `Live Video Captioning` application, follow these 
 
    Skip this step if you are running only Live Video Captioning.
 
+3. [Optional] To include third-party copyleft source packages in the built images, export the environment variable before building:
+     ```bash
+     export COPYLEFT_SOURCES=true
+     ```  
 
-2. Run the following `docker compose` command:
+4. Run the following `docker compose` command:
       ```bash
       docker compose build
       ```

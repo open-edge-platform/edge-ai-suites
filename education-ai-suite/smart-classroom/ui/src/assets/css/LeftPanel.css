@@ -16,6 +16,17 @@
 .left-panel-container.fullscreen {
   margin-top: 70vh; /* Push the LeftPanel down to accommodate the full-screen video */
 }
+
+/* ─── Content Search Panel ───────────────────────────────── */
+.cs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  overflow-y: auto;
+}
+
+
 .tabs {
   display: flex;
   justify-content: flex-start;

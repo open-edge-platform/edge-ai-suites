@@ -289,7 +289,7 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
 
         # Write frame bytes to ffmpeg stdin
         ffmpeg_proc.stdin.write(frame.tobytes())
-        
+        csv_row["defect_type"] = base_filename.replace("-", "_")     # Add defect type from filename for easier analysis
         if "Date" in csv_row:
             del csv_row["Date"]
         if "Time" in csv_row:
@@ -301,9 +301,10 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         now_ns = time.time_ns()
         seconds = now_ns // 1_000_000_000
         nanoseconds = now_ns % 1_000_000_000
-        csv_row["time"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(seconds)) + f".{nanoseconds:09d}Z"
+        csv_row["time"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(seconds)) + f".{nanoseconds:09d}Z" 
         # csv_row["frame_id"] = frame_id
         csv_row = json.dumps(csv_row)
+
         # Publish each CSV row only once
         
         # global published_data

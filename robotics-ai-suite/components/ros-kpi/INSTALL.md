@@ -116,13 +116,13 @@ After installation:
 source /opt/ros/humble/setup.bash
 
 # Run a quick check (30 seconds)
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 
-# Full monitoring (60 seconds)
-make monitor
+# Full monitoring
+uv run python src/monitor_stack.py
 
 # Monitor specific node
-make monitor-node NODE=/slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox
 ```
 
 ### Remote Monitoring
@@ -143,14 +143,14 @@ For monitoring a ROS2 system running on another machine:
 3. **Run remote monitoring**:
    ```bash
    source /opt/ros/humble/setup.bash
-   make monitor-remote REMOTE_IP=10.34.94.191 REMOTE_USER=intel
+   uv run python src/monitor_stack.py --remote-ip 10.34.94.191 --remote-user intel
    ```
 
 ## Remote Monitoring Setup Guide
 
 This section covers the complete setup for monitoring ROS2 systems running on remote machines.
 
-### Prerequisites
+### Remote Machine Prerequisites
 
 **On the monitoring machine (where you run this tool):**
 - ROS2 installed and sourced
@@ -242,12 +242,12 @@ ssh username@remote-ip-address "echo 'SSH works!'"
 **Step 4: (Optional) Configure SSH for convenience**
 
 Edit `~/.ssh/config`:
-```
+```text
 Host robot
     HostName 192.168.1.100
     User ubuntu
     IdentityFile ~/.ssh/id_ed25519
-    
+
 Host jetson
     HostName 10.34.94.191
     User intel
@@ -342,23 +342,23 @@ Once setup is complete:
 
 **Full remote monitoring (with thread details):**
 ```bash
-make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ubuntu DURATION=120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ubuntu --duration 120
 ```
 
 **Remote monitoring (PID-only mode, less overhead):**
 ```bash
-make monitor-remote-pid REMOTE_IP=192.168.1.100 REMOTE_USER=ubuntu DURATION=120
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ubuntu --pid-only --duration 120
 ```
 
 **Monitor specific node remotely:**
 ```bash
-make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox DURATION=180
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox --duration 180
 ```
 
 **Using hostname from SSH config:**
 ```bash
 # If you configured ~/.ssh/config with Host "robot"
-make monitor-remote REMOTE_IP=robot REMOTE_USER=ubuntu
+uv run python src/monitor_stack.py --remote-ip robot --remote-user ubuntu
 ```
 
 ### Troubleshooting Remote Monitoring
@@ -425,10 +425,10 @@ ssh-add ~/.ssh/id_ed25519
 ping -c 10 remote-ip
 
 # Monitor in shorter intervals to reduce data
-make monitor-remote REMOTE_IP=remote-ip INTERVAL=10 DURATION=60
+uv run python src/monitor_stack.py --remote-ip remote-ip --interval 10 --duration 60
 
 # Use PID-only mode (less SSH traffic)
-make monitor-remote-pid REMOTE_IP=remote-ip
+uv run python src/monitor_stack.py --remote-ip remote-ip --pid-only
 ```
 
 #### Resource monitoring works but no graph data
@@ -453,7 +453,7 @@ A convenience script is provided to source ROS2:
 source ./setup_ros2_env.sh
 
 # Now run monitoring commands
-make monitor-remote REMOTE_IP=10.34.94.191 REMOTE_USER=intel
+uv run python src/monitor_stack.py --remote-ip 10.34.94.191 --remote-user intel
 ```
 
 ## Troubleshooting
@@ -553,5 +553,5 @@ source ~/.bashrc
 
 # Verify
 ./setup_ros2_env.sh
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 ```

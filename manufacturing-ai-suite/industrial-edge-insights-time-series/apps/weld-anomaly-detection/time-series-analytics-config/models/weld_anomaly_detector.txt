@@ -1,0 +1,42 @@
+WELD DEFECT CLASSIFIER - EVALUATION REPORT
+============================================================
+
+Training split : TRAIN + VAL
+Evaluation split: TEST
+TEST Accuracy   : 0.8041
+
+Classification Report (TEST):
+                                  precision    recall  f1-score   support
+
+                     Burnthrough     0.9215    0.6955    0.7927     31304
+                   Crater_Cracks     0.9863    0.9796    0.9830     15901
+             Excessive_Convexity     0.8959    0.9459    0.9203     18075
+           Excessive_Penetration     0.9403    0.7255    0.8190     51194
+                       Good Weld     0.3342    0.9506    0.4945     17188
+                  Lack_of_Fusion     0.9178    0.8913    0.9044     29884
+                         Overlap     0.9817    0.9858    0.9837      6956
+                        Porosity     0.7355    0.6802    0.7068     33923
+Porosity_w_Excessive_Penetration     0.8000    0.8431    0.8210     52221
+                         Spatter     0.9734    0.8990    0.9347     28145
+                        Undercut     0.9215    0.8507    0.8847     14398
+                         Warping     0.8956    0.6312    0.7405     31830
+
+                        accuracy                         0.8041    331019
+                       macro avg     0.8587    0.8399    0.8321    331019
+                    weighted avg     0.8603    0.8041    0.8182    331019
+
+
+Confusion Matrix (rows=actual, cols=predicted):
+Labels: Burnthrough, Crater_Cracks, Excessive_Convexity, Excessive_Penetration, Good Weld, Lack_of_Fusion, Overlap, Porosity, Porosity_w_Excessive_Penetration, Spatter, Undercut, Warping
+[[21773     3     2   707  8118   334     0     0     0    23     2   342]
+ [    0 15577    40     5    47     0    83     0     0     0   145     4]
+ [    0    24 17098     2    59     1     1     0     0     4   885     1]
+ [  203     1     0 37140 12016   141     5     0     0    25     1  1662]
+ [  260     2     3   275 16339   108     1     0     6    16     0   178]
+ [   45     2     0   227  2325 26637     4     0     0   576     0    68]
+ [    6    28     8    11    37     3  6857     0     3     1     2     0]
+ [    0     0     0     0     0     0     0 23074 10849     0     0     0]
+ [    0     1     0     0     1     0     1  8189 44025     0     0     4]
+ [  110    15     6    91   809  1716     6     0     0 25303     9    80]
+ [    4   140  1920     0    54     0    27     0     0     3 12248     2]
+ [ 1227     0     7  1040  9084    82     0   107   148    43     0 20092]]

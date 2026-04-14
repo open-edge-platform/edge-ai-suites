@@ -24,7 +24,7 @@ You want to analyze the performance of a specific node (e.g., `/slam_toolbox`) t
 ros2 node list
 
 # 2. Start monitoring that specific node
-make monitor NODE=/slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox
 
 # 3. Let it run while your system operates
 #    (Run for as long as needed to collect representative data)
@@ -37,19 +37,14 @@ ls monitoring_sessions/*/visualizations/
 
 ## Alternative Methods
 
-### Using Python directly:
+### With custom duration
+```bash
+uv run python src/monitor_stack.py --node /slam_toolbox --duration 120  # 2 minutes
+```
+
+### With named session
 ```bash
 uv run python src/monitor_stack.py --node /slam_toolbox --session slam_analysis
-```
-
-### Using the bash wrapper:
-```bash
-make monitor NODE=/slam_toolbox
-```
-
-### With custom duration:
-```bash
-make monitor NODE=/slam_toolbox DURATION=120  # 2 minutes
 ```
 
 ## Analyzing Results

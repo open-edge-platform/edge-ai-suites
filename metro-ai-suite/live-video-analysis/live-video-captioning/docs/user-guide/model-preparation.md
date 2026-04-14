@@ -2,7 +2,7 @@
 
 To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [model-download microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
 
-1. **Clone the repository**:
+1. Clone the repository:
 
      Open a new terminal, clone the edge-ai-libraries repository.
      ```bash
@@ -12,12 +12,12 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b <release-tag>
      ```
 
-2. **Navigate to the directory**:
+2. Navigate to the directory:
      ```bash
      cd edge-ai-libraries/microservices/model-download
      ```
 
-3. **Configure the environment variables**:
+3. Configure the environment variables:
 
      ```bash
      export REGISTRY="intel/"
@@ -25,7 +25,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
      ```
 
-4. **Launch the service with required plugins**:
+4. Launch the service with required plugins:
      ```bash
      export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
      # Example paths:
@@ -36,15 +36,13 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH
      ```
 
-5. **Download/Convert the models**:
+5. Download and convert the models:
 
-     Return to the live-captioning repository terminal you opened earlier.
+     Navigate to `live-video-analysis/live-video-captioning` and use the provided script to download and convert the required models:
+
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
-     ```
 
-     Download and convert the required models using the provided script:
-     ```bash
      # export MODEL_PATH with the same directory that exported in previous step.
      export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
 
@@ -83,6 +81,6 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
     - Vision detection models → `ov_detection_models/`
     - LLM models → `llm_models/`
 
-6. **Stop the service**:
+6. Stop the Model Download service:
 
-    This service exclusively handles the downloading and conversion of models needed for the live-video-captioning sample application. It functions independently and is not tied to the operation of the live-video-captioning application. You can stop or terminate the service once the required models have been prepared.
+    The Model Download service handles the downloading and conversion of models needed for the Live Video Captioning and Live Video Captioniong RAG sample applications. The Model Download service functions independently and is not tied to the operations of the Live Video Captioning and Live Video Captioniong RAG sample applications. You can stop or terminate the service once the required models have been prepared.

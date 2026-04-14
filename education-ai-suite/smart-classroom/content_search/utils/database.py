@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_DIR = "sqlite_db"
+DB_DIR = os.path.join("data", "sqlite_db")
 DB_NAME = "edu_ai_content_search.db"
 if not os.path.exists(DB_DIR):
     os.makedirs(DB_DIR)
