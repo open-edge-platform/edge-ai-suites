@@ -327,6 +327,7 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/upload-ingest' \
 ```
 Response (200 OK):
 ```json
+// # example 1: Normal upload and ingest
 {
     "code": 20000,
     "data": {
@@ -336,6 +337,18 @@ Response (200 OK):
     },
     "message": "Upload and Ingest started",
     "timestamp": 1774878113
+}
+// # example 2: File already exists, return the existed taskid
+{
+    "code": 40901,
+    "data": {
+        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+        "file_name": "classroom_8.mp4",
+        "created_at": "2026-04-14 14:33:53.107540",
+        "task_id": "559814ae-cef6-475c-9a79-3819549228d9"
+    },
+    "message": "Upload failed: File already exists.",
+    "timestamp": 1776148605
 }
 ```
 
