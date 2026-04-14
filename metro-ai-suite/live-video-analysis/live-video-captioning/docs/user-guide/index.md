@@ -44,6 +44,8 @@ The key features are:
 :hidden:
 
 get-started
+model-preparation
+embedding-creation-with-rag
 deploy-with-helm
 how-it-works
 alert-mode
