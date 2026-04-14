@@ -14,11 +14,16 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 Intel recommends using the unified setup script `setup.sh` that configures, builds, deploys,
 and manages the Smart Route Planning Agent.
 
-1. Clone the repository:
+1. Clone the suite:
+
+Go to the target directory of your choice and clone the suite.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite &&
+cd metro-ai-suite/smart-route-planning-agent
 ```
 
 2. Run the complete setup:

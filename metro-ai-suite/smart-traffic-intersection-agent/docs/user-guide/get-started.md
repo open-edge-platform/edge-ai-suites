@@ -33,10 +33,15 @@ Intel recommends using the automated setup script that handles environment confi
 submodule and dependencies setup, secrets generation, building, and deployment of the Smart
 Traffic Intersection Agent.
 
-### 1. Clone the Repository
+### 1. Clone the Suite
+
+Go to the target directory of your choice and clone the suite.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite &&
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 

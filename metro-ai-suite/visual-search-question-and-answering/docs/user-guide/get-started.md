@@ -15,33 +15,14 @@
 
 #### Option 1: Build from source
 
-Go to the target directory of your choice and clone the application, or the suite.
+Go to the target directory of your choice and clone the suite.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
-<!--hide_directive
-::::{tab-set}
-:::{tab-item} hide_directive--> **Clone the Application**
-
 ```bash
 git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
 cd edge-ai-suites &&
-git sparse-checkout set metro-ai-suite/visual-search-question-and-answering
+git sparse-checkout set metro-ai-suite
 ```
-
-<!--hide_directive
-:::
-:::{tab-item} hide_directive--> **Clone the Suite**
-
-```bash
-git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
-cd edge-ai-suites &&
-git sparse-checkout set metro-ai-suite/
-```
-
-<!--hide_directive
-:::
-::::
-hide_directive-->
 
 Run the commands to build images for the microservices:
 
