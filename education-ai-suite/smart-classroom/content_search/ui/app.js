@@ -1,4 +1,106 @@
 /**
+ * Content Search - Main Application (Search & Backend Health Check Only)
+ * File upload functionality is handled by app_ui_renderer_v3.js and app_file_manager.js
+ */
+
+/**
+ * Backend Status Checker
+ * Checks if the backend API is reachable
+ */
+const API_BASE_URL = "http://127.0.0.1:9011";
+window.API_BASE_URL = API_BASE_URL; // Export for other scripts
+const HEALTH_CHECK_INTERVAL = 10000; // Check every 10 seconds
+const HEALTH_CHECK_TIMEOUT = 3000; // 3 second timeout for health check
+
+let healthCheckTimer = null;
+let currentBackendStatus = "checking";
+
+function updateBackendStatusUI(status, message) {
+  const statusEl = el("backend-status");
+  const textEl = el("backend-status-text");
+  const retryBtn = el("backend-status-retry");
+
+  // Remove all status classes
+  statusEl.classList.remove("backend-status--online", "backend-status--offline", "backend-status--checking");
+
+  // Add current status class
+  statusEl.classList.add(`backend-status--${status}`);
+
+  // Update text
+  textEl.textContent = message;
+
+  // Show/hide retry button
+  retryBtn.hidden = status !== "offline";
+
+  currentBackendStatus = status;
+}
+
+async function checkBackendHealth() {
+  try {
+    updateBackendStatusUI("checking", "Checking...");
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT);
+
+    // Use dedicated health check endpoint
+    const response = await fetch(`${API_BASE_URL}/api/v1/system/health`, {
+      method: "GET",
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Check if backend and database are healthy
+      if (data.status === "ok") {
+        const dbStatus = data.services?.database;
+        if (dbStatus === "healthy") {
+          updateBackendStatusUI("online", "Online");
+          return true;
+        } else {
+          updateBackendStatusUI("offline", "DB Error");
+          console.warn("Database unhealthy:", dbStatus);
+          return false;
+        }
+      } else {
+        updateBackendStatusUI("offline", "Unhealthy");
+        return false;
+      }
+    } else {
+      updateBackendStatusUI("offline", `Error ${response.status}`);
+      return false;
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
+      updateBackendStatusUI("offline", "Timeout");
+    } else {
+      updateBackendStatusUI("offline", "Offline");
+    }
+    return false;
+  }
+}
+
+function startHealthCheck() {
+  // Initial check
+  checkBackendHealth();
+
+  // Setup periodic check
+  if (healthCheckTimer) {
+    clearInterval(healthCheckTimer);
+  }
+  healthCheckTimer = setInterval(checkBackendHealth, HEALTH_CHECK_INTERVAL);
+}
+
+function stopHealthCheck() {
+  if (healthCheckTimer) {
+    clearInterval(healthCheckTimer);
+    healthCheckTimer = null;
+  }
+}
+
+/**
  * Business error codes mapping
  */
 const ERROR_CODES = {
@@ -52,19 +154,6 @@ function parseApiResponse(data, defaultErrorMsg = "Operation failed") {
   throw error;
 }
 
-function formatBytes(bytes) {
-  if (!Number.isFinite(bytes) || bytes < 0) return "";
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unitIndex = 0;
-  while (value >= 1024 && unitIndex < units.length - 1) {
-    value /= 1024;
-    unitIndex += 1;
-  }
-  const precision = value >= 10 || unitIndex === 0 ? 0 : 1;
-  return `${value.toFixed(precision)} ${units[unitIndex]}`;
-}
-
 function el(id) {
   return document.getElementById(id);
 }
@@ -73,241 +162,12 @@ function setStatus(target, message) {
   target.textContent = message || "";
 }
 
-function withDropzone(fileInput, dropzone, onFilesPicked) {
-  const stop = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-  };
-
-  const handleDrop = (event) => {
-    stop(event);
-    dropzone.classList.remove("is-dragover");
-    const files = Array.from(event.dataTransfer?.files || []);
-    if (files.length) onFilesPicked(files);
-  };
-
-  const handlePick = () => {
-    const files = Array.from(fileInput.files || []);
-    onFilesPicked(files);
-  };
-
-  ["dragenter", "dragover"].forEach((type) => {
-    dropzone.addEventListener(type, (event) => {
-      stop(event);
-      dropzone.classList.add("is-dragover");
-    });
-  });
-
-  ["dragleave", "drop"].forEach((type) => {
-    dropzone.addEventListener(type, (event) => {
-      stop(event);
-      dropzone.classList.remove("is-dragover");
-    });
-  });
-
-  dropzone.addEventListener("drop", handleDrop);
-  fileInput.addEventListener("change", handlePick);
-}
-
-function fileExtension(name) {
-  const lower = String(name || "").toLowerCase();
-  if (!lower.includes(".")) return "";
-  return lower.slice(lower.lastIndexOf("."));
-}
-
-function isSupportedUploadFile(file) {
-  const ext = fileExtension(file?.name);
-  const allowed = new Set([".mp4", ".jpg", ".pdf", ".ppt", ".docx", ".csv", ".txt"]);
-  return allowed.has(ext);
-}
-
-/**
- * @param {{ inputId: string, listId: string, onSelectionChange?: () => void }} opts
- */
-function createFileListController({ inputId, listId, onSelectionChange }) {
-  const input = el(inputId);
-  const list = el(listId);
-  const container = input.closest(".dropzone");
-  const toolbarEl = el("filelist-toolbar");
-  const selectAllCb = el("selectall-check");
-  const toolbarCount = el("filelist-toolbar-count");
-
-  /**
-   * @type {{ file: File, labels: string[], checked: boolean }[]}
-   */
-  let entries = [];
-  let showValidation = false;
-
-  const notify = () => {
-    if (typeof onSelectionChange === "function") onSelectionChange();
-  };
-
-  const syncToolbar = () => {
-    const total = entries.length;
-    const checked = entries.filter((e) => e.checked).length;
-    toolbarEl.hidden = total === 0;
-    if (total === 0) return;
-    toolbarCount.textContent = checked > 0 ? `${checked} of ${total} selected` : `${total} file${total > 1 ? "s" : ""}`;
-    if (checked === 0) {
-      selectAllCb.checked = false;
-      selectAllCb.indeterminate = false;
-    } else if (checked === total) {
-      selectAllCb.checked = true;
-      selectAllCb.indeterminate = false;
-    } else {
-      selectAllCb.checked = false;
-      selectAllCb.indeterminate = true;
-    }
-  };
-
-  const render = () => {
-    list.innerHTML = "";
-    syncToolbar();
-    entries.forEach((entry, index) => {
-      const li = document.createElement("li");
-      if (entry.checked) li.classList.add("is-checked");
-
-      // ── Checkbox ──────────────────────────────────────────────
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.className = "filelist__check";
-      cb.checked = entry.checked;
-      cb.setAttribute("aria-label", `Select ${entry.file.name}`);
-      cb.addEventListener("change", () => {
-        entries[index].checked = cb.checked;
-        li.classList.toggle("is-checked", cb.checked);
-        notify();
-      });
-
-      // ── Body: name row + label chips row ─────────────────────
-      const body = document.createElement("div");
-      body.className = "filelist__body";
-
-      const nameEl = document.createElement("div");
-      nameEl.className = "filelist__name";
-      nameEl.textContent = `${entry.file.name} · ${formatBytes(entry.file.size)}`;
-      body.appendChild(nameEl);
-
-      if (entry.labels.length) {
-        const tagsEl = document.createElement("div");
-        tagsEl.className = "filelist__tags";
-        entry.labels.forEach((label, labelIndex) => {
-          const chip = document.createElement("span");
-          chip.className = "tag tag--sm";
-
-          const text = document.createElement("span");
-          text.textContent = label;
-
-          const del = document.createElement("button");
-          del.type = "button";
-          del.className = "tag__remove";
-          del.setAttribute("aria-label", `Remove label ${label}`);
-          del.textContent = "\u00d7";
-          del.addEventListener("click", (e) => {
-            e.stopPropagation();
-            entries[index].labels.splice(labelIndex, 1);
-            render();
-          });
-
-          chip.appendChild(text);
-          chip.appendChild(del);
-          tagsEl.appendChild(chip);
-        });
-        body.appendChild(tagsEl);
-      }
-
-      // ── Remove button ─────────────────────────────────────────
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "filelist__remove";
-      remove.textContent = "Remove";
-      remove.addEventListener("click", () => {
-        entries = entries.filter((_, i) => i !== index);
-        render();
-        notify();
-      });
-
-      li.appendChild(cb);
-      li.appendChild(body);
-      li.appendChild(remove);
-      list.appendChild(li);
-    });
-
-    notify();
-  };
-
-  // Select-all checkbox handler
-  selectAllCb.addEventListener("change", () => {
-    const shouldCheck = selectAllCb.checked;
-    entries.forEach((e) => { e.checked = shouldCheck; });
-    render();
-  });
-
-  const addFiles = (picked) => {
-    const next = picked.filter((f) => f && typeof f.name === "string");
-    if (!next.length) return;
-
-    const supported = next.filter(isSupportedUploadFile);
-    if (!supported.length) {
-      input.value = "";
-      return;
-    }
-
-    const key = (f) => `${f.name}::${f.size}::${f.lastModified}`;
-    const existing = new Set(entries.map((e) => key(e.file)));
-    const deduped = supported.filter((f) => !existing.has(key(f)));
-
-    entries = [...entries, ...deduped.map((f) => ({ file: f, labels: [], checked: false }))];
-    render();
-
-    input.value = "";
-  };
-
-  withDropzone(input, container, addFiles);
-
-  return {
-    /** Returns all entries with their associated labels */
-    getFiles: () => entries.map((e) => ({ file: e.file, labels: [...e.labels] })),
-    /** Returns the total number of files */
-    getFileCount: () => entries.length,
-    /** How many files are currently checked */
-    getCheckedCount: () => entries.filter((e) => e.checked).length,
-    /**
-     * Attach a label to every currently-checked file.
-     * Returns true if at least one file was updated.
-     */
-    addLabelToChecked: (rawLabel) => {
-      const label = String(rawLabel || "").trim();
-      if (!label) return false;
-      let changed = false;
-      entries.forEach((e) => {
-        if (e.checked && !e.labels.includes(label)) {
-          e.labels.push(label);
-          changed = true;
-        }
-      });
-      if (changed) render();
-      return changed;
-    },
-    /** Marks all unlabeled files as invalid and re-renders. Returns count of files missing labels. */
-    markInvalid: () => {
-      showValidation = true;
-      render();
-      return entries.filter((e) => e.labels.length === 0).length;
-    },
-    /** Returns the union of all labels across all files */
-    getAllLabels: () => {
-      const set = new Set();
-      entries.forEach((e) => e.labels.forEach((l) => set.add(l)));
-      return Array.from(set);
-    },
-    clear: () => {
-      entries = [];
-      showValidation = false;
-      render();
-      input.value = "";
-    },
-  };
+function formatTimestamp(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
 function setupQueryImage() {
@@ -363,90 +223,157 @@ function setupQueryImage() {
   };
 }
 
-function inferUploadKind(file) {
-  const type = (file?.type || "").toLowerCase();
-  if (type === "video/mp4") return "video";
-  if (type === "image/jpeg") return "image";
-
-  const name = (file?.name || "").toLowerCase();
-  const ext = fileExtension(name);
-  if (ext === ".mp4") return "video";
-  if (ext === ".jpg") return "image";
-  const docExts = new Set([".pdf", ".ppt", ".docx", ".csv", ".txt"]);
-  if (docExts.has(ext)) return "document";
-
-  // Default to document for unknown types since most non-media uploads are docs.
-  return "document";
+function fileExtension(name) {
+  const lower = String(name || "").toLowerCase();
+  if (!lower.includes(".")) return "";
+  return lower.slice(lower.lastIndexOf("."));
 }
 
-function uploadCounts(files) {
-  const counts = { video: 0, image: 0, document: 0 };
-  files.forEach((f) => {
-    const kind = inferUploadKind(f);
-    counts[kind] += 1;
-  });
-  return counts;
+/**
+ * Extract file_key from file_path for download API
+ * file_path format: "local://content-search/runs/xxx/raw/video/default/test.mp4"
+ * file_key format: "runs/xxx/raw/video/default/test.mp4"
+ */
+function extractFileKey(filePath) {
+  if (!filePath) return null;
+  // Remove protocol and bucket name
+  return filePath.replace(/^[a-z]+:\/\/[^/]+\//, '');
 }
 
-function fakeUploadSummary(files) {
-  if (!files.length) return "No files selected";
-  const { video, image, document } = uploadCounts(files);
-  const parts = [];
-  if (video) parts.push(`Video: ${video}`);
-  if (image) parts.push(`Image: ${image}`);
-  if (document) parts.push(`Documents: ${document}`);
-  return parts.join(" · ");
+/**
+ * Open preview modal
+ */
+function openPreviewModal(result) {
+  const modal = el("preview-modal");
+  const title = el("preview-modal-title");
+  const body = el("preview-modal-body");
+
+  if (!modal || !title || !body) return;
+
+  title.textContent = result.filename || "Preview";
+  body.innerHTML = '<div class="preview-loading">Loading preview...</div>';
+
+  // Show modal
+  modal.hidden = false;
+  document.body.style.overflow = "hidden";
+
+  // Get file key for download
+  const fileKey = extractFileKey(result.file_path);
+  if (!fileKey) {
+    body.innerHTML = '<div class="preview-error">Cannot preview this file (invalid path)</div>';
+    return;
+  }
+
+  const downloadUrl = `${API_BASE_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+
+  // Render preview based on type
+  setTimeout(() => {
+    try {
+      let content = '';
+
+      // Info section
+      content += '<div class="preview-info">';
+      content += `<div class="preview-info__row"><span class="preview-info__label">Filename:</span><span class="preview-info__value">${result.filename}</span></div>`;
+      content += `<div class="preview-info__row"><span class="preview-info__label">Type:</span><span class="preview-info__value">${result.type}</span></div>`;
+      content += `<div class="preview-info__row"><span class="preview-info__label">Score:</span><span class="preview-info__value">${result.score}%</span></div>`;
+
+      if (result.type === 'video' && result.timestamp) {
+        content += `<div class="preview-info__row"><span class="preview-info__label">Match Time:</span><span class="preview-info__value">${result.timestamp}</span></div>`;
+      } else if (result.type === 'document' && result.page) {
+        content += `<div class="preview-info__row"><span class="preview-info__label">Page:</span><span class="preview-info__value">${result.page}</span></div>`;
+      }
+
+      content += '</div>';
+
+      // Preview content based on type
+      if (result.type === 'video') {
+        const videoSrc = downloadUrl;
+        const startTime = result.video_pin_second || 0;
+
+        // Add hint if there's a specific timestamp
+        if (startTime > 0) {
+          content += `<div class="preview-hint">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 4px;">
+              <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            </svg>
+            Video will start at ${result.timestamp || formatTimestamp(Math.floor(startTime))} (matched scene)
+          </div>`;
+        }
+
+        content += `<video class="preview-video" controls autoplay>
+          <source src="${videoSrc}#t=${startTime}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>`;
+      } else if (result.type === 'image') {
+        content += `<img class="preview-image" src="${downloadUrl}" alt="${result.filename}">`;
+      } else if (result.type === 'document') {
+        if (result.subtype === 'pdf') {
+          content += `<iframe class="preview-pdf" src="${downloadUrl}" type="application/pdf"></iframe>`;
+        } else if (result.summary) {
+          content += `<div class="preview-text">${result.summary}</div>`;
+        } else {
+          content += `<div class="preview-info">
+            <p>Document preview not available. <a href="${downloadUrl}" download>Click here to download</a></p>
+          </div>`;
+        }
+      }
+
+      body.innerHTML = content;
+
+      // If video, ensure we seek to the exact timestamp (multiple fallbacks)
+      if (result.type === 'video' && result.video_pin_second) {
+        const video = body.querySelector('video');
+        if (video) {
+          const targetTime = result.video_pin_second;
+
+          // Method 1: Set on loadedmetadata (most reliable)
+          video.addEventListener('loadedmetadata', () => {
+            video.currentTime = targetTime;
+          });
+
+          // Method 2: Set on canplay (backup)
+          video.addEventListener('canplay', () => {
+            if (Math.abs(video.currentTime - targetTime) > 0.5) {
+              video.currentTime = targetTime;
+            }
+          });
+
+          // Method 3: Force set after a short delay (final fallback)
+          setTimeout(() => {
+            if (video.readyState >= 2 && Math.abs(video.currentTime - targetTime) > 0.5) {
+              video.currentTime = targetTime;
+            }
+          }, 500);
+        }
+      }
+    } catch (error) {
+      body.innerHTML = `<div class="preview-error">Error loading preview: ${error.message}</div>`;
+    }
+  }, 100);
 }
 
-function formatTimestamp(totalSeconds) {
-  const h = Math.floor(totalSeconds / 3600);
-  const m = Math.floor((totalSeconds % 3600) / 60);
-  const s = totalSeconds % 60;
-  if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
+/**
+ * Close preview modal
+ */
+function closePreviewModal() {
+  const modal = el("preview-modal");
+  const body = el("preview-modal-body");
 
-function fakeSearchResults({ types, topK, textQuery, hasImageQuery }) {
-  const mode = hasImageQuery ? "image" : "text";
-  const query = hasImageQuery ? "(image)" : textQuery.trim() || "(empty)";
-  const normalized = Array.isArray(types) && types.length ? types : ["document", "image", "video"];
-  const unique = Array.from(new Set(normalized));
-  const displayTypes = unique.length ? unique : ["document", "image", "video"];
-  const count = Math.max(1, Math.min(10, topK));
+  if (modal) {
+    modal.hidden = true;
+    document.body.style.overflow = "";
+  }
 
-  const sampleLabels = [
-    ["Math", "Grade1"], ["Lily"], ["Science", "Grade2"], [], ["History"], ["Grade1", "Lily"],
-  ];
-  const docSubtypes = ["pdf", "txt", "video_summary"];
-
-  return Array.from({ length: count }, (_, i) => {
-    const rank = i + 1;
-    const t = displayTypes[i % displayTypes.length];
-    const score = Math.max(0.01, Math.min(1, +(0.97 - i * 0.06 + (((rank * 17) % 7) * 0.005)).toFixed(3)));
-    const labels = sampleLabels[i % sampleLabels.length];
-    const base = { type: t, rank, score, labels, meta: `${mode} query: ${query}` };
-
-    if (t === "video") {
-      const startSec = i * 47 + 8;
-      const endSec = startSec + 24 + i * 6;
-      return { ...base, filename: `lecture_clip_${String(rank).padStart(2, "0")}.mp4`,
-        start_time: formatTimestamp(startSec), end_time: formatTimestamp(endSec) };
+  // Stop any playing media
+  if (body) {
+    const video = body.querySelector('video');
+    if (video) {
+      video.pause();
+      video.src = "";
     }
-    if (t === "image") {
-      return { ...base, filename: `image_${String(rank).padStart(3, "0")}.jpg` };
-    }
-    // document — alternate subtypes
-    const subtype = docSubtypes[i % docSubtypes.length];
-    if (subtype === "pdf") {
-      const p = rank * 3 - 2;
-      return { ...base, subtype: "pdf", filename: `document_${rank}.pdf`, page_range: `pp. ${p}–${p + 3}` };
-    }
-    if (subtype === "video_summary") {
-      return { ...base, subtype: "video_summary", filename: `summary_${rank}.txt`,
-        chunk_id: `chunk_${String(rank * 7).padStart(4, "0")}` };
-    }
-    return { ...base, subtype: "txt", filename: `notes_${rank}.txt` };
-  });
+    body.innerHTML = "";
+  }
 }
 
 function renderResults(listEl, metaEl, results, metaText) {
@@ -456,64 +383,90 @@ function renderResults(listEl, metaEl, results, metaText) {
     const li = document.createElement("li");
     li.className = "result-card";
 
-    // ── Header: type badge · filename · score ──────────────────
+    // ── Header: filename · preview icon · score ──────────────────
     const header = document.createElement("div");
     header.className = "result-card__header";
 
-    const typeBadge = document.createElement("span");
-    const subtypeLabel = r.subtype ? ` / ${r.subtype.replace("_", " ")}` : "";
-    typeBadge.className = `result-card__type result-card__type--${r.type}`;
-    typeBadge.textContent = `${r.type}${subtypeLabel}`;
+    // Filename container with preview icon
+    const filenameContainer = document.createElement("div");
+    filenameContainer.className = "result-card__filename-container";
 
-    const filename = document.createElement("span");
+    const filename = document.createElement("h4");
     filename.className = "result-card__filename";
-    filename.textContent = r.filename || r.title || "—";
+    filename.textContent = r.filename || r.title || "Unknown";
+    filename.title = r.filename; // Show full name on hover
+
+    // Preview icon button
+    const previewIcon = document.createElement("button");
+    previewIcon.className = "result-card__preview-icon";
+    previewIcon.type = "button";
+    previewIcon.title = "Preview";
+    previewIcon.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="8" cy="8" r="3"/>
+      <path d="M2 8s2-4 6-4 6 4 6 4-2 4-6 4-6-4-6-4z"/>
+    </svg>`;
+    previewIcon.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openPreviewModal(r);
+    });
+
+    filenameContainer.appendChild(filename);
+    filenameContainer.appendChild(previewIcon);
 
     const scoreEl = document.createElement("span");
     const sv = typeof r.score === "number" ? r.score : null;
     if (sv !== null) {
       scoreEl.className = "result-card__score" +
-        (sv >= 0.85 ? " result-card__score--high" : sv >= 0.60 ? " result-card__score--mid" : " result-card__score--low");
-      scoreEl.textContent = `Score\u00a0${sv.toFixed(3)}`;
+        (sv >= 85 ? " result-card__score--high" : sv >= 60 ? " result-card__score--mid" : " result-card__score--low");
+      scoreEl.textContent = `Score: ${sv}%`;
     }
 
-    header.append(typeBadge, filename, scoreEl);
+    header.append(filenameContainer, scoreEl);
     li.appendChild(header);
 
-    // ── Type-specific metadata row ─────────────────────────────
-    const metaItems = [];
-    if (r.start_time !== undefined) metaItems.push(`Start: ${r.start_time}`);
-    if (r.end_time !== undefined)   metaItems.push(`End: ${r.end_time}`);
-    if (r.page_range)               metaItems.push(`Pages: ${r.page_range}`);
-    if (r.chunk_id)                 metaItems.push(`Chunk ID: ${r.chunk_id}`);
-    if (metaItems.length) {
-      const metaRow = document.createElement("div");
-      metaRow.className = "result-card__meta";
-      metaItems.forEach((text, idx) => {
-        if (idx > 0) {
-          const sep = document.createElement("span");
-          sep.className = "result-card__meta-sep";
-          sep.textContent = "·";
-          metaRow.appendChild(sep);
-        }
-        const span = document.createElement("span");
-        span.textContent = text;
-        metaRow.appendChild(span);
-      });
-      li.appendChild(metaRow);
+    // ── Metadata list ─────────────────────────────
+    const detailsList = document.createElement("ul");
+    detailsList.className = "result-card__details";
+
+    // Page or timestamp information
+    if (r.type === "document" && r.page) {
+      const pageItem = document.createElement("li");
+      pageItem.textContent = r.page;
+      detailsList.appendChild(pageItem);
+    } else if (r.type === "video") {
+      if (r.timestamp) {
+        const timeItem = document.createElement("li");
+        timeItem.textContent = `Time: ${r.timestamp}`;
+        detailsList.appendChild(timeItem);
+      } else if (r.time_range) {
+        const timeItem = document.createElement("li");
+        timeItem.textContent = `Time: ${r.time_range}`;
+        detailsList.appendChild(timeItem);
+      }
     }
 
-    // ── Labels row ─────────────────────────────────────────────
+    // Labels
     if (r.labels && r.labels.length) {
-      const labelsRow = document.createElement("div");
-      labelsRow.className = "result-card__labels";
+      const labelsItem = document.createElement("li");
+      labelsItem.className = "result-card__labels-item";
+
+      const labelText = document.createElement("span");
+      labelText.textContent = "Labels: ";
+      labelText.style.marginRight = "8px";
+      labelsItem.appendChild(labelText);
+
       r.labels.forEach((lbl) => {
         const chip = document.createElement("span");
         chip.className = "tag tag--sm";
         chip.textContent = lbl;
-        labelsRow.appendChild(chip);
+        labelsItem.appendChild(chip);
       });
-      li.appendChild(labelsRow);
+
+      detailsList.appendChild(labelsItem);
+    }
+
+    if (detailsList.children.length > 0) {
+      li.appendChild(detailsList);
     }
 
     listEl.appendChild(li);
@@ -544,42 +497,21 @@ function filterResultsByType(results, filterValue) {
 }
 
 (function main() {
-  const uploadStatus = el("upload-status");
+  // Note: File upload functionality is handled by app_ui_renderer_v3.js and app_file_manager.js
+  // This file only handles search functionality and backend health check
+
   const searchStatus = el("search-status");
   const resultsMeta = el("results-meta");
   const resultsList = el("results-list");
   const resultsFilterEl = el("results-filter");
-  const uploadStateEl = el("upload-state");
-  const indexingSpinnerEl = el("indexing-spinner");
-  const indexingStateTextEl = el("indexing-state-text");
-  const asyncHintEl = el("async-hint");
-
-  /** @type {ReturnType<typeof setTimeout> | null} */
-  let indexingTimer = null;
 
   /** @type {{ type?: string, title: string, meta: string }[]} */
   let lastResults = [];
   /** @type {string} */
   let lastResultsMetaText = "";
 
-  const setPipelineState = ({ uploadState, indexingState, showHint }) => {
-    if (typeof uploadState === "string") uploadStateEl.textContent = uploadState;
-    if (typeof indexingState === "string") indexingStateTextEl.textContent = indexingState;
-
-    const inProgress = indexingState === "Indexing in progress…";
-    indexingSpinnerEl.hidden = !inProgress;
-    asyncHintEl.hidden = !showHint;
-  };
-
-  // ── Label assignment panel ─────────────────────────────────────
-  const labelAssignEl = el("label-assign");
-  const labelAssignHintEl = el("label-assign-hint");
-  const labelInputEl = el("label-input");
-
-  // Global pool of all labels ever committed (shown in search filter)
-  /** @type {Set<string>} */
-  const availableLabels = new Set();
-  /** @type {Set<string>} */
+  // Global pool of all labels (populated from fileManager in app_ui_renderer_v3.js)
+  const availableLabels = window.fileManagerUI?.fileManager?.availableLabels || new Set();
   const NO_LABEL_KEY = "__no_label__";
   const searchSelectedLabels = new Set();
   const labelDropdownBtn = el("label-dropdown-btn");
@@ -710,48 +642,6 @@ function filterResultsByType(results, filterValue) {
     }
   });
 
-  const onSelectionChange = () => {
-    const total = uploads.getFileCount();
-    const count = uploads.getCheckedCount();
-    // Show panel whenever there are files; hide when list is empty
-    labelAssignEl.hidden = total === 0;
-    const idleEl = el("label-assign-idle");
-    const inputRowEl = labelInputEl.closest(".label-input-row");
-    if (count > 0) {
-      // Active: files are selected, show input
-      labelAssignEl.classList.remove("is-idle");
-      labelAssignHintEl.textContent = `${count} file${count > 1 ? "s" : ""} selected`;
-      labelInputEl.disabled = false;
-      el("btn-add-label").disabled = false;
-      if (idleEl) idleEl.hidden = true;
-      if (inputRowEl) inputRowEl.hidden = false;
-    } else {
-      // Idle: files exist but none checked
-      labelAssignEl.classList.add("is-idle");
-      labelAssignHintEl.textContent = "";
-      labelInputEl.disabled = true;
-      el("btn-add-label").disabled = true;
-      if (idleEl) idleEl.hidden = false;
-      if (inputRowEl) inputRowEl.hidden = true;
-    }
-  };
-
-  const uploads = createFileListController({
-    inputId: "upload-files",
-    listId: "list-files",
-    onSelectionChange,
-  });
-
-  // Add labels to checked files — each non-empty line is a separate label
-  const doAddLabel = () => {
-    const lines = labelInputEl.value.split("\n").map((l) => l.trim()).filter(Boolean);
-    if (!lines.length) return;
-    lines.forEach((label) => uploads.addLabelToChecked(label));
-    labelInputEl.value = "";
-    labelInputEl.focus();
-  };
-  el("btn-add-label").addEventListener("click", doAddLabel);
-
   const queryImage = setupQueryImage();
   const queryTextEl = el("query-text");
   const queryImageEl = el("query-image");
@@ -814,7 +704,6 @@ function filterResultsByType(results, filterValue) {
 
     if (isText) {
       queryImage.clear();
-      // Keep focus in the active control for clarity.
       queryTextEl.focus();
     } else {
       queryTextEl.value = "";
@@ -824,177 +713,6 @@ function filterResultsByType(results, filterValue) {
 
     enforceTypeRulesForMode(mode);
   };
-
-  /**
-   * Poll task status
-   */
-  async function pollTaskStatus(taskId) {
-    try {
-      const response = await fetch(`http://127.0.0.1:9011/api/v1/task/query/${taskId}`, {
-        method: "GET",
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      parseApiResponse(data, "Query task failed");
-
-      return data.data;
-    } catch (error) {
-      console.error("Poll task failed:", error);
-
-      // Handle specific error codes
-      if (error.code === 50002) {
-        // Task not found - might have expired
-        setStatus(uploadStatus, "Task not found. It may have expired.");
-        if (indexingTimer) {
-          clearInterval(indexingTimer);
-          indexingTimer = null;
-        }
-        setPipelineState({ indexingState: "Idle", showHint: false });
-      }
-
-      return null;
-    }
-  }
-
-  /**
-   * Start polling a task until it completes or fails
-   */
-  function startTaskPolling(taskId) {
-    if (indexingTimer) {
-      clearInterval(indexingTimer);
-      indexingTimer = null;
-    }
-
-    // Poll every 2 seconds
-    indexingTimer = setInterval(async () => {
-      const taskData = await pollTaskStatus(taskId);
-
-      if (!taskData) {
-        return;
-      }
-
-      const status = taskData.status;
-
-      if (status === "PENDING") {
-        setPipelineState({ indexingState: "Pending...", showHint: true });
-      } else if (status === "QUEUED") {
-        setPipelineState({ indexingState: "Queued...", showHint: true });
-      } else if (status === "PROCESSING") {
-        // Note: progress field is not yet implemented in backend, always shows 100%
-        // So we just show "Processing..." without percentage
-        setPipelineState({ indexingState: "Processing...", showHint: true });
-      } else if (status === "COMPLETED") {
-        clearInterval(indexingTimer);
-        indexingTimer = null;
-        setPipelineState({ indexingState: "Completed", showHint: false });
-
-        // Show success message with summary if available
-        const summary = taskData.result?.video_summary;
-        let successMsg = "Upload and indexing completed successfully!";
-        if (summary) {
-          const chunks = summary.total_chunks || 0;
-          const elapsed = Math.round(summary.elapsed_seconds || 0);
-          successMsg += ` (${chunks} chunk${chunks > 1 ? 's' : ''} processed in ${elapsed}s)`;
-        }
-        setStatus(uploadStatus, successMsg);
-
-        // Clear file list after successful completion
-        setTimeout(() => {
-          uploads.clear();
-        }, 3000);
-      } else if (status === "FAILED") {
-        clearInterval(indexingTimer);
-        indexingTimer = null;
-        setPipelineState({ indexingState: "Failed", showHint: false });
-        const errorMsg = taskData.result?.message || "Indexing failed";
-        setStatus(uploadStatus, `Indexing failed: ${errorMsg}`);
-      }
-    }, 2000);
-  }
-
-  el("btn-upload").addEventListener("click", async () => {
-    const entries = uploads.getFiles();
-    const files = entries.map((e) => e.file);
-
-    if (!files.length) {
-      if (indexingTimer) { clearInterval(indexingTimer); indexingTimer = null; }
-      setPipelineState({ uploadState: "Idle", indexingState: "Idle", showHint: false });
-      setStatus(uploadStatus, "");
-      return;
-    }
-
-    const summary = fakeUploadSummary(files);
-    setStatus(uploadStatus, `Uploading: ${summary}…`);
-    if (indexingTimer) { clearInterval(indexingTimer); indexingTimer = null; }
-    setPipelineState({ uploadState: "Uploading…", indexingState: "Queued", showHint: true });
-
-    // Build FormData - upload each file with its labels as meta
-    const formData = new FormData();
-
-    entries.forEach((entry) => {
-      formData.append("file", entry.file);
-
-      // Add labels as meta if present
-      if (entry.labels.length > 0) {
-        const meta = JSON.stringify({ tags: entry.labels });
-        formData.append("meta", meta);
-      }
-    });
-
-    try {
-      const response = await fetch("http://127.0.0.1:9011/api/v1/object/upload-ingest", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(errText || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      parseApiResponse(data, "Upload failed");
-
-      // Commit all labels from uploaded files into available pool
-      entries.forEach((e) => e.labels.forEach((l) => availableLabels.add(l)));
-      renderSearchLabelFilter();
-
-      const allLabels = uploads.getAllLabels();
-      const labelNote = allLabels.length ? ` · Labels: [${allLabels.join(", ")}]` : "";
-      const taskId = data?.data?.task_id || data?.task_id;
-      const taskNote = taskId ? ` · Task: ${taskId}` : "";
-      setStatus(uploadStatus, `Upload success${taskNote}${labelNote}`);
-
-      setPipelineState({ uploadState: "Uploaded", indexingState: "Processing", showHint: true });
-
-      // Start polling task status
-      if (taskId) {
-        startTaskPolling(taskId);
-      } else {
-        // No task ID returned, simulate completion
-        setTimeout(() => {
-          setPipelineState({ indexingState: "Completed", showHint: false });
-        }, 3000);
-      }
-    } catch (error) {
-      // Show user-friendly error message based on error code
-      let errorMsg = error?.message || "Unknown error";
-
-      // Add specific hints for common errors
-      if (error.code === 50001) {
-        errorMsg += " Supported formats: .mp4, .jpg, .png, .pdf, .docx, .txt, .html, .md";
-      } else if (error.code === 40901) {
-        errorMsg += " Try uploading a different file.";
-      }
-
-      setStatus(uploadStatus, `Upload failed: ${errorMsg}`);
-      setPipelineState({ uploadState: "Failed", indexingState: "Idle", showHint: false });
-    }
-  });
 
   // Query mode toggle makes the mutual exclusivity explicit.
   modeTextBtn.addEventListener("click", () => setQueryMode("text"));
@@ -1058,7 +776,7 @@ function filterResultsByType(results, filterValue) {
       requestBody.filter = filter;
     }
 
-    const response = await fetch("http://127.0.0.1:9011/api/v1/object/search", {
+    const response = await fetch(`${API_BASE_URL}/api/v1/object/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -1095,7 +813,7 @@ function filterResultsByType(results, filterValue) {
             requestBody.filter = filter;
           }
 
-          const response = await fetch("http://127.0.0.1:9011/api/v1/object/search", {
+          const response = await fetch(`${API_BASE_URL}/api/v1/object/search`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody),
@@ -1126,23 +844,32 @@ function filterResultsByType(results, filterValue) {
   function mapApiResultToUi(apiResult) {
     const meta = apiResult.meta || {};
     const type = meta.type || "document";
-    const distance = apiResult.distance || 0;
 
-    // Convert distance to similarity score (lower distance = higher similarity)
-    // Assuming distance is in range [0, 2], convert to score [0, 1]
-    const score = Math.max(0, Math.min(1, 1 - distance / 2));
+    // Use score directly from API response (already calculated as percentage)
+    const scorePercent = Math.round(apiResult.score || 0);
 
     const result = {
       type: type,
-      score: score,
+      score: scorePercent,
       labels: meta.tags || [],
-      filename: meta.asset_id || meta.file_path || "Unknown",
+      // Use file_name if available, otherwise extract from file_path
+      filename: meta.file_name || extractFilename(meta.file_path) || "Unknown",
+      summary: meta.summary_text || meta.chunk_text || "",
+      // Keep original data for preview
+      file_path: meta.file_path,
+      video_pin_second: meta.video_pin_second,
     };
 
     // Type-specific fields
-    if (type === "video" || (meta.start_time !== undefined && meta.end_time !== undefined)) {
-      result.start_time = formatTimestamp(Math.floor(meta.start_time || 0));
-      result.end_time = formatTimestamp(Math.floor(meta.end_time || 0));
+    if (type === "video") {
+      // Use video_pin_second for single timestamp
+      if (meta.video_pin_second !== undefined) {
+        result.timestamp = formatTimestamp(Math.floor(meta.video_pin_second));
+      }
+      // Support range if start_time and end_time exist
+      if (meta.start_time !== undefined && meta.end_time !== undefined) {
+        result.time_range = `${formatTimestamp(Math.floor(meta.start_time))} - ${formatTimestamp(Math.floor(meta.end_time))}`;
+      }
     }
 
     if (type === "document") {
@@ -1150,17 +877,36 @@ function filterResultsByType(results, filterValue) {
       if (meta.chunk_id || meta.chunk_text) {
         result.subtype = "video_summary";
         result.chunk_id = meta.chunk_id;
-      } else if (meta.doc_filetype === "application/pdf") {
+      } else if (meta.doc_filetype === "application/pdf" || meta.doc_page_number !== undefined) {
         result.subtype = "pdf";
-        if (meta.page_range) {
-          result.page_range = meta.page_range;
+        // Handle page information
+        if (meta.doc_page_number !== undefined) {
+          result.page = `Page: ${meta.doc_page_number}`;
+        } else if (meta.page_range) {
+          result.page = meta.page_range;
         }
       } else {
         result.subtype = "txt";
       }
     }
 
+    if (type === "image") {
+      // Add any image-specific metadata here
+    }
+
     return result;
+  }
+
+  /**
+   * Extract filename from file path
+   */
+  function extractFilename(filePath) {
+    if (!filePath) return null;
+    // Remove protocol prefix (local://, etc.)
+    const path = filePath.replace(/^[a-z]+:\/\/[^/]+\//, '');
+    // Get last part of path
+    const parts = path.split('/');
+    return parts[parts.length - 1];
   }
 
   el("btn-search").addEventListener("click", async () => {
@@ -1233,12 +979,9 @@ function filterResultsByType(results, filterValue) {
   });
 
   el("btn-reset").addEventListener("click", () => {
-    uploads.clear();
-    labelInputEl.value = "";
-    labelAssignEl.hidden = true;
     searchSelectedLabels.clear();
-    labelDropdownPanel.hidden = true;
-    labelDropdownBtn.setAttribute("aria-expanded", "false");
+    if (labelDropdownPanel) labelDropdownPanel.hidden = true;
+    if (labelDropdownBtn) labelDropdownBtn.setAttribute("aria-expanded", "false");
     renderSearchLabelFilter();
 
     el("query-text").value = "";
@@ -1251,23 +994,50 @@ function filterResultsByType(results, filterValue) {
     typeVidEl.checked = true;
     el("topk").value = "4";
 
-    setStatus(uploadStatus, "");
     setStatus(searchStatus, "");
     resultsMeta.textContent = "";
     resultsList.innerHTML = "";
     if (resultsFilterEl) resultsFilterEl.value = "all";
     lastResults = [];
     lastResultsMetaText = "";
-
-    if (indexingTimer) {
-      clearTimeout(indexingTimer);
-      indexingTimer = null;
-    }
-    setPipelineState({ uploadState: "Idle", indexingState: "Idle", showHint: false });
   });
 
   // Initialize UI state
   setQueryMode("text");
-  setPipelineState({ uploadState: "Idle", indexingState: "Idle", showHint: false });
   renderSearchLabelFilter();
+
+  // Setup preview modal close handlers
+  const previewModalClose = el("preview-modal-close");
+  const previewModalOverlay = el("preview-modal-overlay");
+
+  if (previewModalClose) {
+    previewModalClose.addEventListener("click", closePreviewModal);
+  }
+
+  if (previewModalOverlay) {
+    previewModalOverlay.addEventListener("click", closePreviewModal);
+  }
+
+  // Close modal on Escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      const modal = el("preview-modal");
+      if (modal && !modal.hidden) {
+        closePreviewModal();
+      }
+    }
+  });
+})();
+
+// Backend status retry button - moved outside IIFE to ensure it runs after DOM loads
+(function initBackendStatus() {
+  const retryBtn = el("backend-status-retry");
+  if (retryBtn) {
+    retryBtn.addEventListener("click", () => {
+      checkBackendHealth();
+    });
+  }
+
+  // Start backend health check
+  startHealthCheck();
 })();

@@ -1,6 +1,6 @@
 /**
- * UI Renderer for File Manager
- * Handles rendering file table and interactions
+ * UI Renderer v3.0 - Simplified File List
+ * 4 states: Pending (Upload button) | Processing | Uploaded | Failed
  */
 
 (function() {
@@ -9,14 +9,13 @@
   // Get elements
   const dropzone = document.getElementById('dropzone-compact');
   const fileInput = document.getElementById('upload-files');
-  const fileTableWrapper = document.getElementById('file-table-wrapper');
-  const fileTableBody = document.getElementById('file-table-body');
-  const batchActions = document.getElementById('batch-actions');
-  const batchSummary = document.getElementById('batch-summary');
-  const btnUploadAll = document.getElementById('btn-upload-all');
-  const btnUploadAllText = document.getElementById('btn-upload-all-text');
-  const btnClearCompleted = document.getElementById('btn-clear-completed');
-  const btnClearFailed = document.getElementById('btn-clear-failed');
+  const fileListWrapper = document.getElementById('file-list-wrapper');
+  const fileListItems = document.getElementById('file-list-items');
+  const labelsInput = document.getElementById('labels-input');
+  const btnAddToSelected = document.getElementById('btn-add-to-selected');
+  const selectAllCheckbox = document.getElementById('select-all-files');
+  const btnDeleteAll = document.getElementById('btn-delete-all');
+  const linkClearAll = document.getElementById('link-clear-all');
   const uploadStatus = document.getElementById('upload-status');
 
   // Initialize file manager
@@ -33,351 +32,362 @@
       return;
     }
 
-    // Show table
-    fileTableWrapper.hidden = false;
-    batchActions.hidden = false;
-
-    // Render all files
-    renderFileTable();
-    updateBatchActions();
-
+    fileListWrapper.hidden = false;
+    renderFileList();
     setStatus(`${addedFiles.length} file(s) added`);
   }
 
   /**
-   * Render entire file table
+   * Render entire file list
    */
-  function renderFileTable() {
-    fileTableBody.innerHTML = '';
+  function renderFileList() {
+    fileListItems.innerHTML = '';
 
     const files = fileManager.getAllFiles();
 
     if (files.length === 0) {
-      fileTableWrapper.hidden = true;
-      batchActions.hidden = true;
+      fileListWrapper.hidden = true;
       return;
     }
 
     files.forEach(file => {
-      const row = createFileRow(file);
-      fileTableBody.appendChild(row);
+      const item = createFileItem(file);
+      fileListItems.appendChild(item);
     });
+
+    updateSelectAllCheckbox();
   }
 
   /**
-   * Create a file table row
+   * Create file item element
    */
-  function createFileRow(file) {
-    const tr = document.createElement('tr');
-    tr.dataset.fileId = file.id;
+  function createFileItem(file) {
+    const container = document.createElement('div');
+    container.className = 'file-item';
+    if (file.checked) {
+      container.classList.add('is-selected');
+    }
+    container.dataset.fileId = file.id;
 
-    // Icon cell
-    const iconCell = document.createElement('td');
-    iconCell.className = 'file-cell-icon';
-    iconCell.textContent = getFileIcon(file.type);
-    tr.appendChild(iconCell);
+    // Main row
+    const row = document.createElement('div');
+    row.className = 'file-item__row';
 
-    // Name cell
-    const nameCell = document.createElement('td');
-    nameCell.className = 'file-cell-name';
+    // Checkbox
+    const checkCell = document.createElement('div');
+    checkCell.className = 'file-item__check';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = file.checked;
+    checkbox.addEventListener('change', () => {
+      handleFileCheckToggle(file.id);
+    });
+    checkCell.appendChild(checkbox);
+
+    // File name
+    const nameCell = document.createElement('div');
+    nameCell.className = 'file-item__name';
     nameCell.textContent = file.filename;
     nameCell.title = file.filename;
-    tr.appendChild(nameCell);
 
-    // Size cell
-    const sizeCell = document.createElement('td');
-    sizeCell.className = 'file-cell-size';
+    // Type
+    const typeCell = document.createElement('div');
+    typeCell.className = 'file-item__type';
+    typeCell.textContent = capitalize(file.type);
+
+    // Size
+    const sizeCell = document.createElement('div');
+    sizeCell.className = 'file-item__size';
     sizeCell.textContent = fileManager.formatSize(file.size);
-    tr.appendChild(sizeCell);
 
-    // Labels cell
-    const labelsCell = document.createElement('td');
-    labelsCell.className = 'file-cell-labels';
-    labelsCell.appendChild(createLabelsDisplay(file));
-    tr.appendChild(labelsCell);
-
-    // Status cell
-    const statusCell = document.createElement('td');
-    statusCell.className = 'file-cell-status';
+    // Status
+    const statusCell = document.createElement('div');
+    statusCell.className = 'file-item__status';
     statusCell.appendChild(createStatusDisplay(file));
-    tr.appendChild(statusCell);
 
-    // Actions cell
-    const actionsCell = document.createElement('td');
-    actionsCell.className = 'file-cell-actions';
-    actionsCell.appendChild(createActionsButtons(file));
-    tr.appendChild(actionsCell);
+    // Elapsed Time
+    const elapsedCell = document.createElement('div');
+    elapsedCell.className = 'file-item__elapsed';
+    elapsedCell.textContent = formatElapsedTime(file);
 
-    return tr;
-  }
+    // Actions
+    const actionsCell = document.createElement('div');
+    actionsCell.className = 'file-item__actions';
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'icon-btn';
+    deleteBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+    </svg>`;
+    deleteBtn.title = 'Delete';
+    deleteBtn.type = 'button';
+    deleteBtn.addEventListener('click', () => handleDeleteFile(file.id));
+    actionsCell.appendChild(deleteBtn);
 
-  /**
-   * Get file icon by type
-   */
-  function getFileIcon(type) {
-    const icons = {
-      video: '📄',
-      image: '📄',
-      document: '📄',
-    };
-    return icons[type] || '📄';
-  }
+    // Append all cells
+    row.appendChild(checkCell);
+    row.appendChild(nameCell);
+    row.appendChild(typeCell);
+    row.appendChild(sizeCell);
+    row.appendChild(statusCell);
+    row.appendChild(elapsedCell);
+    row.appendChild(actionsCell);
 
-  /**
-   * Create labels display
-   */
-  function createLabelsDisplay(file) {
-    const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.gap = '4px';
-    container.style.flexWrap = 'wrap';
+    container.appendChild(row);
 
-    if (file.labels.length === 0) {
-      const empty = document.createElement('span');
-      empty.className = 'file-label file-label--empty';
-      empty.textContent = '-';
-      container.appendChild(empty);
-      return container;
-    }
-
-    // Show first 2 labels
-    file.labels.slice(0, 2).forEach(label => {
-      const span = document.createElement('span');
-      span.className = 'file-label';
-      span.textContent = label;
-      container.appendChild(span);
-    });
-
-    // Show +N if more labels
-    if (file.labels.length > 2) {
-      const more = document.createElement('span');
-      more.className = 'file-label file-label--count';
-      more.textContent = `+${file.labels.length - 2}`;
-      more.title = file.labels.slice(2).join(', ');
-      container.appendChild(more);
+    // Labels row (if has labels)
+    if (file.labels.length > 0) {
+      const labelsRow = document.createElement('div');
+      labelsRow.className = 'file-item__labels';
+      file.labels.forEach(label => {
+        labelsRow.appendChild(createLabelTag(file.id, label));
+      });
+      container.appendChild(labelsRow);
     }
 
     return container;
   }
 
   /**
-   * Create status display
+   * Create status display (4 states only)
    */
   function createStatusDisplay(file) {
     const container = document.createElement('div');
-    container.className = 'file-cell-status';
-
-    const config = STATUS_CONFIG[file.status];
-
-    // For uploading status, show progress bar
-    if (file.status === FILE_STATUS.UPLOADING) {
-      const progress = document.createElement('div');
-      progress.className = 'file-progress';
-
-      const progressBar = document.createElement('div');
-      progressBar.className = 'file-progress__bar';
-
-      const progressFill = document.createElement('div');
-      progressFill.className = 'file-progress__fill';
-      progressFill.style.width = `${file.uploadProgress}%`;
-
-      progressBar.appendChild(progressFill);
-      progress.appendChild(progressBar);
-
-      const progressText = document.createElement('span');
-      progressText.className = 'file-progress__text';
-      progressText.textContent = `${file.uploadProgress}%`;
-      progress.appendChild(progressText);
-
-      container.appendChild(progress);
-      return container;
-    }
-
-    // For other statuses
-    const icon = document.createElement('span');
-    icon.className = 'status-icon';
-    if (file.status === FILE_STATUS.PROCESSING) {
-      icon.className += ' status-icon--processing';
-    }
-    icon.textContent = config.icon;
-
-    const text = document.createElement('span');
-    text.className = `status-text ${config.class}`;
-
-    // Customize text based on status
-    if (file.status === FILE_STATUS.COMPLETED) {
-      const elapsed = file.result?.elapsed_seconds;
-      if (elapsed) {
-        text.textContent = `${config.text} (${Math.round(elapsed)}s)`;
-      } else {
-        text.textContent = config.text;
-      }
-    } else if (file.status === FILE_STATUS.FAILED) {
-      const errorMsg = file.error?.message || 'Unknown error';
-      text.textContent = errorMsg.length > 30 ? errorMsg.substring(0, 30) + '...' : errorMsg;
-      text.title = errorMsg;
-    } else {
-      text.textContent = config.text;
-    }
-
-    container.appendChild(icon);
-    container.appendChild(text);
-
-    return container;
-  }
-
-  /**
-   * Create action buttons
-   */
-  function createActionsButtons(file) {
-    const container = document.createElement('div');
-    container.className = 'file-cell-actions';
+    container.style.display = 'flex';
+    container.style.alignItems = 'center';
+    container.style.gap = '8px';
 
     if (file.status === FILE_STATUS.PENDING) {
-      // Upload button
-      const uploadBtn = createActionButton('↑', 'Upload', 'file-action-btn--upload');
-      uploadBtn.onclick = () => handleUploadFile(file.id);
+      // State 1: Pending -> [Upload] button
+      const uploadBtn = document.createElement('button');
+      uploadBtn.className = 'status-badge status-badge--pending';
+      uploadBtn.textContent = 'Upload';
+      uploadBtn.type = 'button';
+      uploadBtn.addEventListener('click', () => handleUploadFile(file.id));
       container.appendChild(uploadBtn);
 
-      // Remove button
-      const removeBtn = createActionButton('×', 'Remove', 'file-action-btn--remove');
-      removeBtn.onclick = () => handleRemoveFile(file.id);
-      container.appendChild(removeBtn);
-
-    } else if (file.status === FILE_STATUS.UPLOADING) {
-      // Cancel button
-      const cancelBtn = createActionButton('×', 'Cancel', 'file-action-btn--remove');
-      cancelBtn.onclick = () => handleCancelUpload(file.id);
-      container.appendChild(cancelBtn);
+    } else if (
+      file.status === FILE_STATUS.UPLOADING ||
+      file.status === FILE_STATUS.QUEUED ||
+      file.status === FILE_STATUS.PROCESSING
+    ) {
+      // State 2: Processing (uploading/queued/processing)
+      const badge = document.createElement('span');
+      badge.className = 'status-badge status-badge--processing';
+      badge.innerHTML = 'Processing<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+      container.appendChild(badge);
 
     } else if (file.status === FILE_STATUS.COMPLETED) {
-      // View button (optional)
-      // const viewBtn = createActionButton('👁', 'View');
-      // viewBtn.onclick = () => handleViewFile(file.id);
-      // container.appendChild(viewBtn);
+      // State 3: Completed -> [Uploaded ✓]
+      const badge = document.createElement('span');
+      badge.className = 'status-badge status-badge--completed';
+      badge.textContent = 'Uploaded ✓';
+      container.appendChild(badge);
 
-      // Remove button
-      const removeBtn = createActionButton('×', 'Remove', 'file-action-btn--remove');
-      removeBtn.onclick = () => handleRemoveFile(file.id);
-      container.appendChild(removeBtn);
+    } else if (file.status === FILE_STATUS.FAILED || file.status === FILE_STATUS.CANCELLED) {
+      // State 4: Failed -> [Failed ✗] [Retry]
+      const failedBadge = document.createElement('span');
+      failedBadge.className = 'status-badge status-badge--failed';
+      failedBadge.textContent = 'Failed ✗';
+      container.appendChild(failedBadge);
 
-    } else if (file.status === FILE_STATUS.FAILED) {
-      // Retry button
-      const retryBtn = createActionButton('↻', 'Retry', 'file-action-btn--retry');
-      retryBtn.onclick = () => handleRetryFile(file.id);
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn-retry';
+      retryBtn.textContent = 'Retry';
+      retryBtn.type = 'button';
+      retryBtn.addEventListener('click', () => handleRetryFile(file.id));
       container.appendChild(retryBtn);
-
-      // Remove button
-      const removeBtn = createActionButton('×', 'Remove', 'file-action-btn--remove');
-      removeBtn.onclick = () => handleRemoveFile(file.id);
-      container.appendChild(removeBtn);
-
-    } else {
-      // No actions for queued/processing
-      const noAction = document.createElement('span');
-      noAction.textContent = '-';
-      noAction.style.color = 'var(--muted)';
-      container.appendChild(noAction);
     }
 
     return container;
   }
 
   /**
-   * Create action button
+   * Create label tag with remove button
    */
-  function createActionButton(symbol, title, extraClass = '') {
-    const btn = document.createElement('button');
-    btn.className = `file-action-btn ${extraClass}`;
-    btn.title = title;
-    btn.textContent = symbol;
-    btn.type = 'button';
-    return btn;
+  function createLabelTag(fileId, label) {
+    const tag = document.createElement('span');
+    tag.className = 'file-label-tag';
+
+    const text = document.createElement('span');
+    text.textContent = label;
+    tag.appendChild(text);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'file-label-tag__remove';
+    removeBtn.textContent = '×';
+    removeBtn.type = 'button';
+    removeBtn.title = `Remove ${label}`;
+    removeBtn.addEventListener('click', () => {
+      fileManager.removeLabel(fileId, label);
+      updateFileItem(fileId);
+    });
+    tag.appendChild(removeBtn);
+
+    return tag;
   }
 
   /**
-   * Update batch actions panel
+   * Capitalize first letter
    */
-  function updateBatchActions() {
-    const counts = fileManager.getStatusCounts();
-    const total = fileManager.getAllFiles().length;
+  function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
 
-    if (total === 0) {
-      batchActions.hidden = true;
-      return;
+  /**
+   * Format elapsed time from file timestamps
+   */
+  function formatElapsedTime(file) {
+    // Not started yet
+    if (file.status === FILE_STATUS.PENDING) {
+      return '-';
     }
 
-    batchActions.hidden = false;
+    // No upload start time recorded (shouldn't happen but defensive)
+    if (!file.uploadStartedAt) {
+      return '-';
+    }
 
-    // Update summary
-    const parts = [];
-    if (counts.pending > 0) parts.push(`${counts.pending} pending`);
-    if (counts.uploading > 0) parts.push(`${counts.uploading} uploading`);
-    if (counts.queued > 0) parts.push(`${counts.queued} queued`);
-    if (counts.processing > 0) parts.push(`${counts.processing} processing`);
-    if (counts.completed > 0) parts.push(`${counts.completed} completed`);
-    if (counts.failed > 0) parts.push(`${counts.failed} failed`);
+    let startTime = file.uploadStartedAt; // Use upload start time, not creation time
+    let endTime;
 
-    batchSummary.textContent = parts.join(', ') || 'No files';
-
-    // Update buttons
-    if (counts.pending > 0) {
-      btnUploadAll.hidden = false;
-      btnUploadAllText.textContent = `Upload All (${counts.pending})`;
+    if (file.status === FILE_STATUS.COMPLETED) {
+      endTime = file.completedAt || new Date();
+    } else if (file.status === FILE_STATUS.FAILED || file.status === FILE_STATUS.CANCELLED) {
+      endTime = new Date();
     } else {
-      btnUploadAll.hidden = true;
+      // Uploading/Queued/Processing - show current elapsed time
+      endTime = new Date();
     }
 
-    btnClearCompleted.hidden = counts.completed === 0;
-    if (counts.completed > 0) {
-      btnClearCompleted.textContent = `Clear Completed (${counts.completed})`;
-    }
+    const diffMs = endTime - startTime;
+    const diffSec = Math.floor(diffMs / 1000);
 
-    btnClearFailed.hidden = counts.failed === 0;
-    if (counts.failed > 0) {
-      btnClearFailed.textContent = `Clear Failed (${counts.failed})`;
+    if (diffSec < 0) {
+      return '0s'; // Safety check
+    } else if (diffSec < 60) {
+      return `${diffSec}s`;
+    } else if (diffSec < 3600) {
+      const minutes = Math.floor(diffSec / 60);
+      const seconds = diffSec % 60;
+      return `${minutes}m ${seconds}s`;
+    } else {
+      const hours = Math.floor(diffSec / 3600);
+      const minutes = Math.floor((diffSec % 3600) / 60);
+      return `${hours}h ${minutes}m`;
     }
   }
 
   /**
-   * Handle upload single file
+   * Update single file item
+   */
+  function updateFileItem(fileId) {
+    const container = document.querySelector(`.file-item[data-file-id="${fileId}"]`);
+    if (!container) return;
+
+    const file = fileManager.getFile(fileId);
+    if (!file) return;
+
+    // Update selection class
+    if (file.checked) {
+      container.classList.add('is-selected');
+    } else {
+      container.classList.remove('is-selected');
+    }
+
+    // Update checkbox
+    const checkbox = container.querySelector('input[type="checkbox"]');
+    if (checkbox) {
+      checkbox.checked = file.checked;
+    }
+
+    // Update status
+    const statusCell = container.querySelector('.file-item__status');
+    if (statusCell) {
+      statusCell.innerHTML = '';
+      statusCell.appendChild(createStatusDisplay(file));
+    }
+
+    // Update elapsed time
+    const elapsedCell = container.querySelector('.file-item__elapsed');
+    if (elapsedCell) {
+      elapsedCell.textContent = formatElapsedTime(file);
+    }
+
+    // Update labels
+    const existingLabels = container.querySelector('.file-item__labels');
+    if (existingLabels) {
+      existingLabels.remove();
+    }
+
+    if (file.labels.length > 0) {
+      const labelsRow = document.createElement('div');
+      labelsRow.className = 'file-item__labels';
+      file.labels.forEach(label => {
+        labelsRow.appendChild(createLabelTag(file.id, label));
+      });
+      container.appendChild(labelsRow);
+    }
+  }
+
+  /**
+   * Handle file checkbox toggle
+   */
+  function handleFileCheckToggle(fileId) {
+    fileManager.toggleChecked(fileId);
+    updateFileItem(fileId);
+    updateSelectAllCheckbox();
+  }
+
+  /**
+   * Update select-all checkbox state
+   */
+  function updateSelectAllCheckbox() {
+    const files = fileManager.getAllFiles();
+    const checked = fileManager.getCheckedFiles();
+
+    if (files.length === 0) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    } else if (checked.length === 0) {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = false;
+    } else if (checked.length === files.length) {
+      selectAllCheckbox.checked = true;
+      selectAllCheckbox.indeterminate = false;
+    } else {
+      selectAllCheckbox.checked = false;
+      selectAllCheckbox.indeterminate = true;
+    }
+  }
+
+  /**
+   * Handle upload file
    */
   async function handleUploadFile(fileId) {
     const file = fileManager.getFile(fileId);
     if (!file) return;
 
-    // Update status to uploading
+    // Update status to uploading (shows as Processing)
     fileManager.updateFile(fileId, {
       status: FILE_STATUS.UPLOADING,
-      uploadProgress: 0
+      uploadStartedAt: new Date() // Record when upload actually starts
     });
-    renderFileTable();
+    updateFileItem(fileId);
 
     try {
-      // Create FormData
       const formData = new FormData();
       formData.append('file', file.file);
 
-      // Add labels as meta if present
       if (file.labels.length > 0) {
         const meta = JSON.stringify({ tags: file.labels });
         formData.append('meta', meta);
       }
 
-      // Create XMLHttpRequest for progress tracking
       const xhr = new XMLHttpRequest();
       file.xhr = xhr;
 
-      // Progress handler
-      xhr.upload.addEventListener('progress', (e) => {
-        if (e.lengthComputable) {
-          const progress = Math.round((e.loaded / e.total) * 100);
-          fileManager.updateFile(fileId, { uploadProgress: progress });
-          updateFileRow(fileId);
-        }
-      });
+      // No need to track progress - just show "Processing..."
 
-      // Complete handler
       xhr.addEventListener('load', async () => {
         if (xhr.status >= 200 && xhr.status < 300) {
           const data = JSON.parse(xhr.responseText);
@@ -392,10 +402,9 @@
               xhr: null,
             });
 
-            updateFileRow(fileId);
+            updateFileItem(fileId);
             setStatus(`${file.filename} uploaded successfully`);
 
-            // Start polling if we have task ID
             if (taskId) {
               startTaskPolling(fileId, taskId);
             }
@@ -407,13 +416,11 @@
         }
       });
 
-      // Error handler
       xhr.addEventListener('error', () => {
         handleUploadError(fileId, new Error('Network error'));
       });
 
-      // Send request
-      xhr.open('POST', 'http://127.0.0.1:9011/api/v1/object/upload-ingest');
+      xhr.open('POST', `${window.API_BASE_URL || 'http://127.0.0.1:9011'}/api/v1/object/upload-ingest`);
       xhr.send(formData);
 
     } catch (error) {
@@ -432,16 +439,16 @@
       },
       xhr: null,
     });
-    updateFileRow(fileId);
+    updateFileItem(fileId);
     setStatus(`Upload failed: ${error.message}`);
   }
 
   /**
-   * Start polling task status
+   * Start task polling
    */
   function startTaskPolling(fileId, taskId) {
     fileManager.updateFile(fileId, { status: FILE_STATUS.PROCESSING });
-    updateFileRow(fileId);
+    updateFileItem(fileId);
 
     fileManager.startPolling(fileId, taskId, (taskData) => {
       if (!taskData) return;
@@ -468,7 +475,6 @@
           completedAt: new Date(),
           result: {
             elapsed_seconds: taskData.result?.video_summary?.elapsed_seconds,
-            chunks: taskData.result?.video_summary?.total_chunks,
           },
         });
         setStatus(`${file.filename} completed successfully`);
@@ -483,40 +489,8 @@
         setStatus(`${file.filename} processing failed`);
       }
 
-      updateFileRow(fileId);
-      updateBatchActions();
+      updateFileItem(fileId);
     });
-  }
-
-  /**
-   * Handle cancel upload
-   */
-  function handleCancelUpload(fileId) {
-    const file = fileManager.getFile(fileId);
-    if (!file || !file.xhr) return;
-
-    file.xhr.abort();
-
-    fileManager.updateFile(fileId, {
-      status: FILE_STATUS.CANCELLED,
-      xhr: null,
-    });
-
-    updateFileRow(fileId);
-    setStatus(`${file.filename} upload cancelled`);
-  }
-
-  /**
-   * Handle remove file
-   */
-  function handleRemoveFile(fileId) {
-    const file = fileManager.getFile(fileId);
-    if (!file) return;
-
-    fileManager.removeFile(fileId);
-    renderFileTable();
-    updateBatchActions();
-    setStatus(`${file.filename} removed`);
   }
 
   /**
@@ -526,34 +500,73 @@
     fileManager.updateFile(fileId, {
       status: FILE_STATUS.PENDING,
       error: null,
-      uploadProgress: 0,
+      uploadStartedAt: null, // Reset timer for retry
     });
-    updateFileRow(fileId);
-    updateBatchActions();
+    updateFileItem(fileId);
   }
 
   /**
-   * Update single file row
+   * Handle delete file
    */
-  function updateFileRow(fileId) {
-    const row = document.querySelector(`tr[data-file-id="${fileId}"]`);
-    if (!row) return;
-
+  function handleDeleteFile(fileId) {
     const file = fileManager.getFile(fileId);
     if (!file) return;
 
-    // Update status cell
-    const statusCell = row.querySelector('.file-cell-status');
-    if (statusCell) {
-      statusCell.innerHTML = '';
-      statusCell.appendChild(createStatusDisplay(file));
+    fileManager.removeFile(fileId);
+    renderFileList();
+    setStatus(`${file.filename} removed`);
+  }
+
+  /**
+   * Handle add labels to selected
+   */
+  function handleAddLabelsToSelected() {
+    const input = labelsInput.value.trim();
+    if (!input) {
+      setStatus('Please enter labels');
+      return;
     }
 
-    // Update actions cell
-    const actionsCell = row.querySelector('.file-cell-actions');
-    if (actionsCell) {
-      actionsCell.innerHTML = '';
-      actionsCell.appendChild(createActionsButtons(file));
+    const labels = input.split(/[\n,]/).map(l => l.trim()).filter(l => l);
+
+    if (labels.length === 0) {
+      setStatus('Please enter valid labels');
+      return;
+    }
+
+    const checkedFiles = fileManager.getCheckedFiles();
+    if (checkedFiles.length === 0) {
+      setStatus('Please select files first');
+      return;
+    }
+
+    const updated = fileManager.addLabelsToChecked(labels);
+
+    if (updated > 0) {
+      checkedFiles.forEach(file => updateFileItem(file.id));
+      labelsInput.value = '';
+      setStatus(`Added labels to ${checkedFiles.length} file(s)`);
+    }
+  }
+
+  /**
+   * Handle select all toggle
+   */
+  function handleSelectAllToggle() {
+    const checked = selectAllCheckbox.checked;
+    fileManager.setAllChecked(checked);
+    renderFileList();
+  }
+
+  /**
+   * Handle clear all files
+   */
+  function handleClearAll(e) {
+    e.preventDefault();
+    if (confirm('Clear all files?')) {
+      fileManager.files.clear();
+      renderFileList();
+      setStatus('All files cleared');
     }
   }
 
@@ -564,44 +577,13 @@
     uploadStatus.textContent = message || '';
   }
 
-  /**
-   * Handle upload all pending files
-   */
-  function handleUploadAll() {
-    const pending = fileManager.getFilesByStatus(FILE_STATUS.PENDING);
-    pending.forEach(file => {
-      handleUploadFile(file.id);
-    });
-  }
-
-  /**
-   * Handle clear completed files
-   */
-  function handleClearCompleted() {
-    const count = fileManager.clearByStatus(FILE_STATUS.COMPLETED);
-    renderFileTable();
-    updateBatchActions();
-    setStatus(`${count} completed file(s) cleared`);
-  }
-
-  /**
-   * Handle clear failed files
-   */
-  function handleClearFailed() {
-    const count = fileManager.clearByStatus(FILE_STATUS.FAILED);
-    renderFileTable();
-    updateBatchActions();
-    setStatus(`${count} failed file(s) cleared`);
-  }
-
   // ===== Event Listeners =====
 
-  // File input change
   fileInput.addEventListener('change', () => {
     const files = Array.from(fileInput.files || []);
     if (files.length > 0) {
       handleFilesSelected(files);
-      fileInput.value = ''; // Reset input
+      fileInput.value = '';
     }
   });
 
@@ -613,11 +595,9 @@
 
   dropzone.addEventListener('dragover', (e) => {
     e.preventDefault();
-    dropzone.classList.add('is-dragover');
   });
 
   dropzone.addEventListener('dragleave', (e) => {
-    e.preventDefault();
     if (e.target === dropzone) {
       dropzone.classList.remove('is-dragover');
     }
@@ -633,16 +613,40 @@
     }
   });
 
-  // Batch action buttons
-  btnUploadAll.addEventListener('click', handleUploadAll);
-  btnClearCompleted.addEventListener('click', handleClearCompleted);
-  btnClearFailed.addEventListener('click', handleClearFailed);
+  // Labels input - Enter key to add
+  labelsInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddLabelsToSelected();
+    }
+  });
+
+  btnAddToSelected.addEventListener('click', handleAddLabelsToSelected);
+  selectAllCheckbox.addEventListener('change', handleSelectAllToggle);
+  btnDeleteAll.addEventListener('click', handleClearAll);
+  linkClearAll.addEventListener('click', handleClearAll);
+
+  // Update elapsed time for processing files every second
+  setInterval(() => {
+    const files = fileManager.getAllFiles();
+    files.forEach(file => {
+      if (
+        file.status === FILE_STATUS.UPLOADING ||
+        file.status === FILE_STATUS.QUEUED ||
+        file.status === FILE_STATUS.PROCESSING
+      ) {
+        const elapsedCell = document.querySelector(`.file-item[data-file-id="${file.id}"] .file-item__elapsed`);
+        if (elapsedCell) {
+          elapsedCell.textContent = formatElapsedTime(file);
+        }
+      }
+    });
+  }, 1000);
 
   // Export for debugging
   window.fileManagerUI = {
     fileManager,
-    renderFileTable,
-    updateBatchActions,
+    renderFileList,
   };
 
 })();

@@ -97,6 +97,7 @@ class FileManager {
         result: null,
         error: null,
         createdAt: new Date(),
+        uploadStartedAt: null, // When user clicks Upload button
         uploadedAt: null,
         completedAt: null,
         xhr: null, // For cancelling upload
@@ -356,7 +357,7 @@ class FileManager {
    */
   async queryTaskStatus(taskId) {
     try {
-      const response = await fetch(`http://127.0.0.1:9011/api/v1/task/query/${taskId}`);
+      const response = await fetch(`${window.API_BASE_URL || 'http://127.0.0.1:9011'}/api/v1/task/query/${taskId}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }

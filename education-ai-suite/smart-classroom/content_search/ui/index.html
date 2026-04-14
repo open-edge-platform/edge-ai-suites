@@ -5,13 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <title>Content Search</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="header">
       <div class="container header__inner">
-        <h1 class="title">Content Search</h1>
-        <p class="subtitle">Upload content, then search with text or an image (type + TopK).</p>
+        <div class="header__content">
+          <div>
+            <h1 class="title">Content Search</h1>
+            <p class="subtitle">Upload content, then search with text or an image (type + TopK).</p>
+          </div>
+          <div class="backend-status" id="backend-status">
+            <div class="backend-status__indicator" id="backend-status-indicator">
+              <span class="backend-status__dot" id="backend-status-dot"></span>
+              <span class="backend-status__text" id="backend-status-text">Checking...</span>
+            </div>
+            <button class="backend-status__retry" id="backend-status-retry" type="button" title="Retry connection" hidden>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M12 7a5 5 0 1 1-1.5-3.5M12 3v4h-4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -77,8 +93,13 @@
               <div class="file-list-col file-list-col--type">Type</div>
               <div class="file-list-col file-list-col--size">Size</div>
               <div class="file-list-col file-list-col--status">Upload Status</div>
+              <div class="file-list-col file-list-col--elapsed">Elapsed Time</div>
               <div class="file-list-col file-list-col--actions">
-                <button class="icon-btn" id="btn-delete-all" title="Delete all files" type="button">🗑️</button>
+                <button class="icon-btn" id="btn-delete-all" title="Delete all files" type="button">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -126,7 +147,8 @@
               <span class="muted">Choose one: Text or Image</span>
             </div>
 
-            <div class="segmented" role="tablist" aria-label="Query mode">
+            <div style="display: flex;">
+              <div class="segmented" role="tablist" aria-label="Query mode">
               <button class="segmented__btn is-active" id="mode-text" type="button" role="tab" aria-selected="true" data-mode="text">
                 <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
                   <path d="M3 4h10M3 8h10M3 12h7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -146,6 +168,7 @@
                 </svg>
                 <span>Image</span>
               </button>
+            </div>
             </div>
 
             <div class="queryrow" aria-label="Text or Image query">
@@ -267,9 +290,22 @@
       </div>
     </footer>
 
+    <!-- Preview Modal -->
+    <div class="modal" id="preview-modal" hidden>
+      <div class="modal__overlay" id="preview-modal-overlay"></div>
+      <div class="modal__content" id="preview-modal-content">
+        <div class="modal__header">
+          <h3 class="modal__title" id="preview-modal-title">Preview</h3>
+          <button class="modal__close" id="preview-modal-close" type="button" aria-label="Close preview">×</button>
+        </div>
+        <div class="modal__body" id="preview-modal-body">
+          <!-- Content will be dynamically inserted here -->
+        </div>
+      </div>
+    </div>
+
     <script src="app_file_manager.js"></script>
-    <script src="app_ui_renderer_v3.js"></script>
+    <script src="app_ui_renderer.js"></script>
     <script src="app.js"></script>
-</invoke></script>
   </body>
 </html>
