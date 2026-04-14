@@ -17,9 +17,9 @@ Edge Microvisor Toolkit as a VM host is provided in [Other Documentation](#other
 section. The reader is advised to contact Intel representatives for further details on
 configuring an Edge Microvisor Toolkit host VM and instructions on hosting the Windows® Guest OS.
 
-- The `HMI Augmented Worker` sample application utilizes `Chat Question and Answer Core` for
+- The `HMI Augmented Worker` sample application utilizes `Chat Question & Answer Core` for
 the RAG pipeline. The [documentation](#other-documentation) available with
-`Chat Question-and-Answer Core` covers the details of how to set up the RAG pipeline, deploy
+`Chat Question & Answer Core` covers the details of how to set up the RAG pipeline, deploy
 it, and consume the application. Follow the instructions provided and set up the RAG pipeline.
 
 - Supported target hardware details are available in the [system requirements](./get-started/system-requirements.md) page.
@@ -28,14 +28,14 @@ it, and consume the application. Follow the instructions provided and set up the
 
 This section covers the details of the configuration of each constituent blocks of the application.
 
-### Chat-Question-and-Answer Core (ChatQnA Core)
+### Chat Question & Answer Core (Chat Q&A Core)
 
-The RAG capability provided by `ChatQnA Core` is setup in the Host partition following
+The RAG capability provided by the `Chat Q&A Core` is set up in the Host partition following
 instructions as updated in [Prerequisites](#prerequisites). The following knobs are available
-for configuration of the `ChatQnA Core` application.
+for configuration of the `Chat Q&A Core` application.
 
 1. **Number of CPUs allocation**: Allocation of cores to the VM (or host) running the
-`ChatQnA Core` is configurable in combination with the core requirements for the Windows® VM.
+`Chat Q&A Core` is configurable in combination with the core requirements for the Windows® VM.
 In the current version, the Core allocation is done to the Windows® Guest VM which in turn
 determines the available cores for the Host partition. Together with the model selection, the
 core selection forms a tradeoff of performance vs. accuracy, which need to be accounted for.
@@ -44,7 +44,7 @@ and applications running on host through SRIOV. However, the performance vs. acc
 analysis, along with recommended configurations has not been done and validated in the current
 version of the sample application.
 
-2. **Deployment Option**: It is possible to deploy `ChatQnA Core` both using Helm or with
+2. **Deployment Option**: It is possible to deploy the `Chat Q&A Core` both using Helm or with
 docker compose. The former will need Kubevirt based infrastructure which can manage both the
 VM(s) and the containers. The recommendation is to use the docker compose based deployment.
 
@@ -70,9 +70,9 @@ is also run on the Windows® VM. This is explained in the [how to use the applic
 
 To use the application effectively, make sure that all the steps mentioned in the above [section](#application-configuration):
 
-- Deploy the `ChatQnA Core` on the Host partition.
+- Deploy the `Chat Q&A Core` on the Host partition.
 
-  Deploy the `ChatQnA Core` using either of the following methods:
+  Deploy the `Chat Q&A Core` using either of the following methods:
 
   - **Docker Compose deployment** (recommended for simpler setups): Use this for local or
   non-Kubernetes environments.
@@ -94,11 +94,11 @@ To use the application effectively, make sure that all the steps mentioned in th
 - Access the WebUI
 
   While the WebUI component can be independently developed by third-party users to suit
-  specific use cases, this sample application reuses the WebUI bundled with the `ChatQnA Core`
+  specific use cases, this sample application reuses the WebUI bundled with the `Chat Q&A Core`
   for demonstration purposes. The WebUI runs on the same Windows® VM and provides a simple
   interface to interact with the RAG pipeline.
   Open a browser and navigate to the WebUI endpoint (e.g., `http://<hostvm-ip>:<port-num>`).
-  The `port-num` is the same as provided in the `ChatQnA Core` documentation.
+  The `port-num` is the same as provided in the `Chat Q&A Core` documentation.
 
 - Interact with the RAG Pipeline once the entire setup is running:
 
@@ -119,7 +119,7 @@ To use the application effectively, make sure that all the steps mentioned in th
 - [Create Edge Microvisor Toolkit bootable USB drive using source code](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/get-started-guide.md#create-a-bootable-usb-drive-using-source-code)
 - [Desktop Virtualization on Edge Microvisor Toolkit](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node/blob/main/standalone-node/docs/user-guide/desktop-virtualization-image-guide.md)
 - [Edge Microvisor Toolkit Documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit/tree/3.0/docs/developer-guide)
-- [Chat Question and Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
+- [Chat Question & Answer Core Main Page](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
 
 <!--hide_directive
 :::{toctree}
