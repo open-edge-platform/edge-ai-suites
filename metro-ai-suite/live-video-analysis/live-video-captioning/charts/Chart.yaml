@@ -1,0 +1,49 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: live-video-captioning
+description: >
+  Live Video Captioning — real-time RTSP video captioning powered by Intel DL Streamer
+  and OpenVINO Vision-Language Models (VLMs). Includes the caption service,
+  DL Streamer pipeline server, MQTT broker, MediaMTX WebRTC relay, coturn TURN server,
+  live metrics service, and a system collector.
+type: application
+version: 0.1.0
+appVersion: "2026.0.0"
+keywords:
+  - intel
+  - openvino
+  - dlstreamer
+  - video-captioning
+  - vlm
+  - webrtc
+  - mqtt
+home: https://github.com/open-edge-platform/edge-ai-suites
+sources:
+  - https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-captioning
+maintainers:
+  - name: Intel Corporation
+kubeVersion: ">=1.24.0-0"
+dependencies:
+  - name: mqtt-broker
+    version: "0.1.0"
+    repository: "file://subcharts/mqtt-broker"
+  - name: dlstreamer-pipeline-server
+    version: "0.1.0"
+    repository: "file://subcharts/dlstreamer-pipeline-server"
+  - name: mediamtx
+    version: "0.1.0"
+    repository: "file://subcharts/mediamtx"
+  - name: coturn
+    version: "0.1.0"
+    repository: "file://subcharts/coturn"
+  - name: video-caption-service
+    version: "0.1.0"
+    repository: "file://subcharts/video-caption-service"
+  - name: live-metrics-service
+    version: "0.1.0"
+    repository: "file://subcharts/live-metrics-service"
+  - name: collector
+    version: "0.1.0"
+    repository: "file://subcharts/collector"

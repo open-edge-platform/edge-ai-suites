@@ -1,62 +1,97 @@
 # Content Search
-## Prerequisites
-1 python3
- python3.10
 
-2 postgreSQL
-postgreSQL installation refers to [PostgreSQL installation](./docs/dev_guide/Installation.md#postgresql)
-3 Minio
-minio installation refers to [Minio installation](./docs/dev_guide/Installation.md#minio)
+Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities.
 
-4 System Tools: Required for multimodal processing:
+## Quick Start
+### Pre-requisites
+**Python 3.12**: 
+- Ensure Python 3.12 is installed and added to your system PATH.
 
-- Tesseract OCR: For image/PDF text extraction.
-- Poppler: For PDF rendering.
+**Windows Long Paths Issue**: 
 
-## Environment Setup
-### Create/activate python venv
-```powershell
-# Create venv
-& '<your python dir>' -m venv venv
-.\venv\Scripts\Activate.ps1
+To prevent issues with the Windows 260-character path limit, please choose one of the following:
+- Option A (Recommended): Move the project folder to a shallow directory (e.g., `C:\User\CS` or `D:\Projects`).
+- Option B: Lift the path limit by running the following command in a PowerShell window with `Administrator` privileges:
+```PowerShell
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
+-Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 ```
 
-###
-```powershell
-cd xxx/content_search
+**Network Requirement**: 
+- Proxy: If your machine is behind a proxy, ensure your environment variables (e.g., `HTTP_PROXY`, `HTTPS_PROXY`) are correctly configured to allow the script to download necessary components.
+- Model Downloads: This system downloads pre-trained models (such as CLIP and BGE) from Hugging Face. Ensure your network has stable access to `huggingface.co`.
+
+### Dependencies Installation
+We provide a unified installation script that automates the setup of core dependencies.
+Run the following script in PowerShell window with `Administrator` privileges:
+```PowerShell
+# Run the automation script from the Content Search root with Windows PowerShell
+.\install.ps1
+```
+> **Note**: Restart your PowerShell terminal to apply those new environment variables.
+
+Verify the installation by running the following commands:
+```PowerShell
+tesseract --version
+pdftoppm -v
+```
+
+### Create Python Virtual Environment
+Open PowerShell in the Content Search project root and run (replace <PythonPath> with your actual python path):
+```PowerShell
+& "<PythonPath>" -m venv venv_content_search
+# Activate
+.\venv_content_search\Scripts\Activate.ps1
+# Upgrade pip and install requirements
 python -m pip install --upgrade pip
-pip install -r .\requirements.txt
+python -m pip install -r requirements.txt
 ```
-## Launch
-```powershell
-cd xxx/content_search
+
+> **To Exit Venv**: Simply type `deactivate` in your terminal to leave the virtual environment.
+
+### Launching Content Search Services
+Once the environment is configured, activate the virtual environment and launch the Content Search service:
+
+```PowerShell
+# Activate the virtual environment
+.\venv_content_search\Scripts\Activate.ps1
+
+# Start all microservices
 python .\start_services.py
 ```
-// todo
-## Avaliable Endpoints
+> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models (such as CLIP, BGE, and Qwen VLM).
 
-| Endpoint | Method | Pattern | Description | Status |
-| :--- | :---: | :---: | :--- | :---: |
-| `/api/v1/system/health` | **GET** | SYNC | Backend app health check | DONE |
-| `/api/v1/task/query/{task_id}` | **GET** | SYNC | Query status of a specific task | DONE |
-| `/api/v1/task/list` | **GET** | SYNC | Query tasks by conditions (e.g., `?status=PROCESSING`) | DONE |
-| `/api/v1/task/cancel/{task_id}` | **POST** | SYNC | Cancel a running task | WIP |
-| `/api/v1/task/pause/{task_id}` | **POST** | SYNC | Pause a running task | WIP |
-| `/api/v1/task/resume/{task_id}` | **POST** | SYNC | Resume a paused task | WIP |
-| `/api/v1/object/files` | **GET** | SYNC | Query files in MinIO with filters | DONE |
-| `/api/v1/object/upload` | **POST** | ASYNC | Upload a file to MinIO | DONE |
-| `/api/v1/object/ingest` | **POST** | ASYNC | Ingest a specific file from MinIO | WIP |
-| `/api/v1/object/ingest-text` | **POST** | ASYNC | Emedding a raw text | WIP |
-| `/api/v1/object/upload-ingest` | **POST** | ASYNC | Upload to MinIO and trigger ingestion | DONE |
-| `/api/v1/object/search` | **POST** | ASYNC | Search for files based on description | DONE |
-| `/api/v1/object/download` | **POST** | STREAM | Download file from MinIO | DONE |
-| `/api/v1/video/summarization` | **POST** | STREAM | Generate video summarization | WIP |
+The launcher automatically performs health checks on all services. When all services are ready, you will see:
+```
+[launcher] All 5 services are ready. (startup took XXs)
+[launcher] You can use Ctrl+C to stop all services.
+```
 
-## API reference
-[Content Search API reference](./docs/dev_guide/Content_search_API.md)
+If any service fails to start, the launcher will report which service(s) failed:
+```
+[launcher] WARNING: 1 service(s) failed: vlm (not ready after 600s)
+[launcher] Check logs in: <path>/content_search/logs/
+```
 
-[Ingest and Retrieve](./docs/dev_guide/file_ingest_and_retrieve/API_GUIDE.md)
+You can also manually verify the service status:
+```PowerShell
+Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
+```
+> Tip: The default port is `9011`, but this may vary depending on your specific configuration. Please ensure you are using the correct port for your environment.
 
-[Video Preprocess](./docs/dev_guide/video_preprocess/API_GUIDE.md)
+### Services Termination
+To stop the service and all associated microservices, press `Ctrl` + `C` in the launch terminal window.
 
-[VLM OV Serving](./docs/dev_guide/vlm_openvino_serving/API_GUIDE.md)
+## API Endpoints
+
+| Endpoint | Method | Pattern | Description | Documentation |
+| :--- | :---: | :---: | :--- | :--- |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. `PROCESSING`, `COMPLETED`, `FAILED`). | [Details](./docs/dev_guide/Content_search_API.md#task-status-polling) |
+| `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`). | [Details](./docs/dev_guide/Content_search_API.md#get-task-list) |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Processes raw text strings or existing text-based objects for semantic indexing. | [Details](./docs/dev_guide/Content_search_API.md#text-file-ingestion) |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to local storage and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
+| `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes similarity search across vector collections using natural language or base64 images. | [Details](./docs/dev_guide/Content_search_API.md#retrieve-and-search) |
+| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file via stream-bridging. | [Details](./docs/dev_guide/Content_search_API.md#resource-download-videoimagedocument) |
+| `/api/v1/object/cleanup-task/{task_id}` | **DELETE** | SYNC | **Resource & Task Purge**: Irreversibly deletes local storage files, vector indices, and database records for a specific task. | [Details](./docs/dev_guide/Content_search_API.md#cleanup-file-storage-and-record) |
+
+For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)

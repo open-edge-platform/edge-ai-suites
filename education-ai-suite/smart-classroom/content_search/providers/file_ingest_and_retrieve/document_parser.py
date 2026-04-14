@@ -9,9 +9,33 @@ from typing import List, Optional, Dict, Any
 
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter, SemanticSplitterNodeParser
-from llama_index.core.schema import BaseNode
+from llama_index.core.schema import BaseNode, TextNode
 from llama_index.readers.file import UnstructuredReader
 from unstructured.partition.docx import register_picture_partitioner
+
+# ---------------------------------------------------------------------------
+# Monkey-patch: llama-index-readers-file 0.6.0 passes both deprecated
+# ``doc_id`` AND ``id_`` to Document/TextNode constructors, which triggers
+# "'doc_id' is deprecated and 'id_' will be used instead" on every node.
+# Remove the redundant ``doc_id`` kwarg from __init__ until the upstream
+# package drops it.
+# ---------------------------------------------------------------------------
+_orig_document_init = Document.__init__
+_orig_textnode_init = TextNode.__init__
+
+
+def _patched_document_init(self, **data):
+    data.pop("doc_id", None)
+    _orig_document_init(self, **data)
+
+
+def _patched_textnode_init(self, **data):
+    data.pop("doc_id", None)
+    _orig_textnode_init(self, **data)
+
+
+Document.__init__ = _patched_document_init
+TextNode.__init__ = _patched_textnode_init
 
 from providers.file_ingest_and_retrieve.utils import DocxParagraphPicturePartitioner, ensure_directory, is_supported_file
 
@@ -61,8 +85,8 @@ class DocumentParser:
         self,
         chunk_size: int = 250,
         chunk_overlap: int = 50,
-        extract_images: bool = True,
-        image_output_dir: str = "./extracted_images",
+        extract_images: bool = False,
+        image_output_dir: Optional[str] = None,
         ocr_languages: Optional[List[str]] = None,
         use_hi_res_strategy: bool = True,
         embed_model=None,
@@ -76,7 +100,7 @@ class DocumentParser:
         Args:
             chunk_size: Maximum characters per chunk (default: 250). Used only when embed_model is None.
             chunk_overlap: Characters overlap between chunks (default: 50). Used only when embed_model is None.
-            extract_images: Whether to extract images from PDFs (default: True)
+            extract_images: Whether to extract images from PDFs (default: False)
             image_output_dir: Directory to save extracted images (default: './extracted_images')
             ocr_languages: List of OCR languages (default: ['eng', 'chi_sim', 'chi'])
             use_hi_res_strategy: Use high-resolution parsing (slower but more accurate)
@@ -92,7 +116,10 @@ class DocumentParser:
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
         self.extract_images = extract_images
-        self.image_output_dir = ensure_directory(image_output_dir)
+        _default_img_dir = os.path.join(os.getcwd(), "logs", "extracted_images")
+        self.image_output_dir = image_output_dir or _default_img_dir
+        if extract_images:
+            ensure_directory(self.image_output_dir)
         self.ocr_languages = ocr_languages or ["eng", "chi_sim", "chi"]
         self.use_hi_res_strategy = use_hi_res_strategy
         self.semantic_min_chunk_size = semantic_min_chunk_size
@@ -140,7 +167,7 @@ class DocumentParser:
         if not is_supported_file(file_path):
             raise ValueError(
                 f"Unsupported file format: {Path(file_path).suffix}. "
-                f"Supported: txt, pdf, docx, pptx, xlsx, html, htm, xml, md, rst"
+                f"Supported: txt, pdf, docx, pptx, xlsx, html, htm, xml, md"
             )
 
         # Check for legacy formats that need LibreOffice
@@ -155,6 +182,7 @@ class DocumentParser:
                 )
 
         if ext == ".docx":
+            DocxParagraphPicturePartitioner.output_dir = self.image_output_dir
             register_picture_partitioner(DocxParagraphPicturePartitioner)
 
         unstructured_kwargs = {

@@ -1,0 +1,58 @@
+apiVersion: v2
+name: live-video-search
+description: Umbrella Helm chart for Live Video Search (VSS Search + Smart NVR)
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+dependencies:
+  - name: shared
+    version: 1.0.0
+    repository: "file://subchart/shared"
+  - name: init-resources
+    version: 1.0.0
+    repository: "file://subchart/init-resources"
+  - name: nginx
+    version: 1.0.0
+    repository: "file://subchart/nginx"
+  - name: vss-ui
+    version: 1.0.0
+    repository: "file://subchart/vss-ui"
+  - name: pipeline-manager
+    version: 1.0.0
+    repository: "file://subchart/pipeline-manager"
+  - name: postgres-service
+    version: 1.0.0
+    repository: "file://subchart/postgres-service"
+  - name: minio-service
+    version: 1.0.0
+    repository: "file://subchart/minio-service"
+  - name: vdms-vector-db
+    version: 1.0.0
+    repository: "file://subchart/vdms-vector-db"
+  - name: multimodal-embedding-serving
+    version: 1.0.0
+    repository: "file://subchart/multimodal-embedding-serving"
+  - name: vdms-dataprep
+    version: 1.0.0
+    repository: "file://subchart/vdms-dataprep"
+  - name: video-search
+    version: 1.0.0
+    repository: "file://subchart/video-search"
+  - name: mqtt-broker
+    version: 1.0.0
+    repository: "file://subchart/mqtt-broker"
+  - name: redis
+    version: 1.0.0
+    repository: "file://subchart/redis"
+  - name: frigate-vms
+    version: 1.0.0
+    repository: "file://subchart/frigate-vms"
+  - name: nvr-event-router
+    version: 1.0.0
+    repository: "file://subchart/nvr-event-router"
+  - name: rtsp-test
+    version: 1.0.0
+    repository: "file://subchart/rtsp-test"
+  - name: vss-collector
+    version: 1.0.0
+    repository: "file://subchart/vss-collector"

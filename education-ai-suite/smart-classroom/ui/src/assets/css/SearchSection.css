@@ -1,0 +1,531 @@
+/* ─── Search Section ─────────────────────────────────────── */
+
+.cs-search-card {
+  width: 100%;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 16px;
+  margin-top: 16px;
+  color: #2B2C30;
+  font-family: 'IntelOne Text', sans-serif;
+}
+
+/* ───────── Header ───────── */
+
+.cs-search-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.cs-search-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2B2C30;
+}
+
+/* ───────── Tabs ───────── */
+
+.cs-search-tabs {
+  display: flex;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 16px;
+}
+
+.cs-search-tab {
+  flex: 1;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6A6D75;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.cs-search-tab:hover {
+  color: #2B2C30;
+  background: #f5f9ff;
+}
+
+.cs-search-tab--active {
+  color: #2B2C30;
+  font-weight: 600;
+}
+
+.cs-search-tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #1976d2;
+}
+
+/* ───────── Search Content ───────── */
+
+.cs-search-content {
+  margin-bottom: 16px;
+}
+
+.cs-search-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.cs-search-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2B2C30;
+}
+
+.cs-search-char-count {
+  font-size: 12px;
+  color: #888;
+}
+
+.cs-search-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s;
+  background: #f5f5f5;
+}
+
+.cs-search-textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.cs-search-textarea::placeholder {
+  color: #aaa;
+}
+
+/* ───────── Image Search Dropzone ───────── */
+
+.cs-search-dropzone {
+  border: 2px dashed #d0d0d0;
+  border-radius: 6px;
+  padding: 32px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+.cs-search-dropzone:hover,
+.cs-search-dropzone--active {
+  border-color: #1976d2;
+  background: #f0f7ff;
+}
+
+.cs-search-dropzone-text {
+  font-size: 14px;
+  color: #555;
+  margin: 0 0 4px 0;
+}
+
+.cs-search-dropzone-hint {
+  font-size: 12px;
+  color: #888;
+  margin: 0;
+}
+
+.cs-search-dropzone-camera {
+  width: 56px;
+  height: 48px;
+  margin-bottom: 8px;
+  opacity: 1;
+}
+
+/* ───────── Image Preview ───────── */
+
+.cs-search-image-preview {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.cs-search-image-preview img {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.cs-search-image-clear {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-search-image-clear:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* ───────── Search Type Selection ───────── */
+
+.cs-search-type-section {
+  margin-bottom: 16px;
+}
+
+.cs-search-type-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.cs-search-type-options {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cs-search-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0;
+  vertical-align: middle;
+  color: #444;
+  width: fit-content;
+  flex-shrink: 0;
+}
+
+.cs-search-type-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1976d2;
+  cursor: pointer;
+}
+
+.cs-search-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.cs-search-warning-icon {
+  font-size: 14px;
+}
+
+/* ───────── Divider ───────── */
+
+.cs-search-divider {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 16px 0;
+}
+
+/* ───────── Filter Section ───────── */
+
+.cs-search-filter-section {
+  margin-bottom: 16px;
+}
+
+.cs-search-filter-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.cs-search-filter-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #494B51;
+  margin-bottom: 8px;
+}
+
+.cs-search-filter-box {
+  position: relative;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 40px;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.cs-search-filter-box:hover {
+  border-color: #1976d2;
+}
+
+.cs-search-filter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  min-height: 24px;
+}
+
+.cs-search-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #333;
+}
+
+.cs-search-chip-remove {
+  background: none;
+  border: none;
+  color: #888;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0;
+  line-height: 1;
+}
+
+.cs-search-chip-remove:hover {
+  color: #d32f2f;
+}
+
+/* ───────── Filter Dropdown ───────── */
+
+.cs-search-filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.cs-search-filter-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.cs-search-filter-dropdown-item:hover {
+  background: #f5f5f5;
+}
+
+.cs-search-filter-dropdown-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #1976d2;
+}
+
+/* ───────── Top Results Section ───────── */
+
+.cs-search-results-section {
+  margin-bottom: 16px;
+}
+
+.cs-search-results-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cs-search-results-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.cs-search-results-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+}
+
+.cs-search-results-input:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.cs-search-results-input:disabled {
+  background: #f5f5f5;
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+/* ───────── Action Buttons ───────── */
+
+.cs-search-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.cs-search-btn {
+  width: 80px;
+  height: 32px;
+  padding: 8px 16px;
+  gap: 4px;
+  opacity: 1;
+  border-radius: 4px;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-search-btn--primary {
+  background: #1976d2;
+  color: white;
+  border: none;
+}
+
+.cs-search-btn--primary:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.cs-search-btn--primary:disabled {
+  background: #b0bec5;
+  cursor: default;
+}
+
+.cs-search-btn--primary.cs-search-btn--loading,
+.cs-search-btn--primary.cs-search-btn--loading:disabled {
+  width: 132px;
+  height: 32px;
+  background: #1976d2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: default;
+  opacity: 1;
+}
+
+.cs-search-btn--primary.cs-search-btn--loading:hover {
+  background: #1976d2;
+}
+
+/* Spinner icon animation for loading button */
+@keyframes cs-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.cs-search-btn--loading .cs-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid transparent;
+  border-top-color: white;
+  border-right-color: white;
+  border-radius: 50%;
+  animation: cs-spin 0.8s linear infinite;
+  margin-right: 6px;
+}
+
+.cs-search-btn--secondary {
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.cs-search-btn--secondary:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+}
+
+/* ───────── Search Disabled State ───────── */
+
+.cs-search-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.cs-search-disabled-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 16px;
+}
+
+.cs-search-disabled-title {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #2B2C30;
+  margin-bottom: 4px;
+}
+
+.cs-search-disabled-hint {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  color: #6A6D75;
+}
+
+/* ─── Media Queries ──────────────────────────────────────── */
+
+@media (max-width: 300px) {
+  .cs-search-tabs {
+    flex-direction: column;
+  }
+
+  .cs-search-tab {
+    text-align: center;
+  }
+
+  .cs-search-type-options {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

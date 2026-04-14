@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rtsp-test
+description: Live Video Search rtsp-test subchart
+version: 1.0.0
+appVersion: "1.0.0"

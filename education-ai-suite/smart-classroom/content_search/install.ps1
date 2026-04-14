@@ -1,33 +1,33 @@
 $ErrorActionPreference = "Stop"
 
+$currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+if (-not $currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Write-Host "[!] Error: Please run this script as Administrator." -ForegroundColor Red
+    exit 1
+}
 function Invoke-Cmd {
     $exe, $rest = $args
     & $exe $rest
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 }
 
+function Invoke-Cmd-Wait {
+    param(
+        [string]$Executable,
+        [string[]]$Arguments
+    )
+    Write-Host "[*] Executing: $Executable $Arguments" -ForegroundColor Gray
+    $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -Wait -PassThru -NoNewWindow
+    if ($process.ExitCode -ne 0) {
+        Write-Host "[!] Process failed with exit code $($process.ExitCode)" -ForegroundColor Red
+        exit $process.ExitCode
+    }
+}
+
 # --- Proxy settings ---
 Write-Host "HTTP_PROXY  = $env:HTTP_PROXY"
 Write-Host "HTTPS_PROXY = $env:HTTPS_PROXY"
 Write-Host "NO_PROXY    = $env:NO_PROXY"
-
-$venvDir    = Join-Path $PSScriptRoot "venv_content_search"
-$venvPython = Join-Path $PSScriptRoot "venv_content_search\Scripts\python.exe"
-
-# --- Create venv ---
-if (-not (Test-Path $venvPython)) {
-    Write-Host "Creating venv (Python 3.12 required)..."
-    py -3.12 -m venv $venvDir
-} else {
-    Write-Host "Venv already exists, skipping creation."
-}
-
-# --- Install dependencies ---
-Write-Host "Upgrading pip..."
-Invoke-Cmd $venvPython -m pip install --upgrade pip --quiet
-
-Write-Host "Installing requirements_providers.txt..."
-Invoke-Cmd $venvPython -m pip install -r (Join-Path $PSScriptRoot "requirements_providers.txt") --quiet
 
 # --- Install Tesseract OCR ---
 $tesseractExe = "C:\Program Files\Tesseract-OCR\tesseract.exe"
@@ -81,17 +81,4 @@ if ($currentPath -notlike "*poppler*") {
     Write-Host "Poppler already in user PATH, skipping."
 }
 
-# --- Download MinIO ---
-$minioDir = Join-Path $PSScriptRoot "providers/minio_wrapper"
-$minioExe = Join-Path $minioDir "minio.exe"
-if (Test-Path $minioExe) {
-    Write-Host "minio.exe already exists, skipping download."
-} else {
-    $minioUrl = "https://dl.min.io/server/minio/release/windows-amd64/minio.exe"
-    Write-Host "Downloading minio.exe..."
-    if (-not (Test-Path $minioDir)) { New-Item -ItemType Directory -Path $minioDir | Out-Null }
-    Invoke-WebRequest -Uri $minioUrl -OutFile $minioExe -UseBasicParsing
-    Write-Host "minio.exe downloaded to $minioExe"
-}
-
-Write-Host "Installation complete. Run start_services.py to launch services."
+Write-Host "Installation complete."

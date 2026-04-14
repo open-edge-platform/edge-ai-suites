@@ -9,9 +9,11 @@
 
 # Check if ROS2 is installed
 if [ -f "/opt/ros/humble/setup.bash" ]; then
+    # shellcheck source=/dev/null
     source /opt/ros/humble/setup.bash
     echo "✅ ROS2 Humble sourced"
 elif [ -f "/opt/ros/jazzy/setup.bash" ]; then
+    # shellcheck source=/dev/null
     source /opt/ros/jazzy/setup.bash
     echo "✅ ROS2 Jazzy sourced"
 else
@@ -31,4 +33,4 @@ fi
 
 echo ""
 echo "ROS2 environment ready for monitoring!"
-echo "Run: make monitor-remote REMOTE_IP=<ip> REMOTE_USER=<user>"
+echo "Run: uv run python src/monitor_stack.py --remote-ip <ip> --remote-user <user>"

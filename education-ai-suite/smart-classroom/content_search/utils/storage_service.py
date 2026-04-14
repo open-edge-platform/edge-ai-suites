@@ -6,6 +6,7 @@
 import uuid
 import logging
 from fastapi import UploadFile
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -18,16 +19,15 @@ class StorageService:
 
     def _try_initialize(self):
         try:
-            from providers.minio_wrapper.minio_client import MinioStore
-            self._store = MinioStore.from_config()
-            self._store.ensure_bucket()
+            from providers.local_storage.store import LocalStore
+            self._store = LocalStore.from_config()
             self._error_msg = None
         except (ImportError, ModuleNotFoundError) as e:
             self._error_msg = f"Component missing: {str(e)}"
-            logger.error(f"❌ MinIO component load failed: {self._error_msg}")
+            logger.error(f"Storage component load failed: {self._error_msg}")
         except Exception as e:
             self._error_msg = f"Initialization failed: {str(e)}"
-            logger.error(f"❌ MinIO connection failed: {self._error_msg}")
+            logger.error(f"Storage initialization failed: {self._error_msg}")
 
     @property
     def is_available(self) -> bool:
@@ -38,7 +38,6 @@ class StorageService:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         run_id = str(uuid.uuid4())
         main_type = file.content_type.split('/')[0]
-        # 1. Build MinIO standard path
         object_key = self._store.build_raw_object_key(
             run_id=run_id,
             asset_type=main_type,
@@ -49,7 +48,7 @@ class StorageService:
         self._store.put_bytes(object_key, content, content_type=file.content_type)
 
         return {
-            "source": "minio",
+            "source": "local",
             "file_key": object_key,
             "bucket": self._store.bucket,
             "filename": file.filename,
@@ -60,10 +59,39 @@ class StorageService:
         if not self.is_available:
             raise RuntimeError(f"Storage Service unavailable: {self._error_msg}")
         try:
-            response = self._store.client.get_object(self._store.bucket, file_key)
-            return response
+            return self._store.get_object_stream(file_key)
         except Exception as e:
-            logger.error(f"❌ Failed to get file {file_key}: {str(e)}")
+            logger.error(f"Failed to get file {file_key}: {str(e)}")
+            raise e
+
+    async def get_file_content(self, file_key: str, bucket_name: Optional[str] = None) -> bytes:
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        try:
+            return self._store.get_bytes(file_key)
+        except Exception as e:
+            logger.error(f"Failed to read content for {file_key}: {str(e)}")
+            raise e
+
+    def file_exists(self, file_key: str) -> bool:
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        try:
+            return self._store.object_exists(file_key)
+        except Exception as e:
+            logger.error(f"Error checking existence for {file_key}: {str(e)}")
+            return False
+
+    def delete_file(self, file_key: str, missing_ok: bool = True) -> bool:
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        try:
+            result = self._store.delete_object(file_key, missing_ok=missing_ok)
+            if result:
+                logger.info(f"Successfully deleted file: {file_key}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to delete file {file_key}: {str(e)}")
             raise e
 
 storage_service = StorageService()

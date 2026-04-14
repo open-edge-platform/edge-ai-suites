@@ -1,0 +1,108 @@
+global:
+  volumeHostPath: ''
+  usePvc: true
+  keepPvc: false
+  sharedPvcName: ''
+  env:
+    defaultClipDuration: '-1'
+    defaultNumFrames: '64'
+    defaultStartOffsetSec: '0'
+    embeddingDevice: CPU
+    embeddingModelName: ''
+    embeddingUseOv: 'true'
+    ovModelsDir: /app/ov_models
+    ovPerformanceMode: THROUGHPUT
+  gpu:
+    multimodalEmbeddingEnabled: false
+    vdmsDataprepEnabled: false
+    key: ''
+    device: ''
+    hostPath: /dev/dri
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  vssStackTag: ''
+images:
+  multimodalEmbeddingServing:
+    repository: intel/multimodal-embedding-serving
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+modelPvc:
+  enabled: true
+  existingClaim: ''
+  storageClassName: ''
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  failureThreshold: 180
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+podAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    - labelSelector:
+        matchExpressions:
+          - key: app
+            operator: In
+            values:
+              - vdms-dataprep
+      topologyKey: kubernetes.io/hostname

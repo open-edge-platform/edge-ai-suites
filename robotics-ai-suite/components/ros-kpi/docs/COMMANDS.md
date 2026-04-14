@@ -21,20 +21,26 @@ Intel-operated generative artificial intelligence solutions.
 
 | Task | Command | Duration |
 |------|---------|----------|
-| Quick check | `make quick-check` | 30s |
-| Full monitor | `make monitor` | 60s |
-| Full monitor, PID mode | `make monitor-pid` | 60s |
-| Monitor specific node | `make monitor NODE=/my_node` | 60s |
-| Extended session | `make monitor-long` | 5 min |
-| Graph only | `make graph-only` | 60s |
-| Resources only (threads) | `make resources-threads` | 60s |
-| Resources only (PIDs) | `make resources-pid` | 60s |
-| Remote system | `make monitor-remote REMOTE_IP=<ip>` | 60s |
-| Remote system, PID mode | `make monitor-remote-pid REMOTE_IP=<ip>` | 60s |
-| Pipeline graph (PNG) | `make pipeline-graph` | — |
-| Pipeline graph (specific) | `make pipeline-graph SESSION=<name>` | — |
-| List sessions | `make list-sessions` | — |
-| Re-visualize last session | `make visualize-last` | — |
+| Quick check | `uv run python src/monitor_stack.py --duration 30` | 30s |
+| Full monitor | `uv run python src/monitor_stack.py` | until Ctrl-C |
+| Full monitor, PID mode | `uv run python src/monitor_stack.py --pid-only` | until Ctrl-C |
+| Monitor specific node | `uv run python src/monitor_stack.py --node /my_node` | until Ctrl-C |
+| Timed session | `uv run python src/monitor_stack.py --duration 300` | 5 min |
+| Graph only | `uv run python src/monitor_stack.py --graph-only` | until Ctrl-C |
+| Resources only (threads) | `uv run python src/monitor_stack.py --resources-only` | until Ctrl-C |
+| Resources only (PIDs) | `uv run python src/monitor_stack.py --resources-only --pid-only` | until Ctrl-C |
+| Remote system | `uv run python src/monitor_stack.py --remote-ip <ip>` | until Ctrl-C |
+| Remote system, PID mode | `uv run python src/monitor_stack.py --remote-ip <ip> --pid-only` | until Ctrl-C |
+| Pipeline graph (PNG) | `uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json --no-show` | — |
+| Pipeline graph (interactive) | `uv run python src/visualize_graph.py <session>/graph_timing.csv --show` | — |
+| List sessions | `uv run python src/monitor_stack.py --list-sessions` | — |
+| Re-visualize timing | `uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show` | — |
+| Re-visualize resources | `uv run python src/visualize_resources.py <session>/resource_usage.log --cores --heatmap --show` | — |
+| Trigger latency analysis | `uv run python src/analyze_trigger_latency.py` | — |
+| Trigger latency + JSON output | `uv run python src/analyze_trigger_latency.py --json-out SESSION/kpi.json` | — |
+| Trigger latency from rosbag | `uv run python src/analyze_trigger_latency.py --bag <bag_dir>` | — |
+| Cross-run aggregate summary | `uv run python src/aggregate_kpi.py BENCH_DIR` | — |
+| Aggregate + CSV export | `uv run python src/aggregate_kpi.py BENCH_DIR --csv-out BENCH_DIR/results.csv` | — |
 | Clean all data | `make clean` | — |
 
 ---
@@ -70,14 +76,11 @@ uv run python src/monitor_stack.py --resources-only --pid-only --duration 60
 
 ---
 
-## Make Targets
-
-All targets accept optional `NODE=`, `DURATION=`, `INTERVAL=`, `SESSION=`,
-`REMOTE_IP=`, and `REMOTE_USER=` variables.
+## Common Invocations
 
 ```bash
-make monitor NODE=/slam_toolbox DURATION=120 INTERVAL=2
-make monitor-remote REMOTE_IP=192.168.1.100 NODE=/slam_toolbox REMOTE_USER=ros
+uv run python src/monitor_stack.py --node /slam_toolbox --duration 120 --interval 2
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --node /slam_toolbox --remote-user ros
 ```
 
 ---
@@ -131,10 +134,9 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --no-show --outp
 uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 ```
 
-Or via make:
 ```bash
-make pipeline-graph
-make pipeline-graph SESSION=20260306_154140
+uv run python src/visualize_graph.py monitoring_sessions/20260306_154140/graph_timing.csv \
+  --topology monitoring_sessions/20260306_154140/graph_topology.json --show
 ```
 
 ---
@@ -159,8 +161,8 @@ Monitor a ROS2 pipeline running on a **separate machine**.
 - Same RMW (CycloneDDS or FastDDS) installed locally
 
 ```bash
-make monitor-remote REMOTE_IP=192.168.1.100
-make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ros NODE=/slam_toolbox
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100
+uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --remote-user ros --node /slam_toolbox
 uv run python src/monitor_stack.py --remote-ip 192.168.1.100 --pid-only --duration 120
 ```
 
@@ -175,7 +177,7 @@ Results are stored and visualized **locally** on the monitoring machine.
 
 ## Session Data Layout
 
-```
+```text
 monitoring_sessions/
 └── 20260209_143022/
     ├── session_info.txt
@@ -192,9 +194,9 @@ monitoring_sessions/
 |---------|-----|
 | No ROS2 processes found | Run `ros2 node list` to verify nodes are up |
 | Monitor exits immediately | Source ROS2: `source /opt/ros/humble/setup.bash` |
-| Visualizations not generated | Run `make visualize-last` manually |
-| Permission denied | Scripts invoke via `uv run python src/...` — run `uv sync` if modules are missing |
+| Visualizations not generated | `uv run python src/visualize_timing.py <session>/graph_timing.csv --show` |
+| Permission denied | Run `uv sync` if modules are missing |
 | Remote: no data | Check SSH auth and matching `ROS_DOMAIN_ID` |
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 core. Check **Avg Cores** column. |
-| `grafana-export` port in use | `fuser -k 9092/tcp && make grafana-export SESSION=<name>` |
+| Prometheus exporter port in use | `fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir <session>` |
 | Graph click does nothing | Use `--show` flag (not `--no-show`) to enable TkAgg interactive mode |

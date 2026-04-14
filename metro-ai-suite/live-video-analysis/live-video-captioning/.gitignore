@@ -6,3 +6,5 @@ ov_detection_models
 shared/
 *__pycache__*
 app/live_video_captioning.egg-info/*
+charts/Chart.lock
+charts/charts/*.tgz

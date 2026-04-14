@@ -33,6 +33,41 @@ def generate_unique_id():
     return uuid.uuid4().int & 0x7FFFFFFFFFFFFFFF
 
 
+def file_key_to_path(file_key, bucket_name):
+    """Convert a storage-relative file_key to a full local:// file_path URI."""
+    return f"local://{bucket_name}/{file_key}"
+
+
+def file_path_to_key(file_path):
+    """Convert a full local:// file_path URI to a storage-relative file_key.
+
+    Strips the ``local://<bucket_name>/`` prefix.  If the path does not start
+    with ``local://`` it is returned unchanged.
+    """
+    prefix = "local://"
+    if not file_path.startswith(prefix):
+        return file_path
+    # Strip "local://<bucket_name>/"
+    rest = file_path[len(prefix):]
+    idx = rest.find("/")
+    if idx == -1:
+        return rest
+    return rest[idx + 1:]
+
+
+def extract_bucket_name(file_path):
+    """Extract the bucket name from a ``local://<bucket>/…`` URI.
+
+    Returns ``None`` if the path does not follow the expected scheme.
+    """
+    prefix = "local://"
+    if not file_path.startswith(prefix):
+        return None
+    rest = file_path[len(prefix):]
+    idx = rest.find("/")
+    return rest[:idx] if idx != -1 else rest
+
+
 def encode_image_to_base64(image, format="PNG", add_header=False):
     """
     Encode an image to a base64 string.
@@ -77,6 +112,7 @@ class DocxParagraphPicturePartitioner:
     Custom partitioner to extract images from DOCX paragraphs.
     This preserves images that might be lost with standard parsing.
     """
+    output_dir: str = os.path.join(os.getcwd(), "logs", "extracted_images")
 
     @classmethod
     def iter_elements(cls, paragraph: Paragraph, opts: DocxPartitionerOptions) -> Iterator[Image]:
@@ -84,8 +120,7 @@ class DocxParagraphPicturePartitioner:
             return
         imgs = paragraph._element.xpath(".//pic:pic")
         if imgs:
-            img_output_dir = "extracted_images"
-            os.makedirs(img_output_dir, exist_ok=True)
+            os.makedirs(cls.output_dir, exist_ok=True)
             for img in imgs:
                 try:
                     embed = img.xpath(".//a:blip/@r:embed")[0]
@@ -93,7 +128,7 @@ class DocxParagraphPicturePartitioner:
                     image_blob = related_part.blob
                     image = PILImage.open(BytesIO(image_blob))
                     image_filename = f"{embed}_{related_part.sha1}.png"
-                    image_path = os.path.join(img_output_dir, image_filename)
+                    image_path = os.path.join(cls.output_dir, image_filename)
                     image.save(image_path)
                     element_metadata = ElementMetadata(image_path=image_path)
                     yield Image(text="IMAGE", metadata=element_metadata)
@@ -115,6 +150,6 @@ def get_file_extension(file_path: str) -> str:
 def is_supported_file(file_path: str) -> bool:
     supported_extensions = {
         "txt", "pdf", "docx", "doc", "pptx", "ppt", "xlsx", "xls",
-        "html", "htm", "xml", "md", "rst",
+        "html", "htm", "xml", "md",
     }
     return get_file_extension(file_path) in supported_extensions

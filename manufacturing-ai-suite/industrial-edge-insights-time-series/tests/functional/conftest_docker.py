@@ -38,7 +38,7 @@ def setup_docker_environment(request):
     Yields:
         dict: A dictionary with setup information and helper functions
     """
-    logger.info(f"Setting up Docker environment for test: {request.node.name}")
+    logger.debug(f"Setting up Docker environment for test: {request.node.name}")
     
     # Store original directory to return to it later
     original_dir = os.getcwd()
@@ -49,7 +49,7 @@ def setup_docker_environment(request):
     if not docker_utils.update_env_file(env_file_path, case):
         logger.error("Failed to update .env file with credentials")
         pytest.fail("Failed to update environment file during setup")
-    logger.info("Updated .env file with valid credentials")
+    logger.debug("Updated .env file with valid credentials")
         
     # Create helper functions for the test to use
     def deploy_mqtt(app=None, num_of_streams=None):
@@ -59,13 +59,13 @@ def setup_docker_environment(request):
             app (str): Optional app parameter to specify which application to use
             num_of_streams (int): Optional number of streams parameter for multi-stream deployments
         """
-        logger.info(f"Deploying with MQTT ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
+        logger.debug(f"Deploying with MQTT ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
         result = docker_utils.invoke_make_up_mqtt_ingestion(app=app, num_of_streams=num_of_streams)
         if not result:
             logger.error(f"Failed to deploy MQTT ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
             pytest.fail("MQTT deployment failed during test execution")
             return False
-        logger.info(f"Successfully deployed MQTT ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
+        logger.debug(f"Successfully deployed MQTT ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
         return True
     
     def deploy_opcua(app=None, num_of_streams=None):
@@ -75,13 +75,13 @@ def setup_docker_environment(request):
             app (str): Optional app parameter to specify which application to use
             num_of_streams (int): Optional number of streams parameter for multi-stream deployments
         """
-        logger.info(f"Deploying with OPC-UA ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
+        logger.debug(f"Deploying with OPC-UA ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
         result = docker_utils.invoke_make_up_opcua_ingestion(app=app, num_of_streams=num_of_streams)
         if not result:
             logger.error(f"Failed to deploy OPC-UA ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
             pytest.fail("OPC-UA deployment failed during test execution")
             return False
-        logger.info(f"Successfully deployed OPC-UA ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
+        logger.debug(f"Successfully deployed OPC-UA ingestion{f' for app {app}' if app else ''}{f' with {num_of_streams} streams' if num_of_streams else ''}")
         return True
         
     # Create a context object with all relevant information and helper functions
@@ -101,14 +101,14 @@ def setup_docker_environment(request):
     yield context
     
     # Cleanup after test is done
-    logger.info(f"Cleaning up Docker environment after test: {request.node.name}")
+    logger.debug(f"Cleaning up Docker environment after test: {request.node.name}")
     
     # Run make down to clean up
     if not docker_utils.invoke_make_down():
         logger.error("Failed to clean up Docker containers")
         pytest.fail("Docker cleanup failed after test completion")
     else:
-        logger.info("Successfully cleaned up Docker containers")
+        logger.debug("Successfully cleaned up Docker containers")
     
     # Return to original directory
     os.chdir(original_dir)
@@ -129,7 +129,7 @@ def setup_multimodal_environment(request):
     Yields:
         dict: A dictionary with setup information and helper functions
     """
-    logger.info(f"Setting up multimodal environment for test: {request.node.name}")
+    logger.debug(f"Setting up multimodal environment for test: {request.node.name}")
     
     # Store original directory to return to it later
     original_dir = os.getcwd()
@@ -139,7 +139,7 @@ def setup_multimodal_environment(request):
     
     try:
         os.chdir(multimodal_dir)
-        logger.info(f"✓ Successfully changed to: {multimodal_dir}")
+        logger.debug(f"✓ Successfully changed to: {multimodal_dir}")
         
         # Step to create valid credentials in the .env file
         case = docker_utils.generate_multimodal_test_credentials(case_type="valid")
@@ -152,31 +152,31 @@ def setup_multimodal_environment(request):
             logger.error("S3_STORAGE_PASSWORD is missing or empty in generated credentials")
             pytest.fail("S3_STORAGE_PASSWORD missing during multimodal setup")
             
-        logger.info(f"Generated S3_STORAGE_USERNAME: [REDACTED]")
+        logger.debug(f"Generated S3_STORAGE_USERNAME: [REDACTED]")
         
         env_file_path = os.path.join(multimodal_dir, ".env")
         if not docker_utils.update_env_file(env_file_path, case):
             logger.error("Failed to update .env file with credentials for multimodal")
             pytest.fail("Failed to update multimodal environment file during setup")
-        logger.info("Updated .env file with valid credentials for multimodal")
+        logger.debug("Updated .env file with valid credentials for multimodal")
         
         # Update HOST_IP with system IP address for multimodal deployment
-        logger.info("Updating HOST_IP with system IP address for multimodal deployment")
+        logger.debug("Updating HOST_IP with system IP address for multimodal deployment")
         if not common_utils.update_host_ip_in_env(env_file_path):
             logger.warning("Failed to update HOST_IP in .env file, using default value")
         else:
-            logger.info("✓ Successfully updated HOST_IP with system IP address")
+            logger.debug("✓ Successfully updated HOST_IP with system IP address")
             
         # Create helper functions for the test to use
         def deploy_multimodal():
             """Deploy multimodal stack with vision and time series analytics"""
-            logger.info("Deploying multimodal stack")
+            logger.debug("Deploying multimodal stack")
             result = docker_utils.invoke_make_up_in_current_dir()
             if not result:
                 logger.error("Failed to deploy multimodal stack")
                 pytest.fail("Multimodal deployment failed during test execution")
                 return False
-            logger.info("Successfully deployed multimodal stack")
+            logger.debug("Successfully deployed multimodal stack")
             return True
         
         # Create a context object with all relevant information and helper functions
@@ -197,14 +197,14 @@ def setup_multimodal_environment(request):
         
     finally:
         # Cleanup after test is done
-        logger.info(f"Cleaning up multimodal environment after test: {request.node.name}")
+        logger.debug(f"Cleaning up multimodal environment after test: {request.node.name}")
         
         # Run make down to clean up (from multimodal directory)
         if not docker_utils.invoke_make_down_in_current_dir():
             logger.error("Failed to clean up multimodal Docker containers")
             pytest.fail("Multimodal Docker cleanup failed after test completion")
         else:
-            logger.info("Successfully cleaned up multimodal Docker containers")
+            logger.debug("Successfully cleaned up multimodal Docker containers")
         
         # Return to original directory
         os.chdir(original_dir)

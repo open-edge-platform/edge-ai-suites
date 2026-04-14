@@ -3,33 +3,36 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks
+import urllib.parse
+import mimetypes
+import json
+from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks, Form
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from utils.database import get_db
 from utils.task_service import task_service
 from utils.storage_service import storage_service
+from utils.asset_service import asset_service
 from utils.search_service import search_service
-import urllib.parse
-import mimetypes
-from utils.core_responses import resp_200
+from utils.core_responses import resp_200, fail_task_not_found, fail_process_failed, fail_processing
+from pydantic import BaseModel, Field
+from typing import Optional, Dict, Any
 
 router = APIRouter()
 
-# @router.get("/files")
-
 @router.post("/upload")
-async def upload_video(background_tasks: BackgroundTasks, file: UploadFile = File(...), db: Session = Depends(get_db)):
-    minio_payload = await storage_service.upload_and_prepare_payload(file)
-
-    result = await task_service.handle_file_upload(db, minio_payload, background_tasks, should_ingest=False)
-    return resp_200(
-        data={
-            "task_id": str(result["task_id"]),
-            "status": result["status"]
-        },
-        message="File received, processing started."
+async def upload_video(
+    background_tasks: BackgroundTasks, 
+    file: UploadFile = File(...), 
+    db: Session = Depends(get_db)
+):
+    result = await asset_service.process_simple_upload(
+        db=db,
+        file=file,
+        background_tasks=background_tasks
     )
+    return resp_200(data=result)
 
 @router.post("/ingest")
 async def ingest_existing_file(
@@ -37,16 +40,30 @@ async def ingest_existing_file(
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    bucket_name = payload.get("bucket_name", "content-search")
     file_key = payload.get("file_key")
     if not file_key:
-        raise HTTPException(status_code=400, detail="file_key is required")
+        return resp_200(code=40000, message="file_key is required")
 
-    minio_payload = {
+    bucket_name = payload.get("bucket_name", "content-search")
+
+    meta = payload.get("meta", {})
+    if isinstance(meta, str):
+        try:
+            meta = json.loads(meta)
+        except:
+            meta = {"raw_info": meta}
+
+    storage_payload = {
         "file_key": file_key,
         "bucket_name": bucket_name,
+        "meta": meta,
+        "vs_options": {
+            "prompt": payload.get("prompt"),
+            "chunk_duration_s": payload.get("chunk_duration")
+        }
     }
-    result = await task_service.handle_file_ingest(db, minio_payload, background_tasks)
+
+    result = await task_service.handle_file_ingest(db, storage_payload, background_tasks)
 
     return resp_200(
         data={
@@ -57,19 +74,22 @@ async def ingest_existing_file(
         message="Ingestion process started for existing file"
     )
 
+class IngestTextRequest(BaseModel):
+    text: Optional[str] = None
+    bucket_name: Optional[str] = "content-search"
+    file_key: Optional[str] = None
+    meta: Dict[str, Any] = Field(default_factory=dict)
+
 @router.post("/ingest-text")
 async def ingest_raw_text(
-    payload: dict,
+    request: IngestTextRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
-    text = payload.get("text")
-    if not text:
-        raise HTTPException(status_code=400, detail="Text content is required")
 
     result = await task_service.handle_text_ingest(
         db,
-        payload,
+        request.model_dump(), 
         background_tasks
     )
 
@@ -78,35 +98,33 @@ async def ingest_raw_text(
             "task_id": str(result["task_id"]),
             "status": result["status"]
         },
-        message="Text ingestion started"
+        message="Text ingestion task created successfully"
     )
 
 @router.post("/upload-ingest")
 async def upload_file_with_ingest(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...), 
+    file: UploadFile = File(...),
+    meta: str = Form(None),
+    prompt: str = Form(None),
+    chunk_duration: int = Form(None),
     db: Session = Depends(get_db)
 ):
-    minio_payload = await storage_service.upload_and_prepare_payload(file)
-    result = await task_service.handle_file_upload(db, minio_payload, background_tasks, should_ingest=True)
-    return resp_200(
-        data={
-            "task_id": str(result["task_id"]),
-            "status": result["status"],
-            "file_key": minio_payload["file_key"]
-        },
-        message="Upload and Ingest started"
+    meta_data = asset_service.parse_meta(meta)
+
+    result = await asset_service.process_upload_and_ingest(
+        db, file, background_tasks,
+        meta=meta_data,
+        prompt=prompt,
+        chunk_duration=chunk_duration
     )
+    return resp_200(data=result)
 
 @router.post("/search")
-async def file_search(payload: dict):
-    query = payload.get("query")
-    limit = payload.get("max_num_results", 3)
-    if not query:
-        raise HTTPException(status_code=400, detail="Query cannot be empty")
+async def file_search(payload: dict, db: Session = Depends(get_db)):
+    result = await task_service.handle_sync_search(db, payload)
 
-    search_data = await search_service.semantic_search(query, limit)
-    return resp_200(data=search_data, message="Resource found")
+    return resp_200(data=result, message="Search completed")
 
 @router.get("/download")
 async def download_file(file_key: str):
@@ -130,3 +148,51 @@ async def download_file(file_key: str):
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
+
+@router.delete("/cleanup-task/{task_id}")
+async def delete_specific_task(
+    task_id: str,
+    db: Session = Depends(get_db)
+):
+    task_sql = text("SELECT id, payload FROM edu_ai_tasks WHERE id = :tid")
+    task_row = db.execute(task_sql, {"tid": task_id}).fetchone()
+    if not task_row:
+        return resp_200(**fail_task_not_found())
+    record = dict(task_row._mapping)
+    current_status = record.get("status")
+    if current_status == "processing":
+        return resp_200(**fail_processing())
+    try:
+        raw_payload = record.get('payload')
+        payload = json.loads(raw_payload) if isinstance(raw_payload, str) else (raw_payload or {})
+    except Exception:
+        payload = {}
+
+    f_path = payload.get("file_key")
+    f_bucket = payload.get("bucket") or payload.get("bucket_name")
+    f_hash = payload.get("file_hash")
+
+    try:
+        if storage_service.file_exists(f_path):
+            storage_service.delete_file(f_path)
+
+        if await search_service.check_file_exists(f_path, bucket_name=f_bucket):
+            await search_service.delete_file_index(f_path, bucket_name=f_bucket)
+
+        if f_hash:
+            db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash.strip()})
+
+        db.execute(text("DELETE FROM edu_ai_tasks WHERE id = :tid"), {"tid": task_id.strip()})
+        db.commit()
+
+        return resp_200(
+            message="Cleanup completed",
+            data={
+                "task_id": task_id,
+                "status": "COMPLETED"
+            }
+        )
+
+    except Exception as e:
+        db.rollback()
+        return resp_200(**fail_process_failed(str(e)))

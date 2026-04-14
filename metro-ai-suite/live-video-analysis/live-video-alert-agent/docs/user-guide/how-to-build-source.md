@@ -10,10 +10,15 @@ To build the Docker image for `Live Video Alert` application, follow these steps
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
      ```
 
-2. Run the following `docker compose` command:
+2. [Optional] To include third-party copyleft source packages in the image, export the environment variable before building:
      ```bash
-     docker compose build
+     export COPYLEFT_SOURCES=true
      ```
+
+3. Run the following `docker compose` command:
+      ```bash
+      docker compose build
+      ```
 
 ## Run the Application
 - Run the application using the following command:

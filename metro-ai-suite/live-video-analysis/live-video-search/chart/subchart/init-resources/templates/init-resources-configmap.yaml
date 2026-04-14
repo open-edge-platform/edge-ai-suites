@@ -1,0 +1,19 @@
+{{- if and .Values.initResources.enabled (ne (.Values.global.videos.source | default "download") "local") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "lvs.initresources.fullname" . }}-init-resources
+  labels:
+    {{- include "lvs.initresources.labels" . | nindent 4 }}
+data:
+  init.sh: |
+    #!/bin/sh
+    set -eu
+    mkdir -p /videos
+    CURL_OPTS="-fL --retry 6 --retry-delay 5 --retry-all-errors --connect-timeout 10 --max-time 180"
+    echo "Downloading sample videos to /videos using resilient curl settings..."
+    curl $CURL_OPTS -o /videos/backyard.mp4 https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/live-video-analysis/live-video-search/config/videos/backyard.mp4
+    curl $CURL_OPTS -o /videos/garage.mp4 https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/live-video-analysis/live-video-search/config/videos/garage.mp4
+    curl $CURL_OPTS -o /videos/livingroom.mp4 https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/live-video-analysis/live-video-search/config/videos/livingroom.mp4
+    ls -lah /videos
+{{- end }}

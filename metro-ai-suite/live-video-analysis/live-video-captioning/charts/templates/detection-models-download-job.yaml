@@ -1,0 +1,64 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Job that downloads object-detection models into the detection-models PVC.
+Runs only when the detection pipeline is enabled.
+*/}}
+{{- $detectionEnabled := eq (lower (toString (index .Values "video-caption-service" "env" "enableDetectionPipeline"))) "true" -}}
+{{- if and $detectionEnabled .Values.global.detectionModels }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "live-video-captioning.fullname" . }}-detection-models-download
+  labels:
+    {{- include "live-video-captioning.labels" . | nindent 4 }}
+    app.kubernetes.io/component: detection-model-downloader
+spec:
+  backoffLimit: 0
+  ttlSecondsAfterFinished: {{ .Values.detectionModelsDownload.ttlSecondsAfterFinished }}
+  {{- if .Values.detectionModelsDownload.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ .Values.detectionModelsDownload.activeDeadlineSeconds }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "live-video-captioning.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: detection-model-downloader
+    spec:
+      restartPolicy: Never
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      containers:
+        - name: detection-model-downloader
+          image: "{{ .Values.detectionModelsDownload.image.repository }}:{{ .Values.detectionModelsDownload.image.tag }}"
+          imagePullPolicy: {{ .Values.detectionModelsDownload.image.pullPolicy }}
+          command:
+            - /bin/bash
+            - /scripts/download.sh
+          env:
+            - name: DETECTION_SCRIPT_URL
+              value: {{ .Values.detectionModelsDownload.scriptUrl | quote }}
+            - name: DETECTION_MODEL_COUNT
+              value: {{ len .Values.global.detectionModels | quote }}
+            {{- range $i, $model := .Values.global.detectionModels }}
+            - name: DETECTION_MODEL_{{ $i }}_NAME
+              value: {{ $model | quote }}
+            {{- end }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: detection-models
+              mountPath: /detection_models
+            - name: download-script
+              mountPath: /scripts
+          resources:
+            {{- toYaml .Values.detectionModelsDownload.resources | nindent 12 }}
+      volumes:
+        - name: detection-models
+          persistentVolumeClaim:
+            claimName: {{ include "live-video-captioning.fullname" . }}-detection-models
+        - name: download-script
+          configMap:
+            name: {{ include "live-video-captioning.fullname" . }}-detection-models-download-script
+            defaultMode: 0755
+{{- end }}

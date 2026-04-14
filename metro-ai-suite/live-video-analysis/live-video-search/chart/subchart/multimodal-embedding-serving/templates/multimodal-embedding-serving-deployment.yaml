@@ -1,0 +1,136 @@
+{{- $gpu := default (dict) .Values.global.gpu -}}
+{{- $embedGpuEnabled := default false (index $gpu "multimodalEmbeddingEnabled") -}}
+{{- $gpuHostPath := default "/dev/dri" (index $gpu "hostPath") -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: multimodal-embedding-serving
+  labels:
+    {{- include "lvs.mmes.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: multimodal-embedding-serving
+  template:
+    metadata:
+      labels:
+        app: multimodal-embedding-serving
+        {{- include "lvs.mmes.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if or .Values.affinity .Values.podAffinity }}
+      affinity:
+        {{- with .Values.affinity }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.podAffinity }}
+        podAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: multimodal-embedding-serving
+          image: {{ include "lvs.mmes.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.multimodalEmbeddingServing.repository .Values.imageOverride.repository) "tag" (default (include "lvs.mmes.vssTag" .) .Values.imageOverride.tag)) }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: multimodal-embedding-serving-config
+          ports:
+            - containerPort: 8000
+              name: http
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $embedGpuEnabled }}
+          resources:
+            requests:
+              {{ .Values.global.gpu.key }}: 1
+            limits:
+              {{ .Values.global.gpu.key }}: 1
+          {{- else if .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: volume-data
+              mountPath: /home/appuser/.cache/huggingface
+              subPath: huggingface
+            {{- if .Values.modelPvc.enabled }}
+            - name: models-data
+              mountPath: {{ .Values.global.env.ovModelsDir }}
+              subPath: ovmodels
+            {{- else }}
+            - name: volume-data
+              mountPath: {{ .Values.global.env.ovModelsDir }}
+              subPath: ovmodels
+            {{- end }}
+            - name: volume-data
+              mountPath: /tmp/dataprep
+              subPath: tmpvideos
+            {{- if $embedGpuEnabled }}
+            - name: dev-dri
+              mountPath: /dev/dri
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.modelPvc.enabled }}
+        - name: models-data
+          {{- if .Values.modelPvc.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.modelPvc.existingClaim }}
+          {{- else if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.mmes.fullname" . }}-models-pvc
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- end }}
+        - name: volume-data
+          {{- if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.global.sharedPvcName | default "lvs-pvc" }}
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if $embedGpuEnabled }}
+        - name: dev-dri
+          hostPath:
+            path: {{ $gpuHostPath }}
+            type: Directory
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

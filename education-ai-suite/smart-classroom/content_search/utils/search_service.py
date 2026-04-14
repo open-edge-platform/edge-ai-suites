@@ -3,19 +3,28 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import os
 import httpx
 import logging
+import traceback
 from utils.config import settings
 
 logger = logging.getLogger(__name__)
 
 class SearchService:
     def __init__(self):
-        self.base_url = settings.SEARCH_SERVICE_BASE_URL
+        host = os.getenv("INGEST_HOST", "127.0.0.1")
+        port = os.getenv("INGEST_PORT", "9990")
+
+        self.base_url = f"http://{host}:{port}"
+
         self.ingest_url = f"{self.base_url}/v1/dataprep/ingest"
         self.ingest_text_url = f"{self.base_url}/v1/dataprep/ingest_text"
         self.retrieval_url = f"{self.base_url}/v1/retrieval"
-        self.default_bucket = settings.MINIO_DEFAULT_BUCKET
+        self.get_url = f"{self.base_url}/v1/dataprep/get"
+        self.delete_url = f"{self.base_url}/v1/dataprep/delete"
+
+        self.default_bucket = getattr(settings, "STORAGE_DEFAULT_BUCKET", None) or os.getenv("STORAGE_BUCKET", "content-search")
 
     async def trigger_ingest(self, file_path: str, bucket_name: str = None, meta: dict = None, is_directory: bool = False):
         target_bucket = bucket_name or self.default_bucket
@@ -27,7 +36,6 @@ class SearchService:
         }
         async with httpx.AsyncClient() as client:
             try:
-                # Ingest maybe slow
                 response = await client.post(self.ingest_url, json=payload, timeout=300.0)
                 response.raise_for_status()
                 logger.info(f"Successfully triggered ingest for {file_path}")
@@ -53,21 +61,52 @@ class SearchService:
                 logger.error(f"Search service ingest_text error: {str(e)}")
                 return {"error": str(e)}
 
-    async def semantic_search(self, query: str, limit: int = 3, filters: dict = None):
-        payload = {
-            "query": query, 
-            "max_num_results": limit
-        }
-        if filters:
-            payload["filter"] = filters
-
+    async def semantic_search(self, search_payload: dict):
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(self.retrieval_url, json=payload)
+                logger.info(f"Calling retrieval at: {self.retrieval_url}")
+                response = await client.post(self.retrieval_url, json=search_payload, timeout=30.0)
                 response.raise_for_status()
                 return response.json()
             except Exception as e:
-                logger.error(f"Search service retrieval error: {str(e)}")
-                return {"results": []}
+                logger.error(f"Search service retrieval error at {self.retrieval_url}: {str(e)}")
+                traceback.print_exc()
+                return {"results": [], "error": str(e)}
+
+    async def check_file_exists(self, file_path: str, bucket_name: str = None) -> bool:
+        target_bucket = bucket_name or self.default_bucket
+        target_uri = f"local://{target_bucket}/{file_path.lstrip('/')}"
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(
+                    self.get_url,
+                    params={"file_path": target_uri},
+                    timeout=10.0
+                )
+                if response.status_code == 200:
+                    data = response.json()
+                    return bool(data.get("ids_in_db"))
+                return False
+            except Exception as e:
+                logger.error(f"Error checking chroma existence for {target_uri}: {str(e)}")
+                return False
+
+    async def delete_file_index(self, file_path: str, bucket_name: str = None):
+        target_bucket = bucket_name or self.default_bucket
+        target_uri = f"local://{target_bucket}/{file_path.lstrip('/')}"
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.delete(
+                    self.delete_url,
+                    params={"file_path": target_uri},
+                    timeout=20.0
+                )
+                response.raise_for_status()
+                logger.info(f"Successfully deleted chroma index for {target_uri}")
+                return response.json()
+            except Exception as e:
+                logger.error(f"Error deleting chroma index for {target_uri}: {str(e)}")
+                return {"error": str(e)}
 
 search_service = SearchService()

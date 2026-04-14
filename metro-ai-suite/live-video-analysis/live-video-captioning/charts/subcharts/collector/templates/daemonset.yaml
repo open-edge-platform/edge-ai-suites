@@ -1,0 +1,99 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Collector DaemonSet.
+
+Kubernetes equivalents of docker-compose.yaml configuration:
+  pid: host                → hostPID: true
+  privileged: true         → securityContext.privileged: true
+  devices /sys /dev /run /proc → hostPath volumes
+  ./shared/collector-signals   → hostPath from values.collectorSignalsHostPath
+  telegraf.conf            → ConfigMap mount
+  WEBSOCKET_URL            → env var referencing live-metrics-service
+
+The DaemonSet runs only on nodes bearing the global node-affinity label,
+matching the placement of all other LVC workloads.
+*/}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "collector.fullname" . }}
+  labels:
+    {{- include "collector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+spec:
+  selector:
+    matchLabels:
+      {{- include "collector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "collector.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: collector
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+
+      # Pin to the same node used by the other workloads.
+      nodeSelector:
+        kubernetes.io/hostname: {{ .Values.global.nodeName | quote }}
+      # hostPID required for qmassa GPU monitoring (matches compose pid: host).
+      hostPID: {{ .Values.hostPID }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: collector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          env:
+            - name: WEBSOCKET_URL
+              value: {{ .Values.websocketUrl | quote }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          volumeMounts:
+            # Telegraf configuration
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            # Collector signals directory (fps.txt written here by host processes)
+            - name: collector-signals
+              mountPath: /app/.collector-signals
+            # Host device and system mounts (matches compose devices)
+            - name: host-sys
+              mountPath: /sys
+            - name: host-dev
+              mountPath: /dev
+            - name: host-run
+              mountPath: /run
+            - name: host-proc
+              mountPath: /proc
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: telegraf-config
+          configMap:
+            name: {{ include "collector.fullname" . }}-telegraf-config
+        # Host path for collector signal files.
+        # Pre-create with: mkdir -p {{ .Values.collectorSignalsHostPath }}
+        - name: collector-signals
+          hostPath:
+            path: {{ .Values.collectorSignalsHostPath | quote }}
+            type: DirectoryOrCreate
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-run
+          hostPath:
+            path: /run
+        - name: host-proc
+          hostPath:
+            path: /proc

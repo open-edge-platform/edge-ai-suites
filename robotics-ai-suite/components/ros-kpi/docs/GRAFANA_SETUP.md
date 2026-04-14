@@ -72,22 +72,24 @@ Open two terminals:
 **Terminal 1 - Run your ROS2 monitoring and export:**
 ```bash
 # Monitor for 2 minutes and save a session
-make monitor DURATION=120
+uv run python src/monitor_stack.py --duration 120
 
 # Then export that session to Prometheus (replace timestamp with session name printed above)
-make grafana-export SESSION=20260306_154140
+uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/20260306_154140
 
 # Metrics served at http://localhost:9092/metrics
 ```
 
 **Or keep the exporter always running in live mode:**
 ```bash
-make grafana-export-live
+uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
+# Or use the combined orchestrator:
+./grafana-monitor.sh --remote-ip <ip>
 ```
 
 ### Access Grafana
 
-1. Open browser: http://localhost:30000
+1. Open browser: <http://localhost:30000>
 2. Login:
    - Username: `admin`
    - Password: `admin`
@@ -345,7 +347,7 @@ uv run python src/prometheus_exporter.py --port 9092 --session-dir monitoring_se
 **Exporter port already in use:**
 ```bash
 # Free port 9092 and retry
-fuser -k 9092/tcp && make grafana-export SESSION=<name>
+fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)
 ```
 
 **Change Grafana or Prometheus UI port in `docker-compose.yml`:**

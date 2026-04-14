@@ -287,7 +287,7 @@ print_all_service_host_endpoints() {
     done
     echo -e "${MAGENTA}=======================================================${NC}"
     echo -e
-}   
+}
 
 # Build service images without starting containers
 build_service() {

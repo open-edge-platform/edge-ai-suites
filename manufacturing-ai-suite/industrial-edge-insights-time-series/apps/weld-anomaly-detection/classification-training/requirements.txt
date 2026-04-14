@@ -1,0 +1,9 @@
+# Training/inference requirement: Python 3.10
+# Minimal set used directly by scripts in this folder.
+joblib==1.5.3
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.6.1
+
+# Optional Intel acceleration layer (falls back to standard sklearn if absent).
+scikit-learn-intelex==2025.11.0
