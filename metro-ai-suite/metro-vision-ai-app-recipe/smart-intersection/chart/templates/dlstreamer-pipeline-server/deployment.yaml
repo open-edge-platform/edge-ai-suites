@@ -14,7 +14,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
     spec:
+      {{- if .Values.trustedCompute.enabled }}
       runtimeClassName: kata-qemu
+      {{- end }}
       securityContext:
         supplementalGroups: [109,110,992]
       volumes:

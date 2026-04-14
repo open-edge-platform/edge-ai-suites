@@ -27,6 +27,10 @@ externalUrls:
   githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
   videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
 
+# Trusted Compute configuration for secure workload execution
+trustedCompute:
+  enabled: false
+
 # Container images for utilities and init containers
 images:
   alpine:

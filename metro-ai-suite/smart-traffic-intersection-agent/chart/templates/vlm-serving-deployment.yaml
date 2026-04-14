@@ -29,6 +29,9 @@ spec:
         {{- include "stia.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: vlm-serving
     spec:
+      {{- if .Values.vlmServing.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
       {{- if $needsGpu }}
       securityContext:
         supplementalGroups:
