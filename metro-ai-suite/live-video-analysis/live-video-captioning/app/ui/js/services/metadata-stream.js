@@ -1,7 +1,7 @@
 /**
  * Metadata stream service for SSE handling
  */
-const MetadataStreamService = (function() {
+const MetadataStreamService = (function () {
     let metadataSource = null;
     let reconnectTimer = null;
     const runUIs = new Map();
@@ -39,8 +39,7 @@ const MetadataStreamService = (function() {
 
     function formatTimelinePositionLabel(index) {
         if (index === 0) return 'Latest';
-        if (index === 1) return '1 back';
-        return `${index} back`;
+        return `latest -${index}`;
     }
 
     function formatCaptionTimestamp(data) {
@@ -51,6 +50,42 @@ const MetadataStreamService = (function() {
             return `at ${new Date(data.timestamp).toLocaleTimeString()}`;
         }
         return `at ${new Date().toLocaleTimeString()}`;
+    }
+
+    function checkAlertRules(captionText, alertRules) {
+        if (!alertRules || alertRules.length === 0 || !captionText) {
+            return null;
+        }
+        const lowerCaption = captionText.toLowerCase();
+        for (let i = 0; i < alertRules.length; i++) {
+            const rule = alertRules[i];
+            if (!rule.substring) continue;
+            if (lowerCaption.includes(rule.substring.toLowerCase())) {
+                return {
+                    ruleIndex: i,
+                    color: rule.color || '#ff4444',
+                    substring: rule.substring
+                };
+            }
+        }
+        return null;
+    }
+
+    function createAlertIconSVG(color) {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('width', '14');
+        svg.setAttribute('height', '14');
+        svg.setAttribute('viewBox', '0 0 24 24');
+        svg.setAttribute('fill', color || '#ff4444');
+        svg.setAttribute('class', 'caption-alert-icon');
+        svg.setAttribute('title', 'Alert rule triggered');
+
+        // Bell icon path
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', 'M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z');
+        svg.appendChild(path);
+
+        return svg;
     }
 
     function renderCaptionTimeline(ui, entries) {
@@ -73,10 +108,34 @@ const MetadataStreamService = (function() {
             const row = document.createElement('article');
             row.className = 'caption-entry';
 
+            // Apply alert rule styling if present
+            if (item.alertRule) {
+                row.classList.add('caption-entry-alert');
+                row.style.borderLeftColor = item.alertRule.color;
+                row.style.backgroundColor = `${item.alertRule.color}14`;
+            }
+
             const meta = document.createElement('div');
             meta.className = 'caption-entry-meta';
             const timelineLabel = formatTimelinePositionLabel(index);
-            meta.textContent = `${timelineLabel} • ${item.timestampLabel}`;
+
+            // Create flex container for alert icon and timestamp
+            const metaContent = document.createElement('div');
+            metaContent.style.display = 'flex';
+            metaContent.style.alignItems = 'center';
+            metaContent.style.gap = '4px';
+
+            // Add alert icon if rule triggered
+            if (item.alertRule) {
+                const icon = createAlertIconSVG(item.alertRule.color);
+                metaContent.appendChild(icon);
+            }
+
+            const timeLabel = document.createElement('span');
+            timeLabel.textContent = `${timelineLabel} • ${item.timestampLabel}`;
+            metaContent.appendChild(timeLabel);
+
+            meta.appendChild(metaContent);
 
             const text = document.createElement('p');
             text.className = 'caption-entry-text';
@@ -94,9 +153,14 @@ const MetadataStreamService = (function() {
 
     function updateRunCaptionHistory(runId, ui, data, captionText) {
         const history = captionHistoryByRun.get(runId) || [];
+
+        // Check if caption matches any alert rules
+        const alertRule = checkAlertRules(captionText, ui?.alertRules);
+
         history.unshift({
             captionText,
             timestampLabel: formatCaptionTimestamp(data),
+            alertRule: alertRule || null
         });
 
         if (history.length > MAX_CAPTION_BUFFER) {
@@ -182,7 +246,6 @@ const MetadataStreamService = (function() {
                 if (cfg && cfg.alertMode) {
                     const runCard = ui.wrap;
                     const captionPanel = ui.captionPanel;
-                    const lowerCaption = captionText ? captionText.toLowerCase() : '';
 
                     // Clear inline color state
                     for (const el of [runCard, captionPanel]) {
@@ -192,24 +255,16 @@ const MetadataStreamService = (function() {
                         el.style.removeProperty('--alert-color-rgb');
                     }
 
-                    // Use per-run configured rules (no defaults — empty means no alerts)
-                    const rules = (ui.alertRules && ui.alertRules.length > 0) ? ui.alertRules : [];
-
-                    // Apply first matching rule (alert-1, alert-2, alert-3 based on rule index)
-                    for (let i = 0; i < rules.length; i++) {
-                        const rule = rules[i];
-                        if (!rule.substring) continue;
-                        if (lowerCaption.includes(rule.substring.toLowerCase())) {
-                            const hex = rule.color || '#ff4444';
-                            const rgb = hexToRgb(hex);
-                            const alertClass = 'alert-' + (i + 1);
-                            for (const el of [runCard, captionPanel]) {
-                                if (!el) continue;
-                                el.style.setProperty('--alert-color', hex);
-                                if (rgb) el.style.setProperty('--alert-color-rgb', rgb);
-                                el.classList.add(alertClass);
-                            }
-                            break;
+                    const matchedRule = checkAlertRules(captionText, ui?.alertRules);
+                    if (matchedRule) {
+                        const hex = matchedRule.color;
+                        const rgb = hexToRgb(hex);
+                        const alertClass = 'alert-' + (matchedRule.ruleIndex + 1);
+                        for (const el of [runCard, captionPanel]) {
+                            if (!el) continue;
+                            el.style.setProperty('--alert-color', hex);
+                            if (rgb) el.style.setProperty('--alert-color-rgb', rgb);
+                            el.classList.add(alertClass);
                         }
                     }
                 }
@@ -221,8 +276,8 @@ const MetadataStreamService = (function() {
                     data.timestamp_seconds !== undefined
                         ? `Updated ${data.timestamp_seconds.toFixed(2)}s into stream`
                         : data.timestamp
-                        ? `Updated at ${new Date(data.timestamp).toLocaleTimeString()}`
-                        : '—';
+                            ? `Updated at ${new Date(data.timestamp).toLocaleTimeString()}`
+                            : '—';
                 ui.chips.querySelector('[data-ttft]').textContent = metrics.ttft_mean ? `${metrics.ttft_mean.toFixed(0)} ms` : '—';
                 ui.chips.querySelector('[data-tpot]').textContent = metrics.tpot_mean ? `${metrics.tpot_mean.toFixed(2)} ms` : '—';
                 ui.chips.querySelector('[data-throughput]').textContent = throughput ? `${throughput.toFixed(2)} tok/s` : '—';
@@ -290,7 +345,7 @@ const MetadataStreamService = (function() {
         const m = /^#([0-9a-f]{3,6})$/i.exec(hex.trim());
         if (!m) return null;
         let h = m[1];
-        if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+        if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
         const n = parseInt(h, 16);
         return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
     }

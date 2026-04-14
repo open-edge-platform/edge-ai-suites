@@ -10,11 +10,17 @@ import asyncio
 import json
 import logging
 import time
-from typing import Callable, Optional
-
 import paho.mqtt.client as mqtt
-
-from ..config import MQTT_BROKER_HOST, MQTT_BROKER_PORT, MQTT_TOPIC_PREFIX
+from typing import Callable, Optional
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
+from ..config import (
+    MQTT_BROKER_HOST,
+    MQTT_BROKER_PORT,
+    MQTT_TOPIC_PREFIX,
+    ENABLE_EMBEDDING,
+    EMBEDDING_API_URL,
+)
 
 logger = logging.getLogger("app.mqtt_subscriber")
 
@@ -30,10 +36,12 @@ class MQTTSubscriber:
         broker_host: str = MQTT_BROKER_HOST,
         broker_port: int = MQTT_BROKER_PORT,
         topic_prefix: str = MQTT_TOPIC_PREFIX,
+        embedding_api_url: str = EMBEDDING_API_URL,
     ):
         self.broker_host = broker_host
         self.broker_port = broker_port
         self.topic_prefix = topic_prefix
+        self.embedding_api_url = embedding_api_url
         self._client: Optional[mqtt.Client] = None
         self._connected = False
         self._callbacks: dict[str, list[Callable]] = {}  # topic -> list of callbacks
@@ -41,6 +49,38 @@ class MQTTSubscriber:
         self._reconnect_delay = 1
         self._max_reconnect_delay = 30
         self._loop: Optional[asyncio.AbstractEventLoop] = None
+
+    def _post_embedding_request(self, image_data: str, metadata: dict) -> None:
+        """Send image and metadata to the embedding API."""
+        payload = {
+            "image_data": image_data,
+            "metadata": metadata if isinstance(metadata, dict) else {"payload": metadata},
+        }
+        request = Request(
+            self.embedding_api_url,
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+
+        try:
+            with urlopen(request, timeout=10) as response:
+                status_code = getattr(response, "status", response.getcode())
+                if status_code < 200 or status_code >= 300:
+                    raise RuntimeError(
+                        f"Embedding API returned unexpected status code {status_code}"
+                    )
+        except HTTPError as exc:
+            details = exc.read().decode("utf-8", errors="ignore")
+            raise RuntimeError(
+                f"Embedding API request failed with status {exc.code}: {details}"
+            ) from exc
+        except URLError as exc:
+            raise RuntimeError(f"Embedding API request could not be completed: {exc}") from exc
+
+    async def _submit_embedding(self, image_data: str, metadata: dict) -> None:
+        """Submit an embedding request without blocking the event loop."""
+        await asyncio.to_thread(self._post_embedding_request, image_data, metadata)
 
     def _get_topic_for_run(self, run_id: str) -> str:
         """Generate MQTT topic for a specific run."""
@@ -181,6 +221,14 @@ class MQTTSubscriber:
                     data = raw_data["metadata"]
                 else:
                     data = raw_data
+
+                if ENABLE_EMBEDDING:
+                    image_data = raw_data.get("blob") if isinstance(raw_data, dict) else None
+                    if image_data:
+                        try:
+                            await self._submit_embedding(image_data, data)
+                        except Exception as exc:
+                            logger.error("Failed to submit embedding for topic %s: %s", topic, exc)
 
                 # Only forward messages that contain inference results
                 if not isinstance(data, dict) or "result" not in data:

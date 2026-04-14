@@ -1,46 +1,29 @@
 # Build from Source
 
-This guide provides step-by-step instructions for building Live Captioning Sample Application from source.
+This guide provides step-by-step instructions for building Live Video Captioning Sample Application from source.
 
 ## Building the Images
-To build the Docker image for `Live Captioning` application, follow these steps:
+To build the Docker image for `Live Video Captioning` application, follow these steps:
 
 1. Ensure you are in the project directoy:
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
-     ```
-
-2. [Optional] To include third-party copyleft source packages in the built images, export the environment variable before building:
-     ```bash
-     export COPYLEFT_SOURCES=true
-     ```
-
-3. Run the following `docker compose` command:
       ```bash
-      docker compose build
+      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
       ```
 
-## Run the Application
-- Run the application using follow command:
+2. If you are running [`Live Video Captioning with RAG`](../embedding-creation-with-rag.md), export the following environment variable:
+
+      ```bash
+      export COMPOSE_PROFILES=EMBEDDING
+      ```
+
+   Skip this step if you are running only Live Video Captioning.
+
+3. [Optional] To include third-party copyleft source packages in the built images, export the environment variable before building:
      ```bash
-     docker compose up
-     ```
+     export COPYLEFT_SOURCES=true
+     ```  
 
-- Ensure that the application is running by checking the container status:
-     ```bash
-     docker ps
-     ```
-
-- Access the application by opening your web browser and navigate to `http://<host-ip>:4173 to view the dashboard UI.
-
-- [OPTIONAL] To force a clean rebuild run the following:
-     ```bash
-     docker compose up --build
-     ```
-
-> **Notes:**
-> Ensure your `.env` is configured, especially `HOST_IP`.
-
-## Next Steps
-
-Proceed to [Run the Application](../get-started.md#run-the-application).
+4. Run the following `docker compose` command:
+      ```bash
+      docker compose build
+      ```    
