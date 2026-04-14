@@ -250,4 +250,6 @@ shown in the below picture.
     sudo update-grub
 
     # Reboot the system.
-    ```
+   Edit `GRUB_CMDLINE_LINUX` in the `/etc/default/grub` file.
+   
+   

@@ -386,7 +386,7 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
 
     # Save the file and do update grub
    sudo update-grub
-   ```
+  
 
 Reboot the system.
 

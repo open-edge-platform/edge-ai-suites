@@ -223,7 +223,6 @@ ros2 run fast_mapping fast_mapping_node
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
-```
 
 In parallel start the rosbag file.
 
