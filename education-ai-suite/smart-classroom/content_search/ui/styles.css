@@ -1465,3 +1465,352 @@ body {
     flex-wrap: wrap;
   }
 }
+
+/* ================================================================
+   File List v3.0 - Simplified Row Layout
+   ================================================================ */
+
+.file-list-wrapper {
+  margin-top: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.file-list-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.file-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+/* Labels Section */
+.labels-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.labels-section__label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.labels-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.labels-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  font-size: 14px;
+}
+
+/* File List Columns Header */
+.file-list-columns {
+  display: grid;
+  grid-template-columns: 40px 1fr 100px 100px 180px 80px;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  align-items: center;
+}
+
+.file-list-col {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-list-col--check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-list-col--actions {
+  text-align: right;
+}
+
+/* File List Items */
+.file-list-items {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* File Item */
+.file-item {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s;
+}
+
+.file-item:last-child {
+  border-bottom: none;
+}
+
+.file-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.file-item.is-selected {
+  background: rgba(13, 110, 253, 0.05);
+}
+
+.file-item__row {
+  display: grid;
+  grid-template-columns: 40px 1fr 100px 100px 180px 80px;
+  gap: 12px;
+  padding: 12px 16px;
+  align-items: center;
+  font-size: 14px;
+}
+
+.file-item__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-item__check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.file-item__name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-item__type {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.file-item__size {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.file-item__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.file-item__actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* Status Styles */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-badge--pending {
+  background: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.status-badge--pending:hover {
+  background: #218838;
+}
+
+.status-badge--processing {
+  background: rgba(253, 126, 20, 0.1);
+  color: #fd7e14;
+}
+
+.status-badge--completed {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.status-badge--failed {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+.status-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.status-icon--spin {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Retry Button */
+.btn-retry {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid #fd7e14;
+  color: #fd7e14;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-retry:hover {
+  background: #fd7e14;
+  color: white;
+}
+
+/* Icon Button */
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s;
+}
+
+.icon-btn:hover {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+}
+
+/* File Labels (displayed below filename) */
+.file-item__labels {
+  grid-column: 2 / -1;
+  padding: 0 16px 12px 56px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.file-label-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(13, 110, 253, 0.1);
+  color: var(--primary);
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.file-label-tag__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.file-label-tag__remove:hover {
+  opacity: 1;
+}
+
+/* File List Footer */
+.file-list-footer {
+  padding: 12px 16px;
+  text-align: right;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.link-clear {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.link-clear:hover {
+  text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .file-list-columns,
+  .file-item__row {
+    grid-template-columns: 40px 1fr 80px 140px 60px;
+  }
+  
+  .file-list-col--type,
+  .file-item__type {
+    display: none;
+  }
+  
+  .file-item__labels {
+    padding-left: 56px;
+  }
+}
+
+@media (max-width: 768px) {
+  .file-list-columns,
+  .file-item__row {
+    grid-template-columns: 40px 1fr 120px 60px;
+  }
+  
+  .file-list-col--size,
+  .file-item__size {
+    display: none;
+  }
+  
+  .labels-input-row {
+    flex-direction: column;
+  }
+  
+  .labels-input-row .button {
+    width: 100%;
+  }
+}

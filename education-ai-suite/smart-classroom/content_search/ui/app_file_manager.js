@@ -89,6 +89,7 @@ class FileManager {
         size: file.size,
         type: this.inferFileType(file),
         labels: [],
+        checked: false, // For checkbox selection
         status: FILE_STATUS.PENDING,
         uploadProgress: 0,
         taskId: null,
@@ -235,6 +236,46 @@ class FileManager {
   }
 
   /**
+   * Toggle file checked state
+   */
+  toggleChecked(id) {
+    const file = this.files.get(id);
+    if (file) {
+      file.checked = !file.checked;
+      return file.checked;
+    }
+    return false;
+  }
+
+  /**
+   * Set checked state for file
+   */
+  setChecked(id, checked) {
+    const file = this.files.get(id);
+    if (file) {
+      file.checked = checked;
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Get all checked files
+   */
+  getCheckedFiles() {
+    return this.getAllFiles().filter(f => f.checked);
+  }
+
+  /**
+   * Check/uncheck all files
+   */
+  setAllChecked(checked) {
+    for (const file of this.files.values()) {
+      file.checked = checked;
+    }
+  }
+
+  /**
    * Add label to file
    */
   addLabel(id, label) {
@@ -245,6 +286,26 @@ class FileManager {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Add labels to checked files
+   */
+  addLabelsToChecked(labels) {
+    const checkedFiles = this.getCheckedFiles();
+    let updated = 0;
+
+    for (const file of checkedFiles) {
+      for (const label of labels) {
+        if (label && !file.labels.includes(label)) {
+          file.labels.push(label);
+          this.availableLabels.add(label);
+          updated++;
+        }
+      }
+    }
+
+    return updated;
   }
 
   /**
