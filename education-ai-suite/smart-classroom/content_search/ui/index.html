@@ -44,23 +44,53 @@
             </label>
           </div>
 
-          <!-- File Table -->
-          <div class="file-table-wrapper" id="file-table-wrapper" hidden>
-            <table class="file-table">
-              <thead>
-                <tr>
-                  <th class="file-table__col-icon"></th>
-                  <th class="file-table__col-name">File Name</th>
-                  <th class="file-table__col-size">Size</th>
-                  <th class="file-table__col-labels">Labels</th>
-                  <th class="file-table__col-status">Status</th>
-                  <th class="file-table__col-actions">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="file-table-body">
-                <!-- File rows will be inserted here -->
-              </tbody>
-            </table>
+          <!-- File List -->
+          <div class="file-list-wrapper" id="file-list-wrapper" hidden>
+            <div class="file-list-header">
+              <div class="file-list-info">
+                <span class="muted">Supported file types: MP4, JPG, PNG, DOCX...</span>
+                <span class="muted">Max total size: 500 MB (temporary)</span>
+              </div>
+            </div>
+
+            <!-- Labels Input Section -->
+            <div class="labels-section" id="labels-section">
+              <label class="labels-section__label">Labels</label>
+              <div class="labels-input-row">
+                <input
+                  type="text"
+                  class="input labels-input"
+                  id="labels-input"
+                  placeholder="Press Enter to separate multiple labels, e.g. Math English"
+                  autocomplete="off"
+                />
+                <button class="button button--primary" id="btn-add-to-selected" type="button">Add to selected</button>
+              </div>
+            </div>
+
+            <!-- File List Header -->
+            <div class="file-list-columns">
+              <div class="file-list-col file-list-col--check">
+                <input type="checkbox" id="select-all-files" title="Select all" />
+              </div>
+              <div class="file-list-col file-list-col--name">File name</div>
+              <div class="file-list-col file-list-col--type">Type</div>
+              <div class="file-list-col file-list-col--size">Size</div>
+              <div class="file-list-col file-list-col--status">Upload Status</div>
+              <div class="file-list-col file-list-col--actions">
+                <button class="icon-btn" id="btn-delete-all" title="Delete all files" type="button">🗑️</button>
+              </div>
+            </div>
+
+            <!-- File Items -->
+            <div class="file-list-items" id="file-list-items">
+              <!-- File items will be inserted here -->
+            </div>
+
+            <!-- Clear All Link -->
+            <div class="file-list-footer">
+              <a href="#" class="link-clear" id="link-clear-all">Clear all files</a>
+            </div>
           </div>
 
           <!-- Batch Actions -->
@@ -238,7 +268,7 @@
     </footer>
 
     <script src="app_file_manager.js"></script>
-    <script src="app_ui_renderer.js"></script>
+    <script src="app_ui_renderer_v3.js"></script>
     <script src="app.js"></script>
 </invoke></script>
   </body>
