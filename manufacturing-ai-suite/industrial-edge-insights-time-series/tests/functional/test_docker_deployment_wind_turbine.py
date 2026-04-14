@@ -27,7 +27,9 @@ def test_blank_values():
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)
     logger.info("Verifying that make check env variables fails with blank values in .env file")
-    assert docker_utils.invoke_make_check_env_variables() == False
+    result = docker_utils.invoke_make_check_env_variables()
+    logger.info(f"make check env variables returned: {result}, expected: False")
+    assert result == False
     
 
 def test_invalid_values():
@@ -36,7 +38,9 @@ def test_invalid_values():
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)
     logger.info("Verifying that make check env variables fails with invalid values in .env file")
-    assert docker_utils.invoke_make_check_env_variables() == False
+    result = docker_utils.invoke_make_check_env_variables()
+    logger.info(f"make check env variables returned: {result}, expected: False")
+    assert result == False
     
 
 def test_valid_values():
@@ -45,7 +49,9 @@ def test_valid_values():
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)
     logger.info("Verifying that make check env variables succeeds with valid values in .env file")
-    assert docker_utils.invoke_make_check_env_variables() == True
+    result = docker_utils.invoke_make_check_env_variables()
+    logger.info(f"make check env variables returned: {result}, expected: True")
+    assert result == True
 
 def test_make_up_opcua(setup_docker_environment):
     """TC_004: Testing make up OPCUA and make down with valid values in .env file"""
@@ -54,11 +60,13 @@ def test_make_up_opcua(setup_docker_environment):
     
     # Use the deploy_opcua function with app parameter
     result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
+    logger.info(f"OPC-UA deploy result: {result}")
     assert result == True, "OPC-UA deployment with app parameter failed"
     
     # Verify containers are running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Deployed containers: {containers}")
+    logger.info(f"Containers found: {len(containers) if containers else 0}")
     assert containers, "No containers found after deployment"
     
     # No manual cleanup needed - handled by fixture
@@ -70,11 +78,14 @@ def test_make_up_mqtt(setup_docker_environment):
     context = setup_docker_environment
     
     # Use enhanced deploy_mqtt function with app parameter
-    assert context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP) == True
+    deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
+    logger.info(f"MQTT deploy result: {deploy_result}")
+    assert deploy_result == True
     
     # Verify containers are running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Deployed containers: {containers}")
+    logger.info(f"Containers found: {len(containers) if containers else 0}")
     assert containers, "No containers found after MQTT deployment"
     # No manual cleanup needed - handled by fixture    
 
@@ -87,13 +98,18 @@ def test_multiple_runs_mqtt(setup_docker_environment):
     context = setup_docker_environment
     for i in range(3):
         logger.info(f"Cycle {i+1}:")
-        assert context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP) == True
+        deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
+        logger.info(f"MQTT deploy result in cycle {i+1}: {deploy_result}")
+        assert deploy_result == True
         docker_utils.wait_for_stability(10)
         containers = docker_utils.get_the_deployed_containers()
+        logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
         assert containers, "No containers found after MQTT deployment"
         # Cleanup between iterations (except last one which is handled by fixture)
         if i < 2:
-            assert docker_utils.invoke_make_down() == True
+            make_down_result = docker_utils.invoke_make_down()
+            logger.info(f"make down result in cycle {i+1}: {make_down_result}")
+            assert make_down_result == True
 
 def test_multiple_runs_opcua(setup_docker_environment):
     """
@@ -104,13 +120,18 @@ def test_multiple_runs_opcua(setup_docker_environment):
     context = setup_docker_environment
     for i in range(3):
         logger.info(f"Cycle {i+1}:")
-        assert context["deploy_opcua"](app=constants.WIND_SAMPLE_APP) == True
+        deploy_result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
+        logger.info(f"OPCUA deploy result in cycle {i+1}: {deploy_result}")
+        assert deploy_result == True
         docker_utils.wait_for_stability(10)
         containers = docker_utils.get_the_deployed_containers()
+        logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
         assert containers, "No containers found after OPCUA deployment"
         # Cleanup between iterations (except last one which is handled by fixture)
         if i < 2:
-            assert docker_utils.invoke_make_down() == True
+            make_down_result = docker_utils.invoke_make_down()
+            logger.info(f"make down result in cycle {i+1}: {make_down_result}")
+            assert make_down_result == True
 
 def test_switch_mqtt_to_opcua_ingestion(setup_docker_environment):
     """TC_008: Testing switch between MQTT and OPCUA ingestion"""
@@ -119,7 +140,9 @@ def test_switch_mqtt_to_opcua_ingestion(setup_docker_environment):
     context["deploy_mqtt"]()
     docker_utils.wait_for_stability(10)
     logger.info("Verifying Switch from mqtt to opcua succeeded")
-    assert docker_utils.invoke_switch_mqtt_opcua() == True
+    switch_result = docker_utils.invoke_switch_mqtt_opcua()
+    logger.info(f"Switch MQTT to OPCUA result: {switch_result}")
+    assert switch_result == True
     # Cleanup handled by fixture
     
 
@@ -130,7 +153,9 @@ def test_switch_opcua_to_mqtt_ingestion(setup_docker_environment):
     context["deploy_opcua"]()
     docker_utils.wait_for_stability(10)
     logger.info("Verifying switch from opcua to mqtt succeeded")
-    assert docker_utils.invoke_switch_opcua_mqtt() == True
+    switch_result = docker_utils.invoke_switch_opcua_mqtt()
+    logger.info(f"Switch OPCUA to MQTT result: {switch_result}")
+    assert switch_result == True
     # Cleanup handled by fixture
 
 def test_stability_with_mqtt_ingestion(setup_docker_environment):
@@ -147,7 +172,10 @@ def test_stability_with_mqtt_ingestion(setup_docker_environment):
     logger.info(f"Container Status: {container_status}")
 
     logger.info("Verifying all containers are running as expected")
-    assert all(status == "Up" for status in container_status.values())
+    failed = {k: v for k, v in container_status.items() if v != "Up"}
+    if failed:
+        logger.info(f"Containers not running: {failed}")
+    assert all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}"
     
     # Cleanup handled by fixture
     
@@ -166,7 +194,10 @@ def test_stability_with_opcua_ingestion(setup_docker_environment):
     logger.info(f"Container Status: {container_status}")
 
     logger.info("Verifying all containers are running as expected")
-    assert all(status == "Up" for status in container_status.values())
+    failed = {k: v for k, v in container_status.items() if v != "Up"}
+    if failed:
+        logger.info(f"Containers not running: {failed}")
+    assert all(status == "Up" for status in container_status.values()), f"Not all containers are running. Failed: {failed}"
     
     # Cleanup handled by fixture
     
@@ -182,6 +213,7 @@ def test_loglevel_configuration(setup_docker_environment):
     # Test INFO log level first
     logger.info("Testing INFO log level configuration")
     result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
+    logger.info(f"INFO log level check result: {result_info}")
     assert result_info == True, "INFO log level verification failed"
     
     # Test DEBUG log level with proper container restart
@@ -193,6 +225,7 @@ def test_loglevel_configuration(setup_docker_environment):
     # Restart container to apply the new log level setting
     logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
     restart_exit_code = docker_utils.restart_container(container_name)
+    logger.info(f"Container restart exit code: {restart_exit_code}")
     assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
     
     # Wait for container to stabilize after restart
@@ -216,6 +249,7 @@ def test_loglevel_configuration(setup_docker_environment):
         
         # Alternative verification: check if container is running and log level was updated
         status_result = docker_utils.check_make_status()
+        logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
         assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
         
         logger.info("Container is running properly with DEBUG log level configuration")
@@ -234,7 +268,7 @@ def test_mqtt_alerts(setup_docker_environment):
     validation_result = docker_utils.validate_mqtt_alert_system(constants.WIND_SAMPLE_APP)
     
     # Validation should pass
-    logger.info("Verifying MQTT alerts system validation completed successfully")
+    logger.info(f"MQTT alert validation result: {validation_result}")
     assert validation_result == True, "MQTT alert system validation failed"
     
     # Cleanup handled by fixture
@@ -249,7 +283,7 @@ def test_opcua_alerts(setup_docker_environment):
     validation_result = docker_utils.validate_opcua_alert_system()
 
     # Validation should pass
-    logger.info("Verifying OPCUA alerts system validation completed successfully")
+    logger.info(f"OPCUA alert validation result: {validation_result}")
     assert validation_result == True, "OPCUA alert system validation failed"
     
     # Cleanup handled by fixture
@@ -269,12 +303,8 @@ def test_influxdb_data_with_mqtt(setup_docker_environment):
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
 
     # Check if the data retrieval was successful (not None)
-    logger.info("Verifying InfluxDB data retrieval completed successfully")
+    logger.info(f"InfluxDB MQTT data retrieval result: {influxdb_data is not None}, data: {influxdb_data}")
     assert influxdb_data is not None, "InfluxDB data retrieval failed"
-    
-    # Print the actual data for verification
-    if influxdb_data:
-        logger.info(f"Retrieved data: {influxdb_data}")
     
     # Cleanup handled by fixture
     
@@ -294,8 +324,8 @@ def test_influxdb_data_with_opcua(setup_docker_environment):
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
 
     # Check if the data retrieval was successful (not None)
+    logger.info(f"InfluxDB OPCUA data retrieval result: {influxdb_data is not None}, data: {influxdb_data}")
     assert influxdb_data is not None, "InfluxDB data retrieval failed"
-    logger.info("InfluxDB data retrieval completed successfully")
 
     # Print the actual data for verification
     if influxdb_data:
@@ -348,6 +378,7 @@ def test_opcua_multi_stream_ingestion(setup_docker_environment):
         # Verify containers are running
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Deployed containers: {containers}")
+        logger.info(f"Containers found after multi-stream deployment: {len(containers) if containers else 0}")
         assert containers, "No containers found after multi-stream deployment"
         
         # Verify we have the expected OPC-UA server containers (should be multiple for multi-stream)
@@ -367,6 +398,7 @@ def test_opcua_multi_stream_ingestion(setup_docker_environment):
         logger.error(f"OPC-UA multi-stream ingestion with {num_streams} streams failed")
         test_result = False
     
+    logger.info(f"OPC-UA multi-stream test result: {test_result}")
     assert test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed"
     # No manual cleanup needed - handled by fixture
 
@@ -389,6 +421,7 @@ def test_mqtt_multi_stream_ingestion(setup_docker_environment):
         # Verify containers are running
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Deployed containers: {containers}")
+        logger.info(f"Containers found after MQTT multi-stream deployment: {len(containers) if containers else 0}")
         assert containers, "No containers found after multi-stream deployment"
         
         # Verify we have the expected MQTT publisher containers (should be multiple for multi-stream)
@@ -409,6 +442,7 @@ def test_mqtt_multi_stream_ingestion(setup_docker_environment):
         test_result = False
 
     
+    logger.info(f"MQTT multi-stream test result: {test_result}")
     assert test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed"
     # No manual cleanup needed - handled by fixture
 
@@ -449,6 +483,7 @@ def test_opcua_multi_stream_scalability(setup_docker_environment):
             logger.error(f"OPC-UA multi-stream ingestion with {num_streams} streams failed")
             test_result = False
         
+        logger.info(f"OPC-UA scalability test result for {num_streams} streams: {test_result}")
         assert test_result == True, f"OPC-UA multi-stream deployment with {num_streams} streams failed"
         
         # Clean up between different stream counts (except the last one)
@@ -496,6 +531,7 @@ def test_mqtt_multi_stream_scalability(setup_docker_environment):
             logger.error(f"MQTT multi-stream ingestion with {num_streams} streams failed")
             test_result = False
 
+        logger.info(f"MQTT scalability test result for {num_streams} streams: {test_result}")
         assert test_result == True, f"MQTT multi-stream deployment with {num_streams} streams failed"
         
         # Clean up between different stream counts (except the last one)
@@ -526,6 +562,7 @@ def test_mqtt_deployment_time_kpi(setup_docker_environment):
     )
     
     # Verify KPIs are met
+    logger.info(f"MQTT deployment KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
     assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
         f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
     assert avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, \
@@ -551,6 +588,7 @@ def test_opcua_deployment_time_kpi(setup_docker_environment):
     )
     
     # Verify KPIs are met
+    logger.info(f"OPCUA deployment KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
     assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
         f"Success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
     assert avg_time <= constants.KPI_DEPLOYMENT_TIME_THRESHOLD, \
@@ -576,6 +614,7 @@ def test_container_sizes_kpi(setup_docker_environment):
     # First, invoke make build to create the images
     logger.info("Building Docker images...")
     build_success, build_output = docker_utils.invoke_make_build()
+    logger.info(f"Docker build result: success={build_success}")
     assert build_success, f"Docker build failed: {build_output}"
     logger.info("Docker build completed successfully")
     
@@ -587,6 +626,7 @@ def test_container_sizes_kpi(setup_docker_environment):
         size_threshold=size_threshold,
         check_deployed_only=False
     )
+    logger.info(f"Image size check result: success={success}, message={message}")
     assert success, message
 
 
@@ -609,6 +649,7 @@ def test_build_time_kpi(setup_docker_environment):
     )
     
     # Verify KPIs are met
+    logger.info(f"Build KPI results: success_rate={success_rate}%, avg_time={avg_time:.2f}s, min={min_time:.2f}s, max={max_time:.2f}s")
     assert success_rate == constants.KPI_REQUIRED_SUCCESS_RATE, \
         f"Build success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
     assert avg_time <= constants.KPI_BUILD_TIME_THRESHOLD, \
@@ -630,6 +671,7 @@ def test_nginx_proxy_integration_wind_turbine(setup_docker_environment):
     )
     
     # Assert overall success or direct access validation
+    logger.info(f"Nginx proxy integration result: success={nginx_results['success']}, errors={nginx_results.get('errors')}")
     assert nginx_results["success"], f"Nginx proxy integration failed: {nginx_results['errors']}"
     
     if nginx_results["nginx_available"]:
@@ -659,13 +701,13 @@ def test_gpu(setup_docker_environment, protocol, test_case, deploy_func):
     curl_result = docker_utils.execute_gpu_config_curl(device="gpu")
     
     # Verify the curl command was successful
-    logger.info("Verifying GPU configuration test completed successfully")
+    logger.info(f"GPU configuration curl result: {curl_result}")
     assert curl_result, "GPU configuration test via REST API failed"
 
     logger.info(f"Verifying if logs contain GPU keywords...")
     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
     gpu_result = docker_utils.check_log_gpu(container_name, timeout=120, interval=10)
     
-    logger.info(f"Verifying GPU keywords found in logs")
+    logger.info(f"GPU log check result: {gpu_result}")
     assert gpu_result == True, f"GPU keywords not found in logs"
 

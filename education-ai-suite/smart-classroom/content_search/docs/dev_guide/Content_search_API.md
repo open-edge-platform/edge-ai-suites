@@ -43,14 +43,16 @@ Content-Type: application/json
 | 500 | Server Error | System crash; display "Server is busy, please try again". |
 
 ### Application Layer Codes (code field)
+
 | Application Code | Semantic Meaning | Description |
 | :--- | :--- | :--- |
-| 20000 | SUCCESS | Task submitted or query successful. |
+| 20000 | SUCCESS | Task submitted, query successful, or cleanup completed. |
+| 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
 | 40001 | AUTH_FAILED | Invalid username or password. |
-| 40901	| FILE_ALREADY_EXISTS |	File already existed (Hash exist). |
+| 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |
-| 50003 | PROCESS_FAILED | Internal processing error (e.g., transcoding failed). |
+| 50003 | PROCESS_FAILED | Internal processing error (e.g., file system or DB delete failed). |
 
 ---
 ### Task Lifecycle & Status Enum
@@ -90,8 +92,8 @@ stateDiagram-v2
 Query Parameters:
 | Parameter | Type    | Required | Default | Description                                         |
 | :-------- | :------ | :------- | :------ | :-------------------------------------------------- |
-| `status`  | string  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
-| `limit`   | integer | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
+| `status`  | `string`  | No       | None    | Filter by: `QUEUED`, `PROCESSING`, `COMPLETED`, `FAILED` |
+| `limit`   | `integer` | No       | 100     | Max number of tasks to return (Min: 1, Max: 1000)   |
 
 Request:
 ```
@@ -232,11 +234,11 @@ Response (200 OK):
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| file_key | string | Yes | The full path of the file in storage (excluding bucket name). |
-| bucket_name | string | No | The storage bucket name. Defaults to content-search. |
-| prompt | string | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
-| chunk_duration | integer | No | Duration of each video segment in seconds. Defaults to 30. |
-| meta | object | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
+| `file_key` | `string` | Yes | The full path of the file in storage (excluding bucket name). |
+| `bucket_name` | `string` | No | The storage bucket name. Defaults to content-search. |
+| `prompt` | `string` | No | Instructions for the AI (VLM). Defaults to "Please summarize this video." |
+| `chunk_duration` | `integer` | No | Duration of each video segment in seconds. Defaults to 30. |
+| `meta` | `object` | No | Custom metadata (e.g., {"tags": ["lecture"]}). Used for filtering during search. |
 
 Request:
 ```
@@ -311,10 +313,10 @@ A unified workflow that first saves the file to local storage and then immediate
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| file | Binary | Yes | The video file to be uploaded. |
-| prompt | string | No | Summarization instructions (passed as a Form field). |
-| chunk_duration | integer | No | Segment duration in seconds (passed as a Form field). |
-| meta | string | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
+| `file` | `Binary` | Yes | The video file to be uploaded. |
+| `prompt` | `string` | No | Summarization instructions (passed as a Form field). |
+| `chunk_duration` | `integer` | No | Segment duration in seconds (passed as a Form field). |
+| `meta` | `string` | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
 
 * Example:
 Request:
@@ -348,14 +350,26 @@ Executes a similarity search across vector collections using either natural lang
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| query | string | Either | Natural language search query (e.g., "student at desk"). |
-| image_base64 | string | Either | Base64 encoded image string for visual similarity search. |
-| max_num_results | integer | No | Maximum number of results to return. Defaults to 10. |
-| filter | object | No | Metadata filters (e.g., {"run_id": "...", "tags": ["class"]}). |
+| `query` | `string` | Either | Natural language search query (e.g., "student at desk"). |
+| `image_base64` | `string` | Either | Base64 encoded image string for visual similarity search. |
+| `max_num_results` | `integer` | No | Maximum number of results to return. Defaults to 10. For text queries, up to `2 × max_num_results` may be returned (`top-k` from visual collection + `top-k` from document collection, merged and sorted by distance). For image queries, at most `max_num_results` are returned.|
+| `filter` | `object` | No | Metadata filters (e.g., {"type": ["document"], "tags": ["class"]}), detail sees below |
+
+* Filter Usage Detail
+
+Different filter keys are always combined with `AND`. When a filter value is a `list`, the matching logic depends on the field type:
+
+| Field type | Example fields | List behavior | Operator used |
+| ---------- | -------------- | ------------- | ------------- |
+| `Array metadata` | `tags` | Matches if the stored array contains **at least one** of the filter values | `$contains` |
+| `Scalar metadata` | `type`, `course`, `semester` | Matches if the stored value **equals any** of the filter values | `$eq` (OR) |
+
+| Note: Video-type results may appear even when "video" is not explicitly selected in the type filter, because relevant document summaries can be converted into video results during post-processing. These constructed results have "original_type": "constructed_from_summary" in their metadata to distinguish them from native video frame results.
 
 * Example:
 Request:
 ```
+# Example 1: Filter by tags — returns results whose tags array contains "classroom" or "student"
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
@@ -363,6 +377,16 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
     "max_num_results": 1,
     "filter": {
         "tags": ["classroom", "student"]
+    }
+}'
+# Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
+curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
+--header 'Content-Type: application/json' \
+--data '{
+    "query": "student in classroom",
+    "max_num_results": 1,
+    "filter": {
+        "type": ["video", "document"]
     }
 }'
 ```
@@ -415,3 +439,49 @@ curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9
 --header 'Content-Type: application/json'
 ```
 
+#### Cleanup file storage and record
+Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.
+
+* URL: /api/v1/object/cleanup-task/{task_id}
+
+* Method: DELETE
+
+* Pattern: SYNC
+
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `task_id` | `string` | Yes | The unique identifier (UUID) of the task to be cleaned up. |
+
+Request:
+```powershell
+curl --location --request DELETE 'http://127.0.0.1:9011/api/v1/object/cleanup-task/b14b0c14-e768-4536-9d13-ea556f9adc1b'
+```
+Response:
+```powershell
+# example 1: 200 OK - Success
+{
+    "code": 20000,
+    "data": {
+        "task_id": "b14b0c14-e768-4536-9d13-ea556f9adc1b",
+        "status": "COMPLETED"
+    },
+    "message": "Cleanup completed",
+    "timestamp": 1775723734
+}
+# example 2: 200 OK - Task Processing
+{
+    "code": 40000,
+    "data": {},
+    "message": "Task is still processing and cannot be deleted",
+    "timestamp": 1775723800
+}
+# example 3: 200 OK - Task Not Found
+{
+    "code": 50002,
+    "data": {},
+    "message": "Task ID does not exist or has expired",
+    "timestamp": 1775723850
+}
+```

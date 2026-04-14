@@ -5,6 +5,7 @@
 import os, argparse
 import math
 import ctypes
+from time import perf_counter
 from typing import Tuple, Dict
 from collections import deque
 import cython
@@ -17,19 +18,23 @@ from libc.stdint cimport (uint8_t, uint16_t, uint32_t, uint64_t,
                           int8_t, int16_t, int32_t, int64_t)
 from libcpp cimport bool
 
+import pathlib
 from pathlib import Path
 import cv2
 from PIL import Image
-import openvino.runtime as ov
-from openvino.runtime import Core, Model
-from time import perf_counter
-import pathlib
-from openvino.runtime import Core, Model, AsyncInferQueue
+import openvino as ov
+from openvino import Core, Model, AsyncInferQueue
 from ultralytics import YOLO
-from ultralytics.yolo.utils.plotting import colors
+from ultralytics.utils.plotting import colors
 
 
 np.import_array()
+
+# Shared Core instance — all models must share one Core so OpenVINO's GPU
+# scheduler can manage them fairly within a single GPU context.
+# Multiple separate Core() instances each get their own context and the
+# GPU driver schedules them independently, causing some to starve.
+_shared_core = Core()
 
 labels = [
 	"person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "trafficlight",
@@ -60,7 +65,7 @@ cdef class YoloV8ModelBase():
 
 		self.device = device
 
-		self.core = Core()
+		self.core = _shared_core
 		self.ov_model = self.core.read_model(model_path)
 
 		self.ov_model.reshape({0: [1, 3, image_size, image_size]})
@@ -76,7 +81,9 @@ cdef class YoloV8ModelBase():
 
 		self.infer_request = self.compiled_model.create_infer_request()
 
-		self.infer_times = []
+		self.infer_times = deque(maxlen=60)  # rolling window for latency (not used for fps display)
+		self._infer_count = 0          # total inferences completed
+		self._infer_start_time = None  # wall time of first completed inference
 		self.outputs = deque()
 		self.async_mod = False
 		self.name = name
@@ -117,16 +124,21 @@ cdef class YoloV8ModelBase():
 		return image
 
 	def fps(self):
-		if len(self.infer_times) > 0:
-			return 1/np.average(self.infer_times);
-		else:
-			return 0
+		# Throughput: inferences completed per wall-clock second.
+		# (1/avg_latency was misleading — it ignores time spent waiting
+		#  between submissions and showed identical values for all streams.)
+		if self._infer_count > 1 and self._infer_start_time is not None:
+			return self._infer_count / (perf_counter() - self._infer_start_time)
+		return 0
 
 	def callback(self, infer_request, info) -> None:
 		image, start_time = info
 
 		infer_time = (perf_counter() - start_time)
 		self.infer_times.append(infer_time)
+		if self._infer_start_time is None:
+			self._infer_start_time = start_time
+		self._infer_count += 1
 		boxes = infer_request.results[self.compiled_model.output(0)]
 		masks = infer_request.results[self.compiled_model.output(1)] if len(infer_request.results) > 1 else None
 
@@ -375,6 +387,4 @@ cdef class YoloV8ModelBase():
 class YoloV8Model(YoloV8ModelBase):
 	def __init__(self, model_path, device, image_size=640):
 		super().__init__(model_path, device, image_size)
-
-
 

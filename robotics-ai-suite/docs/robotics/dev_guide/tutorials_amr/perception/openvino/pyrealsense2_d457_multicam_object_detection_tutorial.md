@@ -74,6 +74,16 @@ sudo apt install -y ros-humble-librealsense2-tools
 :::
 ::::
 
+### Install UV 
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+```
+### Source uv
+```bash
+source $HOME/.local/bin/env
+```
+
 ### Load the Intel IPU Driver ###
 ::::{tab-set}
 :::{tab-item} **IPU7**
@@ -119,12 +129,22 @@ sudo apt install -y ros-humble-pyrealsense2-ai-demo
 :::
 ::::
 
-> **Note:** The `pyrealsense2-ai-demo` installation will also do the following:
->
-> - installs all the run-time python dependency packages,
-> - downloads Ultralytics YOLOv8 model files and generate the models.
->
-> The installation will run for 25-30 minutes and consumes approximately 2GB of the disk space.
+### Setup uv venv
+Go to /opt/ros/`ros-distro`/share/pyrealsense2-ai-demo
+
+```bash
+uv sync
+```
+
+Once the virtual env is setup  download the yolo model
+
+```bash
+source .venv/bin/activate
+./scripts/generate_ai_models.sh
+```
+
+This will take couple minutes
+
 
 ### Run the tutorial
 
@@ -135,9 +155,7 @@ Run the below commands to start the tutorial.
 :sync: jazzy
 
 ```bash
-# Activate the pyrealsense2-ai-demo python environment
-. /opt/ros/jazzy/share/pyrealsense2-ai-demo/venv/bin/activate
-
+cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 # Source the ros2 jazzy
 source /opt/ros/jazzy/setup.bash
 ```
@@ -146,14 +164,14 @@ source /opt/ros/jazzy/setup.bash
 
 ```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
-python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
+uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
 **D3CMCXXX-115-084:**
 
 ```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
-python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/jazzy/share/pyrealsense2-ai-demo/config/config_isx031_4cameras.js
+uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_isx031_4cameras.js
 ```
 
 :::
@@ -161,14 +179,11 @@ python3 /opt/ros/jazzy/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/ja
 :sync: humble
 
 ```bash
-# Activate the pyrealsense2-ai-demo python environment
-. /opt/ros/humble/share/pyrealsense2-ai-demo/venv/bin/activate
-
 # Source the ros2 humble
 source /opt/ros/humble/setup.bash
 
-# Run the pyrealsense2-ai-demo tutorial for four camera input streams
-python3 /opt/ros/humble/bin/pyrealsense2_ai_demo_launcher.py --config=/opt/ros/humble/share/pyrealsense2-ai-demo/config/config_ros2_v4l2_rs-color-0_3.js
+# Run the pyrealsense2-ai-demo tutorial for four camera input streams (you might have to change the config to match to the correct /dev/video*)
+uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_ros2_v4l2_rs-color-0_3.js
 ```
 
 :::
