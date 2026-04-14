@@ -127,9 +127,12 @@ async def file_search(payload: dict, db: Session = Depends(get_db)):
     return resp_200(data=result, message="Search completed")
 
 @router.get("/download")
-async def download_file(file_key: str):
+async def download_file(file_key: str, inline: bool = False):
     """
-    e.g: GET /download?file_key=runs/run_xxx/raw/video/default/test.mp4
+    Download or preview a file
+    e.g:
+      - GET /download?file_key=runs/run_xxx/raw/video/default/test.mp4  (download)
+      - GET /download?file_key=runs/run_xxx/raw/video/default/test.mp4&inline=true  (preview)
     """
     file_stream = await storage_service.get_file_stream(file_key)
 
@@ -140,11 +143,14 @@ async def download_file(file_key: str):
 
     encoded_filename = urllib.parse.quote(filename)
 
+    # Use 'inline' for preview, 'attachment' for download
+    disposition_type = "inline" if inline else "attachment"
+
     return StreamingResponse(
         file_stream,
         media_type=content_type,
         headers={
-            "Content-Disposition": f"attachment; filename=\"{encoded_filename}\"; filename*=UTF-8''{encoded_filename}",
+            "Content-Disposition": f"{disposition_type}; filename=\"{encoded_filename}\"; filename*=UTF-8''{encoded_filename}",
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )

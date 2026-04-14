@@ -441,16 +441,30 @@ Response (200 OK):
 }
 ```
 #### Resource Download (Video/Image/Document)
-Download existing resources from storage.
+Download or preview existing resources from storage.
 
-* URL: /api/v1/object/download/{resource_id}
+* URL: /api/v1/object/download
 * Method: GET
 * Pattern: SYNC
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `file_key` | `string` | Yes | The full path of the file in storage (e.g., "runs/xxx/raw/video/default/file.mp4"). |
+| `inline` | `boolean` | No | If `true`, sets `Content-Disposition: inline` for browser preview (PDF, video, image). If `false` or omitted, forces download with `Content-Disposition: attachment`. Defaults to `false`. |
+
 Request:
+```bash
+# Example 1: Download file (default behavior)
+curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fvideo%2Fdefault%2Fclassroom_8.mp4'
+
+# Example 2: Preview file in browser (PDF, video, image)
+curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fapplication%2Fdefault%2Fdocument.pdf&inline=true'
 ```
-curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fvideo%2Fdefault%2Fclassroom_8.mp4' \
---header 'Content-Type: application/json'
-```
+
+**Usage Notes**:
+- Use `inline=true` for embedding resources in `<iframe>`, `<video>`, or `<img>` tags for in-browser preview.
+- Use `inline=false` (or omit) when you need to trigger a download prompt in the browser.
 
 #### Cleanup file storage and record
 Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.
