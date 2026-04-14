@@ -1,3 +1,57 @@
+/**
+ * Business error codes mapping
+ */
+const ERROR_CODES = {
+  20000: "SUCCESS",
+  40000: "BAD_REQUEST",
+  40001: "AUTH_FAILED",
+  40901: "FILE_ALREADY_EXISTS",
+  50001: "FILE_TYPE_ERROR",
+  50002: "TASK_NOT_FOUND",
+  50003: "PROCESS_FAILED",
+};
+
+/**
+ * Get user-friendly error message based on business code
+ */
+function getErrorMessage(code, defaultMessage) {
+  const errorMessages = {
+    40000: "Bad request. Please check your input and try again.",
+    40001: "Authentication failed. Invalid username or password.",
+    40901: "File already exists. This file has been uploaded before.",
+    50001: "Unsupported file format. Please check the file type.",
+    50002: "Task not found. The task may have expired or been deleted.",
+    50003: "Processing failed. An internal error occurred.",
+  };
+
+  return errorMessages[code] || defaultMessage || "An unknown error occurred.";
+}
+
+/**
+ * Parse API response and throw error if business code indicates failure
+ */
+function parseApiResponse(data, defaultErrorMsg = "Operation failed") {
+  if (!data) {
+    throw new Error(defaultErrorMsg);
+  }
+
+  const code = data.code;
+
+  if (code === 20000) {
+    return data;
+  }
+
+  // Non-success code
+  const errorType = ERROR_CODES[code] || "UNKNOWN_ERROR";
+  const userMessage = getErrorMessage(code, data.message);
+  const error = new Error(userMessage);
+  error.code = code;
+  error.errorType = errorType;
+  error.originalMessage = data.message;
+
+  throw error;
+}
+
 function formatBytes(bytes) {
   if (!Number.isFinite(bytes) || bytes < 0) return "";
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -781,18 +835,27 @@ function filterResultsByType(results, filterValue) {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-
-      if (data.code !== 20000) {
-        throw new Error(data.message || "Query failed");
-      }
+      parseApiResponse(data, "Query task failed");
 
       return data.data;
     } catch (error) {
       console.error("Poll task failed:", error);
+
+      // Handle specific error codes
+      if (error.code === 50002) {
+        // Task not found - might have expired
+        setStatus(uploadStatus, "Task not found. It may have expired.");
+        if (indexingTimer) {
+          clearInterval(indexingTimer);
+          indexingTimer = null;
+        }
+        setPipelineState({ indexingState: "Idle", showHint: false });
+      }
+
       return null;
     }
   }
@@ -815,23 +878,34 @@ function filterResultsByType(results, filterValue) {
       }
 
       const status = taskData.status;
-      const progress = taskData.progress || 0;
 
-      if (status === "PENDING" || status === "QUEUED") {
-        setPipelineState({ indexingState: "Queued", showHint: true });
+      if (status === "PENDING") {
+        setPipelineState({ indexingState: "Pending...", showHint: true });
+      } else if (status === "QUEUED") {
+        setPipelineState({ indexingState: "Queued...", showHint: true });
       } else if (status === "PROCESSING") {
-        const progressText = progress > 0 ? ` (${progress}%)` : "";
-        setPipelineState({ indexingState: `Processing${progressText}`, showHint: true });
+        // Note: progress field is not yet implemented in backend, always shows 100%
+        // So we just show "Processing..." without percentage
+        setPipelineState({ indexingState: "Processing...", showHint: true });
       } else if (status === "COMPLETED") {
         clearInterval(indexingTimer);
         indexingTimer = null;
         setPipelineState({ indexingState: "Completed", showHint: false });
-        setStatus(uploadStatus, "Upload and indexing completed successfully!");
+
+        // Show success message with summary if available
+        const summary = taskData.result?.video_summary;
+        let successMsg = "Upload and indexing completed successfully!";
+        if (summary) {
+          const chunks = summary.total_chunks || 0;
+          const elapsed = Math.round(summary.elapsed_seconds || 0);
+          successMsg += ` (${chunks} chunk${chunks > 1 ? 's' : ''} processed in ${elapsed}s)`;
+        }
+        setStatus(uploadStatus, successMsg);
 
         // Clear file list after successful completion
         setTimeout(() => {
           uploads.clear();
-        }, 2000);
+        }, 3000);
       } else if (status === "FAILED") {
         clearInterval(indexingTimer);
         indexingTimer = null;
@@ -879,14 +953,11 @@ function filterResultsByType(results, filterValue) {
 
       if (!response.ok) {
         const errText = await response.text();
-        throw new Error(errText || `HTTP ${response.status}`);
+        throw new Error(errText || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-
-      if (data.code !== 20000) {
-        throw new Error(data.message || "Upload failed");
-      }
+      parseApiResponse(data, "Upload failed");
 
       // Commit all labels from uploaded files into available pool
       entries.forEach((e) => e.labels.forEach((l) => availableLabels.add(l)));
@@ -910,7 +981,17 @@ function filterResultsByType(results, filterValue) {
         }, 3000);
       }
     } catch (error) {
-      setStatus(uploadStatus, `Upload failed: ${error?.message || "Unknown error"}`);
+      // Show user-friendly error message based on error code
+      let errorMsg = error?.message || "Unknown error";
+
+      // Add specific hints for common errors
+      if (error.code === 50001) {
+        errorMsg += " Supported formats: .mp4, .jpg, .png, .pdf, .docx, .txt, .html, .md";
+      } else if (error.code === 40901) {
+        errorMsg += " Try uploading a different file.";
+      }
+
+      setStatus(uploadStatus, `Upload failed: ${errorMsg}`);
       setPipelineState({ uploadState: "Failed", indexingState: "Idle", showHint: false });
     }
   });
@@ -985,14 +1066,11 @@ function filterResultsByType(results, filterValue) {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(errText || `HTTP ${response.status}`);
+      throw new Error(errText || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
-
-    if (data.code !== 20000) {
-      throw new Error(data.message || "Search failed");
-    }
+    parseApiResponse(data, "Search failed");
 
     return (data.data?.results || []).map(mapApiResultToUi);
   }
@@ -1025,14 +1103,11 @@ function filterResultsByType(results, filterValue) {
 
           if (!response.ok) {
             const errText = await response.text();
-            throw new Error(errText || `HTTP ${response.status}`);
+            throw new Error(errText || `HTTP ${response.status}: ${response.statusText}`);
           }
 
           const data = await response.json();
-
-          if (data.code !== 20000) {
-            throw new Error(data.message || "Search failed");
-          }
+          parseApiResponse(data, "Image search failed");
 
           resolve((data.data?.results || []).map(mapApiResultToUi));
         } catch (error) {
