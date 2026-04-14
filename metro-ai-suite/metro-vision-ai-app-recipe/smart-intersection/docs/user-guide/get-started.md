@@ -6,6 +6,7 @@ fusion, this sample application demonstrates how to achieve accurate traffic det
 congestion management, and real-time alerting.
 
 To get started:
+
 - **Set up the sample application**: use Docker Compose to quickly deploy the application in
   your environment.
 - **Run a predefined pipeline**: execute a sample pipeline to see real-time transportation
@@ -16,22 +17,26 @@ To get started:
 - **Consider Enabling Security features**: use hardware-based security measures to make your
   application safer.
 
+## Prerequisites
 
-## Setup and First Use
-
-**Prerequisites**
 - Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 - Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/).
 - Install Git: [Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
+## Setup and First Use
 
-1. **Clone the Repository**:
-   - Run:
-     ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-     cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-     ```
+1. **Clone the Suite**:
+
+Go to the target directory of your choice and clone the suite.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
+```bash
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite &&
+cd metro-ai-suite/metro-vision-ai-app-recipe/
+```
 
 2. **Setup Application and Download Assets**:
    - Use the installation script to configure the application and download required models:

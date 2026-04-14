@@ -7,11 +7,13 @@ architecture that integrates seamlessly with various input sources and leverages
 deliver accurate and actionable insights.
 
 By following this guide, you will learn how to:
+
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a pipeline to see loitering detection in action.
 - **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
 
 ## Prerequisites
+
 - Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker: [Installation Guide](https://docs.docker.com/get-docker/).
 Enable running docker without "sudo": [Post Install](https://docs.docker.com/engine/install/linux-postinstall/)
@@ -19,12 +21,17 @@ Enable running docker without "sudo": [Post Install](https://docs.docker.com/eng
 
 ## Set up and first use
 
-1. **Clone the Repository**:
-   - Run:
-     ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-     cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-     ```
+1. **Clone the Suite**:
+
+Go to the target directory of your choice and clone the suite.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
+```bash
+git clone --filter=blob:none --sparse  https://github.com/open-edge-platform/edge-ai-suites.git &&
+cd edge-ai-suites &&
+git sparse-checkout set metro-ai-suite &&
+cd metro-ai-suite/metro-vision-ai-app-recipe/
+```
 
 2. **Setup Application and Download Assets**:
    - Use the installation script to configure the application and download required models:
