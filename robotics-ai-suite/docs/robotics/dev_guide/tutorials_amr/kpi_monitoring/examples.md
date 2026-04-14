@@ -42,7 +42,7 @@ ros2 launch my_robot robot.launch.py
 3. In a new terminal, run the quick check (completes automatically):
 
 ```bash
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 ```
 
 4. Review auto-generated results:
@@ -72,7 +72,7 @@ or identifying bottlenecks.
 ros2 node list
 
 # 2. Start monitoring (runs until Ctrl+C)
-make monitor NODE=/slam_toolbox
+uv run python src/monitor_stack.py --node /slam_toolbox
 
 # 3. Let it run while your system operates normally
 
@@ -83,7 +83,7 @@ ls monitoring_sessions/latest/visualizations/
 With a fixed duration:
 
 ```bash
-make monitor NODE=/slam_toolbox DURATION=120   # 2 minutes
+uv run python src/monitor_stack.py --node /slam_toolbox --duration 120   # 2 minutes
 ```
 
 Using Python directly for a named session:
@@ -162,7 +162,7 @@ diff -r monitoring_sessions/debug_session_1/visualizations/ \
          monitoring_sessions/debug_session_2/visualizations/
 ```
 
-Use `make compare-sessions` for an automated comparison report.
+Compare visualizations side by side between sessions.
 
 ## Monitor a Navigation Stack
 
@@ -179,11 +179,12 @@ ros2 launch nav2_bringup tb3_simulation_launch.py
 
 ```bash
 # Before optimization
-make monitor NODE=/my_node DURATION=120
+uv run python src/monitor_stack.py --node /my_node --duration 120
 
 # Make your code changes, then run again
-make monitor NODE=/my_node DURATION=120
+uv run python src/monitor_stack.py --node /my_node --duration 120
 
 # Compare sessions
-make compare-sessions
+diff -r monitoring_sessions/<session_before>/visualizations/ \
+         monitoring_sessions/<session_after>/visualizations/
 ```
