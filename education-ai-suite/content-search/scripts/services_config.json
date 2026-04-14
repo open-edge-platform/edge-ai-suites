@@ -1,0 +1,17 @@
+{
+  "services": {
+    "model_name": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "host_addr": "127.0.0.1",
+    "vlm_port": 9900,
+    "preprocess_port": 8001,
+    "device": "GPU",
+    "weight_format": "int8",
+    "vlm_timeout_seconds": 300,
+    "preprocess_chunk_duration_s": 30,
+    "preprocess_chunk_overlap_s": 4,
+    "preprocess_max_num_frames": 8,
+    "preprocess_frame_width": 0,
+    "preprocess_frame_height": 0,
+    "minio_config_path": "content_search_minio/config.json"
+  }
+}
