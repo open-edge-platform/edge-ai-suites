@@ -44,7 +44,7 @@ def test_invalid_values():
     
 
 def test_valid_values():
-    logger.info("TC_003: Changed Test Case - Verifying make check_env_variables with all valid values in .env file")
+    logger.info("TC_003: Verifying make check_env_variables with all valid values in .env file")
     case = docker_utils.generate_test_credentials(case_type="valid")
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)
@@ -73,8 +73,8 @@ def test_make_up_opcua(setup_docker_environment):
     
 
 def test_make_up_mqtt(setup_docker_environment):
-    """TC_005: Testing make up MQTT and make down with valid values in .env file - MODIFIED to use OPC-UA with specific app"""
-    logger.info("TC_005: Testing make up_opcua_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
+    """TC_005: Testing make up MQTT and make down with valid values in .env file"""
+    logger.info("TC_005: Testing make up_mqtt_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
     context = setup_docker_environment
     
     # Use enhanced deploy_mqtt function with app parameter

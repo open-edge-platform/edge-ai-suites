@@ -14,7 +14,6 @@ import constants
 #import subprocess
 import time
 import logging
-import logging
 
 logger = logging.getLogger(__name__)  # Get a logger for this module specifically
 
