@@ -25,70 +25,58 @@
         <div class="panel">
           <div class="panel__head">
             <h3 class="panel__title">Files</h3>
-            <p class="panel__desc">Select multiple files of different types, or drag & drop here</p>
+            <p class="panel__desc">Select multiple files or drag & drop here</p>
           </div>
-          <div class="dropzone" role="group" aria-label="Unified upload">
+
+          <div class="dropzone-compact" id="dropzone-compact">
             <input
-              class="file"
+              class="file-input"
               id="upload-files"
               type="file"
-              accept=".mp4,.jpg,.pdf,.ppt,.docx,.csv,.txt,video/mp4,image/jpeg,application/pdf,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/csv,text/plain"
+              accept=".mp4,.jpg,.png,.jpeg,.pdf,.ppt,.pptx,.docx,.doc,.xlsx,.xls,.csv,.txt,.html,.htm,.xml,.md,video/mp4,image/jpeg,image/png,application/pdf"
               multiple
             />
-            <label class="dropzone__label" for="upload-files">
-              <span>Select Files</span>
-              <span class="muted">or drag & drop here</span>
-            </label>
-            <div class="filelist__toolbar" id="filelist-toolbar" hidden>
-              <label class="filelist__selectall">
-                <input type="checkbox" id="selectall-check" />
-                <span id="selectall-label">Select all</span>
-              </label>
-              <span class="muted filelist__toolbar-count" id="filelist-toolbar-count"></span>
-            </div>
-            <ul class="filelist" id="list-files" aria-label="Selected files"></ul>
-          </div>
-
-          <div class="label-assign" id="label-assign" hidden>
-            <div class="label-assign__head">
-              <span class="label-assign__title">Labels <span class="badge badge--optional">Optional</span></span>
-              <span class="muted label-assign__hint" id="label-assign-hint"></span>
-            </div>
-            <div class="label-assign__idle" id="label-assign-idle">
-              <svg class="icon" viewBox="0 0 16 16" aria-hidden="true" style="flex-shrink:0;color:Highlight">
-                <path d="M8 1a7 7 0 1 1 0 14A7 7 0 0 1 8 1Zm0 1.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM8 10a.75.75 0 1 1 0 1.5A.75.75 0 0 1 8 10Zm0-6a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Z" fill="currentColor"/>
+            <label class="dropzone-compact__label" for="upload-files">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
               </svg>
-              <span>Check one or more files above to select them, then add labels here. Labels are used as tags for filtering and narrowing down search results later.</span>
-            </div>
-            <div class="label-input-row">
-              <div class="label-input-col">
-                <textarea class="input" id="label-input" rows="3" placeholder="Press Enter to separate multiple labels, e.g.
-Math
-Lily" autocomplete="off"></textarea>
-              </div>
-              <button class="button button--primary" id="btn-add-label" type="button">Add to Selected</button>
-            </div>
+              <span>Select Files or drag & drop</span>
+            </label>
           </div>
-        </div>
 
-        <div class="actions actions--right">
-          <button class="button button--primary" id="btn-upload" type="button">Upload</button>
-        </div>
+          <!-- File Table -->
+          <div class="file-table-wrapper" id="file-table-wrapper" hidden>
+            <table class="file-table">
+              <thead>
+                <tr>
+                  <th class="file-table__col-icon"></th>
+                  <th class="file-table__col-name">File Name</th>
+                  <th class="file-table__col-size">Size</th>
+                  <th class="file-table__col-labels">Labels</th>
+                  <th class="file-table__col-status">Status</th>
+                  <th class="file-table__col-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="file-table-body">
+                <!-- File rows will be inserted here -->
+              </tbody>
+            </table>
+          </div>
 
-        <div class="statusbox" id="pipeline-status" aria-live="polite">
-          <div class="statusbox__row">
-            <span class="statusbox__label">Upload Status</span>
-            <span class="badge" id="upload-state">Idle</span>
-          </div>
-          <div class="statusbox__row">
-            <span class="statusbox__label">Indexing Status</span>
-            <span class="badge" id="indexing-state">
-              <span class="spinner" id="indexing-spinner" aria-hidden="true" hidden></span>
-              <span id="indexing-state-text">Idle</span>
-            </span>
-          </div>
-          <div class="statusbox__hint muted" id="async-hint" hidden>
-            Indexing is asynchronous. You can search while indexing; results may be incomplete.
+          <!-- Batch Actions -->
+          <div class="batch-actions" id="batch-actions" hidden>
+            <div class="batch-actions__summary" id="batch-summary"></div>
+            <div class="batch-actions__buttons">
+              <button class="button button--sm" id="btn-upload-all" type="button" hidden>
+                <svg class="icon icon--sm" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8.5 11.5a.5.5 0 0 1-1 0V6.707L5.354 8.854a.5.5 0 1 1-.708-.708l3-3a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 6.707V11.5z"/>
+                  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2z"/>
+                </svg>
+                <span id="btn-upload-all-text">Upload All</span>
+              </button>
+              <button class="button button--sm button--ghost" id="btn-clear-completed" type="button" hidden>Clear Completed</button>
+              <button class="button button--sm button--ghost" id="btn-clear-failed" type="button" hidden>Clear Failed</button>
+            </div>
           </div>
         </div>
 
@@ -249,6 +237,9 @@ Lily" autocomplete="off"></textarea>
       </div>
     </footer>
 
+    <script src="app_file_manager.js"></script>
+    <script src="app_ui_renderer.js"></script>
     <script src="app.js"></script>
+</invoke></script>
   </body>
 </html>
