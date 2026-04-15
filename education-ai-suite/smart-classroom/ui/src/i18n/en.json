@@ -200,7 +200,9 @@
     "durationError":"Duration Mismatch - check your files",
     "durationMismatch":"⚠️ Audio and video durations don't match. Please ensure both files have similar lengths.",
     "durationExtractionFailed":"⚠️ Unable to extract audio or video duration. Please check your files and try again.",
-    "contentPreparationFailed":"Content preparation failed. Please try again."
+    "contentPreparationFailed":"Content preparation failed. Please try again.",
+    "noLabels":"No labels available",
+    "processing":"Some files are still processing. You can search now; results may expand once processing finishes."
   },
   "contentSearch": {
     "title": "Content Search",
@@ -224,7 +226,7 @@
     "retry":" ↻ Retry",
     "clearAll":"Clear All",
     "uploadFiles":"Upload Files",
-    "removeFileConfirmation":"Removing this file will stop processing. Continue?",
+    "removeFileConfirmation":"Are you sure you want to remove this file. Continue?",
     "cancel":"Cancel",
     "remove":"Remove",
     "pending":"Pending...",
