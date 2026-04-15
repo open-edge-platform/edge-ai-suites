@@ -130,6 +130,19 @@ echo "ros-humble-openvino-node openvino-node/pip-proxy select ${OPENVINO_PROXY_S
 echo "ros-humble-openvino-node openvino-node/models select true" | sudo debconf-set-selections
 run sudo -E apt install -y ros-humble-openvino-node
 
+step "Adding Intel RealSense apt repository..."
+sudo mkdir -p /etc/apt/keyrings
+curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
+run sudo apt update
+echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
+echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+
+step "Installing Intel RealSense SDK..."
+run sudo apt install -y librealsense2-dkms
+run sudo apt install -y librealsense2
+
 step "Adding Gazebo apt repository..."
 run sudo apt-get update
 run sudo apt-get install -y curl lsb-release gnupg
@@ -143,19 +156,6 @@ run sudo apt install -y ros-humble-robotics-sdk
 
 step "Installing Collaborative SLAM (requires Intel Xe/UHD Graphics)..."
 run sudo apt-get install -y ros-humble-collab-slam-lze
-
-step "Adding Intel RealSense apt repository..."
-sudo mkdir -p /etc/apt/keyrings
-curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
-run sudo apt update
-echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
-echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
-echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
-
-step "Installing Intel RealSense SDK..."
-run sudo apt install -y librealsense2-dkms
-run sudo apt install -y librealsense2
 
 step "Installing Linux firmware..."
 run sudo apt install -y linux-firmware
