@@ -4,6 +4,7 @@ import "../../assets/css/SearchSection.css";
 import { csSearch } from "../../services/api";
 import ResultSection, { type CsSearchResult } from "./ResultSection";
 import warningIcon from "../../assets/images/warning-info.svg";
+import infoIcon from "../../assets/images/info-icon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
 import noSearchIcon from "../../assets/images/no-search-icon.svg";
 import { useAppSelector } from "../../redux/hooks";
@@ -267,10 +268,8 @@ const SearchSection: React.FC = () => {
         {/* Processing warning when some files are still processing but search is available */}
         {csUploadsComplete && csProcessing && (
           <div className="cs-search-warning-frame">
-            <svg className="cs-search-warning-frame-icon" width="15" height="15" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M8 1C4.13438 1 1 4.13438 1 8C1 11.8656 4.13438 15 8 15C11.8656 15 15 11.8656 15 8C15 4.13438 11.8656 1 8 1ZM8 11.5C7.58579 11.5 7.25 11.1642 7.25 10.75C7.25 10.3358 7.58579 10 8 10C8.41421 10 8.75 10.3358 8.75 10.75C8.75 11.1642 8.41421 11.5 8 11.5ZM8.75 8.5C8.75 8.91421 8.41421 9.25 8 9.25C7.58579 9.25 7.25 8.91421 7.25 8.5V5C7.25 4.58579 7.58579 4.25 8 4.25C8.41421 4.25 8.75 4.58579 8.75 5V8.5Z" fill="white"/>
-            </svg>
-            <span className="cs-search-warning-frame-text">Some files are still processing. You can search now; results may expand once processing finishes.</span>
+            <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
+            <span className="cs-search-warning-frame-text">{t("search.processing")}</span>
           </div>
         )}
 
@@ -451,7 +450,7 @@ const SearchSection: React.FC = () => {
                 {isLabelDropdownOpen && hasSelectedType && hasValidInput && (
                   <div className="cs-search-filter-dropdown" onClick={(e) => e.stopPropagation()}>
                     {csTags.length === 0 ? (
-                      <div className="cs-search-filter-dropdown-empty">No labels available</div>
+                      <div className="cs-search-filter-dropdown-empty">{t("search.noLabels")}</div>
                     ) : (
                       csTags.map((label) => (
                         <label key={label} className="cs-search-filter-dropdown-item">

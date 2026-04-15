@@ -50,9 +50,15 @@ To configure Docker:
 
 ## Clone source code
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 
 ## Deploy with Docker Compose
