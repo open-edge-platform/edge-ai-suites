@@ -89,7 +89,7 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
 ### Step 5: Configure GPU Support (Optional)
 
