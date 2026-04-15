@@ -412,6 +412,20 @@ Response (200 OK):
         "status": "COMPLETED",
         "results": [
             {
+                "id": "197972195449837430",
+                "distance": 0.8402439,
+                "meta": {
+                    "type": "video",
+                    "file_path": "local://content-search/runs/2a6e14b6-da45-4e20-93a1-2291ab01d6f6/raw/video/default/store-aisle-detection.mp4",
+                    "file_name": "store-aisle-detection.mp4",
+                    "video_pin_second": 11.01,
+                    "video_start_second": 7.76,
+                    "video_end_second": 14.26,
+                    "summary_text": "The video depicts a scene inside a store filled with shelves of white ceramic dishes, including bowls, plates, mugs, and cups. The store appears to be a pottery or ceramics shop, as evidenced by the variety of items available for purchase.\n\nIn the foreground, a man wearing a brown jacket is browsing through the shelves, examining the ceramic dishes. He seems interested in the selection and is carefully inspecting each item. Nearby, a woman in a green jacket is also looking at the dishes, possibly considering purchasing some. Another person, dressed in a blue jacket, is seen walking past the shelves, seemingly uninterested in the products.\n\nAs the camera pans around the store, more people can be observed engaging with the ceramic items. Some individuals are standing near the shelves, closely examining the dishes, while others are walking through the aisles, browsing the available options. The store has a well-lit environment, making it easy for customers to see the details of the ceramic pieces.\n\nThroughout the video, the focus remains on the interaction between the customers and the ceramic dishes, showcasing the variety of items available for purchase. The store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
+                },
+                "score": 53.65
+            },
+            {
                 "id": "435369449869751787",
                 "distance": 0.7416173,
                 "meta": {
