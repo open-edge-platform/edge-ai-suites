@@ -105,7 +105,7 @@ source setup.sh start
 
 This launches all required containers:
 
-![Services overview](./_assets/containers.png)
+![Services overview](./_assets/containers.png "services overview")
 
 ### Step 4: Access the Interface
 
