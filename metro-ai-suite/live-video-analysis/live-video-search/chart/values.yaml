@@ -1,5 +1,5 @@
 global:
-  registry: ""
+  registry: "intel"
   tag: "latest"
   vssStackTag: ""
   smartNvrStackTag: ""
