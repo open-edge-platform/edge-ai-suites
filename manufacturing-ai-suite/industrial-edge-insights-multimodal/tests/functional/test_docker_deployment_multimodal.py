@@ -61,7 +61,7 @@ def test_invalid_values():
 
 def test_valid_values():
     """TC_003: Testing valid values in .env file for multimodal deployment"""
-    logger.info("TC_003: Changed Test Case - Verifying make check_env_variables with all valid values in .env file")
+    logger.info("TC_003: Testing valid values, verifying make check_env_variables with all valid values in .env file")
     case = docker_utils.generate_multimodal_test_credentials(case_type="valid")
     
     # Validate that S3 credentials are present and valid

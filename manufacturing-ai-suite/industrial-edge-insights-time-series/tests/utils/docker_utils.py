@@ -2742,7 +2742,15 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
     
     # Combine basic and multimodal credentials
     basic_credentials.update(multimodal_vars)
-    
+
+    # Always inject proxy variables so Docker Compose does not warn about unset
+    # variables when it interpolates ${no_proxy}, ${http_proxy}, ${https_proxy}.
+    # Pick up values from the current environment (CI/CD may set them); fall back
+    # to an empty string so the compose warning is suppressed.
+    basic_credentials["http_proxy"] = os.environ.get("http_proxy", os.environ.get("HTTP_PROXY", ""))
+    basic_credentials["https_proxy"] = os.environ.get("https_proxy", os.environ.get("HTTPS_PROXY", ""))
+    basic_credentials["no_proxy"] = os.environ.get("no_proxy", os.environ.get("NO_PROXY", ""))
+
     logger.info(f"Generated {len(basic_credentials)} multimodal credentials for case '{case_type}'")
     
     return basic_credentials
