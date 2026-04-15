@@ -804,7 +804,9 @@ access to commonly used robotic functionality with ease.
    :sync: jazzy
 
    ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
    ```
 
    ::::
@@ -812,7 +814,9 @@ access to commonly used robotic functionality with ease.
    :sync: humble
 
    ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
    ```
 
    ::::
