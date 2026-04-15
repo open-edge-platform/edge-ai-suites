@@ -382,14 +382,14 @@ Different filter keys are always combined with `AND`. When a filter value is a `
 * Example:
 Request:
 ```
-# Example 1: Filter by tags — returns results whose tags array contains "classroom" or "student"
+# Example 1: Filter by tags — returns results whose tags array contains "test_tag1" or "test_tag2"
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
     "query": "classroom",
     "max_num_results": 2,
     "filter": {
-        "tags": ["classroom", "student"]
+        "tags": ["test_tag1", "test_tag2"]
     }
 }'
 # Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
@@ -417,7 +417,11 @@ Response (200 OK):
                 "meta": {
                     "type": "image",
                     "file_path": "local://content-search/runs/7a4480af-3f9c-40b6-ac9e-0a698717bc45/raw/image/default/classroom.jpg",
-                    "file_name": "classroom.jpg"
+                    "file_name": "classroom.jpg",
+                    "tags": [
+                        "img_tag1",
+                        "img_tag2"
+                    ]
                 },
                 "score": 83.56
             },
@@ -437,7 +441,11 @@ Response (200 OK):
                     "doc_languages": "[\"eng\"]",
                     "doc_file_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\tmpwma1e266",
                     "file_path": "local://content-search/runs/a6d3ef1f-510b-4ec9-8a16-4db2332758b0/raw/application/default/ComputerScienceOne.pdf",
-                    "file_name": "ComputerScienceOne.pdf"
+                    "file_name": "ComputerScienceOne.pdf",
+                    "tags": [
+                        "pdf_tag1",
+                        "pdf_tag2"
+                    ]
                 },
                 "score": 99.81,
                 "reranker_score": 6.28125
