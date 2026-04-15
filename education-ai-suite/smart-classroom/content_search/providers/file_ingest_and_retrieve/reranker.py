@@ -68,7 +68,7 @@ class PostProcessor:
     def process_text_query_results(
         self, query: str, visual_results: dict, doc_results: dict, top_k: int,
     ) -> dict:
-        """Full post-processing for text queries: dedup → attach summaries → rerank → allocate slots."""
+        """Full post-processing for text queries: dedup → attach summaries → rerank → scores → drop attached summaries → allocate slots → summary to video → format."""
         visual_flat = _flatten_chroma_results(visual_results)
         doc_flat = _flatten_chroma_results(doc_results)
         logger.debug("[PostProcessor] Text query: %r | visual candidates: %d | doc candidates: %d | top_k: %d",
@@ -80,58 +80,21 @@ class PostProcessor:
 
         self._attach_best_summary_texts(visual_deduped)
 
-        summaries, non_summaries = self._split_summaries(doc_flat)
-        logger.debug("[PostProcessor] Doc split: %d summaries, %d non-summaries",
-                     len(summaries), len(non_summaries))
+        doc_reranked = self._rerank_documents(query, doc_flat)
 
-        doc_reranked = self._rerank_documents(query, non_summaries)
+        self._compute_percentage_scores(visual_deduped)
+        self._compute_percentage_scores(doc_reranked)
 
-        # For summaries whose chunk_text is not already attached to a visual result, construct video results
-        attached_texts = {
-            r["meta"].get("summary_text", "")
-            for r in visual_deduped
-            if r.get("meta", {}).get("summary_text")
-        }
-        constructed_count = 0
-        for s in summaries:
-            meta = s.get("meta", {})
-            chunk_text = meta.get("chunk_text", "")
-            if not chunk_text or chunk_text in attached_texts:
-                continue
-            file_key = meta.get("file_key", "")
-            bucket = extract_bucket_name(meta.get("file_path", ""))
-            if not bucket or not file_key:
-                continue
-            video_fp = file_key_to_path(file_key, bucket)
-            start_time = meta.get("start_time", 0)
-            end_time = meta.get("end_time", 0)
-            mid_time = start_time + (end_time - start_time) / 2
-            video_result = {
-                "id": s["id"],
-                "distance": s["distance"],
-                "meta": {
-                    "file_path": video_fp,
-                    "type": "video",
-                    "original_type": "constructed_from_summary",
-                    "video_pin_second": mid_time,
-                    "summary_text": chunk_text,
-                },
-            }
-            visual_deduped.append(video_result)
-            attached_texts.add(chunk_text)
-            constructed_count += 1
-        if constructed_count:
-            logger.debug("[PostProcessor] Constructed %d video results from unattached summaries",
-                         constructed_count)
+        doc_filtered = self._remove_attached_summaries(doc_reranked, visual_deduped)
 
         groups = {}
         if visual_deduped:
             groups["visual"] = visual_deduped
-        if doc_reranked:
-            groups["document"] = doc_reranked
+        if doc_filtered:
+            groups["document"] = doc_filtered
 
         merged = self._allocate_slots(groups, top_k)
-        self._compute_percentage_scores(merged)
+        self._convert_summaries_to_video(merged)
         logger.debug("[PostProcessor] Final merged results: %d", len(merged))
         return self._to_chroma_format(merged)
 
@@ -270,20 +233,64 @@ class PostProcessor:
         return best
 
     @staticmethod
-    def _split_summaries(doc_results: list[dict]) -> tuple[list[dict], list[dict]]:
-        """Split document results into video summaries and non-summaries.
-
-        A document is considered a video summary if its metadata contains
-        a ``summary_key``.  Returns ``(summaries, non_summaries)``.
-        """
-        summaries: list[dict] = []
-        non_summaries: list[dict] = []
+    def _remove_attached_summaries(doc_results: list[dict], visual_results: list[dict]) -> list[dict]:
+        """Remove summaries whose chunk_text is already attached to a visual frame."""
+        attached_texts = {
+            r["meta"].get("summary_text", "")
+            for r in visual_results
+            if r.get("meta", {}).get("summary_text")
+        }
+        filtered = []
+        removed_count = 0
         for r in doc_results:
-            if "summary_key" in r.get("meta", {}):
-                summaries.append(r)
+            if "summary_key" in r.get("meta", {}) and r["meta"].get("chunk_text", "") in attached_texts:
+                removed_count += 1
             else:
-                non_summaries.append(r)
-        return summaries, non_summaries
+                filtered.append(r)
+        if removed_count:
+            logger.debug("[PostProcessor] Removed %d attached summaries from doc group", removed_count)
+        return filtered
+
+    @staticmethod
+    def _convert_summaries_to_video(results: list[dict]) -> None:
+        """Convert remaining summary documents in the final result list to video results in-place.
+
+        Attached summaries are already removed before allocation, so every
+        summary here should be converted.  Any that cannot be converted
+        (missing file_key/bucket) are dropped.
+        """
+        converted_count = 0
+        remove_indices: list[int] = []
+        for i, r in enumerate(results):
+            meta = r.get("meta", {})
+            if "summary_key" not in meta:
+                continue
+            chunk_text = meta.get("chunk_text", "")
+            file_key = meta.get("file_key", "")
+            bucket = extract_bucket_name(meta.get("file_path", ""))
+            if not bucket or not file_key:
+                remove_indices.append(i)
+                continue
+            video_fp = file_key_to_path(file_key, bucket)
+            start_time = meta.get("start_time", 0)
+            end_time = meta.get("end_time", 0)
+            mid_time = start_time + (end_time - start_time) / 2
+            r["meta"] = {
+                "file_path": video_fp,
+                "type": "video",
+                "original_type": "constructed_from_summary",
+                "video_pin_second": round(mid_time, 2),
+                "video_start_second": round(start_time, 2),
+                "video_end_second": round(end_time, 2),
+                "summary_text": chunk_text,
+                "reranker_score": r.get("reranker_score"),
+            }
+            converted_count += 1
+        for i in reversed(remove_indices):
+            results.pop(i)
+        if converted_count or remove_indices:
+            logger.debug("[PostProcessor] Summaries: %d converted to video, %d dropped (missing file_key)",
+                         converted_count, len(remove_indices))
 
     def _rerank_documents(self, query: str, doc_results: list[dict]) -> list[dict]:
         """Re-score documents with BAAI/bge-reranker-large cross-encoder.

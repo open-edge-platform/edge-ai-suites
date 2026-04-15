@@ -20,19 +20,26 @@
 
 ### `process_text_query_results(query, visual_results, doc_results, top_k)`
 
-Pipeline: **dedup → rerank → allocate slots → format**
+Pipeline: **dedup → attach summaries → rerank all docs → percentage scores → drop attached summaries → allocate slots → summary→video → format**
 
-```
-visual_results (ChromaDB) ──→ flatten → _dedup_video_frames ──┐
-                                                               ├─→ _allocate_slots → _to_chroma_format
-doc_results    (ChromaDB) ──→ flatten → _rerank_documents ────┘
+```mermaid
+graph LR
+    VR[visual_results] --> F1[flatten] --> dedup[_dedup_video_frames] --> attach[_attach_best_summary_texts]
+    DR[doc_results] --> F2[flatten] --> rerank[_rerank_documents]
+
+    attach --> pct1[_compute_percentage_scores]
+    rerank --> pct2[_compute_percentage_scores] --> drop[drop attached summaries]
+
+    pct1 --> alloc[_allocate_slots]
+    drop --> alloc
+    alloc --> conv[_convert_selected_summaries_to_video] --> fmt[_to_chroma_format]
 ```
 
 ### `process_image_query_results(visual_results, top_k)`
 
-Pipeline: **dedup → trim → assign RRF by rank → format**
+Pipeline: **dedup → attach summaries → trim → assign RRF by rank → percentage scores → format**
 
-No cross-encoder is invoked. `scores` are assigned purely by distance rank so the output format is consistent with the text path.
+No cross-encoder is invoked. After dedup, summary texts are attached to video results via `_attach_best_summary_texts`. Results are trimmed to `top_k`, assigned RRF scores by rank, then scored with `_compute_percentage_scores` (using the image-to-image sigmoid center) so the output format is consistent with the text path.
 
 ---
 
@@ -46,30 +53,27 @@ No cross-encoder is invoked. `scores` are assigned purely by distance rank so th
   - Otherwise, emit the cluster leader and start a new cluster.
 - Final output is sorted by `distance` ascending (lower = more relevant). This ordering is relied on by `_allocate_slots` for RRF ranking.
 
-### 2. `_rerank_documents`
+### 2. `_attach_best_summary_texts`
 
-- Documents with `meta.chunk_text` are scored by the cross-encoder as `[query, chunk_text]` pairs in a single batched inference call (max length 512 tokens).
+- Iterates over deduped visual results; skips non-video items.
+- Groups video results by `file_path`, then looks up precomputed summary IDs from `video_summary_id_map` and fetches their metadata from the document collection via `chroma_client.get()`.
+- For each video result, finds the summary whose time range midpoint (`(start_time + end_time) / 2`) is closest to `video_pin_second` and attaches its `chunk_text` as `meta.summary_text`.
+- This gives each video frame a textual description that can be displayed alongside the visual result.
+
+### 3. `_rerank_documents`
+
+- **All** document results (including video summaries) are scored by the cross-encoder as `[query, chunk_text]` pairs in a single batched inference call (max length 512 tokens).
 - The raw logit is stored as `reranker_score` on each result.
 - Scored documents are sorted by `reranker_score` descending. Documents without `chunk_text` are appended at the end in their original order without a score.
-
-### 3. `_allocate_slots`
-
-Merges `visual` and `document` groups into a single ranked list of `top_k` items.
-
-**RRF scoring** — each group is ranked independently (visual: by distance, document: by reranker_score). RRF score is assigned per item:
-
-$$\text{rrf\_score} = \frac{1}{k + \text{rank}}, \quad k = \text{RRF\_K} = 60$$
-
-**Two-pass selection:**
-
-1. **Guarantee pass** — each group gets at least `min_per_group = max(1, top_k // (num_groups × 2))` slots, preventing a dominant group from starving others entirely.
-2. **Fill pass** — remaining slots are filled globally by descending `rrf_score`.
-
-After both passes, `selected` is re-sorted by `rrf_score` descending to produce a globally consistent ranking (the guarantee pass can insert items out of global order).
+- Summaries compete alongside regular documents on an equal footing throughout the remaining pipeline steps.
 
 ### 4. `_compute_percentage_scores`
 
-Assigns a 0-100 **absolute relevance** score to each result. Because documents and visual results come from fundamentally different scoring systems, each type has its own formula:
+- Run on visual and document groups **separately, before allocation**.
+- Since percentage scores are independent of RRF (they only depend on each result's own raw score), computing them before or after allocation produces identical values.
+- Computing them early means scores are already present on items entering `_allocate_slots`, which allows a later step (drop attached summaries) to remove items without losing their scores.
+
+Assigns a 0-100 **absolute relevance** score to each result. Each type has its own formula:
 
 **Documents** (have `reranker_score` from the cross-encoder):
 
@@ -97,7 +101,35 @@ Typical score ranges for relevant results:
 | Visual text-to-image   | 80-95    | 30-80    | 0-20       |
 | Visual image-to-image  | 80-97    | 30-80    | 0-20       |
 
-### 5. `_to_chroma_format`
+### 5. Drop attached summaries
+
+- Summaries whose `chunk_text` already appears as `summary_text` on a visual frame are removed from the document group **before allocation**.
+- This prevents attached summaries from consuming document slots in `_allocate_slots`, ensuring allocation uses all `top_k` slots for genuinely distinct content.
+
+### 6. `_allocate_slots`
+
+Merges `visual` and `document` groups into a single ranked list of `top_k` items.
+
+**RRF scoring** — each group is ranked independently (visual: by distance, document: by reranker_score). RRF score is assigned per item:
+
+$$\text{rrf\_score} = \frac{1}{k + \text{rank}}, \quad k = \text{RRF\_K} = 60$$
+
+**Two-pass selection:**
+
+1. **Guarantee pass** — each group gets at least `min_per_group = max(1, top_k // (num_groups × 2))` slots, preventing a dominant group from starving others entirely.
+2. **Fill pass** — remaining slots are filled globally by descending `rrf_score`.
+
+After both passes, `selected` is re-sorted by `rrf_score` descending to produce a globally consistent ranking (the guarantee pass can insert items out of global order).
+
+### 7. `_convert_selected_summaries_to_video`
+
+- Runs **after** allocation. Attached summaries were already removed in step 5, so every summary here is unattached and should be converted.
+- For each result whose metadata contains a `summary_key`:
+  - Resolves `file_path` from `file_key`/bucket, sets `video_pin_second` to the midpoint of `[start_time, end_time]`, replaces metadata with `type: "video"` and `original_type: "constructed_from_summary"`, preserves `reranker_score`.
+  - If `file_key`/bucket cannot be resolved, the summary is dropped.
+- After this step, no `summary_key` documents remain in the output.
+
+### 8. `_to_chroma_format`
 
 Converts the flat result list back to ChromaDB nested format. Preserves the RRF ordering from `_allocate_slots` (does not re-sort by score, since scores are not comparable across types). Output fields:
 
