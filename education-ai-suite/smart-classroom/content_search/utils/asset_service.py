@@ -18,7 +18,10 @@ class AssetService:
         if not meta_str:
             return {}
         try:
-            return json.loads(meta_str)
+            parsed = json.loads(meta_str)
+            if isinstance(parsed, str):
+                parsed = json.loads(parsed)
+            return parsed
         except (json.JSONDecodeError, TypeError):
             return {"info": meta_str}
 
