@@ -87,7 +87,6 @@ const UploadSection: React.FC = () => {
     }
   }, [entries, dispatch]);
 
-  // Sync unique tags from all entries to Redux for SearchSection filter
   useEffect(() => {
     const allTags = entries.flatMap((e) => e.tags);
     const uniqueTags = [...new Set(allTags)];
