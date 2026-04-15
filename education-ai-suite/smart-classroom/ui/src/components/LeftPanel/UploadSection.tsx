@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "STAGED"
@@ -85,6 +85,12 @@ const UploadSection: React.FC = () => {
       );
       dispatch(setCsUploadsComplete(anyUploaded));
     }
+  }, [entries, dispatch]);
+
+  useEffect(() => {
+    const allTags = entries.flatMap((e) => e.tags);
+    const uniqueTags = [...new Set(allTags)];
+    dispatch(setCsTags(uniqueTags));
   }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
