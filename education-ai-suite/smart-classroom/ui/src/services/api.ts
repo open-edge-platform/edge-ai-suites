@@ -784,9 +784,9 @@ export async function csUploadIngest(
       throw new Error(json.message || `Upload-ingest failed (${res.status})`);
     }
     const data = await res.json();
-    // code 40901 = file already exists; backend returns 200 OK with no task_id
+    // code 40901 = file already exists; backend returns task_id for cleanup
     if (data.code === 40901) {
-      return { task_id: '', status: 'ALREADY_EXISTS', file_key: data.data?.file_key };
+      return { task_id: data.data?.task_id ?? '', status: 'ALREADY_EXISTS', file_key: data.data?.file_key };
     }
     const payload = data.data ?? data;
     if (!payload?.task_id) {

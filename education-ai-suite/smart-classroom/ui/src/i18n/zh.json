@@ -146,6 +146,12 @@
     "allCameras": "所有摄像头",
     "noSessionActiveContentSearch": "无活动会话。请上传内容以开始搜索。"
   },
+  "monitoring": {
+    "pausedTitle": "资源监控已暂停",
+    "pausedMessage": "指标轮询已在 {{duration}} 分钟后自动停止。恢复以继续跟踪性能数据。",
+    "resumeAriaLabel": "恢复资源指标轮询",
+    "resumeButton": "恢复"
+  },
   "errors": {
     "projectNameRequired": "项目名称为必填项",
     "failedToStartRecording": "开始录音失败",

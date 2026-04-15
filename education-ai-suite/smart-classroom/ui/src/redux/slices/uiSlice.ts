@@ -49,6 +49,7 @@ export interface UIState {
   videoAnalyticsStopping: boolean;
   hasUploadedVideoFiles: boolean;
   monitoringActive: boolean;
+  monitoringPaused: boolean;
   videoPlaybackMode: boolean;
   uploadedVideoFiles: {
     front: File | null;
@@ -111,6 +112,7 @@ const initialState: UIState = {
   videoAnalyticsStopping: false,
   hasUploadedVideoFiles: false,
   monitoringActive: false,
+  monitoringPaused: false,
   videoPlaybackMode: false,
   uploadedVideoFiles: {
     front: null,
@@ -410,6 +412,10 @@ const uiSlice = createSlice({
     setMonitoringActive: (state, action) => {
       state.monitoringActive = action.payload;
     },
+
+    setMonitoringPaused: (state, action: PayloadAction<boolean>) => {
+      state.monitoringPaused = action.payload;
+    },
     
     setUploadedVideoFiles(state, action: PayloadAction<{
       front?: File | null;
@@ -579,6 +585,7 @@ export const {
   startTranscription,
   setHasUploadedVideoFiles,
   setMonitoringActive,
+  setMonitoringPaused,
   setUploadedVideoFiles,
   setVideoPlaybackMode,
   setRecordedVideoType,
