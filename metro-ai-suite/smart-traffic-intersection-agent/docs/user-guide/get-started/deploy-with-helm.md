@@ -107,7 +107,7 @@ By default, the chart deploys VLM inference on an **Intel GPU**. To change graph
 
 | Value | Description | Default |
 | --- | --- | --- |
-| `vlmServing.gpu.enabled` | Enable Intel GPU for VLM inference. When `true`, `VLM_DEVICE` is automatically set to `GPU` and workers are forced to `1`. | `true` |
+| `vlmServing.gpu.enabled` | Enable Intel GPU for VLM inference. When `true`, the target device is automatically set to `GPU`. | `true` |
 | `vlmServing.gpu.resourceName` | Kubernetes GPU resource name exposed by the Intel device plugin. Use `gpu.intel.com/i915` for integrated/Arc GPUs, `gpu.intel.com/xe` for Data Center GPU Flex/Max. | `gpu.intel.com/i915` |
 | `vlmServing.gpu.resourceLimit` | Number of GPU devices to request | `1` |
 | `vlmServing.gpu.renderGroupIds` | List of render group GIDs for `/dev/dri` access. Defaults cover all common distros. | `[44, 109, 992]` |
@@ -138,7 +138,7 @@ helm install stia . -n <your-namespace> --create-namespace
 
 > **Note:** By default, the chart assumes the Smart Intersection RI (MQTT broker) is deployed in the same namespace as the STIA release. If the RI is in a different namespace, add `--set trafficAgent.mqtt.brokerNamespace=<ri-namespace>`.
 
-> **Note:** The VLM OpenVINO Serving pod will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `vlmServing.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
+> **Note:** The OVMS init container will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `vlmServing.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
 
 ### Step 8: Verify the Deployment
 
@@ -154,7 +154,7 @@ You should see two pods:
 | Pod | Description |
 | --- | ----------- |
 | `stia-traffic-agent-*` | The traffic intersection agent (backend + Gradio UI) |
-| `stia-vlm-openvino-serving-*` | The VLM inference server |
+| `stia-ovms-service-*` | The OVMS VLM inference server |
 
 When live metrics is enabled (the default), you will also see:
 
@@ -265,27 +265,23 @@ helm uninstall stia -n <your-namespace>
 | `trafficAgent.persistence.size` | PVC size for agent data | `1Gi` |
 | `trafficAgent.persistence.storageClass` | Storage class (empty = cluster default) | `""` |
 
-### VLM OpenVINO Serving Settings
+### OVMS (OpenVINO Model Server) Settings
 
 | Key | Description | Default |
 | --- | ----------- | ------- |
-| `vlmServing.image.repository` | VLM serving container image repository | `intel/vlm-openvino-serving` |
-| `vlmServing.image.tag` | Image tag | `1.3.2` |
+| `vlmServing.image.repository` | OVMS container image repository | `openvino/model_server` |
+| `vlmServing.image.tag` | Image tag (CPU) | `2026.1` |
+| `vlmServing.image.gpuTag` | Image tag (GPU) | `2026.1-gpu` |
 | `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
-| `vlmServing.service.port` | VLM HTTP API port | `8000` |
+| `vlmServing.service.port` | OVMS HTTP API port | `8000` |
+| `vlmServing.service.nodePort` | NodePort for OVMS API (only used when type is `NodePort`) | `30800` |
 | `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
-| `vlmServing.env.compressionWeightFormat` | Model weight format (`int4`, `int8`, `fp16`) | `int4` |
-| `vlmServing.env.device` | OpenVINO inference device when GPU is disabled (`CPU` or `GPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
+| `vlmServing.env.targetDevice` | Inference device when GPU is disabled (`CPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
+| `vlmServing.env.weightFormat` | Model weight format (`int4`, `int8`). Empty = auto-detect based on device. | `""` |
 | `vlmServing.env.maxCompletionTokens` | Max tokens per completion | `1500` |
-| `vlmServing.env.workers` | Number of serving workers. Forced to `1` when GPU is enabled. | `1` |
-| `vlmServing.env.logLevel` | VLM serving log level | `info` |
-| `vlmServing.env.openvinoLogLevel` | OpenVINO runtime log level | `1` |
-| `vlmServing.env.accessLogFile` | Access log file path (`/dev/null` to suppress) | `/dev/null` |
-| `vlmServing.env.seed` | Random seed for reproducible inference | `42` |
-| `vlmServing.env.ovConfigCpu` | OpenVINO config JSON for CPU mode (supports `INFERENCE_NUM_THREADS`) | `{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}` |
-| `vlmServing.env.ovConfigGpu` | OpenVINO config JSON for GPU mode (includes GPU model cache) | `{"PERFORMANCE_HINT": "LATENCY", "CACHE_DIR": "/app/ov-model/gpu-cache"}` |
+| `vlmServing.env.logLevel` | OVMS log level | `INFO` |
 | `vlmServing.huggingfaceToken` | Hugging Face API token (stored as a Secret) | `""` |
-| `vlmServing.gpu.enabled` | Enable Intel GPU for VLM inference. Auto-sets `VLM_DEVICE=GPU` and `WORKERS=1`. | `true` |
+| `vlmServing.gpu.enabled` | Enable Intel GPU for VLM inference. Auto-sets target device to `GPU`. | `true` |
 | `vlmServing.gpu.resourceName` | Kubernetes GPU resource name exposed by the Intel device plugin (`gpu.intel.com/i915` or `gpu.intel.com/xe`) | `gpu.intel.com/i915` |
 | `vlmServing.gpu.resourceLimit` | Number of GPU devices to request | `1` |
 | `vlmServing.gpu.renderGroupIds` | List of GIDs for the `render` group added to `supplementalGroups` for `/dev/dri` access. All common distro values are included by default (44, 109, 992). | `[44, 109, 992]` |
@@ -415,10 +411,8 @@ helm install stia . -n traffic -f values-override.yaml \
 - **VLM model download stuck or not progressing:** Verify that proxy environment variables are correctly set inside the pod. A common cause is a mismatch between `values.yaml` key names and the template references (e.g., `http_proxy` vs `httpProxy`). Check with:
 
   ```bash
-  kubectl exec <vlm-pod-name> -n <your-namespace> -- env | grep -i proxy
+  kubectl exec <ovms-pod-name> -n <your-namespace> -- env | grep -i proxy
   ```
-
-- **`Option not found: INFERENCE_NUM_THREADS` error on GPU:** This occurs when the `OV_CONFIG` contains CPU-only options while running on GPU. Ensure `vlmServing.env.ovConfigGpu` does **not** include `INFERENCE_NUM_THREADS`. The chart automatically selects the correct config (`ovConfigCpu` or `ovConfigGpu`) based on `vlmServing.gpu.enabled`.
 
 - **GPU not detected / VLM pod Pending:** Verify the Intel GPU device plugin is installed and the GPU resource is available:
 

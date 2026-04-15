@@ -4,6 +4,7 @@
 
 import asyncio
 import json
+import re
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
@@ -42,12 +43,18 @@ class VLMService:
 
         self.weather_data: Optional[WeatherData] = None
         
-        # VLM service configuration
-        self.base_url = self.vlm_config.get("base_url", "http://vlm-service:8080")
-        self.model = self.vlm_config.get("model", "gpt-4-vision-preview")
-        self.timeout = self.vlm_config.get("timeout_seconds", 300)  # Reduced from 300 to 30 seconds
-        self.max_tokens = self.vlm_config.get("max_completion_tokens", 2000)
+        # VLM service configuration (OVMS backend)
+        self.base_url = self.vlm_config.get("base_url", "http://ovms-service:8000")
+        self.timeout = self.vlm_config.get("timeout_seconds", 300)
+        self.max_tokens = self.vlm_config.get("max_completion_tokens", 1500)
         self.temperature = self.vlm_config.get("temperature", 0.1)
+        self.top_p = self.vlm_config.get("top_p", 0.1)
+        
+        # Compute OVMS storage model name from HF model + device + weight format
+        hf_model = self.vlm_config.get("model", "")
+        target_device = self.vlm_config.get("target_device", "CPU")
+        weight_format = self.vlm_config.get("weight_format", "")
+        self.model = self._compute_ovms_model_name(hf_model, target_device, weight_format)
         self.top_p = self.vlm_config.get("top_p", 0.1)
         
         # Store config service for dynamic threshold access
@@ -71,6 +78,24 @@ class VLMService:
     def get_vlm_semaphore(self) -> asyncio.Semaphore:
         """Get the VLM semaphore for external use."""
         return self._vlm_semaphore
+
+    @staticmethod
+    def _compute_ovms_model_name(hf_model: str, target_device: str, weight_format: str) -> str:
+        """Compute the OVMS storage model name from HuggingFace model name.
+
+        Mirrors the naming convention in setup.sh and chart/files/ovms-init.sh:
+        - Non-alphanumeric chars (except _ . -) replaced with _
+        - OpenVINO namespace models: {sanitized}_{device}
+        - Other models: {sanitized}_{device}_{weight_format}
+        """
+        if not hf_model:
+            return ""
+        sanitized = re.sub(r"[^A-Za-z0-9_.\-]", "_", hf_model)
+        if not weight_format:
+            weight_format = "int4" if ("GPU" in target_device or "NPU" in target_device) else "int8"
+        if hf_model.startswith("OpenVINO/"):
+            return f"{sanitized}_{target_device}"
+        return f"{sanitized}_{target_device}_{weight_format}"
         
     def get_weather_details(self) -> Optional[WeatherData]:
         """Get the last fetched weather data."""
@@ -272,15 +297,7 @@ Please provide a structured analysis in JSON format with the following key detai
    - "weather_related": strictly a boolean value. If weather is a factor for the traffic situation value should be True, otherwise False
    
 3. "recommendations": Array of recommendation objects helping to make decisions while travelling through this intersection:
-   - "recommendation": Clear advice for traffic management or safety.
-Strictly respond ONLY with valid JSON format enclosed in markdown code blocks like:
-```json
-{{
-  "analysis": "...",
-  "alerts": [...],
-  "recommendations": [...]
-}}
-```"""
+   - "recommendation": Clear advice for traffic management or safety."""
         
         return prompt
     
@@ -308,10 +325,11 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                 }
             })
         
-        # Use configurable parameters - match working curl structure
+        # Use configurable parameters - match OVMS API structure
         request = {
             "model": self.model,
             "max_completion_tokens": self.max_tokens,
+            "max_tokens": self.max_tokens,
             "top_p": self.top_p,
             "temperature": self.temperature,
             "messages": [
@@ -319,7 +337,8 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                     "role": "user",
                     "content": content
                 }
-            ]
+            ],
+            "response_format": self._build_response_format(),
         }
         
         logger.debug("VLM request built", 
@@ -328,7 +347,74 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
                    content_items=len(content))
         
         return request
-    
+
+    @staticmethod
+    def _build_response_format() -> Dict[str, Any]:
+        """Build OVMS structured output response_format for traffic analysis.
+
+        Uses ``json_schema`` type so OVMS constrains the VLM to produce
+        valid JSON matching our expected schema.  See:
+        https://docs.openvino.ai/nightly/model-server/ovms_structured_output.html
+        """
+        return {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "TrafficAnalysis",
+                "strict": True,
+                "schema": {
+                    "type": "object",
+                    "properties": {
+                        "analysis": {
+                            "type": "string",
+                            "description": "Detailed overview of current traffic conditions",
+                        },
+                        "alerts": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "alert_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "congestion",
+                                            "weather_related",
+                                            "road_condition",
+                                            "accident",
+                                            "maintenance",
+                                            "normal",
+                                        ],
+                                    },
+                                    "level": {
+                                        "type": "string",
+                                        "enum": ["info", "warning", "critical"],
+                                    },
+                                    "description": {"type": "string"},
+                                    "weather_related": {"type": "boolean"},
+                                },
+                                "required": [
+                                    "alert_type",
+                                    "level",
+                                    "description",
+                                    "weather_related",
+                                ],
+                            },
+                        },
+                        "recommendations": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "recommendation": {"type": "string"},
+                                },
+                                "required": ["recommendation"],
+                            },
+                        },
+                    },
+                    "required": ["analysis", "alerts", "recommendations"],
+                },
+            },
+        }
+
     async def _call_vlm_service(self, request_data: Dict[str, Any]) -> Optional[str]:
         """
         Call VLM service API with error handling.
@@ -340,7 +426,7 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
             VLM response text or None if failed
         """
         try:
-            url = f"{self.base_url}/v1/chat/completions"
+            url = f"{self.base_url}/v3/chat/completions"
             timeout = aiohttp.ClientTimeout(total=self.timeout)
             
             async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -394,19 +480,23 @@ Strictly respond ONLY with valid JSON format enclosed in markdown code blocks li
             Structured VLMAnalysisData object
         """
         try:
-            # Extract JSON from markdown code blocks if present
             logger.debug(response_text)
-            json_content = self._extract_json_from_response(response_text)
-            
-            
-            # If extraction failed or returned None, use fallback
-            if json_content is None or len(json_content.strip()) == 0:
-                logger.warning("JSON extraction failed or returned empty content, using fallback")
-                return self._create_fallback_analysis(response_text, traffic_snapshot, weather_data)
-            
-            # Parse JSON response
-            logger.info("Attempting to parse JSON content")
-            response_data = json.loads(json_content)
+
+            # With OVMS structured output (response_format), the response
+            # should already be valid JSON.  Try direct parsing first,
+            # then fall back to extraction from markdown code blocks.
+            json_content: Optional[str] = None
+            try:
+                response_data = json.loads(response_text)
+                logger.info("Parsed VLM response as direct JSON")
+            except json.JSONDecodeError:
+                # Fallback: extract JSON from markdown code blocks
+                json_content = self._extract_json_from_response(response_text)
+                if json_content is None or len(json_content.strip()) == 0:
+                    logger.warning("JSON extraction failed or returned empty content, using fallback")
+                    return self._create_fallback_analysis(response_text, traffic_snapshot, weather_data)
+                logger.info("Attempting to parse extracted JSON content")
+                response_data = json.loads(json_content)
             
             logger.info("JSON parsing successful", 
                        response_type=type(response_data).__name__,
