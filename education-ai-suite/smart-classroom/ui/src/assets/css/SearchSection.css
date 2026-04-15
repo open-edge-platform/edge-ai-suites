@@ -26,6 +26,63 @@
   color: #2B2C30;
 }
 
+.cs-search-chevron {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6A6D75;
+  transition: transform 0.2s ease;
+  border-radius: 4px;
+}
+
+.cs-search-chevron:hover {
+  background: #f5f5f5;
+  color: #2B2C30;
+}
+
+.cs-search-chevron--expanded {
+  transform: rotate(0deg);
+}
+
+.cs-search-chevron:not(.cs-search-chevron--expanded) {
+  transform: rotate(0deg);
+}
+
+/* ───────── Warning Frame ───────── */
+
+.cs-search-warning-frame {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  max-width: 572px;
+  min-height: 32px;
+  border-radius: 2px;
+  padding: 8px;
+  background: #0054AE;
+  margin-bottom: 14px;
+  box-sizing: border-box;
+}
+
+.cs-search-warning-frame-icon {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+}
+
+.cs-search-warning-frame-text {
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0;
+  vertical-align: middle;
+  color: #FFFFFF;
+}
+
 /* ───────── Tabs ───────── */
 
 .cs-search-tabs {
@@ -355,6 +412,13 @@
   width: 16px;
   height: 16px;
   accent-color: #1976d2;
+}
+
+.cs-search-filter-dropdown-empty {
+  padding: 12px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
 }
 
 /* ───────── Top Results Section ───────── */

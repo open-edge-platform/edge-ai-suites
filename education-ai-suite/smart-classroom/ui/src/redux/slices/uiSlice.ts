@@ -73,6 +73,7 @@ export interface UIState {
   transcriptionDone: boolean;
   csUploadsComplete: boolean;
   csHasUploads: boolean;
+  csTags: string[];
 }
  
 const initialState: UIState = {
@@ -130,6 +131,7 @@ const initialState: UIState = {
   csProcessing: false,
   csUploadsComplete: false,
   csHasUploads: false,
+  csTags: [],
 };
 
 const uiSlice = createSlice({
@@ -510,6 +512,10 @@ const uiSlice = createSlice({
       state.csHasUploads = action.payload;
     },
 
+    setCsTags(state, action: PayloadAction<string[]>) {
+      state.csTags = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -598,6 +604,7 @@ export const {
   setCsProcessing,
   setCsUploadsComplete,
   setCsHasUploads,
+  setCsTags,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

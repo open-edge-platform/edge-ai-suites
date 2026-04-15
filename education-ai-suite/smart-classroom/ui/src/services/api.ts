@@ -1059,7 +1059,8 @@ export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]
     }
 
     const data = await response.json();
-    return Array.isArray(data) ? data : [];
+    // API returns { code, data: { results: [...] }, message, timestamp }
+    return Array.isArray(data?.data?.results) ? data.data.results : [];
   } catch (error) {
     console.error('csSearch error:', error);
     return [];

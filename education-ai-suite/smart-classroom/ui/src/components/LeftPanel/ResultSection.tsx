@@ -5,6 +5,7 @@ import searchIcon from "../../assets/images/search-icon.svg";
 import folderIcon from "../../assets/images/folder.svg";
 import streamingIcon from "../../assets/images/streamingIcon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
+import { formatSecondsToTime } from "../../utils/timeUtils";
 
 // Content Search API types
 export interface CsSearchParams {
@@ -167,6 +168,18 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
           <span className="cs-result-item-value" title={fileName}>{fileName}</span>
         </div>
 
+        {fileType === "document" && (
+          <div className="cs-result-item-row">
+            <span className="cs-result-item-page-label">Page: {meta.doc_page_number ?? "NA"}</span>
+          </div>
+        )}
+
+        {fileType === "video" && (
+          <div className="cs-result-item-row">
+            <span className="cs-result-item-page-label">Time: {formatSecondsToTime(meta.video_pin_second)}</span>
+          </div>
+        )}
+
         {tags.length > 0 && (
           <div className="cs-result-item-row">
             <span className="cs-result-item-label">{t("resultSection.labels")}:</span>
@@ -181,7 +194,7 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
 
       <div className="cs-result-item-score-section">
         <span className="cs-result-item-score-box">
-          {t("resultSection.score")}: {Math.round((result?.score ?? 0) * 100)}%
+          Score: {result?.score ?? 0}%
         </span>
       </div>
     </div>
