@@ -28,18 +28,18 @@ seconds, then sends `SIGINT` to stop the simulation cleanly.
 
 ```bash
 # Basic single run
-make picknplace-run
+bash src/picknplace_run.sh
 
 # Single run + record a KPI rosbag
-make picknplace-record
+bash src/picknplace_run.sh --record
 ```
 
 Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be
 visualized immediately:
 
 ```bash
-make visualize-last
-make pipeline-graph
+uv run python src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
+uv run python src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 ```
 
 ## Benchmark (Multiple Runs)
@@ -48,22 +48,21 @@ The benchmark target runs the simulation `RUNS` times (each up to
 `PN_TIMEOUT` seconds), pauses between runs, then aggregates KPI statistics.
 
 ```bash
-# Default benchmark
-make picknplace-benchmark
+# Default benchmark (25 runs)
+for i in $(seq 1 25); do bash src/picknplace_run.sh; done
 
-# Custom parameters
-make picknplace-benchmark RUNS=5
+# Custom parameters (5 runs)
+for i in $(seq 1 5); do bash src/picknplace_run.sh --timeout 300; done
 
 # Re-aggregate KPIs from a completed benchmark directory
-make analyze-benchmark BENCH=monitoring_sessions/picknplace/bench_20260319_164521
+uv run python src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
 ```
 
 | Parameter | Description | Default |
-|-----------|-------------|---------|
-| `RUNS` | Number of simulation runs | 25 |
-| `PN_TIMEOUT` | Max duration per run (seconds) | 300 |
-| `PAUSE` | Pause between runs (seconds) | 30 |
-| `NODE` | Narrow graph discovery to a specific node | — |
+|-----------|-------------|--------|
+| `--timeout N` | Max duration per run (seconds) | 300 |
+| `--record` | Record KPI topics to a rosbag | — |
+| `--plot` | Save trigger-timeline PNG plots | — |
 
 Sessions are stored in `monitoring_sessions/picknplace/`.
 
@@ -73,7 +72,7 @@ The `picknplace-run` script (`src/picknplace_run.sh`) automates:
 
 1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
 2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `make monitor-gpu DURATION=120` to capture GPU and resource metrics.
+3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
 4. After 120 seconds, sends `SIGINT` to stop the simulation and waits for
    both processes to exit cleanly.
 
@@ -81,20 +80,20 @@ The `picknplace-run` script (`src/picknplace_run.sh`) automates:
 
 ```bash
 # Timeline, resource, and frequency plots
-make visualize-last
+uv run python src/visualize_timing.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 
 # Full GPU dashboard (engine busy%, frequency, power)
-make visualize-gpu
+uv run python src/visualize_gpu.py monitoring_sessions/picknplace/<session>/gpu_usage.log --show
 
 # Interactive node topology graph
-make pipeline-graph
+uv run python src/visualize_graph.py monitoring_sessions/picknplace/<session>/graph_timing.csv --show
 ```
 
-For a specific session:
+For a specific benchmark directory:
 
 ```bash
-make visualize-last ALGORITHM=picknplace
-make visualize-gpu SESSION=monitoring_sessions/picknplace/bench_20260319_164521
+uv run python src/aggregate_kpi.py monitoring_sessions/picknplace/bench_20260319_164521
+uv run python src/visualize_gpu.py monitoring_sessions/picknplace/bench_20260319_164521/<session>/gpu_usage.log --show
 ```
 
 ## Troubleshooting
@@ -102,9 +101,9 @@ make visualize-gpu SESSION=monitoring_sessions/picknplace/bench_20260319_164521
 | Problem | Fix |
 |---------|-----|
 | Simulation fails to launch | Ensure `picknplace-simulation` package is installed (see [Pick & Place tutorial](../simulation/picknplace.md)) |
-| No GPU data in results | Use `GPU=1` flag or verify `intel_gpu_top` is installed on the target |
+| No GPU data in results | Use `--gpu` flag or verify `intel_gpu_top` is installed on the target |
 | Benchmark stops early | Increase `PN_TIMEOUT` — the full pick-and-place cycle can take up to 5 minutes |
-| MoveIt2 instability | Run with CycloneDDS: `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp make picknplace-run` |
+| MoveIt2 instability | Run with CycloneDDS: `RMW_IMPLEMENTATION=rmw_cyclonedds_cpp bash src/picknplace_run.sh` |
 
 ## Session Data Layout
 
