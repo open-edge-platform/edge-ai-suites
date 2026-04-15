@@ -130,29 +130,29 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
 1. Ensure VLM Service Availability
 
-Verify the VLM microservice is running and accessible at the configured endpoint.
+   Verify the VLM microservice is running and accessible at the configured endpoint.
 
 2. Set Environment Variable
 
-```bash
-export NVR_GENAI=true
-export VLM_SERVING_IP=<vlm-serving-device-ip>
-export VLM_SERVING_PORT=<vlm-serving-port>
-```
+   ```bash
+   export NVR_GENAI=true
+   export VLM_SERVING_IP=<vlm-serving-device-ip>
+   export VLM_SERVING_PORT=<vlm-serving-port>
+   ```
 
 3. Run the application
 
-Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
+   Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
-> **Important:**
->
-> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
-> - Requires VLM microservice to be running.
-> - Disabled by default for system stability.
-> - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
->   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
->   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
-> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
+   > **Important:**
+   >
+   > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
+   > - Requires VLM microservice to be running.
+   > - Disabled by default for system stability.
+   > - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
+   >   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
+   >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
+   > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 
 ### Running Tests and Generating Coverage Report
 
