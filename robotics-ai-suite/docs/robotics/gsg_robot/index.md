@@ -553,7 +553,74 @@ sudo apt install ros-humble-openvino-node
 ::::
 
 
-### 5. Install Autonomous Mobile Robot Deb packages
+### 5. Install RealSense™ Camera SDK
+
+RealSense™ SDK is a cross-platform library for RealSense™
+depth cameras. The SDK allows depth and color streaming, and provides
+intrinsic and extrinsic calibration information. The library also offers
+synthetic streams (pointcloud, depth aligned to color and vise-versa), and a
+built-in support for record and playback of streaming sessions.
+
+RealSense™ SDK includes support for ROS and ROS 2, allowing you
+access to commonly used robotic functionality with ease.
+
+1. Register the server’s public key:
+
+   ```bash
+   sudo mkdir -p /etc/apt/keyrings
+   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+   ```
+
+2. Add RealSense to the list of repositories:
+
+   ```bash
+   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
+   ```
+
+3. Update your APT repository caches after setting up the repository:
+
+   ```bash
+   sudo apt update
+   ```
+
+4. Configure APT preferences to pin the RealSense version:
+
+   This step pins the RealSense SDK to validated versions that ensure compatibility with ROS 2 and the tutorials in this documentation. This prevents automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
+
+   :::::{tab-set}
+   ::::{tab-item} **Jazzy**
+   :sync: jazzy
+
+   ```bash
+   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
+   ```
+
+   ::::
+   ::::{tab-item} **Humble**
+   :sync: humble
+
+   ```bash
+   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
+   echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
+   ```
+
+   ::::
+   :::::
+
+5. Install the RealSense drivers and libraries:
+
+   ```bash
+   sudo apt install librealsense2-dkms
+   sudo apt install librealsense2
+   ```
+
+   > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
+
+
+### 6. Install Autonomous Mobile Robot Deb packages
 
 This section details steps to install Autonomous Mobile Robot Deb packages.
 
@@ -763,73 +830,6 @@ This section details steps to install Autonomous Mobile Robot Deb packages.
      the Autonomous Mobile Robot, you will have to re-install the Intel GPU
      Level-Zero accelerated package for Collaborative SLAM
      (``ros-jazzy-collab-slam-lze``) as described above.
-
-
-### 6. Install RealSense™ Camera SDK
-
-RealSense™ SDK is a cross-platform library for RealSense™
-depth cameras. The SDK allows depth and color streaming, and provides
-intrinsic and extrinsic calibration information. The library also offers
-synthetic streams (pointcloud, depth aligned to color and vise-versa), and a
-built-in support for record and playback of streaming sessions.
-
-RealSense™ SDK includes support for ROS and ROS 2, allowing you
-access to commonly used robotic functionality with ease.
-
-1. Register the server’s public key:
-
-   ```bash
-   sudo mkdir -p /etc/apt/keyrings
-   curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
-   ```
-
-2. Add RealSense to the list of repositories:
-
-   ```bash
-   echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list
-   ```
-
-3. Update your APT repository caches after setting up the repository:
-
-   ```bash
-   sudo apt update
-   ```
-
-4. Configure APT preferences to pin the RealSense version:
-
-   This step pins the RealSense SDK to validated versions that ensure compatibility with ROS 2 and the tutorials in this documentation. This prevents automatic upgrades during ``apt upgrade`` that could introduce compatibility issues.
-
-   :::::{tab-set}
-   ::::{tab-item} **Jazzy**
-   :sync: jazzy
-
-   ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.56.5-0~realsense.17055\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-jazzy-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-jazzy-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
-   ```
-
-   ::::
-   ::::{tab-item} **Humble**
-   :sync: humble
-
-   ```bash
-   echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001\n" | sudo tee /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001\n" | sudo tee -a /etc/apt/preferences.d/librealsense
-   echo -e "Package: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense
-   ```
-
-   ::::
-   :::::
-
-5. Install the RealSense drivers and libraries:
-
-   ```bash
-   sudo apt install librealsense2-dkms
-   sudo apt install librealsense2
-   ```
-
-   > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
 
 
 ### 7. Install the Intel® NPU Driver on Intel® Core™ Ultra Processors
