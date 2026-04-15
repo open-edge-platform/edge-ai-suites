@@ -71,6 +71,8 @@ export interface UIState {
   } | null;
   csProcessing: boolean;
   transcriptionDone: boolean;
+  csUploadsComplete: boolean;
+  csHasUploads: boolean;
 }
  
 const initialState: UIState = {
@@ -126,6 +128,8 @@ const initialState: UIState = {
   contentSegmentationError: null,
   timelineHighlight: null,
   csProcessing: false,
+  csUploadsComplete: false,
+  csHasUploads: false,
 };
 
 const uiSlice = createSlice({
@@ -498,6 +502,14 @@ const uiSlice = createSlice({
       state.csProcessing = action.payload;
     },
 
+    setCsUploadsComplete(state, action: PayloadAction<boolean>) {
+      state.csUploadsComplete = action.payload;
+    },
+
+    setCsHasUploads(state, action: PayloadAction<boolean>) {
+      state.csHasUploads = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -508,9 +520,13 @@ const uiSlice = createSlice({
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedCsHasUploads = state.csHasUploads;
+      const preservedCsUploadsComplete = state.csUploadsComplete;
       Object.assign(state, initialState);
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.csHasUploads = preservedCsHasUploads;
+      state.csUploadsComplete = preservedCsUploadsComplete;
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
@@ -580,6 +596,8 @@ export const {
   setShowSearchResults,
   setTimelineHighlight,
   setCsProcessing,
+  setCsUploadsComplete,
+  setCsHasUploads,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

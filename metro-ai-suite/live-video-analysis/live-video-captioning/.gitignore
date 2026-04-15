@@ -1,5 +1,6 @@
 ov_models
 ov_detection_models
+llm_models
 .env
 .venv/
 .coverage

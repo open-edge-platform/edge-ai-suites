@@ -67,22 +67,96 @@ $$\text{rrf\_score} = \frac{1}{k + \text{rank}}, \quad k = \text{RRF\_K} = 60$$
 
 After both passes, `selected` is re-sorted by `rrf_score` descending to produce a globally consistent ranking (the guarantee pass can insert items out of global order).
 
-### 4. `_to_chroma_format`
+### 4. `_compute_percentage_scores`
 
-Converts the flat result list back to ChromaDB nested format. Output fields:
+Assigns a 0-100 **absolute relevance** score to each result. Because documents and visual results come from fundamentally different scoring systems, each type has its own formula:
+
+**Documents** (have `reranker_score` from the cross-encoder):
+
+$$\text{score} = \sigma(\text{reranker\_score}) \times 100$$
+
+**Visual results** (text-to-image and image-to-image):
+
+$$\text{score} = \sigma\bigl(k \cdot (\text{cosine\_sim} - \text{center})\bigr) \times 100$$
+
+where `cosine_sim = 1 - distance` (ChromaDB cosine distance is in [0, 2]).
+
+CLIP text-to-image and image-to-image similarities occupy very different ranges, so each query type uses its own sigmoid center:
+
+| Constant                       | Value  | Purpose                                             |
+| ------------------------------ | ------ | --------------------------------------------------- |
+| `VISUAL_SIGMOID_K`             | `15.0` | Steepness (shared)                                  |
+| `VISUAL_SIGMOID_CENTER_TEXT`   | `0.15` | Center for text-to-image queries (sim ~0.05-0.35)   |
+| `VISUAL_SIGMOID_CENTER_IMAGE`  | `0.70` | Center for image-to-image queries (sim ~0.5-0.95)   |
+
+Typical score ranges for relevant results:
+
+| Type                   | Relevant | Moderate | Irrelevant |
+| ---------------------- | -------- | -------- | ---------- |
+| Document               | 85-99    | 50-85    | 0-30       |
+| Visual text-to-image   | 80-95    | 30-80    | 0-20       |
+| Visual image-to-image  | 80-97    | 30-80    | 0-20       |
+
+### 5. `_to_chroma_format`
+
+Converts the flat result list back to ChromaDB nested format. Preserves the RRF ordering from `_allocate_slots` (does not re-sort by score, since scores are not comparable across types). Output fields:
 
 | Field | Content | Direction |
 |-------|---------|-----------|
 | `ids` | result id list | — |
 | `metadatas` | original metadata dicts | — |
 | `distances` | raw ChromaDB cosine distance | lower = better |
-| `scores` | RRF score, list is already sorted descending | higher = better |
+| `scores` | absolute relevance per type (sigmoid-based, see above) | higher = better |
 | `reranker_scores` | cross-encoder logit per result (`None` for visual items); **only present when at least one document result exists** | higher = better |
 
 ---
 
-## Score Comparability
+## Design: RRF for Result Diversity
 
-- `scores` (RRF) are **comparable within a single call** — visual and document results can be ranked against each other.
-- `scores` are **not comparable across separate calls** — RRF is a relative rank-based value, not an absolute similarity measure.
+### The problem
+
+The system retrieves results from two fundamentally different modalities:
+
+- **Visual** (video frames, images) — scored by CLIP cosine distance, where good text-to-image matches typically have similarity 0.15-0.35.
+- **Documents** (text chunks) — scored by a cross-encoder reranker, producing logits that map to sigmoid scores of 85-99 for relevant results.
+
+These raw scores are **not comparable**. Sorting by raw score would push all documents above all visual results (or vice versa), regardless of actual relevance. A user searching for "Newton's first law" should see a relevant video clip alongside a relevant textbook passage, not ten text results followed by ten videos.
+
+### Why RRF
+
+RRF (Reciprocal Rank Fusion) solves this by discarding raw scores entirely and working only with **rank position** within each group. The rank-2 image and rank-2 document get the same RRF score (`1/(K+2)`), regardless of their raw cosine distance or reranker logit. This guarantees fair interleaving across modalities.
+
+Key properties:
+
+- **Modality-agnostic** — no need to calibrate or normalise scores across different embedding spaces.
+- **Diversity by construction** — the guarantee pass ensures every modality gets minimum representation; the fill pass lets the stronger modality claim remaining slots.
+- **Stable under score drift** — if a model update shifts the raw score distribution, RRF ordering is unaffected as long as the within-group ranking is preserved.
+
+### Why not sort by score
+
+The absolute `score` field uses per-type sigmoid formulas to produce human-readable relevance values (see `_compute_percentage_scores`). These are useful for display and per-type quality filtering, but **not for cross-type ordering** because:
+
+1. A document score of 90 (sigmoid of reranker logit) and a visual score of 90 (sigmoid of CLIP similarity) measure different things.
+2. Sorting by score would collapse back to the original problem of one modality dominating.
+
+Therefore, the final result list preserves **RRF order** and attaches `score` as a supplementary field.
+
+### Tuning `RRF_K`
+
+The constant `RRF_K = 60` controls how quickly RRF scores decay with rank:
+
+| `RRF_K` | Rank 0 vs Rank 5 ratio | Effect                             |
+| ------- | ---------------------- | ---------------------------------- |
+| 10      | 10/15 = 1.50x          | Top ranks dominate heavily         |
+| 60      | 60/65 = 1.08x          | Scores drop slowly, more diversity |
+| 200     | 200/205 = 1.02x        | Nearly flat, almost round-robin    |
+
+The default of 60 is a standard choice that balances relevance (top items still ranked higher) with diversity (lower-ranked items from one group can compete with mid-ranked items from another).
+
+---
+
+## Ordering vs Scores (summary)
+
+- **Ordering** is determined by RRF — a rank-based method that fairly interleaves results from different modalities regardless of their raw score distributions.
+- **Scores** are absolute relevance values per type. They reflect how semantically relevant each result is within its own modality, but are **not comparable across types** (a document score of 90 and a visual score of 90 do not mean the same thing).
 - `distances` are absolute cosine distances and can be used for quality filtering (e.g. drop results with `distance > threshold`) independently of call context.

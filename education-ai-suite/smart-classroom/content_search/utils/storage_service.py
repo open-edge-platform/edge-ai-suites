@@ -73,7 +73,7 @@ class StorageService:
             logger.error(f"Failed to read content for {file_key}: {str(e)}")
             raise e
 
-    async def file_exists(self, file_key: str) -> bool:
+    def file_exists(self, file_key: str) -> bool:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         try:
@@ -82,7 +82,21 @@ class StorageService:
             logger.error(f"Error checking existence for {file_key}: {str(e)}")
             return False
 
-    async def delete_file(self, file_key: str, missing_ok: bool = True) -> bool:
+    def get_file_size(self, file_key: str) -> int:
+        """Get the size of a file in bytes"""
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        try:
+            # For LocalStore, we can get the file path and check its size
+            file_path = self._store._object_path(file_key)
+            if not file_path.is_file():
+                raise RuntimeError(f"File not found: {file_key}")
+            return file_path.stat().st_size
+        except Exception as e:
+            logger.error(f"Failed to get file size for {file_key}: {str(e)}")
+            raise e
+
+    def delete_file(self, file_key: str, missing_ok: bool = True) -> bool:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         try:

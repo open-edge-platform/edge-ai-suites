@@ -142,22 +142,22 @@ wait_for_tsam:
 	done; \
 	echo "Time-Series Analytics microservice is accessible."
 
-upload_zip_file:
-	@echo "Creating UDF deployment zip for weld anomaly detection..."
+upload_tar_file:
+	@echo "Creating UDF deployment tar for weld anomaly detection..."
 	@config_dir=$(CURDIR)/configs/time-series-analytics-microservice; \
-	zip_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.zip; \
-	rm -f $$zip_file; \
+	tar_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.tar; \
+	rm -f $$tar_file; \
 	cd $$config_dir && \
 	folders="udfs tick_scripts"; \
 	if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
-	zip -r $$zip_file $$folders && \
-	echo "Created: $$zip_file"
+	tar cf $$tar_file $$folders && \
+	echo "Created: $$tar_file"
 	@$(MAKE) wait_for_tsam
-	@echo "Uploading UDF deployment zip for weld anomaly detection to Time-Series Analytics microservice..."; \
-	zip_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.zip; \
+	@echo "Uploading UDF deployment tar for weld anomaly detection to Time-Series Analytics microservice..."; \
+	tar_file=$(CURDIR)/configs/time-series-analytics-microservice/weld_anomaly_detector.tar; \
 	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
 		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
-		-F "file=@$$zip_file" \
+		-F "file=@$$tar_file" \
 		-k); \
 	if [ "$$response" = "200" ]; then \
 		echo "Upload successful (HTTP $$response)."; \
@@ -200,7 +200,7 @@ up: check_env_variables validate_host_ip down
 	else \
 		$(DOCKER_COMPOSE) up -d; \
 	fi; \
-	$(MAKE) upload_zip_file
+	$(MAKE) upload_tar_file
 
 # Status of the deployed containers
 .PHONY: status
