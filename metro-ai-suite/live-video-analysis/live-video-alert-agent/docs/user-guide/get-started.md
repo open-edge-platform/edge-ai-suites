@@ -31,7 +31,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
 
-3. Configure Environment:
+3. Configure the Environment:
 
    Optional environment variables:
 

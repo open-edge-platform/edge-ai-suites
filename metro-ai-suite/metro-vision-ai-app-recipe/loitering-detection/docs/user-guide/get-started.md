@@ -119,7 +119,7 @@ By following this guide, you will learn how to:
   - **Username**: `admin`
   - **Password**: `admin` (You will be prompted to change it on first login.)
 - In Grafana UI, the dashboard displays detected people and cars
-  ![Grafana Dashboard](./_assets/grafana.png)
+  ![Grafana Dashboard](./_assets/grafana.png "grafana dashboard")
 
   > **Note:** In the default pipeline, we use `gvatrack tracking-type=short-term-imageless` element. Imageless tracking forms object associations based on the movement and shape of objects, and it does not use image data. Since it does not use image features, the same object may receive different IDs over time due to lack of re-identification.
 

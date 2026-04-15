@@ -39,7 +39,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-### 2. Configure Environment
+### 2. Configure the Environment
 
 Ensure the following specialized adapters are present in `src/dlstreamer-pipeline-server/user_scripts/`:
 
