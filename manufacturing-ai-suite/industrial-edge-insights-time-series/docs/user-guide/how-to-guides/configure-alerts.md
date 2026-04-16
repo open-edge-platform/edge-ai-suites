@@ -78,8 +78,8 @@ data0
 <!--hide_directive:sync: tab2hide_directive-->
 
 
-[weld-defect-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+[weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
+https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
 
 ```bash
 data0
@@ -125,8 +125,8 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   :::{tab-item}hide_directive--> **Weld Defect Detection**
   <!--hide_directive:sync: tab2hide_directive-->
 
-  [weld-defect-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+  [weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
+  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883

@@ -94,8 +94,8 @@ WELD_SAMPLE_APP = "weld-defect-detection"
 WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 WIND_UDF= "windturbine_anomaly_detector"
 WIND_MODEL= "windturbine_anomaly_detector.pkl"
-WELD_UDF= "weld_anomaly_detector"
-WELD_MODEL= "weld_anomaly_detector.cb"
+WELD_UDF= "weld_defect_detector"
+WELD_MODEL= "weld_defect_detector.cb"
 TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series"
 
 WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick"
@@ -167,14 +167,14 @@ SAMPLE_APPS_CONFIG = {
         "ingested_topic": "weld-sensor-data",
         "analytics_topic": "weld-sensor-anomaly-data",
         "alert_topic": "alerts/weld_defects",
-        "udf": "weld_anomaly_detector",
-        "model": "weld_anomaly_detector.cb",
+        "udf": "weld_defect_detector",
+        "model": "weld_defect_detector.cb",
         "udf_deployment_package": "weld_anomaly_udf",
         "config_dir": "apps/weld-defect-detection/time-series-analytics-config",
         "udfs_dir": "apps/weld-defect-detection/time-series-analytics-config/udfs/",
         "models_dir": "apps/weld-defect-detection/time-series-analytics-config/models/",
         "tick_scripts_dir": "apps/weld-defect-detection/time-series-analytics-config/tick_scripts/",
-        "tick_script_path": "apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick",
+        "tick_script_path": "apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick",
         "alert_config": {
             "enabled": True,
             "threshold": 0.7,
@@ -192,14 +192,14 @@ SAMPLE_APPS_CONFIG = {
         "fusion_topic": "fusion/anomaly_detection_results",
         "fusion_measurement": "fusion_result",
         "alert_topic": "alerts/weld_defect_detection",
-        "udf": "weld_anomaly_detector",
-        "model": "weld_anomaly_detector.cb",
+        "udf": "weld_defect_detector",
+        "model": "weld_defect_detector.cb",
         "udf_deployment_package": "weld_anomaly_udf",
         "config_dir": "configs/time-series-analytics-microservice",
         "udfs_dir": "configs/time-series-analytics-microservice/udfs/",
         "models_dir": "configs/time-series-analytics-microservice/models/",
         "tick_scripts_dir": "configs/time-series-analytics-microservice/tick_scripts/",
-        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick",
+        "tick_script_path": "configs/time-series-analytics-microservice/tick_scripts/weld_defect_detector.tick",
         "alert_config": {
             "enabled": True,
             "threshold": 0.7,

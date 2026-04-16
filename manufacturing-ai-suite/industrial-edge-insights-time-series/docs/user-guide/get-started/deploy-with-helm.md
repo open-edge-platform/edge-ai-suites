@@ -206,12 +206,12 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```text
    - time-series-analytics-config/
        - models/
-           - weld_anomaly_detector.cb
+           - weld_defect_detector.cb
        - tick_scripts/
-           - weld_anomaly_detector.tick
+           - weld_defect_detector.tick
        - udfs/
            - requirements.txt
-           - weld_anomaly_detector.py
+           - weld_defect_detector.py
    ```
 
 2. Copy your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:

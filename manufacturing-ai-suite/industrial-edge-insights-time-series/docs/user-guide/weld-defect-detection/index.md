@@ -61,8 +61,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                                 | Example Value                          |
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                                 | `"weld_anomaly_detector.py"`       |
-| `models`| The name of the model file used by the UDF.                                                 | `"weld_anomaly_detector.cb"`   |
+| `name`  | The name of the UDF script.                                                                 | `"weld_defect_detector.py"`       |
+| `models`| The name of the model file used by the UDF.                                                 | `"weld_defect_detector.cb"`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
@@ -91,11 +91,11 @@ detect the anomalous power generation data points relative to wind speed.
 
 ##### **`tick_scripts/`**
 
-The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
+The TICKScript `weld_defect_detector.tick` determines processing of the input data coming in.
 Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier algorithm of CatBoost ML
+The `weld_defect_detector.cb` is a model built using the CatBoostClassifier algorithm of CatBoost ML
 library.
