@@ -17,12 +17,12 @@ global:
   vssStackTag: ''
 images:
   videoSearch:
-    repository: intel/video-search
+    repository: video-search
 
 imageOverride:
-  registry: 'amr-fm-registry.caas.intel.com/esh-user/egai/'
-  repository: 'video-search'
-  tag: '1.3.3-rc1'
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 
