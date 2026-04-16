@@ -1,65 +1,97 @@
-# Content Search Feature
+# Content Search
 
-This file shows steps to set up and run content search feature.
-For full develop guide and API Reference, please see the [Dev Guide](docs/dev_guide/).
+Content Search is a core multimodal service designed for smart classroom environments. It enables AI-driven video summarization, document text extraction, and semantic search capabilities.
 
-## Setup
+## Quick Start
+### Pre-requisites
+**Python 3.12**: 
+- Ensure Python 3.12 is installed and added to your system PATH.
 
-### Prerequisites
+**Windows Long Paths Issue**: 
 
-- **Python 3.10** — only this version is verified on Windows: https://www.python.org/downloads/
-- **Rust compiler** — required by some dependencies: https://rust-lang.org/tools/install
-- **`multimodal_embedding_serving` wheel** — obtain from [this guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/wheel-installation.md) (use verified commit `77b812f`). Place the `.whl` file in the `content_search/` folder before running `install.ps1`.
+To prevent issues with the Windows 260-character path limit, please choose one of the following:
+- Option A (Recommended): Move the project folder to a shallow directory (e.g., `C:\User\CS` or `D:\Projects`).
+- Option B: Lift the path limit by running the following command in a PowerShell window with `Administrator` privileges:
+```PowerShell
+New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
+-Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+```
 
-### Install System Dependencies
+**Network Requirement**: 
+- Proxy: If your machine is behind a proxy, ensure your environment variables (e.g., `HTTP_PROXY`, `HTTPS_PROXY`) are correctly configured to allow the script to download necessary components.
+- Model Downloads: This system downloads pre-trained models (such as CLIP and BGE) from Hugging Face. Ensure your network has stable access to `huggingface.co`.
 
-Run `install.ps1` once to set up the environment (requires admin):
-- Creates the Python 3.10 venv
-- Installs `mobileclip`, `salesforce-lavis`, `requirements.txt`, and the `multimodal_embedding_serving` wheel
-- Downloads and installs Tesseract OCR 5.5.0 and adds it to the system PATH
-- Downloads and extracts Poppler 25.12.0 and adds it to the system PATH
-
-```powershell
-# 1. Install dependencies (once)
-cd content_search
+### Dependencies Installation
+We provide a unified installation script that automates the setup of core dependencies.
+Run the following script in PowerShell window with `Administrator` privileges:
+```PowerShell
+# Run the automation script from the Content Search root with Windows PowerShell
 .\install.ps1
 ```
+> **Note**: Restart your PowerShell terminal to apply those new environment variables.
 
-> **Note:** You may see pip dependency conflict warnings during install. These are expected and safe to ignore.
-
-#### LibreOffice (Optional)
-
-This is for legacy **.doc/.ppt/.xls** support, only install if such formats required.
-
-1. Download from [LibreOffice website](https://www.libreoffice.org/download/download/)
-2. Run the installer (default settings are fine). Installation path is typically: `C:\Program Files\LibreOffice`
-3. Add to PATH:
-   ```powershell
-   # Open PowerShell as Administrator:
-   [Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\LibreOffice\program", "Machine")
-   ```
-4. Verify installation:
-   ```python
-   import shutil
-   shutil.which("soffice") is not None
-   ```
-
-## Start service
-
-```powershell
-# 1. Optional: set proxy if needed
-$env:https_proxy="<your_https_proxy>"
-$env:http_proxy="<your_http_proxy>"
-
-# 2. Launch all services
-.\start.ps1
+Verify the installation by running the following commands:
+```PowerShell
+tesseract --version
+pdftoppm -v
 ```
 
-`start.ps1` will:
-1. Start ChromaDB
-2. Start MinIO and create the bucket
-3. Start the File Ingest & Retrieve server on port `9990`
+### Create Python Virtual Environment
+Open PowerShell in the Content Search project root and run (replace <PythonPath> with your actual python path):
+```PowerShell
+& "<PythonPath>" -m venv venv_content_search
+# Activate
+.\venv_content_search\Scripts\Activate.ps1
+# Upgrade pip and install requirements
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
 
-All settings (ports, credentials, paths) are read from `../config.yaml`.
+> **To Exit Venv**: Simply type `deactivate` in your terminal to leave the virtual environment.
 
----
+### Launching Content Search Services
+Once the environment is configured, activate the virtual environment and launch the Content Search service:
+
+```PowerShell
+# Activate the virtual environment
+.\venv_content_search\Scripts\Activate.ps1
+
+# Start all microservices
+python .\start_services.py
+```
+> **Note**: For the first-time execution, the service may take several minutes to fully start. This is because the system needs to download pre-trained AI models (such as CLIP, BGE, and Qwen VLM).
+
+The launcher automatically performs health checks on all services. When all services are ready, you will see:
+```
+[launcher] All 5 services are ready. (startup took XXs)
+[launcher] You can use Ctrl+C to stop all services.
+```
+
+If any service fails to start, the launcher will report which service(s) failed:
+```
+[launcher] WARNING: 1 service(s) failed: vlm (not ready after 600s)
+[launcher] Check logs in: <path>/content_search/logs/
+```
+
+You can also manually verify the service status:
+```PowerShell
+Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
+```
+> Tip: The default port is `9011`, but this may vary depending on your specific configuration. Please ensure you are using the correct port for your environment.
+
+### Services Termination
+To stop the service and all associated microservices, press `Ctrl` + `C` in the launch terminal window.
+
+## API Endpoints
+
+| Endpoint | Method | Pattern | Description | Documentation |
+| :--- | :---: | :---: | :--- | :--- |
+| `/api/v1/task/query/{task_id}` | **GET** | SYNC | **Task Status Inspection**: Retrieves real-time metadata for a specific job, including current lifecycle state (e.g. `PROCESSING`, `COMPLETED`, `FAILED`). | [Details](./docs/dev_guide/Content_search_API.md#task-status-polling) |
+| `/api/v1/task/list` | **GET** | SYNC | **Batch Task Retrieval**: Queries task records. Supports filtering via query parameters (e.g., `?status=PROCESSING`). | [Details](./docs/dev_guide/Content_search_API.md#get-task-list) |
+| `/api/v1/object/ingest-text` | **POST** | ASYNC | **Text-Specific Ingestion**: Processes raw text strings or existing text-based objects for semantic indexing. | [Details](./docs/dev_guide/Content_search_API.md#text-file-ingestion) |
+| `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to local storage and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
+| `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes similarity search across vector collections using natural language or base64 images. | [Details](./docs/dev_guide/Content_search_API.md#retrieve-and-search) |
+| `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file via stream-bridging. | [Details](./docs/dev_guide/Content_search_API.md#resource-download-videoimagedocument) |
+| `/api/v1/object/cleanup-task/{task_id}` | **DELETE** | SYNC | **Resource & Task Purge**: Irreversibly deletes local storage files, vector indices, and database records for a specific task. | [Details](./docs/dev_guide/Content_search_API.md#cleanup-file-storage-and-record) |
+
+For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)

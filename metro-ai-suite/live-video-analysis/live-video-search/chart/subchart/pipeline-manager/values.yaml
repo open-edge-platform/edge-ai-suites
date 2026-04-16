@@ -1,0 +1,64 @@
+global:
+  env:
+    dataprepTelemetryUrl: http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1
+    searchDataprepTimeoutMs: '90000'
+    minioBucket: video-summary
+    postgresDb: video_summary_db
+    searchFeature: FEATURE_ON
+    summaryFeature: FEATURE_OFF
+  proxy:
+    httpProxy: ''
+    httpsProxy: ''
+    noProxy: localhost,127.0.0.1,.svc.cluster.local
+  registry: ''
+  tag: latest
+  vssStackTag: ''
+images:
+  pipelineManager:
+    repository: intel/pipeline-manager
+
+imageOverride:
+  registry: ''
+  repository: ''
+  tag: ''
+
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 20
+  periodSeconds: 30
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 6
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  failureThreshold: 180

@@ -1,0 +1,8 @@
+# Patterns to ignore when building packages.
+.git/
+.gitignore
+*.md
+.DS_Store
+tests/
+ci/
+.vscode/

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: frigate-vms
+description: Live Video Search frigate-vms subchart
+version: 1.0.0
+appVersion: "1.0.0"

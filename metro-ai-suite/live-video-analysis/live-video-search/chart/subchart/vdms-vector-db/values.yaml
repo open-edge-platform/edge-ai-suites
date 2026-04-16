@@ -1,0 +1,43 @@
+replicaCount: 1
+
+imagePullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 55555
+
+podSecurityContext: {}
+
+securityContext:
+  allowPrivilegeEscalation: false
+  seccompProfile:
+    type: RuntimeDefault
+
+resources: {}
+
+livenessProbe:
+  tcpSocket:
+    port: vdms
+  initialDelaySeconds: 20
+  periodSeconds: 20
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+readinessProbe:
+  tcpSocket:
+    port: vdms
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+startupProbe:
+  tcpSocket:
+    port: vdms
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 120
+
+images:
+  vdmsVectorDb: intellabs/vdms:v2.12.0

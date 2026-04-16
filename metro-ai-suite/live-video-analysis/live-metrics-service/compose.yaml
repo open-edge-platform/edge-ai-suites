@@ -9,7 +9,10 @@ name: ${PROJECT_NAME:-metrics-stack}
 services:
   live-metrics-service:
     image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
-    build: .
+    build:
+      context: .
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-metrics-service
     environment:
       - no_proxy=localhost,127.0.0.1,collector,${no_proxy}

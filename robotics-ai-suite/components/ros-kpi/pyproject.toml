@@ -5,16 +5,17 @@
 # Intel-operated generative artificial intelligence solutions.
 [project]
 name = "ros2-kpi"
-version = "0.1.0"
+version = "0.1.2"
 description = "ROS2 Monitoring Stack for KPI Analysis"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 dependencies = [
     "matplotlib>=3.5.0",
     "numpy>=1.21.0",
     "psutil>=5.9.0",
     "prometheus-client>=0.19.0",
     "pyyaml>=6.0.3",
+    "pillow>=12.1.1",
 ]
 
 # System packages required (not pip-installable):
@@ -29,12 +30,24 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+include = [
+    "Makefile",
+    "quickstart",
+    "docker-compose.yml",
+    "auto-setup.sh",
+    "setup_ros2_env.sh",
+    "start_grafana.sh",
+    "stop_grafana.sh",
+    "prometheus/**",
+    "grafana/**",
+]
 
 [dependency-groups]
 dev = [
     "pytest>=7.0.0",
-    "black>=22.0.0",
+    "black>=26.3.1",
     "ruff>=0.1.0",
+    "autopep8>=2.3.1",
 ]
 
 [project.scripts]
@@ -43,3 +56,5 @@ monitor-resources = "src.monitor_resources:main"
 visualize-resources = "src.visualize_resources:main"
 visualize-timing = "src.visualize_timing:main"
 analyze-rosbag = "src.analyze_rosbag:main"
+analyze-trigger-latency = "src.analyze_trigger_latency:main"
+aggregate-kpi = "src.aggregate_kpi:main"

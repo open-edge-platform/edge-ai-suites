@@ -13,3 +13,7 @@ helm/simulation-data/
 helm-packages/
 
 venv/
+# Python cache
+tests/**/__pycache__/
+tests/__pycache__/
+tests/functional/tests.log

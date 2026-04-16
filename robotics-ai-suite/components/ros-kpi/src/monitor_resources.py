@@ -15,10 +15,9 @@ import glob
 import os
 import sys
 import time
-import re
 import json
 import threading
-from typing import List, Optional, Set
+from typing import Optional, Set
 from datetime import datetime
 
 
@@ -43,7 +42,7 @@ def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int
             universal_newlines=True,
             stdin=subprocess.DEVNULL,
         )
-        
+
         for line in ps_output.split('\n')[1:]:  # Skip header
             if any(pattern in line.lower() for pattern in ['ros2', '_node', 'ros_', 'gazebo', 'rviz']):
                 parts = line.split()
@@ -54,7 +53,7 @@ def get_ros2_pids(remote_ip: str = None, remote_user: str = 'ubuntu') -> Set[int
                         continue
     except subprocess.CalledProcessError as e:
         print(f"Error getting ROS2 processes: {e}", file=sys.stderr)
-    
+
     return pids
 
 
@@ -80,7 +79,7 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
         remote_ip: IP address of the remote system to monitor (None = local)
         remote_user: SSH username for the remote system
     """
-    
+
     # Open log file if specified
     log_fp = None
     if log_file:
@@ -94,7 +93,7 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
         except IOError as e:
             print(f"Error opening log file: {e}", file=sys.stderr)
             log_file = None
-    
+
     # Countdown before scanning
     if remote_ip:
         print(f"Targeting remote system: {remote_user}@{remote_ip}")
@@ -104,7 +103,7 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
         time.sleep(1)
     print("Scanning for ROS2 processes...")
     ros2_pids = get_ros2_pids(remote_ip=remote_ip, remote_user=remote_user)
-    
+
     if not ros2_pids:
         msg = "No ROS2 processes found!\nMake sure ROS2 nodes are running."
         print(msg)
@@ -112,16 +111,16 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
             log_fp.write(msg + "\n")
             log_fp.close()
         return
-    
+
     msg = f"Found {len(ros2_pids)} ROS2-related processes\n"
     print(msg)
     if log_fp:
         log_fp.write(msg + "\n")
         log_fp.flush()
-    
+
     # Build pidstat arguments
     pidstat_args = ['pidstat']
-    
+
     # Add options based on flags
     if show_cpu:
         pidstat_args.append('-u')  # CPU statistics
@@ -131,13 +130,13 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
         pidstat_args.append('-d')  # I/O statistics
     if show_threads:
         pidstat_args.append('-t')  # Show threads
-    
+
     # Add process filter
     pidstat_args.extend(['-p', ','.join(map(str, ros2_pids))])
-    
+
     # Add human-readable output
     pidstat_args.append('-h')
-    
+
     # Add interval (pidstat only accepts integers)
     interval_int = max(1, int(interval))
     if interval < 1 and interval != int(interval):
@@ -146,11 +145,11 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
             log_fp.write(f"Warning: pidstat only accepts integer intervals. Rounding {interval}s to {interval_int}s\n")
             log_fp.flush()
     pidstat_args.append(str(interval_int))
-    
+
     # Add count if specified
     if count > 0:
         pidstat_args.append(str(count))
-    
+
     # Build final command – prefix with ssh when targeting a remote host
     if remote_ip:
         # Use -T (no TTY) so SSH never touches local terminal settings.
@@ -162,14 +161,14 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
                f'{remote_user}@{remote_ip}', remote_cmd]
     else:
         cmd = pidstat_args
-    
+
     cmd_str = f"Running: {' '.join(cmd)}\n"
     print(cmd_str)
     print("Press Ctrl+C to stop\n")
     if log_fp:
         log_fp.write(cmd_str + "\n")
         log_fp.flush()
-    
+
     try:
         # Run pidstat and stream output
         process = subprocess.Popen(
@@ -179,15 +178,15 @@ def monitor_ros2_pidstat(interval: int = 1, count: int = 0,
             universal_newlines=True,
             bufsize=1  # Line buffered
         )
-        
+
         for line in process.stdout:
             print(line, end='')
             if log_fp:
                 log_fp.write(line)
                 log_fp.flush()
-        
+
         process.wait()
-        
+
     except KeyboardInterrupt:
         msg = "\n\nMonitoring stopped by user."
         print(msg)
@@ -211,7 +210,7 @@ def continuous_monitor(interval: int = 2):
     """Continuously monitor ROS2 processes, refreshing the PID list periodically."""
     print("Starting continuous ROS2 monitoring (refreshing process list every 10 seconds)...")
     print("Press Ctrl+C to stop\n")
-    
+
     try:
         iteration = 0
         while True:
@@ -223,18 +222,18 @@ def continuous_monitor(interval: int = 2):
                     time.sleep(interval)
                     iteration += 1
                     continue
-            
+
             # Run pidstat for this iteration
             cmd = ['pidstat', '-u', '-r', '-h', '-p', ','.join(map(str, ros2_pids)), str(interval), '1']
-            
+
             try:
                 output = subprocess.check_output(cmd, universal_newlines=True, stderr=subprocess.DEVNULL)
                 print(output)
             except subprocess.CalledProcessError:
                 pass  # Ignore errors, processes might have died
-            
+
             iteration += 1
-            
+
     except KeyboardInterrupt:
         print("\n\nMonitoring stopped by user.")
 
@@ -261,10 +260,10 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
             ps_cmd,
             universal_newlines=True
         )
-        
+
         print(f"{'PID':<8} {'CPU%':<8} {'MEM%':<8} {'COMMAND'}")
         print("-" * 80)
-        
+
         count = 0
         for line in ps_output.split('\n')[1:]:  # Skip header
             if any(pattern in line.lower() for pattern in ['ros2', '_node', 'ros_', 'gazebo', 'rviz']):
@@ -276,9 +275,9 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
                     cmd = parts[10]  # Show full command
                     print(f"{pid:<8} {cpu:<8} {mem:<8} {cmd}")
                     count += 1
-        
+
         print(f"\nFound {count} ROS2-related processes")
-        
+
     except subprocess.CalledProcessError as e:
         print(f"Error listing processes: {e}", file=sys.stderr)
 
@@ -296,7 +295,7 @@ _LOCAL_IGT_CANDIDATES = [
 _DRM_CARDS_TEMP = ['/sys/class/drm/card0', '/sys/class/drm/card1']
 
 # Engine-class patterns (display name → regex on JSON key)
-import re as _re
+import re as _re  # noqa: E402
 _ENGINE_CLASS_RE = {
     'Render/3D': _re.compile(r'render|3d',                      _re.I),
     'Blitter':   _re.compile(r'blitter|blt',                    _re.I),
@@ -397,6 +396,7 @@ def _parse_igt_clients(sample: dict) -> list:
                        'engines': pid_engines, 'total': round(total_busy, 2)})
     result.sort(key=lambda x: x['total'], reverse=True)
     return result
+
 
 def _ssh(remote_ip: str, remote_user: str, cmd: str,
          timeout: int = 12) -> subprocess.CompletedProcess:
@@ -639,7 +639,7 @@ def _read_sysfs_gpu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         except Exception:
             gt_count = 1
     else:
-        import os, glob
+        import glob  # noqa: E402
         gt_count = len(glob.glob(f'{_CARD}/gt/gt*'))
         if gt_count == 0:
             gt_count = 1
@@ -741,15 +741,15 @@ def monitor_gpu(interval: float = 2.0,
             print(f'[GPU] Using intel_gpu_top on remote (engines, power, RC6, per-PID) '
                   f'interval={interval}s')
         else:
-            print(f'[GPU] intel_gpu_top unavailable on remote (PMU blocked?) — '
-                  f'falling back to sysfs RC6 monitoring.')
-            print(f'[GPU] Run on the remote to enable:  '
-                  f'sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top')
+            print('[GPU] intel_gpu_top unavailable on remote (PMU blocked?) — '
+                  'falling back to sysfs RC6 monitoring.')
+            print('[GPU] Run on the remote to enable:  '
+                  'sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top')
     else:
         probe = _try_intel_gpu_top_local(interval=max(interval, 1.0))
         if probe:
             use_igt = True
-            print(f'[GPU] Using local intel_gpu_top [{probe.get("igt_bin","")}] '
+            print(f'[GPU] Using local intel_gpu_top [{probe.get("igt_bin", "")}] '
                   f'(engines, power, RC6, per-PID)  interval={interval}s')
         else:
             local_igt = _find_local_igt()
@@ -757,8 +757,8 @@ def monitor_gpu(interval: float = 2.0,
                 print(f'[GPU] intel_gpu_top found at {local_igt} but PMU is blocked.')
                 print(f'[GPU] Enable with:  sudo setcap cap_perfmon+eip {local_igt}')
             else:
-                print(f'[GPU] intel_gpu_top not found — falling back to sysfs monitoring.')
-                print(f'[GPU] Install:  sudo apt install intel-gpu-tools')
+                print('[GPU] intel_gpu_top not found — falling back to sysfs monitoring.')
+                print('[GPU] Install:  sudo apt install intel-gpu-tools')
 
     if not use_igt:
         print(f'[GPU] Monitoring Intel GPU via sysfs (interval={interval}s)...')
@@ -838,9 +838,7 @@ def monitor_gpu(interval: float = 2.0,
         print('[GPU] GPU monitor stopped.')
 
 
-
 # ── Intel NPU monitoring (sysfs / SSH) ───────────────────────────────────────
-
 _NPU_SYSFS = '/sys/class/accel/accel0/device'
 _NPU_SYSFS_FILES = [
     'npu_busy_time_us',
@@ -864,7 +862,6 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         memory_used_mb    – memory utilisation (bytes → MB)
     Returns an empty dict on any failure.
     """
-    paths = [f'{_NPU_SYSFS}/{f}' for f in _NPU_SYSFS_FILES]
 
     def _read_all() -> dict:
         if remote_ip:
@@ -994,30 +991,30 @@ def main():
 Examples:
   # List all ROS2 processes
   %(prog)s --list
-  
+
   # Monitor CPU usage (default)
   %(prog)s
-  
+
   # Monitor CPU and memory usage with logging
   %(prog)s --memory --log ros2_monitor.log
-  
+
   # Monitor with 2 second interval
   %(prog)s --interval 2
-  
+
   # Monitor for 10 samples then stop
   %(prog)s --count 10
-  
+
   # Monitor I/O statistics
   %(prog)s --io
-  
+
   # Monitor with thread details
   %(prog)s --threads
-  
+
   # Continuous monitoring (auto-refresh process list)
   %(prog)s --continuous
         """
     )
-    
+
     parser.add_argument('-l', '--list', action='store_true',
                         help='List all ROS2 processes and exit')
     parser.add_argument('-i', '--interval', type=float, default=1,
@@ -1052,11 +1049,11 @@ Examples:
     if args.list:
         list_ros2_processes(remote_ip=args.remote_ip, remote_user=args.remote_user)
         return
-    
+
     if args.continuous:
         continuous_monitor(args.interval)
         return
-    
+
     # Default to showing CPU if nothing else specified
     show_cpu = True
 

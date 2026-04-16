@@ -1,0 +1,44 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# coturn/values.yaml
+
+fullnameOverride: ""
+
+# ⚠️  Do NOT set replicaCount > 1.  coturn uses hostPort binding for UDP 3478,
+# so multiple replicas on the same node will conflict on the port.
+replicaCount: 1
+
+image:
+  repository: coturn/coturn
+  # Pinned tag — compose used "latest" which is non-reproducible.
+  # Type: string
+  tag: "4.6.2"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  # UDP port for STUN/TURN.
+  # Type: integer
+  port: 3478
+  nodePort: 3478
+  protocol: UDP
+
+# Extra CLI flags passed to the coturn entrypoint.
+# Type: list of strings
+extraArgs:
+  - "-v"   # verbose logging
+
+podSecurityContext: {}
+securityContext: {}
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "128Mi"
+
+podAnnotations: {}
+podLabels: {}

@@ -1,0 +1,31 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mediamtx.fullname" . }}
+  labels:
+    {{- include "mediamtx.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mediamtx
+spec:
+  type: {{ .Values.service.type }}
+  selector:
+    {{- include "mediamtx.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: whip
+      port: {{ .Values.service.whipContainerPort }}
+      targetPort: whip
+      protocol: TCP
+      {{- if eq .Values.service.type "NodePort" }}
+      nodePort: {{ .Values.service.whipNodePort }}
+      {{- end }}
+    - name: media-udp
+      port: {{ .Values.service.mediaUdpPort }}
+      targetPort: media-udp
+      protocol: UDP
+    - name: api
+      port: {{ .Values.service.apiContainerPort }}
+      targetPort: api
+      protocol: TCP

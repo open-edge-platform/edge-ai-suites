@@ -1,7 +1,7 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/health-and-life-sciences-ai-suite/multi_modal_patient_monitoring">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/README.md">
      Readme

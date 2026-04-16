@@ -116,7 +116,7 @@ public:
   void process_received_server_landmarks(KeyframeID id);
   void set_latest_keyfrm_local_id(KeyframeID id);
 
-  void send_octree_to_server(univloc_msgs::Octree & octree_msg);
+  void send_octree_to_server(univloc_msgs::Octree && octree_msg);
 
   //! pre-constructed Octree map
   univloc_msgs::OctreePtr octree_map_msg_;

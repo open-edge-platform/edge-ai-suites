@@ -47,7 +47,7 @@ class Config:
     
     @classmethod
     def get_api_url(cls) -> str:
-        return cls.get_value_from_env("AGENT_API_URL", "http://localhost:8081/api/v1/traffic/current")
+        return cls.get_value_from_env("AGENT_API_URL", "ws://localhost:8081/api/v1/traffic/current/ws")
     
     @classmethod
     def get_app_title(cls) -> str:

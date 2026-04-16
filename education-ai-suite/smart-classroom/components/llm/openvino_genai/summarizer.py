@@ -32,10 +32,10 @@ class Summarizer(BaseSummarizer):
                             temperature=self.temperature,
                             do_sample=False,
                         )
-                        cfg = model.get_generation_config()
-                        for attr in dir(cfg):
-                            if not attr.startswith("_"):
-                                logger.info(f"  {attr}: {getattr(cfg, attr)}")
+                    cfg = model.get_generation_config()
+                    for attr in dir(cfg):
+                        if not attr.startswith("_"):
+                            logger.info(f"  {attr}: {getattr(cfg, attr)}")
                     
                 except Exception as e:
                     error_msg = "Summary generation failed. Please ensure sufficient free resources are available to run this process."

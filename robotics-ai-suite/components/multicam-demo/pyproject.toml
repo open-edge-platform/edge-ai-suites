@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[build-system]
+requires = ["setuptools", "cython", "numpy<2.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multicam-demo"
+version = "1.0.1"
+description = "Intel Realsense2 python demo w/ Openvino Extension for yolov8"
+license = { text = "Apache-2.0" }
+authors = [{ name = "ECI Maintainer", email = "eci.maintainer@intel.com" }]
+requires-python = ">=3.9"
+dependencies = [
+    "imutils",
+    "protobuf>=4.25.8",
+    "Pillow",
+    "psutil",
+    "cython",
+    "screeninfo",
+    "onnx",
+    "onnxscript",
+    "opencv-python",
+    "openvino==2025.3.0",
+    "numpy<2.0",
+    "ultralytics>=8.0.20,<9.0",
+    "torch",
+    "pyrealsense2",
+    "setuptools<=70.0.0",
+    "mkl==2025.3.0",
+    "onemkl-sycl-vm==2025.3.0",
+    "onemkl-sycl-stats==2025.3.0",
+    "onemkl-sycl-rng==2025.3.0",
+    "onemkl-sycl-dft==2025.3.0",
+    "onemkl-sycl-datafitting==2025.3.0",
+    "onemkl-sycl-blas==2025.3.0",
+    "onemkl-sycl-sparse==2025.3.0",
+    "onemkl-sycl-lapack==2025.3.0",
+    "mkl-dpcpp==2025.3.0",
+    "dpnp==0.16.0",
+    "dpctl",
+    "yolov8-processor",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.uv.sources]
+yolov8-processor = { path = "src", editable = true }
+
+[tool.uv.extra-build-dependencies]
+yolov8-processor = ["numpy<2.0", "cython"]

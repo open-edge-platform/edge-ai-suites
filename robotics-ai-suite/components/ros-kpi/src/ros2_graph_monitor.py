@@ -14,7 +14,6 @@ displaying message frequencies, delta timestamps, and other useful metrics.
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSProfile, QoSReliabilityPolicy, QoSDurabilityPolicy
-import sys
 import os
 import time
 import argparse
@@ -46,17 +45,17 @@ def _latency_stats(samples) -> dict:
 def categorize_topic(topic_name: str, msg_type: str) -> str:
     """
     Categorize a topic into one of four categories: Sensor, Perception, Motion Planning, or Controls.
-    
+
     Args:
         topic_name: The name of the topic (e.g., '/scan', '/cmd_vel')
         msg_type: The message type (e.g., 'sensor_msgs/msg/LaserScan')
-        
+
     Returns:
         One of: 'Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other'
     """
     topic_lower = topic_name.lower()
     type_lower = msg_type.lower() if msg_type else ''
-    
+
     # Sensor category - raw sensor data
     sensor_patterns = [
         '/scan', '/laser', '/lidar', '/camera', '/image', '/imu', '/gps', '/gnss',
@@ -64,7 +63,7 @@ def categorize_topic(topic_name: str, msg_type: str) -> str:
         '/sonar', '/range', '/battery', '/joint_states', '/tf', '/clock'
     ]
     sensor_types = ['sensor_msgs', 'tf2_msgs']
-    
+
     # Perception category - processed sensor data, maps, costmaps
     perception_patterns = [
         '/map', '/costmap', '/obstacles', '/detections', '/tracked', '/classification',
@@ -72,38 +71,38 @@ def categorize_topic(topic_name: str, msg_type: str) -> str:
         '/footprint', '/markers', '/visualization'
     ]
     perception_types = ['nav_msgs/msg/occupancygrid', 'nav_msgs/msg/odometry', 'visualization_msgs']
-    
+
     # Motion Planning category - paths, goals, planning
     planning_patterns = [
         '/plan', '/path', '/global_plan', '/local_plan', '/trajectory', '/goal',
         '/waypoint', '/route', '/planner', '/planning', '/navigate'
     ]
     planning_types = ['nav_msgs/msg/path', 'nav2_msgs', 'action']
-    
+
     # Controls category - velocity commands, control outputs
     control_patterns = [
         '/cmd_vel', '/cmd', '/control', '/velocity', '/speed', '/steering',
         '/throttle', '/brake', '/motor', '/actuator', '/joint_command'
     ]
     control_types = ['geometry_msgs/msg/twist', 'ackermann_msgs', 'control_msgs']
-    
+
     # Check each category
     if any(pattern in topic_lower for pattern in sensor_patterns) or \
        any(sensor_type in type_lower for sensor_type in sensor_types):
         return 'Sensor'
-    
+
     if any(pattern in topic_lower for pattern in perception_patterns) or \
        any(perc_type in type_lower for perc_type in perception_types):
         return 'Perception'
-    
+
     if any(pattern in topic_lower for pattern in planning_patterns) or \
        any(plan_type in type_lower for plan_type in planning_types):
         return 'Motion Planning'
-    
+
     if any(pattern in topic_lower for pattern in control_patterns) or \
        any(ctrl_type in type_lower for ctrl_type in control_types):
         return 'Controls'
-    
+
     return 'Other'
 
 
@@ -358,7 +357,7 @@ class ROS2GraphMonitor(Node):
             return
 
         relevant_topics = set()
-        for node_name, info in self.node_info.items():
+        for _, info in self.node_info.items():
             for topic, _ in info['publishers']:
                 relevant_topics.add(topic)
             for topic, _ in info['subscribers']:
@@ -407,7 +406,7 @@ class ROS2GraphMonitor(Node):
         try:
             stats = self.topic_stats[topic_name]
             frequency = 1.0 / delta if delta and delta > 0 else None
-            
+
             # Get latency statistics
             lat_stats = _latency_stats(stats['latency_samples'])
 
@@ -513,11 +512,9 @@ class ROS2GraphMonitor(Node):
                 current_time = time.time()
 
                 # Try to extract message ID from header (if available)
-                msg_id = None
                 try:
                     if hasattr(msg, 'header') and hasattr(msg.header, 'stamp'):
-                        # Use ROS2 timestamp as message ID
-                        msg_id = (msg.header.stamp.sec, msg.header.stamp.nanosec)
+                        pass  # header present; timestamp available if needed
                 except Exception:
                     pass  # No header or stamp field available
 
@@ -599,7 +596,7 @@ class ROS2GraphMonitor(Node):
                 return None
 
             return getattr(module, msg_name)
-        except (ImportError, AttributeError) as e:
+        except (ImportError, AttributeError):
             return None
 
     def get_statistics(self) -> Dict[str, Any]:
@@ -703,33 +700,33 @@ class ROS2GraphMonitor(Node):
 def categorize_node(node_name: str, node_info: Dict) -> str:
     """
     Categorize a node based on its name and topics it publishes/subscribes to.
-    
+
     Args:
         node_name: The name of the node
         node_info: Dictionary containing 'publishers' and 'subscribers' lists
-        
+
     Returns:
         One of: 'Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other'
     """
     node_lower = node_name.lower()
-    
+
     # Get all topics this node interacts with
     all_topics = []
     if 'publishers' in node_info:
         all_topics.extend([topic for topic, _ in node_info['publishers']])
     if 'subscribers' in node_info:
         all_topics.extend([topic for topic, _ in node_info['subscribers']])
-    
+
     # Node name patterns for each category
-    sensor_node_patterns = ['camera', 'lidar', 'laser', 'imu', 'gps', 'gnss', 'scan', 
+    sensor_node_patterns = ['camera', 'lidar', 'laser', 'imu', 'gps', 'gnss', 'scan',
                            'sensor', 'depth', 'range', 'ultrasonic', 'sonar']
-    perception_node_patterns = ['map', 'costmap', 'slam', 'rtabmap', 'detection', 
+    perception_node_patterns = ['map', 'costmap', 'slam', 'rtabmap', 'detection',
                                'tracking', 'semantic', 'localization', 'amcl']
-    planning_node_patterns = ['planner', 'planning', 'path', 'route', 'navigate', 
+    planning_node_patterns = ['planner', 'planning', 'path', 'route', 'navigate',
                              'behavior', 'bt_navigator', 'waypoint']
-    control_node_patterns = ['controller', 'control', 'cmd', 'velocity', 'motor', 
+    control_node_patterns = ['controller', 'control', 'cmd', 'velocity', 'motor',
                             'actuator', 'drive', 'steering']
-    
+
     # Check node name first
     if any(pattern in node_lower for pattern in sensor_node_patterns):
         return 'Sensor'
@@ -739,21 +736,21 @@ def categorize_node(node_name: str, node_info: Dict) -> str:
         return 'Motion Planning'
     if any(pattern in node_lower for pattern in control_node_patterns):
         return 'Controls'
-    
+
     # Check topics if node name doesn't match
     category_votes = {'Sensor': 0, 'Perception': 0, 'Motion Planning': 0, 'Controls': 0}
     for topic in all_topics:
         topic_category = categorize_topic(topic, '')
         if topic_category in category_votes:
             category_votes[topic_category] += 1
-    
+
     # Return category with most votes, or 'Other' if no clear winner
     max_votes = max(category_votes.values())
     if max_votes > 0:
         for category, votes in category_votes.items():
             if votes == max_votes:
                 return category
-    
+
     return 'Other'
 
 
@@ -769,7 +766,7 @@ def print_node_statistics(node_stats: Dict[str, Dict[str, Any]], node_info: Dict
     for node_name, stats in sorted(node_stats.items()):
         # Truncate node name if too long
         node_display = node_name if len(node_name) <= 30 else node_name[:27] + "..."
-        
+
         # Get node category
         category = categorize_node(node_name, node_info.get(node_name, {}))
         category_icons = {
@@ -803,15 +800,15 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
         topic_stats = stats_data['topics']
     else:
         topic_stats = stats_data
-    
+
     # Skip printing if there's no meaningful data (only monitor node exists)
     if not node_info and not topic_stats:
         return
-    
+
     # Check if only the monitor node exists
     if len(node_info) <= 1 and all('ros2_graph_monitor' in name for name in node_info.keys()):
         return
-    
+
     print("\n" + "="*80)
     if target_node:
         print(f"ROS2 NODE MONITOR: {target_node} - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -868,17 +865,17 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             'Controls': [],
             'Other': []
         }
-        
+
         for topic_name, stats in topic_stats.items():
             category = categorize_topic(topic_name, stats['msg_type'])
             categorized_topics[category].append((topic_name, stats))
-        
+
         # Display topics by category
         for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
             topics = categorized_topics[category]
             if not topics:
                 continue
-                
+
             # Category header with icon
             category_icons = {
                 'Sensor': '📡',
@@ -889,7 +886,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             }
             icon = category_icons.get(category, '📋')
             print(f"\n{icon} {category.upper()} ({len(topics)} topics)")
-            
+
             if target_node:
                 print(f"{'Topic':<38} {'I/O':<4} {'Msg Type':<20} {'Freq (Hz)':<12} {'Delta (ms)':<12}")
             else:
@@ -937,12 +934,12 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             for topic_name, stats in input_topics:
                 category = categorize_topic(topic_name, stats['msg_type'])
                 input_categorized[category].append((topic_name, stats))
-            
+
             print("\n📥 INPUT TOPICS (Subscribed by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in input_categorized:
                     continue
-                    
+
                 category_icons = {
                     'Sensor': '📡',
                     'Perception': '🧠',
@@ -952,7 +949,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 }
                 icon = category_icons.get(category, '📋')
                 print(f"\n  {icon} {category}:")
-                
+
                 for topic_name, stats in input_categorized[category]:
                     print(f"    {topic_name}")
                     print(f"       Type: {stats['msg_type']}")
@@ -969,12 +966,12 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             for topic_name, stats in output_topics:
                 category = categorize_topic(topic_name, stats['msg_type'])
                 output_categorized[category].append((topic_name, stats))
-            
+
             print("\n📤 OUTPUT TOPICS (Published by target node):")
             for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
                 if category not in output_categorized:
                     continue
-                    
+
                 category_icons = {
                     'Sensor': '📡',
                     'Perception': '🧠',
@@ -984,7 +981,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                 }
                 icon = category_icons.get(category, '📋')
                 print(f"\n  {icon} {category}:")
-                
+
                 for topic_name, stats in output_categorized[category]:
                     print(f"    {topic_name}")
                     print(f"       Type: {stats['msg_type']}")
@@ -1009,7 +1006,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
     # Print connections
     if show_connections:
         print(f"{'TOPIC CONNECTIONS':-^80}")
-        
+
         # Categorize topics with connections
         categorized_connections = {
             'Sensor': [],
@@ -1018,18 +1015,18 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             'Controls': [],
             'Other': []
         }
-        
+
         for topic_name, stats in topic_stats.items():
             if stats['publishers'] or stats['subscribers']:
                 category = categorize_topic(topic_name, stats['msg_type'])
                 categorized_connections[category].append((topic_name, stats))
-        
+
         # Display connections by category
         for category in ['Sensor', 'Perception', 'Motion Planning', 'Controls', 'Other']:
             topics = categorized_connections[category]
             if not topics:
                 continue
-            
+
             # Category header with icon
             category_icons = {
                 'Sensor': '📡',
@@ -1041,7 +1038,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
             icon = category_icons.get(category, '📋')
             print(f"\n{icon} {category.upper()}")
             print("-" * 80)
-            
+
             for topic_name, stats in sorted(topics):
                 print(f"\n📡 {topic_name}")
                 print(f"   Type: {stats['msg_type']}")
@@ -1058,6 +1055,7 @@ def print_graph_info(node_info: Dict, stats_data: Dict, target_node: Optional[st
                     print(f"   Message Count: {stats['message_count']}")
 
         print("\n" + "="*80 + "\n")
+
 
 def main():
     """Main function to run the ROS2 graph monitor."""
@@ -1211,7 +1209,7 @@ Examples:
                     print(f"     Setting ROS_DOMAIN_ID={remote_domain} to match remote.")
                     os.environ['ROS_DOMAIN_ID'] = remote_domain
                 else:
-                    print(f"  ✅ ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID','0')} matches.")
+                    print(f"  ✅ ROS_DOMAIN_ID={os.environ.get('ROS_DOMAIN_ID', '0')} matches.")
             except Exception:
                 pass
         os.environ['ROS_LOCALHOST_ONLY'] = '0'
@@ -1227,7 +1225,7 @@ Examples:
         os.environ['CYCLONEDDS_URI'] = cyclone_uri
         # FastDDS / rmw_fastrtps unicast peer (always override)
         os.environ['ROS_STATIC_PEERS'] = args.remote_ip
-        print(f"  ROS_LOCALHOST_ONLY=0")
+        print("  ROS_LOCALHOST_ONLY=0")
         print(f"  CYCLONEDDS_URI set with peer {args.remote_ip} (multicast disabled)")
         print(f"  ROS_STATIC_PEERS={args.remote_ip}")
 
@@ -1340,11 +1338,11 @@ Examples:
                     stats_data = monitor.get_statistics()
                     # Add node statistics
                     stats_data['node_stats'] = monitor.get_node_statistics()
-                    
+
                     # Check if we have any real data
                     all_nodes = monitor.get_node_names_and_namespaces()
                     other_nodes = [n for n in all_nodes if n[0] != 'ros2_graph_monitor']
-                    
+
                     if other_nodes or len(stats_data.get('topics', {})) > 0:
                         print_graph_info(node_info, stats_data, args.node,
                                        show_processing=args.show_processing,

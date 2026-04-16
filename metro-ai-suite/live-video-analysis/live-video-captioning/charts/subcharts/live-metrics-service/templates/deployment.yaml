@@ -1,0 +1,74 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{/*
+live-metrics-service uses hostPort binding — only one pod can bind a given host
+port per node.  Ensure replicaCount is always 1.
+*/}}
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "live-metrics-service replicaCount must be 1: multiple replicas conflict on the host TCP port." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "live-metrics-service.fullname" . }}
+  labels:
+    {{- include "live-metrics-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: live-metrics-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "live-metrics-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "live-metrics-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: live-metrics-service
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: live-metrics-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: metrics
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.nodePort }}
+              protocol: TCP
+          env:
+            - name: METRICS_PORT
+              value: {{ .Values.env.metricsPort | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.env.logLevel | quote }}
+            - name: CORS_ORIGINS
+              value: {{ .Values.env.corsOrigins | quote }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 5
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: metrics
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
