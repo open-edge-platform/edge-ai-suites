@@ -18,7 +18,7 @@ dependencies:
     version: 1.0.1
     repository: "file://subchart/app"
   - name: metrics-service
-    version: 1.0.1-rc.1
+    version: 1.0.1
     repository: "file://subchart/metrics-service"
   - name: collector
     version: 1.0.1

@@ -4,5 +4,5 @@ apiVersion: v2
 name: metrics-service
 description: Live Metrics Service subchart
 type: application
-version: 1.0.1-rc.1
-appVersion: "1.0.0-rc.2"
+version: 1.0.1
+appVersion: "1.0.0"

@@ -76,7 +76,7 @@ app:
   image:
     registry: "intel/"  # Override global.registry for this component only
     repository: live-video-alert-agent
-    tag: "1.0.0"
+    tag: "latest"
   port: 9000
   service:
     type: NodePort
