@@ -2641,46 +2641,33 @@ def invoke_make_check_env_variables_in_current_dir():
         return False
 
 
-def invoke_make_up_in_current_dir(max_retries=2, retry_delay=30):
-    """Execute 'make up' command in the current directory without changing directories.
+def invoke_make_up_in_current_dir():
+    """Execute 'make up' command in the current directory without changing directories."""
+    try:
+        logger.info("Executing 'make up' command")
+        result, output = run_command("make up", capture_output=True)
 
-    Retries up to max_retries times on failure. 'make up' calls 'make down' as its
-    first step so retrying is safe — each attempt starts from a clean state. This
-    guards against transient race conditions where the TSAM REST API is slow to
-    start on the first attempt.
-    """
-    for attempt in range(1, max_retries + 1):
-        try:
-            logger.info(f"Executing 'make up' command (attempt {attempt}/{max_retries})")
-            result = run_command("make up")
+        if result == 0:
+            logger.info("make up succeeded")
+            if output:
+                logger.warning(f"make up output: {output}")
+            return True
 
-            if result == 0:
-                logger.info("make up succeeded")
-                return True
+        logger.error(f"make up failed with exit code: {result}")
+        if output:
+            logger.error(f"Error output: {output}")
 
-            logger.error(f"make up failed with exit code: {result} (attempt {attempt}/{max_retries})")
-            # Capture stderr for diagnostics
-            error_result = subprocess.run(
-                ["make", "up"],
-                capture_output=True,
-                text=True,
-                cwd=os.getcwd()
-            )
-            if error_result.stderr:
-                logger.error(f"Error output: {error_result.stderr}")
+        # Run make status to show container state for diagnostics
+        logger.info("Running 'make status' for diagnostics...")
+        _, status_output = run_command("make status", capture_output=True)
+        if status_output:
+            logger.info(f"make status output: {status_output}")
 
-            if attempt < max_retries:
-                logger.info(f"Retrying 'make up' in {retry_delay}s...")
-                time.sleep(retry_delay)
+        return False
 
-        except Exception as e:
-            logger.error(f"Failed to run make up (attempt {attempt}/{max_retries}): {str(e)}")
-            if attempt < max_retries:
-                logger.info(f"Retrying 'make up' in {retry_delay}s...")
-                time.sleep(retry_delay)
-
-    logger.error(f"'make up' failed after {max_retries} attempts.")
-    return False
+    except Exception as e:
+        logger.error(f"Failed to run make up: {str(e)}")
+        return False
 
 
 def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
@@ -2742,14 +2729,6 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
     
     # Combine basic and multimodal credentials
     basic_credentials.update(multimodal_vars)
-
-    # Always inject proxy variables so Docker Compose does not warn about unset
-    # variables when it interpolates ${no_proxy}, ${http_proxy}, ${https_proxy}.
-    # Pick up values from the current environment (CI/CD may set them); fall back
-    # to an empty string so the compose warning is suppressed.
-    basic_credentials["http_proxy"] = os.environ.get("http_proxy", os.environ.get("HTTP_PROXY", ""))
-    basic_credentials["https_proxy"] = os.environ.get("https_proxy", os.environ.get("HTTPS_PROXY", ""))
-    basic_credentials["no_proxy"] = os.environ.get("no_proxy", os.environ.get("NO_PROXY", ""))
 
     logger.info(f"Generated {len(basic_credentials)} multimodal credentials for case '{case_type}'")
     

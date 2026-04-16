@@ -2130,9 +2130,6 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         # Use external nginx proxy approach (exactly like Docker does)
         logger.info("Using external nginx proxy for API access (matches Docker pattern)...")
 
-        # Payload must match the TSAM config.json schema: {"udfs": {"name": ..., "models": ...}, "alerts": {...}}
-        # The path-based format {"weld_anomaly_detector": {"udfs": "/tmp/..."}} is NOT the API schema and
-        # causes KeyError: 'udfs' in classifier_startup.py when the restart background task runs.
         payload = {
             "udfs": {
                 "name": constants.WELD_UDF,
