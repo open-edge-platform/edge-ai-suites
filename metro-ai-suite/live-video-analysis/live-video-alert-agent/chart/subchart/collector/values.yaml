@@ -4,7 +4,7 @@
 enabled: true
 
 image:
-  registry: "docker.io/"  # Collector always pulls from public docker.io
+  registry: "intel/"  # Collector always pulls from public docker.io
 
 resources:
   requests:

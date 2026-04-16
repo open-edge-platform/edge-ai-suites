@@ -176,3 +176,7 @@ docker compose down -v
 export RTSP_URL=<your-url>
 docker compose up -d
 ```
+
+## Learn More
+- [Build from Source](./how-to-build-source.md#how-to-build-source)
+- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.

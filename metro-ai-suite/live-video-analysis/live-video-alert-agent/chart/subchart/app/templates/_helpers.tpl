@@ -4,15 +4,15 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- define "app.fullname" -}}
-{{- printf "%s-live-video-alert-agent" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-live-video-alert-agent" .Release.Name | lower |trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{- define "app.labels" -}}
-helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | lower | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/name: live-video-alert-agent
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
-app.kubernetes.io/part-of: live-video-alert-agent
+app.kubernetes.io/part-of: {{ .Values.global.partOf | default "live-video-alert-agent" }}
 {{- end }}
 
 {{- define "app.serviceAccountName" -}}

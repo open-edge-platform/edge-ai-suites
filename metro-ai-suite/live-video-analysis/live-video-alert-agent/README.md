@@ -10,7 +10,7 @@ Deploy AI-powered alerting for live video streams with OpenVINO Vision Language 
 
 To see the system requirements and other installations, see the following guides:
 
-- [System Requirements](./docs/user-guide/system-requirements.md): Check the hardware and software requirements for deploying the application.
+- [System Requirements](./docs/user-guide/system-requirements.md#system-requirements): Check the hardware and software requirements for deploying the application.
 - [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up the application.
 
 ## How It Works
@@ -30,7 +30,6 @@ RTSP Source → StreamManager (OpenCV/Circular Buffer)
 ## Learn More
 
 - [Get Started](docs/user-guide/get-started.md) - Quick deployment guide
-- [Deploy with Helm](docs/user-guide/deploy-with-helm.md) - Kubernetes Helm chart deployment
 - [Overview](docs/user-guide/index.md) - Features and architecture
 - [System Requirements](docs/user-guide/system-requirements.md) - Hardware and software needs
 - [Build from Source](docs/user-guide/how-to-build-source.md) - Custom build instructions

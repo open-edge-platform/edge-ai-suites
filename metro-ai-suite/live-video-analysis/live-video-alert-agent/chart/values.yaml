@@ -74,9 +74,9 @@ ovms:
 
 app:
   image:
-    registry: ""  # Override global.registry for this component only
+    registry: "intel/"  # Override global.registry for this component only
     repository: live-video-alert-agent
-    tag: "1.0.0-rc.2"
+    tag: "1.0.0"
   port: 9000
   service:
     type: NodePort
@@ -106,11 +106,11 @@ app:
 metrics-service:
   enabled: true
   image:
-    repository: live-metrics-service
+    repository: "intel/live-metrics-service"
     tag: "1.0.0"
   service:
     type: NodePort
-  corsOrigins: ""
+  corsOrigins: "*"
   logLevel: "INFO"
   resources:
     requests:
@@ -134,9 +134,9 @@ metrics-service:
 collector:
   enabled: true
   image:
-    registry: "docker.io/"
-    repository: intel/vippet-collector
-    tag: "2025.2.0"
+    registry: "intel/"
+    repository: vippet-collector
+    tag: "2026.0.0"
   resources:
     requests:
       cpu: "100m"

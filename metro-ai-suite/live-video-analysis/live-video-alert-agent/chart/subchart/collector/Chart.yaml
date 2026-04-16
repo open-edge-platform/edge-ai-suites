@@ -4,5 +4,5 @@ apiVersion: v2
 name: collector
 description: GPU/CPU metrics collector (Telegraf-based) subchart
 type: application
-version: 1.0.1-rc.1
-appVersion: "1.0.0-rc.2"
+version: 1.0.1
+appVersion: "1.0.0"

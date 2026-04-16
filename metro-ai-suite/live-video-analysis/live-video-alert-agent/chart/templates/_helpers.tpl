@@ -12,7 +12,7 @@ SPDX-License-Identifier: Apache-2.0
 {{- end -}}
 {{- end -}}
 {{- define "lva.labels" -}}
-helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | lower | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/name: live-video-alert-agent
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}

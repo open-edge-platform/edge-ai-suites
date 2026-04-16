@@ -4,4 +4,4 @@
 apiVersion: v2
 name: ovms
 description: OpenVINO Model Server subchart for VLM inference
-version: 1.0.1-rc.1
+version: 1.0.1

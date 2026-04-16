@@ -4,11 +4,11 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- define "ovms.fullname" -}}
-{{- printf "%s-ovms" .Release.Name | trunc 63 | trimSuffix "-" }}
+{{- printf "%s-ovms" .Release.Name | lower | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{- define "ovms.labels" -}}
-helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+helm.sh/chart: {{ printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | lower | trunc 63 | trimSuffix "-" }}
 app.kubernetes.io/name: ovms
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}

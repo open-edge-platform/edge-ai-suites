@@ -12,8 +12,6 @@ Before you begin, ensure that you have the following:
 - Helm installed on your system. See the [Installation Guide](https://helm.sh/docs/intro/install/).
 - **Storage Requirement:** The chart creates a **10 Gi** PVC for the VLM model on first run.
 
-See also: [System Requirements](system-requirements.md).
-
 
 ## Helm Chart Installation
 
