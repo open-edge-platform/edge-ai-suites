@@ -62,7 +62,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | Key     | Description                                                                                 | Example Value                          |
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
 | `name`  | The name of the UDF script.                                                                 | `"weld_defect_detector.py"`       |
-| `models`| The name of the model file used by the UDF.                                                 | `"weld_defect_detector.cb"`   |
+| `models`| The names of the model files used by the UDF.                                               | `["weld_defect_detector.pkl", "weld_defect_detector_labels.pkl", "weld_defect_detector.json"]` |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
@@ -84,10 +84,10 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the Python script to process the incoming data.
-Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
-detect the anomalous power generation data points relative to wind speed.
+Uses RandomForestClassifier from scikit-learn with Intel's extension (sklearnex) to detect anomalous weld patterns in sensor data.
+Supports GPU offloading on Intel GPUs via the `target_offload` configuration for accelerated inference.
 
-> **Note:** CatBoost models do not run on Intel GPUs.
+> **Note:** Configure `DEVICE` environment variable (`'auto'`, `'gpu'`, or `'cpu'`) to control hardware acceleration.
 
 ##### **`tick_scripts/`**
 
@@ -97,5 +97,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_defect_detector.cb` is a model built using the CatBoostClassifier algorithm of CatBoost ML
-library.
+Contains serialized model files:
+- `weld_defect_detector.pkl`: Trained RandomForestClassifier pipeline (scikit-learn format)
+- `weld_defect_detector_labels.pkl`: Label encoder for class names
+- `weld_defect_detector.json`: Model metadata including feature statistics and class information for model explainability
