@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # OVMS Model Init Script (Helm init container)
-# Runs inside the OVMS image — uses pip3, curl, python directly.
+# Runs inside python:3.12-slim — uses pip3, python3.
 # Receives parameters via positional args from the deployment template.
 #
 # Args (passed via Kubernetes args field):
@@ -76,7 +76,7 @@ else
     echo "Installing full conversion dependencies..."
     requirements_url="https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/requirements.txt"
     tmp_requirements=$(mktemp)
-    curl -fsSL "${requirements_url}" -o "${tmp_requirements}"
+    python3 -c "import urllib.request; urllib.request.urlretrieve('${requirements_url}', '${tmp_requirements}')"
     if grep -q '^transformers' "${tmp_requirements}"; then
         sed -i 's/^transformers.*/transformers==4.53.3/' "${tmp_requirements}"
     else
@@ -90,14 +90,14 @@ pip3 install --no-cache-dir -U 'huggingface_hub[hf_xet]==0.36.0'
 
 if [ -n "${huggingface_token}" ]; then
     echo "Logging in to Hugging Face..."
-    hf auth login --token "${huggingface_token}"
+    python3 -c "import huggingface_hub; huggingface_hub.login(token='${huggingface_token}')"
 fi
 
-curl -fsSL https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/export_model.py -o export_model.py
+python3 -c "import urllib.request; urllib.request.urlretrieve('https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/export_model.py', 'export_model.py')"
 mkdir -p models
 
 # Export VLM model with storage-aware name
-python export_model.py text_generation \
+python3 export_model.py text_generation \
     --source_model "${vlm_model}" \
     --model_name "${vlm_storage_name}" \
     --weight-format "${vlm_weight_format}" \

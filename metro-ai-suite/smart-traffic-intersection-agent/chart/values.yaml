@@ -76,6 +76,12 @@ vlmServing:
     tag: "2026.1"
     gpuTag: "2026.1-gpu"
     pullPolicy: IfNotPresent
+  # Init container image for model export (needs python3, pip3)
+  # Aligned with edge-ai-libraries sample apps (VSS, DocSum)
+  initImage:
+    repository: python
+    tag: "3.12-slim"
+    pullPolicy: IfNotPresent
   replicas: 1
   service:
     type: NodePort
