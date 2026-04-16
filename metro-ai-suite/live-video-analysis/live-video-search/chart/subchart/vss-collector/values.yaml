@@ -5,7 +5,7 @@ global:
     noProxy: localhost,127.0.0.1,.svc.cluster.local
 
 images:
-  telemetryCollector: intel/vippet-collector:2026.0.0-20260217-weekly
+  telemetryCollector: intel/vippet-collector:2026.0.0
 
 replicaCount: 1
 

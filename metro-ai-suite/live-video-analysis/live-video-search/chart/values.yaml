@@ -1,5 +1,5 @@
 global:
-  registry: ""
+  registry: "intel"
   tag: "latest"
   vssStackTag: ""
   smartNvrStackTag: ""
@@ -124,7 +124,7 @@ images:
   frigate: "ghcr.io/blakeblackshear/frigate:0.15.1"
   mqttBroker: "eclipse-mosquitto:2.0.21"
   redis: "redis:7"
-  telemetryCollector: "intel/vippet-collector:2026.0.0-20260217-weekly"
+  telemetryCollector: "intel/vippet-collector:2026.0.0"
   rtspServer: "bluenviron/mediamtx:latest"
   rtspPublisher: "jrottenberg/ffmpeg:6.1-alpine"
 

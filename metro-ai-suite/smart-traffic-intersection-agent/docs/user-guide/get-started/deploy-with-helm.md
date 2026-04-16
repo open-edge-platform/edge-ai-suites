@@ -35,7 +35,7 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version <version-no>
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 1.1.0-helm
 ```
 
 #### Step 2: Extract the `.tgz` File
@@ -43,7 +43,7 @@ helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --ve
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
+tar -xvf smart-traffic-intersection-agent-1.1.0-helm.tgz
 ```
 
 Navigate to the extracted directory:
@@ -68,7 +68,7 @@ Clone the repository containing the Helm chart:
 # Clone the latest on mainline
 git clone https://github.com/open-edge-platform/edge-ai-suites.git
 # Alternatively, clone a specific release branch
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
 ```
 
 #### Step 2: Change to the Chart Directory
@@ -79,7 +79,15 @@ Navigate to the chart directory:
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/chart
 ```
 
-#### Step 3: Configure the `values.yaml` File
+#### Step 3: Build Chart Dependencies
+
+The chart uses Helm subcharts for the live-metrics service and collector. Build them before installing:
+
+```bash
+helm dependency build .
+```
+
+#### Step 4: Configure the `values.yaml` File
 
 Edit the `values.yaml` file located in the chart directory to set the necessary environment variables. Refer to the [values reference table](#valuesyaml-reference) below.
 
@@ -87,13 +95,13 @@ Edit the `values.yaml` file located in the chart directory to set the necessary 
 
 ## Common Steps After Configuration
 
-### Step 4: Deploy Smart Intersection
+### Step 5: Deploy Smart Intersection
 
 The Smart Traffic Intersection Agent depends on a running **Smart Intersection** deployment, which includes [SceneScape](https://github.com/open-edge-platform/scenescape). It provides the MQTT broker, camera pipelines, and scene analytics that the Traffic Agent consumes.
 
-Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-1.2.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/how-to-deploy-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
+Follow the [Smart Intersection Helm Deployment Guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.0.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/docs/user-guide/get-started/deploy-with-helm.md) to deploy it. Once all Smart Intersection pods are running and the MQTT broker is reachable, proceed to the next step.
 
-### Step 5: Configure GPU Support (Optional)
+### Step 6: Configure GPU Support (Optional)
 
 By default, the chart deploys VLM inference on an **Intel GPU**. To change graph or verify GPU configuration, edit the following values in `values.yaml`:
 
@@ -120,7 +128,7 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 > **Note:** The `OV_CONFIG` environment variable is automatically set based on the device. When GPU is enabled, CPU-only options like `INFERENCE_NUM_THREADS` are excluded to avoid runtime errors.
 
-### Step 6: Deploy the Helm Chart
+### Step 7: Deploy the Helm Chart
 
 Deploy the Smart Traffic Intersection Agent Helm chart:
 
@@ -128,9 +136,11 @@ Deploy the Smart Traffic Intersection Agent Helm chart:
 helm install stia . -n <your-namespace> --create-namespace
 ```
 
+> **Note:** By default, the chart assumes the Smart Intersection RI (MQTT broker) is deployed in the same namespace as the STIA release. If the RI is in a different namespace, add `--set trafficAgent.mqtt.brokerNamespace=<ri-namespace>`.
+
 > **Note:** The VLM OpenVINO Serving pod will download and convert the model on first startup. This may take several minutes depending on network speed and model size. To avoid re-downloading the model on every install cycle, set `vlmServing.persistence.keepOnUninstall` to `true` (the default). This tells Helm to retain the model cache PVC on uninstall.
 
-### Step 7: Verify the Deployment
+### Step 8: Verify the Deployment
 
 Check the status of the deployed resources to ensure everything is running correctly:
 
@@ -146,13 +156,20 @@ You should see two pods:
 | `stia-traffic-agent-*` | The traffic intersection agent (backend + Gradio UI) |
 | `stia-vlm-openvino-serving-*` | The VLM inference server |
 
-Wait until both pods show `Running` and `READY 1/1`:
+When live metrics is enabled (the default), you will also see:
+
+| Pod | Description |
+| --- | ----------- |
+| `<release>-live-metrics-service-*` | WebSocket relay for live system metrics |
+| `<release>-collector-*` | Telegraf collector for host-level metrics (CPU, memory, temperature, GPU) |
+
+Wait until all pods show `Running` and `READY 1/1`:
 
 ```bash
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=stia -n <your-namespace> --timeout=600s
 ```
 
-### Step 8: Access the Application
+### Step 9: Access the Application
 
 #### Using NodePort (default)
 
@@ -162,19 +179,18 @@ The chart deploys services as `NodePort` by default. Retrieve the allocated port
 # Get the NodePort values
 kubectl get svc stia-traffic-agent -n <your-namespace>
 
-# Get the node IP
+# Find the node where the traffic-agent pod is running
+kubectl get pod -n <your-namespace> -o wide | grep traffic-agent
+# Use the INTERNAL-IP of that node (see NODE column)
 kubectl get nodes -o wide
-# Use the INTERNAL-IP of any node
 ```
 
 Then open your browser at:
 
 ```
-http://<node-ip>:<backend-node-port>   # Backend API (default NodePort: 30881)
-http://<node-ip>:<ui-node-port>         # Gradio UI   (default NodePort: 30860)
+http://<node-ip>:<backend-node-port>   # Backend API
+http://<node-ip>:<ui-node-port>         # Gradio UI
 ```
-
-> **Note:** If you are behind a corporate proxy, make sure the node IPs are included in your `no_proxy` / browser proxy exceptions.
 
 #### Using Port-Forward (ClusterIP)
 
@@ -193,7 +209,7 @@ Then open your browser at:
 - **Backend API:** `http://127.0.0.1:8081/docs`
 - **Gradio UI:** `http://127.0.0.1:7860`
 
-### Step 9: Uninstall the Helm Chart
+### Step 10: Uninstall the Helm Chart
 
 To uninstall the deployed Helm chart:
 
@@ -230,17 +246,17 @@ helm uninstall stia -n <your-namespace>
 | `trafficAgent.image.tag` | Image tag | `latest` |
 | `trafficAgent.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `trafficAgent.service.backendPort` | Backend API port | `8081` |
-| `trafficAgent.service.backendNodePort` | NodePort for backend API (only used when type is `NodePort`) | `30881` |
 | `trafficAgent.service.uiPort` | Gradio UI port | `7860` |
-| `trafficAgent.service.uiNodePort` | NodePort for Gradio UI (only used when type is `NodePort`) | `30860` |
 | `trafficAgent.intersection.name` | Unique intersection identifier | `intersection_1` |
 | `trafficAgent.intersection.latitude` | Intersection latitude | `37.51358` |
 | `trafficAgent.intersection.longitude` | Intersection longitude | `-122.25591` |
 | `trafficAgent.env.logLevel` | Application log level | `INFO` |
 | `trafficAgent.env.refreshInterval` | Dashboard refresh interval (seconds) | `15` |
 | `trafficAgent.env.weatherMock` | Use mock weather data (`true`/`false`) | `false` |
-| `trafficAgent.env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `600` |
-| `trafficAgent.mqtt.host` | MQTT broker hostname (SceneScape K8s service name) | `smart-intersection-broker` |
+| `trafficAgent.env.vlmTimeoutSeconds` | Timeout for VLM inference requests (seconds) | `1800` |
+| `trafficAgent.mqtt.host` | MQTT broker hostname. If set, takes precedence over the constructed FQDN. | `""` |
+| `trafficAgent.mqtt.serviceName` | MQTT broker K8s service name | `smart-intersection-broker` |
+| `trafficAgent.mqtt.brokerNamespace` | Namespace where the Smart Intersection RI (MQTT broker) is deployed. Only set this if the RI is in a different namespace than the STIA release. The FQDN is built as `<serviceName>.<brokerNamespace>.svc.cluster.local`. | `""` (defaults to release namespace) |
 | `trafficAgent.mqtt.port` | MQTT broker port | `1883` |
 | `trafficAgent.traffic.highDensityThreshold` | Object count for high-density classification | `10` |
 | `trafficAgent.traffic.moderateDensityThreshold` | Object count for moderate-density classification | `""` |
@@ -257,7 +273,6 @@ helm uninstall stia -n <your-namespace>
 | `vlmServing.image.tag` | Image tag | `1.3.2` |
 | `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `vlmServing.service.port` | VLM HTTP API port | `8000` |
-| `vlmServing.service.nodePort` | NodePort for VLM API (only used when type is `NodePort`) | `30800` |
 | `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
 | `vlmServing.env.compressionWeightFormat` | Model weight format (`int4`, `int8`, `fp16`) | `int4` |
 | `vlmServing.env.device` | OpenVINO inference device when GPU is disabled (`CPU` or `GPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
@@ -285,8 +300,24 @@ helm uninstall stia -n <your-namespace>
 | Key | Description | Default |
 | --- | ----------- | ------- |
 | `tls.caCert` | PEM-encoded CA certificate for the MQTT broker (base64-encoded in the Secret) | `""` |
-| `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`) | `smart-intersection-broker-rootcert` |
+| `tls.caCertSecretName` | Name of an existing Secret containing the CA cert (overrides `tls.caCert`). The Smart Intersection RI (release-2026.0.0) creates `smart-intersection-ca-secret`. | `smart-intersection-ca-secret` |
 | `tls.caCertKey` | Key name inside the external secret (required when `caCertSecretName` is set) | `root-cert` |
+
+### Live Metrics Service Settings (Subchart)
+
+The live-metrics service is packaged as a Helm subchart. Keys must be nested under `live-metrics-service` to match the subchart name.
+
+| Key | Description | Default |
+| --- | ----------- | ------- |
+| `live-metrics-service.enabled` | Deploy the live-metrics WebSocket relay | `true` |
+
+### Collector / Telegraf Settings (Subchart)
+
+The collector is packaged as a Helm subchart. Keys must be nested under `collector` to match the subchart name.
+
+| Key | Description | Default |
+| --- | ----------- | ------- |
+| `collector.enabled` | Deploy the Telegraf collector (requires `live-metrics-service.enabled=true`) | `true` |
 
 ---
 
@@ -306,7 +337,7 @@ trafficAgent:
     latitude: "37.7749"
     longitude: "-122.4194"
   mqtt:
-    host: "smart-intersection-broker"
+    brokerNamespace: ""  # defaults to release namespace; set only if RI is in a different namespace
 
 tls:
   caCert: |

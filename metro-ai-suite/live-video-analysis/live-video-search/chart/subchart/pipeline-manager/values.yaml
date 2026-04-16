@@ -15,7 +15,7 @@ global:
   vssStackTag: ''
 images:
   pipelineManager:
-    repository: intel/pipeline-manager
+    repository: pipeline-manager
 
 imageOverride:
   registry: ''
