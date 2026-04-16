@@ -37,6 +37,13 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CO
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
 [ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT
 
+# Path variables needed by all commands (including --stop/--clean)
+export SAMPLE_APP="smart-intersection"
+SUBMODULE="deps/metro-vision"
+SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
+export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
+export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
+export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
@@ -88,8 +95,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     
     # check if ri-compose.yaml exists and run docker compose down accordingly
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        #docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
-        docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down
+        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down
     else
         docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
     fi
@@ -137,12 +143,6 @@ if [ -z "$VLM_MODEL_NAME" ]; then
     echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for some possible VLM model names.${NC}"
     return 1
 fi
-
-export SAMPLE_APP="smart-intersection"
-SUBMODULE="deps/metro-vision"
-SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
-export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
-export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 
 # Verify if dependencies are setup; if not setup the required submodules and run install script
 check_and_setup_dependencies() {
@@ -228,8 +228,6 @@ export VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
 export VLM_WEIGHT_FORMAT=${VLM_WEIGHT_FORMAT:-}
 
 # OVMS model repository directory (host-side, mounted into OVMS container)
-export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
-
 # Health Check Configuration
 export HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30s}
 export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
