@@ -32,7 +32,20 @@ class AssetService:
         return file_hash, existing_asset
 
     @staticmethod
-    def _handle_deduplication_policy(existing_asset: FileAsset, file_hash: str):
+    def _handle_deduplication_policy(db: Session, existing_asset: FileAsset, file_hash: str):
+        from utils.core_models import AITask
+
+        all_tasks = db.query(AITask).order_by(AITask.created_at.desc()).all()
+
+        related_task = None
+        for task in all_tasks:
+            payload = task.payload if isinstance(task.payload, dict) else {}
+            if payload.get('file_hash') == file_hash:
+                related_task = task
+                break
+
+        task_id = str(related_task.id) if related_task else None
+
         return {
             "is_biz_error": True,
             "code": 40901,
@@ -40,7 +53,8 @@ class AssetService:
             "data": {
                 "file_hash": file_hash,
                 "file_name": existing_asset.file_name,
-                "created_at": str(existing_asset.created_at)
+                "created_at": str(existing_asset.created_at),
+                "task_id": task_id
             }
         }
 
@@ -50,7 +64,7 @@ class AssetService:
 
         if existing_asset:
             print(f"[ASSET] File existed! filename: {file.filename}, Hash: {file_hash}")
-            return AssetService._handle_deduplication_policy(existing_asset, file_hash)
+            return AssetService._handle_deduplication_policy(db, existing_asset, file_hash)
 
         print(f"[ASSET] New upload: {file.filename}", flush=True)
         payload = await storage_service.upload_and_prepare_payload(file)

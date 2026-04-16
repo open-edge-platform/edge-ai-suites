@@ -384,6 +384,15 @@ va_pipeline:
   output_rtsp_url: rtsp://127.0.0.1:8554
   hls_base_url: http://127.0.0.1:8888
 
+  pose_statistics:
+    min_frames_for_transition: 3            # frames to confirm raise-hand for identified students
+    min_frames_for_transition_unid: 15      # frames to confirm raise-hand for unidentified students
+    absence_threshold: 90                   # forget student after unseen for N frames (90 ≈ 3s)
+    min_stand_frames: 10                    # frames a student must be seen before counting stand-up (10 ≈ 0.3s)
+    center_dist_threshold: 0.1              # how close two bounding boxes must be to count as same person (0~1)
+    unidentified_max: 50                    # max unidentified students to track
+    stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
+
 content_search:
   host_addr: "127.0.0.1" 
   port: 9011
