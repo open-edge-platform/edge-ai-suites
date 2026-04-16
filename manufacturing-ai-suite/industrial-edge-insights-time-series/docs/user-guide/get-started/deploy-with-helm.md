@@ -206,7 +206,9 @@ To copy your own or existing model into Time Series Analytics Microservice in or
    ```text
    - time-series-analytics-config/
        - models/
-           - weld_defect_detector.cb
+           - weld_defect_detector.pkl
+           - weld_defect_detector_labels.pkl
+           - weld_defect_detector.json
        - tick_scripts/
            - weld_defect_detector.tick
        - udfs/

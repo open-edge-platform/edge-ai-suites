@@ -95,7 +95,7 @@ WIND_SAMPLE_APP = "wind-turbine-anomaly-detection"
 WIND_UDF= "windturbine_anomaly_detector"
 WIND_MODEL= "windturbine_anomaly_detector.pkl"
 WELD_UDF= "weld_defect_detector"
-WELD_MODEL= "weld_defect_detector.cb"
+WELD_MODEL= "weld_defect_detector.pkl"
 TARGET_SUBPATH = "edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series"
 
 WINDTURBINE_TICK_SCRIPT_PATH = "apps/wind-turbine-anomaly-detection/time-series-analytics-config/tick_scripts/windturbine_anomaly_detector.tick"
