@@ -2,8 +2,8 @@
 
 The Live Video Captioning sample application demonstrates real-time video captioning using Deep Learning Streamer (DL Streamer) and OpenVINO™ toolkit. The sample application processes the Real-Time Streaming Protocol (RTSP) video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model (VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
 
-
 This section shows how to:
+
 - **Set up the sample application**: Use Docker Compose tool to deploy the application quickly in your environment.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
@@ -20,89 +20,85 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 
 ## Run the Application
 
-1. Clone the repository:
+1. Clone the suite:
 
-     ```bash
-     # Clone the latest on the mainline
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
-     # Alternatively, clone a specific release branch
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b <release-tag>
-     ```
+   Go to the target directory of your choice and clone the suite.
+   If you want to clone a specific release branch, replace `main` with the desired tag.
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
-     > **Note:** If the repository is forked, edit the link.
+   ```bash
+   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set metro-ai-suite
+   cd metro-ai-suite/live-video-analysis/live-video-captioning
+   ```
 
-2. Navigate to the directory:
+2. Configure the image registry and tag:
 
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
-     ```
+   If you prefer to use prebuilt images from Docker Hub, export the following variables:
 
-3. Configure the image registry and tag:
+   If you prefer to use prebuilt images from Docker Hub, export the variables below.
 
-     If you prefer to use prebuilt images from Docker Hub, export the following variables:
+   ```bash
+   export REGISTRY="intel/"
+   export TAG="latest"
+   ```
 
-     If you prefer to use prebuilt images from Docker Hub, export the variables below.
+   If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
-     ```bash
-        export REGISTRY="intel/"
-        export TAG="latest"
-     ```
+3. Configure the environment:
 
-    If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
+   Create an `.env` file in the repository root:
 
-4. Configure the environment:
+   ```bash
+   WHIP_SERVER_IP=mediamtx
+   WHIP_SERVER_PORT=8889
+   WHIP_SERVER_TIMEOUT=30s
+   PROJECT_NAME=live-captioning
+   HOST_IP=<HOST_IP>
+   EVAM_HOST_PORT=8040
+   EVAM_PORT=8080
+   DASHBOARD_PORT=4173
+   WEBRTC_PEER_ID=stream
+   WEBRTC_BITRATE=5000
+   ALERT_MODE=False
+   ENABLE_DETECTION_PIPELINE=False
+   CAPTION_HISTORY=3
+   ```
 
-    Create an `.env` file in the repository root:
+   Notes:
+   - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
+   - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
+   - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
+   - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
 
-     ```bash
-     WHIP_SERVER_IP=mediamtx
-     WHIP_SERVER_PORT=8889
-     WHIP_SERVER_TIMEOUT=30s
-     PROJECT_NAME=live-captioning
-     HOST_IP=<HOST_IP>
-     EVAM_HOST_PORT=8040
-     EVAM_PORT=8080
-     DASHBOARD_PORT=4173
-     WEBRTC_PEER_ID=stream
-     WEBRTC_BITRATE=5000
-     ALERT_MODE=False
-     ENABLE_DETECTION_PIPELINE=False
-     CAPTION_HISTORY=3
-     ```
+   Follow the steps outlined in the [Model Preparation](./model-preparation.md) section.
 
-    Notes:
-    - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
-    - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
-    - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
-    - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
+4. Start the Live Video Captioning application:
 
-    Follow the steps outlined in the [Model Preparation](./model-preparation.md) section.
+   From the `live-video-analysis/live-video-captioning` directory, start the application using Docker Compose:
 
-6. Start the Live Video Captioning application:
+   ```bash
+   docker compose up -d
+   ```
 
-    From the `live-video-analysis/live-video-captioning` directory, start the application using Docker Compose:
+5. Access the application:
 
-     ```bash
-     docker compose up -d
-     ```
+   To start processing video with live captioning:
 
-7. Access the application:
+   a. Open the dashboard at `http://<HOST_IP>:4173`.
+   b. Enter an RTSP URL for your video stream.
+   c. Select a VLM model from the dropdown.
+   d. Customize the prompt and maximum tokens as needed.
+   e. Click **Start** to begin captioning.
 
-    To start processing video with live captioning:
+   > **Note:** If running in a proxy network, add your RTSP stream URLs or IPs to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
 
-    a. Open the dashboard at `http://<HOST_IP>:4173`.
-    b. Enter an RTSP URL for your video stream.
-    c. Select a VLM model from the dropdown.
-    d. Customize the prompt and maximum tokens as needed.
-    e. Click **Start** to begin captioning.
+6. Stop the Live Video Captioning sample application services:
 
-    > **Note:** If running in a proxy network, add your RTSP stream URLs or IPs to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
-
-8. Stop the Live Video Captioning sample application services:
-
-     ```bash
-     docker compose down
-     ```
+   ```bash
+   docker compose down
+   ```
 
 ## Additional Features Reference
 

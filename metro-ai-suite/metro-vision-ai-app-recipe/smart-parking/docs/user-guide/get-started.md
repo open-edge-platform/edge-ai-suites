@@ -5,6 +5,7 @@ It provides a modular architecture that integrates seamlessly with various input
 leverages AI models to deliver accurate and actionable insights.
 
 By following this guide, you will learn how to:
+
 - **Set up the sample application**: Use Docker Compose to quickly deploy the application in your environment.
 - **Run a predefined pipeline**: Execute a pipeline to see smart parking application in action.
 - **Access the application's features and user interfaces**: Explore the Grafana dashboard, Node-RED interface, and DL Streamer Pipeline Server to monitor, analyze and customize workflows.
@@ -17,6 +18,7 @@ By following this guide, you will learn how to:
 <!--
 **Setup and First Use**: Include installation instructions, basic operation, and initial validation.
 -->
+
 ## Set up and First Use
 
 <!--
@@ -29,15 +31,22 @@ By following this guide, you will learn how to:
 3. Troubleshooting tips for common installation issues.
 -->
 
-1. **Clone the Repository**:
-   - Run:
-     ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
-     cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-     ```
+1. **Clone the Suite**:
+
+   Go to the target directory of your choice and clone the suite.
+   If you want to clone a specific release branch, replace `main` with the desired tag.
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
+   ```bash
+   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set metro-ai-suite
+   cd metro-ai-suite/metro-vision-ai-app-recipe/
+   ```
 
 2. **Setup Application and Download Assets**:
    - Use the installation script to configure the application and download required models:
+
      ```bash
      ./install.sh smart-parking
      ```
@@ -50,6 +59,7 @@ By following this guide, you will learn how to:
 
 1. **Start the Application**:
    - Download container images with Application microservices and run with Docker Compose:
+
      ```bash
      docker compose up -d
      ```
@@ -58,9 +68,9 @@ By following this guide, you will learn how to:
      <summary>
      Check Status of Microservices
      </summary>
-
      - The application starts the following microservices.
      - To check if all microservices are in Running state:
+
        ```bash
        docker ps
        ```
@@ -75,26 +85,31 @@ By following this guide, you will learn how to:
      </details>
 
 2. **Run Predefined Pipelines**:
-
    - Start video streams to run video inference pipelines:
+
      ```bash
      ./sample_start.sh
      ```
+
    - To check the status of the pipelines:
-      ```bash
-      ./sample_status.sh
-      ```
+
+     ```bash
+     ./sample_status.sh
+     ```
+
      <details>
      <summary>
      Stop pipelines
      </summary>
-
      - To stop the pipelines without waiting for video streams to finish replay:
+
        ```bash
        ./sample_stop.sh
        ```
-      > **Note:** This will stop all the pipelines and the streams. **DO NOT** run this if
-      > you want to see smart parking detection.
+
+     > **Note:** This will stop all the pipelines and the streams. **DO NOT** run this if
+     > you want to see smart parking detection.
+
      </details>
 
 3. **View the Application Output**:
@@ -109,28 +124,31 @@ By following this guide, you will learn how to:
 ## Access the Application and Components
 
 ### **Nginx Dashboard**
+
 - **URL**: `https://localhost`
 
 ### **Grafana UI**
 
 - **URL**: `https://localhost/grafana`
 - **Log in with credentials**:
-    - **Username**: `admin`
-    - **Password**: `admin` (You will be prompted to change it on first login.)
+  - **Username**: `admin`
+  - **Password**: `admin` (You will be prompted to change it on first login.)
 - In Grafana UI, the dashboard displays the detected cars in the parking lot.
-      ![Grafana Dashboard](./_assets/grafana-smart-parking.jpg)
+  ![Grafana Dashboard](./_assets/grafana-smart-parking.jpg "smart parking grafana dashboard")
 
-### **NodeRED UI** ###
+### **NodeRED UI**
+
 - **URL**: `https://localhost/nodered/`
 
-### **DL Streamer Pipeline Server** ###
+### **DL Streamer Pipeline Server**
+
 - **REST API**: `https://localhost/api/pipelines/status`
 - **WebRTC**: `https://localhost/mediamtx/object_detection_1/`
-
 
 ## **Stop the Application**
 
 - To stop the application microservices, use the following command:
+
   ```bash
   docker compose down
   ```
@@ -139,9 +157,10 @@ By following this guide, you will learn how to:
 
 - [Deploy Using Helm](./get-started/deploy-with-helm.md): Use Helm to deploy the application to a Kubernetes cluster for scalable and production-ready deployments.
 - [Deploy with Edge Orchestrator](./get-started/deploy-with-edge-orchestrator.md): Use a simplified
-edge application deployment process.
+  edge application deployment process.
 
 ## Supporting Resources
+
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
 - [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 

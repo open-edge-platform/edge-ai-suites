@@ -1,8 +1,9 @@
 # Get Started
 
-The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](../../live-video-captioning/) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
+The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](../../../live-video-captioning) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
 
 By following this guide, you will learn how to:
+
 - **Set up the sample application**: Use Docker Compose tool to deploy the application in your system environment.
 - **Run the sample application**: Launch the application and use the chatbots to answer questions.
 - **Customize application parameters**: Customize settings, for example, the LLM models and deployment configurations, to adapt the application to your specific requirements and environment.
@@ -16,23 +17,20 @@ By following this guide, you will learn how to:
 
 ## Run the Application
 
-1. Clone the repository:
+1. Clone the suite:
 
-     ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
-     # Alternatively, clone a specific release branch
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git edges-ai-suites -b <release-tag>
-     ```
+   Go to the target directory of your choice and clone the suite.
+   If you want to clone a specific release branch, replace `main` with the desired tag.
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
-    > **Note**: If the repository is forked, edit the link.
+   ```bash
+   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set metro-ai-suite
+   cd metro-ai-suite/live-video-analysis/live-video-captioning-rag
+   ```
 
-2. Navigate to the directory:
-
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
-     ```
-
-3. Configure Image Registry and Tag:
+2. Configure Image Registry and Tag:
 
      If you prefer to use prebuilt images from Docker Hub, export the following variables:
 
@@ -43,11 +41,11 @@ By following this guide, you will learn how to:
 
      If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
 
-4. Download and export models:
+3. Download and export models:
 
      Follow the model preparation steps in [Prerequisites](#prerequisites).
 
-5. Configure and export the environment:
+4. Configure and export the environment:
 
      From the `live-video-analysis/live-video-captioning-rag` directory, use the helper script below to configure and export the application environment.
 
@@ -61,7 +59,7 @@ By following this guide, you will learn how to:
      source scripts/setup_env.sh
      ```
 
-6. Start the Live Video Captioning RAG sample application:
+5. Start the Live Video Captioning RAG sample application:
 
      From the `live-video-analysis/live-video-captioning-rag` directory, start the sample application using Docker Compose tool:
 
@@ -71,7 +69,7 @@ By following this guide, you will learn how to:
 
      > **Note**: The application will take some time to start. Check the container status and ensure that they are in  the `"healthy/running"` state using the `docker ps` command before accessing the application.
 
-7. Access the application:
+6. Access the application:
 
      To start the application:
 
@@ -79,24 +77,24 @@ By following this guide, you will learn how to:
      b. Enter any query in the chatbot.<br>
         > **Note**: You will get a generic response at this point because no context has been created in the vector store yet.
      c. To demonstrate the full functionality, run the following commands to create the context using a sample image and caption:
-	 
-         ```bash
-         # Navigate to the directory
-         cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
 
-         # Run the Python script
-         python3 sample/demo_call_embedding.py
-         ```
+     ```bash
+     # Navigate to the directory
+     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
 
-         > **Notes**: Intel provides this script for demonstration purposes only. The script will:
-         - Download a sample image.
-         - Call the `embeddings/` endpoint to generate embeddings.
-         - Create the context and store it in the vector store.
+     # Run the Python script
+     python3 sample/demo_call_embedding.py
+     ```
+
+     > **Notes**: Intel provides this script for demonstration purposes only. The script will:
+     > - Download a sample image.
+     > - Call the `embeddings/` endpoint to generate embeddings.
+     > - Create the context and store it in the vector store.
      d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.<br>
         `Example query: "How many students are there in the classroom?"`<br>
         You will now receive contextual responses from the RAG chatbot.
 
-8. Stop the Live Video Captioning RAG sample application services:
+7. Stop the Live Video Captioning RAG sample application services:
 
      ```bash
      docker compose down

@@ -45,7 +45,7 @@ def setup_helm_environment(request):
         telegraf_input_plugin = request.node.callspec.params['telegraf_input_plugin']
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
 
     logger.debug(
         f"Installing Helm release... "
@@ -85,7 +85,7 @@ def setup_helm_weld_environment(request):
         telegraf_input_plugin = request.node.callspec.params['telegraf_input_plugin']
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
 
     logger.debug(
         f"Installing Helm release... "

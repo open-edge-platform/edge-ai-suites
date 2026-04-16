@@ -84,10 +84,10 @@ weld_defect_train.py            # Training script — produces model Artifacts
 weld_defect_predict.py          # WeldDefectPredictor class + CLI
 weld_defect_inference_sample.py # Standalone sample inference script
 
-weld_anomaly_detector.pkl        # Trained sklearn pipeline   (generated)
-weld_anomaly_detector_labels.pkl # LabelEncoder mapping       (generated)
-weld_anomaly_detector.json       # Model metadata             (generated)
-weld_anomaly_detector.txt        # Evaluation report          (generated)
+weld_defect_detector.pkl        # Trained sklearn pipeline   (generated)
+weld_defect_detector_labels.pkl # LabelEncoder mapping       (generated)
+weld_defect_detector.json       # Model metadata             (generated)
+weld_defect_detector.txt        # Evaluation report          (generated)
 ```
 
 ---
@@ -96,11 +96,11 @@ weld_anomaly_detector.txt        # Evaluation report          (generated)
 
 Both generated pickle files are required for correct inference in this project:
 
-1. `weld_anomaly_detector.pkl`
+1. `weld_defect_detector.pkl`
    - Serialized sklearn pipeline (scaler + classifier)
    - Produces numeric class predictions and probability vectors
 
-2. `weld_anomaly_detector_labels.pkl`
+2. `weld_defect_detector_labels.pkl`
    - Serialized `LabelEncoder`
    - Maps numeric class index back to defect category text
    - Provides correct class order for probability decoding
@@ -113,12 +113,12 @@ Both generated pickle files are required for correct inference in this project:
 
 ### If one file is missing
 
-- Missing `weld_anomaly_detector.pkl`:
+- Missing `weld_defect_detector.pkl`:
   Inference cannot run.
-- Missing `weld_anomaly_detector_labels.pkl`:
+- Missing `weld_defect_detector_labels.pkl`:
   You may still get numeric outputs, but category names and per-class probability labels will be wrong or unavailable.
 
-In short: keep `weld_anomaly_detector.pkl` and `weld_anomaly_detector_labels.pkl` together when deploying.
+In short: keep `weld_defect_detector.pkl` and `weld_defect_detector_labels.pkl` together when deploying.
 
 ### Current inference-script compatibility note
 
@@ -133,9 +133,9 @@ If you train with the current training script, either rename/copy generated arti
 Example compatibility copy:
 
 ```bash
-cp weld_anomaly_detector.pkl weld_defect_model.pkl
-cp weld_anomaly_detector_labels.pkl weld_defect_labels.pkl
-cp weld_anomaly_detector.json model_info.json
+cp weld_defect_detector.pkl weld_defect_model.pkl
+cp weld_defect_detector_labels.pkl weld_defect_labels.pkl
+cp weld_defect_detector.json model_info.json
 ```
 
 ---
@@ -212,8 +212,8 @@ This will:
 1. Resolve dataset files from `manifest.csv` for steel type `FE410`
 2. Build TRAIN+VAL training data and TEST evaluation data
 3. Train a `Pipeline(StandardScaler -> RandomForestClassifier)`
-4. Evaluate on TEST and write report to `weld_anomaly_detector.txt`
-5. Save `weld_anomaly_detector.pkl`, `weld_anomaly_detector_labels.pkl`, `weld_anomaly_detector.json`
+4. Evaluate on TEST and write report to `weld_defect_detector.txt`
+5. Save `weld_defect_detector.pkl`, `weld_defect_detector_labels.pkl`, `weld_defect_detector.json`
 
 Model/training configuration in the current script:
 
@@ -229,8 +229,8 @@ Loaded manifest data (files=..., train+val_rows=..., test_rows=...)
 Training model...
 Evaluating on TEST...
 TEST Accuracy: ...
-Saved report: weld_anomaly_detector.txt
-Saved model artifacts: weld_anomaly_detector.pkl, weld_anomaly_detector_labels.pkl, weld_anomaly_detector.json
+Saved report: weld_defect_detector.txt
+Saved model artifacts: weld_defect_detector.pkl, weld_defect_detector_labels.pkl, weld_defect_detector.json
 Done
 ```
 
@@ -411,9 +411,9 @@ This version of the training script does not run cross-validation. It reports TE
 
 Where to check results:
 
-- `weld_anomaly_detector.txt`: full classification report + confusion matrix
+- `weld_defect_detector.txt`: full classification report + confusion matrix
 - console output: TEST accuracy
-- `weld_anomaly_detector.json`: metadata (`classes`, `features`, `trained_at`, `intel_patched`, data-source fields)
+- `weld_defect_detector.json`: metadata (`classes`, `features`, `trained_at`, `intel_patched`, data-source fields)
 
 ---
 
