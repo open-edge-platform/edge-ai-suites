@@ -79,7 +79,7 @@ By following this guide, you will learn how to:
      b. Enter any query in the chatbot.<br>
         > **Note**: You will get a generic response at this point because no context has been created in the vector store yet.
      c. To demonstrate the full functionality, run the following commands to create the context using a sample image and caption:
-	 
+
          ```bash
          # Navigate to the directory
          cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
@@ -106,6 +106,43 @@ By following this guide, you will learn how to:
 
 This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
 For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md)
+
+## Testing and Coverage
+
+The sample application uses **pytest** for unit testing. Test files are located in the `tests/` directory under the `app/` folder.
+
+### Install Test Dependencies
+
+```bash
+cd app
+uv sync --group test
+```
+
+### Run All Tests
+
+```bash
+uv run pytest
+```
+
+### Run a Specific Test File
+
+```bash
+uv run pytest tests/test_main.py
+```
+
+### Run Tests with Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=term-missing
+```
+
+### Generate an HTML Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=html
+```
+
+Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 ## Learn More
 
