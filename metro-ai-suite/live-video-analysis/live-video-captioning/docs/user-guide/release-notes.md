@@ -30,4 +30,4 @@ generation delay. Docker-based deployment is supported currently.
 **Upgrade Notes**
 
 - If you change `.env` values (ports, `HOST_IP`, model paths), restart the stack:
-  `docker compose down && docker compose up `.
+  `docker compose down && docker compose up -d`.

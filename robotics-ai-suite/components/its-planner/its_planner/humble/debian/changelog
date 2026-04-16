@@ -1,3 +1,17 @@
+ros-humble-its-planner (2.3-2) UNRELEASED; urgency=low
+
+  * feat: Add multi-distro support for ROS 2 Humble and Jazzy
+    - Add automatic ROS distro detection to install_deb_relocalization_pkgs.sh
+    - Update all README files to support both Humble and Jazzy distributions
+    - Add distro-specific environment variable handling (GAZEBO_MODEL_PATH vs GZ_SIM_RESOURCE_PATH)
+    - Update launch scripts with distro-aware package paths and configurations
+    - Enhance nav2 parameter files with distro-specific settings
+    - Remove hardcoded Humble references throughout documentation
+    - Improve collab_slam script with automatic ROS environment detection
+    - Add support for ROS 2 Humble and Jazzy with respective plugin files
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 19 Mar 2026 00:00:00 +0000
+
 ros-humble-its-planner (2.3-1) UNRELEASED; urgency=low
 
   * Refactoring of the code and general optimizations

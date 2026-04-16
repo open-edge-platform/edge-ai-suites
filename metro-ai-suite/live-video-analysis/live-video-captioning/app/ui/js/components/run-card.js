@@ -253,8 +253,46 @@ const RunCardComponent = (function () {
         return finalName;
     }
 
+    /**
+     * Transition a run card into the error state.
+     * Called when the backend reports the pipeline instance has gone away.
+     * Safe to call multiple times — subsequent calls are no-ops.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     */
+    function setRunErrorState(ui) {
+        // Switch dot to pulsing red
+        const dot = ui.wrap?.querySelector('.dot');
+        if (dot) {
+            dot.classList.remove('active');
+            dot.classList.add('error');
+        }
+
+        // Show error banner in the watcher row
+        if (ui.watcher) {
+            ui.watcher.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span style="color:#ef4444;font-weight:600;">Pipeline lost, click Remove to clear</span>
+            `;
+            ui.watcher.style.gap = '6px';
+            ui.watcher.style.display = 'flex';
+            ui.watcher.style.alignItems = 'center';
+        }
+
+        // Re-enable and relabel the stop button so the user can dismiss the card
+        if (ui.stopBtn) {
+            ui.stopBtn.disabled = false;
+            ui.stopBtn.textContent = 'Remove';
+        }
+    }
+
     return {
         createRunElement,
+        setRunErrorState,
         validateAndPrepareRunName,
         getUniqueRunName,
         formatRunNameForDisplay

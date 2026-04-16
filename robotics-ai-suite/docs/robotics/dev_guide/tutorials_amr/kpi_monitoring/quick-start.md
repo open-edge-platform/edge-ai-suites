@@ -13,10 +13,26 @@ Complete the [installation](installation.md) before proceeding.
 The `quickstart` script provides a guided menu that handles ROS2 environment
 setup automatically:
 
+<!--hide_directive::::{tab-set}hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
+<!--hide_directive:sync: jazzyhide_directive-->
+
 ```bash
-cd <ros-kpi-component-dir>
+cd /opt/ros/jazzy/benchmarking
 ./quickstart
 ```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive:::{tab-item}hide_directive--> **Humble**
+<!--hide_directive:sync: humblehide_directive-->
+
+```bash
+cd /opt/ros/humble/benchmarking
+./quickstart
+```
+
+<!--hide_directive:::hide_directive-->
+<!--hide_directive::::hide_directive-->
 
 The menu guides you through:
 
@@ -26,12 +42,7 @@ The menu guides you through:
 - Quick health checks
 - Starting Grafana dashboards
 
-Alternatively, use the `make` shortcut:
-
-```bash
-make start    # Same as ./quickstart
-make quick    # Quick 30-second health check
-```
+The `./quickstart` script is the recommended entry point.
 
 ## Common Tasks
 
@@ -60,22 +71,18 @@ export ROS_DOMAIN_ID=0
 
 ```bash
 # Quick 30-second check
-make quick-check
+uv run python src/monitor_stack.py --duration 30
 
 # Full 60-second session
-make monitor
+uv run python src/monitor_stack.py --duration 60
 
 # Extended session (5 minutes)
-make monitor-long DURATION=300
+uv run python src/monitor_stack.py --duration 300
 ```
 
 ### Monitor a Specific Node
 
 ```bash
-# By name
-make monitor NODE=/slam_toolbox DURATION=120
-
-# Or using Python directly
 uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --duration 120
 ```
 
@@ -83,10 +90,10 @@ uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --d
 
 ```bash
 # Basic remote session
-make monitor-remote REMOTE_IP=192.168.1.100
+./grafana-monitor.sh --remote-ip 192.168.1.100
 
 # With specific node and user
-make monitor-remote REMOTE_IP=192.168.1.100 REMOTE_USER=ubuntu NODE=/slam_toolbox
+./grafana-monitor.sh --remote-ip 192.168.1.100 --remote-user ubuntu --node /slam_toolbox
 ```
 
 > **Note:** Allow 30–60 seconds for DDS discovery to complete before topic data
@@ -112,9 +119,9 @@ monitoring_sessions/
 Useful session commands:
 
 ```bash
-make list-sessions              # List all previous sessions
-make visualize-last             # Re-visualize the most recent session
-make analyze-session SESSION=20260305_123456
+uv run python src/monitor_stack.py --list-sessions   # List all previous sessions
+uv run python src/visualize_timing.py <session>/graph_timing.csv --show   # Re-visualize
+uv run python src/analyze_trigger_latency.py         # Analyze trigger latency
 ```
 
 ## Advanced Usage
@@ -123,10 +130,10 @@ make analyze-session SESSION=20260305_123456
 
 ```bash
 # Run Wandering benchmark (5 runs, 180s each)
-make wandering-benchmark RUNS=5 TIMEOUT=180
+for i in $(seq 1 5); do bash src/wandering_run.sh --timeout 180; done
 
 # Run Pick-n-Place benchmark (5 runs)
-make picknplace-benchmark RUNS=5
+for i in $(seq 1 5); do bash src/picknplace_run.sh; done
 ```
 
 ### Grafana Dashboard
@@ -144,7 +151,7 @@ See [Grafana Dashboard](grafana.md) for the full setup guide.
 
 | Problem | Fix |
 |---------|-----|
-| ROS2 not found | `source /opt/ros/humble/setup.bash` (or `jazzy`) `&& export ROS_DOMAIN_ID=0` |
+| ROS2 not found | Source your ROS2 environment — see [Set Up ROS2](../../gsg_robot/index.md) |
 | No nodes detected | Ensure your ROS2 application is running first |
 | `permission denied` on scripts | `chmod +x quickstart auto-setup.sh` |
 | `uv` not found | `curl -LsSf https://astral.sh/uv/install.sh | sh && source ~/.bashrc` |

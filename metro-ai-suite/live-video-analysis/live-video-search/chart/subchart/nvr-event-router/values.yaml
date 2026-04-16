@@ -7,7 +7,7 @@ global:
 
 images:
   nvrEventRouter:
-    repository: intel/nvr-event-router
+    repository: nvr-event-router
 
 imageOverride:
   registry: ''

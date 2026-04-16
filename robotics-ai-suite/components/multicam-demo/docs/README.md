@@ -51,7 +51,7 @@ The source code of this component can be found here:
 
 ### Prerequisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
 - [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
@@ -76,14 +76,17 @@ From the setup description explained above, three out of the four
 instances of the AI-based applications are run on a GPU. Therefore, the
 appropriate GPU drivers need to be installed.
 
-Run the below command to check for the GPU device.
+Check for the GPU device with:
 
 ``` bash
 # Install clinfo
 sudo apt install -y clinfo
 
 # Run clinfo command to check GPU Device
-$ clinfo | grep -i "Device Name"
+clinfo | grep -i "Device Name"
+```
+
+```text
   Device Name                                     Intel(R) UHD Graphics
   Device Name                                     13th Gen Intel(R) Core(TM) i7-1370PE
     Device Name                                   Intel(R) UHD Graphics
@@ -142,7 +145,7 @@ SerDes and further to install and load the
 
 ## Pre-requisites
 
-- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html)
+- [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
 - [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
 - [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
 - [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
@@ -247,4 +250,6 @@ shown in the below picture.
     sudo update-grub
 
     # Reboot the system.
-    ```
+   Edit `GRUB_CMDLINE_LINUX` in the `/etc/default/grub` file.
+   
+   

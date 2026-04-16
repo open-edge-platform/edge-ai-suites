@@ -11,7 +11,7 @@ class Settings(BaseSettings):
 
     SEARCH_SERVICE_BASE_URL: str = "http://127.0.0.1:9990"
 
-    MINIO_DEFAULT_BUCKET: str = "content-search"
+    STORAGE_DEFAULT_BUCKET: str = "content-search"
 
     class Config:
         env_file = ".env"

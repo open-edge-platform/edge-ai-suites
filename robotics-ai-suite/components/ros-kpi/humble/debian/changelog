@@ -1,0 +1,20 @@
+ros-humble-benchmark-framework (0.1.2) UNRELEASED; urgency=low
+
+  * Add structured per-session JSON output with throughput, latency, jitter,
+    and metadata fields to analyze_trigger_latency.py
+  * Add per-component Performance Summary table to terminal output
+  * Add throughput (Hz) column and Aggregate Summary table to aggregate_kpi.py
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 03 Apr 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.1) UNRELEASED; urgency=low
+
+  * Add simulation benchmarking scripts and fix make targets
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 03 Apr 2026 00:00:00 +0000
+
+ros-humble-benchmark-framework (0.1.0) UNRELEASED; urgency=low
+
+  * Initial release of ROS2 KPI Monitoring Stack
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 27 Mar 2026 00:00:00 +0000

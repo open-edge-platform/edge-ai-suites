@@ -36,11 +36,11 @@ from pathlib import Path
 from typing import List, Optional
 
 import matplotlib
-import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
 
 # ── Data loading ──────────────────────────────────────────────────────────────
+
 
 def load_npu_log(path: str) -> List[dict]:
     """Parse JSON-lines npu_usage.log; skip start/stop event markers."""
@@ -76,10 +76,9 @@ def _ts(records: List[dict]) -> list:
 def _fmt_xaxis(ax, times):
     """Format x-axis as HH:MM:SS elapsed or absolute time."""
     if not times or times[0] is None:
-        return
+        return None
     tz0 = times[0]
     elapsed = [(t - tz0).total_seconds() if t else 0 for t in times]
-    ticks = ax.get_xticks()
     ax.set_xlabel('Time (s)', fontsize=9)
     return elapsed
 
@@ -199,7 +198,8 @@ def plot_npu_full(records: List[dict],
         print('[NPU Viz] No data records to plot.')
         return None
 
-    matplotlib.use('Agg') if not show else None
+    if not show:
+        matplotlib.use('Agg')
 
     times   = _ts(records)
     t0      = times[0] if times and times[0] else datetime.now()
@@ -267,7 +267,7 @@ def main():
     elif args.session:
         for candidate in [
             Path(f'monitoring_sessions/{args.session}/npu_usage.log'),
-            *Path('monitoring_sessions').glob(f'*/{ args.session}/npu_usage.log'),
+            *Path('monitoring_sessions').glob(f'*/{args.session}/npu_usage.log'),
         ]:
             if candidate.exists():
                 log_path = candidate

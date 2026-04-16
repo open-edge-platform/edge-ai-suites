@@ -1,0 +1,96 @@
+/* Monitoring Paused Banner */
+.mpb {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 0.75rem 0 1rem;
+  background: #ffffff;
+  border: 1px solid #d0dce8;
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 113, 197, 0.07);
+}
+
+/* Left accent bar — Intel blue tint */
+.mpb__indicator {
+  flex-shrink: 0;
+  width: 4px;
+  align-self: stretch;
+  background: #0071c5;
+  border-radius: 0;
+}
+
+/* Content area */
+.mpb__body {
+  flex: 1;
+  padding: 0.65rem 0.875rem;
+  min-width: 0;
+}
+
+.mpb__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.mpb__icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: #0071c5;
+}
+
+.mpb__title {
+  font-family: "IntelOne Display", var(--font-display), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0071c5;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.mpb__message {
+  margin: 0;
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: #4a4d55;
+}
+
+/* Resume button */
+.mpb__resume-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0.6rem 0.75rem;
+  padding: 0.4rem 0.85rem;
+  background: #0071c5;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: "IntelOne Text", var(--font-text), system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 113, 197, 0.25);
+}
+
+.mpb__resume-btn:hover {
+  background: #005fa3;
+  box-shadow: 0 2px 6px rgba(0, 113, 197, 0.35);
+}
+
+.mpb__resume-btn:focus-visible {
+  outline: 2px solid #0071c5;
+  outline-offset: 2px;
+}
+
+.mpb__btn-icon {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}

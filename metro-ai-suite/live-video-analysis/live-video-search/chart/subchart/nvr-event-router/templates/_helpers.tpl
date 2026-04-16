@@ -28,12 +28,12 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
 {{- define "lvs.nvrrouter.image" -}}
-{{- $registry := .registry | default "" -}}
+{{- $registry := .registry -}}
 {{- $repository := .repository -}}
 {{- $tag := .tag -}}
 {{- if $registry -}}
-{{- printf "%s/%s:%s" (trimSuffix "/" $registry) $repository $tag -}}
+{{ trimSuffix "/" $registry }}/{{ $repository }}:{{ $tag }}
 {{- else -}}
-{{- printf "%s:%s" $repository $tag -}}
+intel/{{ $repository }}:{{ $tag }}
 {{- end -}}
 {{- end -}}

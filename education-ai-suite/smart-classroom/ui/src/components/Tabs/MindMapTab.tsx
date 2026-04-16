@@ -43,35 +43,70 @@ const validateJsMindData = (data: any): boolean => {
   }
 };
 
+/** Extracts the first balanced {...} block from a string. */
+const extractFirstJsonObject = (text: string): string | null => {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\" && inString) { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);
+    }
+  }
+  return null;
+};
+
+const tryParse = (s: string): any | null => {
+  try {
+    const p = JSON.parse(s);
+    if (validateJsMindData(p)) return p;
+  } catch {}
+  return null;
+};
+
 const cleanJsMindContent = (content: string): any => {
-  if (!content) {
+  if (!content || !content.trim()) {
     return {
-      "meta": {
-        "name": "default",
-        "author": "ai_assistant",
-        "version": "1.0"
-      },
+      "meta": { "name": "default", "author": "ai_assistant", "version": "1.0" },
       "format": "node_tree",
-      "data": {
-        "id": "root",
-        "topic": "Main Topic",
-        "children": []
-      }
+      "data": { "id": "root", "topic": "Main Topic", "children": [] }
     };
   }
 
-  try {
-    const cleanedContent = content.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/g, "$1").trim();
-    const parsedData = JSON.parse(cleanedContent);
-    if (validateJsMindData(parsedData)) {
-      return parsedData;
-    } else {
-      throw new Error("Invalid jsMind format");
-    }
-  } catch (error) {
-    console.error("Failed to parse jsMind data:", error);
-    throw new Error("INVALID_FORMAT");
+  // Strategy 1: direct parse (handles clean JSON returned by backend)
+  let result = tryParse(content.trim());
+  if (result) return result;
+
+  // Strategy 2: strip code fences then direct parse
+  const stripped = content.replace(/```[a-zA-Z]*\n?([\s\S]*?)```/gs, "$1").trim();
+  result = tryParse(stripped);
+  if (result) return result;
+
+  // Strategy 3: balanced-brace extractor on stripped content
+  const extracted1 = extractFirstJsonObject(stripped);
+  if (extracted1) {
+    result = tryParse(extracted1);
+    if (result) return result;
   }
+
+  // Strategy 4: balanced-brace extractor on raw content (fallback if fence-strip corrupted it)
+  const extracted2 = extractFirstJsonObject(content);
+  if (extracted2) {
+    result = tryParse(extracted2);
+    if (result) return result;
+  }
+
+  console.error("cleanJsMindContent: all strategies failed. Raw content preview:", content.slice(0, 200));
+  throw new Error("INVALID_FORMAT");
 };
 
 const MindMapTab: React.FC = () => {
@@ -81,16 +116,27 @@ const MindMapTab: React.FC = () => {
   const mindmapEnabled = useAppSelector((s) => s.ui.mindmapEnabled);
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const shouldStartMindmap = useAppSelector((s) => s.ui.shouldStartMindmap);
+  const mindmapLoading = useAppSelector((s) => s.ui.mindmapLoading);
   const summaryComplete = useAppSelector((s) => s.ui.summaryComplete);
 
   const { finalText, isRendered, sessionId: mindmapSessionId } = useAppSelector((s) => s.mindmap);
 
   const startedRef = useRef(false);
+  const shouldStartRef = useRef(false);
   const sessionRef = useRef<string | null>(null);
   const jsmindRef = useRef<HTMLDivElement>(null);
   const jsmindInstance = useRef<any>(null);
   const startTimeRef = useRef<number | null>(null);
   const isInitializedRef = useRef(false);
+
+  // Refs for values read inside the fetch effect but that must NOT be deps
+  const mindmapLoadingRef = useRef(false);
+  const finalTextRef = useRef<string | null>(null);
+  const mindmapSessionIdRef = useRef<string | null>(null);
+
+  mindmapLoadingRef.current = mindmapLoading;
+  finalTextRef.current = finalText ?? null;
+  mindmapSessionIdRef.current = mindmapSessionId ?? null;
 
   const cleanupJsMind = () => {
     try {
@@ -238,24 +284,32 @@ const MindMapTab: React.FC = () => {
     }
   };
 
+  // Keep a ref in sync with shouldStartMindmap so we can read it inside effects
+  // without adding it to dependency arrays (prevents the self-triggering loop).
   useEffect(() => {
-    if (!mindmapEnabled || !sessionId || !shouldStartMindmap) return;
-    if (!summaryComplete) {
-      console.log('🧠 Waiting for summary to complete before starting mindmap');
-      return;
-    }
-    if (mindmapSessionId === sessionId && finalText) {
-      return;
-    }
-    
+    shouldStartRef.current = shouldStartMindmap;
+  }, [shouldStartMindmap]);
+
+  useEffect(() => {
+    if (!mindmapEnabled || !sessionId) return;
+    if (!shouldStartRef.current) return;
+    if (!summaryComplete) return;
+    // Already have result for this session (read via ref — not a dep)
+    if (mindmapSessionIdRef.current === sessionId && finalTextRef.current) return;
+    // Redux-level guard: already fetching (read via ref — not a dep)
+    if (mindmapLoadingRef.current) return;
+    // Component/module-level guards
     if (activeMindmapSessions.has(sessionId) || startedRef.current) return;
+
     startedRef.current = true;
     activeMindmapSessions.add(sessionId);
     startTimeRef.current = performance.now();
 
     dispatch(mmStart(sessionId));
+    // Clear the trigger flag BEFORE the async call to stop re-entry.
+    // Do NOT dispatch uiMindmapStart here — it sets shouldStartMindmap=true
+    // again, which causes the effect to re-fire and hit the backend repeatedly.
     dispatch(clearMindmapStartRequest());
-    dispatch(uiMindmapStart());
 
     (async () => {
       try {
@@ -275,7 +329,7 @@ const MindMapTab: React.FC = () => {
         dispatch(clearMindmapStartRequest());
       }
     })();
-  }, [mindmapEnabled, shouldStartMindmap, sessionId, dispatch, mindmapSessionId, finalText, summaryComplete]);
+  }, [mindmapEnabled, sessionId, summaryComplete, dispatch]);
 
   useEffect(() => {
     isInitializedRef.current = false;

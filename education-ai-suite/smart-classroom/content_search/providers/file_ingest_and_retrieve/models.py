@@ -3,6 +3,7 @@
 
 import logging
 import os
+from pathlib import Path
 from typing import Optional
 
 logger = logging.getLogger(__name__)
@@ -48,12 +49,22 @@ def get_document_embedding_model():
         doc_model_path = os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5")
         run_device = os.getenv("INGEST_DEVICE", "CPU")
 
-        logger.info(f"Initializing document embedding model: {doc_model_path} on device: {run_device}")
+        local_path = Path(os.getcwd()).parent / "models" / "openvino" / doc_model_path
+        if local_path.exists():
+            logger.info(f"Loading document embedding OV IR from {local_path}")
+            _document_embedding_model = OpenVINOEmbedding(
+                model_id_or_path=str(local_path),
+                device=run_device,
+            )
+        else:
+            logger.info(f"Converting document embedding model {doc_model_path} to OV IR and saving to {local_path}")
+            _document_embedding_model = OpenVINOEmbedding(
+                model_id_or_path=doc_model_path,
+                device=run_device,
+            )
+            local_path.mkdir(parents=True, exist_ok=True)
+            _document_embedding_model._model.save_pretrained(str(local_path))
+            _document_embedding_model._tokenizer.save_pretrained(str(local_path))
 
-        _document_embedding_model = OpenVINOEmbedding(
-            model_id_or_path=doc_model_path,
-            device=run_device,
-        )
-
-        logger.info("Document embedding model initialized and cached")
+        logger.info(f"Document embedding model {doc_model_path} initialized and cached on device {run_device}")
     return _document_embedding_model
