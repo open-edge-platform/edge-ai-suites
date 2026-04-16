@@ -117,12 +117,12 @@ jobs:
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
         make down
-    - name: Deploying Weld Anomaly Detection Sample App
+    - name: Deploying Weld Defect Detection Sample App
       run: |
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series
-        echo "Deploying Weld Anomaly Detection Sample App"
-        make up_mqtt_ingestion app=weld-anomaly-detection
+        echo "Deploying Weld Defect Detection Sample App"
+        make up_mqtt_ingestion app=weld-defect-detection
         timeout 30s bash -c '
           docker logs -f ia-time-series-analytics-microservice 2>&1 |
           while read -r line; do
@@ -139,7 +139,7 @@ jobs:
             echo "❌ Not found within 30s"
             exit 1
         fi
-    - name: Undeploying Weld Anomaly Detection Sample App
+    - name: Undeploying Weld Defect Detection Sample App
       run: |
         cd "${{ github.workspace }}"
         cd ./timeseries/manufacturing-ai-suite/industrial-edge-insights-time-series

@@ -9,7 +9,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 #### Configure MQTT Alerts
 
 The following MQTT alerts are configured for both `Wind Turbine Anomaly Detection`
-and `Weld Anomaly Detection` sample apps
+and `Weld Defect Detection` sample apps
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -29,11 +29,11 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
  ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
-[weld-anomaly-detection/time-series-analytics-config/config.json](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/config.json)
+[weld-defect-detection/time-series-analytics-config/config.json](
+https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json)
 
 ```json
   "alerts": {
@@ -51,7 +51,7 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 #### Configure MQTT Alert in TICK Script
 
 The following code snippets show how to add the MQTT, if not
-already added, to `Wind Turbine Anomaly Detection` and `Weld Anomaly Detection`
+already added, to `Wind Turbine Anomaly Detection` and `Weld Defect Detection`
 sample apps. The TICK script has the following configuration done by default.
 
 <!--hide_directive::::{tab-set}
@@ -74,12 +74,12 @@ data0
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 
-[weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+[weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
+https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
 
 ```bash
 data0
@@ -122,11 +122,11 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
   ```
   <!--hide_directive:::
-  :::{tab-item}hide_directive--> **Weld Anomaly Detection**
+  :::{tab-item}hide_directive--> **Weld Defect Detection**
   <!--hide_directive:sync: tab2hide_directive-->
 
-  [weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick](
-  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config/tick_scripts/weld_anomaly_detector.tick)
+  [weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
+  https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick)
 
   ```bash
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/weld_defects -p 1883
@@ -139,7 +139,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 
 > **Note:**
 > This section is applicable to Wind Turbine Anomaly Dectection sample app only.
-> In other words, OPC UA alerts are not supported for Weld Anomaly Detection sample app.
+> In other words, OPC UA alerts are not supported for Weld Defect Detection sample app.
 
 #### Prerequisite
 
@@ -290,7 +290,7 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
   ```
 
   <!--hide_directive:::
-  :::{tab-item} hide_directive--> **Weld Anomaly Detection**
+  :::{tab-item} hide_directive--> **Weld Defect Detection**
   <!--hide_directive:sync: tab2hide_directive-->
 
   ```bash

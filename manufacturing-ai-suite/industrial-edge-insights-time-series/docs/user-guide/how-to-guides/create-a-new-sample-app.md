@@ -1,7 +1,7 @@
 # Create a New Sample App
 
 This guide provides step-by-step instructions on how you can create a new sample app by taking
-`Wind Turbine Anomaly Detection` OR `Weld Anomaly Detection` sample app as a reference
+`Wind Turbine Anomaly Detection` OR `Weld Defect Detection` sample app as a reference
 by configuring the generic `Time Series AI Stack`. Create a copy of the
 `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection`
 folder and replace the folder name with the sample app name to be created.

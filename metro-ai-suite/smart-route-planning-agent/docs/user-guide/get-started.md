@@ -14,42 +14,48 @@ platform, see [Docker Documentation](https://docs.docker.com/) for an introducti
 Intel recommends using the unified setup script `setup.sh` that configures, builds, deploys,
 and manages the Smart Route Planning Agent.
 
-1. Clone the repository:
+1. Clone the suite:
 
-```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/smart-route-planning-agent
-```
+   Go to the target directory of your choice and clone the suite.
+   If you want to clone a specific release branch, replace `main` with the desired tag.
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
+   ```bash
+   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set metro-ai-suite
+   cd metro-ai-suite/smart-route-planning-agent
+   ```
 
 2. Run the complete setup:
 
-The setup script provides several options. For a complete setup (recommended for first-time
-users):
+   The setup script provides several options. For a complete setup (recommended for first-time
+   users):
 
-```bash
-source setup.sh --setup
-```
+   ```bash
+   source setup.sh --setup
+   ```
 
 3. Run alternative setup options
 
-For a more granular control, run these commands:
+   For a more granular control, run these commands:
 
-```bash
-# Build service images only (without starting containers)
-source setup.sh --build
+   ```bash
+   # Build service images only (without starting containers)
+   source setup.sh --build
 
-# Start services only (after build)
-source setup.sh --run
+   # Start services only (after build)
+   source setup.sh --run
 
-# Stop services
-source setup.sh --stop
+   # Stop services
+   source setup.sh --stop
 
-# Restart services
-source setup.sh --restart
+   # Restart services
+   source setup.sh --restart
 
-# Clean up containers, volumes, images, networks, and all related resources
-source setup.sh --clean
-```
+   # Clean up containers, volumes, images, networks, and all related resources
+   source setup.sh --clean
+   ```
 
 ## Manual Setup for Advanced Users
 

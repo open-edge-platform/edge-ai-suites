@@ -25,7 +25,7 @@
       pytest -v -s --html=docker_stability_wind_turbine_report.html test_docker_deployment_stability.py
       ```
 
-   * Weld Anomaly Detection
+   * Weld Defect Detection
 
       ```sh
       pytest -v -s --html=docker_weld_anomaly_report.html test_docker_deployment_weld_anomaly.py
@@ -48,7 +48,7 @@
       pytest -v -s --html=helm_influxdb_retention_wind_turbine_report.html test_helm_influxdb_retention.py
       ```
 
-   * Weld Anomaly Detection
+   * Weld Defect Detection
 
       ```sh
       pytest -v -s --html=helm_weld_anomaly_report.html test_helm_deployment_weld_anomaly.py

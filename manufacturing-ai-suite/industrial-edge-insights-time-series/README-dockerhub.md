@@ -4,7 +4,7 @@
 
 The MQTT publisher simulator extracts weld/wind turbine data from a CSV file(s) and sends it as a JSON-formatted data over the configured topic to the MQTT broker. The Telegraf MQTT input plugin then subscribes to this topic to receive the weld/wind turbine data.
 
-The MQTT publisher simulator is used for ingesting the weld data and wind turbine data in the `Weld Anomaly Detection Sample App` and `Wind Turbine Anomaly Detection Sample App` respectively.
+The MQTT publisher simulator is used for ingesting the weld data and wind turbine data in the `Weld Defect Detection Sample App` and `Wind Turbine Anomaly Detection Sample App` respectively.
 
 ## OPC-UA Server Simulator
 

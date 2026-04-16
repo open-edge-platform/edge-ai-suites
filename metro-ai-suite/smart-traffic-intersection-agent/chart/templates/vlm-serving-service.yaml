@@ -16,8 +16,5 @@ spec:
       port: {{ .Values.vlmServing.service.port }}
       targetPort: 8000
       protocol: TCP
-      {{- if and (eq .Values.vlmServing.service.type "NodePort") .Values.vlmServing.service.nodePort }}
-      nodePort: {{ .Values.vlmServing.service.nodePort }}
-      {{- end }}
   selector:
     app: {{ include "stia.vlmServing.fullname" . }}
