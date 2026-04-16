@@ -77,7 +77,7 @@ Other supporting services such as `mqtt-broker`, `live-metrics-service`, `multim
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
-Set `global.nodeName` to the Kubernetes node name. This uses the built-in `kubernetes.io/hostname` label, so you do not need permission to label nodes.
+In the [values-override.yaml](../../charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
 
 Example:
 
