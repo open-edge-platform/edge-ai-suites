@@ -6,7 +6,10 @@ name: ${PROJECT_NAME:-live-video-caption-rag}
 services:
   live-video-captioning-rag:
     image: ${REGISTRY:-}live-video-captioning-rag:${TAG:-latest}
-    build: ./app
+    build:
+      context: ./app
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-video-captioning-rag
     environment:
       http_proxy: ${http_proxy}

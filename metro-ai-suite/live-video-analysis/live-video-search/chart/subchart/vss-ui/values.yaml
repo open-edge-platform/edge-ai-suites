@@ -15,12 +15,12 @@ global:
 
 images:
   vssUi:
-    repository: intel/vss-ui
+    repository: vss-ui
 
 imageOverride:
-  registry: 'amr-fm-registry.caas.intel.com/esh-user/egai/'
-  repository: 'vss-ui'
-  tag: '1.3.3-rc1'
+  registry: ''
+  repository: ''
+  tag: ''
 
 replicaCount: 1
 
