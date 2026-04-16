@@ -16,15 +16,9 @@ spec:
       port: {{ .Values.trafficAgent.service.backendPort }}
       targetPort: 8081
       protocol: TCP
-      {{- if and (eq .Values.trafficAgent.service.type "NodePort") .Values.trafficAgent.service.backendNodePort }}
-      nodePort: {{ .Values.trafficAgent.service.backendNodePort }}
-      {{- end }}
     - name: ui
       port: {{ .Values.trafficAgent.service.uiPort }}
       targetPort: 7860
       protocol: TCP
-      {{- if and (eq .Values.trafficAgent.service.type "NodePort") .Values.trafficAgent.service.uiNodePort }}
-      nodePort: {{ .Values.trafficAgent.service.uiNodePort }}
-      {{- end }}
   selector:
     app: {{ include "stia.trafficAgent.fullname" . }}

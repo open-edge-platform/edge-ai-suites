@@ -5,6 +5,7 @@ UI Components for the RSU Monitoring System
 """
 import base64
 import io
+import os
 from PIL import Image
 from typing import Optional, List, Tuple
 
@@ -74,18 +75,22 @@ class UIComponents:
         colors = ThemeColors.get_colors()
         
         if not monitoring_data:
+            intersection_label = os.getenv("INTERSECTION_NAME", "")
+            title_text = f"{intersection_label} — Smart Traffic Intersection Agent" if intersection_label else "Smart Traffic Intersection Agent"
             return f"""
             <div style="text-align: center; background: {colors['header_bg']}; 
                         padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: {colors['shadow']};">
-                <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 Traffic MONITORING SYSTEM</p>
+                <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {title_text}</p>
                 <p style="color: #fbbf24; margin: 8px 0 0 0; font-size: 16px; font-weight: 500;">⚠️ DATA UNAVAILABLE</p>
             </div>
             """
         
+        intersection_label = monitoring_data.data.intersection_name or os.getenv("INTERSECTION_NAME", "")
+        title_text = f"{intersection_label} — Smart Traffic Intersection Agent" if intersection_label else Config.get_app_title()
         return f"""
         <div style="text-align: center; background: {colors['header_bg']}; 
                     padding: 25px; border-radius: 12px; margin-bottom: 20px; box-shadow: {colors['shadow']};">
-            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {Config.get_app_title()} | {monitoring_data.data.intersection_name}</p> 
+            <p style="color: white; margin: 0; font-size: 26px; font-weight: 600;">🚦 {title_text}</p> 
         </div>
         """
 

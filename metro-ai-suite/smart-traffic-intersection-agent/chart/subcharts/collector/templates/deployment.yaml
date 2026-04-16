@@ -1,0 +1,95 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+Collector Deployment.
+
+Kubernetes equivalents of docker-compose.yaml configuration:
+  pid: host                -> hostPID: true
+  privileged: true         -> securityContext.privileged: true
+  devices /sys /dev /run /proc -> hostPath volumes
+  telegraf.conf            -> ConfigMap mount
+  WEBSOCKET_URL            -> env var referencing live-metrics-service
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "collector.fullname" . }}
+  labels:
+    {{- include "collector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "collector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "collector.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: collector
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/component
+                    operator: In
+                    values:
+                      - vlm-serving
+              topologyKey: kubernetes.io/hostname
+      hostPID: {{ .Values.hostPID }}
+      containers:
+        - name: collector
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: prometheus
+              containerPort: {{ .Values.prometheusPort }}
+              protocol: TCP
+          env:
+            - name: WEBSOCKET_URL
+              value: "ws://{{ .Release.Name }}-live-metrics-service:9090/ws/collector"
+            {{- include "collector.proxyEnv" . | nindent 12 }}
+          volumeMounts:
+            - name: telegraf-config
+              mountPath: /etc/telegraf/telegraf.conf
+              subPath: telegraf.conf
+              readOnly: true
+            - name: collector-signals
+              mountPath: /app/.collector-signals
+            - name: host-sys
+              mountPath: /sys
+              readOnly: true
+            - name: host-dev
+              mountPath: /dev
+              readOnly: true
+            - name: host-run
+              mountPath: /run
+              readOnly: true
+            - name: host-proc
+              mountPath: /proc
+              readOnly: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+      volumes:
+        - name: telegraf-config
+          configMap:
+            name: {{ include "collector.fullname" . }}-telegraf-config
+        - name: collector-signals
+          emptyDir: {}
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-run
+          hostPath:
+            path: /run
+        - name: host-proc
+          hostPath:
+            path: /proc
