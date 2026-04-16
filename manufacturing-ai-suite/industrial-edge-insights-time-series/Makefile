@@ -5,7 +5,7 @@
 #
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
-SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-anomaly-detection
+SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-defect-detection
 HELM_REGISTRY := oci://registry-1.docker.io/intel
 MAKEFLAGS += --no-print-directory
 
@@ -208,8 +208,8 @@ up_mqtt_ingestion: check_env_variables down
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
-	@if [ "$(app)" = "weld-anomaly-detection" ]; then \
-		echo "The weld-anomaly-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
+	@if [ "$(app)" = "weld-defect-detection" ]; then \
+		echo "The weld-defect-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
 		exit 1; \
 	fi; \
 	if [ $(num_of_streams) -gt 1 ]; then \
@@ -338,10 +338,10 @@ help:
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make gen_helm_charts app=weld-defect-detection"
 	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make push_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make push_helm_charts app=weld-defect-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
 

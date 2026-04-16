@@ -2319,7 +2319,7 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
     
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
     
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):

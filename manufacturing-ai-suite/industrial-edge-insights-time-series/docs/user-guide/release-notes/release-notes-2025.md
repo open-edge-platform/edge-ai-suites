@@ -17,7 +17,7 @@ including a new sample application and several key features detailed below.
 - Integrated nginx reverse proxy to centralize external traffic for web applications
   and REST API servers, reducing port exposure.
 - Added documentation for secure connectivity to internal and external MQTT brokers.
-- Introduced Weld Anomaly Detection (v1.0.0) sample application featuring dataset
+- Introduced Weld Defect Detection (v1.0.0) sample application featuring dataset
   ingestion, CatBoost machine learning model integration, and a dedicated
   Grafana dashboard.
 - Wind Turbine Anomaly Detection - v1.1.0:
