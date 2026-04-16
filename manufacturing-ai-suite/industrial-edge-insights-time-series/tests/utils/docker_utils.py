@@ -1307,6 +1307,120 @@ def check_log_gpu(container_name, timeout=300, interval=10):
     return check_logs_for_pattern(container_name, "gpu", timeout, interval)
 
 
+def upload_udf_tar_package(sample_app=constants.WIND_SAMPLE_APP):
+    """Build and upload the UDF deployment tar package via the Docker ts-api endpoint.
+
+    Implements the documented workflow:
+      cd apps/<sample_app>/time-series-analytics-config
+      tar cf <sample_app>.tar models/ tick_scripts/ udfs/
+      curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@<sample_app>.tar" -k
+
+    Args:
+        sample_app (str): Sample app name (e.g. constants.WIND_SAMPLE_APP).
+
+    Returns:
+        bool: True if the upload succeeded (HTTP 200), False otherwise.
+    """
+    import tarfile as _tarfile
+    import tempfile as _tempfile
+
+    upload_endpoint = "https://localhost:3000/ts-api/udfs/package"
+
+    success, original_dir = check_and_set_working_directory(return_original=True)
+    if not success:
+        logger.error("Failed to set correct working directory for UDF tar upload.")
+        return False
+
+    tar_path = None
+    try:
+        app_cfg = constants.SAMPLE_APPS_CONFIG.get(sample_app, {})
+        config_dir_rel = app_cfg.get("config_dir")
+        if not config_dir_rel:
+            logger.error("No config_dir defined for sample app '%s'.", sample_app)
+            return False
+
+        config_path = Path(os.getcwd()) / config_dir_rel
+        if not config_path.is_dir():
+            logger.error("Config directory not found: %s", config_path)
+            return False
+
+        required_folders = ("udfs", "tick_scripts")
+        for folder in required_folders:
+            source = config_path / folder
+            if not source.exists() or not source.is_dir() or not any(source.iterdir()):
+                logger.error(
+                    "Required UDF folder '%s' is missing or empty under '%s'.",
+                    folder, config_path,
+                )
+                return False
+
+        tar_name = f"{sample_app}.tar"
+        with _tempfile.NamedTemporaryFile(
+            suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
+        ) as tmp_file:
+            tar_path = tmp_file.name
+
+        with _tarfile.open(tar_path, "w") as tar:
+            for folder in required_folders:
+                tar.add(config_path / folder, arcname=folder)
+                logger.info("Added required '%s' folder to tar archive.", folder)
+            models_source = config_path / "models"
+            if models_source.exists() and models_source.is_dir() and any(models_source.iterdir()):
+                tar.add(models_source, arcname="models")
+                logger.info("Added optional 'models' folder to tar archive.")
+            else:
+                logger.debug("Skipping absent/empty optional 'models' folder.")
+
+        logger.info("Created UDF tar archive at '%s'.", tar_path)
+        logger.info("Uploading UDF tar package for '%s' to %s", sample_app, upload_endpoint)
+
+        with _tempfile.NamedTemporaryFile(
+            suffix=".json", delete=False, prefix="udf_upload_response_"
+        ) as resp_file:
+            tmp_response = resp_file.name
+        try:
+            curl_command = [
+                "curl", "-k", "-s",
+                "-o", tmp_response,
+                "-w", "%{http_code}",
+                "-X", "POST", upload_endpoint,
+                "-F", f"file=@{tar_path}",
+            ]
+            result = subprocess.run(curl_command, capture_output=True, text=True, timeout=60)
+            if result.returncode == 0:
+                http_code = result.stdout.strip()
+                if http_code == "200":
+                    logger.info("UDF tar package uploaded successfully (HTTP 200).")
+                    return True
+                try:
+                    with open(tmp_response) as fh:
+                        logger.error(
+                            "UDF upload returned HTTP %s. Response: %s",
+                            http_code, fh.read().strip(),
+                        )
+                except OSError:
+                    logger.error("UDF upload returned HTTP %s.", http_code)
+            else:
+                logger.error("UDF upload curl command failed: %s", result.stderr.strip())
+            return False
+        except subprocess.SubprocessError as exc:
+            logger.error("curl subprocess error during UDF upload: %s", exc)
+            return False
+        finally:
+            try:
+                os.unlink(tmp_response)
+            except OSError:
+                pass
+
+    finally:
+        if tar_path and os.path.exists(tar_path):
+            try:
+                os.unlink(tar_path)
+            except OSError:
+                pass
+        os.chdir(original_dir)
+
+
 def update_config_file(ingestion_type="opcua"):
     """Common helper for to update configuration setup and validation for MQTT/OPCUA."""
     try:
@@ -1569,16 +1683,31 @@ def validate_opcua_alert_system():
     logger.info("=== Docker-based OPC UA Alert System Validation ===")
     logger.info(f"Starting validation from directory: {os.getcwd()}")
 
+    # Step 1: Configure OPC UA alert in TICK script only (no config POST yet)
+    logger.info("\nStep 1: Configuring OPC UA alert in TICK script...")
+    tick_result = check_and_update_tick_script(setup="opcua")
+    if tick_result is None:
+        logger.error("✗ Step 1 FAILED: Tick script update failed")
+        return False
+    logger.info("✓ Step 1 PASSED: Tick script updated successfully")
 
-    # Step 1: Setup OPC UA alerts configuration using Docker-specific approach
-    logger.info("\nStep 1: Setting up OPC UA alerts configuration...")
+    # Step 2: Upload the UDF deployment package (must happen before config POST)
+    logger.info("\nStep 2: Uploading UDF deployment package...")
+    upload_result = upload_udf_tar_package(constants.WIND_SAMPLE_APP)
+    if not upload_result:
+        logger.error("✗ Step 2 FAILED: UDF deployment package upload failed")
+        return False
+    logger.info("✓ Step 2 PASSED: UDF deployment package uploaded successfully")
+
+    # Step 3: Post the OPC UA config to TSAM (triggers TSAM restart)
+    logger.info("\nStep 3: Configuring OPC UA alert in config.json...")
     update_config_setup = update_config_file("opcua")
     if not update_config_setup:
-        logger.error("✗ Step 1 FAILED: OPC UA alerts configuration setup failed")
+        logger.error("✗ Step 3 FAILED: OPC UA alerts configuration setup failed")
         return False
 
-    # Step 2: Restart OPC UA server container
-    logger.info("\nStep 2: Restarting OPC UA server container...")
+    # Step 4: Restart OPC UA server container
+    logger.info("\nStep 4: Restarting OPC UA server container...")
     opcua_container_name = "timeseriessoftware-ia-opcua-server-1"
     try:
         if container_is_running(opcua_container_name):
@@ -1596,18 +1725,18 @@ def validate_opcua_alert_system():
             logger.error(f"✗ Container {opcua_container_name} is not running")
             return False
     except Exception as e:
-        logger.error(f"✗ Step 3 FAILED: Error restarting OPC UA server - {str(e)}")
+        logger.error(f"✗ Step 4 FAILED: Error restarting OPC UA server - {str(e)}")
         return False
 
     # Wait for OPC UA system to stabilize and process data before checking logs
     logger.info("\nWaiting for OPC UA alert system to stabilize and generate alerts...")
     wait_for_stability(60)  # Extended wait time to allow OPC UA alerts to be generated and logged
 
-    # Step 4: Check container logs for OPC UA alert pattern
-    logger.info("\nStep 4: Checking container logs for OPC UA alert pattern...")
+    # Step 5: Check container logs for OPC UA alert pattern
+    logger.info("\nStep 5: Checking container logs for OPC UA alert pattern...")
     logs_validation = check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], "opcua", timeout=120, interval=10)
     if not logs_validation:
-        logger.error("✗ Step 4 FAILED: OPC UA alert pattern not found in container logs")
+        logger.error("✗ Step 5 FAILED: OPC UA alert pattern not found in container logs")
         return False
 
     logger.info("\n=== Docker-based OPC UA Alert System Validation PASSED ===")

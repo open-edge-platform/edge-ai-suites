@@ -98,7 +98,7 @@ def _get_sample_app_config_dir(chart_path, sample_app):
 
 
 def _stage_udf_package(config_dir, sample_app):
-    """Copy required UDF artifacts into a temporary directory for kubectl cp."""
+    """Copy required UDF artifacts into a temporary directory."""
     staging_root = Path(tempfile.mkdtemp(prefix=f"{sample_app}_udf_"))
     package_dir = staging_root / sample_app
     try:
@@ -1616,7 +1616,7 @@ def with_model_registry(chart_path, input):
     """Check time-series pod after model registry is enabled in the configuration."""
     original_dir = os.getcwd()
     try:
-        # Step 1: Create a ZIP archive
+        # Step 1: Create a TAR archive
         if input == "mqtt":
             assert setup_mqtt_alerts(chart_path) == True
             logger.info("MQTT alerts setup in tick script completed successfully.")
@@ -1900,15 +1900,13 @@ def _post_ts_api_config(
     pod_name=None,
     endpoint=None,
     method="POST",
-    max_attempts=3,
-    delay_seconds=5,
 ):
     """Execute a ts-api call via external nginx proxy (exactly like Docker does)."""
     ns = target_namespace or namespace
-    
+
     target_endpoint = endpoint or "https://localhost:30001/ts-api/config"
     http_method = method.upper()
-    
+
     # Build curl command to run from test machine (NOT inside pod)
     curl_command = [
         'curl', '-k', '-X', http_method, target_endpoint,
@@ -1919,41 +1917,29 @@ def _post_ts_api_config(
     if payload and http_method in {"POST", "PUT", "PATCH", "DELETE"}:
         curl_command.extend(['-d', payload])
 
-    for attempt in range(1, max_attempts + 1):
-        logger.info(
-            "Executing Time Series API request (attempt %d/%d) via external nginx: %s",
-            attempt,
-            max_attempts,
-            " ".join(curl_command),
-        )
-        
-        try:
-            result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
-        except subprocess.SubprocessError as exc:
-            logger.error(f"Failed to execute ts-api request: {exc}")
-            result = None
+    logger.info(
+        "Executing Time Series API request via external nginx: %s",
+        " ".join(curl_command),
+    )
 
-        if result and result.returncode == 0:
-            logger.info("ts-api request completed successfully. Response:")
-            logger.info(result.stdout.strip())
-            logger.info("Waiting 5 seconds for configuration to be processed...")
-            time.sleep(5)
-            return True
+    try:
+        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+    except subprocess.SubprocessError as exc:
+        logger.error(f"Failed to execute ts-api request: {exc}")
+        return False
 
-        logger.warning("ts-api request attempt %d failed.", attempt)
-        if result:
-            stderr = result.stderr.strip()
-            if stderr:
-                logger.warning(stderr)
+    if result and result.returncode == 0:
+        logger.info("ts-api request completed successfully. Response:")
+        logger.info(result.stdout.strip())
+        logger.info("Waiting 5 seconds for configuration to be processed...")
+        time.sleep(5)
+        return True
 
-        if attempt < max_attempts:
-            logger.info(
-                "Waiting %d seconds before retrying ts-api request...",
-                delay_seconds,
-            )
-            time.sleep(delay_seconds)
-
-    logger.error("ts-api request failed after %d attempts.", max_attempts)
+    logger.error("ts-api request failed.")
+    if result:
+        stderr = result.stderr.strip()
+        if stderr:
+            logger.error(stderr)
     return False
 
 
@@ -1966,8 +1952,6 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
         pod_name=pod_name,
         endpoint=restart_endpoint,
         method="GET",
-        max_attempts=2,
-        delay_seconds=5
     )
     if result:
         logger.info("Configuration restart successful. Waiting 45 seconds for microservice to fully restart and activate UDF...")
@@ -1978,17 +1962,14 @@ def _restart_ts_api_config(target_namespace=None, pod_name=None):
     return result
         
 
-def _upload_udf_tar_via_api(config_dir, sample_app, max_attempts=3, delay_seconds=5):
+def _upload_udf_tar_via_api(config_dir, sample_app):
     """Create a tar archive of UDF artifacts and upload it via the ts-api REST endpoint.
 
-    This replaces the legacy ``kubectl cp`` approach and matches the workflow used
-    by ``make upload_tar_file`` in the project Makefile.
+    Matches the workflow used by ``make upload_tar_file`` in the project Makefile.
 
     Args:
         config_dir (Path): Absolute path to the app's time-series-analytics-config directory.
         sample_app (str): Name of the sample app (used to label the tar file).
-        max_attempts (int): Number of upload retry attempts.
-        delay_seconds (int): Seconds to wait between retries.
 
     Returns:
         bool: True if the upload succeeded (HTTP 200), False otherwise.
@@ -2000,32 +1981,58 @@ def _upload_udf_tar_via_api(config_dir, sample_app, max_attempts=3, delay_second
     tar_path = None
 
     try:
-        # Build tar containing udfs, tick_scripts, and (if present) models
+        config_path = Path(config_dir)
+        required_folders = ("udfs", "tick_scripts")
+        for folder in required_folders:
+            source = config_path / folder
+            if not source.exists():
+                logger.error(
+                    "Required UDF package folder '%s' is missing under '%s'.",
+                    folder,
+                    config_path,
+                )
+                return False
+            if not source.is_dir():
+                logger.error(
+                    "Required UDF package path '%s' exists but is not a directory.",
+                    source,
+                )
+                return False
+            if not any(source.iterdir()):
+                logger.error(
+                    "Required UDF package folder '%s' is empty under '%s'.",
+                    folder,
+                    config_path,
+                )
+                return False
+
+        # Build tar containing required udfs and tick_scripts, and optional models
         with _tempfile.NamedTemporaryFile(
             suffix=".tar", delete=False, prefix=f"{sample_app}_udf_"
         ) as tmp_file:
             tar_path = tmp_file.name
 
         with _tarfile.open(tar_path, "w") as tar:
-            for folder in ("udfs", "tick_scripts", "models"):
-                source = Path(config_dir) / folder
-                if source.exists() and any(source.iterdir()):
-                    tar.add(source, arcname=folder)
-                    logger.info("Added '%s' folder to tar archive.", folder)
-                else:
-                    logger.debug("Skipping absent/empty folder '%s'.", folder)
+            for folder in required_folders:
+                source = config_path / folder
+                tar.add(source, arcname=folder)
+                logger.info("Added required '%s' folder to tar archive.", folder)
+            models_source = config_path / "models"
+            if models_source.exists() and models_source.is_dir() and any(models_source.iterdir()):
+                tar.add(models_source, arcname="models")
+                logger.info("Added optional 'models' folder to tar archive.")
+            else:
+                logger.debug("Skipping absent/empty optional folder 'models'.")
 
         logger.info("Created UDF tar archive at '%s'.", tar_path)
 
         # Upload the tar via curl (mirrors make upload_tar_file)
-        for attempt in range(1, max_attempts + 1):
-            logger.info(
-                "Uploading UDF tar package (attempt %d/%d) to %s",
-                attempt,
-                max_attempts,
-                upload_endpoint,
-            )
-            tmp_response = "/tmp/udf_upload_response.json"
+        logger.info("Uploading UDF tar package to %s", upload_endpoint)
+        with _tempfile.NamedTemporaryFile(
+            suffix=".json", delete=False, prefix="udf_upload_response_"
+        ) as resp_file:
+            tmp_response = resp_file.name
+        try:
             curl_command = [
                 "curl", "-k", "-s",
                 "-o", tmp_response,
@@ -2039,27 +2046,29 @@ def _upload_udf_tar_via_api(config_dir, sample_app, max_attempts=3, delay_second
                 )
             except subprocess.SubprocessError as exc:
                 logger.error("curl subprocess error during UDF upload: %s", exc)
-                result = None
+                return False
 
             if result and result.returncode == 0:
                 http_code = result.stdout.strip()
                 if http_code == "200":
                     logger.info("UDF tar package uploaded successfully (HTTP 200).")
                     return True
-                logger.warning(
-                    "UDF upload attempt %d returned HTTP %s.", attempt, http_code
-                )
+                try:
+                    with open(tmp_response) as fh:
+                        logger.error(
+                            "UDF upload returned HTTP %s. Response: %s",
+                            http_code, fh.read().strip(),
+                        )
+                except OSError:
+                    logger.error("UDF upload returned HTTP %s.", http_code)
             else:
-                logger.warning("UDF upload attempt %d: curl command failed.", attempt)
-
-            if attempt < max_attempts:
-                logger.info("Retrying in %d seconds...", delay_seconds)
-                time.sleep(delay_seconds)
-
-        logger.error(
-            "UDF tar package upload failed after %d attempts.", max_attempts
-        )
-        return False
+                logger.error("UDF upload: curl command failed.")
+            return False
+        finally:
+            try:
+                os.unlink(tmp_response)
+            except OSError:
+                pass
 
     finally:
         if tar_path and os.path.exists(tar_path):
@@ -2067,6 +2076,29 @@ def _upload_udf_tar_via_api(config_dir, sample_app, max_attempts=3, delay_second
                 os.unlink(tar_path)
             except OSError:
                 pass
+
+
+def upload_udf_tar_package(chart_path, sample_app=constants.WIND_SAMPLE_APP):
+    """Build and upload the UDF deployment tar package via the Helm ts-api endpoint.
+
+    Implements the documented workflow:
+      cd apps/<sample_app>/time-series-analytics-config
+      tar cf <sample_app>.tar models/ tick_scripts/ udfs/
+      curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@<sample_app>.tar" -k
+
+    Args:
+        chart_path (str): Path to the Helm chart (used to resolve the config directory).
+        sample_app (str): Sample app name (e.g. constants.WIND_SAMPLE_APP).
+
+    Returns:
+        bool: True if the upload succeeded (HTTP 200), False otherwise.
+    """
+    config_dir = _get_sample_app_config_dir(chart_path, sample_app)
+    if not config_dir:
+        logger.error("Cannot resolve config directory for '%s'.", sample_app)
+        return False
+    logger.info("Uploading UDF tar package for '%s' via ts-api tar-upload endpoint...", sample_app)
+    return _upload_udf_tar_via_api(config_dir, sample_app)
 
 
 def setup_sample_app_udf_deployment_package(
@@ -2078,9 +2110,8 @@ def setup_sample_app_udf_deployment_package(
 ):
     """Package and activate the sample app UDF bundle following the documented Helm workflow.
 
-    Uses the ts-api zip-upload endpoint (``POST /ts-api/udfs/package``) introduced by
-    the *timeseries microservice zip upload* feature instead of the deprecated
-    ``kubectl cp`` approach.
+    Uses the ts-api tar-upload endpoint (``POST /ts-api/udfs/package``) introduced by
+    the *timeseries microservice tar upload* feature.
     """
     ns = target_namespace or namespace
     try:
@@ -2088,9 +2119,9 @@ def setup_sample_app_udf_deployment_package(
         if not config_dir:
             return False
 
-        # Upload UDF artifacts via REST API (replaces kubectl cp)
+        # Upload UDF artifacts via REST API
         logger.info(
-            "Uploading UDF package for '%s' via ts-api zip-upload endpoint...", sample_app
+            "Uploading UDF package for '%s' via ts-api tar-upload endpoint...", sample_app
         )
         if not _upload_udf_tar_via_api(config_dir, sample_app):
             logger.error("Failed to upload UDF tar package for '%s'.", sample_app)
@@ -2321,6 +2352,12 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         logger.info(f"Restored working directory to: {os.getcwd()}")
     
 def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
+    """Configure OPC-UA alert in the TICK script (Step 1 of the OPC-UA activation workflow).
+
+    Only updates the tick script.  Callers are responsible for the subsequent steps:
+      Step 2 - upload_udf_tar_package(chart_path, sample_app)
+      Step 3 - setup_sample_app_udf_deployment_package(chart_path, alert_mode="opcua")
+    """
     try:
         if not sample_app:
             sample_app = constants.WIND_SAMPLE_APP
@@ -2338,13 +2375,8 @@ def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
             logger.error("Failed to set OPC UA alert configuration in tick script.")
             return False
 
-        logger.info("OPC UA alert configuration updated successfully. Redeploying UDF package...")
-        return setup_sample_app_udf_deployment_package(
-            chart_path,
-            sample_app=sample_app,
-            device_value=device,
-            alert_mode="opcua",
-        )
+        logger.info("OPC UA alert configuration updated in tick script.")
+        return True
 
     except subprocess.CalledProcessError as e:
         logger.error("An error occurred while executing a command: %s", e)

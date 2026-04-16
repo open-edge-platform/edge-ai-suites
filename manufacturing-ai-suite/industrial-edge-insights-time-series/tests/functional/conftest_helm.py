@@ -38,7 +38,7 @@ def setup_helm_environment(request):
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
-    cleanup_ok = helm_utils.check_pods(namespace, timeout=120)
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
     if not cleanup_ok:
         logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
     case = helm_utils.password_test_cases["test_case_4"]
@@ -70,7 +70,7 @@ def setup_helm_environment(request):
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
     # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT)
     if not cleanup_result:
         logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
 
@@ -83,7 +83,7 @@ def setup_helm_weld_environment(request):
 
     # Wait for pods from the previous release to fully terminate before installing
     logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
-    cleanup_ok = helm_utils.check_pods(namespace, timeout=120)
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
     if not cleanup_ok:
         logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
 
@@ -116,7 +116,7 @@ def setup_helm_weld_environment(request):
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
     # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT)
     if not cleanup_result:
         logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
 
@@ -138,6 +138,6 @@ def setup_multimodal_helm_environment():
     yield
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
     # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT)
     if not cleanup_result:
         logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
