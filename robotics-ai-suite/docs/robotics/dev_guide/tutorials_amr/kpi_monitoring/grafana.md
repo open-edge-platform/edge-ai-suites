@@ -29,19 +29,13 @@ sudo usermod -aG docker $USER   # log out and back in after this
 make grafana-start
 
 # 2. In a new terminal — run monitoring
-make monitor
+uv run python src/monitor_stack.py
 
 # 3. In a new terminal — start the metrics exporter
 make grafana-export SESSION=<session-name-from-step-2>
 
 # Open browser
 make grafana-open   # → http://localhost:30000
-```
-
-Or run everything with a single demo command:
-
-```bash
-make grafana-demo
 ```
 
 ## Access Points

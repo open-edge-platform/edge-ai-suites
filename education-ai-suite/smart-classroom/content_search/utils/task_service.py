@@ -161,8 +161,9 @@ class TaskService:
 
                 else:
                     ai_result = asyncio.run(search_service.trigger_ingest(
-                        file_path=file_key, 
-                        bucket_name=bucket_name
+                        file_path=file_key,
+                        bucket_name=bucket_name,
+                        meta=task.payload.get("meta")
                     ))
 
                 if is_video and ai_result and "error" not in ai_result:

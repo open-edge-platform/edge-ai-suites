@@ -3,10 +3,13 @@ import { Line } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
 import Accordion from '../common/Accordion'; 
 import '../../assets/css/RightPanel.css'
+import '../../assets/css/MonitoringPausedBanner.css';
 import { useTranslation } from 'react-i18next';
 import { setMetrics } from '../../redux/slices/resourceSlice'; 
 import { getResourceMetrics } from '../../services/api'; 
 import { useAppSelector, useAppDispatch } from '../../redux/hooks';
+import { useResourceMetricTimer } from '../../hooks/useResourceMetricTimer';
+import MonitoringPausedBanner from '../common/MonitoringPausedBanner';
 Chart.register(...registerables);
 
 type GPUMetricKey = 'shared_memory_mb' | '3D_utilization_percent' | 'VideoDecode_utilization_percent' | 'VideoProcessing_utilization_percent' | 'Compute_utilization_percent';
@@ -28,8 +31,10 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector(s => s.ui.sessionId);
+  const monitoringPaused = useAppSelector(s => s.ui.monitoringPaused);
   const resourceMetrics = useAppSelector(s => s.resource?.metrics);
   const lastUpdated = useAppSelector(s => s.resource?.lastUpdated);
+  const { resumeMonitoring } = useResourceMetricTimer();
   
   const [resourceData, setResourceData] = useState<any>({
     cpu_utilization: [],
@@ -45,8 +50,8 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
     }
   }, [resourceMetrics, lastUpdated]);
 
- useEffect(() => {
-    if (!sessionId) return;
+  useEffect(() => {
+    if (!sessionId || monitoringPaused) return;
 
     const fetchResourceMetrics = async () => {
       try {
@@ -62,7 +67,7 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
     const interval = setInterval(fetchResourceMetrics, 5000);
 
     return () => clearInterval(interval);
-  }, [sessionId, dispatch]);
+  }, [sessionId, monitoringPaused, dispatch]);
 
   const gpuMetricsConfig: GPUMetricsConfig = {
     shared_memory_mb: { 
@@ -180,7 +185,7 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
         position: 'left' as const,
         beginAtZero: true,
         min: 0,
-        max: 100, 
+        // No hard max — auto-scales above 100% when GPU metrics exceed the typical range
         title: {
           display: true,
           text: 'Utilization (%)'
@@ -188,7 +193,7 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
         ticks: {
           stepSize: 20,
           callback: function(value: any) {
-            return value ;
+            return value;
           }
         }
       },
@@ -253,7 +258,11 @@ const ResourceUtilizationAccordion: React.FC<ResourceUtilizationAccordionProps> 
       <div className="accordion-subtitle">
         {t('accordion.subtitle_resource') || "System resource monitoring during AI processing"}
       </div>
-      
+
+      {monitoringPaused && (
+        <MonitoringPausedBanner onResume={resumeMonitoring} />
+      )}
+
       <div className="accordion-content">
         {sessionId ? (
           <>

@@ -81,6 +81,9 @@ class VideoAnalyticsPipelineService:
         self.pipeline_retry_counts: Dict[str, int] = {}
         self.max_retries = 10
 
+        # Pipeline error events for status reporting (consumed by monitor_pipeline_status)
+        self.pipeline_errors: Dict[str, List[str]] = {}
+
         ps = getattr(config.va_pipeline, "pose_statistics", None)
         self.min_frames_for_transition = getattr(ps, "min_frames_for_transition", 3) if ps else 3
         self.min_frames_for_transition_unid = getattr(ps, "min_frames_for_transition_unid", 15) if ps else 15
@@ -262,7 +265,16 @@ class VideoAnalyticsPipelineService:
                     )
                     break
                 else:
-                    # Unexpected exit
+                    # Unexpected exit — record error for status reporting
+                    log_error = self._check_error(log_file) if log_file else None
+                    error_detail = log_error or f"Pipeline exited with code {process.returncode}"
+                    if pipeline_name not in self.pipeline_errors:
+                        self.pipeline_errors[pipeline_name] = []
+                    self.pipeline_errors[pipeline_name].append(error_detail)
+                    self.logger.warning(
+                        f"Pipeline '{pipeline_name}' exited unexpectedly: {error_detail}"
+                    )
+
                     retry_count = self.pipeline_retry_counts.get(pipeline_name, 0)
 
                     if retry_count < self.max_retries:
@@ -284,7 +296,6 @@ class VideoAnalyticsPipelineService:
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
                         if params:
-                            time.sleep(2)  # Wait a bit before restarting
                             self._launch_pipeline_internal(
                                 pipeline_name, params["options"], params["command"]
                             )
@@ -806,6 +817,8 @@ class VideoAnalyticsPipelineService:
                 del self.pipeline_retry_counts[pipeline_name]
             if pipeline_name in self.monitor_stop_flags:
                 del self.monitor_stop_flags[pipeline_name]
+            if pipeline_name in self.pipeline_errors:
+                del self.pipeline_errors[pipeline_name]
 
             return True
 
@@ -874,14 +887,20 @@ class VideoAnalyticsPipelineService:
                     process = self.pipelines[pipeline_name_lower]
                     return_code = process.poll()
 
+                    # Collect any error events recorded by the monitor thread
+                    errors = self.pipeline_errors.pop(pipeline_name_lower, [])
+
                     # Pipeline is running
                     if return_code is None:
                         all_stopped = False
-                        pipeline_statuses.append({
+                        status_entry = {
                             "pipeline_name": pipeline_name,
                             "status": "running",
                             "pid": process.pid,
-                        })
+                        }
+                        if errors:
+                            status_entry["errors"] = errors
+                        pipeline_statuses.append(status_entry)
 
                     # Pipeline has stopped
                     else:
@@ -896,14 +915,17 @@ class VideoAnalyticsPipelineService:
                                 "message": "Pipeline exited normally (EOS received)",
                             })
                         else:
-                            # Check for errors in log
-                            error_msg = "Pipeline exited unexpectedly. Auto-restarting."
+                            if not errors:
+                                log_error = self._check_error(log_file) if log_file else None
+                                if log_error:
+                                    errors = [log_error]
 
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_error",
                                 "return_code": return_code,
-                                "message": error_msg,
+                                "message": "Pipeline exited unexpectedly.",
+                                "errors": errors,
                             })
 
                 # Yield combined status

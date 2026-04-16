@@ -6,6 +6,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import os
+from pathlib import Path
 from typing import List, Union, Dict, Any, Optional
 
 import torch
@@ -31,12 +33,24 @@ class CLIPHandler(BaseEmbeddingModel):
     def load_model(self) -> None:
         try:
             self._embedding_dim = None
-            logger.info(f"Loading CLIP model: {self.model_name} with pretrained: {self.pretrained}")
 
-            self.model, _, self.preprocess = open_clip.create_model_and_transforms(
-                self.model_name,
-                pretrained=self.pretrained,
-            )
+            local_path = Path(os.getcwd()).parent / "models" / "clip" / f"{self.model_name}-{self.pretrained}.pt"
+            if local_path.exists():
+                logger.info(f"Loading CLIP model {self.model_name} from local cache: {local_path}")
+                self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+                    self.model_name,
+                    pretrained=str(local_path),
+                )
+            else:
+                logger.info(f"Downloading CLIP model {self.model_name} with pretrained: {self.pretrained}")
+                self.model, _, self.preprocess = open_clip.create_model_and_transforms(
+                    self.model_name,
+                    pretrained=self.pretrained,
+                )
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                torch.save(self.model.state_dict(), str(local_path))
+                logger.info(f"Saved CLIP model weights to local cache: {local_path}")
+
             self.tokenizer = open_clip.get_tokenizer(self.model_name)
             self.model.eval()
             logger.info(f"CLIP model {self.model_name} loaded successfully")
