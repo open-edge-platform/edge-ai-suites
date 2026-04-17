@@ -297,7 +297,9 @@ Please provide a structured analysis in JSON format with the following key detai
    - "weather_related": strictly a boolean value. If weather is a factor for the traffic situation value should be True, otherwise False
    
 3. "recommendations": Array of recommendation objects helping to make decisions while travelling through this intersection:
-   - "recommendation": Clear advice for traffic management or safety."""
+   - "recommendation": Clear advice for traffic management or safety.
+
+IMPORTANT: Be concise. Keep the analysis under 3 sentences. Return at most 4 alerts and 3 recommendations. Each description and recommendation must be a single sentence."""
         
         return prompt
     
@@ -367,9 +369,11 @@ Please provide a structured analysis in JSON format with the following key detai
                         "analysis": {
                             "type": "string",
                             "description": "Detailed overview of current traffic conditions",
+                            "maxLength": 500,
                         },
                         "alerts": {
                             "type": "array",
+                            "maxItems": 4,
                             "items": {
                                 "type": "object",
                                 "properties": {
@@ -388,7 +392,10 @@ Please provide a structured analysis in JSON format with the following key detai
                                         "type": "string",
                                         "enum": ["info", "warning", "critical"],
                                     },
-                                    "description": {"type": "string"},
+                                    "description": {
+                                        "type": "string",
+                                        "maxLength": 200,
+                                    },
                                     "weather_related": {"type": "boolean"},
                                 },
                                 "required": [
@@ -401,10 +408,14 @@ Please provide a structured analysis in JSON format with the following key detai
                         },
                         "recommendations": {
                             "type": "array",
+                            "maxItems": 3,
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "recommendation": {"type": "string"},
+                                    "recommendation": {
+                                        "type": "string",
+                                        "maxLength": 200,
+                                    },
                                 },
                                 "required": ["recommendation"],
                             },
@@ -487,7 +498,7 @@ Please provide a structured analysis in JSON format with the following key detai
             # then fall back to extraction from markdown code blocks.
             json_content: Optional[str] = None
             try:
-                response_data = json.loads(response_text)
+                response_data = json.loads(response_text, strict=False)
                 logger.info("Parsed VLM response as direct JSON")
             except json.JSONDecodeError:
                 # Fallback: extract JSON from markdown code blocks
@@ -496,14 +507,15 @@ Please provide a structured analysis in JSON format with the following key detai
                     logger.warning("JSON extraction failed or returned empty content, using fallback")
                     return self._create_fallback_analysis(response_text, traffic_snapshot, weather_data)
                 logger.info("Attempting to parse extracted JSON content")
-                response_data = json.loads(json_content)
+                response_data = json.loads(json_content, strict=False)
             
             logger.info("JSON parsing successful", 
                        response_type=type(response_data).__name__,
                        response_keys=list(response_data.keys()) if isinstance(response_data, dict) else "non-dict")
             
-            # Parse alerts
+            # Parse alerts (deduplicate by type+level+description)
             alerts = []
+            seen_alerts: set[tuple[str, str, str]] = set()
             for alert_data in response_data.get('alerts', []):
                 try:
                     alert = VLMAlert(
@@ -512,7 +524,10 @@ Please provide a structured analysis in JSON format with the following key detai
                         description=alert_data.get('description', ''),
                         weather_related=alert_data.get('weather_related', False)
                     )
-                    alerts.append(alert)
+                    key = (alert.alert_type.value, alert.level.value, alert.description)
+                    if key not in seen_alerts:
+                        seen_alerts.add(key)
+                        alerts.append(alert)
                 except (ValueError, KeyError) as e:
                     logger.warning("Failed to parse alert", error=str(e), alert_data=alert_data)
                     continue
@@ -531,6 +546,19 @@ Please provide a structured analysis in JSON format with the following key detai
             
             # Create structured analysis - map LLM response fields to our data model
             analysis_text = response_data.get('analysis', '')
+
+            # Guard against garbage analysis (e.g. VLM returning just ",")
+            stripped = analysis_text.strip(' ,"\n\t')
+            if len(stripped) < 10:
+                logger.warning("VLM analysis text too short, using heuristic summary",
+                             raw_analysis=analysis_text)
+                high_density_threshold = self.config_service.get_high_density_threshold()
+                if traffic_snapshot.total_count > high_density_threshold:
+                    analysis_text = (f"High traffic detected with {traffic_snapshot.total_count} "
+                                     f"vehicles at the intersection.")
+                else:
+                    analysis_text = (f"Traffic conditions monitored with {traffic_snapshot.total_count} "
+                                     f"vehicles at the intersection.")
             
             analysis = VLMAnalysisData(
                 traffic_summary=analysis_text,  # Use the "analysis" field from LLM response

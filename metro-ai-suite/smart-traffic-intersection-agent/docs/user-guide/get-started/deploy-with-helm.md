@@ -128,6 +128,22 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 > **Note:** The `OV_CONFIG` environment variable is automatically set based on the device. When GPU is enabled, CPU-only options like `INFERENCE_NUM_THREADS` are excluded to avoid runtime errors.
 
+### Supported VLM Models
+
+The default model is `microsoft/Phi-3.5-vision-instruct`. To use a different model, override it at install time:
+
+```bash
+helm install stia . -n <your-namespace> --create-namespace \
+  --set vlmServing.env.modelName=Qwen/Qwen2.5-VL-3B-Instruct
+```
+
+| Model | Structured JSON | Notes |
+| --- | --- | --- |
+| `Qwen/Qwen2.5-VL-3B-Instruct` | Excellent | Recommended. Best instruction-following and structured output adherence. |
+| `microsoft/Phi-3.5-vision-instruct` | Good | Default. May occasionally produce non-JSON responses (~10-20% fallback rate). |
+
+> **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
+
 ### Step 7: Deploy the Helm Chart
 
 Deploy the Smart Traffic Intersection Agent Helm chart:

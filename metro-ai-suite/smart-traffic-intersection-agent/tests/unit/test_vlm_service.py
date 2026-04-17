@@ -304,17 +304,26 @@ class TestVLMServicePromptBuilding:
         assert set(schema["required"]) == {"analysis", "alerts", "recommendations"}
 
         # Verify alert schema has correct enum values
-        alert_props = schema["properties"]["alerts"]["items"]["properties"]
+        alert_schema = schema["properties"]["alerts"]
+        assert alert_schema["maxItems"] == 4
+        alert_props = alert_schema["items"]["properties"]
         assert set(alert_props["alert_type"]["enum"]) == {
             "congestion", "weather_related", "road_condition",
             "accident", "maintenance", "normal",
         }
         assert set(alert_props["level"]["enum"]) == {"info", "warning", "critical"}
         assert alert_props["weather_related"]["type"] == "boolean"
+        assert alert_props["description"]["maxLength"] == 200
 
         # Verify recommendations schema
-        rec_props = schema["properties"]["recommendations"]["items"]["properties"]
+        rec_schema = schema["properties"]["recommendations"]
+        assert rec_schema["maxItems"] == 3
+        rec_props = rec_schema["items"]["properties"]
         assert "recommendation" in rec_props
+        assert rec_props["recommendation"]["maxLength"] == 200
+
+        # Verify analysis constraints
+        assert schema["properties"]["analysis"]["maxLength"] == 500
 
 
 class TestVLMServiceResponseParsing:
