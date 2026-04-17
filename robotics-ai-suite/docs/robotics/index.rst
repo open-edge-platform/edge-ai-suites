@@ -34,7 +34,7 @@ Click each icon to learn more.
         Provides a learning path for developers to use and configure Autonomous Mobile Robot
 
     .. grid-item-card:: System Integrators
-        :link: dev_guide/index_systemintegrator.md
+        :link: dev_guide/index_systemintegrator
         :link-type: doc
         :link-alt: clickable cards
 
@@ -46,6 +46,7 @@ Click each icon to learn more.
    :hidden:
 
    gsg_robot/index
+   shared/requirements_robot
    dev_guide/index_howitworks
    dev_guide/index_tutorials
    dev_guide/index_systemintegrator
