@@ -5,12 +5,12 @@ Live Video Search depends on **VSS Search** and **Smart NVR** images. Follow the
 ## Build VSS Images
 
 - VSS build guide:
- [How to Build from Source](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/build-from-source.md)
+ [How to Build from Source](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/build-from-source.html)
 
 ## Build Smart NVR Images
 
 - Smart NVR build guide:
- [How to Build from Source](../../../../smart-nvr/docs/user-guide/get-started/build-from-source.md)
+ [How to Build from Source](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started/build-from-source.html)
 
 ## Match Image Tags
 

@@ -99,11 +99,11 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
    ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
-make up_mqtt_ingestion app="weld-anomaly-detection"
+make up_mqtt_ingestion app="weld-defect-detection"
 ```
 
 <!--hide_directive:::
@@ -129,12 +129,12 @@ make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMB
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
 # Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STREAMS>
 ```
 
 <!--hide_directive:::
@@ -157,7 +157,7 @@ make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_ST
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
 The `Wind Turbine Anomaly Detection` sample app ML model can run on `GPU` while
-the `Weld Anomaly Detection` sample app ML model can only run on `CPU`.
+the `Weld Defect Detection` sample app ML model can only run on `CPU`.
 
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
 
@@ -225,7 +225,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 1. Get into the InfluxDB* container:
@@ -269,8 +269,8 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
    - After login, click on Dashboard
      ![Menu view](./_assets/dashboard.png)
 
-   - Select the `Weld Anomaly Detection Dashboard`.
-     ![Weld Anomaly Detection dashboard](./_assets/weld_anomaly_detection.png)
+   - Select the `Weld Defect Detection Dashboard`.
+     ![Weld Defect Detection dashboard](./_assets/weld_defect_detection.png)
 
    - One will see the below output.
 

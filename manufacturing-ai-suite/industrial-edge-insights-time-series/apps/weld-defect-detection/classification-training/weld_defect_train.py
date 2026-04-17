@@ -11,10 +11,10 @@ Features  : Pressure, CO2 Weld Flow, Feed, Primary Weld Current,
             Secondary Weld Voltage
 Target    : Defect category (12 classes)
 Outputs   :
-  - weld_anomaly_detector.pkl         - trained pipeline (scaler + classifier)
-  - weld_anomaly_detector_labels.pkl  - label-encoder mapping
-  - weld_anomaly_detector.txt         - classification report on VAL split
-  - weld_anomaly_detector.json        - metadata consumed by inference scripts
+  - weld_defect_detector.pkl         - trained pipeline (scaler + classifier)
+  - weld_defect_detector_labels.pkl  - label-encoder mapping
+  - weld_defect_detector.txt         - classification report on VAL split
+  - weld_defect_detector.json        - metadata consumed by inference scripts
   
 Intel Acceleration
 ------------------
@@ -63,10 +63,10 @@ FEATURES = [
     "Secondary Weld Voltage",
 ]
 
-MODEL_OUT = Path("weld_anomaly_detector.pkl")
-LABELS_OUT = Path("weld_anomaly_detector_labels.pkl")
-REPORT_OUT = Path("weld_anomaly_detector.txt")
-MODEL_INFO_OUT = Path("weld_anomaly_detector.json")
+MODEL_OUT = Path("weld_defect_detector.pkl")
+LABELS_OUT = Path("weld_defect_detector_labels.pkl")
+REPORT_OUT = Path("weld_defect_detector.txt")
+MODEL_INFO_OUT = Path("weld_defect_detector.json")
 
 CATEGORY_LABELS = {
     "burnthrough_weld_12-14-22-0201-02": "Burnthrough Weld",

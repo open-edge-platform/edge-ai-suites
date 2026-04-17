@@ -1,6 +1,6 @@
 {
-  "model_file": "weld_anomaly_detector.pkl",
-  "labels_file": "weld_anomaly_detector_labels.pkl",
+  "model_file": "weld_defect_detector.pkl",
+  "labels_file": "weld_defect_detector_labels.pkl",
   "features": [
     "Pressure",
     "CO2 Weld Flow",

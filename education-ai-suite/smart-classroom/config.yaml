@@ -383,6 +383,8 @@ va_pipeline:
   rtsp_codec: h264 # h264 or h265
   output_rtsp_url: rtsp://127.0.0.1:8554
   hls_base_url: http://127.0.0.1:8888
+  webrtc_base_url: http://127.0.0.1:8889
+  stream_protocol: webrtc # webrtc or hls
 
   pose_statistics:
     min_frames_for_transition: 3            # frames to confirm raise-hand for identified students
