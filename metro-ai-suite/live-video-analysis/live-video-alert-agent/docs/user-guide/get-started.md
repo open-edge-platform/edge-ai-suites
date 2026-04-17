@@ -183,3 +183,12 @@ docker compose down -v
 export RTSP_URL=<your-url>
 docker compose up -d
 ```
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+
+:::
+hide_directive-->
