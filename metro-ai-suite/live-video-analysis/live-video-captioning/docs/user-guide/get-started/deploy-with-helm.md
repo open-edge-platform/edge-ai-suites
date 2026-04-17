@@ -86,8 +86,6 @@ global:
   nodeName: worker4
 ```
 
-> **Note**: Please ensure that the value of `global.nodeName` matches the value specified for `affinity.value` in the model-download chart deployed above. **This is required so that the shared PVC created by the model-download chart can be accessed and shared by the live-video-captioning chart.**
-
 #### Get the IP of the selected node
 
 Use the same node that you selected for the pinned media workloads. First list the nodes and labels:
@@ -296,10 +294,10 @@ helm uninstall lvc -n "$my_namespace"
 
 ## Related Links
 
-- [Get Started](./get-started.md)
-- [System Requirements](./get-started/system-requirements.md)
-- [How it Works](./how-it-works.md)
-- [Object Detection Pipeline](./object-detection-pipeline.md)
-- [Embedding Creation with RAG](./embedding-creation-with-rag.md)
-- [Build from Source](./get-started/build-from-source.md)
+- [Get Started](../get-started.md)
+- [System Requirements](../get-started/system-requirements.md)
+- [How it Works](../how-it-works.md)
+- [Object Detection Pipeline](../how-to-guides/configure-object-detection-pipeline.md)
+- [Build from Source](../get-started/build-from-source.md)
+- [Embedding Creation with RAG](../how-to-guides/configure-embedding-creation-with-rag.md)
 - [Model Download Service](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md)

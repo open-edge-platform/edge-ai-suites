@@ -21,7 +21,7 @@ User can enable object detection in the pipeline by following the steps below:
      CAPTION_HISTORY=3
      ```
 
-2. Prepare your object-detection models by following the [model preparation guide](../user-guide/model-preparation.md).
+2. Prepare your object-detection models by following the [model preparation guide](../user-guide/get-started/model-preparation.md).
 
 3. Then, now you are ready to deploy the pipeline which enabled with object detection model. You may find those pipelines available under the `Select Pipelines` dropdown menu.
 

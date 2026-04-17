@@ -21,7 +21,7 @@ When enabled:
 
 - Docker Engine software and Docker Compose tool are installed.
 - Complete the base setup in [Get Started](./get-started.md).
-- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./model-preparation.md) to download and convert the models.
+- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./get-started/model-preparation.md) to download and convert the models.
 - Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
@@ -45,7 +45,7 @@ When enabled:
      > **Notes**:
      - Update the helper script values to use your preferred embedding and LLM models.
      - For gated models, export your HF_TOKEN before running the `setup_embeddings.sh` script above:
-	 
+
        ```bash
        export HF_TOKEN=<your-huggingface-token>
        ```
