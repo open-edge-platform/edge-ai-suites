@@ -6,8 +6,8 @@ Use the VTune™ Profiler profiler and OpenVINO™ toolkit benchmarking to measu
 .. toctree::
 
    openvino-benchmarking.md
-   vtune-profiler
-   benchtool
+   vtune-profiler.md
+   benchtool.md
 
 .. recorder
 hide_directive-->
