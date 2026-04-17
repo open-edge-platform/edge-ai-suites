@@ -145,7 +145,7 @@ Prior to deployment, edit the sample override file at `charts/values-override.ya
 | `global.hostIP` | Browser-reachable IP of the selected node that runs the pinned media workloads. In many on-prem clusters this is the node `INTERNAL-IP`. Retrieve it with `kubectl get node <node-name> -o wide` | `192.168.1.20` |
 | `global.nodeName` | Kubernetes node name used to pin the media, TURN, and host-coupled workloads to one worker node. Prefer a GPU-capable node when available | `worker4` |
 | `global.models` | List of VLM models from HuggingFace to export to OpenVINO format (at least one VLM required) | `OpenGVLab/InternVL2-1B` |
-| `global.huggingface.api.Token` | HuggingfaceHub token to download gated model. | <your_huggingfacehub_token> |
+| `global.huggingface.apiToken` | HuggingfaceHub token to download gated model. | <your_huggingfacehub_token> |
 | `video-caption-service.env.enableDetectionPipeline` | Enables detection filtering in the pipeline. When set to `"true"` and configure `global.detectionModels` so the chart downloads the required detection models automatically | `"true"` or `"false"` |
 | `global.detectionModels` | List of detection model names to download (only required when `video-caption-service.enableDetectionPipeline` is enabled) | `["yolov8s"]` |
 | `video-caption-service.env.defaultRtspUrl` | Default RTSP URL shown in the dashboard | `rtsp://camera.example/live` |

@@ -2,6 +2,13 @@
 Copyright (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
+{{/*
+coturn uses hostPort binding (UDP 3478) — only one pod can bind a given host port
+per node.  Ensure replicaCount is always 1.
+*/}}
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "coturn replicaCount must be 1: multiple replicas conflict on the host UDP port." }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

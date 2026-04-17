@@ -99,15 +99,11 @@ spec:
           ports:
             - name: rest-api
               containerPort: {{ .Values.service.port }}
-              #{{- if gt (int .Values.service.hostPort) 0 }}
               hostPort: {{ .Values.service.hostPort }}
-              #{{- end }}
               protocol: TCP
             - name: webrtc
               containerPort: {{ .Values.service.webrtcContainerPort }}
-              #{{- if gt (int .Values.service.webrtcHostPort) 0 }}
               hostPort: {{ .Values.service.webrtcHostPort }}
-              #{{- end }}
               protocol: TCP
           env:
             - name: RUN_MODE

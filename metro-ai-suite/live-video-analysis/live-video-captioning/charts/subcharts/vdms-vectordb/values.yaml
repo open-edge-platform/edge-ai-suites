@@ -74,9 +74,6 @@ resources:
 podAnnotations: {}
 podLabels: {}
 
-volumes: []
-volumeMounts: []
-
 nodeSelector: {}
 
 tolerations: []

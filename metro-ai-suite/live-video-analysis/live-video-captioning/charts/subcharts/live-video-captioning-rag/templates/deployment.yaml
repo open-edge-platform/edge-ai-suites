@@ -2,6 +2,13 @@
 Copyright (C) 2026 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
+{{/*
+live-video-captioning-rag uses hostPort binding — only one pod can bind a given host
+port per node.  Ensure replicaCount is always 1.
+*/}}
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "live-video-captioning-rag replicaCount must be 1: multiple replicas conflict on the host TCP port." }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -181,6 +188,10 @@ spec:
             - name: llm-cache
               mountPath: /tmp/model_cache
       {{- if .Values.global.llmModel.useGPU.enabled }}
+            - name: dri-device
+              mountPath: /dev/dri
+      {{- end }}
+      {{- if .Values.global.llmModel.useGPU.enabled }}
           resources:
             requests:
               {{ .Values.global.llmModel.useGPU.key}}: 1
@@ -201,10 +212,12 @@ spec:
             defaultMode: 0777
         - name: llm-cache
           emptyDir: {}
+      {{- if .Values.global.llmModel.useGPU.enabled }}
         - name: dri-device
           hostPath:
             path: /dev/dri
             type: Directory
+      {{- end }}
         - name: models
           persistentVolumeClaim:
             claimName: {{ include "live-video-captioning-rag.modelsPvcName" . }}

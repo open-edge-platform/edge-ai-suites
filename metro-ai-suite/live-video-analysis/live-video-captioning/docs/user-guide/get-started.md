@@ -35,8 +35,6 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 
 2. Configure the image registry and tag:
 
-   If you prefer to use prebuilt images from Docker Hub, export the following variables:
-
    If you prefer to use prebuilt images from Docker Hub, export the variables below.
 
    ```bash

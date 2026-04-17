@@ -5,6 +5,8 @@
 
 fullnameOverride: ""
 
+# ⚠️  Do NOT set replicaCount > 1.  mediamtx uses hostPort binding for WebRTC WHIP,
+# so multiple replicas on the same node will conflict on the port.
 replicaCount: 1
 
 image:

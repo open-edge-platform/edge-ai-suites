@@ -5,6 +5,8 @@
 
 fullnameOverride: ""
 
+# ⚠️  Do NOT set replicaCount > 1.  coturn uses hostPort binding for UDP 3478,
+# so multiple replicas on the same node will conflict on the port.
 replicaCount: 1
 
 image:

@@ -46,6 +46,12 @@ global:
   # Type: string
   noProxy: ""
 
+  # ------- Application Label ---------------------------------------------------
+  # Value for the app.kubernetes.io/part-of label on all workloads.
+  # Override if this chart is embedded inside a larger application.
+  # Type: string
+  partOf: "live-video-captioning"
+
   # ------- Image Pull Secrets --------------------------------------------------
   # List of Kubernetes secret names for private registries.
   # Type: list of strings

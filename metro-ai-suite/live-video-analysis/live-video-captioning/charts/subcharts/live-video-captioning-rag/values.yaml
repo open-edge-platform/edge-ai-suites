@@ -8,6 +8,8 @@
 # Type: string
 fullnameOverride: ""
 
+# ⚠️  Do NOT set replicaCount > 1.  live-video-captioning-rag uses hostPort binding,
+# so multiple replicas on the same node will conflict on the port.
 replicaCount: 1
 
 image:

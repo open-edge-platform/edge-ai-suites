@@ -28,11 +28,9 @@ global:
       enabled: false
       key: "" # GPU resource key for your cluster, e.g. "gpu.intel.com/i95" or "gpu.intel.com/xe"
 
-  proxy:
-    # setup proxy settings
-    no_proxy: ""
-    http_proxy: ""
-    https_proxy: ""
+  noProxy: ""
+  httpProxy: ""
+  httpsProxy: ""
 
 replicaCount: 1
 
