@@ -1,6 +1,8 @@
+<!--hide_directive
 ---
 orphan: true
 ---
+hide_directive-->
 
 # Recorder tool
 
