@@ -328,9 +328,9 @@ def start_video_analytics_pipeline(
                         }
                     else:
                         if config.va_pipeline.stream_protocol == "webrtc":
-                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{request.pipeline_name}_stream"
+                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
                         else:
-                            stream_url = f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream"
+                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
                         return {
                             "status": "success",
                             "pipeline_name": req.pipeline_name,
