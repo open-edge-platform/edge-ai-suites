@@ -288,7 +288,7 @@ For RTSP test mode, start again with:
 
 ## References
 
-- [Smart NVR docs](../../../../smart-nvr/docs/user-guide/get-started.md)
+- [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)
 - [VSS API (public)](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization/docs/user-guide)
 
 <!--hide_directive
