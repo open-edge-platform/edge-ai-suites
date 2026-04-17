@@ -1,6 +1,6 @@
 <!--hide_directive
 ```{eval-rst}
-orphan: true
+:orphan:
 ```
 hide_directive-->
 
