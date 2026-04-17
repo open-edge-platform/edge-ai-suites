@@ -48,6 +48,6 @@ Click each icon to learn more.
    gsg_robot/index
    dev_guide/index_howitworks
    dev_guide/index_tutorials
-    dev_guide/index_systemintegrator.md
+   dev_guide/index_systemintegrator.md
    dev_guide/index_gmslguide
    Release Notes <release-notes>
