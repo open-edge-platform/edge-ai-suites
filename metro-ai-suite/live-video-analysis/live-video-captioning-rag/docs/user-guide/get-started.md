@@ -89,7 +89,7 @@ By following this guide, you will learn how to:
      python3 sample/demo_call_embedding.py
      ```
 
-     > **Notes:** Intel provides this script for demonstration purposes only. The script will:
+     > **Note:** Intel provides this script for demonstration purposes only. The script will:
      > - Download a sample image.
      > - Call the `embeddings/` endpoint to generate embeddings.
      > - Create the context and store it in the vector store.
