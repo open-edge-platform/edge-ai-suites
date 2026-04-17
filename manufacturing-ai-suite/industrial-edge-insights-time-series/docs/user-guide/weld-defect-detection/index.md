@@ -1,8 +1,8 @@
-# Weld Anomaly Detection
+# Weld Defect Detection
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection">
      GitHub
   </a>
   </div>
@@ -23,7 +23,7 @@ for Time-series applications.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Weld Anomaly Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-anomaly-detection-timeseries-ai-stack-architecture.png)
+![Weld Defect Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-defect-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
@@ -31,7 +31,7 @@ Let's discuss how this architecture translates to data flow in the weld anomaly 
 
 #### **Data Sources**
 
-Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/simulation-data` is ingested into **Telegraf** using the **MQTT** protocol using the **MQTT publisher** data simulator.
+Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/simulation-data` is ingested into **Telegraf** using the **MQTT** protocol using the **MQTT publisher** data simulator.
 
 #### **Data Ingestion**
 
@@ -43,7 +43,7 @@ Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/indust
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Anomaly Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-anomaly-detection/time-series-analytics-config`.
+**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
 
 Directory details is as below:
 
@@ -61,8 +61,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 
 | Key     | Description                                                                                 | Example Value                          |
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                                 | `"weld_anomaly_detector.py"`       |
-| `models`| The name of the model file used by the UDF.                                                 | `"weld_anomaly_detector.cb"`   |
+| `name`  | The name of the UDF script.                                                                 | `"weld_defect_detector.py"`       |
+| `models`| The names of the model files used by the UDF.                                               | `["weld_defect_detector.pkl", "weld_defect_detector_labels.pkl", "weld_defect_detector.json"]` |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---
@@ -84,18 +84,20 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the Python script to process the incoming data.
-Uses CatBoostClassifier machine learning algo from CatBoost library to run on CPU to
-detect the anomalous power generation data points relative to wind speed.
+Uses RandomForestClassifier from scikit-learn with Intel's extension (sklearnex) to detect anomalous weld patterns in sensor data.
+Supports GPU offloading on Intel GPUs via the `target_offload` configuration for accelerated inference.
 
-> **Note:** CatBoost models do not run on Intel GPUs.
+> **Note:** Configure `DEVICE` environment variable (`'auto'`, `'gpu'`, or `'cpu'`) to control hardware acceleration.
 
 ##### **`tick_scripts/`**
 
-The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
+The TICKScript `weld_defect_detector.tick` determines processing of the input data coming in.
 Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
 ##### **`models/`**
 
-The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier algorithm of CatBoost ML
-library.
+Contains serialized model files:
+- `weld_defect_detector.pkl`: Trained RandomForestClassifier pipeline (scikit-learn format)
+- `weld_defect_detector_labels.pkl`: Label encoder for class names
+- `weld_defect_detector.json`: Model metadata including feature statistics and class information for model explainability

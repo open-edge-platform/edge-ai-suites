@@ -33,7 +33,7 @@ These workloads are kept on the same worker because they rely on node-local acce
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
-Set `global.nodeName` to the Kubernetes node name. 
+Set `global.nodeName` to the Kubernetes node name.
 
 Example:
 
@@ -76,7 +76,7 @@ kubectl get node <node-name> -o jsonpath='{.status.addresses[?(@.type=="Internal
 
 Set that value in `global.hostIP`.
 
-If the worker node does not have any browser-reachable IP, direct NodePort access will not work. This capability will be added to the chart in a future update. 
+If the worker node does not have any browser-reachable IP, direct NodePort access will not work. This capability will be added to the chart in a future update.
 
 ## Known Limitations
 
@@ -100,7 +100,7 @@ The most important values are:
 | --- | --- | --- |
 | `global.hostIP` | Browser-reachable IP of the selected node that runs the pinned media workloads. In many on-prem clusters this is the node `INTERNAL-IP`. Retrieve it with `kubectl get node <node-name> -o wide` | `192.168.1.20` |
 | `global.nodeName` | Kubernetes node name used to pin the media, TURN, and host-coupled workloads to one worker node. Prefer a GPU-capable node when available | `worker4` |
-| `global.storageClassName` | StorageClass for the chart PVCs. Leave empty to use the cluster default. If the default class uses node-local storage, see [Known Issues](./known-issues.md#pvcs-bound-to-local-storage-prevent-reinstall-on-a-different-worker-node) | `` |
+| `global.storageClassName` | StorageClass for the chart PVCs. Leave empty to use the cluster default. If the default class uses node-local storage, see [Known Issues](../known-issues.md#pvcs-bound-to-local-storage-prevent-reinstall-on-a-different-worker-node) | `` |
 | `global.models` | **Required.** List of VLM models to export to OpenVINO format. Must contain at least one entry — the chart will fail if this list is empty. The download job always runs and uses this list as its source of truth | `OpenGVLab/InternVL2-1B` |
 | `modelsPvc.size` | PVC size for VLM models | `50Gi` |
 | `detectionModelsPvc.size` | PVC size for object detection models | `5Gi` |
@@ -120,7 +120,6 @@ modelsDownload:
 ```
 
 The chart injects `HF_TOKEN` and `HUGGINGFACEHUB_API_TOKEN` as environment variables in the model download job. Leave the field empty for public models that do not require authentication.
-
 
 ### Proxy Configuration
 
@@ -214,7 +213,7 @@ Then upgrade the release:
 ```bash
 helm upgrade lvc . \
   -f values-override.yaml \
-  -n "$my_namespace" 
+  -n "$my_namespace"
 ```
 
 ## Uninstall the Release
@@ -234,8 +233,8 @@ helm uninstall lvc -n "$my_namespace"
 
 ## Related Links
 
-- [Get Started](./get-started.md)
-- [System Requirements](./get-started/system-requirements.md)
-- [How it Works](./how-it-works.md)
-- [Object Detection Pipeline](./object-detection-pipeline.md)
-- [Build from Source](./get-started/build-from-source.md)
+- [Get Started](../get-started.md)
+- [System Requirements](../get-started/system-requirements.md)
+- [How it Works](../how-it-works.md)
+- [Object Detection Pipeline](../how-to-guides/configure-object-detection-pipeline.md)
+- [Build from Source](../get-started/build-from-source.md)

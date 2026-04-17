@@ -33,10 +33,16 @@ Intel recommends using the automated setup script that handles environment confi
 submodule and dependencies setup, secrets generation, building, and deployment of the Smart
 Traffic Intersection Agent.
 
-### 1. Clone the Repository
+### 1. Clone the Suite
+
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
@@ -45,6 +51,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Run the Complete Setup
@@ -110,89 +117,89 @@ locations on the same machine for `n` required instances.
 
 ### Set up Instance #1
 
-1.  Clone the repository into a new directory:
+1. Clone the repository into a new directory:
 
-    ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
-    cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
-    ```
+   ```bash
+   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+   cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
+   ```
 
-2.  Edit the deployment configuration file for instance #1:
+2. Edit the deployment configuration file for instance #1:
 
-    ```bash
-    nano src/config/deployment_instance.json
-    ```
+   ```bash
+   nano src/config/deployment_instance.json
+   ```
 
-    Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
+   Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
 
-    ```json
-    {
-        "name": "intersection_1",
-        "latitude": 37.5879818,
-        "longitude": -122.0534334,
-        "agent_backend_port": "8081",
-        "agent_ui_port": "7860"
-    }
-    ```
+   ```json
+   {
+       "name": "intersection_1",
+       "latitude": 37.5879818,
+       "longitude": -122.0534334,
+       "agent_backend_port": "8081",
+       "agent_ui_port": "7860"
+   }
+   ```
 
-    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-3.  Set the required environment variable.
+3. Set the required environment variable.
 
-    ```bash
-    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
-    ```
+   ```bash
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   ```
 
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
-4.  Run the setup for instance #1:
+4. Run the setup for instance #1:
 
-    ```bash
-    source setup.sh --setup
-    ```
+   ```bash
+   source setup.sh --setup
+   ```
 
 ### Set up Instance #2
 
-1.  Open a new terminal window and move to new directory. Clone the repository into the new directory:
+1. Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
-    ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
-    cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
-    ```
+   ```bash
+   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+   cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
+   ```
 
-2.  Edit the deployment configuration for instance #2:
+2. Edit the deployment configuration for instance #2:
 
-    ```bash
-    nano src/config/deployment_instance.json
-    ```
+   ```bash
+   nano src/config/deployment_instance.json
+   ```
 
-    The following is a sample value for instance #2 deployment configuration:
+   The following is a sample value for instance #2 deployment configuration:
 
-    ```json
-    {
-        "name": "intersection_2",
-        "latitude": 37.33874,
-        "longitude": -121.8852525,
-        "agent_backend_port": "8082",
-        "agent_ui_port": "7861"
-    }
-    ```
+   ```json
+   {
+       "name": "intersection_2",
+       "latitude": 37.33874,
+       "longitude": -121.8852525,
+       "agent_backend_port": "8082",
+       "agent_ui_port": "7861"
+   }
+   ```
 
-    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-3.  Set the required environment variable.
+3. Set the required environment variable.
 
-    ```bash
-    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
-    ```
+   ```bash
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   ```
 
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
-4.  Run Setup for Instance #2
+4. Run Setup for Instance #2
 
-    ```bash
-    source setup.sh --setup
-    ```
+   ```bash
+   source setup.sh --setup
+   ```
 
 Ensure each instance has their `deployment_instance.json` updated with:
 

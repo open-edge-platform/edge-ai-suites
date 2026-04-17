@@ -28,19 +28,18 @@ Before you begin ensure the following:
 
 ### 1. Deploy Source Code
 
-Clone the repository to your Edge Server:
+Clone the suite to your Edge Server.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
-Go to the directory:
-
-```bash
-cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-```
-
-### 2. Configure Environment
+### 2. Configure the Environment
 
 Ensure the following specialized adapters are present in `src/dlstreamer-pipeline-server/user_scripts/`:
 

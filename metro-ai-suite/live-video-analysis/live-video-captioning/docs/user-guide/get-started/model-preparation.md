@@ -1,10 +1,11 @@
 # Model Preparation
 
-To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [model-download microservice](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
+To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [Model Download Microservice](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
 
 1. Clone the repository:
 
      Open a new terminal, clone the edge-ai-libraries repository.
+
      ```bash
      # Clone the latest on the mainline
      git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries
@@ -13,6 +14,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      ```
 
 2. Navigate to the directory:
+
      ```bash
      cd edge-ai-libraries/microservices/model-download
      ```
@@ -26,6 +28,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      ```
 
 4. Launch the service with required plugins:
+
      ```bash
      export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
      # Example paths:
@@ -57,21 +60,25 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
     **Examples:**
 
      - For a VLM model (required for live-video-captioning):
+
          ```bash
          ./model_download_scripts/download_models.sh --model OpenGVLab/InternVL2-1B --type vlm --weight-format int8
          ```
 
-    - For a YOLO vision model (for live-video-captioning with object-detection pipeline):
+     - For a YOLO vision model (for live-video-captioning with object-detection pipeline):
+
          ```bash
          ./model_download_scripts/download_models.sh --model yolov8s --type vision
          ```
 
-    - For a LLM model (for live-video-captioning with RAG):
+     - For a LLM model (for live-video-captioning with RAG):
+
          ```bash
          ./model_download_scripts/download_models.sh --model microsoft/Phi-3.5-mini-instruct --type llm --device <CPU/GPU> --weight-format int8
          ```
 
-    - For more detailed information about the scripts:
+     - For more detailed information about the scripts:
+
          ```bash
          ./model_download_scripts/download_models.sh -h
          ```

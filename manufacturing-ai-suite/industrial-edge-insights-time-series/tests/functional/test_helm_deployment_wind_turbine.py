@@ -97,7 +97,7 @@ def test_verify_pods_all_running_opcua_switch_to_mqtt(setup_helm_environment):
     logger.info(f"update_values_yaml result: {result}")
     assert result == True, "Failed to update values.yaml."
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
     result = helm_utils.helm_install(release_name, chart_path, namespace, constants.TELEGRAF_OPCUA_PLUGIN, sample_app=sample_app)
     logger.info(f"helm_install result: {result}")
     assert result == True, "Failed to install Helm release."
@@ -342,7 +342,7 @@ def test_verify_pods_logs_with_respect_to_log_level(setup_helm_environment, tele
     assert result == True, "Failed to update values.yaml."
     logger.info(f"Case 4 - Release Name: {release_name}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin opcua: {constants.TELEGRAF_OPCUA_PLUGIN}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
     result = helm_utils.helm_install(release_name, chart_path, namespace, constants.TELEGRAF_OPCUA_PLUGIN, sample_app=sample_app)
     logger.info(f"helm_install result: {result}")
     assert result == True, "Failed to install Helm release."
