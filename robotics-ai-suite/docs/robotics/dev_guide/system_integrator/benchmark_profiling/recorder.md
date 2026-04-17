@@ -1,7 +1,7 @@
 <!--hide_directive
----
+```{eval-rst}
 orphan: true
----
+```
 hide_directive-->
 
 # Recorder tool
