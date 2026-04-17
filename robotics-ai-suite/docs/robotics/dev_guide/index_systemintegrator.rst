@@ -10,7 +10,7 @@ This chapter details information specifically for system integrators.
 .. toctree::
    :maxdepth: 1
 
-   system_integrator/benchmark_profiling/index
-   system_integrator/performance
-   system_integrator/security
+   system_integrator/benchmark_profiling/index.md
+   system_integrator/performance.md
+   system_integrator/security.md
 
