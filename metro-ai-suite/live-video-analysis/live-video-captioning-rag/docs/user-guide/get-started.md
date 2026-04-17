@@ -107,7 +107,7 @@ By following this guide, you will learn how to:
 ## Integration with Live Video Captioning
 
 This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
-For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/embedding-creation-with-rag.html)
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Learn More
 

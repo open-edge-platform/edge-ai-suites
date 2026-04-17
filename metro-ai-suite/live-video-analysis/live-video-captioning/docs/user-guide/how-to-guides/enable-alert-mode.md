@@ -43,10 +43,10 @@ CAPTION_HISTORY=3
 
 When Alert Mode is active, an **Alert Rules** section appears in the dashboard sidebar. You can define up to **3 rules**, each consisting of:
 
-| Field | Description |
-| ----- | ----------- |
-| **Keyword** | A plain-text substring to search for in each caption (case-insensitive) |
-| **Color** | A highlight color (hex) applied to the run card and caption panel on a match |
+| Field       | Description                                                                  |
+| ----------- | ---------------------------------------------------------------------------- |
+| **Keyword** | A plain-text substring to search for in each caption (case-insensitive)      |
+| **Color**   | A highlight color (hex) applied to the run card and caption panel on a match |
 
 Rules are evaluated **in order from top to bottom**. The first rule whose keyword is found in the caption text is applied; remaining rules are skipped for that caption.
 
@@ -58,11 +58,11 @@ Rules are evaluated **in order from top to bottom**. The first rule whose keywor
 
 ### Example Rules
 
-| Keyword | Color | Triggers when caption contains… |
-| ------- | ----- | -------------------------------- |
-| `yes` | `#ff4444` (red) | "Yes", "yes", "YES", "yes, there is…" |
-| `fire` | `#ff8800` (orange) | "fire", "Fire", "campfire", "fire truck" |
-| `person` | `#ffaa00` (amber) | "person", "Person", "a person walking" |
+| Keyword  | Color              | Triggers when caption contains…          |
+| -------- | ------------------ | ---------------------------------------- |
+| `yes`    | `#ff4444` (red)    | "Yes", "yes", "YES", "yes, there is…"    |
+| `fire`   | `#ff8800` (orange) | "fire", "Fire", "campfire", "fire truck" |
+| `person` | `#ffaa00` (amber)  | "person", "Person", "a person walking"   |
 
 ### Persistence
 
@@ -83,9 +83,8 @@ Example prompts and corresponding rule keywords:
 - **PPE Compliance**: "Is the person wearing a safety helmet? Answer Yes or No."
   → Rule keyword: `no`
 
-
 ## Next Steps
 
-- [Get Started](./get-started.md) - Basic setup and configuration
-- [API Reference](./api-reference.md) - REST API documentation
-- [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements
+- [Get Started](../get-started.md) - Basic setup and configuration
+- [API Reference](../api-reference.md) - REST API documentation
+- [System Requirements](../get-started/system-requirements.md) - Hardware and software requirements

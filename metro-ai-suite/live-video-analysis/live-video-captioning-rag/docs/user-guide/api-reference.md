@@ -5,7 +5,7 @@ The backend is a FastAPI application that serves REST APIs.
 ## Interactive API docs
 
 When the stack is running, FastAPI provides OpenAPI specifications and Swagger UI at
-http://<HOST_IP>:4172/docs
+`http://<HOST_IP>:4172/docs`
 
 If you run the backend on a different host and port, edit accordingly.
 
