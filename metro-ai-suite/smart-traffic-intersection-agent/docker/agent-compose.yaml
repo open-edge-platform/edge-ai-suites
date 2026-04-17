@@ -71,8 +71,8 @@ services:
       HTTP_PROXY: ${http_proxy}
       https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
-      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
-      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving
+      no_proxy: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving,live-metrics-service
+      NO_PROXY: ${no_proxy:-${NO_PROXY:-}},.scenescape.intel.com,${HOST_IP},broker.scenescape.intel.com,vlm-openvino-serving,live-metrics-service
       
       # MQTT configuration (connects to broker service)
       MQTT_HOST: ${MQTT_HOST:-broker.scenescape.intel.com}
@@ -98,6 +98,9 @@ services:
       MODERATE_DENSITY_THRESHOLD: ${MODERATE_DENSITY_THRESHOLD:-}
       TRAFFIC_BUFFER_DURATION: ${TRAFFIC_BUFFER_DURATION:-}
 
+      # Live metrics WebSocket URL (internal, proxied through traffic-agent)
+      METRICS_WS_URL: ws://live-metrics-service:9090/ws/clients
+
     volumes:
       - ${APP_DIR:-..}/src/config:/app/config:ro
       - traffic-agent-data:/app/data
@@ -111,6 +114,61 @@ services:
       retries: ${HEALTH_CHECK_RETRIES:-3}
       start_period: ${HEALTH_CHECK_START_PERIOD:-10s}
     restart: unless-stopped
+
+  # Live System Metrics - relay service
+  live-metrics-service:
+    image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
+    build:
+      context: ${APP_DIR:-..}/../live-video-analysis/live-metrics-service
+    environment:
+      - METRICS_PORT=9090
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=localhost,127.0.0.1,collector,${no_proxy}
+    ports:
+      - "9090"
+    networks:
+      - scenescape
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+  # Live System Metrics - collector (Telegraf)
+  collector:
+    image: docker.io/intel/vippet-collector:2026.0.0
+    ports:
+      - "9273"
+    privileged: true
+    devices:
+      - "/sys:/sys"
+      - "/dev:/dev"
+      - "/run:/run"
+      - "/proc:/proc"
+    pid: host
+    volumes:
+      - "${APP_DIR:-..}/../live-video-analysis/live-metrics-service/telegraf.conf:/etc/telegraf/telegraf.conf:ro"
+      - "${APP_DIR:-..}/../live-video-analysis/live-metrics-service/collector-signals:/app/.collector-signals"
+    environment:
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=localhost,127.0.0.1,live-metrics-service,${no_proxy}
+      - WEBSOCKET_URL=ws://live-metrics-service:9090/ws/collector
+    depends_on:
+      live-metrics-service:
+        condition: service_healthy
+    networks:
+      - scenescape
+    restart: unless-stopped
+
+  # Override RI nginx to avoid hardcoded container_name conflict in multi-instance deployments
+  nginx:
+    container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy
 
 volumes:
   ov-models:

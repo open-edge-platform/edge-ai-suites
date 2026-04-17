@@ -21,24 +21,7 @@ User can enable object detection in the pipeline by following the steps below:
      CAPTION_HISTORY=3
      ```
 
-2. Prepare the object-detection models by using this [script](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/download_public_models.sh).
-     ```bash
-     # Navigate to the directory
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
-
-     # Clean-up and create `ov_detection_models` dir.
-     sudo rm -rf ov_detection_models && mkdir ov_detection_models
-
-     # Download the script
-     curl -O https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/tags/v2026.0.0/samples/download_public_models.sh && chmod +x download_public_models.sh
-
-     # Export the MODELS_PATH to store the detection model files downloaded. For example: `yolov8s`
-     export MODELS_PATH=${PWD}/ov_detection_models/yolov8s
-
-     # Run the script follwed by the model name to be download.
-     # You may view all the available supported models inside the script.
-     ./download_public_models.sh yolov8s
-     ```
+2. Prepare your object-detection models by following the [model preparation guide](../user-guide/model-preparation.md).
 
 3. Then, now you are ready to deploy the pipeline which enabled with object detection model. You may find those pipelines available under the `Select Pipelines` dropdown menu.
 

@@ -48,38 +48,38 @@ cleanup_handler() {
 trap 'cleanup_handler' INT
 
 step "Removing previously installed packages..."
-run sudo apt remove -y --purge "*oneapi*" "ros-*" "*openvino*" "*gazebo*" "*realsense*" || :
-run sudo apt remove -y --purge "intel-igc*" || :
-run sudo apt remove -y --purge "*level-zero*" || :
-run sudo apt remove -y --purge "libze1" || :
+run sudo apt-get remove -y --purge "*oneapi*" "ros-*" "*openvino*" "*gazebo*" "*realsense*" || :
+run sudo apt-get remove -y --purge "intel-igc*" || :
+run sudo apt-get remove -y --purge "*level-zero*" || :
+run sudo apt-get remove -y --purge "libze1" || :
 sudo rm -f "/etc/apt/sources.list.d/*" || :
 
 step "Updating package lists and cleaning up..."
-run sudo apt update
-run sudo apt autoremove -y
+run sudo apt-get update
+run sudo apt-get autoremove -y
 
 step "Installing GCC 12..."
-run sudo apt install -y gcc-12 g++-12
+run sudo apt-get install -y gcc-12 g++-12
 run sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 60 --slave /usr/bin/g++ g++ /usr/bin/g++-12
 
 step "Installing prerequisites..."
-run sudo apt install -y software-properties-common
+run sudo apt-get install -y software-properties-common
 run sudo add-apt-repository -y universe
 
 step "Installing curl and fetching ROS 2 apt source..."
-run sudo apt update
-run sudo apt install curl -y
+run sudo apt-get update
+run sudo apt-get install curl -y
 export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
 echo "    ROS apt source version: ${ROS_APT_SOURCE_VERSION}"
 curl $CURL_QUIET -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo ${UBUNTU_CODENAME:-${VERSION_CODENAME}})_all.deb"
 run sudo dpkg -i /tmp/ros2-apt-source.deb
 
 step "Upgrading system packages..."
-run sudo apt update
+run sudo apt-get update
 run sudo apt upgrade -y
 
 step "Installing ROS 2 Humble Desktop (this may take a while)..."
-run sudo apt install -y ros-humble-desktop
+run sudo apt-get install -y ros-humble-desktop
 
 step "Configuring ROS 2 environment in ~/.bashrc..."
 echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc
@@ -111,24 +111,38 @@ echo -e "\nPackage: ros-humble-openvino-wrapper-lib\nPin: version 2025.3.0*\nPin
 echo -e "\nPackage: ros-humble-openvino-node\nPin: version 2025.3.0*\nPin-Priority: 1002" | sudo tee -a /etc/apt/preferences.d/intel-openvino > /dev/null
 
 step "Updating package lists with new repositories..."
-run sudo apt update
+run sudo apt-get update
 
 step "Installing Level Zero GPU drivers..."
-run sudo apt install -y libze1 libze-intel-gpu1
+run sudo apt-get install -y libze1 libze-intel-gpu1
 
 step "Preparing OpenVINO installation (purging old config)..."
-run sudo apt install -y debconf-utils
-run sudo apt purge -y ros-humble-openvino-node || :
-run sudo apt autoremove -y || :
+run sudo apt-get install -y debconf-utils
+run sudo apt-get purge -y ros-humble-openvino-node || :
+run sudo apt-get autoremove -y || :
 echo PURGE | sudo debconf-communicate ros-humble-openvino-node > /dev/null 2>&1 || true
 
 step "Installing OpenVINO base package..."
-run sudo apt install -y openvino
+run sudo apt-get install -y openvino
 
 step "Installing ROS 2 OpenVINO node..."
 echo "ros-humble-openvino-node openvino-node/pip-proxy select ${OPENVINO_PROXY_SELECT}" | sudo debconf-set-selections
 echo "ros-humble-openvino-node openvino-node/models select true" | sudo debconf-set-selections
 run sudo -E apt install -y ros-humble-openvino-node
+
+step "Adding Intel RealSense apt repository..."
+sudo mkdir -p /etc/apt/keyrings
+curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
+echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
+echo -e "\nPackage: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
+echo -e "\nPackage: ros-humble-librealsense2*\nPin: version 2.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+echo -e "\nPackage: ros-humble-realsense2*\nPin: version 4.56.4*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/librealsense > /dev/null
+run sudo apt-get update
+
+step "Installing Intel RealSense SDK..."
+run sudo apt-get install -y --allow-downgrades ros-humble-librealsense2
+run sudo apt-get install -y librealsense2-dkms
+run sudo apt-get install -y librealsense2
 
 step "Adding Gazebo apt repository..."
 run sudo apt-get update
@@ -139,24 +153,13 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-
 
 step "Installing ROS 2 Robotics SDK..."
 run sudo apt-get update
-run sudo apt install -y ros-humble-robotics-sdk
+run sudo apt-get install -y ros-humble-robotics-sdk
 
 step "Installing Collaborative SLAM (requires Intel Xe/UHD Graphics)..."
 run sudo apt-get install -y ros-humble-collab-slam-lze
 
-step "Adding Intel RealSense apt repository..."
-sudo mkdir -p /etc/apt/keyrings
-curl -sSf https://librealsense.realsenseai.com/Debian/librealsenseai.asc | gpg --dearmor | sudo tee /etc/apt/keyrings/librealsenseai.gpg > /dev/null
-echo "deb [signed-by=/etc/apt/keyrings/librealsenseai.gpg] https://librealsense.realsenseai.com/Debian/apt-repo `lsb_release -cs` main" | sudo tee /etc/apt/sources.list.d/librealsense.list > /dev/null
-run sudo apt update
-echo -e "Package: librealsense2*\nPin: version 2.55.1-0~realsense.12474\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/librealsense > /dev/null
-
-step "Installing Intel RealSense SDK..."
-run sudo apt install -y librealsense2-dkms
-run sudo apt install -y librealsense2
-
 step "Installing Linux firmware..."
-run sudo apt install -y linux-firmware
+run sudo apt-get install -y linux-firmware
 
 step "Installing Intel NPU drivers and configuring permissions..."
 run sudo apt-get install -y intel-level-zero-npu intel-driver-compiler-npu

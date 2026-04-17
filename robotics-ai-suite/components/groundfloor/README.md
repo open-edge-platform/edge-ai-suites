@@ -107,7 +107,11 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
+```
+
+```text
+
 Target               Description
 ------               -----------
 build                Build debian package

@@ -65,6 +65,7 @@ def _consistency(cv_pct: float) -> str:
 
 PIPELINE_ORDER = ['Sensor', 'Perception', 'Planning', 'Control', 'Other']
 
+
 def _classify(node: str, inp: str, out: str) -> str:  # noqa: ARG001
     """
     Assign a pipeline stage to a (node, input, output) pair.
@@ -105,7 +106,7 @@ def load_bench(bench_dir: Path) -> tuple[int, dict]:
     json_files = sorted(bench_dir.glob('*/kpi.json'))
     if not json_files:
         print(f"ERROR: No kpi.json files found under {bench_dir}", file=sys.stderr)
-        print("       Run 'make wandering-benchmark' or check that --record was used.",
+        print("       Run 'bash src/wandering_run.sh --record' or check that --record was used.",
               file=sys.stderr)
         sys.exit(1)
 
@@ -143,6 +144,7 @@ def aggregate(per_pair: dict, total_runs: int, min_runs: int,
         p50s    = [p['p50_ms']   for p in run_pairs]
         stdevs  = [p['stdev_ms'] for p in run_pairs]
         ns      = [p['n']        for p in run_pairs]
+        fps_vals = [p['fps'] for p in run_pairs if p.get('fps') is not None]
 
         mean_of_means   = statistics.mean(means)
         stdev_of_means  = statistics.stdev(means) if len(means) > 1 else 0.0
@@ -171,6 +173,9 @@ def aggregate(per_pair: dict, total_runs: int, min_runs: int,
             'mean_stdev_ms': statistics.mean(stdevs),
             # Average sample count per run
             'mean_n':        statistics.mean(ns),
+            # Throughput across runs
+            'mean_fps':      statistics.mean(fps_vals) if fps_vals else None,
+            'fps_stdev':     statistics.stdev(fps_vals) if len(fps_vals) > 1 else 0.0,
         })
 
     results.sort(key=lambda x: (
@@ -195,6 +200,7 @@ _CAT_LABELS = {
     'Other':      'Other   ',
 }
 
+
 def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
     if not results:
         print("No pairs met the minimum-runs threshold.")
@@ -203,14 +209,15 @@ def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
     print()
     print('━' * W)
     print(f"  Benchmark: {bench_dir.name}  |  {total_runs} runs × 120 s")
-    print(f"  Columns: mean = avg(mean_ms across runs)  ±stdev  cv% = consistency")
-    print(f"           p90 = avg(p90_ms)  worst_p90 = max across all runs")
-    print(f"  Legend (health): ✅<10ms  🟡<50ms  🟠<200ms  🔴≥200ms")
-    print(f"  Legend (consistency ◆<10%cv  ◇<25%  △<50%  ✗≥50% — RTF-sensitive)")
-    print(f"  Pipeline stages (in order): Sensor → Perception → Planning → Control → Other")
+    print("  Columns: Hz = avg throughput  mean = avg(mean_ms across runs)  ±stdev  cv% = consistency")
+    print("           p90 = avg(p90_ms)  worst_p90 = max across all runs")
+    print("  Legend (health): ✅<10ms  🟡<50ms  🟠<200ms  🔴≥200ms")
+    print("  Legend (consistency ◆<10%cv  ◇<25%  △<50%  ✗≥50% — RTF-sensitive)")
+    print("  Pipeline stages (in order): Sensor → Perception → Planning → Control → Other")
     print('━' * W)
+    _pm = '±'
     print(f"  {'#':>3}  {'Stage':<10} {'Node':<22} {'Input':<30} {'Output':<26} "
-          f"{'mean':>8} {'±':>1} {'stdev':>6} {'cv%':>5} "
+          f"{'Hz':>8} {'mean':>8} {_pm:>1} {'stdev':>6} {'cv%':>5} "
           f"{'p90':>8} {'worst_p90':>9} {'runs':>6}")
     print('━' * W)
 
@@ -230,7 +237,10 @@ def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
         inp = r['input'][-29:] if len(r['input']) > 29 else r['input']
         out = r['output'][-25:] if len(r['output']) > 25 else r['output']
         run_frac = f"{r['runs_seen']:>2}/{r['total_runs']}"
+        fps = r.get('mean_fps')
+        fps_s = f'{fps:.1f}' if fps is not None else '—'
         print(f"  {i:>3}  {h}{c} {cat_label} {nd:<20} {inp:<30} {out:<26} "
+              f"{fps_s:>8} "
               f"{r['mean_ms']:>7.1f}ms "
               f"{r['stdev_runs']:>5.1f} "
               f"{r['cv_pct']:>5.1f}% "
@@ -276,11 +286,51 @@ def print_report(results: List[dict], bench_dir: Path, total_runs: int) -> None:
 _CSV_FIELDS = [
     'node', 'input', 'output', 'category',
     'runs_seen', 'total_runs',
+    'mean_fps', 'fps_stdev',
     'mean_ms', 'stdev_runs', 'cv_pct',
     'min_mean_ms', 'max_mean_ms',
     'mean_p90_ms', 'worst_p90_ms', 'best_p90_ms',
     'mean_p50_ms', 'mean_stdev_ms', 'mean_n',
 ]
+
+
+def print_aggregate_summary(results: List[dict], bench_dir: Path, total_runs: int) -> None:
+    """Print a compact per-component aggregate summary (throughput + latency)."""
+    if not results:
+        return
+
+    # One row per (node, output): pick the dominant input (highest mean trigger count)
+    # We collapse the input dimension by choosing the pair with the lowest worst_p90.
+    by_node_out: Dict[tuple, dict] = {}
+    for r in results:
+        k = (r['node'], r['output'])
+        if k not in by_node_out or r['worst_p90_ms'] < by_node_out[k]['worst_p90_ms']:
+            by_node_out[k] = r
+
+    ranked = sorted(
+        by_node_out.values(),
+        key=lambda r: (
+            PIPELINE_ORDER.index(r['category']) if r['category'] in PIPELINE_ORDER
+            else len(PIPELINE_ORDER),
+            r['mean_ms'],
+        ),
+    )
+
+    W = 108
+    print()
+    print('━' * W)
+    print(f"  Aggregate Summary  |  {bench_dir.name}  |  {total_runs} runs")
+    print('━' * W)
+    print(f"  {'Component':<28} {'Output':<26} {'Throughput':>12}  {'Mean Latency':>14}  {'Worst p90':>10}")
+    print('━' * W)
+    for r in ranked:
+        nd    = r['node'].split('/')[-1][:26]
+        out   = r['output'][-25:] if len(r['output']) > 25 else r['output']
+        fps   = r.get('mean_fps')
+        fps_s = f'{fps:.1f} Hz' if fps is not None else '—'
+        h     = _health(r['mean_ms'])
+        print(f"  {h} {nd:<26} {out:<26} {fps_s:>12}  {r['mean_ms']:>12.1f} ms  {r['worst_p90_ms']:>8.1f} ms")
+    print('━' * W)
 
 
 def write_csv(results: List[dict], path: Path) -> None:
@@ -347,6 +397,7 @@ def main() -> None:
     results = aggregate(per_pair, total_runs, min_runs, node_filter=args.node)
 
     print_report(results, bench_dir, total_runs)
+    print_aggregate_summary(results, bench_dir, total_runs)
 
     if args.csv_out:
         write_csv(results, Path(args.csv_out))

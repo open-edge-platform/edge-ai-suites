@@ -5,7 +5,7 @@
 #
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
-SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-anomaly-detection
+SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-defect-detection
 HELM_REGISTRY := oci://registry-1.docker.io/intel
 MAKEFLAGS += --no-print-directory
 
@@ -133,22 +133,22 @@ wait_for_tsam:
 	done; \
 	echo "Time-Series Analytics microservice is accessible."
 
-upload_zip_file:
-	@echo "Creating UDF deployment zip for $(SAMPLE_APP)..."
+upload_tar_file:
+	@echo "Creating UDF deployment tar for $(SAMPLE_APP)..."
 	@config_dir=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config; \
-	zip_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).zip; \
-	rm -f $$zip_file; \
+	tar_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).tar; \
+	rm -f $$tar_file; \
 	cd $$config_dir && \
 	folders="udfs tick_scripts"; \
 	if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
-	zip -r $$zip_file $$folders && \
-	echo "Created: $$zip_file"
+	tar cf $$tar_file $$folders && \
+	echo "Created: $$tar_file"
 	@$(MAKE) wait_for_tsam
-	@echo "Uploading UDF deployment zip for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
-	zip_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).zip; \
+	@echo "Uploading UDF deployment tar for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
+	tar_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).tar; \
 	response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
 		-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
-		-F "file=@$$zip_file" \
+		-F "file=@$$tar_file" \
 		-k); \
 	if [ "$$response" = "200" ]; then \
 		echo "Upload successful (HTTP $$response)."; \
@@ -202,14 +202,14 @@ up_mqtt_ingestion: check_env_variables down
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
 	fi; \
-	$(MAKE) upload_zip_file app=$(SAMPLE_APP);
+	$(MAKE) upload_tar_file app=$(SAMPLE_APP);
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
-	@if [ "$(app)" = "weld-anomaly-detection" ]; then \
-		echo "The weld-anomaly-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
+	@if [ "$(app)" = "weld-defect-detection" ]; then \
+		echo "The weld-defect-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
 		exit 1; \
 	fi; \
 	if [ $(num_of_streams) -gt 1 ]; then \
@@ -223,7 +223,7 @@ up_opcua_ingestion: check_env_variables down
 	else \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=$(num_of_streams) --scale ia-mqtt-publisher=0 -d; \
 	fi; \
-	$(MAKE) upload_zip_file app=$(SAMPLE_APP);
+	$(MAKE) upload_tar_file app=$(SAMPLE_APP);
 
 
 # Status of the deployed containers
@@ -338,10 +338,10 @@ help:
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make gen_helm_charts app=weld-defect-detection"
 	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make push_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make push_helm_charts app=weld-defect-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
 

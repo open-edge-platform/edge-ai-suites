@@ -416,7 +416,7 @@ def check_and_set_working_directory(return_original=True):
                        If return_original=False, returns True/False for success/failure
     """
     current_dir = os.getcwd()
-    logger.info(f"Current working directory: {current_dir}")
+    logger.debug(f"Current working directory: {current_dir}")
 
     target_dir = constants.EDGE_AI_SUITES_DIR
     
@@ -425,15 +425,15 @@ def check_and_set_working_directory(return_original=True):
     
     # Check if we're already in the target directory
     if current_dir == target_dir:
-        logger.info(f"Already in target directory: {target_dir}")
+        logger.debug(f"Already in target directory: {target_dir}")
         return True if not return_original else (True, current_dir)
     
     # Change to target directory
-    logger.info(f"Changing to target directory: {target_dir}")
+    logger.debug(f"Changing to target directory: {target_dir}")
     try:
         if os.path.exists(target_dir):
             os.chdir(target_dir)
-            logger.info(f"✓ Successfully changed to: {os.getcwd()}")
+            logger.debug(f"✓ Successfully changed to: {os.getcwd()}")
             return True if not return_original else (True, current_dir)
         else:
             logger.info(f"✗ Target directory does not exist: {target_dir}")
@@ -663,7 +663,7 @@ def update_env_file(file_path=None, values=None):
                     logger.error(f"Failed while appending to .env file: {append_result.stderr}")
                     return False
 
-        logger.info(f"Successfully updated .env file with {len(values)} environment variables")
+        logger.debug(f"Successfully updated .env file with {len(values)} environment variables")
         return True
 
     except Exception as e:
@@ -1315,7 +1315,7 @@ def update_config_file(ingestion_type="opcua"):
         if not success:
             logger.error("✗ Failed to set correct working directory")
             return False
-        logger.info(f"Current working directory: {os.getcwd()}")
+        logger.debug(f"Current working directory: {os.getcwd()}")
         
         # Step 1: Check if time-series analytics container is running
         logger.info("Checking if time-series analytics container is running...")
@@ -1366,7 +1366,7 @@ def update_config_file(ingestion_type="opcua"):
         config_dir = constants.WINDTURBINE_CONFIG_DIR
         if os.path.exists(config_dir):
             os.chdir(config_dir)
-            logger.info(f"Changed to directory: {os.getcwd()}")
+            logger.debug(f"Changed to directory: {os.getcwd()}")
         else:
             logger.error(f"✗ Configuration directory not found: {config_dir}")
             os.chdir(original_dir)
@@ -1436,7 +1436,7 @@ def update_config_file(ingestion_type="opcua"):
                 if result.returncode == 0:
                     logger.info("Curl command executed successfully. Response:")
                     logger.info(result.stdout)
-                    logger.info(f"✓ {ingestion_type.upper()} alerts configuration setup completed successfully")
+                    logger.debug(f"✓ {ingestion_type.upper()} alerts configuration setup completed successfully")
                     
                     # Wait for services to fully initialize after configuration change
                     logger.info("Waiting for services to fully process the configuration change...")
@@ -2504,14 +2504,14 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
             setup_type = "mqtt"
         elif sample_app == constants.WELD_SAMPLE_APP:
             target_dir = os.path.join(constants.EDGE_AI_SUITES_DIR, 
-                                    "apps/weld-anomaly-detection/time-series-analytics-config")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+                                    "apps/weld-defect-detection/time-series-analytics-config")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         elif sample_app == constants.MULTIMODAL_SAMPLE_APP:
             # For multimodal, the config is in a different location
             multimodal_dir = constants.EDGE_AI_SUITES_DIR.replace(constants.TARGET_SUBPATH, constants.MULTIMODAL_TARGET_SUBPATH)
             target_dir = os.path.join(multimodal_dir, "configs/time-series-analytics-microservice")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         else:
             logger.error(f"✗ Unsupported sample app: {sample_app}")
@@ -2784,7 +2784,7 @@ def check_and_set_working_directory_multimodal(return_original=True):
     try:
         os.chdir(MULTIMODAL_APPLICATION_DIRECTORY)
         current_dir = os.getcwd()
-        logger.info(f"✓ Successfully changed to: {current_dir}")
+        logger.debug(f"✓ Successfully changed to: {current_dir}")
         
         # Verify we're in the correct directory
         if not current_dir.endswith("industrial-edge-insights-multimodal"):

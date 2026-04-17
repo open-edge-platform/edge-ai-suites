@@ -1,0 +1,88 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+
+ConfigMap holding the telegraf.conf for the collector.
+The WEBSOCKET_URL environment variable in the Deployment is substituted
+by Telegraf at runtime via ${WEBSOCKET_URL}.
+*/}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "collector.fullname" . }}-telegraf-config
+  labels:
+    {{- include "collector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+data:
+  telegraf.conf: |
+    # Configuration for telegraf agent
+    [agent]
+      interval = "2s"
+      round_interval = true
+      metric_batch_size = 2000
+      metric_buffer_limit = 20000
+      collection_jitter = "0s"
+      flush_interval = "1s"
+      flush_jitter = "0s"
+      precision = "0s"
+
+    # Read metrics about cpu usage
+    [[inputs.cpu]]
+      percpu = false
+      totalcpu = true
+      collect_cpu_time = false
+      report_active = false
+      core_tags = false
+
+    # Read metrics about memory usage
+    [[inputs.mem]]
+
+    # Read CPU frequency from shell script
+    [[inputs.exec]]
+      commands = ["/app/read_cpu_freq.sh"]
+      environment = []
+      name_suffix = ""
+      timeout = "15s"
+      data_format = "influx"
+      interval = "10s"
+
+    # Run executable as long-running input plugin (qmassa GPU monitoring)
+    [[inputs.execd]]
+      command = ["python3", "/app/qmassa_reader.py"]
+      data_format = "influx"
+
+    # Read metrics about temperature
+    [[inputs.temp]]
+
+    # Process metrics using a Starlark script
+    [[processors.starlark]]
+      namepass = ["temp"]
+      source = '''
+    def apply(metric):
+        return metric if metric.tags.get("sensor", "").startswith("coretemp_package_id_") else None
+    '''
+
+    # Parse FPS metrics file if available
+    [[inputs.file]]
+      files = ["/app/.collector-signals/fps.txt"]
+      data_format = "value"
+      data_type = "float"
+      name_override = "fps"
+
+    # Configuration for the Prometheus client to spawn
+    [[outputs.prometheus_client]]
+      listen = ":{{ .Values.prometheusPort }}"
+      metric_version = 1
+      path = "/metrics"
+      collectors_exclude = ["gocollector", "process"]
+      string_as_label = true
+      export_timestamp = true
+
+    # A plugin that can transmit metrics over WebSocket
+    [[outputs.websocket]]
+      url = "${WEBSOCKET_URL}"
+      data_format = "json"
+      read_timeout = "0s"
+      startup_error_behavior = "retry"
+      [outputs.websocket.headers]
+        Content-Type = "application/json"

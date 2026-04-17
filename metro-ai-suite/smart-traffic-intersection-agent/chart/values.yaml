@@ -27,9 +27,7 @@ trafficAgent:
   service:
     type: NodePort
     backendPort: 8081
-    backendNodePort: 30881
     uiPort: 7860
-    uiNodePort: 30860
   # Intersection identification
   intersection:
     name: "intersection_1"
@@ -42,12 +40,13 @@ trafficAgent:
     weatherMock: "false"
     vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
-  # For Helm/K8s: use the K8s service DNS of the SceneScape broker, e.g.:
-  #   smart-intersection-broker (same namespace)
-  #   smart-intersection-broker.<namespace>.svc.cluster.local (cross-namespace)
-  # For Docker Compose: broker.scenescape.intel.com
+  # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
+  # If brokerNamespace is empty, it defaults to the release namespace.
+  # If host is set explicitly, it takes precedence over the constructed FQDN.
   mqtt:
-    host: "smart-intersection-broker"
+    host: ""
+    serviceName: "smart-intersection-broker"
+    brokerNamespace: ""
     port: "1883"
   # Traffic analysis thresholds
   traffic:
@@ -80,8 +79,10 @@ vlmServing:
   service:
     type: NodePort
     port: 8000
-    nodePort: 30800
   env:
+    # Validated default VLM model for traffic scene analysis. Users can override
+    # with any compatible HuggingFace vision-language model via:
+    #   --set vlmServing.env.modelName="<org/model-name>"
     modelName: "microsoft/Phi-3.5-vision-instruct"
     compressionWeightFormat: "int4"
     device: "CPU"
@@ -141,9 +142,33 @@ tls:
   # CA certificate for MQTT broker TLS
   caCert: ""
   # If caCertSecretName is set, use an existing secret instead of creating one
-  # e.g. smart-intersection-broker-rootcert (from SceneScape RI)
-  caCertSecretName: "smart-intersection-broker-rootcert"
+  # The Smart Intersection RI (release-2026.0.0) creates "smart-intersection-ca-secret"
+  caCertSecretName: "smart-intersection-ca-secret"
   # Key name inside the external secret (required when caCertSecretName is set)
   # The key will be mapped to the expected filename "scenescape-ca.pem"
   # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
   caCertKey: "root-cert"
+
+# =============================================================================
+# Live Metrics Service (subchart)
+# =============================================================================
+# Keys MUST match the subchart chart name "live-metrics-service".
+# The condition field in Chart.yaml enables/disables the subchart.
+live-metrics-service:
+  # Set to false to skip deploying the live-metrics relay
+  enabled: true
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+
+# =============================================================================
+# Collector / Telegraf (subchart)
+# =============================================================================
+# Keys MUST match the subchart chart name "collector".
+collector:
+  # Set to false to skip deploying the Telegraf collector.
+  # Requires live-metrics-service.enabled=true to function.
+  enabled: true
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+  # The WebSocket URL is constructed dynamically in the collector deployment template
+  # to use the release-scoped live-metrics-service name.

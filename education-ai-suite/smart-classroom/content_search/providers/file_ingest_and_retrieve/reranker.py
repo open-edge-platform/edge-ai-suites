@@ -12,9 +12,18 @@ import torch
 from optimum.intel import OVModelForSequenceClassification
 from transformers import AutoTokenizer
 
+from providers.file_ingest_and_retrieve.utils import extract_bucket_name, file_key_to_path
+
 logger = logging.getLogger(__name__)
 
 RRF_K = 60  # RRF constant — higher means scores drop off more slowly with rank, increasing diversity
+
+# Sigmoid parameters for visual score rescaling: sigmoid(k * (sim - center)) * 100.
+# Text→image and image→image have very different similarity distributions, so each
+# query type needs its own center.
+VISUAL_SIGMOID_K = 15.0               # steepness (shared)
+VISUAL_SIGMOID_CENTER_TEXT = 0.15     # text→image: CLIP sim clusters ~0.05–0.35
+VISUAL_SIGMOID_CENTER_IMAGE = 0.70   # image→image: CLIP sim clusters ~0.5–0.95
 
 
 def _flatten_chroma_results(chroma_results: dict) -> list[dict]:
@@ -32,9 +41,14 @@ class PostProcessor:
     """Post-processes retrieval results: video dedup, document reranking, slot allocation."""
 
     def __init__(self, reranker_model: str, device: str = "CPU",
-                 dedup_time_threshold: float = 5.0, overfetch_multiplier: int = 3):
+                 dedup_time_threshold: float = 5.0, overfetch_multiplier: int = 3,
+                 video_summary_id_map: dict = None, chroma_client=None,
+                 document_collection_name: str = ""):
         self.dedup_time_threshold = dedup_time_threshold
         self.overfetch_multiplier = overfetch_multiplier
+        self.video_summary_id_map = video_summary_id_map or {}
+        self.chroma_client = chroma_client
+        self.document_collection_name = document_collection_name
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / reranker_model
         if local_path.exists():
@@ -54,7 +68,7 @@ class PostProcessor:
     def process_text_query_results(
         self, query: str, visual_results: dict, doc_results: dict, top_k: int,
     ) -> dict:
-        """Full post-processing for text queries: dedup → rerank → allocate slots."""
+        """Full post-processing for text queries: dedup → attach summaries → rerank → scores → drop attached summaries → allocate slots → summary to video → format."""
         visual_flat = _flatten_chroma_results(visual_results)
         doc_flat = _flatten_chroma_results(doc_results)
         logger.debug("[PostProcessor] Text query: %r | visual candidates: %d | doc candidates: %d | top_k: %d",
@@ -64,16 +78,23 @@ class PostProcessor:
         logger.debug("[PostProcessor] After dedup: %d visual results (removed %d)",
                      len(visual_deduped), len(visual_flat) - len(visual_deduped))
 
+        self._attach_best_summary_texts(visual_deduped)
+
         doc_reranked = self._rerank_documents(query, doc_flat)
+
+        self._compute_percentage_scores(visual_deduped)
+        self._compute_percentage_scores(doc_reranked)
+
+        doc_filtered = self._remove_attached_summaries(doc_reranked, visual_deduped)
 
         groups = {}
         if visual_deduped:
             groups["visual"] = visual_deduped
-        if doc_reranked:
-            groups["document"] = doc_reranked
+        if doc_filtered:
+            groups["document"] = doc_filtered
 
         merged = self._allocate_slots(groups, top_k)
-        self._compute_percentage_scores(merged)
+        self._convert_summaries_to_video(merged)
         logger.debug("[PostProcessor] Final merged results: %d", len(merged))
         return self._to_chroma_format(merged)
 
@@ -87,11 +108,12 @@ class PostProcessor:
         deduped = self._dedup_video_frames(visual_flat)
         logger.debug("[PostProcessor] After dedup: %d visual results (removed %d)",
                      len(deduped), len(visual_flat) - len(deduped))
+        self._attach_best_summary_texts(deduped)
         trimmed = deduped[:top_k]
         # Assign RRF scores by rank so distances field is consistent with text query path (higher = better)
         for rank, item in enumerate(trimmed):
             item["rrf_score"] = 1.0 / (RRF_K + rank)
-        self._compute_percentage_scores(trimmed)
+        self._compute_percentage_scores(trimmed, visual_sigmoid_center=VISUAL_SIGMOID_CENTER_IMAGE)
         return self._to_chroma_format(trimmed)
 
 
@@ -149,6 +171,126 @@ class PostProcessor:
         deduped.sort(key=lambda r: r["distance"])
         return deduped
 
+
+    def _attach_best_summary_texts(self, results: list[dict]) -> None:
+        """Attach the best matched summary text to each video result in-place.
+
+        For each video result, finds the summary whose time range midpoint
+        is closest to the video_pin_second and attaches its chunk_text.
+        Non-video results are skipped.
+        """
+        if not self.video_summary_id_map or not self.chroma_client:
+            return
+
+        # Group video results by file_path to avoid redundant DB lookups
+        video_results_by_file: dict[str, list[dict]] = defaultdict(list)
+        for r in results:
+            meta = r.get("meta", {})
+            if meta.get("type") == "video":
+                file_path = meta.get("file_path", "")
+                video_results_by_file[file_path].append(r)
+
+        for file_path, video_results in video_results_by_file.items():
+            summary_ids = self.video_summary_id_map.get(file_path, [])
+            if not summary_ids:
+                logger.debug("[summary] No summaries found for %s", file_path)
+                continue
+
+            summaries = self.chroma_client.get(
+                ids=summary_ids,
+                output_fields=["id", "meta"],
+                collection_name=self.document_collection_name,
+            )
+            if not summaries:
+                continue
+
+            for r in video_results:
+                video_pin_second = r["meta"].get("video_pin_second", 0)
+                best = self._find_best_summary(video_pin_second, summaries)
+                if best:
+                    chunk_text = best.get("meta", {}).get("chunk_text", "")
+                    if chunk_text:
+                        r["meta"]["summary_text"] = chunk_text
+                        logger.debug("[summary] Attached summary to video t=%.1fs in %s",
+                                     video_pin_second, file_path)
+
+    @staticmethod
+    def _find_best_summary(video_pin_second: float, summaries: list[dict]) -> dict | None:
+        """Find the summary whose time range midpoint is closest to video_pin_second."""
+        best = None
+        best_dist = float("inf")
+        for s in summaries:
+            meta = s.get("meta", {})
+            start_time = meta.get("start_time")
+            end_time = meta.get("end_time")
+            if start_time is None or end_time is None:
+                continue
+            mid_time = start_time + (end_time - start_time) / 2
+            dist = abs(video_pin_second - mid_time)
+            if dist < best_dist:
+                best_dist = dist
+                best = s
+        return best
+
+    @staticmethod
+    def _remove_attached_summaries(doc_results: list[dict], visual_results: list[dict]) -> list[dict]:
+        """Remove summaries whose chunk_text is already attached to a visual frame."""
+        attached_texts = {
+            r["meta"].get("summary_text", "")
+            for r in visual_results
+            if r.get("meta", {}).get("summary_text")
+        }
+        filtered = []
+        removed_count = 0
+        for r in doc_results:
+            if "summary_key" in r.get("meta", {}) and r["meta"].get("chunk_text", "") in attached_texts:
+                removed_count += 1
+            else:
+                filtered.append(r)
+        if removed_count:
+            logger.debug("[PostProcessor] Removed %d attached summaries from doc group", removed_count)
+        return filtered
+
+    @staticmethod
+    def _convert_summaries_to_video(results: list[dict]) -> None:
+        """Convert remaining summary documents in the final result list to video results in-place.
+
+        Attached summaries are already removed before allocation, so every
+        summary here should be converted.  Any that cannot be converted
+        (missing file_key/bucket) are dropped.
+        """
+        converted_count = 0
+        remove_indices: list[int] = []
+        for i, r in enumerate(results):
+            meta = r.get("meta", {})
+            if "summary_key" not in meta:
+                continue
+            chunk_text = meta.get("chunk_text", "")
+            file_key = meta.get("file_key", "")
+            bucket = extract_bucket_name(meta.get("file_path", ""))
+            if not bucket or not file_key:
+                remove_indices.append(i)
+                continue
+            video_fp = file_key_to_path(file_key, bucket)
+            start_time = meta.get("start_time", 0)
+            end_time = meta.get("end_time", 0)
+            mid_time = start_time + (end_time - start_time) / 2
+            r["meta"] = {
+                "file_path": video_fp,
+                "type": "video",
+                "original_type": "constructed_from_summary",
+                "video_pin_second": round(mid_time, 2),
+                "video_start_second": round(start_time, 2),
+                "video_end_second": round(end_time, 2),
+                "summary_text": chunk_text,
+                "reranker_score": r.get("reranker_score"),
+            }
+            converted_count += 1
+        for i in reversed(remove_indices):
+            results.pop(i)
+        if converted_count or remove_indices:
+            logger.debug("[PostProcessor] Summaries: %d converted to video, %d dropped (missing file_key)",
+                         converted_count, len(remove_indices))
 
     def _rerank_documents(self, query: str, doc_results: list[dict]) -> list[dict]:
         """Re-score documents with BAAI/bge-reranker-large cross-encoder.
@@ -214,8 +356,9 @@ class PostProcessor:
 
         num_active = len(groups)
         min_per_group = max(1, top_k // (num_active * 2))
-        logger.debug("[slots] groups=%s | top_k=%d | min_per_group=%d",
-                     list(groups.keys()), top_k, min_per_group)
+        group_sizes = {name: len(items) for name, items in groups.items()}
+        logger.debug("[slots] %d group(s): %s | top_k=%d | min_per_group=%d",
+                     num_active, group_sizes, top_k, min_per_group)
 
         # Assign RRF scores
         # visual group: already sorted by distance asc from _dedup_video_frames
@@ -274,22 +417,27 @@ class PostProcessor:
 
 
     @staticmethod
-    def _compute_percentage_scores(results: list[dict]) -> None:
-        """Compute a 0-100% relevance score for each result in-place.
+    def _compute_percentage_scores(results: list[dict], visual_sigmoid_center: float = VISUAL_SIGMOID_CENTER_TEXT) -> None:
+        """Compute a 0-100% absolute relevance score for each result in-place.
 
-        - Documents with a reranker_score: sigmoid(reranker_score) * 100
-        - Visual results (no reranker_score): (1 - distance) * 100, clamped to [0, 100]
-          (ChromaDB cosine distance is in [0, 2]; 0 = identical)
+        - Documents (reranker_score present): sigmoid(reranker_score) * 100
+        - Visual (no reranker_score): sigmoid(k * (cosine_sim - center)) * 100
+          where cosine_sim = 1 - distance (ChromaDB cosine distance in [0, 2])
         """
         for r in results:
             if r.get("reranker_score") is not None:
                 r["score"] = round(1.0 / (1.0 + math.exp(-r["reranker_score"])) * 100, 2)
             else:
-                r["score"] = round(max(0.0, min(100.0, (1.0 - r["distance"]) * 100)), 2)
+                similarity = 1.0 - r["distance"]
+                r["score"] = round(1.0 / (1.0 + math.exp(-VISUAL_SIGMOID_K * (similarity - visual_sigmoid_center))) * 100, 2)
 
     @staticmethod
     def _to_chroma_format(results: list[dict]) -> dict:
-        """Convert flat result list back to ChromaDB nested format for backward compat."""
+        """Convert flat result list back to ChromaDB nested format for backward compat.
+
+        Preserves RRF order from _allocate_slots — scores are absolute relevance
+        per type and not comparable across types, so sorting by score would be wrong.
+        """
         output = {
             "ids": [[r["id"] for r in results]],
             "metadatas": [[r["meta"] for r in results]],

@@ -184,7 +184,7 @@ def get_env_values():
     chart_path = _resolve_chart_path(os.getenv("chart_path", None))
     namespace = os.getenv("namespace", None)
     grafana_url = os.getenv("grafana_url", None)
-    wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "180"))  # Default sleep time if not set
+    wait_time = int(os.getenv("wait_time_for_pods_to_come_up", "90"))  # Default sleep time if not set
     target = os.getenv("target", None)
     if not all([FUNCTIONAL_FOLDER_PATH_FROM_TEST_FILE, release_name, chart_path, namespace, grafana_url, wait_time, target]):
         raise EnvironmentError("One or more environment variables are not set.")
@@ -1620,16 +1620,16 @@ def with_model_registry(chart_path, input):
             logger.info("Files copied successfully to 'wind-turbine-anomaly-detection' directory.")
         elif result.stderr:
             logger.error(f"Error copying files: {result.stderr.decode('utf-8')}")
-        zip_command = f"zip -r windturbine_anomaly_detector.zip udfs models tick_scripts"
-        result = subprocess.run(zip_command, shell=True, capture_output=True, text=True, check=True)
+        tar_command = f"tar cf windturbine_anomaly_detector.tar udfs models tick_scripts"
+        result = subprocess.run(tar_command, shell=True, capture_output=True, text=True, check=True)
+        logger.info("TAR archive created successfully.")
         if result.stdout:
-            logger.info(f"ZIP command output: {result.stdout}")
-            logger.info("ZIP archive created successfully.")
-        elif result.stderr:
-            logger.error(f"ZIP command errors: {result.stderr}")
+            logger.info(f"TAR command output: {result.stdout}")
+        if result.stderr:
+            logger.error(f"TAR command stderr: {result.stderr}")
         
 
-        # Step 2: Upload the ZIP file using kubectl exec to avoid port-forwarding
+        # Step 2: Upload the tar file using kubectl exec to avoid port-forwarding
         # Find the model registry pod
         model_registry_pod_command = (
             f"kubectl get pods -n {namespace} "
@@ -1644,16 +1644,16 @@ def with_model_registry(chart_path, input):
             logger.error("Model registry pod not found.")
             return False
 
-        # Copy the ZIP file to the model registry pod first
+        # Copy the TAR file to the model registry pod first
         kubectl_cp_command = [
-            'kubectl', 'cp', 'windturbine_anomaly_detector.zip',
-            f'{model_registry_pod}:/tmp/windturbine_anomaly_detector.zip',
+            'kubectl', 'cp', 'windturbine_anomaly_detector.tar',
+            f'{model_registry_pod}:/tmp/windturbine_anomaly_detector.tar',
             '-n', namespace
         ]
-        logger.info(f"Copying ZIP file to model registry pod: {' '.join(kubectl_cp_command)}")
+        logger.info(f"Copying TAR file to model registry pod: {' '.join(kubectl_cp_command)}")
         result = subprocess.run(kubectl_cp_command, capture_output=True, text=True)
         if result.returncode != 0:
-            logger.error(f"Error copying ZIP file to pod: {result.stderr}")
+            logger.error(f"Error copying TAR file to pod: {result.stderr}")
             return False
 
         # Upload using curl from within the pod (in-cluster call)
@@ -1663,7 +1663,7 @@ def with_model_registry(chart_path, input):
             '-H', 'Content-Type: multipart/form-data',
             '-F', 'name="windturbine_anomaly_detector"',
             '-F', 'version="1.0"',
-            '-F', 'file=@/tmp/windturbine_anomaly_detector.zip;type=application/zip'
+            '-F', 'file=@/tmp/windturbine_anomaly_detector.tar;type=application/x-tar'
         ]
         logger.info(f"Uploading model via kubectl exec: {' '.join(upload_command)}")
         result = subprocess.run(upload_command, capture_output=True, text=True)
@@ -1787,7 +1787,7 @@ def verify_ts_logs(namespace, log_type):
     all_logs_ok = True
 
     for pod_name in relevant_pod_names:
-        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace):
+        if not common_utils.check_logs_by_level(pod_name, log_type, "pod", namespace, tail_lines=200):
             all_logs_ok = False
 
     if all_logs_ok:
@@ -2091,12 +2091,12 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
             return False
 
         os.chdir(ts_config_path)
-        os.makedirs("weld_anomaly_detector", exist_ok=True)
+        os.makedirs("weld_defect_detector", exist_ok=True)
         for item in ["models", "tick_scripts", "udfs"]:
             if os.path.exists(item):
-                result = subprocess.run(['cp', '-r', item, 'weld_anomaly_detector/.'], capture_output=True, text=True)
+                result = subprocess.run(['cp', '-r', item, 'weld_defect_detector/.'], capture_output=True, text=True)
                 if result.returncode == 0:
-                    logger.info(f"Copied {item} to weld_anomaly_detector directory.")
+                    logger.info(f"Copied {item} to weld_defect_detector directory.")
                 else:
                     logger.error(f"Error copying {item}: {result.stderr}")
                     return False
@@ -2115,7 +2115,7 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
             return False
 
         kubectl_cp_ts = [
-            'kubectl', 'cp', 'weld_anomaly_detector',
+            'kubectl', 'cp', 'weld_defect_detector',
             f'{ts_pod}:/tmp/', '-n', namespace
         ]
         logger.info(f"Copying Time Series UDF package: {' '.join(kubectl_cp_ts)}")
@@ -2132,10 +2132,10 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
 
         # External nginx proxy access (Docker uses HOST_IP:3000, Helm uses HOST_IP:30001)
         payload = {
-            "weld_anomaly_detector": {
-                "udfs": "/tmp/weld_anomaly_detector/udfs",
-                "models": "/tmp/weld_anomaly_detector/models", 
-                "tick_scripts": "/tmp/weld_anomaly_detector/tick_scripts"
+            "weld_defect_detector": {
+                "udfs": "/tmp/weld_defect_detector/udfs",
+                "models": "/tmp/weld_defect_detector/models", 
+                "tick_scripts": "/tmp/weld_defect_detector/tick_scripts"
             }
         }
         json_payload = json.dumps(payload)
@@ -2213,14 +2213,14 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         
         if sample_app == constants.WIND_SAMPLE_APP:
             os.chdir('../' + constants.HELM_TIMESERIES)
-            logger.info(f"Current working directory: {os.getcwd()}")
+            logger.debug(f"Current working directory: {os.getcwd()}")
             file_path = f'{os.getcwd()}/tick_scripts/windturbine_anomaly_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt"
         elif sample_app == constants.WELD_SAMPLE_APP:
             os.chdir('../' + constants.HELM_WELD)
-            logger.info(f"Current working directory: {os.getcwd()}")
-            file_path = f'{os.getcwd()}/tick_scripts/weld_anomaly_detector.tick'
+            logger.debug(f"Current working directory: {os.getcwd()}")
+            file_path = f'{os.getcwd()}/tick_scripts/weld_defect_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt_weld"
 
@@ -2319,7 +2319,7 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
     
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
     
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):

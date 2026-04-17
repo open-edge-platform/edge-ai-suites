@@ -2,10 +2,10 @@
 
 This article describes how to run Metro AI Suite Sensor Fusion for Traffic Management on
 Bare Metal systems. Before proceding, make sure to address the
-[prerequisites](./get-started-guide/prerequisites.md) and meet
+[prerequisites](./get-started-guide/prerequisites.md) and meet the
 [system requirements](./get-started-guide/system-req.md).
 
-Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources Summary](#resources-summary)
+Metro AI Suite Sensor Fusion for Traffic Management application can support different pipeline using topology JSON files to describe the pipeline topology. The defined pipeline topology can be found at [Resources Summary](#resources-summary).
 
 ## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Bare Metal systems
 
@@ -154,7 +154,7 @@ sudo pkill Hce
 
 #### Usage
 
-All executable files are located at: $PROJ_DIR/build/bin
+All executable files are located at: `$PROJ_DIR/build/bin`
 
 ##### entry program with display
 
@@ -201,7 +201,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_fusion 2C1L
     ```
 
-    ![Display type: media_fusion](./_assets/2C1L-Display-type-media-fusion.png "Display type: media_fusion")
+    ![Display type: media_fusion](./_assets/2C1L-Display-type-media-fusion.png "display type media fusion")
 
 - `media_lidar` display type
 
@@ -212,7 +212,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 1 1 /path-to-dataset media_lidar 2C1L
     ```
 
-    ![Display type: media_lidar](./_assets/2C1L-Display-type-media-lidar.png "Display type: media_lidar")
+    ![Display type: media_lidar](./_assets/2C1L-Display-type-media-lidar.png "display type media lidar")
 
 - `media` display type
 
@@ -223,7 +223,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 1 1 /path-to-dataset media 2C1L
     ```
 
-    ![Display type: media](./_assets/2C1L-Display-type-media.png "Display type: media")
+    ![Display type: media](./_assets/2C1L-Display-type-media.png "display type media")
 
 - `lidar` display type
 
@@ -234,7 +234,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 1 1 /path-to-dataset lidar 2C1L
     ```
 
-    ![Display type: lidar](./_assets/2C1L-Display-type-lidar.png "Display type: lidar")
+    ![Display type: lidar](./_assets/2C1L-Display-type-lidar.png "display type lidar")
 
 #### 4C+2L
 
@@ -254,7 +254,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 4C2L
     ```
 
-    ![Display type: media_fusion](./_assets/4C2L-Display-type-media-fusion.png "Display type: media_fusion")
+    ![Display type: media_fusion](./_assets/4C2L-Display-type-media-fusion.png "display type media fusion")
 
 - `media_lidar` display type
 
@@ -265,7 +265,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 4C2L
     ```
 
-    ![Display type: media_lidar](./_assets/4C2L-Display-type-media-lidar.png "Display type: media_lidar")
+    ![Display type: media_lidar](./_assets/4C2L-Display-type-media-lidar.png "display type media lidar")
 
 - `media` display type
 
@@ -276,7 +276,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 2 1 /path-to-dataset media 4C2L
     ```
 
-    ![Display type: media](./_assets/4C2L-Display-type-media.png "Display type: media")
+    ![Display type: media](./_assets/4C2L-Display-type-media.png "display type media")
 
 - `lidar` display type
 
@@ -287,7 +287,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 4C2L
     ```
 
-    ![Display type: lidar](./_assets/4C2L-Display-type-lidar.png "Display type: lidar")
+    ![Display type: lidar](./_assets/4C2L-Display-type-lidar.png "display type lidar")
 
 #### 12C+2L
 
@@ -307,7 +307,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_fusion 12C2L
     ```
 
-    ![Display type: media_fusion](./_assets/12C2L-Display-type-media-fusion.png "Display type: media_fusion")
+    ![Display type: media_fusion](./_assets/12C2L-Display-type-media-fusion.png "display type media fusion")
 
 - `media_lidar` display type
 
@@ -318,7 +318,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localFusionPipeline.json 2 1 /path-to-dataset media_lidar 12C2L
     ```
 
-    ![Display type: media_lidar](./_assets/12C2L-Display-type-media-lidar.png "Display type: media_lidar")
+    ![Display type: media_lidar](./_assets/12C2L-Display-type-media-lidar.png "display type media lidar")
 
 - `media` display type
 
@@ -329,7 +329,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localMediaPipeline.json 2 1 /path-to-dataset media 12C2L
     ```
 
-    ![Display type: media](./_assets/12C2L-Display-type-media.png "Display type: media")
+    ![Display type: media](./_assets/12C2L-Display-type-media.png "display type media")
 
 - `lidar` display type
 
@@ -340,7 +340,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/6C1L/localLidarPipeline.json 2 1 /path-to-dataset lidar 12C2L
     ```
 
-    ![Display type: lidar](./_assets/12C2L-Display-type-lidar.png "Display type: lidar")
+    ![Display type: lidar](./_assets/12C2L-Display-type-lidar.png "display type lidar")
 
 #### 8C+4L
 
@@ -360,7 +360,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 8C4L
     ```
 
-    ![Display type: media_fusion](./_assets/8C4L-Display-type-media-fusion.png "Display type: media_fusion")
+    ![Display type: media_fusion](./_assets/8C4L-Display-type-media-fusion.png "display type media fusion")
 
 - `media_lidar` display type
 
@@ -371,7 +371,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 8C4L
     ```
 
-    ![Display type: media_lidar](./_assets/8C4L-Display-type-media-lidar.png "Display type: media_lidar")
+    ![Display type: media_lidar](./_assets/8C4L-Display-type-media-lidar.png "display type media lidar")
 
 - `media` display type
 
@@ -382,7 +382,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localMediaPipeline.json 4 1 /path-to-dataset media 8C4L
     ```
 
-    ![Display type: media](./_assets/8C4L-Display-type-media.png "Display type: media")
+    ![Display type: media](./_assets/8C4L-Display-type-media.png "display type media")
 
 - `lidar` display type
 
@@ -393,7 +393,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/2C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 8C4L
     ```
 
-    ![Display type: lidar](./_assets/8C4L-Display-type-lidar.png "Display type: lidar")
+    ![Display type: lidar](./_assets/8C4L-Display-type-lidar.png "display type lidar")
 
 #### 12C+4L
 
@@ -413,7 +413,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_fusion 12C4L
     ```
 
-    ![Display type: media_fusion](./_assets/12C4L-Display-type-media-fusion.png "Display type: media_fusion")
+    ![Display type: media_fusion](./_assets/12C4L-Display-type-media-fusion.png "display type media fusion")
 
 - `media_lidar` display type
 
@@ -424,7 +424,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localFusionPipeline.json 4 1 /path-to-dataset media_lidar 12C4L
     ```
 
-    ![Display type: media_lidar](./_assets/12C4L-Display-type-media-lidar.png "Display type: media_lidar")
+    ![Display type: media_lidar](./_assets/12C4L-Display-type-media-lidar.png "display type media lidar")
 
 - `media` display type
 
@@ -435,7 +435,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localMediaPipeline.json 4 1 /path-to-dataset media 12C4L
     ```
 
-    ![Display type: media](./_assets/12C4L-Display-type-media.png "Display type: media")
+    ![Display type: media](./_assets/12C4L-Display-type-media.png "display type media")
 
 - `lidar` display type
 
@@ -446,7 +446,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
     sudo -E ./build/bin/CLSensorFusionDisplay 127.0.0.1 50052 ai_inference/test/configs/kitti/3C1L/localLidarPipeline.json 4 1 /path-to-dataset lidar 12C4L
     ```
 
-    ![Display type: lidar](./_assets/12C4L-Display-type-lidar.png "Display type: lidar")
+    ![Display type: lidar](./_assets/12C4L-Display-type-lidar.png "display type lidar")
 
 ## Run Metro AI Suite Sensor Fusion for Traffic Management Application on Edge Microvisor Toolkit systems
 

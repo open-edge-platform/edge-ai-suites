@@ -21,7 +21,7 @@ by a Type-2 hypervisor such as
 [Edge Microvisor Toolkit](https://github.com/open-edge-platform/edge-microvisor-toolkit).
 The Retrieval-Augmented Generation (RAG) pipeline and supporting AI services are deployed
 natively on a host system, which is the Edge Microvisor Toolkit in this implementation.
-[Chat Question-and-Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
+[Chat Question & Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
 provides the RAG capability.
 This separation ensures robust isolation between the HMI and AI components, enabling
 independent scaling, maintenance, and updates. The setup leverages the strengths of both
@@ -45,7 +45,7 @@ This section highlights the high-level architecture of the sample application.
 
 ### High-Level Architecture
 
-The system has a RAG pipeline reusing `Chat Question and Answer Core` application
+The system has a RAG pipeline reusing `Chat Question & Answer Core` application
 running on the host alongside a typical HMI application which is executing on
 the Windows® Guest VM (virtual machine). A knowledge base is initialized by using the
 contents from a pre-configured folder. The folder contains the knowledge base like user
@@ -61,16 +61,16 @@ the operator to access this knowledge base.
 
 ![HMI augmented worker architecture diagram](./_assets/hmi-augmented-worker-architecture.png)
 
-### Chat Question-and-Answer Core (ChatQnA Core)
+### Chat Question & Answer Core (Chat Q&A Core)
 
-The 'ChatQnA Core' sample application serves as a basic Retrieval Augmented Generation
+The `Chat Q&A Core` sample application serves as a basic Retrieval Augmented Generation
 (RAG) pipeline, allowing users to pose questions and obtain answers, even from their
 private data corpus. This sample application illustrates the construction of RAG pipelines.
 Developed as a single, monolithic application
 with the complete RAG pipeline integrated into one microservice, it is designed for minimal memory usage.
 
-The `ChatQnA Core` application should be setup on the host system. For further details,
-visit [Chat Question-and-Answer Core Sample Application Overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
+The `Chat Q&A Core` application should be setup on the host system. For further details,
+visit [Question & Answer Core sample application overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
 The application is used as is, without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.
@@ -80,7 +80,7 @@ Retriever model are setup based on the HMI application requirement.
 The File Watcher Service runs alongside with HMI application on the Windows environment,
 consistently observing file system activities like creation, modification, and deletion.
 When changes are detected, it sends the pertinent file data over the network to the
-`ChatQnA Core` service for ingestion and contextual processing, facilitating
+`Chat Q&A Core` service for ingestion and contextual processing, facilitating
 Retrieval-Augmented Generation (RAG) workflows. The watcher service logic is shown in
 the following flow diagram:
 
@@ -93,8 +93,8 @@ While HMIs generally serve as interface connecting users to machines, systems, o
 devices, their design and functionality can differ significantly based on the particular
 requirements of an industrial process or the preferences of the developer. In this sample
 application, no reference HMI application is provided. Instead, the user will reuse the
-WebUI of `ChatQnA Core` application to interact with the RAG knowledge base. It would be
-an accurate summary to state that this sample application illustrates how the `ChatQnA Core`
+WebUI of the `Chat Q&A Core` application to interact with the RAG knowledge base. It would be
+an accurate summary to state that this sample application illustrates how the `Chat Q&A Core`
 RAG pipeline can be executed in a Type-2 Hypervisor setup enabling applications like HMI
 to benefit from it.
 

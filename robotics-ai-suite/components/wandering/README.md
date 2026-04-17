@@ -35,7 +35,10 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls|grep -i .deb
+ls|grep -i .deb
+```
+
+```text
 ros-jazzy-wandering_2.3-1_amd64.deb
 ros-jazzy-wandering-aaeon-tutorial_2.3-1_amd64.deb
 ros-jazzy-wandering-irobot-tutorial_2.3-1_amd64.deb
@@ -149,7 +152,10 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help                                                                                                                                            
+make help
+```                                                              
+
+```text         
 Target               Description
 ------               -----------
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
