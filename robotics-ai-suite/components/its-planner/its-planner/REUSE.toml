@@ -1,0 +1,27 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "*/*/debian/**",
+    "docs/images/*",
+    "relocalization/relocalization_bringup/saved_poses.txt",
+    "collab_slam/map/*",
+    "collab_slam/nav2_bringup_collab/maps/turtlebot3_world.pgm",
+    "collab_slam/nav2_bringup_collab/urdf/turtlebot3_waffle.urdf",
+    "collab_slam/nav2_bringup_collab/worlds/*.model",
+    "3rd_party/patches/*/0001-msgs-add-global-Localization-server.patch",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"
+
+
+[[annotations]]
+path = [
+   "3rd_party/patches/*/0002-amcl-add-disable-laser-control-msgs.patch",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "LGPL-2.1-or-later"

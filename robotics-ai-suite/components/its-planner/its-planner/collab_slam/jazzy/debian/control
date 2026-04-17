@@ -1,0 +1,12 @@
+Source: ros-jazzy-nav2-bringup-collab
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-ament-lint-auto, ros-jazzy-ament-cmake-gtest, ros-jazzy-ament-cmake-pytest, ros-jazzy-nav2-common, ros-jazzy-navigation2, ros-jazzy-slam-toolbox, ros-jazzy-launch-ros, ros-jazzy-launch, ros-jazzy-launch-testing,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-nav2-bringup-collab
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-nav2-common, ros-jazzy-navigation2, ros-jazzy-slam-toolbox, ros-jazzy-launch-ros,
+Description: an example bringup system for Nav2 applications

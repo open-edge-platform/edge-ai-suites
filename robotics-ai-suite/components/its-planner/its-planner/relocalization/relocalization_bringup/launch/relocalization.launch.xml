@@ -1,0 +1,13 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<launch>
+    <arg name="mode" default=""/>
+    <node pkg="pose_checker" exec="pose_checker">
+        <param name="mode" value="$(var mode)"/>
+    </node>
+    <node pkg="send_localization" exec="send_localization" />
+</launch>

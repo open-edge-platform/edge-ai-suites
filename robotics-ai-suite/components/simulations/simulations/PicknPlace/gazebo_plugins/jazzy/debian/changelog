@@ -1,0 +1,13 @@
+ros-jazzy-robot-config-plugins (3.6-2) noble; urgency=high
+
+  * Enhance vacuum tool plugin for Gazebo Harmonic compatibility.
+  * Refactor vacuum gripper plugin headers and improve joint management.
+  * Update conveyor belt plugin for Gazebo Harmonic.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 25 Feb 2026 00:00:00 +0000
+
+ros-jazzy-robot-config-plugins (3.6-1) noble; urgency=high
+
+  * Initial release.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Wed, 24 Sep 2025 11:13:40 +0200

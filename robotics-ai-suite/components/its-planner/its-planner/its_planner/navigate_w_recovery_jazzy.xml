@@ -1,0 +1,42 @@
+<!--
+Copyright (C) 2025 Intel Corporation
+
+SPDX-License-Identifier: Apache-2.0
+-->
+
+<!--
+  This Behavior Tree replans the global path periodically at 1 Hz and it also has
+  recovery actions.
+-->
+<root main_tree_to_execute="MainTree">
+    <BehaviorTree ID="MainTree">
+        <RecoveryNode number_of_retries="6" name="NavigateRecovery">
+            <PipelineSequence name="NavigateWithRecovery">
+                <RateController hz="1.0">
+                    <RecoveryNode number_of_retries="1" name="ComputePathRecovery">
+                        <ComputePathToPose goal="{goal}" path="{path}" planner_id="GridBased" server_name="planner_server" server_timeout="10"/>
+                        <ClearEntireCostmap name="ClearGlobalCostmap-Context" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    </RecoveryNode>
+                </RateController>
+                <RecoveryNode number_of_retries="1" name="FollowPathRecovery">
+                    <FollowPath path="{path}" controller_id="FollowPath" server_name="controller_server" server_timeout="10"/>
+                    <ClearEntireCostmap name="ClearLocalCostmap-Context" service_name="local_costmap/clear_entirely_local_costmap"/>
+                </RecoveryNode>
+            </PipelineSequence>
+            <ReactiveFallback name="RecoveryFallback">
+                <GoalUpdated/>
+                <SequenceStar name="RecoveryActions">
+                    <ClearEntireCostmap name="ClearLocalCostmap-Subtree" service_name="local_costmap/clear_entirely_local_costmap"/>
+                    <ClearEntireCostmap name="ClearGlobalCostmap-Subtree" service_name="global_costmap/clear_entirely_global_costmap"/>
+                    <BackUp backup_dist="-0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <BackUp backup_dist="-0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <BackUp backup_dist="-0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <BackUp backup_dist="-0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <BackUp backup_dist="-0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <BackUp backup_dist="0.05" backup_speed="0.13" server_name="behavior_server" server_timeout="10"/>
+                    <Wait wait_duration="1" server_name="behavior_server" server_timeout="10"/>
+                </SequenceStar>
+            </ReactiveFallback>
+        </RecoveryNode>
+    </BehaviorTree>
+</root>

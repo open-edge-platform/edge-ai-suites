@@ -1,0 +1,29 @@
+Source: ros-jazzy-text-to-speech-pkg
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    python3-ament-package,
+    python3-tk,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-std-msgs,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-text-to-speech-pkg
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    libasound2-dev,
+    python3-dev,
+    python3-pip,
+    ros-jazzy-follow-me-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rclpy,
+    ros-jazzy-std-msgs,
+Description: This package contains nodes for converting any text to speech by using openvino's pre-trained forward Tacotron and melGAN models

@@ -1,0 +1,121 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+ <xacro:macro name="ur_vacuum_gripper" params="
+    prefix
+    namespace
+    index 
+    base_link
+    xyz">
+
+    <link name="${prefix}vacuum_gripper${index}">
+      <gravity>0</gravity>
+      <visual name="vacuum_visual_${index}">
+        <origin rpy="0 0 0" xyz="0 0 0.0025" />
+        <geometry>
+          <cylinder radius="0.01" length="0.005"/>
+        </geometry>
+        <material name="transparent">
+          <color rgba="0 0 0 0"/>
+        </material>
+      </visual>
+      <collision name="vacuum_collision_${index}">
+        <origin rpy="0 0 0" xyz="0 0 0.015"/>
+        <geometry>
+          <cylinder radius="0.02" length="0.03"/>
+        </geometry>
+      </collision>
+      <inertial name="vacuum_inertial_${index}">
+        <origin rpy="0 0 0" xyz="0.000000 0.000000 0.0025"/>
+        <mass value="0.1"/> 
+        <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/> 
+      </inertial>
+    </link>
+    
+    <joint name="${prefix}gripper_joint${index}" type="revolute">
+      <axis xyz="1 0 0" />
+      <parent link="${base_link}" />
+      <child link="${prefix}vacuum_gripper${index}" />
+      <origin rpy="0 0.0 0" xyz="${xyz}"/>
+      <limit effort="50.0" velocity="50.0" lower="0" upper="0" />
+      <dynamics damping="0.0" friction="10"/>
+    </joint>
+
+    <!-- Gazebo properties for vacuum gripper -->
+    <gazebo reference="${prefix}vacuum_gripper${index}">
+      <mu1>5.0</mu1>
+      <mu2>5.0</mu2>
+      <minDepth>0.0005</minDepth>
+      <maxVel>0</maxVel>
+      <kp>1e+18</kp>
+      <kd>1000.0</kd>
+      <material>Gazebo/Grey</material>
+    </gazebo>
+  
+    <!-- DetachableJoint Plugin for vacuum gripper -->
+    <gazebo>
+      <plugin name="gz::sim::systems::DetachableJoint" filename="libgz-sim-detachable-joint-system.so">
+        <parent_link>${prefix}vacuum_gripper${index}</parent_link>
+        <child_model>cube_0</child_model>
+        <child_link>link</child_link>
+        <topic>/${namespace}/vacuum_gripper/attach_${index}</topic>
+        <suppress_child_warning>true</suppress_child_warning>
+      </plugin>
+    </gazebo>
+
+</xacro:macro>
+  
+<!-- Base link dla vacuum gripper -->
+<link name="$(arg prefix)vacuum_gripper_base">
+  <gravity>0</gravity>
+  <visual name="vacuum_visual_base">
+    <origin rpy="0 0 0" xyz="0 0 0.00" />
+    <geometry>
+      <cylinder radius="0.03" length="0.005"/>
+    </geometry>
+    <material name="VacuumBase">
+      <color rgba="0.2 0.2 0.2 1.0"/>
+    </material>
+  </visual>
+  <inertial name="vacuum_inertial_base">
+    <origin rpy="0 0 0" xyz="0.0 0.0 0.00"/>
+    <mass value="0.005"/>
+    <inertia ixx="0.049443313556" ixy="0" ixz="0" iyy="0.049443313556" iyz="0" izz="0.049443313556"/>
+  </inertial>
+  <collision name="vacuum_collision_base">
+    <origin rpy="0 0 0" xyz="0 0 0.00"/>
+    <geometry>
+      <cylinder radius="0.03" length="0.005"/>
+    </geometry>
+  </collision>
+</link>
+
+<joint name="$(arg prefix)vacuum_gripper_base_joint" type="fixed">
+  <parent link="$(arg prefix)ee_link" />
+  <child link="$(arg prefix)vacuum_gripper_base" />
+  <origin rpy="0.0 0.0 0.0" xyz="0.0025 0.0 0.0"/>
+  <limit effort="0.0" velocity="0.0" lower="0" upper="0" />
+  <dynamics damping="0.0" friction="10"/>
+</joint>
+
+<!-- Gazebo properties dla base -->
+<gazebo reference="$(arg prefix)vacuum_gripper_base">
+  <material>Gazebo/DarkGrey</material>
+</gazebo>
+ 
+<!-- Instancje vacuum gripper -->
+<xacro:ur_vacuum_gripper 
+  prefix="$(arg prefix)" 
+  namespace="$(arg namespace)" 
+  index="1" 
+  base_link="$(arg prefix)vacuum_gripper_base" 
+  xyz="0.0 0.0125 0.002"/>
+ 
+<xacro:ur_vacuum_gripper 
+  prefix="$(arg prefix)" 
+  namespace="$(arg namespace)" 
+  index="2" 
+  base_link="$(arg prefix)vacuum_gripper_base" 
+  xyz="0.0 -0.0125 0.002"/>
+
+</robot>

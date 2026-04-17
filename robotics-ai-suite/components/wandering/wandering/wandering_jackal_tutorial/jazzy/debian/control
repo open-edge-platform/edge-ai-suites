@@ -1,0 +1,22 @@
+Source: ros-jazzy-wandering-jackal-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-wandering-jackal-tutorial
+Architecture: any
+Depends: ros-jazzy-imu-tools,
+         ros-jazzy-tf2-ros,
+         ros-jazzy-realsense2-camera,
+         ros-jazzy-wandering,
+         ros-jazzy-depthimage-to-laserscan,
+         ros-jazzy-nav2-bringup,
+         ros-jazzy-rtabmap-ros,
+         ros-jazzy-imu-filter-madgwick
+Recommends: ros-jazzy-clearpath-robot
+Description: Intel Wandering tutorial on Clearpath Robotics Jackal robot.
+ This package depends on the Clearpath Robot metapackage 'ros-jazzy-clearpath-robot'.
+ Instructions on how to add the Clearpath Package Server to your APT database are
+ provided by the Clearpath Robotics documentation:
+ https://docs.clearpathrobotics.com/docs/ros/installation/robot/#clearpath-package-server

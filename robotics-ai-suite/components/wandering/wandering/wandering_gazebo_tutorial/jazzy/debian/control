@@ -1,0 +1,12 @@
+Source: ros-jazzy-wandering-gazebo-tutorial
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-ament-lint-auto,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-wandering-gazebo-tutorial
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-launch-ros, ros-jazzy-nav2-bringup, ros-jazzy-turtlebot3-gazebo, ros-jazzy-rtabmap-demos, ros-jazzy-wandering,
+Description: Tutorial for Wandering application with Gazebo

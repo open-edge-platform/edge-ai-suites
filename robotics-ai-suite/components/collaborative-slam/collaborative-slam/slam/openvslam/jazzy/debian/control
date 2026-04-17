@@ -1,0 +1,83 @@
+Source: ros-jazzy-univloc-slam
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    liborb-lze-dev,
+    libze1,
+    libze-dev,
+    ros-jazzy-libg2o,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-rclcpp,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-dbow2,
+    ros-jazzy-image-transport,
+    ros-jazzy-image-transport-plugins,
+    libspdlog-dev,
+    nlohmann-json3-dev,
+    libopencv-dev,
+    libeigen3-dev,
+    liblapack-dev,
+    libva-dev,
+    libyaml-cpp-dev,
+    libboost-dev,
+    python3-ament-package
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-univloc-slam-dev
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    liborb-lze-dev,
+    libze-dev,
+    ros-jazzy-libg2o
+Description: [internal] Development headers and all libraries for SLAM algorithm
+Provides: ros-jazzy-univloc-slam
+Conflicts: ros-jazzy-univloc-slam
+Replaces: ros-jazzy-univloc-slam
+
+Package: ros-jazzy-univloc-slam-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    liborb-lze-dev,
+    ros-jazzy-libg2o,
+    ros-jazzy-rclcpp,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-dbow2
+Description: Intel GPU Level-Zero accelerated package for SLAM algorithm
+Provides: ros-jazzy-univloc-slam
+Conflicts: ros-jazzy-univloc-slam
+Replaces: ros-jazzy-univloc-slam
+
+Package: ros-jazzy-univloc-slam-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-libg2o,
+    ros-jazzy-rclcpp,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-dbow2
+Description: Intel AVX/AVX2 CPU instruction accelerated package for SLAM algorithm
+Provides: ros-jazzy-univloc-slam
+Conflicts: ros-jazzy-univloc-slam
+Replaces: ros-jazzy-univloc-slam
+
+Package: ros-jazzy-univloc-slam-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-libg2o,
+    ros-jazzy-rclcpp,
+    ros-jazzy-cv-bridge,
+    ros-jazzy-tf2-eigen,
+    ros-jazzy-dbow2
+Description: Intel SSE-only CPU instruction accelerated package for SLAM algorithm
+Provides: ros-jazzy-univloc-slam
+Conflicts: ros-jazzy-univloc-slam
+Replaces: ros-jazzy-univloc-slam

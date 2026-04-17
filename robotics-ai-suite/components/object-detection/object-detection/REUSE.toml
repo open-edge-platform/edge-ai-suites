@@ -1,0 +1,32 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "*/debian/**",
+    "**/*.labels",
+    "**/*.png",
+    "**/*.jpg",
+    "**/*.onnx",
+    "**/debian/**",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"
+
+
+[[annotations]]
+path = [
+    "yolov8/src/yolo/src/toml.hpp"
+]
+SPDX-FileCopyrightText = "Mark Gillard <mark.gillard@outlook.com.au>"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = [
+    "yolov8/src/yolo/src/CLI11.hpp"
+]
+SPDX-FileCopyrightText = "2017-2022 University of Cincinnati, developed by Henry Schreiner under NSF AWARD 1414736. All rights reserved."
+SPDX-License-Identifier = "BSD-3-Clause"

@@ -1,0 +1,25 @@
+Source: ros-jazzy-univloc-msgs
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-rclcpp,
+    ros-jazzy-std-msgs,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-rosidl-default-generators
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-univloc-msgs
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-rclcpp,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-std-msgs,
+    ros-jazzy-rosidl-default-runtime
+Description: Message(s) for Collaborative SLAM package

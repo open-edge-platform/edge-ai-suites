@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:macro name="wheel" params="name gazebo parent_link *origin">
+
+  <xacro:property name="mass"   value="0.2" />
+  <xacro:property name="radius" value="${4.0*cm2m}" />
+  <xacro:property name="width"  value="${3.7*cm2m}" />
+
+  <xacro:property name="wheel_link_name"  value="${name}_wheel"/>
+  <xacro:property name="wheel_joint_name" value="${wheel_link_name}_joint"/>
+
+  <joint name="${wheel_joint_name}" type="continuous">
+    <parent link="${parent_link}"/>
+    <child link="${wheel_link_name}"/>
+    <xacro:insert_block name="origin"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="${wheel_link_name}">
+    <visual>
+      <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      <geometry>
+        <cylinder length="${width}" radius="${radius}"/>
+      </geometry>
+      <!-- Give black color to wheels in Rviz -->
+      <xacro:insert_block name="material_black"/>
+    </visual>
+    <collision>
+      <geometry>
+        <cylinder length="${width}" radius="${radius}"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="${mass}" radius="${radius}"
+      length="${width}" />
+  </link>
+
+  <gazebo reference="${wheel_link_name}">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000.0</kp>
+    <kd>100.0</kd>
+    <minDepth>0.0001</minDepth>
+    <maxVel>1.0</maxVel>
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+
+  <xacro:if value="${gazebo == 'classic'}">
+    <ros2_control name="${wheel_link_name}_controller" type="system">
+      <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </hardware>
+      <joint name="${wheel_joint_name}">
+        <state_interface name="velocity" />
+        <state_interface name="position" />
+        <command_interface name="velocity" />
+      </joint>
+    </ros2_control>
+  </xacro:if>
+
+  <xacro:if value="${gazebo == 'ignition'}">
+    <ros2_control name="${wheel_link_name}_controller" type="system">
+      <hardware>
+        <plugin>ign_ros2_control/IgnitionSystem</plugin>
+      </hardware>
+      <joint name="${wheel_joint_name}">
+        <state_interface name="velocity" />
+        <state_interface name="position" />
+        <command_interface name="velocity" />
+      </joint>
+    </ros2_control>
+  </xacro:if>
+
+</xacro:macro>
+</robot>

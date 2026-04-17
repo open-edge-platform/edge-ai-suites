@@ -1,0 +1,17 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "**/*.tar.gz",
+    "data/*.txt",
+    # license comments  could be added after the %YAML:1.0 line
+    # but even then OpenCV’s parsers may still have issues
+    # (no guarantees across versions)
+    "data/*.yml",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"

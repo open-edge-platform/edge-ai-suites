@@ -1,0 +1,12 @@
+Source: ros-jazzy-robot-config
+Section: misc
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), ros-jazzy-ament-lint-auto <!nocheck>, ros-jazzy-ament-lint-common <!nocheck>, ros-jazzy-builtin-interfaces, ros-jazzy-geometry-msgs, ros-jazzy-moveit-core, ros-jazzy-std-msgs, ros-jazzy-xacro, ros-jazzy-ros-gz
+Homepage:
+Standards-Version: 3.9.2
+
+Package: ros-jazzy-robot-config
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, python3-setuptools, ros-jazzy-action-msgs, ros-jazzy-control-msgs, ros-jazzy-controller-interface, ros-jazzy-controller-manager, ros-jazzy-controller-manager-msgs, ros-jazzy-ros-gz, ros-jazzy-gz-sim-vendor, ros-jazzy-gazebo-msgs, ros-jazzy-geometry-msgs, ros-jazzy-hardware-interface, ros-jazzy-joint-state-broadcaster, ros-jazzy-joint-trajectory-controller, ros-jazzy-launch-ros, ros-jazzy-moveit-core, ros-jazzy-moveit-msgs, ros-jazzy-moveit-planners-ompl, ros-jazzy-moveit-ros-move-group, ros-jazzy-moveit-simple-controller-manager, ros-jazzy-nav2-common, ros-jazzy-nav2-controller, ros-jazzy-navigation2, ros-jazzy-rclpy, ros-jazzy-robot-state-publisher, ros-jazzy-ros2controlcli, ros-jazzy-rosidl-default-runtime, ros-jazzy-slam-toolbox, ros-jazzy-std-srvs, ros-jazzy-trajectory-msgs, ros-jazzy-xacro
+Description: This package demonstrate spawning multiple Robotic arms in Gazebo simulation environment separated by their own namespace

@@ -1,0 +1,40 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+export LDFLAGS=-pthread -lfmt
+export PKG_CONFIG_PATH=/opt/ros/humble/lib/pkgconfig
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG  -Wno-error=maybe-uninitialized
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+export ROS_VERSION=2
+
+%:
+	dh $@ -v --buildsystem=cmake --parallel --builddirectory=.obj-$(DEB_HOST_GNU_TYPE) \
+	--sourcedirectory=$(CURDIR)
+
+override_dh_auto_configure:
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_configure -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/humble \
+		-DAMENT_PREFIX_PATH=/opt/ros/humble \
+		-DCMAKE_PREFIX_PATH=/opt/ros/humble \
+		-DUSE_PREBUILT_DEPS=ON \
+		 
+
+override_dh_auto_build:
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_build
+
+override_dh_auto_test:
+	echo -- Running tests. Even if one of them fails the build is not canceled.
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_test
+
+override_dh_shlibdeps:
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_shlibdeps -l$(CURDIR)/debian/ros-humble-univloc-msgs//opt/ros/humble/lib/
+
+override_dh_auto_install:
+	if [ -f "/opt/ros/humble/setup.sh" ]; then . "/opt/ros/humble/setup.sh"; fi && \
+	dh_auto_install

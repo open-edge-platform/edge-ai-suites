@@ -1,0 +1,12 @@
+Source: ros-humble-nav2-bringup-collab
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-humble-ament-cmake, ros-humble-ament-lint-common, ros-humble-ament-lint-auto, ros-humble-ament-cmake-gtest, ros-humble-ament-cmake-pytest, ros-humble-nav2-common, ros-humble-navigation2, ros-humble-slam-toolbox, ros-humble-launch-ros, ros-humble-launch, ros-humble-launch-testing,
+Standards-Version: 4.1.4
+
+Package: ros-humble-nav2-bringup-collab
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-humble-nav2-common, ros-humble-navigation2, ros-humble-slam-toolbox, ros-humble-launch-ros, ros-humble-robotics-sdk-license,
+Description: an example bringup system for Nav2 applications

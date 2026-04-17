@@ -1,0 +1,28 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# These contents may have been developed with support from one or more
+# Intel-operated generative artificial intelligence solutions.
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+  scrape_timeout: 4s
+
+scrape_configs:
+  # ROS2 KPI Metrics Exporter
+  - job_name: 'ros2-kpi'
+    static_configs:
+      - targets: ['localhost:9092']
+        labels:
+          instance: 'local'
+          service: 'ros2-kpi-exporter'
+    metric_relabel_configs:
+      # Keep all ros2_* metrics
+      - source_labels: [__name__]
+        regex: 'ros2_.*'
+        action: keep
+  
+  # Self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

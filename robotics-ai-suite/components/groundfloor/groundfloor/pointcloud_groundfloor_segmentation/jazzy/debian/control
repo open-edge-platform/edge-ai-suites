@@ -1,0 +1,25 @@
+Source: ros-jazzy-pointcloud-groundfloor-segmentation
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),  ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-ament-lint-auto, ros-jazzy-rclcpp, ros-jazzy-sensor-msgs, ros-jazzy-tf2-ros, ros-jazzy-tf2-eigen, ros-jazzy-pcl-conversions, ros-jazzy-nav2-bringup, ros-jazzy-tf2-geometry-msgs, ros-jazzy-depth-image-proc, libpcl-dev
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-pointcloud-groundfloor-segmentation
+Architecture: any
+Multi-Arch: foreign
+Depends:  ${misc:Depends},
+          ${shlibs:Depends},
+          ros-jazzy-ament-cmake,
+          ros-jazzy-ament-lint-common,
+          ros-jazzy-ament-lint-auto,
+          ros-jazzy-rclcpp,
+          ros-jazzy-sensor-msgs,
+          ros-jazzy-tf2-ros,
+          ros-jazzy-tf2-eigen,
+          ros-jazzy-pcl-conversions,
+          ros-jazzy-nav2-bringup,
+          ros-jazzy-tf2-geometry-msgs,
+          ros-jazzy-depth-image-proc,
+          libpcl-dev
+Description: Pointcloud groundfloor segmentation, a ROS package for real-time groundfloor extraction from 3D pointcloud.

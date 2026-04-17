@@ -1,0 +1,19 @@
+Source: ros-jazzy-follow-me-interfaces
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-generators,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-follow-me-interfaces
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-rclcpp,
+    ros-jazzy-rosidl-default-runtime,
+Description: Custom ROS msg for hand gesture category

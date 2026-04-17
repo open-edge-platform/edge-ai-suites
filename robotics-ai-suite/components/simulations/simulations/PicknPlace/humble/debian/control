@@ -1,0 +1,12 @@
+Source: ros-humble-picknplace-simulation
+Section: metapackages 
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Rules-Requires-Root: no
+
+Package: ros-humble-picknplace-simulation
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-humble-robot-config, ros-humble-robot-config-plugins, ros-humble-picknplace
+Description: Meta Package for pick n place simulation deb files

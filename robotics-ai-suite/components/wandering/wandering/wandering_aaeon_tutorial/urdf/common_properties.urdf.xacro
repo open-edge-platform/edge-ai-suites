@@ -1,0 +1,157 @@
+<?xml version="1.0" ?>
+<!-- Various useful macros -->
+<robot name="xacro_properties" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="inertial_cuboid_with_pose" params="mass x y z *origin">
+    <inertial>
+      <mass value="${mass}" />
+      <xacro:insert_block name="origin"/>
+      <inertia ixx="${(1/12) * mass * (y*y + z*z)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (x*x + z*z)}" iyz="0.0"
+        izz="${(1/12) * mass * (x*x + y*y)}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_cuboid" params="mass x y z">
+    <xacro:inertial_cuboid_with_pose mass="${mass}" x="${x}" y="${y}" z="${z}">
+      <origin xyz="0 0 0" />
+    </xacro:inertial_cuboid_with_pose>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_cylinder_with_pose" params="mass radius length *origin">
+    <inertial>
+      <xacro:insert_block name="origin"/>
+      <mass value="${mass}" />
+      <inertia ixx="${(1/12) * mass * (3*radius*radius + length*length)}" ixy="0.0" ixz="0.0"
+        iyy="${(1/12) * mass * (3*radius*radius + length*length)}" iyz="0.0"
+        izz="${(1/2) * mass * (radius*radius)}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_cylinder" params="mass radius length">
+    <xacro:inertial_cylinder_with_pose mass="${mass}" radius="${radius}" length="${length}">
+      <origin xyz="0 0 0" />
+    </xacro:inertial_cylinder_with_pose>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_sphere" params="mass radius">
+    <inertial>
+      <mass value="${mass}" />
+      <inertia ixx="${(2/5) * mass * radius * radius}" ixy="0.0" ixz="0.0"
+	             iyy="${(2/5) * mass * radius * radius}" iyz="0.0"
+	             izz="${(2/5) * mass * radius * radius}" />
+    </inertial>
+  </xacro:macro>
+
+  <xacro:macro name="inertial_dummy">
+    <xacro:inertial_cuboid mass="0.01" x="0.01" y="0.01" z="0.01"/>
+  </xacro:macro>
+
+  <xacro:macro name="ray_sensor" 
+    params="sensor_name gazebo update_rate visualize 
+            h_samples h_res h_min_angle h_max_angle
+            v_samples:=1 v_res:=1 v_min_angle:=0 v_max_angle:=0
+            r_min r_max r_res *plugin">
+    <!-- Classic -->
+    <xacro:if value="${gazebo == 'classic'}">
+      <sensor type="ray" name="${sensor_name}">
+        <update_rate>${update_rate}</update_rate>
+        <visualize>${visualize}</visualize>
+        <always_on>true</always_on>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>${h_samples}</samples>
+              <resolution>${h_res}</resolution>
+              <min_angle>${h_min_angle}</min_angle>
+              <max_angle>${h_max_angle}</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>${v_samples}</samples>
+              <resolution>${v_res}</resolution>
+              <min_angle>${v_min_angle}</min_angle>
+              <max_angle>${v_max_angle}</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>${r_min}</min>
+            <max>${r_max}</max>
+            <resolution>${r_res}</resolution>
+          </range>
+        </ray>
+        <!-- Noise is currently disabled -->
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.0</stddev>
+        </noise>
+        <xacro:insert_block name="plugin"/>
+      </sensor>
+    </xacro:if>
+
+    <!-- Ignition -->
+    <xacro:if value="${gazebo == 'ignition'}">
+      <sensor name="${sensor_name}" type="gpu_lidar">
+        <update_rate>${update_rate}</update_rate>
+        <visualize>${visualize}</visualize>
+        <always_on>true</always_on>
+        <lidar>
+          <scan>
+            <horizontal>
+              <samples>${h_samples}</samples>
+              <resolution>${h_res}</resolution>
+              <min_angle>${h_min_angle}</min_angle>
+              <max_angle>${h_max_angle}</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>${v_samples}</samples>
+              <resolution>${v_res}</resolution>
+              <min_angle>${v_min_angle}</min_angle>
+              <max_angle>${v_max_angle}</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>${r_min}</min>
+            <max>${r_max}</max>
+            <resolution>${r_res}</resolution>
+          </range>
+        </lidar>
+      </sensor>
+    </xacro:if>
+  </xacro:macro>
+
+  <!-- Conversion macros -->
+  <xacro:property name="cm2m"    value="${1/100.0}"/>
+  <xacro:property name="mm2m"    value="${1/1000.0}"/>
+  <xacro:property name="in2m"    value="0.0254"/>
+  <xacro:property name="deg2rad" value="${pi/180.0}"/>
+
+  <!-- Material colors -->
+  <xacro:property name="material_black">
+    <material name="black">
+      <color rgba="0.1 0.1 0.1 1"/>
+    </material>
+  </xacro:property>
+
+  <!-- Material macros -->
+  <xacro:macro name="material_black">
+    <visual>
+      <material>
+        <diffuse>0 0 0 1</diffuse>
+        <specular>${80/255} ${80/255} ${80/255} 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+  </xacro:macro>
+
+  <xacro:macro name="material_darkgray">
+    <visual>
+      <material>
+        <diffuse>${3/255} ${3/255} ${3/255} 1</diffuse>
+        <specular>0 0 0 1</specular>
+        <emissive>0 0 0 1</emissive>
+      </material>
+    </visual>
+  </xacro:macro>
+
+</robot>

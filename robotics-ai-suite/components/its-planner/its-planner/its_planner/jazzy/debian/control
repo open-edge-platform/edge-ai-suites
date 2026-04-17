@@ -1,0 +1,12 @@
+Source: ros-jazzy-its-planner
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-ament-lint-auto, ros-jazzy-ament-cmake-gtest, ros-jazzy-rclcpp, ros-jazzy-rclcpp-action, ros-jazzy-rclcpp-lifecycle, ros-jazzy-std-msgs, ros-jazzy-geometry-msgs, ros-jazzy-geometry-msgs, ros-jazzy-visualization-msgs, ros-jazzy-nav-msgs, ros-jazzy-tf2-ros, ros-jazzy-nav2-core, ros-jazzy-builtin-interfaces, ros-jazzy-pluginlib, libboost-dev, libboost-serialization-dev
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-its-planner
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-rcl, ros-jazzy-rclcpp, ros-jazzy-rclcpp-lifecycle, ros-jazzy-visualization-msgs, ros-jazzy-nav2-core, ros-jazzy-class-loader, ros-jazzy-rcutils, ros-jazzy-nav2-costmap-2d, ros-jazzy-console-bridge-vendor, ros-jazzy-rclcpp-action, ros-jazzy-std-msgs, ros-jazzy-nav-msgs, ros-jazzy-geometry-msgs, ros-jazzy-builtin-interfaces, ros-jazzy-tf2-ros, ros-jazzy-pluginlib, libboost-serialization1.74.0,
+Description: Intelligent Sampling and Two-Way Search

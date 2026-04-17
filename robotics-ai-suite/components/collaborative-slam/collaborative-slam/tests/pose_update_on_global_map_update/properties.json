@@ -1,0 +1,5 @@
+{
+    "image": "amr-registry.caas.intel.com/edge-controls/amr-build-tests",
+    "tag":"humble",
+    "skip": false
+}

@@ -1,0 +1,11 @@
+Source: ros-jazzy-turtlesim-tutorial-demo
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: debhelper (>= 9.0.0), python3-pytest <!nocheck>, ros-jazzy-ament-copyright <!nocheck>, ros-jazzy-ament-flake8 <!nocheck>, ros-jazzy-ament-pep257 <!nocheck>, python3-all, python3-setuptools, dh-python
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-turtlesim-tutorial-demo
+Architecture: any
+Depends: ${python3:Depends}, ${misc:Depends}, ros-jazzy-turtlesim, ros-jazzy-rqt, ros-jazzy-rqt-common-plugins, ros-jazzy-rviz2,
+Description: turtlesim is a tool made for teaching ROS and ROS packages - sample application

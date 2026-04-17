@@ -1,0 +1,10 @@
+Source: ros-jazzy-wandering-irobot-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-wandering-irobot-tutorial
+Architecture: any
+Depends: ros-jazzy-irobot-create-control, ros-jazzy-irobot-create-description, ros-jazzy-irobot-create-msgs, ros-jazzy-imu-tools, ros-jazzy-tf2-ros, ros-jazzy-realsense2-camera, ros-jazzy-realsense2-description, ros-jazzy-wandering, ros-jazzy-rplidar-ros, ros-jazzy-nav2-bringup, ros-jazzy-rtabmap-ros, ros-jazzy-topic-tools, ros-jazzy-joy, ros-jazzy-teleop-twist-joy, ros-jazzy-twist-mux, ros-jazzy-pointcloud-groundfloor-segmentation, ros-jazzy-rviz2
+Description: Intel Wandering tutorial on iRobot create 3

@@ -1,0 +1,66 @@
+<?xml version="1.0" ?>
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+<xacro:macro name="layer_tmpl" params="name parent_link dim_x dim_y dim_z **visual_origin **link_origin">
+
+  <link name="${name}_link">
+    <visual>
+      <xacro:insert_block name="visual_origin"/>
+      <geometry>
+        <box size="${dim_x} ${dim_y} ${dim_z}"/>
+      </geometry>
+      <material name="white"/>
+    </visual>
+
+    <collision>
+      <geometry>
+        <box size="${dim_x} ${dim_y} ${dim_z}"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${name}_joint" type="fixed">
+    <parent link="${parent_link}"/>
+    <child link="${name}_link"/>
+    <xacro:insert_block name="link_origin"/>
+  </joint>
+
+</xacro:macro>
+
+<xacro:macro name="layer" params="name parent_link *origin">
+  <xacro:layer_tmpl name="${name}"
+                    parent_link="${parent_link}"
+                    dim_x="${chassis_x_dim}"
+                    dim_y="${chassis_y_dim}"
+                    dim_z="${chassis_z_dim}">
+    <first/>
+    <second>
+      <xacro:insert_block name="origin"/>
+    </second>
+  </xacro:layer_tmpl>
+</xacro:macro>
+
+<xacro:macro name="arduino" params="name parent_link *origin">
+  <xacro:property name="arduino_x_dim" value="${56*mm2m}"/>
+  <xacro:property name="arduino_y_dim" value="${85*mm2m}"/>
+  <xacro:property name="arduino_z_dim" value="${2*mm2m}"/>
+
+  <xacro:include filename="$(find wandering_aaeon_tutorial)/urdf/sensors/imu.urdf.xacro" />
+
+  <xacro:layer_tmpl name="${name}"
+                    parent_link="${parent_link}"
+                    dim_x="${arduino_x_dim}"
+                    dim_y="${arduino_y_dim}"
+                    dim_z="${arduino_z_dim}">
+    <first/>
+    <second>
+      <xacro:insert_block name="origin"/>
+    </second>
+  </xacro:layer_tmpl>
+
+  <xacro:imu_sensor name="imu" parent="${name}_link" gazebo="$(arg gazebo)" namespace="$(arg namespace)">
+    <origin rpy="0 0 0" xyz="-0.002 -0.0075 0"/>
+  </xacro:imu_sensor>
+</xacro:macro>
+
+</robot>

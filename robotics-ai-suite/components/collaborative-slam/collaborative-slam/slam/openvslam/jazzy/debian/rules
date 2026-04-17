@@ -1,0 +1,172 @@
+#!/usr/bin/make -f
+
+export DH_VERBOSE=1
+export LDFLAGS=-pthread -lfmt
+export PKG_CONFIG_PATH=/opt/ros/jazzy/lib/pkgconfig
+export DEB_CXXFLAGS_MAINT_APPEND=-DNDEBUG  -Wno-error=maybe-uninitialized
+
+DEB_HOST_GNU_TYPE ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+
+export CPPFLAGS := $(shell dpkg-buildflags --get CPPFLAGS) -Wno-aggressive-loop-optimizations
+export CFLAGS   := $(shell dpkg-buildflags --get CFLAGS) -Wno-aggressive-loop-optimizations
+export CXXFLAGS := $(shell dpkg-buildflags --get CXXFLAGS) -Wno-aggressive-loop-optimizations
+
+export ROS_VERSION=2
+export ROS_DISTRO=jazzy
+
+BUILD_LZE_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-lze
+BUILD_SSE_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-sse
+BUILD_AVX2_DIR=$(CURDIR)/.obj-$(DEB_HOST_GNU_TYPE)-avx2
+
+%:
+	dh $@ -v --buildsystem=cmake --parallel --sourcedirectory=$(CURDIR)
+
+override_dh_auto_configure:
+	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+	dh_auto_configure \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_LZE_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/jazzy \
+		-DAMENT_PREFIX_PATH=/opt/ros/jazzy \
+		-DCMAKE_PREFIX_PATH=/opt/ros/jazzy \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DBUILD_NATIVE=OFF \
+		-DUSE_GPU_CM=1 \
+		-DBUILD_SHARED_LIBS=ON \
+		-DCMAKE_CXX_FLAGS=" -mavx2" -DCMAKE_C_FLAGS=" -mavx2"
+	dh_auto_configure \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_AVX2_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/jazzy \
+		-DAMENT_PREFIX_PATH=/opt/ros/jazzy \
+		-DCMAKE_PREFIX_PATH=/opt/ros/jazzy \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DBUILD_NATIVE=OFF \
+		-DCMAKE_CXX_FLAGS=" -mavx2" -DCMAKE_C_FLAGS=" -mavx2" \
+		-DBUILD_SHARED_LIBS=ON
+	dh_auto_configure \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_SSE_DIR) -- \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/opt/ros/jazzy \
+		-DAMENT_PREFIX_PATH=/opt/ros/jazzy \
+		-DCMAKE_PREFIX_PATH=/opt/ros/jazzy \
+		-DUSE_PREBUILT_DEPS=ON \
+		-DBUILD_NATIVE=OFF \
+		-DUSE_SSE_ORB=1 \
+		-DUSE_SSE_FP_MATH=1 \
+		-DBUILD_SHARED_LIBS=ON
+
+
+override_dh_auto_clean:
+	dh_auto_clean -O--builddir=$(BUILD_SSE_DIR) || true
+	dh_auto_clean -O--builddir=$(BUILD_LZE_DIR) || true  
+	dh_auto_clean -O--builddir=$(BUILD_AVX2_DIR) || true
+	$(RM) -r $(BUILD_SSE_DIR) $(BUILD_LZE_DIR) $(BUILD_AVX2_DIR)
+
+
+override_dh_auto_build:
+	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+	dh_auto_build 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_LZE_DIR) -- && \
+	dh_auto_build 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_SSE_DIR) -- && \
+	dh_auto_build 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_AVX2_DIR) --
+
+override_dh_auto_test:
+	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+	dh_auto_test	 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_LZE_DIR) -- && \
+	dh_auto_test	 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_SSE_DIR) -- && \
+	dh_auto_test	 	\
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_AVX2_DIR) --
+
+override_dh_shlibdeps:
+	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+	dh_shlibdeps  \
+		-l$(CURDIR)/debian/ros-jazzy-univloc-slam-lze//opt/ros/jazzy/lib && \
+	dh_shlibdeps  \
+		-l$(CURDIR)/debian/ros-jazzy-univloc-slam-sse//opt/ros/jazzy/lib && \
+	dh_shlibdeps \
+		-l$(CURDIR)/debian/ros-jazzy-univloc-slam-avx2//opt/ros/jazzy/lib
+
+override_dh_auto_install:
+	# In case we're installing to a non-standard location, look for a setup.sh
+	# in the install tree and source it.  It will set things like
+	# CMAKE_PREFIX_PATH, PKG_CONFIG_PATH, and PYTHONPATH.
+	if [ -f "/opt/ros/jazzy/setup.sh" ]; then . "/opt/ros/jazzy/setup.sh"; fi && \
+	dh_auto_install \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_LZE_DIR) --
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/bin" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/bin $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy; \
+	fi && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy/lib/lze && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/lze && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/lib" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy/lib/lze; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/lze; \
+	fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/include" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy; \
+	fi && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/share $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy
+	dh_auto_install \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_SSE_DIR) --
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/bin" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/bin $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy; \
+	fi && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy/lib/sse && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/sse && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/lib" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy/lib/sse; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/sse; \
+	fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/include" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy; \
+	fi  && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/share $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy
+	dh_auto_install \
+		--sourcedirectory=$(CURDIR) \
+		-O--builddir=$(BUILD_AVX2_DIR) --
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/bin" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/bin $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy; \
+	fi && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy/lib/avx2 && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/avx2 && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/lib" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy/lib/avx2; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/lib/* $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/avx2; \
+	fi && \
+	if [ -d "$(CURDIR)/debian/tmp/opt/ros/jazzy/include" ]; then \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy; \
+		cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/include $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy; \
+	fi  && \
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/share $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy
+	cp -rf $(CURDIR)/debian/tmp/opt/ros/jazzy/share $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy
+
+	# Create symlinks
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy/lib && \
+	ln -sf lze/libunivloc_slam.so $(CURDIR)/debian/ros-jazzy-univloc-slam-lze/opt/ros/jazzy/lib/libunivloc_slam.so && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy/lib && \
+	ln -sf sse/libunivloc_slam.so $(CURDIR)/debian/ros-jazzy-univloc-slam-sse/opt/ros/jazzy/lib/libunivloc_slam.so && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy/lib && \
+	ln -sf avx2/libunivloc_slam.so $(CURDIR)/debian/ros-jazzy-univloc-slam-avx2/opt/ros/jazzy/lib/libunivloc_slam.so && \
+	install -d $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib && \
+	ln -sf sse/libunivloc_slam.so $(CURDIR)/debian/ros-jazzy-univloc-slam-dev/opt/ros/jazzy/lib/libunivloc_slam.so

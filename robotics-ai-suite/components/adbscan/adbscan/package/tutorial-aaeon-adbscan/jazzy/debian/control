@@ -1,0 +1,20 @@
+Source: ros-jazzy-aaeon-adbscan-tutorial
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-aaeon-adbscan-tutorial
+Architecture: any
+Depends:
+    ros-jazzy-aaeon-ros2-amr-interface,
+    ros-jazzy-adbscan-oneapi | ros-jazzy-adbscan-ros2,
+    ros-jazzy-fast-mapping,
+    ros-jazzy-imu-filter-madgwick,
+    ros-jazzy-joy-linux,
+    ros-jazzy-realsense2-camera,
+    ros-jazzy-robot-localization,
+    ros-jazzy-rviz2,
+    ros-jazzy-teleop-twist-keyboard,
+    ros-jazzy-twist-mux,
+Description: AAEON Robot ADBSCAN mapping with FastMapping algorithm using Realsense camera

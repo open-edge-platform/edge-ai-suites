@@ -1,0 +1,80 @@
+Source: ros-humble-univloc-slam
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    libboost-dev,
+    libeigen3-dev,
+    liblapack-dev,
+    libopencv-dev,
+    liborb-lze-dev,
+    libspdlog-dev,
+    libva-dev,
+    libyaml-cpp-dev,
+    libze-dev,
+    libze1,
+    nlohmann-json3-dev,
+    python3-ament-package,
+    ros-humble-ament-cmake-gtest,
+    ros-humble-ament-cmake,
+    ros-humble-ament-lint-auto,
+    ros-humble-ament-lint-common,
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-libg2o-intel-sse,
+    ros-humble-rclcpp,
+Standards-Version: 4.1.4
+
+Package: ros-humble-univloc-slam-dev
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    liborb-lze-dev,
+    ros-humble-libg2o-intel-sse
+Description: [internal] Development headers and all libraries for SLAM algorithm
+Provides: ros-humble-univloc-slam
+Conflicts: ros-humble-univloc-slam
+Replaces: ros-humble-univloc-slam
+
+Package: ros-humble-univloc-slam-lze
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    liborb-lze,
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-libg2o-intel-avx2,
+    ros-humble-rclcpp,
+    ros-humble-tf2-eigen,
+Description: Intel GPU Level-Zero accelerated package for SLAM algorithm
+Provides: ros-humble-univloc-slam
+Conflicts: ros-humble-univloc-slam
+Replaces: ros-humble-univloc-slam
+
+Package: ros-humble-univloc-slam-avx2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-libg2o-intel-avx2,
+    ros-humble-rclcpp,
+    ros-humble-cv-bridge,
+    ros-humble-tf2-eigen,
+    ros-humble-dbow2,
+Description: Intel AVX/AVX2 CPU instruction accelerated package for SLAM algorithm
+Provides: ros-humble-univloc-slam
+Conflicts: ros-humble-univloc-slam
+Replaces: ros-humble-univloc-slam
+
+Package: ros-humble-univloc-slam-sse
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-cv-bridge,
+    ros-humble-dbow2,
+    ros-humble-libg2o-intel-sse,
+    ros-humble-rclcpp,
+    ros-humble-tf2-eigen,
+Description: Intel SSE-only CPU instruction accelerated package for SLAM algorithm
+Provides: ros-humble-univloc-slam
+Conflicts: ros-humble-univloc-slam
+Replaces: ros-humble-univloc-slam

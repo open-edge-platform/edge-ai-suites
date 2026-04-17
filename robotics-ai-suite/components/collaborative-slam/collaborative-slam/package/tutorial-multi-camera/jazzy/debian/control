@@ -1,0 +1,14 @@
+Source: ros-jazzy-cslam-tutorial-multi-camera
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-cslam-tutorial-multi-camera
+Architecture: any
+Depends:
+    ros-jazzy-cslam-tutorial-common,
+    ros-jazzy-bagfile-multi-camera,
+    python3-matplotlib,
+    ros-jazzy-robot-localization
+Description: Intel Collaborative SLAM tutorial for Multi Camera

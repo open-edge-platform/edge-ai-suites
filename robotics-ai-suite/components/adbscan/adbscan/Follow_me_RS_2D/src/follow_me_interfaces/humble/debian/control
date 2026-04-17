@@ -1,0 +1,19 @@
+Source: ros-humble-follow-me-interfaces
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    ros-humble-ament-cmake,
+    ros-humble-ament-lint-auto,
+    ros-humble-ament-lint-common,
+    ros-humble-rclcpp,
+    ros-humble-rosidl-default-generators,
+Standards-Version: 4.1.4
+
+Package: ros-humble-follow-me-interfaces
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-humble-rclcpp,
+    ros-humble-rosidl-default-runtime,
+Description: Custom ROS msg for hand gesture category

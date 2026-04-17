@@ -1,0 +1,23 @@
+Source: ros-humble-wandering-jackal-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-wandering-jackal-tutorial
+Architecture: any
+Depends: ros-humble-imu-tools,
+         ros-humble-tf2-ros,
+         ros-humble-realsense2-camera,
+         ros-humble-wandering,
+         ros-humble-depthimage-to-laserscan,
+         ros-humble-nav2-bringup,
+         ros-humble-rtabmap-ros,
+         ros-humble-imu-filter-madgwick,
+         ros-humble-robotics-sdk-license
+Recommends: ros-humble-clearpath-robot
+Description: Intel Wandering tutorial on Clearpath Robotics Jackal robot.
+ This package depends on the Clearpath Robot metapackage 'ros-humble-clearpath-robot'.
+ Instructions on how to add the Clearpath Package Server to your APT database are
+ provided by the Clearpath Robotics documentation:
+ https://docs.clearpathrobotics.com/docs/ros/installation/robot/#clearpath-package-server

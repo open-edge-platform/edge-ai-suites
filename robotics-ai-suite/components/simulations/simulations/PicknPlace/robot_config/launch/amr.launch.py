@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+
+# Copyright (C) 2025 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions
+# and limitations under the License.
+
+# Description: Helper launch file to spawn AMR in Gazebo separated by namespace
+# Example usage:
+# amr_launch_cmd = IncludeLaunchDescription(
+#        PythonLaunchDescriptionSource(
+#            os.path.join(robot_config_launch_dir, 'amr.launch.py')),
+#                launch_arguments={ 'amr_name': 'amr1',
+#                           'x_pos': '1.0',
+#                           'y_pos': '1.0',
+#                           'yaw': '0.0',
+#                           'use_sim_time': 'true',
+#                           'launch_stack': 'true',
+#                           'wait_on': 'service /spawn_entity'
+#                          }.items()
+#                        )
+#
+# ld.add_action(amr_launch_cmd)
+
+import os
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import (
+    ExecuteProcess,
+    IncludeLaunchDescription,
+    OpaqueFunction,
+    RegisterEventHandler,
+)
+from launch.event_handlers import OnProcessExit
+from launch.launch_context import LaunchContext
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+
+from launch_ros.actions import Node
+
+LOG_LEVEL = 'info'
+
+
+def generate_launch_description():
+    return LaunchDescription(
+        [
+            OpaqueFunction(function=launch_setup),
+        ]
+    )
+
+
+def launch_setup(context: LaunchContext):
+    TURTLEBOT3_MODEL = 'waffle'
+
+    ros_distro = os.environ.get('ROS_DISTRO')
+
+    package_path = get_package_share_directory('robot_config')
+    nav_launch_dir = os.path.join(
+        package_path, 'launch', 'nav2_bringup', ros_distro
+    )
+
+    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+
+    amr_name = context.launch_configurations['amr_name']
+    x_pos = context.launch_configurations['x_pos']
+    y_pos = context.launch_configurations['y_pos']
+    yaw = context.launch_configurations['yaw']
+
+    if 'mode' in context.launch_configurations:
+        mode = context.launch_configurations['mode']
+    else:
+        mode = 'full'
+
+    urdf = os.path.join(
+        package_path, 'urdf', 'turtlebot3_' + TURTLEBOT3_MODEL + '.urdf'
+    )
+
+    # Read URDF content
+    with open(urdf, 'r') as infp:
+        robot_description = infp.read()
+
+    # Prefix all link and joint names in the URDF with the AMR namespace
+    # so that they match the TF frame names published by robot_state_publisher
+    # (which uses frame_prefix). This makes RViz Robot Model work correctly.
+    import re
+    prefix = amr_name + '/'
+    # Prefix link names:  <link name="X"> → <link name="amr1/X">
+    robot_description = re.sub(
+        r'<link\s+name="([^"]+)"',
+        lambda m: f'<link name="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    # Prefix joint names: <joint name="X" ...> → <joint name="amr1/X" ...>
+    robot_description = re.sub(
+        r'<joint\s+name="([^"]+)"',
+        lambda m: f'<joint name="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    # Prefix parent/child link references
+    robot_description = re.sub(
+        r'<parent\s+link="([^"]+)"',
+        lambda m: f'<parent link="{prefix}{m.group(1)}"',
+        robot_description
+    )
+    robot_description = re.sub(
+        r'<child\s+link="([^"]+)"',
+        lambda m: f'<child link="{prefix}{m.group(1)}"',
+        robot_description
+    )
+
+    actions = []
+
+    # If launch request with Full or Gazebo only mode.
+    if mode == 'full' or mode == 'gazebo':
+        # Create state publisher node for that instance
+        turtlebot_state_publisher = Node(
+            package='robot_state_publisher',
+            namespace=amr_name,
+            executable='robot_state_publisher',
+            output='screen',
+            parameters=[{
+                'robot_description': robot_description,
+                'use_sim_time': use_sim_time,
+                'publish_frequency': 10.0,
+                # frame_prefix removed: link names in URDF are already prefixed
+                # with amr_name/ so robot_state_publisher publishes correct TF frames
+            }],
+        )
+
+        actions.append(turtlebot_state_publisher)
+
+        # Odometry TF publisher - converts /amr1/odom messages to TF transforms
+        # This is needed because Gazebo Harmonic's DiffDrive plugin doesn't publish TF directly
+        odom_tf_publisher = Node(
+            package='robot_config',
+            executable='odom_tf_publisher.py',
+            output='screen',
+            parameters=[{
+                'odom_topic': f'/{amr_name}/odom',
+                'publish_tf': True,
+                'use_sim_time': use_sim_time,
+            }],
+        )
+        actions.append(odom_tf_publisher)
+
+        # Create spawn call
+        spawn_turtlebot3 = Node(
+            package='ros_gz_sim',
+            executable='create',
+            arguments=[
+                '-file', os.path.join(
+                    package_path, 'models',
+                    'turtlebot3_' + TURTLEBOT3_MODEL, 'model_tray_camera.sdf'
+                ),
+                '-name', amr_name,
+                '-robot_namespace', ['/', amr_name],
+                '-x', x_pos, '-y', y_pos,
+                '-z', '0.05', '-Y', yaw,
+                '-unpause',
+            ],
+            output='screen',
+        )
+        actions.append(spawn_turtlebot3)
+
+    # Create stack nodes for Full or stack only mode.
+    if mode == 'full' or mode == 'stack':
+        params_file = LaunchConfiguration(
+            'nav_params_file',
+            default=os.path.join(
+                package_path, 'params', 'nav2_params_' + ros_distro + '.yaml'
+            ),
+        )
+        bringup_cmd = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(nav_launch_dir, 'bringup_launch.py')
+            ),
+            launch_arguments={
+                'slam': 'False',
+                'namespace': ['/', amr_name],
+                'use_namespace': 'True',
+                'map': '',
+                'map_server': 'False',
+                'params_file': params_file,
+                'default_bt_xml_filename': os.path.join(
+                    get_package_share_directory('nav2_bt_navigator'),
+                    'behavior_trees',
+                    'navigate_w_replanning_and_recovery.xml',
+                ),
+                'autostart': 'true',
+                'use_composition': 'False',
+                'use_sim_time': use_sim_time,
+                'log_level': LOG_LEVEL,
+            }.items(),
+        )
+
+        actions.append(bringup_cmd)
+
+    # Check if wait_on is provided.  If exist then create a dependency action on it
+    if 'wait_on' in context.launch_configurations:
+        wait_on = context.launch_configurations['wait_on'].split(' ')
+        wait_for_action_server = ExecuteProcess(
+            cmd=[
+                'ros2', 'run', 'robot_config', 'wait_for_interface.py',
+                wait_on[0], wait_on[1]
+            ],
+            output='screen',
+        )
+        # Create a dependency action for spawn turtlebot3
+        action = RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=wait_for_action_server,
+                on_exit=actions,
+            )
+        )
+
+        actions = [wait_for_action_server, action]
+
+    # Add Gazebo Bridge nodes for AMR
+    if mode == 'full' or mode == 'gazebo':
+        amr_namespace = '/' + amr_name
+
+        # Joint states bridge for AMR
+        gz_ros_bridge_joint_states = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/joint_states@sensor_msgs/msg/JointState'
+                 '[gz.msgs.Model'),
+            ],
+            output='screen',
+        )
+
+        # Odometry bridge
+        gz_ros_bridge_odom = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/odom@nav_msgs/msg/Odometry'
+                 '[gz.msgs.Odometry'),
+            ],
+            output='screen',
+        )
+
+        # Laser scan bridge
+        gz_ros_bridge_scan = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/scan@sensor_msgs/msg/LaserScan'
+                 '[gz.msgs.LaserScan'),
+            ],
+            output='screen',
+        )
+
+        # Camera bridge
+        gz_ros_bridge_camera = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/camera/image_raw@sensor_msgs/msg/Image'
+                 '[gz.msgs.Image'),
+                (f'{amr_namespace}/camera/camera_info@sensor_msgs/msg/CameraInfo'
+                 '[gz.msgs.CameraInfo'),
+            ],
+            output='screen',
+        )
+
+        # cmd_vel bridge (ROS → Gazebo) for Nav2 to drive the AMR
+        gz_ros_bridge_cmd_vel = Node(
+            package='ros_gz_bridge',
+            executable='parameter_bridge',
+            arguments=[
+                (f'{amr_namespace}/cmd_vel@geometry_msgs/msg/Twist'
+                 ']gz.msgs.Twist'),
+            ],
+            output='screen',
+        )
+
+        # Add bridge nodes to actions
+        actions.extend([
+            gz_ros_bridge_joint_states,
+            gz_ros_bridge_odom,
+            gz_ros_bridge_scan,
+            gz_ros_bridge_camera,
+            gz_ros_bridge_cmd_vel,
+        ])
+
+    return actions

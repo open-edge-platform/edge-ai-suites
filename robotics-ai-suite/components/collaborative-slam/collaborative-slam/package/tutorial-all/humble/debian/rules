@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+INSTALL_DIR=opt/ros/humble/share/collab-slam
+
+override_dh_fixperms:
+	dh_fixperms
+
+%:
+	dh $@
+
+override_dh_auto_install:
+	dh_auto_install --

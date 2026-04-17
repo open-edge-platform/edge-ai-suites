@@ -1,0 +1,129 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# https://docs.ros.org/en/humble/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html#id5
+cmake_minimum_required(VERSION 3.14.4)
+project(its_planner)
+
+set(CMAKE_CXX_STANDARD 17)
+set(GCC_COVERAGE_COMPILE_FLAGS "-fno-strict-overflow -fno-delete-null-pointer-checks")
+
+# find dependencies
+find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(builtin_interfaces REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(nav2_core REQUIRED)
+find_package(pluginlib REQUIRED)
+
+include_directories(
+  include
+)
+
+set(GCC_COVERAGE_COMPILE_FLAGS "-lboost_serialization")
+
+include(CheckSymbolExists)
+check_symbol_exists(drand48 stdlib.h HAVE_DRAND48)
+
+add_subdirectory(src/prm)
+add_subdirectory(src/path_utils)
+add_subdirectory(src/its)
+add_subdirectory(src/dubins)
+
+set(library_name its_planner)
+
+set(dependencies
+  rclcpp
+  rclcpp_action
+  rclcpp_lifecycle
+  std_msgs
+  visualization_msgs
+  nav_msgs
+  geometry_msgs
+  builtin_interfaces
+  tf2_ros
+  nav2_costmap_2d
+  nav2_core
+  pluginlib
+)
+
+add_library(${library_name} SHARED
+  src/its_planner.cpp
+)
+
+ament_target_dependencies(${library_name}
+  ${dependencies}
+)
+
+target_link_libraries(${library_name} boost_serialization
+  path_utils_lib prm_lib its_lib dubins_lib
+)
+
+target_compile_definitions(${library_name} PUBLIC "PLUGINLIB__DISABLE_BOOST_FUNCTIONS")
+
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  target_compile_definitions(${library_name} PUBLIC "ROS_DISTRO_HUMBLE")
+endif()
+
+if($ENV{ROS_DISTRO} STREQUAL "jazzy")
+  target_compile_definitions(${library_name} PUBLIC "ROS_DISTRO_JAZZY")
+endif()
+
+pluginlib_export_plugin_description_file(nav2_core global_planner_plugin.xml)
+
+install(TARGETS ${library_name}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(DIRECTORY include/
+  DESTINATION include/
+)
+
+install(FILES global_planner_plugin.xml
+  DESTINATION share/${PROJECT_NAME}
+)
+
+# Install launch files
+install(DIRECTORY launch/
+  DESTINATION share/${PROJECT_NAME}/launch
+  FILES_MATCHING PATTERN "*.py"
+)
+
+# Install configuration files - ROS distro specific
+if($ENV{ROS_DISTRO} STREQUAL "humble")
+  # Humble specific files
+  install(FILES 
+    nav2_params_humble.yaml
+    nav2_params_dubins_humble.yaml
+    navigate_w_recovery_humble.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+else()
+  # Default to jazzy for newer distros
+  install(FILES 
+    nav2_params_jazzy.yaml
+    nav2_params_dubins_jazzy.yaml
+    navigate_w_recovery_jazzy.xml
+    DESTINATION share/${PROJECT_NAME}
+  )
+endif()
+
+if(BUILD_TESTING)
+  find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
+  add_subdirectory(test)
+endif()
+
+ament_export_include_directories(include)
+ament_export_libraries(${library_name} path_utils_lib prm_lib dubins_lib)
+ament_export_dependencies(${dependencies})
+ament_package()

@@ -1,0 +1,24 @@
+Source: ros-jazzy-its-relocalization
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~), python3-ament-package, ros-jazzy-ament-cmake, ros-jazzy-ament-lint-common, ros-jazzy-ament-lint-auto, ros-jazzy-ament-cmake-gtest, ros-jazzy-rclcpp, ros-jazzy-rclcpp-action, ros-jazzy-rclcpp-lifecycle, ros-jazzy-std-msgs, ros-jazzy-geometry-msgs, ros-jazzy-visualization-msgs, ros-jazzy-nav-msgs, ros-jazzy-tf2-ros, ros-jazzy-nav2-core, ros-jazzy-nav2-amcl, ros-jazzy-its-planner, ros-jazzy-builtin-interfaces, ros-jazzy-pluginlib, libboost-dev, libboost-serialization-dev
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-its-pose-checker
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends}, ros-jazzy-rcl, ros-jazzy-rclcpp, ros-jazzy-nav2-msgs, ros-jazzy-its-planner, ros-jazzy-nav2-costmap-2d, ros-jazzy-geometry-msgs, ros-jazzy-nav2-amcl, ros-jazzy-std-srvs, ros-jazzy-tf2-ros, ros-jazzy-nav2-core,
+Description: Pose checker package part of relocalization module for ROS2 Navigation
+
+Package: ros-jazzy-its-reloc-benchmarking
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-rcl, ros-jazzy-rclcpp, ros-jazzy-geometry-msgs, ros-jazzy-std-srvs,
+Description: Benchmarking package part of relocalization module for ROS2 Navigation
+
+Package: ros-jazzy-its-relocalization-bringup
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},  ros-jazzy-rcl, ros-jazzy-rclcpp, ros-jazzy-navigation2, ros-jazzy-turtlebot3, ros-jazzy-its-pose-checker, ros-jazzy-its-reloc-benchmarking, ros-jazzy-its-send-localization,
+Description: Re-localization bringup package

@@ -1,0 +1,10 @@
+Source: ros-humble-segmentation-realsense-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-segmentation-realsense-tutorial
+Architecture: any
+Depends: ros-humble-realsense2-camera, ros-humble-openvino-node
+Description: Example tutorial for Openvino Semantic Segmentation with Realsense Topic

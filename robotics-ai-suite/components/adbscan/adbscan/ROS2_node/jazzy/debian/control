@@ -1,0 +1,63 @@
+Source: ros-jazzy-adbscan-ros2
+Section: utils
+Priority: optional
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+Build-Depends: cmake, debhelper (>=11~),
+    intel-oneapi-compiler-dpcpp-cpp (>= 2025.2),
+    intel-oneapi-dpcpp-ct (>= 2025.2),
+    intel-oneapi-tbb-devel-2021.13,
+    ros-jazzy-openvino-wrapper-lib,
+    ros-jazzy-openvino-node,    
+    libze1,
+    libze-intel-gpu1,
+    libflann1.9-dpcpp,
+    libpcl-dev (>= 1.14),
+    python3-ament-package,
+    ros-jazzy-ament-cmake-gtest,
+    ros-jazzy-ament-cmake,
+    ros-jazzy-ament-lint-auto,
+    ros-jazzy-ament-lint-common,
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-nav2-dynamic-msgs,
+    ros-jazzy-pcl-conversions,
+    ros-jazzy-rclcpp,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+    libpcl-oneapi-common1.14,
+    libtbb-dev,
+Standards-Version: 4.1.4
+
+Package: ros-jazzy-adbscan-ros2
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-bagfile-laser-pointcloud,
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-nav2-dynamic-msgs,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rviz2,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+Description: Standard Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2
+Provides: ros-jazzy-adbscan-ros2
+Conflicts: ros-jazzy-adbscan-oneapi
+Replaces: ros-jazzy-adbscan-oneapi
+
+Package: ros-jazzy-adbscan-oneapi
+Architecture: any
+Multi-Arch: foreign
+Depends: ${misc:Depends}, ${shlibs:Depends},
+    ros-jazzy-builtin-interfaces,
+    ros-jazzy-geometry-msgs,
+    ros-jazzy-nav2-dynamic-msgs,
+    ros-jazzy-pcl-conversions,
+    ros-jazzy-rclcpp,
+    ros-jazzy-rviz2,
+    ros-jazzy-sensor-msgs,
+    ros-jazzy-visualization-msgs,
+Description: Intel OneAPI optimized Adaptive Density-based Spatial Clustering of Applications with Noise (ADBSCAN) for ROS2
+Provides: ros-jazzy-adbscan-oneapi
+Conflicts: ros-jazzy-adbscan-ros2
+Replaces: ros-jazzy-adbscan-ros2

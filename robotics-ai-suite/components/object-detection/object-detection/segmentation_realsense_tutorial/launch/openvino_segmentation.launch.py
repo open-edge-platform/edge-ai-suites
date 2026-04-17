@@ -1,0 +1,137 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+import logging
+import os
+from pathlib import Path
+import sys
+from tempfile import NamedTemporaryFile
+
+from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import (
+    DeclareLaunchArgument,
+    IncludeLaunchDescription,
+    LogInfo,
+    OpaqueFunction,
+    Shutdown,
+)
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration
+from launch_ros.actions import Node
+import yaml
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def create_modified_yaml(device):
+    try:
+        template_path = (
+            Path(get_package_share_directory('segmentation_realsense_tutorial'))
+            / 'param'
+            / 'object_segmentation_pipeline.yaml'
+        )
+
+        # Get package share directory for dynamic path resolution
+        package_share_dir = get_package_share_directory('segmentation_realsense_tutorial')
+
+        with template_path.open('r') as file:
+            config = yaml.safe_load(file)
+
+        # Update paths dynamically using ROS package share directory
+        pipeline = config['Pipelines'][0]
+        pipeline['infers'][0]['label'] = os.path.join(package_share_dir, 'label', 'object.labels')
+        pipeline['infers'][0]['engine'] = device
+
+        with NamedTemporaryFile(mode='w', delete=False, suffix='.yaml') as tmp_file:
+            yaml.safe_dump(config, tmp_file)
+        return tmp_file.name
+    except FileNotFoundError as e:
+        logger.error(f'Configuration file not found: {e}')
+        sys.exit(1)
+
+    except yaml.YAMLError as e:
+        logger.error(f'Error parsing YAML file: {e}')
+        sys.exit(1)
+
+
+def generate_launch_description(*args, **kwargs):
+    device = LaunchConfiguration('device')
+    supported_devices = ['GPU', 'CPU']
+
+    def launch_nodes(context, *args, **kwargs):
+        selected_device = context.launch_configurations['device']
+
+        # Check if the provided device is supported
+        if selected_device not in supported_devices:
+            logger.error(
+                f"Error: Unsupported device \
+                         '{selected_device}'. Supported devices are: \
+                            {supported_devices}"
+            )
+            return [Shutdown(reason=f"Unsupported device '{selected_device}'")]
+
+        modified_config_path = create_modified_yaml(selected_device)
+
+        realsense_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                [
+                    os.path.join(
+                        get_package_share_directory('realsense2_camera'), 'launch', 'rs_launch.py'
+                    )
+                ]
+            ),
+            launch_arguments={
+                'enable_infra1': 'true',
+                'align_depth.enable': 'true',
+                'enable_sync': 'true',
+                'initial_reset': 'true',
+                'pointcloud.enable': 'true',
+                'camera_namespace': '/',
+            }.items(),
+        )
+        default_rviz = os.path.join(
+            get_package_share_directory('segmentation_realsense_tutorial'), 'rviz', 'default.rviz'
+        )
+
+        rviz_node = Node(
+            package='rviz2',
+            executable='rviz2',
+            output='screen',
+            arguments=['--display-config', default_rviz],
+        )
+
+        openvino_node = Node(
+            package='openvino_node',
+            executable='pipeline_with_params',
+            name='segmentation_pipeline',
+            arguments=['-config', modified_config_path],
+            remappings=[
+                ('/openvino_toolkit/image_raw', '/camera/color/image_raw'),
+                (
+                    '/openvino_toolkit/segmentation/segmented_obejcts',
+                    '/ros2_openvino_toolkit/segmented_obejcts',
+                ),
+                ('/openvino_toolkit/segmentation/images', '/ros2_openvino_toolkit/image_rviz'),
+            ],
+            output='screen',
+        )
+
+        return [openvino_node, rviz_node, realsense_launch]
+
+    return LaunchDescription(
+        [
+            DeclareLaunchArgument(
+                device, default_value='GPU', description='Inference device to use (e.g., GPU, CPU)'
+            ),
+            OpaqueFunction(function=launch_nodes),
+            LogInfo(msg=[LaunchConfiguration('device'), ' device selected for inference']),
+        ]
+    )
+
+
+if __name__ == '__main__':
+    ld = generate_launch_description()

@@ -1,0 +1,10 @@
+Source: ros-humble-wandering-irobot-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-humble-wandering-irobot-tutorial
+Architecture: any
+Depends: ros-humble-irobot-create-control, ros-humble-irobot-create-description, ros-humble-irobot-create-msgs, ros-humble-imu-tools, ros-humble-tf2-ros, ros-humble-realsense2-camera, ros-humble-realsense2-description, ros-humble-wandering, ros-humble-rplidar-ros, ros-humble-nav2-bringup, ros-humble-rtabmap-ros, ros-humble-topic-tools, ros-humble-joy, ros-humble-teleop-twist-joy, ros-humble-twist-mux, ros-humble-robotics-sdk-license, ros-humble-pointcloud-groundfloor-segmentation, ros-humble-rviz2
+Description: Intel Wandering tutorial on iRobot create 3

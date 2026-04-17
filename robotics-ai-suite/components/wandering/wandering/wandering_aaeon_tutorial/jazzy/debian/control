@@ -1,0 +1,10 @@
+Source: ros-jazzy-wandering-aaeon-tutorial
+Section: utils
+Priority: optional
+Standards-Version: 4.1.4
+Maintainer: ECI Maintainer <eci.maintainer@intel.com>
+
+Package: ros-jazzy-wandering-aaeon-tutorial
+Architecture: any
+Depends: ros-jazzy-launch-ros, ros-jazzy-imu-tools, ros-jazzy-tf2-ros, ros-jazzy-aaeon-ros2-amr-interface, ros-jazzy-realsense2-camera, ros-jazzy-wandering, ros-jazzy-depthimage-to-laserscan, ros-jazzy-nav2-bringup, ros-jazzy-rtabmap-ros, ros-jazzy-imu-filter-madgwick, ros-jazzy-joint-state-publisher, ros-jazzy-robot-state-publisher, ros-jazzy-realsense2-description
+Description: Intel Wandering tutorial on Aaeon Robot

@@ -1,0 +1,35 @@
+# Copyright (C) 2025 Intel Corporation
+#
+# SPDX-License-Identifier: Apache-2.0
+
+version = 1
+
+[[annotations]]
+path = [
+    "**/*.dae",
+    "**/*.DAE",
+    "**/debian/**",
+    "docs/images/*",
+    "**/*.dsv.in",    
+    "**/*.material",    
+    "**/model.config",
+    "**/*.pgm",
+    "**/*.png",
+    "**/*.psd",
+    "**/*.stl",
+    "**/*.sdf",
+    "**/*.srdf",
+    "**/*.urdf",    
+    "**/*.world",
+    "**/*.xacro",
+]
+SPDX-FileCopyrightText = "2025 Intel Corporation"
+SPDX-License-Identifier = "Apache-2.0"
+
+[[annotations]]
+path = [
+    "PicknPlace/picknplace/scripts/moveit2.py",
+]
+SPDX-FileCopyrightText = "Copyright (c) 2022, Andrej Orsula"
+SPDX-License-Identifier = "BSD-3-Clause"
+
