@@ -55,7 +55,7 @@ services:
       - rag_network
 
   multimodal-embedding-serving:
-    image: intel/multimodal-embedding-serving:1.3.4-rc1
+    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
     container_name: multimodal-embedding-serving
     ports:
       - '${EMBEDDING_SERVER_PORT:-9777}:8000'
