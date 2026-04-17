@@ -396,8 +396,9 @@ va_pipeline:
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
 
 content_search:
-  host_addr: "127.0.0.1" 
+  host_addr: "127.0.0.1"
   port: 9011
+  video_summarization_enabled: true
 
   chromadb:
     host: "127.0.0.1"

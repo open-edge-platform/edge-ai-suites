@@ -46,7 +46,7 @@ class PostProcessor:
                  document_collection_name: str = ""):
         self.dedup_time_threshold = dedup_time_threshold
         self.overfetch_multiplier = overfetch_multiplier
-        self.video_summary_id_map = video_summary_id_map or {}
+        self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
         self.chroma_client = chroma_client
         self.document_collection_name = document_collection_name
 
@@ -68,7 +68,7 @@ class PostProcessor:
     def process_text_query_results(
         self, query: str, visual_results: dict, doc_results: dict, top_k: int,
     ) -> dict:
-        """Full post-processing for text queries: dedup → attach summaries → rerank → scores → drop attached summaries → allocate slots → summary to video → format."""
+        """Full post-processing for text queries: dedup → attach summaries → rerank → scores → allocate slots → drop duplicate summaries → summary to video → format."""
         visual_flat = _flatten_chroma_results(visual_results)
         doc_flat = _flatten_chroma_results(doc_results)
         logger.debug("[PostProcessor] Text query: %r | visual candidates: %d | doc candidates: %d | top_k: %d",
@@ -85,15 +85,17 @@ class PostProcessor:
         self._compute_percentage_scores(visual_deduped)
         self._compute_percentage_scores(doc_reranked)
 
-        doc_filtered = self._remove_attached_summaries(doc_reranked, visual_deduped)
-
         groups = {}
         if visual_deduped:
             groups["visual"] = visual_deduped
-        if doc_filtered:
-            groups["document"] = doc_filtered
+        if doc_reranked:
+            groups["document"] = doc_reranked
 
         merged = self._allocate_slots(groups, top_k)
+        # Remove duplicate summaries AFTER slot allocation so that summaries
+        # whose video frames didn't make top_k are preserved (and later
+        # converted to video results by _convert_summaries_to_video).
+        merged = self._remove_attached_summaries_from_final(merged)
         self._convert_summaries_to_video(merged)
         logger.debug("[PostProcessor] Final merged results: %d", len(merged))
         return self._to_chroma_format(merged)
@@ -193,7 +195,6 @@ class PostProcessor:
         for file_path, video_results in video_results_by_file.items():
             summary_ids = self.video_summary_id_map.get(file_path, [])
             if not summary_ids:
-                logger.debug("[summary] No summaries found for %s", file_path)
                 continue
 
             summaries = self.chroma_client.get(
@@ -233,22 +234,30 @@ class PostProcessor:
         return best
 
     @staticmethod
-    def _remove_attached_summaries(doc_results: list[dict], visual_results: list[dict]) -> list[dict]:
-        """Remove summaries whose chunk_text is already attached to a visual frame."""
+    def _remove_attached_summaries_from_final(results: list[dict]) -> list[dict]:
+        """Remove summaries that duplicate a visual frame already in the final results.
+
+        Only summaries whose chunk_text matches a summary_text attached to a
+        selected visual frame are removed.  This must run AFTER slot allocation
+        so summaries whose video frames didn't make the cut stay in the list
+        (they'll be converted to video results by _convert_summaries_to_video).
+        """
         attached_texts = {
             r["meta"].get("summary_text", "")
-            for r in visual_results
-            if r.get("meta", {}).get("summary_text")
+            for r in results
+            if r.get("meta", {}).get("type") == "video" and r.get("meta", {}).get("summary_text")
         }
+        if not attached_texts:
+            return results
         filtered = []
         removed_count = 0
-        for r in doc_results:
+        for r in results:
             if "summary_key" in r.get("meta", {}) and r["meta"].get("chunk_text", "") in attached_texts:
                 removed_count += 1
             else:
                 filtered.append(r)
         if removed_count:
-            logger.debug("[PostProcessor] Removed %d attached summaries from doc group", removed_count)
+            logger.debug("[PostProcessor] Removed %d duplicate summaries from final results", removed_count)
         return filtered
 
     @staticmethod
@@ -276,6 +285,7 @@ class PostProcessor:
             end_time = meta.get("end_time", 0)
             mid_time = start_time + (end_time - start_time) / 2
             r["meta"] = {
+                **meta,
                 "file_path": video_fp,
                 "type": "video",
                 "original_type": "constructed_from_summary",
