@@ -77,11 +77,11 @@ Assigns a 0-100 **absolute relevance** score to each result. Each type has its o
 
 **Documents** (have `reranker_score` from the cross-encoder):
 
-$$\text{score} = \sigma(\text{reranker\_score}) \times 100$$
+$$score = \sigma(reranker\\_score) \times 100$$
 
 **Visual results** (text-to-image and image-to-image):
 
-$$\text{score} = \sigma\bigl(k \cdot (\text{cosine\_sim} - \text{center})\bigr) \times 100$$
+$$score = \sigma\bigl(k \cdot (cosine\\_sim - center)\bigr) \times 100$$
 
 where `cosine_sim = 1 - distance` (ChromaDB cosine distance is in [0, 2]).
 
@@ -112,7 +112,7 @@ Merges `visual` and `document` groups into a single ranked list of `top_k` items
 
 **RRF scoring** — each group is ranked independently (visual: by distance, document: by reranker_score). RRF score is assigned per item:
 
-$$\text{rrf\_score} = \frac{1}{k + \text{rank}}, \quad k = \text{RRF\_K} = 60$$
+$$rrf\\_score = \frac{1}{k + rank}, \quad k = RRF\\_K = 60$$
 
 **Two-pass selection:**
 

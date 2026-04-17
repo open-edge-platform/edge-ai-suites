@@ -66,7 +66,39 @@ Sessions are stored in `monitoring_sessions/wandering/`.
 
 ## Remote Benchmark
 
-To benchmark a wandering pipeline running on a remote machine:
+To benchmark a wandering pipeline running on a remote machine, use
+`monitor_stack.py` directly with `--remote-ip`. It monitors resources via SSH
+and the ROS2 graph via DDS peer discovery, with no Grafana stack required.
+
+```bash
+# CPU + GPU monitoring
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --gpu --algorithm wandering --duration 180
+
+# CPU + NPU monitoring
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --npu --algorithm wandering --duration 180
+
+# Combined GPU + NPU
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --gpu --npu --algorithm wandering --duration 180
+```
+
+> **Note:** DDS discovery on remote sessions typically takes 30–60 seconds.
+> Use `--duration 180` or longer to ensure meaningful data is captured.
+
+For repeated remote runs:
+
+```bash
+make monitor-remote-repeat REMOTE_IP=<ip> REMOTE_USER=intel REPEAT=3 \
+    GPU=1 ALGORITHM=wandering DOMAIN_ID=46
+```
+
+### Remote Benchmark with Grafana
+
+To stream metrics into a live Grafana dashboard during a remote benchmark,
+use `grafana-monitor.sh` instead. This starts the Prometheus exporter
+alongside `monitor_stack.py`:
 
 ```bash
 # CPU + GPU monitoring
@@ -80,16 +112,6 @@ To benchmark a wandering pipeline running on a remote machine:
 # Combined GPU + NPU
 ./grafana-monitor.sh --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 \
     --gpu --npu --algorithm wandering --duration 180
-```
-
-> **Note:** DDS discovery on remote sessions typically takes 30–60 seconds.
-> Use `DURATION=180` or longer to ensure meaningful data is captured.
-
-For repeated remote runs:
-
-```bash
-make monitor-remote-repeat REMOTE_IP=<ip> REMOTE_USER=intel REPEAT=3 \
-    GPU=1 ALGORITHM=wandering DOMAIN_ID=46
 ```
 
 ## Visualization
