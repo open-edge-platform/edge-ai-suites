@@ -1,6 +1,6 @@
 # Configure Embedding Creation with RAG
 
-This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the [Live-Video-Captioning-RAG](../../../live-video-captioning-rag/) service for Retrieval-Augmented Generation (RAG) chat.
+This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning-rag/index.html) service for Retrieval-Augmented Generation (RAG) chat.
 
 When enabled:
 
@@ -20,8 +20,8 @@ When enabled:
 ## Prerequisites
 
 - Docker Engine software and Docker Compose tool are installed.
-- Complete the base setup in [Get Started](./get-started.md).
-- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](./get-started/model-preparation.md) to download and convert the models.
+- Complete the base setup in [Get Started](../get-started.md).
+- VLM models are prepared for the captioning pipeline (`ov_models/`) while LLM models are prepared for the RAG pipeline (`llm_models/`). See [Model Preparation section](../get-started/model-preparation.md) to download and convert the models.
 - Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
@@ -38,9 +38,9 @@ When enabled:
      - Enables the Compose profile with `COMPOSE_PROFILES=EMBEDDING`.
      - Configures embedding service, VDMS, and RAG service environment variables.
      - Brings up these additional services:
-	     - `multimodal-embedding-serving`
-	     - `vdms-vector-db`
-	     - `live-video-captioning-rag`
+     - `multimodal-embedding-serving`
+     - `vdms-vector-db`
+     - `live-video-captioning-rag`
 
      > **Notes**:
      - Update the helper script values to use your preferred embedding and LLM models.
@@ -107,6 +107,6 @@ docker compose down
 
 ## Supporting Resources
 
-- [Get Started](./get-started.md) - Base setup and deployment flow
-- [API Reference](./api-reference.md) - Live Video Captioning API endpoints
-- [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements
+- [Get Started](../get-started.md) - Base setup and deployment flow
+- [API Reference](../api-reference.md) - Live Video Captioning API endpoints
+- [System Requirements](../get-started/system-requirements.md) - Hardware and software requirements

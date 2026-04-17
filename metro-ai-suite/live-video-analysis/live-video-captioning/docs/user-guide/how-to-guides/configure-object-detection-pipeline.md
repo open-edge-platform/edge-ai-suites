@@ -3,9 +3,11 @@
 Object Detection is an optional configuration to enhances the base live captioning pipeline by integrating object detection as a pre-filtering step. Instead of sending every video frame to the captioning model, only frames containing detected objects are passed to VLM for caption generation. This approach significantly reduces compute overhead while maintaining meaningful captions, as frames without relevant objects are skipped. It is ideal for scenarios where captions should focus on detected entities rather than every frame.
 
 ## Enabling Object Detection Pipeline
+
 User can enable object detection in the pipeline by following the steps below:
 
 1. Set `ENABLE_DETECTION_PIPELINE` to `true` in the .env file.
+
      ```bash
      WHIP_SERVER_IP=mediamtx
      WHIP_SERVER_PORT=8889
@@ -21,7 +23,7 @@ User can enable object detection in the pipeline by following the steps below:
      CAPTION_HISTORY=3
      ```
 
-2. Prepare your object-detection models by following the [model preparation guide](../user-guide/get-started/model-preparation.md).
+2. Prepare your object-detection models by following the [model preparation guide](../get-started/model-preparation.md).
 
 3. Then, now you are ready to deploy the pipeline which enabled with object detection model. You may find those pipelines available under the `Select Pipelines` dropdown menu.
 
@@ -59,14 +61,16 @@ discovery logic and the DL Streamer pipeline server.
 ### No detection models in dropdown
 
 Symptoms:
+
 - Detection Model list is empty in the UI.
 
 Checks:
+
 - Ensure `ov_detection_models/` contains at least one model directory with OpenVINO IR files.
 - If you downloaded models, re-run the stack so the service rescans.
 
 ## Next Steps
 
-- [Get Started](./get-started.md) - Basic setup and configuration
-- [API Reference](./api-reference.md) - REST API documentation
-- [System Requirements](./get-started/system-requirements.md) - Hardware and software requirements
+- [Get Started](../get-started.md) - Basic setup and configuration
+- [API Reference](../api-reference.md) - REST API documentation
+- [System Requirements](../get-started/system-requirements.md) - Hardware and software requirements
