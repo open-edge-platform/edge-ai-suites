@@ -1053,7 +1053,7 @@ If the APT package manager is unable to connect to the repositories, follow thes
 :::{toctree}
 :hidden:
 
-../dev_guide/requirements
+../dev_guide/requirements.md
 
 :::
 hide_directive-->
