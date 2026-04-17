@@ -187,8 +187,12 @@ class VideoAnalyticsPipelineService:
         """Get RTSP sink elements for pushing to RTSP server"""
         return [
             "mfh264enc",
-            "bitrate=2000",
+            "bitrate=3000",
             "gop-size=15",
+            "low-latency=true",
+            "bframes=0",
+            "rc-mode=cbr",
+            "quality-vs-speed=0",
             "!",
             "h264parse",
             "!",

@@ -233,7 +233,7 @@ def start_video_analytics_pipeline(
         requests: List of VideoAnalyticsRequest with pipeline_name, source
 
     Returns:
-        JSON array with HLS stream addresses for each pipeline
+        JSON array with HLS/WebRTC stream addresses for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
@@ -327,11 +327,16 @@ def start_video_analytics_pipeline(
                             "error": f"Failed to start pipeline '{req.pipeline_name}'",
                         }
                     else:
+                        if config.va_pipeline.stream_protocol == "webrtc":
+                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{request.pipeline_name}_stream"
+                        else:
+                            stream_url = f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream"
                         return {
                             "status": "success",
                             "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "hls_stream": f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream",
+                            "stream_url": stream_url,
+                            "stream_protocol": config.va_pipeline.stream_protocol,
                             "overlays_embedded": True,
                         }
                 except Exception as e:
