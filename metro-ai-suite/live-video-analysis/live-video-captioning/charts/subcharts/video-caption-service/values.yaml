@@ -75,6 +75,10 @@ env:
   # Type: string — leave empty; computed at deploy time
   whipServerPort: "8889"
 
+  # Live Video RAG host port
+  # Type: string
+  liveVideoRagHostPort: "4172"
+
 # Names of the parent-chart PVCs for models (read-only mounts).
 # Type: string  — empty = derive from release name
 modelsPvcName: ""

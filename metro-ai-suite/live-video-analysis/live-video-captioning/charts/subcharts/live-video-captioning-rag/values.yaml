@@ -1,0 +1,86 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# live-video-captioning-rag/values.yaml - default values for the Live Video Captioning RAG subchart.
+
+# Override the generated fullname. Set to "live-video-captioning-rag" in parent values.yaml
+# so that other subcharts can reliably reference the service by this name.
+# Type: string
+fullnameOverride: ""
+
+# ⚠️  Do NOT set replicaCount > 1.  live-video-captioning-rag uses hostPort binding,
+# so multiple replicas on the same node will conflict on the port.
+replicaCount: 1
+
+image:
+  repository: intel/live-video-captioning-rag
+  # Type: string
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  # Container port the FastAPI app listens on.
+  # Type: integer
+  port: 4172
+  # NodePort exposed on the host for browser dashboard access.
+  # Type: integer
+  nodePort: 4172
+
+# Application environment variables.
+# All variables are read by app/backend/config.py.
+env:
+  # LLM Model for RAG. Fields mirror global.llmModel and are used as fallbacks
+  # when this subchart is deployed standalone (without a parent chart).
+  llmModel:
+    modelId: "microsoft/Phi-3.5-mini-instruct"
+    modelType: "llm"
+    weightFormat: "int8"
+    useGPU:
+      enabled: false
+      key: ""  # GPU resource key for your cluster, e.g. "gpu.intel.com/i915"
+
+  # Number of output tokens for the LLM response.
+  # Type: integer
+  maxTokens: 1024
+
+  # Number of candidate captions returned by the RAG retriever.
+  # Type: int
+  topK: 1
+
+  # Multimodal embedding model for RAG (must be compatible with the multimodal-embedding subchart).
+  embeddingModel:
+    modelId: "QwenText/qwen3-embedding-0.6b"
+    useGPU:
+      enabled: false
+      key: ""  # GPU resource key for your cluster, e.g. "gpu.intel.com/i915"
+
+  # Multimodal embedding host(multimodal-embedding subchart service).
+  # Type: string
+  embeddingHost: "multimodal-embedding"
+
+  # Multimodal embedding host port(multimodal-embedding subchart service).
+  # Type: integer
+  embeddingHostPort: 8000
+
+  # VDMS Host (vdms-vectordb subchart service).
+  # Type: string
+  vdmsHost: "vdms-vectordb"
+
+  # VDMS Port (vdms-vectordb subchart service).
+  # Type: integer
+  vdmsPort: 55555
+
+podSecurityContext: {}
+securityContext: {}
+
+podAnnotations: {}
+podLabels: {}
+
+resources:
+  requests:
+    cpu: "4"
+    memory: "8Gi"
+  limits:
+    cpu: "8"
+    memory: "16Gi"
