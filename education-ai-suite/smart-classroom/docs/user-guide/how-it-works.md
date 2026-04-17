@@ -78,7 +78,7 @@ The VA pipeline aggregates per-frame metadata into classroom engagement statisti
 A **Media Server (MediaMTX)** receives processed video from all three pipelines and provides:
 
 - RTSP streaming for real-time playback
-- HLS streaming for browser-based viewing
+- HLS/WebRTC streaming for browser-based viewing
 
 ## Metrics Collector
 
@@ -92,7 +92,7 @@ Monitors and collects:
 - **Transcriptions, summaries, mind maps, and topic segments** can be accessed from the Web-based UI and file system. The path for file system is **/\<project-location>/\<your-project-name>/**. For example, `/storage/chapter-10/`
 - **Semantic topic search** results are returned via the API, with similarity scores and time-range references into the original recording.
 - **Classroom statistics** (student count, stand-up events, hand-raise events) are generated from the video analytics pipeline and displayed in the UI.
-- **Video streams** with real-time detection overlays are available via RTSP and HLS.
+- **Video streams** with real-time detection overlays are available via RTSP and HLS/WebRTC.
 - **Performance metrics** (e.g., utilisation, model efficiency) are displayed for monitoring.
 - Localisation ensures outputs are available in multiple languages (English/Chinese).
 

@@ -233,7 +233,7 @@ def start_video_analytics_pipeline(
         requests: List of VideoAnalyticsRequest with pipeline_name, source
 
     Returns:
-        JSON array with HLS stream addresses for each pipeline
+        JSON array with HLS/WebRTC stream addresses for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
