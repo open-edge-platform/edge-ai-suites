@@ -2504,14 +2504,14 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
             setup_type = "mqtt"
         elif sample_app == constants.WELD_SAMPLE_APP:
             target_dir = os.path.join(constants.EDGE_AI_SUITES_DIR, 
-                                    "apps/weld-anomaly-detection/time-series-analytics-config")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+                                    "apps/weld-defect-detection/time-series-analytics-config")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         elif sample_app == constants.MULTIMODAL_SAMPLE_APP:
             # For multimodal, the config is in a different location
             multimodal_dir = constants.EDGE_AI_SUITES_DIR.replace(constants.TARGET_SUBPATH, constants.MULTIMODAL_TARGET_SUBPATH)
             target_dir = os.path.join(multimodal_dir, "configs/time-series-analytics-microservice")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         else:
             logger.error(f"✗ Unsupported sample app: {sample_app}")

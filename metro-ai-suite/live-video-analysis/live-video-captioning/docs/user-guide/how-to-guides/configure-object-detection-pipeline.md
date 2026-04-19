@@ -1,0 +1,76 @@
+# Configure Object Detection Pipeline
+
+Object Detection is an optional configuration to enhances the base live captioning pipeline by integrating object detection as a pre-filtering step. Instead of sending every video frame to the captioning model, only frames containing detected objects are passed to VLM for caption generation. This approach significantly reduces compute overhead while maintaining meaningful captions, as frames without relevant objects are skipped. It is ideal for scenarios where captions should focus on detected entities rather than every frame.
+
+## Enabling Object Detection Pipeline
+
+User can enable object detection in the pipeline by following the steps below:
+
+1. Set `ENABLE_DETECTION_PIPELINE` to `true` in the .env file.
+
+     ```bash
+     WHIP_SERVER_IP=mediamtx
+     WHIP_SERVER_PORT=8889
+     WHIP_SERVER_TIMEOUT=30s
+     PROJECT_NAME=live-captioning
+     HOST_IP=<HOST_IP>
+     EVAM_HOST_PORT=8040
+     EVAM_PORT=8080
+     DASHBOARD_PORT=4173
+     WEBRTC_PEER_ID=stream
+     ALERT_MODE=False
+     ENABLE_DETECTION_PIPELINE=True  # Enable detection pipeline
+     CAPTION_HISTORY=3
+     ```
+
+2. Prepare your object-detection models by following the [model preparation guide](../get-started/model-preparation.md).
+
+3. Then, now you are ready to deploy the pipeline which enabled with object detection model. You may find those pipelines available under the `Select Pipelines` dropdown menu.
+
+## Helm Chart Behavior
+
+When deploying with the Helm chart, the detection pipeline can now download the
+configured detection models automatically.
+
+Set these values in `charts/values-override.yaml`:
+
+```yaml
+global:
+  detectionModels:
+    - "yolov8s"
+
+video-caption-service:
+  env:
+    enableDetectionPipeline: "true"
+
+detectionModelsDownload:
+  enabled: true
+```
+
+The chart downloads each detection model into:
+
+```text
+ov_detection_models/<model-name>/public/<model-name>
+```
+
+This matches the directory structure expected by the backend detection-model
+discovery logic and the DL Streamer pipeline server.
+
+## Troubleshooting
+
+### No detection models in dropdown
+
+Symptoms:
+
+- Detection Model list is empty in the UI.
+
+Checks:
+
+- Ensure `ov_detection_models/` contains at least one model directory with OpenVINO IR files.
+- If you downloaded models, re-run the stack so the service rescans.
+
+## Next Steps
+
+- [Get Started](../get-started.md) - Basic setup and configuration
+- [API Reference](../api-reference.md) - REST API documentation
+- [System Requirements](../get-started/system-requirements.md) - Hardware and software requirements

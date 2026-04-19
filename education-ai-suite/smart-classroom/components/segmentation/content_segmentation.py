@@ -1,6 +1,7 @@
 from components.base_component import PipelineComponent
 import openvino_genai as ov_genai
 import logging
+import re
 from utils.config_loader import config
 
 logger = logging.getLogger(__name__)
@@ -48,6 +49,78 @@ class ContentSegmentationComponent(PipelineComponent):
             }
         ]
 
+    @staticmethod
+    def _extract_json_array(text: str) -> str | None:
+        """Extract the first balanced [...] block from a string."""
+        start = text.find("[")
+        if start == -1:
+            return None
+        depth = 0
+        in_string = False
+        escape = False
+        for i in range(start, len(text)):
+            ch = text[i]
+            if escape:
+                escape = False
+                continue
+            if ch == "\\" and in_string:
+                escape = True
+                continue
+            if ch == '"':
+                in_string = not in_string
+                continue
+            if in_string:
+                continue
+            if ch == "[":
+                depth += 1
+            elif ch == "]":
+                depth -= 1
+                if depth == 0:
+                    return text[start:i + 1]
+        return None
+
+    @staticmethod
+    def _clean_topics_output(raw: str) -> str:
+        """
+        Clean the raw output from the model to extract a valid JSON array string.
+        """
+        import json
+
+        def try_parse(s: str):
+            try:
+                parsed = json.loads(s)
+                if isinstance(parsed, list):
+                    return s
+            except Exception:
+                pass
+            return None
+
+        text = raw.strip()
+
+        result = try_parse(text)
+        if result:
+            return result
+
+        stripped = re.sub(r"```[a-zA-Z]*\n?([\s\S]*?)```", r"\1", text).strip()
+        result = try_parse(stripped)
+        if result:
+            return result
+
+        extracted = ContentSegmentationComponent._extract_json_array(stripped)
+        if extracted:
+            result = try_parse(extracted)
+            if result:
+                return result
+
+        extracted = ContentSegmentationComponent._extract_json_array(text)
+        if extracted:
+            result = try_parse(extracted)
+            if result:
+                return result
+
+        logger.error("_clean_topics_output: all strategies failed. Preview: %s", raw[:200])
+        raise ValueError("INVALID_TOPICS_FORMAT")
+
     def generate_topics(self, transcript_text):
         try:
             logger.info("Generating topic segmentation...")
@@ -59,8 +132,9 @@ class ContentSegmentationComponent(PipelineComponent):
             )
 
             full_output = self.model.generate(prompt, False)
+            clean_output = self._clean_topics_output(full_output)
             logger.info("Topic segmentation completed.")
-            return full_output
+            return clean_output
 
         except Exception as e:
             logger.error(f"Topic segmentation failed: {e}")

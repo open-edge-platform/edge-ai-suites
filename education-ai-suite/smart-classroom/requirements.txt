@@ -26,3 +26,4 @@ speechbrain==1.0.3
 pyannote.audio==3.3.2
 faiss-cpu
 sentence-transformers
+hf_xet==1.4.3

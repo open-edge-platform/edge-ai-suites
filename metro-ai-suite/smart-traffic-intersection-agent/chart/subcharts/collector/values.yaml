@@ -1,0 +1,38 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# collector/values.yaml
+#
+# Security notice:
+# The collector Deployment runs with hostPID=true and privileged=true.
+# This is necessary for hardware metrics collection (CPU freq, GPU via qmassa).
+# Ensure your cluster policy (PodSecurityAdmission / OPA) allows this.
+
+fullnameOverride: ""
+
+image:
+  repository: docker.io/intel/vippet-collector
+  tag: "2026.0.0"
+  pullPolicy: IfNotPresent
+
+# live-metrics-service WebSocket URL.
+# Must match live-metrics-service fullnameOverride and port.
+websocketUrl: "ws://live-metrics-service:9090/ws/collector"
+
+# Prometheus metrics port exposed by Telegraf.
+prometheusPort: 9273
+
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+
+# Run with host PID namespace (required for qmassa GPU monitoring).
+hostPID: true
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "1"
+    memory: "512Mi"

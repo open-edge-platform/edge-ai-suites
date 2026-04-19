@@ -108,4 +108,4 @@ Workaround — choose one of the following:
 
 ## Known EMT Limitation with External RTSP Streams
 
-Due to an EMT networking limitation, RTSP streams must be deployed within the same Docker network as the application (accessed via container/service name). RTSP streams hosted outside the Docker network or accessed using <host-ip> are not supported
+Due to an EMT networking limitation, RTSP streams must be deployed within the same Docker network as the application (accessed via container/service name). RTSP streams hosted outside the Docker network or accessed using <host-ip> are not supported.

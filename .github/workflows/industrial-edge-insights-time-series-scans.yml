@@ -679,7 +679,7 @@ jobs:
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
           make down
         
-      - name: Deploy Time Series Weld Anomaly Detection Sample App 
+      - name: Deploy Time Series Weld Defect Detection Sample App 
         if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
@@ -696,9 +696,9 @@ jobs:
           sed -i "s/VISUALIZER_GRAFANA_PASSWORD=.*/VISUALIZER_GRAFANA_PASSWORD=${VISUALIZER_GRAFANA_PASSWORD}/g" .env
           make build
           echo "Deploying using mqtt ingestion"
-          make up_mqtt_ingestion app=weld-anomaly-detection
+          make up_mqtt_ingestion app=weld-defect-detection
 
-      - name: DBS download and scan for Time Series Weld Anomaly Detection Sample App
+      - name: DBS download and scan for Time Series Weld Defect Detection Sample App
         if: ${{ (inputs.application == 'time-series') || (inputs.application == 'both') }}
         run: |
           cd manufacturing-ai-suite/industrial-edge-insights-time-series/
