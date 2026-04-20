@@ -919,6 +919,8 @@ def get_docker_ports_from_env(project_root: str = None):
     
     if 'OPCUA_SERVER_PORT' in env_vars:
         port_mapping['opcua'] = int(env_vars['OPCUA_SERVER_PORT'])
+    else:
+        port_mapping['opcua'] = constants.OPCUA_SERVER_PORT  # Default internal port for OPC UA server
     
     # These are hardcoded in docker-compose.yml
     port_mapping['mqtt'] = 1883
@@ -1009,6 +1011,8 @@ def get_docker_ports_from_compose(project_root: str = None):
     
     if 'opcua_server' in port_mapping and 'OPCUA_SERVER_PORT' in env_vars:
         port_mapping['opcua'] = int(env_vars['OPCUA_SERVER_PORT'])
+    else:
+        port_mapping['opcua'] = constants.OPCUA_SERVER_PORT  # Default internal port for OPC UA server
     
     return port_mapping
 

@@ -27,17 +27,17 @@ and latency trigger, and saves all output to
 
 ```bash
 # Basic single run
-make wandering
+bash src/wandering_run.sh
 
 # Single run + record a KPI rosbag
-make wandering-record
+bash src/wandering_run.sh --record
 ```
 
 After the run, visualize results:
 
 ```bash
-make visualize-last ALGORITHM=wandering
-make pipeline-graph ALGORITHM=wandering
+uv run python src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
+uv run python src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 ```
 
 ## Benchmark (Multiple Runs)
@@ -47,44 +47,45 @@ between runs, and then aggregates KPI statistics across all sessions.
 
 ```bash
 # Default benchmark (25 runs, 120s each)
-make wandering-benchmark
+for i in $(seq 1 25); do bash src/wandering_run.sh --timeout 120; done
 
-# Custom parameters
-make wandering-benchmark RUNS=10 TIMEOUT=120
+# Custom parameters (10 runs, 120s each)
+for i in $(seq 1 10); do bash src/wandering_run.sh --timeout 120; done
 
 # Re-aggregate KPIs from a completed benchmark directory
-make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260319_100421
+uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_20260319_100421
 ```
 
 | Parameter | Description | Default |
-|-----------|-------------|---------|
-| `RUNS` | Number of simulation runs | 25 |
-| `TIMEOUT` | Max duration per run (seconds) | 120 |
-| `PAUSE` | Pause between runs (seconds) | 30 |
-| `NODE` | Narrow graph discovery to a specific node | — |
+|-----------|-------------|--------|
+| `--timeout N` | Max duration per run (seconds) | off |
+| `--record` | Record KPI topics to a rosbag | — |
+| `--plot` | Save trigger-timeline PNG plots | — |
 
 Sessions are stored in `monitoring_sessions/wandering/`.
 
 ## Remote Benchmark
 
-To benchmark a wandering pipeline running on a remote machine:
+To benchmark a wandering pipeline running on a remote machine, use
+`monitor_stack.py` directly with `--remote-ip`. It monitors resources via SSH
+and the ROS2 graph via DDS peer discovery, with no Grafana stack required.
 
 ```bash
 # CPU + GPU monitoring
-make monitor-remote REMOTE_IP=10.0.0.1 REMOTE_USER=intel DOMAIN_ID=46 \
-    GPU=1 ALGORITHM=wandering DURATION=180
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --gpu --algorithm wandering --duration 180
 
 # CPU + NPU monitoring
-make monitor-remote REMOTE_IP=10.0.0.1 REMOTE_USER=intel DOMAIN_ID=46 \
-    NPU=1 ALGORITHM=wandering DURATION=180
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --npu --algorithm wandering --duration 180
 
 # Combined GPU + NPU
-make monitor-remote REMOTE_IP=10.0.0.1 REMOTE_USER=intel DOMAIN_ID=46 \
-    GPU=1 NPU=1 ALGORITHM=wandering DURATION=180
+uv run python src/monitor_stack.py --remote-ip 10.0.0.1 --remote-user intel \
+    --ros-domain-id 46 --gpu --npu --algorithm wandering --duration 180
 ```
 
 > **Note:** DDS discovery on remote sessions typically takes 30–60 seconds.
-> Use `DURATION=180` or longer to ensure meaningful data is captured.
+> Use `--duration 180` or longer to ensure meaningful data is captured.
 
 For repeated remote runs:
 
@@ -93,20 +94,40 @@ make monitor-remote-repeat REMOTE_IP=<ip> REMOTE_USER=intel REPEAT=3 \
     GPU=1 ALGORITHM=wandering DOMAIN_ID=46
 ```
 
+### Remote Benchmark with Grafana
+
+To stream metrics into a live Grafana dashboard during a remote benchmark,
+use `grafana-monitor.sh` instead. This starts the Prometheus exporter
+alongside `monitor_stack.py`:
+
+```bash
+# CPU + GPU monitoring
+./grafana-monitor.sh --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 \
+    --gpu --algorithm wandering --duration 180
+
+# CPU + NPU monitoring
+./grafana-monitor.sh --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 \
+    --npu --algorithm wandering --duration 180
+
+# Combined GPU + NPU
+./grafana-monitor.sh --remote-ip 10.0.0.1 --remote-user intel --domain-id 46 \
+    --gpu --npu --algorithm wandering --duration 180
+```
+
 ## Visualization
 
 ```bash
 # Timeline, resource, and frequency plots
-make visualize-last ALGORITHM=wandering
+uv run python src/visualize_timing.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 
 # Full GPU dashboard (engine/freq/power)
-make visualize-gpu ALGORITHM=wandering
+uv run python src/visualize_gpu.py monitoring_sessions/wandering/<session>/gpu_usage.log --show
 
 # NPU dashboard (busy%, clock, memory)
-make visualize-npu ALGORITHM=wandering
+uv run python src/visualize_npu.py monitoring_sessions/wandering/<session>/npu_usage.log --show
 
 # Interactive node topology graph
-make pipeline-graph ALGORITHM=wandering
+uv run python src/visualize_graph.py monitoring_sessions/wandering/<session>/graph_timing.csv --show
 ```
 
 ## Session Data Layout

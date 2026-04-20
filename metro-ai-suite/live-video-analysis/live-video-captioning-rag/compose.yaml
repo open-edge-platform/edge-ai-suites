@@ -6,7 +6,10 @@ name: ${PROJECT_NAME:-live-video-caption-rag}
 services:
   live-video-captioning-rag:
     image: ${REGISTRY:-}live-video-captioning-rag:${TAG:-latest}
-    build: ./app
+    build:
+      context: ./app
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-video-captioning-rag
     environment:
       http_proxy: ${http_proxy}
@@ -52,7 +55,7 @@ services:
       - rag_network
 
   multimodal-embedding-serving:
-    image: intel/multimodal-embedding-serving:1.3.4-rc1
+    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
     container_name: multimodal-embedding-serving
     ports:
       - '${EMBEDDING_SERVER_PORT:-9777}:8000'

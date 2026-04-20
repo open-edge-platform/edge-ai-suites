@@ -225,7 +225,7 @@ def main():
     else:
         if sample_app is None:
             sys.exit("Error: SAMPLE_APP environment variable is not set.")
-        topic = sample_app.split("anomaly")[0] + "data"
+        topic = sample_app.split("-")[0] + "-simulation-data"
 
     if args.csv is not None:
         csv_file_path = args.csv

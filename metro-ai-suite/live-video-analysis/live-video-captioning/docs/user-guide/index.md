@@ -43,15 +43,11 @@ The key features are:
 :::{toctree}
 :hidden:
 
-get-started
-model-preparation
-embedding-creation-with-rag
-deploy-with-helm
-how-it-works
-alert-mode
-object-detection-pipeline
-api-reference
-known-issues
+get-started.md
+how-to-guides.md
+how-it-works.md
+api-reference.md
+known-issues.md
 Release Notes <release-notes.md>
 
 :::

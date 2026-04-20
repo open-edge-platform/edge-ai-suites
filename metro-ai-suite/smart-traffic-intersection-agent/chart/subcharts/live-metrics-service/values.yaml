@@ -1,0 +1,41 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# live-metrics-service/values.yaml
+
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: intel/live-metrics-service
+  tag: "latest"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  # Container / service port.  Also used as hostPort so browsers can connect
+  # directly on the node IP (same as Docker Compose port publishing).
+  port: 9090
+
+env:
+  # Port the metrics server listens on.
+  metricsPort: "9090"
+  # Log verbosity.  [DEBUG | INFO | WARNING | ERROR]
+  logLevel: "INFO"
+  # CORS allowed origins.
+  corsOrigins: "*"
+
+healthcheck:
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "256Mi"

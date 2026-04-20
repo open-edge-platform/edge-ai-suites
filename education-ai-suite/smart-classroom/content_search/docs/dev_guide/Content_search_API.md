@@ -382,14 +382,14 @@ Different filter keys are always combined with `AND`. When a filter value is a `
 * Example:
 Request:
 ```
-# Example 1: Filter by tags — returns results whose tags array contains "classroom" or "student"
+# Example 1: Filter by tags — returns results whose tags array contains "test_tag1" or "test_tag2"
 curl --location 'http://127.0.0.1:9011/api/v1/object/search' \
 --header 'Content-Type: application/json' \
 --data '{
-    "query": "student in classroom",
-    "max_num_results": 1,
+    "query": "classroom",
+    "max_num_results": 2,
     "filter": {
-        "tags": ["classroom", "student"]
+        "tags": ["test_tag1", "test_tag2"]
     }
 }'
 # Example 2: Filter by type — available values: `video`, `image`, `document`. If not specified, all types are returned. Example returns only `video` or `document` results:
@@ -408,49 +408,93 @@ Response (200 OK):
 {
     "code": 20000,
     "data": {
+        "task_id": "4d3159df-93d1-44a9-8592-bc48eb561b05",
+        "status": "COMPLETED",
         "results": [
             {
-                "id": "1680138485034402529",
-                "distance": 0.47685748,
+                "id": "197972195449837430",
+                "distance": 0.8402439,
                 "meta": {
-                    "start_frame": 0,
-                    "chunk_text": "The video depicts a classroom setting with four individuals seated at desks arranged in a U-shape. The room has a modern design with blue chairs, white tables, and a whiteboard on the right side. The walls are adorned with various posters and a large mirror reflecting part of the room. The lighting is bright, creating a well-lit environment. The individuals appear to be engaged in a discussion or presentation, with one person standing and gesturing towards the others. The overall atmosphere suggests an educational or collaborative activity taking place.",
-                    "reused": false,
-                    "start_time": 0.0,
-                    "asset_id": "classroom_8.mp4",
-                    "file_path": "local://content-search/runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
-                    "run_id": "81802f9e-0a28-4486-bad2-2e05c1086326",
-                    "type": "document",
-                    "end_time": 0.32,
-                    "summary_key": "runs/81802f9e-0a28-4486-bad2-2e05c1086326/derived/video/classroom_8.mp4/chunksum-v1/summaries/chunk_0001/summary.txt",
-                    "doc_filetype": "text/plain",
-                    "chunk_id": "chunk_0001",
-                    "file_key": "runs/c9a34e33-284a-48af-8d41-2b0d7d2989a7/raw/video/default/classroom_8.mp4",
-                    "chunk_index": 0,
+                    "type": "video",
+                    "file_path": "local://content-search/runs/2a6e14b6-da45-4e20-93a1-2291ab01d6f6/raw/video/default/store-aisle-detection.mp4",
+                    "file_name": "store-aisle-detection.mp4",
+                    "video_pin_second": 11.01,
+                    "video_start_second": 7.76,
+                    "video_end_second": 14.26,
+                    "summary_text": "The video depicts a scene inside a store filled with shelves of white ceramic dishes, including bowls, plates, mugs, and cups. The store appears to be a pottery or ceramics shop, as evidenced by the variety of items available for purchase.\n\nIn the foreground, a man wearing a brown jacket is browsing through the shelves, examining the ceramic dishes. He seems interested in the selection and is carefully inspecting each item. Nearby, a woman in a green jacket is also looking at the dishes, possibly considering purchasing some. Another person, dressed in a blue jacket, is seen walking past the shelves, seemingly uninterested in the products.\n\nAs the camera pans around the store, more people can be observed engaging with the ceramic items. Some individuals are standing near the shelves, closely examining the dishes, while others are walking through the aisles, browsing the available options. The store has a well-lit environment, making it easy for customers to see the details of the ceramic pieces.\n\nThroughout the video, the focus remains on the interaction between the customers and the ceramic dishes, showcasing the variety of items available for purchase. The store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
+                },
+                "score": 53.65
+            },
+            {
+                "id": "435369449869751787",
+                "distance": 0.7416173,
+                "meta": {
+                    "type": "image",
+                    "file_path": "local://content-search/runs/7a4480af-3f9c-40b6-ac9e-0a698717bc45/raw/image/default/classroom.jpg",
+                    "file_name": "classroom.jpg",
                     "tags": [
-                        "class",
-                        "student"
-                    ],
-                    "end_frame": 8
-                }
+                        "img_tag1",
+                        "img_tag2"
+                    ]
+                },
+                "score": 83.56
+            },
+            {
+                "id": "3898473585704952476",
+                "distance": 0.19918823,
+                "meta": {
+                    "doc_filename": "ComputerScienceOne.pdf",
+                    "doc_is_continuation": true,
+                    "doc_last_modified": "2026-04-14T20:56:13",
+                    "doc_sequence_number": 448,
+                    "chunk_text": "tegral. Instead, Computer Science is the study of computers and computation. It involves studying and understanding computational processes and the development of algorithms and techniques and how they apply to problems.",
+                    "chunk_index": 448,
+                    "type": "document",
+                    "doc_filetype": "application/pdf",
+                    "doc_page_number": 36,
+                    "doc_languages": "[\"eng\"]",
+                    "doc_file_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\tmpwma1e266",
+                    "file_path": "local://content-search/runs/a6d3ef1f-510b-4ec9-8a16-4db2332758b0/raw/application/default/ComputerScienceOne.pdf",
+                    "file_name": "ComputerScienceOne.pdf",
+                    "tags": [
+                        "pdf_tag1",
+                        "pdf_tag2"
+                    ]
+                },
+                "score": 99.81,
+                "reranker_score": 6.28125
             }
         ]
     },
     "message": "Search completed",
-    "timestamp": 1774877744
+    "timestamp": 1776171542
 }
 ```
 #### Resource Download (Video/Image/Document)
-Download existing resources from storage.
+Download or preview existing resources from storage.
 
-* URL: /api/v1/object/download/{resource_id}
+* URL: /api/v1/object/download
 * Method: GET
 * Pattern: SYNC
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `file_key` | `string` | Yes | The full path of the file in storage (e.g., "runs/xxx/raw/video/default/file.mp4"). |
+| `inline` | `boolean` | No | If `true`, sets `Content-Disposition: inline` for browser preview (PDF, video, image). If `false` or omitted, forces download with `Content-Disposition: attachment`. Defaults to `false`. |
+
 Request:
+```bash
+# Example 1: Download file (default behavior)
+curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fvideo%2Fdefault%2Fclassroom_8.mp4'
+
+# Example 2: Preview file in browser (PDF, video, image)
+curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fapplication%2Fdefault%2Fdocument.pdf&inline=true'
 ```
-curl --location 'http://127.0.0.1:9011/api/v1/object/download?file_key=runs%2Fc9a34e33-284a-48af-8d41-2b0d7d2989a7%2Fraw%2Fvideo%2Fdefault%2Fclassroom_8.mp4' \
---header 'Content-Type: application/json'
-```
+
+**Usage Notes**:
+- Use `inline=true` for embedding resources in `<iframe>`, `<video>`, or `<img>` tags for in-browser preview.
+- Use `inline=false` (or omit) when you need to trigger a download prompt in the browser.
 
 #### Cleanup file storage and record
 Removes all physical and logical footprints associated with a specific task, including local storage files, indexed vectors in ChromaDB, and metadata records in the database.

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "STAGED"
@@ -85,6 +85,12 @@ const UploadSection: React.FC = () => {
       );
       dispatch(setCsUploadsComplete(anyUploaded));
     }
+  }, [entries, dispatch]);
+
+  useEffect(() => {
+    const allTags = entries.flatMap((e) => e.tags);
+    const uniqueTags = [...new Set(allTags)];
+    dispatch(setCsTags(uniqueTags));
   }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
@@ -259,8 +265,8 @@ const UploadSection: React.FC = () => {
           } else {
             const res = await csUploadIngest(entry.file, meta);
             if (res.status === "ALREADY_EXISTS") {
-              // File was already fully processed in a previous session — no new task created
-              updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100 });
+              // File was already fully processed — store task_id so cleanup works on remove
+              updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, taskId: res.task_id || null });
             } else {
               updateEntry(entry.id, { taskId: res.task_id, status: "PROCESSING", fileKey: res.file_key ?? null });
               startPolling(entry.id, res.task_id);
@@ -283,8 +289,8 @@ const UploadSection: React.FC = () => {
         const meta = entry.tags.length ? { tags: entry.tags } : undefined;
         const res = await csUploadIngest(entry.file, meta);
         if (res.status === "ALREADY_EXISTS") {
-          // Already fully processed — no new background task, treat as terminal
-          updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100 });
+          // Already fully processed — store task_id so cleanup works on remove
+          updateEntry(entry.id, { status: "ALREADY_EXISTS", progress: 100, taskId: res.task_id || null });
         } else {
           updateEntry(entry.id, { taskId: res.task_id, status: "PROCESSING", fileKey: res.file_key ?? null });
           startPolling(entry.id, res.task_id);

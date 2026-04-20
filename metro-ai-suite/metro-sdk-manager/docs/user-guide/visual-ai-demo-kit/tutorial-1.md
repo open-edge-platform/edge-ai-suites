@@ -43,10 +43,10 @@ The AI Tolling system consists of several key components:
 
 ### 1. **Create the AI Tolling Application Directory**
 
-Navigate to the metro vision AI recipe directory and create the AI tolling application by copying the Smart Parking template:
+Navigate to the OEP Vision AI recipe directory and create the AI tolling application by copying the Smart Parking template:
 
 ```bash
-cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
+cd ~/oep/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
 cp -r smart-parking/ ai-tolling/
 ```
 
@@ -84,27 +84,27 @@ Create and run the model download script to install all required AI models:
 ```bash
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
-  -v "$PWD:/home/dlstreamer/metro-suite" \
+  -v "$PWD:/home/dlstreamer/oep-suite" \
   intel/dlstreamer:2026.0.0-ubuntu24 bash -c "$(cat <<EOF
 
-cd /home/dlstreamer/metro-suite/
+cd /home/dlstreamer/oep-suite/
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/public
-export MODELS_PATH=/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models
+export MODELS_PATH=/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models
 /home/open-edge-platform/dlstreamer/samples/download_public_models.sh yolov10s
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/intel
 
 python3 -m pip install openvino-dev[onnx,tensorflow2]
 
-omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
+omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+wget -O "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
 
 
-omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
+omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
+wget -O "/home/dlstreamer/oep-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" ai-tolling/src/dlstreamer-pipeline-server/models ai-tolling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
@@ -230,7 +230,7 @@ if [ ! -f server.key ] || [ ! -f server.crt ]; then
 
 fi
 
-cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
+cd ~/oep/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
 
 # Verify the configuration
 grep SAMPLE_APP= .env
