@@ -1695,13 +1695,13 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "mqtt": {
-                    "mqtt_broker_host": "ia-mqtt-broker",
-                    "mqtt_broker_port": 1883,
+                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
                     "name": "my_mqtt_broker"
                 }
             }
@@ -1713,8 +1713,8 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "opcua": {
@@ -2239,12 +2239,18 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         # Use external nginx proxy approach (exactly like Docker does)
         logger.info("Using external nginx proxy for API access (matches Docker pattern)...")
 
-        # External nginx proxy access (Docker uses HOST_IP:3000, Helm uses HOST_IP:30001)
         payload = {
-            "weld_defect_detector": {
-                "udfs": "/tmp/weld_defect_detector/udfs",
-                "models": "/tmp/weld_defect_detector/models", 
-                "tick_scripts": "/tmp/weld_defect_detector/tick_scripts"
+            "udfs": {
+                "name": constants.WELD_UDF,
+                "models": constants.WELD_MODEL,
+                "device": device_value
+            },
+            "alerts": {
+                "mqtt": {
+                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
+                    "name": "my_mqtt_broker"
+                }
             }
         }
         json_payload = json.dumps(payload)

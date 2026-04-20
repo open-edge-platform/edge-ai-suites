@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import os
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -12,6 +14,21 @@ from utils.storage_service import storage_service
 from utils.search_service import search_service
 
 router = APIRouter()
+
+
+@router.get("/config")
+async def get_config():
+    """Return Content Search model and database configuration."""
+    vs_enabled = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
+    return {
+        "vlm_model": os.getenv("VLM_MODEL_NAME", "Qwen/Qwen2.5-VL-3B-Instruct"),
+        "visual_embedding_model": os.getenv("VISUAL_EMBEDDING_MODEL", "CLIP/clip-vit-b-16"),
+        "doc_embedding_model": os.getenv("DOC_EMBEDDING_MODEL", "BAAI/bge-small-en-v1.5"),
+        "reranker_model": os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-large"),
+        "vector_db": f"ChromaDB ({os.getenv('CHROMA_HOST', '127.0.0.1')}:{os.getenv('CHROMA_PORT', '9090')})",
+        "video_summarization_enabled": vs_enabled,
+    }
+
 
 @router.get("/health")
 async def health_check(db: Session = Depends(get_db)):

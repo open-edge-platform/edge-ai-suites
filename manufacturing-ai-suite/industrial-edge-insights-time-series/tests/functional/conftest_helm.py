@@ -64,15 +64,14 @@ def setup_helm_environment(request):
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=300) == True, "Failed to verify pods are running after installation."
+    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
     
     yield
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
 
 @pytest.fixture(scope="function")
 def setup_helm_weld_environment(request):
@@ -110,15 +109,14 @@ def setup_helm_weld_environment(request):
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=300) == True, "Failed to verify pods are running after installation."
+    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
     
     yield
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.POD_CLEANUP_TIMEOUT)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
 
 @pytest.fixture(scope="function")
 def setup_multimodal_helm_environment():
@@ -137,7 +135,6 @@ def setup_multimodal_helm_environment():
     time.sleep(3)
     yield
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.POD_CLEANUP_TIMEOUT)
+    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")

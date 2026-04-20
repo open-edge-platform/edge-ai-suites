@@ -47,3 +47,15 @@ dependencies:
   - name: collector
     version: "0.1.0"
     repository: "file://subcharts/collector"
+  - name: multimodal-embedding
+    version: "0.1.0"
+    repository: "file://subcharts/multimodal-embedding"
+    condition: global.enableRAG
+  - name: vdmsvectordb
+    version: "0.1.0"
+    repository: "file://subcharts/vdms-vectordb"
+    condition: global.enableRAG
+  - name: live-video-captioning-rag
+    version: "0.1.0"
+    repository: "file://subcharts/live-video-captioning-rag"
+    condition: global.enableRAG
