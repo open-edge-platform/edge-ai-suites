@@ -33,10 +33,16 @@ Intel recommends using the automated setup script that handles environment confi
 submodule and dependencies setup, secrets generation, building, and deployment of the Smart
 Traffic Intersection Agent.
 
-### 1. Clone the Repository
+### 1. Clone the Suite
+
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
@@ -45,6 +51,7 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
 ```
+
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Run the Complete Setup
@@ -110,89 +117,89 @@ locations on the same machine for `n` required instances.
 
 ### Set up Instance #1
 
-1.  Clone the repository into a new directory:
+1. Clone the repository into a new directory:
 
-    ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
-    cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
-    ```
+   ```bash
+   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+   cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
+   ```
 
-2.  Edit the deployment configuration file for instance #1:
+2. Edit the deployment configuration file for instance #1:
 
-    ```bash
-    nano src/config/deployment_instance.json
-    ```
+   ```bash
+   nano src/config/deployment_instance.json
+   ```
 
-    Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
+   Update `name`, `latitude` and `longitude` values as required. Following is a sample value for the Instance #1 deployment config:
 
-    ```json
-    {
-        "name": "intersection_1",
-        "latitude": 37.5879818,
-        "longitude": -122.0534334,
-        "agent_backend_port": "8081",
-        "agent_ui_port": "7860"
-    }
-    ```
+   ```json
+   {
+       "name": "intersection_1",
+       "latitude": 37.5879818,
+       "longitude": -122.0534334,
+       "agent_backend_port": "8081",
+       "agent_ui_port": "7860"
+   }
+   ```
 
-    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-3.  Set the required environment variable.
+3. Set the required environment variable.
 
-    ```bash
-    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
-    ```
+   ```bash
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   ```
 
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
-4.  Run the setup for instance #1:
+4. Run the setup for instance #1:
 
-    ```bash
-    source setup.sh --setup
-    ```
+   ```bash
+   source setup.sh --setup
+   ```
 
 ### Set up Instance #2
 
-1.  Open a new terminal window and move to new directory. Clone the repository into the new directory:
+1. Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
-    ```bash
-    git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
-    cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
-    ```
+   ```bash
+   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+   cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
+   ```
 
-2.  Edit the deployment configuration for instance #2:
+2. Edit the deployment configuration for instance #2:
 
-    ```bash
-    nano src/config/deployment_instance.json
-    ```
+   ```bash
+   nano src/config/deployment_instance.json
+   ```
 
-    The following is a sample value for instance #2 deployment configuration:
+   The following is a sample value for instance #2 deployment configuration:
 
-    ```json
-    {
-        "name": "intersection_2",
-        "latitude": 37.33874,
-        "longitude": -121.8852525,
-        "agent_backend_port": "8082",
-        "agent_ui_port": "7861"
-    }
-    ```
+   ```json
+   {
+       "name": "intersection_2",
+       "latitude": 37.33874,
+       "longitude": -121.8852525,
+       "agent_backend_port": "8082",
+       "agent_ui_port": "7861"
+   }
+   ```
 
-    > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
+   > **TIPS:** Leave `agent_backend_port` and `agent_ui_port` empty to avoid port conflicts. Random ports would be assigned and application URLs with assigned ports will be shown when setup finishes.
 
-3.  Set the required environment variable.
+3. Set the required environment variable.
 
-    ```bash
-    export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
-    ```
+   ```bash
+   export VLM_MODEL_NAME=<supported_model_name>  # eg. microsoft/Phi-3.5-vision-instruct, Qwen/Qwen2.5-VL-3B-Instruct
+   ```
 
-    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
+   > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
-4.  Run Setup for Instance #2
+4. Run Setup for Instance #2
 
-    ```bash
-    source setup.sh --setup
-    ```
+   ```bash
+   source setup.sh --setup
+   ```
 
 Ensure each instance has their `deployment_instance.json` updated with:
 
@@ -256,6 +263,52 @@ URLs for accessing the relevant services:
 
 ![Service endpoints displayed after setup completion](./_assets/service_endpoints.png "Service endpoints after completed setup")
 
+## Upgrading
+
+When upgrading to a new release of the Smart Traffic Intersection Agent, follow these steps
+to avoid common issues caused by stale data or configuration from a prior version.
+
+### 1. Pull the Latest Code
+
+```bash
+git pull origin <branch-or-tag>
+```
+
+### 2. Sync Submodules
+
+The RI dependency (`deps/metro-vision`) is managed as a git submodule. After pulling new
+code, sync the submodule to match the version pinned by the new release:
+
+```bash
+cd metro-ai-suite/smart-traffic-intersection-agent
+git submodule sync deps/metro-vision
+git submodule update --init --depth 1 deps/metro-vision
+```
+
+> This manual step is required for **existing clones** because `setup.sh` only initializes
+> the submodule when the dependency directory does not yet exist. If the directory is
+> already present from a prior release, `setup.sh --setup` will skip the submodule update
+> and use the old version. For a **fresh clone** on a new machine, `source setup.sh --setup`
+> handles submodule initialization automatically and no manual step is needed.
+
+### 3. Clean and Re-setup
+
+For **major version upgrades** (for example, from SceneScape v1.x to v2026.x), stale data
+volumes and secrets can cause failures. Clean up old containers and re-run setup:
+
+```bash
+source setup.sh --clean --keep-models
+export VLM_MODEL_NAME=<supported_model_name>
+source setup.sh --setup
+```
+
+The `--keep-models` flag preserves downloaded VLM model files so they don't need to be
+re-downloaded.
+
+> **IMPORTANT:** If the PostgreSQL version has changed between releases, the existing data
+> volume is incompatible. The `--clean` step removes it. If you need to preserve data,
+> export it before cleaning.
+
 ## Troubleshooting
 
 ### Port Conflicts for Traffic Intersection Agent Backend or UI
@@ -274,6 +327,51 @@ empty values for the `agent_backend_port` and `agent_ui_port` fields:
 Intel recommends to keep these values empty and let the Docker engine use ephemeral ports.
 However, if you need to provide an explicit port, ensure port values for all instances are
 unique. Additionally, ensure no other external services are running on these ports.
+
+### PostgreSQL Container Fails to Start After Upgrade
+
+**Symptom:** The PostgreSQL container exits immediately with an error like
+`incompatible data directory` or `was created by PostgreSQL <old_version>`.
+
+**Cause:** A major PostgreSQL version change (for example, 15 → 17) makes existing data
+volumes incompatible.
+
+**Fix:** Remove the stale volume and re-run setup:
+
+```bash
+source setup.sh --clean --keep-models
+source setup.sh --setup
+```
+
+### Secrets or Certificate Errors on Startup
+
+**Symptom:** Services fail to start with TLS or authentication errors, or the
+`pgserver.env` file is missing.
+
+**Cause:** A partial or stale secrets directory from a prior installation. The setup script
+may skip secret generation if it detects existing files.
+
+**Fix:** Force secret regeneration by cleaning and re-running setup:
+
+```bash
+source setup.sh --clean --keep-models
+source setup.sh --setup
+```
+
+### Demo Video Files Not Found by DL Streamer
+
+**Symptom:** DL Streamer containers exit or log errors about missing video files.
+
+**Cause:** Video filenames may change between releases (for example, `1122north.ts` →
+`1122north_h264.ts`). The download step is skipped if files with `.ts` extension already
+exist in the video directory.
+
+**Fix:** Remove old video files and re-run setup to download the correct versions:
+
+```bash
+rm -f deps/metro-vision/smart-intersection/sample-videos/*.ts
+source setup.sh --setup
+```
 
 <!--hide_directive
 :::{toctree}

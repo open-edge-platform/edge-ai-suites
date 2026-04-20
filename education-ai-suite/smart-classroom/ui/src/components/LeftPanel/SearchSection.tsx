@@ -4,6 +4,7 @@ import "../../assets/css/SearchSection.css";
 import { csSearch } from "../../services/api";
 import ResultSection, { type CsSearchResult } from "./ResultSection";
 import warningIcon from "../../assets/images/warning-info.svg";
+import infoIcon from "../../assets/images/info-icon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
 import noSearchIcon from "../../assets/images/no-search-icon.svg";
 import { useAppSelector } from "../../redux/hooks";
@@ -11,7 +12,6 @@ import { useAppSelector } from "../../redux/hooks";
 type SearchTab = "text" | "image";
 type SearchType = "document" | "image" | "video";
 
-const AVAILABLE_LABELS = ["class", "student", "lecture", "exam", "default", "default_video"];
 const MAX_QUERY_LENGTH = 100;
 const DEFAULT_MAX_RESULTS = 10;
 
@@ -39,6 +39,8 @@ const SearchSection: React.FC = () => {
   const { t } = useTranslation();
   const csUploadsComplete = useAppSelector((s) => s.ui.csUploadsComplete);
   const csHasUploads = useAppSelector((s) => s.ui.csHasUploads);
+  const csProcessing = useAppSelector((s) => s.ui.csProcessing);
+  const csTags = useAppSelector((s) => s.ui.csTags);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const filterBoxRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +55,8 @@ const SearchSection: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<Set<SearchType>>(
     new Set(["document", "image", "video"])
   );
+
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [isLabelDropdownOpen, setIsLabelDropdownOpen] = useState(false);
@@ -91,6 +95,11 @@ const SearchSection: React.FC = () => {
       setActiveTab("text");
     }
   }, [csHasUploads]);
+
+  // Remove selected labels that are no longer available
+  useEffect(() => {
+    setSelectedLabels((prev) => prev.filter((label) => csTags.includes(label)));
+  }, [csTags]);
 
   const [maxResults, setMaxResults] = useState<number>(DEFAULT_MAX_RESULTS);
 
@@ -245,9 +254,28 @@ const SearchSection: React.FC = () => {
         {/* Header */}
         <div className="cs-search-header">
           <span className="cs-search-title">{t("searchSection.title")}</span>
+          <button 
+            className={`cs-search-chevron ${isExpanded ? "cs-search-chevron--expanded" : ""}`}
+            onClick={() => setIsExpanded(!isExpanded)}
+            aria-label={isExpanded ? "Collapse" : "Expand"}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
 
-        {!csHasUploads ? (
+        {/* Processing warning when some files are still processing but search is available */}
+        {csUploadsComplete && csProcessing && (
+          <div className="cs-search-warning-frame">
+            <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
+            <span className="cs-search-warning-frame-text">{t("search.processing")}</span>
+          </div>
+        )}
+
+        {isExpanded && (
+          <>
+          {!csHasUploads ? (
           /* No files uploaded */
           <div className="cs-search-disabled">
             <img 
@@ -395,7 +423,7 @@ const SearchSection: React.FC = () => {
             <div className="cs-search-divider" />
 
             {/* Filter by Label */}
-            {/*<div className={`cs-search-filter-section ${!hasSelectedType || !hasValidInput ? "cs-search-filter-disabled" : ""}`}>
+            <div className={`cs-search-filter-section ${!hasSelectedType || !hasValidInput ? "cs-search-filter-disabled" : ""}`}>
               <div className="cs-search-filter-label">{t("searchSection.filterByLabel")}</div>
               <div 
                 ref={filterBoxRef}
@@ -421,20 +449,24 @@ const SearchSection: React.FC = () => {
                 </div>
                 {isLabelDropdownOpen && hasSelectedType && hasValidInput && (
                   <div className="cs-search-filter-dropdown" onClick={(e) => e.stopPropagation()}>
-                    {AVAILABLE_LABELS.map((label) => (
-                      <label key={label} className="cs-search-filter-dropdown-item">
-                        <input
-                          type="checkbox"
-                          checked={selectedLabels.includes(label)}
-                          onChange={() => toggleLabel(label)}
-                        />
-                        <span>{label}</span>
-                      </label>
-                    ))}
+                    {csTags.length === 0 ? (
+                      <div className="cs-search-filter-dropdown-empty">{t("search.noLabels")}</div>
+                    ) : (
+                      csTags.map((label) => (
+                        <label key={label} className="cs-search-filter-dropdown-item">
+                          <input
+                            type="checkbox"
+                            checked={selectedLabels.includes(label)}
+                            onChange={() => toggleLabel(label)}
+                          />
+                          <span>{label}</span>
+                        </label>
+                      ))
+                    )}
                   </div>
                 )}
               </div>
-            </div> */}
+            </div> 
 
             {/* Top Results */}
             <div className={`cs-search-results-section ${!hasSelectedType || !hasValidInput ? "cs-search-filter-disabled" : ""}`}>
@@ -476,6 +508,8 @@ const SearchSection: React.FC = () => {
               <ResultSection results={searchResults} />
             )}
           </>
+        )}
+        </>
         )}
       </div>
     </>

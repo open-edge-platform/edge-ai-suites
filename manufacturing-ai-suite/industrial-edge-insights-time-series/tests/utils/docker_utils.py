@@ -2504,14 +2504,14 @@ def setup_mqtt_alerts_docker(sample_app=constants.WIND_SAMPLE_APP):
             setup_type = "mqtt"
         elif sample_app == constants.WELD_SAMPLE_APP:
             target_dir = os.path.join(constants.EDGE_AI_SUITES_DIR, 
-                                    "apps/weld-anomaly-detection/time-series-analytics-config")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+                                    "apps/weld-defect-detection/time-series-analytics-config")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         elif sample_app == constants.MULTIMODAL_SAMPLE_APP:
             # For multimodal, the config is in a different location
             multimodal_dir = constants.EDGE_AI_SUITES_DIR.replace(constants.TARGET_SUBPATH, constants.MULTIMODAL_TARGET_SUBPATH)
             target_dir = os.path.join(multimodal_dir, "configs/time-series-analytics-microservice")
-            file_path = os.path.join(target_dir, "tick_scripts/weld_anomaly_detector.tick")
+            file_path = os.path.join(target_dir, "tick_scripts/weld_defect_detector.tick")
             setup_type = "mqtt_weld"
         else:
             logger.error(f"✗ Unsupported sample app: {sample_app}")
@@ -2642,26 +2642,29 @@ def invoke_make_check_env_variables_in_current_dir():
 
 
 def invoke_make_up_in_current_dir():
-    """Execute 'make up' command in the current directory without changing directories"""
+    """Execute 'make up' command in the current directory without changing directories."""
     try:
         logger.info("Executing 'make up' command")
-        result = run_command("make up")
-        
-        if result != 0:  # Command failed
-            logger.error(f"make up failed with exit code: {result}")
-            # Get more detailed error information
-            error_result = subprocess.run(
-                ["make", "up"], 
-                capture_output=True, 
-                text=True,
-                cwd=os.getcwd()
-            )
-            if error_result.stderr:
-                logger.error(f"Error output: {error_result.stderr}")
-            return False
-            
-        logger.info("make up succeeded")
-        return True
+        result, output = run_command("make up", capture_output=True)
+
+        if result == 0:
+            logger.info("make up succeeded")
+            if output:
+                logger.warning(f"make up output: {output}")
+            return True
+
+        logger.error(f"make up failed with exit code: {result}")
+        if output:
+            logger.error(f"Error output: {output}")
+
+        # Run make status to show container state for diagnostics
+        logger.info("Running 'make status' for diagnostics...")
+        _, status_output = run_command("make status", capture_output=True)
+        if status_output:
+            logger.info(f"make status output: {status_output}")
+
+        return False
+
     except Exception as e:
         logger.error(f"Failed to run make up: {str(e)}")
         return False
@@ -2726,7 +2729,7 @@ def generate_multimodal_test_credentials(case_type="valid", invalid_field=None):
     
     # Combine basic and multimodal credentials
     basic_credentials.update(multimodal_vars)
-    
+
     logger.info(f"Generated {len(basic_credentials)} multimodal credentials for case '{case_type}'")
     
     return basic_credentials

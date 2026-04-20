@@ -1,0 +1,334 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: model-download-helper
+  labels:
+    app: model-download-helper
+data:
+  download-model.sh: |-
+    #!/bin/bash
+    # Shared function to download models via model-download service
+    # Usage: download_model MODEL_NAME MODEL_TYPE WEIGHT_FORMAT HF_TOKEN OUTPUT_NAME
+
+    # Function to check the health of the model-download microservice
+    check_model_download_service_health() {
+        local MAX_ATTEMPTS=5
+        local SLEEP_SECS=5
+        local attempt=1
+
+        if [ -z "${MODEL_DOWNLOAD_BASE_URL:-}" ]; then
+            echo "ERROR: MODEL_DOWNLOAD_BASE_URL is empty."
+            echo "Set MODEL_DOWNLOAD_HOST/MODEL_DOWNLOAD_PORT or MODEL_DOWNLOAD_BASE_URL before calling download_model."
+            return 1
+        fi
+
+        local api_health_url="${MODEL_DOWNLOAD_BASE_URL%/}/health"
+        local root_base_url="${MODEL_DOWNLOAD_BASE_URL%/}"
+        root_base_url="${root_base_url%/api/v1}"
+        local root_health_url="${root_base_url%/}/health"
+
+        echo "Checking health of model-download microservice..."
+        echo "Health URLs: ${api_health_url} (api), ${root_health_url} (root)"
+
+        while [ $attempt -le $MAX_ATTEMPTS ]; do
+            local api_http_code
+            local root_http_code
+            local api_curl_rc
+            local root_curl_rc
+
+            set +e
+            api_http_code=$(curl -sS -o /dev/null -w "%{http_code}" "${api_health_url}")
+            api_curl_rc=$?
+            root_http_code=$(curl -sS -o /dev/null -w "%{http_code}" "${root_health_url}")
+            root_curl_rc=$?
+            set -e
+
+            if [ "$api_curl_rc" -eq 0 ] && [ "$api_http_code" = "200" ]; then
+                echo "Model-download microservice is up and running"
+                return 0
+            fi
+
+            if [ "$root_curl_rc" -eq 0 ] && [ "$root_http_code" = "200" ]; then
+                echo "Model-download microservice is up and running"
+                return 0
+            fi
+
+            echo "Attempt $attempt/$MAX_ATTEMPTS: Model-download microservice not available. Retrying in $SLEEP_SECS seconds..."
+            echo "  api health -> curl_rc=${api_curl_rc}, http_code=${api_http_code}"
+            echo "  root health -> curl_rc=${root_curl_rc}, http_code=${root_http_code}"
+            sleep "$SLEEP_SECS"
+            attempt=$((attempt + 1))
+        done
+
+        echo "ERROR: Model-download service is not healthy. Please restart the service and try again"
+        return 1
+    }
+
+    download_model() {
+        local MODEL_NAME=$1
+        local MODEL_TYPE=$2  # vlm | llm | vision(yolo)
+        local WEIGHT_FORMAT=$3  # ""=fp16, "int8", or "int4"
+        local HF_TOKEN=${4:-""}  # default to empty
+        local OUTPUT_NAME=${5:-""}
+        local TARGET_ROOT="/opt/data/ov_models"
+        local MODEL_BASENAME="${MODEL_NAME##*/}"
+        local MODEL_PROVIDER="${MODEL_NAME%%/*}"
+        local TARGET_SUBPATH=""
+
+        # Keep model families isolated on the shared PVC.
+        if [ "$MODEL_TYPE" = "vision" ]; then
+            TARGET_ROOT="/opt/data/detection-models"
+        elif [ "$MODEL_TYPE" = "llm" ]; then
+            TARGET_ROOT="/opt/data/llm_models"
+        fi
+
+        # Fallback normalization when output name is not explicitly provided.
+        # Example: google/gemma-3-4b-it -> gemma-3-4b
+        if [ -z "$OUTPUT_NAME" ]; then
+            OUTPUT_NAME="$MODEL_BASENAME"
+            OUTPUT_NAME="${OUTPUT_NAME%-it}"
+            OUTPUT_NAME="${OUTPUT_NAME%-instruct}"
+        fi
+
+        if [ "$MODEL_TYPE" = "llm" ]; then
+            TARGET_SUBPATH="$OUTPUT_NAME"
+            case "$TARGET_SUBPATH" in
+                */*) ;;
+                *) TARGET_SUBPATH="${MODEL_PROVIDER}/${TARGET_SUBPATH}" ;;
+            esac
+        else
+            TARGET_SUBPATH="$OUTPUT_NAME"
+        fi
+
+        local TARGET_DIR="${TARGET_ROOT}/${TARGET_SUBPATH}"
+
+        # Backward-compatible API context initialization.
+        # Works for both legacy script flow (variables already set) and direct helper usage.
+        if [ -z "${MODEL_DOWNLOAD_BASE_URL:-}" ]; then
+            if [ -n "${MODEL_DOWNLOAD_HOST:-}" ] && [ -n "${MODEL_DOWNLOAD_PORT:-}" ]; then
+                MODEL_DOWNLOAD_BASE_URL="http://${MODEL_DOWNLOAD_HOST}:${MODEL_DOWNLOAD_PORT}/api/v1/"
+            else
+                echo "ERROR: Missing model-download endpoint configuration."
+                echo "Provide MODEL_DOWNLOAD_HOST and MODEL_DOWNLOAD_PORT, or set MODEL_DOWNLOAD_BASE_URL directly."
+                exit 1
+            fi
+        fi
+
+        if [ -z "${MODEL_DOWNLOAD_API_URL:-}" ]; then
+            MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL%/}/models/download"
+        fi
+
+        if [ -z "${DOWNLOAD_MODEL_DIR:-}" ]; then
+            DOWNLOAD_MODEL_DIR="downloaded_models/"
+        fi
+
+        resolve_content_dir() {
+            local root="$1"
+            local current="$root"
+            local provider_segment="${MODEL_NAME%%/*}"
+            local model_segment="${MODEL_NAME##*/}"
+            local direct_match="$root/$provider_segment/$model_segment"
+            local provider_match="$root/$provider_segment"
+            local model_match="$root/$model_segment"
+
+            # Prefer an exact path match for provider/model when present.
+            if [ -d "$direct_match" ]; then
+                echo "$direct_match"
+                return
+            fi
+
+            # Common fallback if conversion path already points inside provider dir.
+            if [ -d "$provider_match/$model_segment" ]; then
+                echo "$provider_match/$model_segment"
+                return
+            fi
+
+            # Fallback when provider folder is omitted in the output structure.
+            if [ -d "$model_match" ]; then
+                echo "$model_match"
+                return
+            fi
+
+            # Prefer explicit 'models' directory when present.
+            if [ -d "$current/models" ]; then
+                current="$current/models"
+            fi
+
+            # Unwrap nested single-directory wrappers.
+            while true; do
+                local file_count
+                local dir_count
+                file_count=$(find "$current" -mindepth 1 -maxdepth 1 -type f | wc -l)
+                dir_count=$(find "$current" -mindepth 1 -maxdepth 1 -type d | wc -l)
+
+                if [ "$file_count" -gt 0 ] || [ "$dir_count" -ne 1 ]; then
+                    break
+                fi
+
+                current=$(find "$current" -mindepth 1 -maxdepth 1 -type d | head -n 1)
+            done
+
+            # Final fallback: search for the deepest directory that exactly matches model segment.
+            found=$(find "$root" -type d -name "$model_segment" | head -n 1)
+            if [ -n "$found" ]; then
+                echo "$found"
+                return
+            fi
+
+            echo "$current"
+        }
+
+        echo "Installing required tools..."
+        apt-get update -qq && apt-get install -y -qq curl jq > /dev/null 2>&1
+
+        # Check model-download service health
+        if ! check_model_download_service_health; then
+            exit 1
+        fi
+
+        mkdir -p "$TARGET_ROOT"
+
+        echo "Downloading ${MODEL_TYPE} model '${MODEL_NAME}' via model-download service..."
+
+                # Build JSON payload based on model type
+                if [ "$MODEL_TYPE" = "vlm" ] || [ "$MODEL_TYPE" = "llm" ]; then
+                        HUB="openvino"
+                        PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s","is_ovms":true,"config":{"precision":"%s"}}],"parallel_downloads":false}' \
+                            "$MODEL_NAME" "$HUB" "$MODEL_TYPE" "$WEIGHT_FORMAT")
+                elif [ "$MODEL_TYPE" = "vision" ]; then
+                        HUB="ultralytics"
+                        PAYLOAD=$(printf '{"models":[{"name":"%s","hub":"%s","type":"%s"}],"parallel_downloads":false}' \
+                            "$MODEL_NAME" "$HUB" "$MODEL_TYPE")
+                else
+                        echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm, vision, or llm)."
+                        exit 1
+                fi
+
+                # Submit download request
+                set +e
+                POST_RESPONSE=$(curl -sS -X POST "${MODEL_DOWNLOAD_API_URL}?download_path=${DOWNLOAD_MODEL_DIR}" \
+                        -H "Content-Type: application/json" \
+                        -d "${PAYLOAD}")
+                CURL_RC=$?
+                set -e
+
+                if [ $CURL_RC -ne 0 ]; then
+                        echo "ERROR: Download API call failed (curl rc=${CURL_RC})."
+                        exit 1
+                fi
+
+                if echo "$POST_RESPONSE" | jq -e '.detail' >/dev/null 2>&1; then
+                        echo "ERROR: API returned error: $(echo "$POST_RESPONSE" | jq -r '.detail')"
+                        exit 1
+                fi
+
+        echo "Model download API response: $POST_RESPONSE"
+
+        # Extract job IDs
+        JOB_IDS=$(echo "$POST_RESPONSE" | jq -r '.job_ids[]')
+
+        if [ -z "$JOB_IDS" ]; then
+            echo "ERROR: No job_ids returned by model-download API"
+            exit 1
+        fi
+
+        echo "Jobs submitted: $JOB_IDS"
+
+        # Poll jobs until completion
+        MAX_ATTEMPTS=90
+        SLEEP_SECS=10
+        attempt=1
+
+        while [ $attempt -le $MAX_ATTEMPTS ]; do
+            all_done=1
+
+            for job_id in $JOB_IDS; do
+                JOB_URL="${MODEL_DOWNLOAD_BASE_URL%/}/jobs/${job_id}"
+                JOB_RESPONSE=$(curl -s "$JOB_URL")
+
+                status=$(echo "$JOB_RESPONSE" | jq -r '.status')
+                echo "Job $job_id → $status"
+
+                if [ "$status" != "completed" ] && [ "$status" != "failed" ]; then
+                    all_done=0
+                fi
+
+                if [ "$status" = "failed" ]; then
+                    echo "ERROR: Job $job_id failed"
+                    exit 1
+                fi
+            done
+
+            if [ $all_done -eq 1 ]; then
+                break
+            fi
+
+            echo "Waiting for jobs to finish (attempt $attempt/$MAX_ATTEMPTS)..."
+            sleep $SLEEP_SECS
+            attempt=$((attempt + 1))
+        done
+
+        if [ $attempt -gt $MAX_ATTEMPTS ]; then
+            echo "ERROR: Timed out waiting for model download jobs"
+            exit 1
+        fi
+
+        # Copy model files from conversion paths
+        for job_id in $JOB_IDS; do
+            JOB_URL="${MODEL_DOWNLOAD_BASE_URL%/}/jobs/${job_id}"
+            JOB_RESPONSE=$(curl -s "$JOB_URL")
+
+            conversion_path=$(echo "$JOB_RESPONSE" | jq -r '.result.conversion_path // .result.download_path // ""')
+
+            if [ -z "$conversion_path" ]; then
+                echo "ERROR: No conversion path returned for job $job_id"
+                exit 1
+            fi
+
+            # Translate path: model-download uses /opt/models, but we mount models-pvc at /opt/data
+            # So /opt/models/downloaded_models/... becomes /opt/data/downloaded_models/...
+            source_path=$(echo "$conversion_path" | sed 's|/opt/models|/opt/data|')
+
+            if [ ! -d "$source_path" ]; then
+                echo "ERROR: Conversion path does not exist: $source_path (API returned: $conversion_path)"
+                exit 1
+            fi
+
+            echo "Flattening model files from $source_path to $TARGET_DIR"
+            rm -rf "$TARGET_DIR"
+            mkdir -p "$TARGET_DIR"
+
+            # Handle different directory structures based on model type
+            if [ "$MODEL_TYPE" = "vision" ]; then
+                # Vision models (YOLO) keep artifacts under a 'public' directory.
+                # Preserve this level so runtime path is <target>/public/<model>/...
+                if [ -d "$source_path/public" ]; then
+                    mkdir -p "$TARGET_DIR/public"
+                    cp -a "$source_path/public"/. "$TARGET_DIR/public"/
+                    echo "Copied vision model files from $source_path/public to $TARGET_DIR/public"
+                else
+                    echo "WARNING: Expected public subdirectory not found in $source_path, copying all contents"
+                    cp -a "$source_path"/. "$TARGET_DIR"/
+                fi
+            else
+                # VLM/LLM models: use resolve_content_dir to handle nested provider/model structure
+                content_dir=$(resolve_content_dir "$source_path")
+
+                if [ ! -d "$content_dir" ]; then
+                    echo "ERROR: Resolved model content directory does not exist: $content_dir"
+                    exit 1
+                fi
+
+                cp -a "$content_dir"/. "$TARGET_DIR"/
+                echo "Copied VLM/LLM model files from $content_dir"
+            fi
+
+            # Keep PVC root clean: remove wrapper folders created by model-download service.
+            rm -rf "/opt/data/downloaded_models"
+            rm -rf "/opt/data/models"
+
+            echo "Successfully copied model files for job $job_id"
+        done
+
+        echo "Successfully prepared ${MODEL_TYPE} model: ${MODEL_NAME} at ${TARGET_DIR}"
+    }

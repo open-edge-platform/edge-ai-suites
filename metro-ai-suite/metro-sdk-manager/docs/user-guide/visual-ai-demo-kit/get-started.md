@@ -28,7 +28,7 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
 ```
 
 ![Visual AI Demo Kit Installation](images/visual-ai-demo-kit-install.png)
@@ -53,7 +53,7 @@ This section demonstrates how to run pre-configured visual AI applications using
 Navigate to the metro-vision-ai-app-recipe directory:
 
 ```bash
-cd ~/metro/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
+cd ~/oep/edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 ```
 
 ### Step 2: Setup Application and Download Assets
@@ -155,7 +155,7 @@ Transform the Smart Parking application into a comprehensive AI-based tolling sy
 - Implementing license plate recognition and vehicle classification
 - Setting up automated toll calculation and payment processing workflows
 
-#### [Tutorial 2: Customizing Node-RED Flows for Metro Vision AI Applications](./tutorial-2.md)
+#### [Tutorial 2: Customizing Node-RED Flows for OEP Vision AI Applications](./tutorial-2.md)
 
 Master the art of workflow automation and data processing customization. Learn to:
 

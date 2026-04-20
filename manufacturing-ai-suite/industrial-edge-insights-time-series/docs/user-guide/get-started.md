@@ -47,9 +47,15 @@ To configure Docker:
 
 ## Clone source code
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-time-series
 ```
 
 ## Deploy with Docker Compose
@@ -93,11 +99,11 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series
    ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
-make up_mqtt_ingestion app="weld-anomaly-detection"
+make up_mqtt_ingestion app="weld-defect-detection"
 ```
 
 <!--hide_directive:::
@@ -116,6 +122,7 @@ To activate multi-stream ingestion, set the `num_of_streams` parameter to the re
 
 ```bash
 # Deploy with OPC-UA Multi-Stream Ingestion
+export OPCUA_SERVER_PORT_MAPPING=30003-30100
 make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
 
 # Deploy with MQTT Multi-Stream Ingestion
@@ -123,12 +130,12 @@ make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMB
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
 # Deploy with MQTT Multi-Stream Ingestion
-make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
+make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STREAMS>
 ```
 
 <!--hide_directive:::
@@ -150,10 +157,10 @@ make up_mqtt_ingestion app="weld-anomaly-detection" num_of_streams=<NUMBER_OF_ST
 ### Running User Defined Function(UDF) inference on GPU
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
-The `Wind Turbine Anomaly Detection` sample app ML model can run on `GPU` while
-the `Weld Anomaly Detection` sample app ML model can only run on `CPU`.
 
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
+
+- **For Wind Turbine Anomaly Detection**:
 
 ```sh
  curl -k -X 'POST' \
@@ -161,6 +168,17 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
  -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
+     value updated to gpu from cpu>'
+```
+
+- **For Weld Defect Detection**:
+
+```sh
+ curl -k -X 'POST' \
+ 'https://<HOST_IP>:3000/ts-api/config' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json with device
      value updated to gpu from cpu>'
 ```
 
@@ -219,7 +237,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Anomaly Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 1. Get into the InfluxDB* container:
@@ -263,8 +281,8 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
    - After login, click on Dashboard
      ![Menu view](./_assets/dashboard.png)
 
-   - Select the `Weld Anomaly Detection Dashboard`.
-     ![Weld Anomaly Detection dashboard](./_assets/weld_anomaly_detection.png)
+   - Select the `Weld Defect Detection Dashboard`.
+     ![Weld Defect Detection dashboard](./_assets/weld_defect_detection.png)
 
    - One will see the below output.
 

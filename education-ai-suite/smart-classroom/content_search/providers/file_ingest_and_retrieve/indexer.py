@@ -295,8 +295,11 @@ class Indexer:
                     extracted_count += 1
                     image = Image.fromarray(frame)
                     seconds = frame_counter / fps
+                    half_window = frame_extract_interval / fps / 2 + 3
                     meta_data = copy.deepcopy(meta)
-                    meta_data["video_pin_second"] = seconds
+                    meta_data["video_pin_second"] = round(seconds, 2)
+                    meta_data["video_start_second"] = round(max(0, seconds - half_window), 2)
+                    meta_data["video_end_second"] = round(min(video.duration, seconds + half_window), 2)
                     if do_detect_and_crop:
                         for crop in self.detector.get_cropped_images(image):
                             embedding = self.get_image_embedding(crop)

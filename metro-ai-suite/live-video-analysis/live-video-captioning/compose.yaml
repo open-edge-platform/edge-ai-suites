@@ -32,6 +32,8 @@ services:
     privileged: true
     tty: true
     entrypoint: [ "./run.sh" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mediamtx
       - mqtt-broker
@@ -39,8 +41,8 @@ services:
       - "${EVAM_HOST_PORT:-8040}:${EVAM_PORT:-8080}"
       - "8556:8554"
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${NO_PROXY}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${NO_PROXY}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -146,8 +148,8 @@ services:
         COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: video-caption-service
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,${NO_PROXY}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${NO_PROXY}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -163,6 +165,9 @@ services:
       - ENABLE_DETECTION_PIPELINE=${ENABLE_DETECTION_PIPELINE:-false}
       - CAPTION_HISTORY=${CAPTION_HISTORY:-3}
       - METRICS_SERVICE_PORT=${METRICS_SERVICE_PORT:-9090}
+      # Embedding and vectordatabase
+      - ENABLE_EMBEDDING=${ENABLE_EMBEDDING:-false}
+      - LIVE_VIDEO_RAG_HOST_PORT=${LIVE_VIDEO_RAG_HOST_PORT:-4172}
     volumes:
       - "./ov_models:/app/ov_models:ro"
       - "./ov_detection_models:/app/ov_detection_models:ro"
@@ -241,12 +246,132 @@ services:
     networks:
       - app_network
 
+  multimodal-embedding-serving:
+    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
+    container_name: multimodal-embedding-serving
+    ports:
+      - '${EMBEDDING_SERVER_PORT:-9777}:8000'
+    profiles:
+      - EMBEDDING
+    ipc: host
+    environment:
+      no_proxy: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
+      no_proxy_env: localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,${no_proxy}
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      EMBEDDING_MODEL_NAME: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_DEVICE: ${EMBEDDING_DEVICE}
+      EMBEDDING_USE_OV: ${EMBEDDING_USE_OV}
+      EMBEDDING_OV_MODELS_DIR: ${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
+      DEFAULT_START_OFFSET_SEC: ${DEFAULT_START_OFFSET_SEC:-0}
+      DEFAULT_CLIP_DURATION: ${DEFAULT_CLIP_DURATION:--1}
+      DEFAULT_NUM_FRAMES: ${DEFAULT_NUM_FRAMES:-64}
+      OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-LATENCY}
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - ${USER_GROUP_ID:-1000}
+      - ${VIDEO_GROUP_ID:-44}
+      - ${RENDER_GROUP_ID:-1002}
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', 'curl -f http://localhost:8000/health || exit 1' ]
+      interval: 10s
+      timeout: 10s
+      retries: 40
+      start_period: 5s
+    networks:
+      - app_network
+    volumes:
+      - ov-models:/home/appuser/.cache/huggingface
+      #- data-prep:/tmp/dataprep
+      - ov-models:${EMBEDDING_OV_MODELS_DIR:-/app/ov_models}
+
+  vdms-vector-db:
+    image: intellabs/vdms:v2.11.0
+    container_name: vdms-vector-db
+    profiles:
+      - EMBEDDING
+    ipc: host
+    environment:
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - no_proxy_env=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - OVERRIDE_db_root_path=/db
+      - OVERRIDE_images_path=/db/images
+      - OVERRIDE_descriptors_path=/db/descriptors
+      - OVERRIDE_blobs_path=/db/blobs
+      - OVERRIDE_pmgd_path=/db/graph
+    ports:
+      - '${VDMS_PORT:-55555}:55555'
+    volumes:
+      - vdms-db:/db
+    networks:
+      - app_network
+
+  live-video-captioning-rag:
+    image: ${REGISTRY:-}live-video-captioning-rag:${TAG:-latest}
+    build:
+      context: ../live-video-captioning-rag/app
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
+    container_name: live-video-captioning-rag
+    profiles:
+      - EMBEDDING
+    environment:
+      http_proxy: ${http_proxy}
+      HTTP_PROXY: ${http_proxy}
+      https_proxy: ${https_proxy}
+      HTTPS_PROXY: ${https_proxy}
+      no_proxy: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${no_proxy}
+      NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${NO_PROXY}
+      LLM_MODEL_ID: ${LLM_MODEL_ID}
+      LLM_DEVICE: ${LLM_DEVICE}
+      MAX_TOKENS: ${MAX_TOKENS:-1024}
+      TOP_K: ${TOP_K:-1}
+      SCORE_THRESHOLD: ${SCORE_THRESHOLD:-0.3}
+      # EMBEDDING
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL_NAME}
+      EMBEDDING_HOST: ${EMBEDDING_HOST:-multimodal-embedding-serving}
+      EMBEDDING_HOST_PORT: ${EMBEDDING_HOST_PORT:-8000}
+      # VDMS
+      VDMS_HOST: ${VDMS_HOST}
+      VDMS_PORT: ${VDMS_PORT:-55555}
+    ports:
+      - ${LIVE_VIDEO_RAG_HOST_PORT:-4172}:4172
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - ${USER_GROUP_ID:-1000}
+      # render group ID for ubuntu 20.04 host OS
+      - "109"
+      # render group ID for ubuntu 22.04 host OS
+      - "110"
+      # render group ID for ubuntu 24.04 host OS
+      - "992"
+    volumes:
+      - "${MODEL_CACHE_PATH:-/tmp/model_cache}:/tmp/model_cache"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:4172/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app_network
+
 volumes:
   vol_evam_pipeline_root:
     driver: local
     driver_opts:
       type: tmpfs
       device: tmpfs
+  ov-models:
+    driver: local
+  vdms-db:
+    driver: local
 
 networks:
   app_network:

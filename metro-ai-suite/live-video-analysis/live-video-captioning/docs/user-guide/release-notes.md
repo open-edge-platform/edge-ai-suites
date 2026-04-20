@@ -13,7 +13,6 @@ camera feed, and the generated text.
 In addition, the sample application may generate alerts with custom prompts, with customizable
 generation delay. Docker-based deployment is supported currently.
 
-
 **New**
 
 - Docker Compose stack integrating DLStreamer pipeline server, WebRTC signaling (mediamtx),
@@ -30,4 +29,4 @@ generation delay. Docker-based deployment is supported currently.
 **Upgrade Notes**
 
 - If you change `.env` values (ports, `HOST_IP`, model paths), restart the stack:
-  `docker compose down && docker compose up `.
+  `docker compose down && docker compose up -d`.

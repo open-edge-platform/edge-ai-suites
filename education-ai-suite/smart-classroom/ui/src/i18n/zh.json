@@ -146,6 +146,12 @@
     "allCameras": "所有摄像头",
     "noSessionActiveContentSearch": "无活动会话。请上传内容以开始搜索。"
   },
+  "monitoring": {
+    "pausedTitle": "资源监控已暂停",
+    "pausedMessage": "指标轮询已在 {{duration}} 分钟后自动停止。恢复以继续跟踪性能数据。",
+    "resumeAriaLabel": "恢复资源指标轮询",
+    "resumeButton": "恢复"
+  },
   "errors": {
     "projectNameRequired": "项目名称为必填项",
     "failedToStartRecording": "开始录音失败",
@@ -195,7 +201,9 @@
     "durationError": "持续时间不匹配 - 检查您的文件",
     "durationMismatch": "⚠️ 音频和视频时长不匹配。请确保两个文件的长度相似。",
     "durationExtractionFailed": "⚠️ 无法提取音频或视频时长。请检查您的文件并重试。",
-    "contentPreparationFailed": "内容准备失败。请重试。"
+    "contentPreparationFailed": "内容准备失败。请重试。",
+    "noLabels": "暂无标签",
+    "processing": "一些文件仍在处理中。您现在可以搜索；处理完成后结果可能会增加。"
   },
   "contentSearch": {
     "title": "内容搜索",
@@ -219,9 +227,9 @@
     "retry": "重试",
     "clearAll": "清除所有",
     "uploadFiles": "上传文件",
-    "removeFileConfirmation": "删除此文件将停止处理。继续？",
+    "removeFileConfirmation": "您确定要删除此文件吗.继续？",
     "cancel": "取消",
-    "remove": "删除",
+    "remove": "消除",
     "pending": "待处理…",
     "staged": "就绪",
     "processing": "处理中…",

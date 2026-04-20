@@ -19,7 +19,7 @@ models/
 chunks/
 
 #Ignore logs
-monitoring/executionlogs/
+**/monitoring/executionlogs/
 logs/
 
 *.exe

@@ -1680,13 +1680,13 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "mqtt": {
-                    "mqtt_broker_host": "ia-mqtt-broker",
-                    "mqtt_broker_port": 1883,
+                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
                     "name": "my_mqtt_broker"
                 }
             }
@@ -1698,8 +1698,8 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "opcua": {
@@ -2091,12 +2091,12 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
             return False
 
         os.chdir(ts_config_path)
-        os.makedirs("weld_anomaly_detector", exist_ok=True)
+        os.makedirs("weld_defect_detector", exist_ok=True)
         for item in ["models", "tick_scripts", "udfs"]:
             if os.path.exists(item):
-                result = subprocess.run(['cp', '-r', item, 'weld_anomaly_detector/.'], capture_output=True, text=True)
+                result = subprocess.run(['cp', '-r', item, 'weld_defect_detector/.'], capture_output=True, text=True)
                 if result.returncode == 0:
-                    logger.info(f"Copied {item} to weld_anomaly_detector directory.")
+                    logger.info(f"Copied {item} to weld_defect_detector directory.")
                 else:
                     logger.error(f"Error copying {item}: {result.stderr}")
                     return False
@@ -2115,7 +2115,7 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
             return False
 
         kubectl_cp_ts = [
-            'kubectl', 'cp', 'weld_anomaly_detector',
+            'kubectl', 'cp', 'weld_defect_detector',
             f'{ts_pod}:/tmp/', '-n', namespace
         ]
         logger.info(f"Copying Time Series UDF package: {' '.join(kubectl_cp_ts)}")
@@ -2130,12 +2130,18 @@ def setup_multimodal_udf_deployment_package(chart_path, namespace, device_value=
         # Use external nginx proxy approach (exactly like Docker does)
         logger.info("Using external nginx proxy for API access (matches Docker pattern)...")
 
-        # External nginx proxy access (Docker uses HOST_IP:3000, Helm uses HOST_IP:30001)
         payload = {
-            "weld_anomaly_detector": {
-                "udfs": "/tmp/weld_anomaly_detector/udfs",
-                "models": "/tmp/weld_anomaly_detector/models", 
-                "tick_scripts": "/tmp/weld_anomaly_detector/tick_scripts"
+            "udfs": {
+                "name": constants.WELD_UDF,
+                "models": constants.WELD_MODEL,
+                "device": device_value
+            },
+            "alerts": {
+                "mqtt": {
+                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
+                    "name": "my_mqtt_broker"
+                }
             }
         }
         json_payload = json.dumps(payload)
@@ -2220,7 +2226,7 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         elif sample_app == constants.WELD_SAMPLE_APP:
             os.chdir('../' + constants.HELM_WELD)
             logger.debug(f"Current working directory: {os.getcwd()}")
-            file_path = f'{os.getcwd()}/tick_scripts/weld_anomaly_detector.tick'
+            file_path = f'{os.getcwd()}/tick_scripts/weld_defect_detector.tick'
             logger.info(f"File path for tick script: {file_path}")
             setup = "mqtt_weld"
 
@@ -2319,7 +2325,7 @@ def measure_deployment_time(ingestion_type, release_name, iterations=None):
     assert update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
     
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
     
     logger.info(f"Starting {ingestion_type} deployment time measurement...")
     for i in range(iterations):
