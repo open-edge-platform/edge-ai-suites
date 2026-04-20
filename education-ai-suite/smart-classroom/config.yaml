@@ -223,6 +223,8 @@ models:
 
   va:
     models_base_path: "models"
+    front_pose_model: yolov8m-pose # yolov8m-pose/yolov11m-pose/yolo26m-pose
+    back_pose_model: yolov8s-pose # yolov8s-pose/yolov11s-pose/yolo26s-pose
     threshold: 0.5 # confidence threshold for YOLO detections
   
   embedding:

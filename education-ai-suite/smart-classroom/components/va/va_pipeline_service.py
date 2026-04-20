@@ -53,8 +53,8 @@ class VideoAnalyticsPipelineService:
         # Set model paths
         self.model_base_dir = Path(config.models.va.models_base_path).resolve() / "va"
         self.models = {
-            "yolov8m": "yolov8m-pose.xml",
-            "yolov8s": "yolov8s-pose.xml",
+            "front-pose": f"{config.models.va.front_pose_model}.xml",
+            "back-pose": f"{config.models.va.back_pose_model}.xml",
             "resnet18": "resnet18.xml",
             "mobilenetv2": "mobilenetv2.xml",
             "reid": "person-reidentification-retail-0288.xml",
@@ -397,7 +397,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8m')}",
+            f"model={self._get_model_path('front-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",
@@ -512,7 +512,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8s')}",
+            f"model={self._get_model_path('back-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",

@@ -1,5 +1,6 @@
 from os import PathLike
 from pathlib import Path
+from typing import List, Optional
 from zipfile import ZipFile
 import shutil
 
@@ -19,6 +20,27 @@ CFG_URL = "https://raw.githubusercontent.com/ultralytics/ultralytics/v8.1.0/ultr
 OUT_DIR = DATASETS_DIR
 DATA_PATH = OUT_DIR / "val2017.zip"
 CFG_PATH = OUT_DIR / "coco8-pose.yaml"
+
+_SUPPORTED_FAMILIES = ("v8", "v11", "26")
+
+_MODEL_TYPE_MAP = {
+    "v8": "yolo_v8_pose",
+    "v11": "yolo_v11_pose",
+    "26": "yolo_v26_pose",  # DLStreamer model type has an extra 'v'
+}
+
+_MODEL_INPUT_SHAPE = {
+    "v8": [1, 3, 384, 640],
+    "v11": [1, 3, 384, 640],
+    "26": [1, 3, 640, 640],
+}
+
+
+def _detect_model_family(model_name: str) -> str:
+    for family in _SUPPORTED_FAMILIES:
+        if family in model_name:
+            return family
+    raise ValueError(f"Unsupported model family: {model_name}")
 
 
 def download_file(
@@ -124,39 +146,52 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
     def transform_fn(data_item: dict):
         return pose_validator.preprocess(data_item)["img"].numpy()
 
-    quantization_dataset = nncf.Dataset(pose_data_loader, transform_fn)
-    ignored_scope = nncf.IgnoredScope(  # post-processing
-        subgraphs=[
-            nncf.Subgraph(
-                inputs=[
-                    f"__module.model.{22 if 'v8' in model_name else 23}/aten::cat/Concat",
-                    f"__module.model.{22 if 'v8' in model_name else 23}/aten::cat/Concat_1",
-                    f"__module.model.{22 if 'v8' in model_name else 23}/aten::cat/Concat_2",
-                    f"__module.model.{22 if 'v8' in model_name else 23}/aten::cat/Concat_7",
-                ],
-                outputs=[
-                    f"__module.model.{22 if 'v8' in model_name else 23}/aten::cat/Concat_9"
-                ],
-            )
-        ]
-    )
+    family = _detect_model_family(model_name)
 
+    def get_ignored_scope():
+        if family in ("v8", "v11"):
+            module_idx = 22 if family == "v8" else 23
+            return nncf.IgnoredScope(  # post-processing
+                subgraphs=[
+                    nncf.Subgraph(
+                        inputs=[
+                            f"__module.model.{module_idx}/aten::cat/Concat",
+                            f"__module.model.{module_idx}/aten::cat/Concat_1",
+                            f"__module.model.{module_idx}/aten::cat/Concat_2",
+                            f"__module.model.{module_idx}/aten::cat/Concat_7",
+                        ],
+                        outputs=[
+                            f"__module.model.{module_idx}/aten::cat/Concat_9"
+                        ],
+                    )
+                ]
+            )
+        return nncf.IgnoredScope(patterns=[".*one2one.*"])
+
+    quantization_dataset = nncf.Dataset(pose_data_loader, transform_fn)
     quantized_pose_model = nncf.quantize(
         pose_ov_model,
         quantization_dataset,
         preset=nncf.QuantizationPreset.PERFORMANCE,
-        ignored_scope=ignored_scope,
+        ignored_scope=get_ignored_scope(),
     )
-    quantized_pose_model.reshape([1, 3, 384, 640])
-    quantized_pose_model.set_rt_info("yolo_v8_pose" if 'v8' in model_name else "yolo_v11_pose", ['model_info', 'model_type'])
+    quantized_pose_model.reshape(_MODEL_INPUT_SHAPE[family])
+    quantized_pose_model.set_rt_info(_MODEL_TYPE_MAP[family], ['model_info', 'model_type'])
     quantized_pose_model.set_rt_info("sit stand sit_raise_up stand_raise_up", ['model_info', 'labels'])
 
     print(f"Quantized model will be saved to {int8_model_pose_path}")
     ov.save_model(quantized_pose_model, str(int8_model_pose_path))
 
-def convert_yolo_models(output_dir: str = "models/va"):
-    convert_yolo_to_openvino("yolov8s-pose", output_dir)
-    convert_yolo_to_openvino("yolov8m-pose", output_dir)
+
+def convert_yolo_models(output_dir: str = "models/va", models: Optional[List[str]] = None):
+    if models is None:
+        models = ["yolov8s-pose", "yolov8m-pose"]
+    for model in models:
+        if "pose" not in model:
+            raise ValueError(f"Model must be a pose model: {model}")
+        _detect_model_family(model)
+        convert_yolo_to_openvino(model, output_dir)
+
 
 if __name__ == "__main__":
     convert_yolo_models()
