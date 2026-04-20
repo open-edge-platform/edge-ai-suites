@@ -32,6 +32,8 @@ services:
     privileged: true
     tty: true
     entrypoint: [ "./run.sh" ]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mediamtx
       - mqtt-broker
@@ -39,8 +41,8 @@ services:
       - "${EVAM_HOST_PORT:-8040}:${EVAM_PORT:-8080}"
       - "8556:8554"
     environment:
-      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${NO_PROXY}
+      - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${no_proxy}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${NO_PROXY}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy

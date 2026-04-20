@@ -1,14 +1,14 @@
-# Getting Started Guide - Metro Vision AI SDK
+# Getting Started Guide - OEP Vision AI SDK
 
 ## Overview
 
-The Metro Vision AI SDK provides a comprehensive development environment for computer vision applications using Intel's optimized tools and frameworks. This guide demonstrates the installation process and provides a practical object detection implementation using DL Streamer and OpenVINO.
+The OEP Vision AI SDK provides a comprehensive development environment for computer vision applications using Intel's optimized tools and frameworks. This guide demonstrates the installation process and provides a practical object detection implementation using DL Streamer and OpenVINO.
 
 ## Learning Objectives
 
 Upon completion of this guide, you will be able to:
 
-- Install and configure the Metro Vision AI SDK
+- Install and configure the OEP Vision AI SDK
 - Execute object detection inference on video content
 - Understand the basic pipeline architecture for computer vision workflows
 
@@ -26,10 +26,10 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash
 ```
 
-![Metro Vision AI SDK Installation](images/metro-vision-ai-sdk-install.png)
+![OEP Vision AI SDK Installation](images/oep-vision-ai-sdk-install.png)
 
 The installation process configures the following components:
 
@@ -47,8 +47,8 @@ This section demonstrates a complete object detection workflow using the install
 Create a dedicated working directory for the tutorial:
 
 ```bash
-mkdir -p ~/metro/metro-vision-get-started-tutorial
-cd ~/metro/metro-vision-get-started-tutorial
+mkdir -p ~/oep/oep-vision-get-started-tutorial
+cd ~/oep/oep-vision-get-started-tutorial
 ```
 
 ### Step 2: Download Sample Video and model
@@ -150,7 +150,7 @@ Create sophisticated video analytics using Intel® DL Streamer framework, includ
 
 ### [Tutorial 5: Profiling](./tutorial-5.md)
 
-Profiling and monitoring performance of Metro Vision AI workloads using command-line tools.
+Profiling and monitoring performance of OEP Vision AI workloads using command-line tools.
 
 ## Additional Resources
 
@@ -183,5 +183,6 @@ tutorial-2
 tutorial-3
 tutorial-4
 tutorial-5
+tutorial-6
 :::
 hide_directive-->

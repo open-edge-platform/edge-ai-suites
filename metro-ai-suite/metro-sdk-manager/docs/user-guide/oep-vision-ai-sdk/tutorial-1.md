@@ -1,4 +1,4 @@
-# Metro Vision AI SDK - Tutorial 1
+# OEP Vision AI SDK - Tutorial 1
 
 This tutorial demonstrates how to download AI models, set up the OpenVINO environment, and run performance benchmarks using Intel's optimized containers. You'll learn to evaluate AI model performance across different hardware configurations including CPU, GPU, and Intel® Core™ Ultra processors.
 
@@ -24,7 +24,7 @@ Upon completion of this tutorial, you will be able to:
 
 Before starting this tutorial, ensure you have:
 
-- Metro Vision AI SDK installed and configured
+- OEP Vision AI SDK installed and configured
 - Docker installed and running on your system
 - Basic familiarity with command-line operations
 - Internet connection for downloading models and containers
@@ -44,8 +44,8 @@ First, create a dedicated workspace and download the required video sample and A
 
 ```bash
 # Create working directory
-mkdir -p ~/metro/metro-vision-tutorial-1
-cd ~/metro/metro-vision-tutorial-1
+mkdir -p ~/oep/oep-vision-tutorial-1
+cd ~/oep/oep-vision-tutorial-1
 ```
 
 ### Step 2: Download Pre-trained Model

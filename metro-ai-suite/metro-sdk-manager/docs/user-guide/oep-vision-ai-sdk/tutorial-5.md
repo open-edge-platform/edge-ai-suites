@@ -1,6 +1,6 @@
-# Metro Vision AI SDK - Tutorial 5
+# OEP Vision AI SDK - Tutorial 5
 
-This tutorial will guide you through profiling and monitoring performance of Metro Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DL Streamer Pipeline Server or OpenVINO applications.
+This tutorial will guide you through profiling and monitoring performance of OEP Vision AI workloads using command-line tools. You'll learn to use `perf`, `htop`, and `intel_gpu_top` to analyze system performance while running DL Streamer Pipeline Server or OpenVINO applications.
 
 ## Prerequisites
 
@@ -41,13 +41,13 @@ lspci | grep -i vga
 ls -la /dev/dri/
 ```
 
-## Step 3: Start Your Metro Vision AI Workload
+## Step 3: Start Your OEP Vision AI Workload
 
 Create and start a DL Streamer pipeline that continuously runs in the background for profiling:
 
 ```bash
-mkdir -p ~/metro/metro-vision-tutorial-5
-cd ~/metro/metro-vision-tutorial-5
+mkdir -p ~/oep/oep-vision-tutorial-5
+cd ~/oep/oep-vision-tutorial-5
 
 # Download sample video for object detection
 wget -O bottle-detection.mp4 https://storage.openvinotoolkit.org/test_data/videos/bottle-detection.mp4
@@ -60,10 +60,10 @@ docker run --rm --user=root \
   bash -c "export MODELS_PATH=/home/dlstreamer && /opt/intel/dlstreamer/samples/download_public_models.sh yolov10s"
 
 # Create a continuous DL Streamer pipeline script
-cat > metro_vision_pipeline.sh << 'EOF'
+cat > oep_vision_pipeline.sh << 'EOF'
 #!/bin/bash
 
-# Metro Vision AI DLStreamer Pipeline for Performance Testing using Docker
+# OEP Vision AI DLStreamer Pipeline for Performance Testing using Docker
 CURRENT_DIR=$(pwd)
 MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
@@ -71,7 +71,7 @@ DEVICE=GPU
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
 
 
-echo "Starting Metro Vision AI Pipeline with Docker DLStreamer..."
+echo "Starting OEP Vision AI Pipeline with Docker DLStreamer..."
 echo "Model: $MODEL_PATH"
 echo "Video: $VIDEO_PATH"
 echo "Device: $DEVICE"
@@ -120,13 +120,13 @@ while true; do
 done
 EOF
 
-chmod +x metro_vision_pipeline.sh
+chmod +x oep_vision_pipeline.sh
 
 # Start the pipeline in background
-sudo ./metro_vision_pipeline.sh &
+sudo ./oep_vision_pipeline.sh &
 PIPELINE_PID=$!
 
-echo "Metro Vision AI pipeline started with PID: $PIPELINE_PID"
+echo "OEP Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
@@ -150,7 +150,7 @@ htop
 - CPU usage per core (bars at the top)
 - Memory usage and available memory
 - Running processes sorted by CPU usage
-- Look for your Metro Vision AI processes
+- Look for your OEP Vision AI processes
 
 **Key shortcuts in htop:**
 
@@ -188,7 +188,7 @@ When you're done profiling, stop the background pipeline:
 
 ```bash
 # Stop the background DL Streamer pipeline
-sudo pkill -9 -f metro_vision_pipeline.sh
+sudo pkill -9 -f oep_vision_pipeline.sh
 ```
 
 ## Next Steps: Visual Pipeline and Platform Evaluation Tool (Vippet)
@@ -232,7 +232,7 @@ Vippet complements the command-line monitoring skills you've learned in this tut
 
 ## Summary
 
-This tutorial provides a practical approach to profiling Metro Vision AI workloads using command-line tools:
+This tutorial provides a practical approach to profiling OEP Vision AI workloads using command-line tools:
 
 ### **What You've Learned:**
 
