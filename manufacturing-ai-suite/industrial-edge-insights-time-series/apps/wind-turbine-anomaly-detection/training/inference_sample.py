@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+""" Inference example script for RandomForestRegressor using Intel scikit-learn extension for wind turbine anomaly detection. """
+
 import argparse
 import logging
 import pickle

@@ -1,4 +1,11 @@
-#!/usr/bin/env python3
+#
+# Apache v2 license
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+
+""" Training script for RandomForestRegressor using Intel scikit-learn extension for wind turbine anomaly detection. """
+
 import argparse
 import logging
 import pickle
@@ -24,7 +31,7 @@ from sklearn.model_selection import train_test_split
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Train a RandomForestRegressor with Intel scikit-learn extension and export a PKL model."
+        description="Train a RandomForestRegressor with Intel scikit-learn extension for wind turbine anomaly detection."
     )
     parser.add_argument("--data", type=Path, default=Path("T1.csv"), help="Path to input CSV file")
     parser.add_argument(
@@ -34,16 +41,16 @@ def parse_args() -> argparse.Namespace:
         help="Name of the regression target column",
     )
     parser.add_argument(
-        "--drop-columns",
+        "--features",
         type=str,
         nargs="*",
-        default=["timestamp"],
-        help="Columns to drop from training features",
+        default=["wind_speed"],
+        help="Feature columns to use (default: wind_speed only)",
     )
     parser.add_argument(
         "--output-model",
         type=Path,
-        default=Path("random_forest_regressor_intel.pkl"),
+        default=Path("rf_anomaly_model.pkl"),
         help="Output path for serialized model (.pkl)",
     )
     parser.add_argument("--test-size", type=float, default=0.2, help="Test split ratio")
@@ -89,12 +96,12 @@ def main() -> None:
     if args.target not in df.columns:
         raise ValueError(f"Target column '{args.target}' not found in CSV.")
 
-    for column in args.drop_columns:
-        if column in df.columns:
-            df = df.drop(columns=[column])
+    missing_features = [f for f in args.features if f not in df.columns]
+    if missing_features:
+        raise ValueError(f"Missing feature columns in CSV: {missing_features}")
 
-    # Ensure all model inputs are explicitly float32 while preserving feature names.
-    X = df.drop(columns=[args.target]).astype(np.float32)
+    # Ensure all model inputs are explicitly float32 while preserving feature names and order.
+    X = df[args.features].astype(np.float32)
     y = df[args.target].astype(np.float32)
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -122,6 +129,7 @@ def main() -> None:
     r2 = r2_score(y_test_np, predictions)
 
     print("Training completed.")
+    print(f"Features: {args.features}")
     print(f"Offload device: {offload_label}")
     print(f"X dtype: {X.dtypes.iloc[0]}, y dtype: {y.dtype}")
     print(f"RMSE: {rmse:.4f}")
