@@ -1680,13 +1680,13 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "mqtt": {
-                    "mqtt_broker_host": "ia-mqtt-broker",
-                    "mqtt_broker_port": 1883,
+                    "mqtt_broker_host": constants.CONTAINERS["mqtt_broker"]["name"],
+                    "mqtt_broker_port": constants.CONTAINERS["mqtt_broker"]["port"],
                     "name": "my_mqtt_broker"
                 }
             }
@@ -1698,8 +1698,8 @@ def with_model_registry(chart_path, input):
                 "version": "1.0"
             },
             "udfs": {
-                "name": "windturbine_anomaly_detector",
-                "models": "windturbine_anomaly_detector.pkl"
+                "name": constants.WIND_UDF,
+                "models": constants.WIND_MODEL
             },
             "alerts": {
                 "opcua": {
