@@ -11,6 +11,8 @@
 - Automatic model export and conversion in Helm init container using OVMS export tooling
 - Add alert deduplication and short-analysis fallback for improved VLM response handling
 
+**Known Issues**
+- VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 
 ## Version 1.0.0
 
