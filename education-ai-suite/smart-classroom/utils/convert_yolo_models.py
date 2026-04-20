@@ -5,6 +5,7 @@ from zipfile import ZipFile
 import shutil
 
 import openvino as ov
+import torch
 from ultralytics import YOLO
 from ultralytics.data.utils import DATASETS_DIR
 from ultralytics.utils import DEFAULT_CFG
@@ -15,7 +16,7 @@ from ultralytics.utils.metrics import OKS_SIGMA
 import nncf
 
 DATA_URL = "https://ultralytics.com/assets/coco8-pose.zip"
-CFG_URL = "https://raw.githubusercontent.com/ultralytics/ultralytics/v8.1.0/ultralytics/cfg/datasets/coco8-pose.yaml"
+CFG_URL = "https://raw.githubusercontent.com/ultralytics/ultralytics/v8.4.0/ultralytics/cfg/datasets/coco8-pose.yaml"
 
 OUT_DIR = DATASETS_DIR
 DATA_PATH = OUT_DIR / "val2017.zip"
@@ -133,6 +134,7 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
     args.data = "coco8-pose.yaml"
 
     pose_validator = PoseValidator(args=args)
+    pose_validator.device = torch.device("cpu")
     pose_validator.data = check_det_dataset(args.data)
     pose_validator.stride = 32
     pose_data_loader = pose_validator.get_dataloader(OUT_DIR / "coco8-pose", 1)
