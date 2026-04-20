@@ -18,7 +18,7 @@ This diagram shows the software components included in the Autonomous Mobile Rob
 
 ![Autonomous Mobile Robot Software Components](../images/amr_sdk_software_components.png)
 
-The Autonomous Mobile Robot software stack relies on the underlying hardware platform, software supported by and integrated into their respective Unified Extensible Firmware Interface (UEFI)-based boot processes, and supported Linux operating system. For requirement details, see [Requirements](../dev_guide/requirements.rst).
+The Autonomous Mobile Robot software stack relies on the underlying hardware platform, software supported by and integrated into their respective Unified Extensible Firmware Interface (UEFI)-based boot processes, and supported Linux operating system. For requirement details, see [Requirements](../shared/requirements_robot.md).
 
 ## Autonomous Mobile Robot Drivers
 

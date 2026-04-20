@@ -1,4 +1,4 @@
-# Metro Vision AI SDK - Tutorial 3
+# OEP Vision AI SDK - Tutorial 3
 
 This tutorial demonstrates how to implement real-time object detection using YOLOv10s model with OpenVINO Runtime. You'll learn to create a complete computer vision application that processes video streams, performs AI inference, and displays results with bounding boxes and confidence scores in real-time.
 
@@ -28,7 +28,7 @@ Upon completion of this tutorial, you will be able to:
 
 Before starting this tutorial, ensure you have:
 
-- Metro Vision AI SDK installed and configured
+- OEP Vision AI SDK installed and configured
 - Docker installed and running on your system
 - Python programming experience (intermediate level)
 - Basic understanding of computer vision concepts
@@ -60,8 +60,8 @@ Set up your workspace and download a sample city intersection video
 
 ```bash
 # Create working directory structure
-mkdir -p ~/metro/metro-vision-tutorial-3
-cd ~/metro/metro-vision-tutorial-3
+mkdir -p ~/oep/oep-vision-tutorial-3
+cd ~/oep/oep-vision-tutorial-3
 
 # Download sample city intersection video for object detection
 wget -O intersection.mp4 https://www.pexels.com/download/video/34505889?fps=29.97&h=360&w=640
