@@ -94,6 +94,8 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
             chunk_size = 1000
             start_time = time.time()
             row_served = 0
+            # Create a more human-readable filename by removing the extension and splitting on delimiters. It will also capitalize the words for better readability.
+            # For example, crater_cracks_03-20-23-0122-11 will become Crater_Cracks
             filename_only = os.path.basename(filename).split('.')[0]
             name_parts = [part for part in re.split(r'[-_.]', filename_only) if part]
             readable_parts = []

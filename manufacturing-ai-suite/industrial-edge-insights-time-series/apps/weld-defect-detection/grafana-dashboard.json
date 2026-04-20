@@ -214,7 +214,7 @@
           "measurement": "weld-sensor-anomaly-data",
           "orderByTime": "ASC",
           "policy": "autogen",
-          "query": "SELECT \"Primary Weld Current\"  FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1)  AND $timeFilter",
+          "query": "SELECT \"Primary Weld Current\" FROM \"autogen\".\"weld-sensor-anomaly-data\" WHERE (\"anomaly_status\"= 1)  AND $timeFilter",
           "rawQuery": true,
           "refId": "B",
           "resultFormat": "time_series",
@@ -508,7 +508,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "fixed"
           },
           "custom": {
             "align": "auto",
@@ -520,13 +520,11 @@
               "reducers": []
             },
             "inspect": false,
-            "styleField": "weld-sensor-anomaly-data.predicted_category",
             "tooltip": {
-              "field": "Value",
-              "placement": "top"
+              "placement": "auto"
             },
-            "wrapHeaderText": true,
-            "wrapText": true
+            "wrapHeaderText": false,
+            "wrapText": false
           },
           "mappings": [],
           "thresholds": {
@@ -542,7 +540,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 12,
+        "h": 14,
         "w": 11,
         "x": 0,
         "y": 15
@@ -550,23 +548,12 @@
       "id": 15,
       "options": {
         "cellHeight": "sm",
-        "enablePagination": false,
+        "enablePagination": true,
         "frameIndex": 1,
         "showHeader": true
       },
       "pluginVersion": "12.4.0",
       "targets": [
-        {
-          "alias": "Simulator Category",
-          "datasource": {
-            "type": "influxdb",
-            "uid": "P951FEA4DE68E13C5"
-          },
-          "query": "SELECT \"filename\" FROM \"weld-sensor-anomaly-data\" WHERE $timeFilter order by time desc",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series"
-        },
         {
           "alias": "Predicted Category",
           "query": "SELECT \"predicted_category\" FROM \"weld-sensor-anomaly-data\" WHERE $timeFilter order by time desc",
@@ -576,14 +563,6 @@
         }
       ],
       "title": "Simulation vs Prediction",
-      "transformations": [
-        {
-          "id": "joinByField",
-          "options": {
-            "mode": "inner"
-          }
-        }
-      ],
       "transparent": true,
       "type": "table"
     },
