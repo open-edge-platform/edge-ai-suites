@@ -2377,7 +2377,7 @@ def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
         logger.error("An error occurred while executing a command: %s", e)
         return False
     except Exception as e:
-        logger.error("An unexpected error occurred while configuring OPC UA alerts: %s", e)
+        logger.error("OPC UA alert configuration failed due to an unexpected error: %s", e)
         return False        
     
 def pod_restart(target_namespace, deployment_name="deployment-influxdb"):
