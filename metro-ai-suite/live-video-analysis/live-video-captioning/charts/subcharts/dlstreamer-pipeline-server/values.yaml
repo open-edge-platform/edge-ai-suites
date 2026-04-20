@@ -89,13 +89,7 @@ securityContext:
   privileged: true
   allowPrivilegeEscalation: true
 
-resources:
-  requests:
-    cpu: "4"
-    memory: "8Gi"
-  limits:
-    cpu: "8"
-    memory: "16Gi"
+resources: {}
 
 podAnnotations: {}
 podLabels: {}
