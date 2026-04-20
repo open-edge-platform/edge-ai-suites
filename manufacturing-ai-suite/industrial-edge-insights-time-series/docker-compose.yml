@@ -220,7 +220,7 @@ services:
     networks:
     - timeseries_network
     ports:
-    - ${OPCUA_SERVER_PORT}-30048:4840
+    - ${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
     volumes:
     - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
