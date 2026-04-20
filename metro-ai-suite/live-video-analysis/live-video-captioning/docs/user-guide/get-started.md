@@ -14,9 +14,9 @@ This section shows how to:
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
-- OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./model-preparation.md) to prepare the model.
+- OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./get-started/model-preparation.md) to prepare the model.
 - OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
-when object detection in the pipeline is enabled. See [Object Detection Pipeline configuration](./object-detection-pipeline.md) to enable.
+when object detection in the pipeline is enabled. See [Object Detection Pipeline configuration](./how-to-guides/configure-object-detection-pipeline.md) to enable.
 
 ## Run the Application
 
@@ -72,7 +72,7 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
    - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
    - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
 
-   Follow the steps outlined in the [Model Preparation](./model-preparation.md) section.
+   Follow the steps outlined in the [Model Preparation](./get-started/model-preparation.md) section.
 
 4. Start the Live Video Captioning application:
 
@@ -104,9 +104,9 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 
 If you want to use the application with additional features, see:
 
-- [Alert Mode](./alert-mode.md) - Enable alert-style responses for binary detection scenarios
-- [Enable Detection Pipeline](./object-detection-pipeline.md) - Enable object detection for live captioning.
-- [Enable Embedding Creation with RAG](./embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
+- [Alert Mode](./how-to-guides/enable-alert-mode.md) - Enable alert-style responses for binary detection scenarios
+- [Enable Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) - Enable object detection for live captioning.
+- [Enable Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
 
 ## Testing
 
@@ -150,8 +150,9 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
 - [Model Download Microservice Get Started Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md)
+- [Model Preparation](./get-started/model-preparation.md)
 - [Build from Source](./get-started/build-from-source.md)
-- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
+- [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 
@@ -160,7 +161,9 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 :hidden:
 
 get-started/system-requirements.md
+get-started/model-preparation.md
 get-started/build-from-source.md
+get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

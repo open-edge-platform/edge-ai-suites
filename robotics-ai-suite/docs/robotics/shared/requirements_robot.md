@@ -1,3 +1,5 @@
+# System Requirements
+
 - Intel® processors:
    - Intel® Core™ Ultra processors (Series 1-3)
    - 11th-13th Generation Intel® Core™ processors with Intel® Iris® Xe Integrated Graphics or Intel® UHD Graphics

@@ -47,7 +47,7 @@ This page provides detailed hardware, software, platform requirements, and suppo
 
 - Supports 3 concurrent video pipelines (front, back, content) up to 45 minutes
 - Supports .mp4 format and RTSP streams
-- Outputs processed video via RTSP and HLS streaming (MediaMTX)
+- Outputs processed video via RTSP and HLS/WebRTC streaming (MediaMTX)
 
 For pipeline architecture and processing stages, see [How It Works](../how-it-works.md#video-analytics-pipeline).
 

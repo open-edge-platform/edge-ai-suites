@@ -665,15 +665,6 @@ export async function* monitorVideoAnalyticsPipelines(
     for (const line of lines) {
       if (!line.trim()) continue;
       const parsed = JSON.parse(line);
-
-    if (parsed.results) {
-      parsed.results = parsed.results.map((r: any) => ({
-        ...r,
-        hls_stream: r.hls_stream
-          ? `${r.hls_stream}/index.m3u8`
-          : null
-      }));
-    }
     yield parsed;
         }
       }

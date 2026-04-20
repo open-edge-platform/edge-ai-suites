@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #######################################
-# Metro Gen AI SDK System Resource Checker and Installation Script
+# OEP Vision AI SDK System Resource Checker and Installation Script
 # Checks CPU, Memory, Storage, and Intel GPU resources
 # Installs Docker, Docker Compose, and required container images
 # Globals:
@@ -20,19 +20,20 @@
 repositories=(
   "https://github.com/open-edge-platform/edge-ai-libraries|release-2026.0.0|edge-ai-libraries"
   "https://github.com/open-edge-platform/edge-ai-suites|release-2026.0.0|edge-ai-suites"
+  "https://github.com/open-edge-platform/scenescape|main|scenescape"
 )
 
 images=(
-  "intel/audio-analyzer:1.3.2-rc1"
-  "intel/document-ingestion:1.2.4-rc1"
-  "intel/multimodal-embedding-serving:1.3.2-rc1"
-  "intel/vdms-dataprep:1.3.2-rc1"
-  "intel/vlm-openvino-serving:1.3.2-rc1"
-  "intel/model-download:1.2.0"
-  "intel/chatqna:2.1.0-rc2"
-  "intel/chatqna-ui:2.1.0-rc2"
+  "openvino/model_server:2026.0"
+  "openvino/ubuntu24_dev:2026.0.0"
+  "intel/dlstreamer:2026.0.0-ubuntu24"
+  "intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24"
+  "intel/scenescape-manager:v2026.0.0"
+  "intel/scenescape-controller:v2026.0.0"
+  "intel/scenescape-autocalibration:v2026.0.0"
 )
-NAME="Metro Gen AI SDK"
+
+NAME="OEP Vision AI SDK"
 
 set -euo pipefail
 
@@ -368,22 +369,22 @@ verify_images() {
 }
 
 #######################################
-# Create metro directory if it doesn't exist
+# Create OEP directory if it doesn't exist
 # Returns:
 #   0 if directory exists or was created successfully
 #######################################
-create_metro_directory() {
-  local metro_dir="$HOME/metro"
+create_oep_directory() {
+  local oep_dir="$HOME/oep"
   
-  if [[ ! -d "${metro_dir}" ]]; then
-    info "Creating metro directory at ${metro_dir}..."
-    mkdir -p "${metro_dir}" || err "Failed to create metro directory"
-    success "Metro directory created successfully"
+  if [[ ! -d "${oep_dir}" ]]; then
+    info "Creating OEP directory at ${oep_dir}..."
+    mkdir -p "${oep_dir}" || err "Failed to create OEP directory"
+    success "OEP directory created successfully"
   else
-    info "Metro directory already exists at ${metro_dir}"
+    info "OEP directory already exists at ${oep_dir}"
   fi
   
-  echo -e "${GREEN}${BOLD}Metro Directory:${NC} ${CYAN}${metro_dir}${NC}"
+  echo -e "${GREEN}${BOLD}OEP Directory:${NC} ${CYAN}${oep_dir}${NC}"
 }
 
 #######################################
@@ -397,8 +398,8 @@ clone_repository() {
   local repo_url="$1"
   local branch="$2"
   local target_dir="$3"
-  local metro_dir="$HOME/metro"
-  local full_path="${metro_dir}/${target_dir}"
+  local oep_dir="$HOME/oep"
+  local full_path="${oep_dir}/${target_dir}"
   
   if [[ -d "${full_path}" ]]; then
     warn "Directory ${target_dir} already exists, checking if it's the correct repository..."
@@ -477,7 +478,7 @@ verify_repos() {
 
   for repo in "${repositories[@]}"; do
     IFS='|' read -r repo_url branch target_dir <<< "${repo}"
-    new_target_dir="$HOME/metro/${target_dir}"
+    new_target_dir="$HOME/oep/${target_dir}"
     local repo_info=$(git -C "${new_target_dir}" remote get-url origin 2>/dev/null)
 
     if [[ -n "${repo_info}" ]]; then
@@ -492,7 +493,7 @@ verify_repos() {
 # Show help message
 #######################################
 show_help() {
-  echo -e "${BOLD}${CYAN}Metro Gen AI SDK Installation Script${NC}"
+  echo -e "${BOLD}${CYAN}OEP Gen AI SDK Installation Script${NC}"
   echo ""
   echo -e "${BOLD}Usage:${NC} $0 [OPTIONS]"
   echo ""
@@ -547,7 +548,7 @@ main() {
         ;;
     esac
   done
-  info "Metro Gen AI SDK Installation Script"
+  info "OEP Gen AI SDK Installation Script"
   echo -e "${BOLD}${BLUE}==================================================${NC}"
   
   # System Requirements Check
@@ -616,8 +617,8 @@ main() {
     echo -e "${BOLD}${CYAN}Git Repository Setup${NC}"
     echo -e "${BOLD}${BLUE}==================================================${NC}"
     
-    # Create metro directory
-    create_metro_directory
+    # Create OEP directory
+    create_oep_directory
     
     echo ""
     # Clone required repositories
@@ -647,7 +648,7 @@ main() {
   
   echo ""
   info "Next steps:"
-  info "1. Navigate to ${HOME}/metro/ to explore the cloned repositories"
+  info "1. Navigate to ${HOME}/oep/ to explore the cloned repositories"
   info "2. Check repository documentation for usage instructions"
   info "3. Start developing with ${NAME}!"
 

@@ -176,9 +176,9 @@ data0
 >
 > - The `noRecoveries()` method suppresses recovery alerts, ensuring only critical alerts are sent.
 
-#### 2. Upload the UDF deployment package
+#### 2. Upload the new UDF deployment package
 
-To copy the TICK script and upload the UDF deployment package run the following commands:
+To copy the TICK script and upload the new UDF deployment package, run the following commands:
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection # path relative to git  clone   folder
@@ -190,7 +190,10 @@ tar cf ${SAMPLE_APP}.tar models/ tick_scripts/ udfs/
 curl -X POST https://localhost:3000/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
 ```
 
-#### 2. Configuring OPC-UA Alert in config.json
+> **Note:**
+> If the `curl` command fails with `502`, wait briefly and retry the command. This response can occur while the Time Series Analytics Microservice is still becoming ready.
+
+#### 3. Configuring OPC-UA Alert in config.json
 
 Make the following REST API call to the Time Series Analytics microservice. Note that the
 `mqtt` alerts key is replaced with the `opcua` key and its specific details:
@@ -331,6 +334,9 @@ To enable OPC-UA alerts in `Time Series Analytics Microservice`, please follow b
 
    curl -X POST https://localhost:30001/ts-api/udfs/package -F "file=@${SAMPLE_APP}.tar" -k
    ```
+
+    > **Note:**
+    > If the `curl` command fails with `502`, wait briefly and retry the command. This response can occur while the Time Series Analytics Microservice is still becoming ready.
 
 3. Configuring OPC-UA Alert in `config.json`
 

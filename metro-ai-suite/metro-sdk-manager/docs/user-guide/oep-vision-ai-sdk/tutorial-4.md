@@ -1,4 +1,4 @@
-# Metro Vision AI SDK - Tutorial 4
+# OEP Vision AI SDK - Tutorial 4
 
 This tutorial demonstrates how to build sophisticated video analytics pipelines using Intel® DL Streamer framework. You'll learn to create real-time human pose estimation applications, understand GStreamer pipeline architecture, and develop custom video analytics solutions for computer vision applications.
 
@@ -29,7 +29,7 @@ Upon completion of this tutorial, you will be able to:
 
 Before starting this tutorial, ensure you have:
 
-- Metro Vision AI SDK installed and configured
+- OEP Vision AI SDK installed and configured
 - Docker installed and running on your system
 - Understanding of computer vision and AI inference concepts
 - Basic familiarity with GStreamer framework
@@ -61,8 +61,8 @@ Set up your workspace and download the required video content and AI models:
 
 ```bash
 # Create working directory structure
-mkdir -p ~/metro/metro-vision-tutorial-4/{models/intel/human-pose-estimation-0001/FP32,output}
-cd ~/metro/metro-vision-tutorial-4
+mkdir -p ~/oep/oep-vision-tutorial-4/{models/intel/human-pose-estimation-0001/FP32,output}
+cd ~/oep/oep-vision-tutorial-4
 
 # Download sample video for human pose estimation
 wget -O face-demographics-walking.mp4 \

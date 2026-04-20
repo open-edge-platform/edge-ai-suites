@@ -1,6 +1,6 @@
 # Get Started
 
-The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](../../../live-video-captioning) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
+The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
 
 By following this guide, you will learn how to:
 
@@ -13,7 +13,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](../../../live-video-captioning/docs/user-guide/model-preparation.md) provided to prepare the model.
+- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/get-started/model-preparation.html) provided to prepare the model.
 
 ## Run the Application
 
@@ -61,21 +61,24 @@ By following this guide, you will learn how to:
 
 5. Start the Live Video Captioning RAG sample application:
 
-     From the `live-video-analysis/live-video-captioning-rag` directory, start the sample application using Docker Compose tool:
+     From the `live-video-analysis/live-video-captioning-rag` directory, start the sample application using the Docker Compose tool:
 
      ```bash
      docker compose up -d
      ```
 
-     > **Note**: The application will take some time to start. Check the container status and ensure that they are in  the `"healthy/running"` state using the `docker ps` command before accessing the application.
+     > **Note:** The application will take some time to start. Check the container status and ensure that they are in the `"healthy/running"` state using the `docker ps` command before accessing the application.
 
 6. Access the application:
 
      To start the application:
 
      a. From the web browser, navigate to the `Live Video Captioning RAG` dashboard at `http://<HOST_IP>:4172`.
-     b. Enter any query in the chatbot.<br>
-        > **Note**: You will get a generic response at this point because no context has been created in the vector store yet.
+
+     b. Enter any query in the chatbot.
+
+     > **Note:** You will get a generic response at this point because no context has been created in the vector store yet.
+
      c. To demonstrate the full functionality, run the following commands to create the context using a sample image and caption:
 
      ```bash
@@ -86,10 +89,11 @@ By following this guide, you will learn how to:
      python3 sample/demo_call_embedding.py
      ```
 
-     > **Notes**: Intel provides this script for demonstration purposes only. The script will:
+     > **Note:** Intel provides this script for demonstration purposes only. The script will:
      > - Download a sample image.
      > - Call the `embeddings/` endpoint to generate embeddings.
      > - Create the context and store it in the vector store.
+
      d. Once the script completes its execution, return to the dashboard in your browser and test the chatbot with contextual queries.<br>
         `Example query: "How many students are there in the classroom?"`<br>
         You will now receive contextual responses from the RAG chatbot.
@@ -103,7 +107,7 @@ By following this guide, you will learn how to:
 ## Integration with Live Video Captioning
 
 This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
-For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](../../../live-video-captioning/docs/user-guide/embedding-creation-with-rag.md)
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Learn More
 
@@ -111,3 +115,13 @@ For setup instructions, see [Setup Live Video Captioning RAG along with Live Vid
 - [API Reference](./api-reference.md)
 - [Build from Source](./get-started/build-from-source.md)
 - [Known Issues](./known-issues.md)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements.md
+./get-started/build-from-source.md
+
+:::
+hide_directive-->

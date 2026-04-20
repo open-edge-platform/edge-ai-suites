@@ -1,14 +1,14 @@
-# Getting Started Guide - Metro Gen AI SDK
+# Getting Started Guide - OEP Gen AI SDK
 
 ## Overview
 
-The Metro Gen AI SDK provides a comprehensive development environment for generative AI applications using Intel's optimized tools and microservices. This guide demonstrates the installation process and provides a practical question-answering implementation using retrieval-augmented generation (RAG) capabilities.
+The OEP Gen AI SDK provides a comprehensive development environment for generative AI applications using Intel's optimized tools and microservices. This guide demonstrates the installation process and provides a practical question-answering implementation using retrieval-augmented generation (RAG) capabilities.
 
 ## Learning Objectives
 
 Upon completion of this guide, you will be able to:
 
-- Install and configure the Metro Gen AI SDK
+- Install and configure the OEP Gen AI SDK
 - Deploy generative AI microservices for document processing and question-answering
 - Understand the architecture of RAG-based applications using Intel's AI frameworks
 
@@ -26,10 +26,10 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-gen-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-gen-ai-sdk.sh | bash
 ```
 
-![Metro Gen AI SDK Installation](images/metro-gen-ai-sdk-install.png)
+![OEP Gen AI SDK Installation](images/oep-gen-ai-sdk-install.png)
 
 ## Question-Answering Application Implementation
 
@@ -40,11 +40,11 @@ This section demonstrates a complete RAG (Retrieval-Augmented Generation) applic
 Configure and start the Model Download service to manage LLM and embedding model downloads:
 
 ```bash
-cd $HOME/metro/edge-ai-libraries/microservices/model-download
+cd $HOME/oep/edge-ai-libraries/microservices/model-download
 export REGISTRY="intel/"
 export TAG=1.2.0
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
-source scripts/run_service.sh up --plugins openvino --model-path $HOME/metro/models/
+source scripts/run_service.sh up --plugins openvino --model-path $HOME/oep/models/
 ```
 
 > **Note:** Keep this terminal open while the model download service is running. Open a new terminal to continue with the next steps.
@@ -56,7 +56,7 @@ Update the `<your-huggingface-token>` to your Access Token from Hugging Face. To
 Set up the Python virtual environment and install required dependencies:
 
 ```bash
-cd $HOME/metro/edge-ai-libraries/sample-applications/chat-question-and-answer
+cd $HOME/oep/edge-ai-libraries/sample-applications/chat-question-and-answer
 # Configure application environment variables
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 export LLM_MODEL=Qwen/Qwen2.5-7B-Instruct
@@ -104,7 +104,7 @@ http://localhost:8101
   \- Comprehensive documentation for multimodal audio processing capabilities
 - [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
   \- Vector database integration and document processing workflows
-- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md)
+- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/index.md)
   \- Embedding generation service architecture and API documentation
 - [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md)
   \- VDMS integration and visual data management workflows

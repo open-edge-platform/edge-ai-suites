@@ -122,6 +122,7 @@ To activate multi-stream ingestion, set the `num_of_streams` parameter to the re
 
 ```bash
 # Deploy with OPC-UA Multi-Stream Ingestion
+export OPCUA_SERVER_PORT_MAPPING=30003-30100
 make up_opcua_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMBER_OF_STREAMS>
 
 # Deploy with MQTT Multi-Stream Ingestion
