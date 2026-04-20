@@ -2352,12 +2352,7 @@ def setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         logger.info(f"Restored working directory to: {os.getcwd()}")
     
 def setup_opcua_alerts(chart_path, sample_app=None, device="cpu"):
-    """Configure OPC-UA alert in the TICK script (Step 1 of the OPC-UA activation workflow).
-
-    Only updates the tick script.  Callers are responsible for the subsequent steps:
-      Step 2 - upload_udf_tar_package(chart_path, sample_app)
-      Step 3 - setup_sample_app_udf_deployment_package(chart_path, alert_mode="opcua")
-    """
+    """Configure OPC-UA alert in the TICK script (Step 1 of the OPC-UA activation workflow)."""
     try:
         if not sample_app:
             sample_app = constants.WIND_SAMPLE_APP
