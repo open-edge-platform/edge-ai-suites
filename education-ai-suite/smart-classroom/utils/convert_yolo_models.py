@@ -21,17 +21,17 @@ OUT_DIR = DATASETS_DIR
 DATA_PATH = OUT_DIR / "val2017.zip"
 CFG_PATH = OUT_DIR / "coco8-pose.yaml"
 
-_SUPPORTED_FAMILIES = ("v8", "v11", "26")
+_SUPPORTED_FAMILIES = ("v8", "11", "26")
 
 _MODEL_TYPE_MAP = {
     "v8": "yolo_v8_pose",
-    "v11": "yolo_v11_pose",
+    "11": "yolo_v11_pose",  # DLStreamer model type has an extra 'v'
     "26": "yolo_v26_pose",  # DLStreamer model type has an extra 'v'
 }
 
 _MODEL_INPUT_SHAPE = {
     "v8": [1, 3, 384, 640],
-    "v11": [1, 3, 384, 640],
+    "11": [1, 3, 384, 640],
     "26": [1, 3, 640, 640],
 }
 
@@ -149,7 +149,7 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
     family = _detect_model_family(model_name)
 
     def get_ignored_scope():
-        if family in ("v8", "v11"):
+        if family in ("v8", "11"):
             module_idx = 22 if family == "v8" else 23
             return nncf.IgnoredScope(  # post-processing
                 subgraphs=[
