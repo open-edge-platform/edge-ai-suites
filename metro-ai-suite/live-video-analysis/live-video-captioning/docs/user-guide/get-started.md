@@ -106,7 +106,7 @@ If you want to use the application with additional features, see:
 - [Enable Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) - Enable object detection for live captioning.
 - [Enable Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
 
-## Testing
+## Testing and Coverage
 
 The project uses **pytest** for unit testing. Tests are located in the `tests/` directory
 under the `app/` folder.
