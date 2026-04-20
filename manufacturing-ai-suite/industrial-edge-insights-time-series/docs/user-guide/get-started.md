@@ -157,10 +157,10 @@ make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STR
 ### Running User Defined Function(UDF) inference on GPU
 
 By default, UDF for both the sample apps is configured to run on `CPU`.
-The `Wind Turbine Anomaly Detection` sample app ML model can run on `GPU` while
-the `Weld Defect Detection` sample app ML model can only run on `CPU`.
 
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
+
+- **For Wind Turbine Anomaly Detection**:
 
 ```sh
  curl -k -X 'POST' \
@@ -168,6 +168,17 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
  -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
+     value updated to gpu from cpu>'
+```
+
+- **For Weld Defect Detection**:
+
+```sh
+ curl -k -X 'POST' \
+ 'https://<HOST_IP>:3000/ts-api/config' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json with device
      value updated to gpu from cpu>'
 ```
 

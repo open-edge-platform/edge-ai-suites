@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import os
 import traceback
 import asyncio
 from sqlalchemy.orm import Session
@@ -10,10 +11,12 @@ from fastapi import BackgroundTasks
 from utils.database import SessionLocal
 from utils.crud_task import task_crud
 from utils.schemas_task import TaskStatus
-from utils.search_service import search_service 
-from utils.storage_service import storage_service 
-from utils.video_service import video_service 
+from utils.search_service import search_service
+from utils.storage_service import storage_service
+from utils.video_service import video_service
 from utils.core_models import FileAsset, AITask
+
+VIDEO_SUMMARIZATION_ENABLED = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
 
 class TaskService:
     @staticmethod
@@ -166,7 +169,33 @@ class TaskService:
                         meta=task.payload.get("meta")
                     ))
 
-                if is_video and ai_result and "error" not in ai_result:
+                # Determine if video summarization should run for this task
+                raw_meta = task.payload.get("meta", {})
+                if isinstance(raw_meta, str):
+                    try:
+                        import json as _json
+                        raw_meta = _json.loads(raw_meta)
+                    except Exception:
+                        raw_meta = {}
+                user_vs_enabled = raw_meta.get("vs_enabled", True) if isinstance(raw_meta, dict) else True
+                do_summarize = is_video and VIDEO_SUMMARIZATION_ENABLED and bool(user_vs_enabled)
+
+                if ai_result and "error" not in ai_result:
+                    task.status = TaskStatus.COMPLETED
+                    if do_summarize:
+                        ai_result["video_summary_status"] = "PROCESSING"
+                    task.result = ai_result
+                    db.commit()
+                    print(f"[OK] Task {task_id} ingest completed", flush=True)
+                else:
+                    task.status = TaskStatus.FAILED
+                    task.result = ai_result or {"error": "Unknown error from search service"}
+                    db.commit()
+                    print(f"[FAILED] Task {task_id} failed: {task.result}", flush=True)
+
+                # Video summarization runs after task is marked COMPLETED
+                # so the file is already searchable during summarization
+                if do_summarize and ai_result and "error" not in ai_result:
                     try:
                         payload = task.payload if task.payload else {}
                         raw_meta = payload.get("meta", {})
@@ -196,24 +225,19 @@ class TaskService:
                             chunk_duration=chunk_duration
                         ))
 
-                        ai_result["video_summary"] = summary_res
+                        task.result = {**ai_result, "video_summary": summary_res, "video_summary_status": "COMPLETED"}
+                        db.commit()
+                        print(f"[OK] Task {task_id} video summarization completed", flush=True)
 
                     except Exception as ve:
                         import traceback
-                        print(f"[WARN] Video summarization failed: {ve}", flush=True)
+                        print(f"[WARN] Video summarization failed (task already COMPLETED): {ve}", flush=True)
                         traceback.print_exc()
-                        ai_result["video_summary_error"] = str(ve)
-
-                if ai_result and "error" not in ai_result:
-                    task.status = TaskStatus.COMPLETED
-                    task.result = ai_result
-                    print(f"[OK] Task {task_id} completed", flush=True)
-                else:
-                    task.status = TaskStatus.FAILED
-                    task.result = ai_result or {"error": "Unknown error from search service"}
-                    print(f"[FAILED] Task {task_id} failed: {task.result}", flush=True)
-
-                db.commit()
+                        task.result = {**ai_result, "video_summary_error": str(ve), "video_summary_status": "FAILED"}
+                        db.commit()
+                elif is_video and not do_summarize:
+                    reason = "globally disabled" if not VIDEO_SUMMARIZATION_ENABLED else "disabled by user"
+                    print(f"[VIDEO] Summarization {reason}, skipping for {file_key}", flush=True)
 
             except Exception as e:
                 task.status = "FAILED"

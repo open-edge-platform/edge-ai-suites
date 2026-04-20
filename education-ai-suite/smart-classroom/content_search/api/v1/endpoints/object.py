@@ -215,6 +215,23 @@ async def download_file(request: Request, file_key: str, inline: bool = False):
             headers=headers
         )
 
+@router.get("/tags")
+def list_tags(db: Session = Depends(get_db)):
+    """Return all unique tags from successfully stored file assets."""
+    rows = db.execute(text("SELECT meta FROM file_assets WHERE meta IS NOT NULL")).fetchall()
+    tag_set: set[str] = set()
+    for row in rows:
+        raw = row._mapping.get("meta")
+        if not raw:
+            continue
+        meta = json.loads(raw) if isinstance(raw, str) else raw
+        tags = meta.get("tags") if isinstance(meta, dict) else None
+        if isinstance(tags, list):
+            for t in tags:
+                if isinstance(t, str) and t.strip():
+                    tag_set.add(t.strip())
+    return resp_200(data=sorted(tag_set), message="Tags retrieved")
+
 @router.delete("/cleanup-task/{task_id}")
 async def delete_specific_task(
     task_id: str,
