@@ -119,6 +119,26 @@ Choose **one** of the following approaches to get the Helm charts:
 > 1. Uninstall the Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
+>
+> 3. To deploy with GPU support for inferencing, use the following command:
+>
+>       ```bash
+>       helm install <app_name> \
+>           --set privileged_access_required=true \
+>           --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
+>           . -n ts-sample-app --create-namespace
+>       ```
+>
+>       The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
+>
+>       E.g.:
+>       ```bash
+>        helm install ts-wind-turbine-anomaly \
+>        --set privileged_access_required=true \
+>        --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
+>        . -n ts-sample-app --create-namespace
+>       ```
+>
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -137,18 +157,6 @@ To install Helm charts, use one of the following options:
     ```bash
     helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n ts-sample-app --create-namespace
     ```
-
-> **Note:**
-> To deploy with GPU support for inferencing, use the following command:
->
-> ```bash
-> helm install ts-wind-turbine-anomaly \
->   --set privileged_access_required=true \
->   --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
->   . -n ts-sample-app --create-namespace
-> ```
->
-> The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **Weld Defect Detection**
