@@ -10,6 +10,7 @@ You can also have a look at the [AAEON robotic kit](legacy-aaeon-developer-kit.m
 
 <!--hide_directive
 :::{toctree}
+:maxdepth: 1
 
 create-your-robot-kit.md
 clearpath-jackal-robot.md
@@ -23,6 +24,7 @@ Manually control a robot
 
 <!--hide_directive
 :::{toctree}
+:maxdepth: 1
 
 robot-keyboard-teleop.md
 
