@@ -13,7 +13,6 @@ camera feed, and the generated text.
 In addition, the sample application may generate alerts with custom prompts, with customizable
 generation delay. Docker-based deployment is supported currently.
 
-
 **New**
 
 - Docker Compose stack integrating DLStreamer pipeline server, WebRTC signaling (mediamtx),

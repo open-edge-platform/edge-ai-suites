@@ -3,10 +3,14 @@
 
 """Tests for backend.routes.runs, run lifecycle endpoints."""
 
+import asyncio
+import json
+import pytest
 from unittest.mock import patch
-
+from unittest.mock import AsyncMock, MagicMock
 from backend.state import RUNS
 from backend.models.responses import RunInfo
+import backend.routes.runs as runs_module
 
 
 # ===================================================================
@@ -248,3 +252,152 @@ class TestStopRun:
             resp = client.delete("/api/runs/r1")
         assert resp.status_code == 200
         assert "r1" not in RUNS
+
+
+class TestRunsHelpers:
+    """Unit tests for helper functions in runs route."""
+
+    def test_build_unique_run_name_returns_none_when_sanitized_empty(self):
+        assert runs_module._build_unique_run_name("!!!@@@###") is None
+
+    def test_generate_peer_id_invalid_config_raises(self, monkeypatch):
+        monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_PREFIX", "toolongprefix")
+        monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_MAX_LENGTH", 3)
+        with patch.dict(RUNS, {}, clear=True):
+            with pytest.raises(RuntimeError, match="Invalid WebRTC peer ID configuration"):
+                runs_module._generate_peer_id()
+
+
+class TestMetadataStream:
+    """Tests for multiplexed metadata generator and endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_generator_yields_status_heartbeat_on_timeout(self):
+        fake_subscriber = MagicMock()
+        fake_subscriber.subscribe_to_run = MagicMock()
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _raise_timeout(coro, timeout):
+            del timeout
+            coro.close()
+            raise asyncio.TimeoutError
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        with patch.dict(
+            RUNS,
+            {
+                "r1": RunInfo(
+                    runId="r1",
+                    pipelineId="p1",
+                    peerId="peer1",
+                    mqttTopic="t/r1",
+                    status="error",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_timeout
+        ):
+            gen = runs_module._multiplexed_metadata_generator()
+            event = await anext(gen)
+
+            assert event.startswith("data: ")
+            payload = json.loads(event.removeprefix("data: ").strip())
+            assert payload["type"] == "status"
+            assert payload["runs"] == {"r1": "error"}
+
+            await gen.aclose()
+
+        fake_subscriber.subscribe_to_run.assert_called_once()
+        fake_subscriber.unsubscribe_from_run.assert_called_once_with("r1")
+
+    @pytest.mark.asyncio
+    async def test_generator_yields_error_comment_on_internal_exception(self):
+        fake_subscriber = MagicMock()
+        fake_subscriber.subscribe_to_run = MagicMock()
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        async def _raise_runtime(coro, timeout):
+            del timeout
+            coro.close()
+            raise RuntimeError("boom")
+
+        with patch.dict(
+            RUNS,
+            {
+                "r2": RunInfo(
+                    runId="r2",
+                    pipelineId="p2",
+                    peerId="peer2",
+                    mqttTopic="t/r2",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_runtime
+        ), patch("backend.routes.runs.asyncio.sleep", AsyncMock()):
+            gen = runs_module._multiplexed_metadata_generator()
+            event = await anext(gen)
+            assert event.startswith(": error - boom")
+            await gen.aclose()
+
+    @pytest.mark.asyncio
+    async def test_generator_logs_queueing_error_from_callback(self):
+        subscribed_callback = {"cb": None}
+        fake_subscriber = MagicMock()
+
+        def _subscribe(_run_id, callback):
+            subscribed_callback["cb"] = callback
+
+        fake_subscriber.subscribe_to_run = _subscribe
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        async def _raise_runtime(coro, timeout):
+            del timeout
+            coro.close()
+            raise RuntimeError("loop-fail")
+
+        sleep_mock = AsyncMock()
+        with patch.dict(
+            RUNS,
+            {
+                "r3": RunInfo(
+                    runId="r3",
+                    pipelineId="p3",
+                    peerId="peer3",
+                    mqttTopic="t/r3",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_runtime
+        ), patch("backend.routes.runs.asyncio.sleep", sleep_mock), patch(
+            "backend.routes.runs.asyncio.get_event_loop", side_effect=RuntimeError("no-loop")
+        ), patch("backend.routes.runs.logger.error") as error_mock:
+            gen = runs_module._multiplexed_metadata_generator()
+            _ = await anext(gen)
+
+            assert subscribed_callback["cb"] is not None
+            subscribed_callback["cb"]("r3", {"result": "ok"}, 1.23)
+            assert error_mock.called
+
+            await gen.aclose()
+
+    def test_metadata_stream_endpoint_returns_sse_headers(self, client):
+        async def _dummy_generator():
+            yield "data: {}\n\n"
+
+        with patch("backend.routes.runs._multiplexed_metadata_generator", return_value=_dummy_generator()):
+            resp = client.get("/api/runs/metadata-stream")
+
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/event-stream")
+        assert resp.headers["cache-control"] == "no-cache"

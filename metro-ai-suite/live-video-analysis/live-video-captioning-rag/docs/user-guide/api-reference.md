@@ -5,7 +5,7 @@ The backend is a FastAPI application that serves REST APIs.
 ## Interactive API docs
 
 When the stack is running, FastAPI provides OpenAPI specifications and Swagger UI at
-http://<HOST_IP>:4172/docs
+`http://<HOST_IP>:4172/docs`
 
 If you run the backend on a different host and port, edit accordingly.
 
@@ -13,11 +13,11 @@ If you run the backend on a different host and port, edit accordingly.
 
 The backend defines the following application routes:
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET` | `/api/health` | Returns application health status. |
-| `GET` | `/api/model` | Returns the configured LLM model identifier. |
-| `POST` | `/api/chat` | Streams chat responses from the RAG pipeline. |
+| Method | Path              | Description                                          |
+| ------ | ----------------- | ---------------------------------------------------- |
+| `GET`  | `/api/health`     | Returns application health status.                   |
+| `GET`  | `/api/model`      | Returns the configured LLM model identifier.         |
+| `POST` | `/api/chat`       | Streams chat responses from the RAG pipeline.        |
 | `POST` | `/api/embeddings` | Creates and stores an embedding in the vector store. |
 
 ## API Endpoints
@@ -30,8 +30,8 @@ Returns a simple health payload to confirm that the application is running.
 
 ```json
 {
-	"status": "healthy",
-	"message": "Live Video Captioning RAG application is up and running."
+  "status": "healthy",
+  "message": "Live Video Captioning RAG application is up and running."
 }
 ```
 
@@ -43,8 +43,8 @@ Returns the configured LLM model ID used by the backend.
 
 ```json
 {
-	"status": "Success",
-	"llm_model": "<configured-model-id>"
+  "status": "Success",
+  "llm_model": "<configured-model-id>"
 }
 ```
 
@@ -56,7 +56,7 @@ Submits a user question to the RAG pipeline and returns a streamed response usin
 
 ```json
 {
-	"input": "What you see in the image?"
+  "input": "What you see in the image?"
 }
 ```
 
@@ -71,7 +71,7 @@ Returned when `input` is missing or an empty string.
 
 ```json
 {
-	"detail": "Input question is required and cannot be empty."
+  "detail": "Input question is required and cannot be empty."
 }
 ```
 
@@ -83,19 +83,18 @@ Processes caption or image-derived content and stores the resulting embedding in
 
 ```json
 {
-	"image_data": "<base64-or-caption-payload>",
-	"metadata": {
-		"result": "The image shows ....<caption_text>",
-        "timestamp": 2754121008,
-        "timestamp_seconds": 2.75,
-        "resolution": {
-            "height": 1080,
-            "width": 1920
-        },
-        "frame_id": 101,
-        "img_format": "BGR"
-}
-	}
+  "image_data": "<base64-or-caption-payload>",
+  "metadata": {
+    "result": "The image shows ....<caption_text>",
+    "timestamp": 2754121008,
+    "timestamp_seconds": 2.75,
+    "resolution": {
+      "height": 1080,
+      "width": 1920
+    },
+    "frame_id": 101,
+    "img_format": "BGR"
+  }
 }
 ```
 
@@ -103,9 +102,9 @@ Processes caption or image-derived content and stores the resulting embedding in
 
 ```json
 {
-	"status": "success",
-	"message": "Embedding processed and stored successfully.",
-	"id": "<embedding-id>"
+  "status": "success",
+  "message": "Embedding processed and stored successfully.",
+  "id": "<embedding-id>"
 }
 ```
 
@@ -121,7 +120,7 @@ Example validation response:
 
 ```json
 {
-	"detail": "Input image data is required and cannot be empty."
+  "detail": "Input image data is required and cannot be empty."
 }
 ```
 
@@ -131,7 +130,7 @@ If embedding processing fails unexpectedly, the backend returns:
 
 ```json
 {
-	"detail": "Failed to process embedding."
+  "detail": "Failed to process embedding."
 }
 ```
 

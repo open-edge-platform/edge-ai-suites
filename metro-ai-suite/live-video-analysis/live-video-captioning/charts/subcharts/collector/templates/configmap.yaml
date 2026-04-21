@@ -36,7 +36,6 @@ data:
     [[inputs.mem]]
 
     [[inputs.exec]]
-      # read_cpu_freq.sh is bundled inside the collector image at /app/read_cpu_freq.sh.
       commands = ["/app/read_cpu_freq.sh"]
       environment = []
       name_suffix = ""
@@ -45,7 +44,6 @@ data:
       interval = "10s"
 
     [[inputs.execd]]
-      # qmassa_reader.py is bundled inside the collector image at /app/qmassa_reader.py.
       command = ["python3", "/app/qmassa_reader.py"]
       data_format = "influx"
 

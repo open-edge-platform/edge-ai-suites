@@ -35,6 +35,12 @@ def setup_helm_environment(request):
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
+
+    # Wait for pods from the previous release to fully terminate before installing
+    logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
+    if not cleanup_ok:
+        logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
@@ -45,7 +51,7 @@ def setup_helm_environment(request):
         telegraf_input_plugin = request.node.callspec.params['telegraf_input_plugin']
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
 
     logger.debug(
         f"Installing Helm release... "
@@ -58,15 +64,14 @@ def setup_helm_environment(request):
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=300) == True, "Failed to verify pods are running after installation."
+    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
     
     yield
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
 
 @pytest.fixture(scope="function")
 def setup_helm_weld_environment(request):
@@ -74,6 +79,12 @@ def setup_helm_weld_environment(request):
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
+
+    # Wait for pods from the previous release to fully terminate before installing
+    logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
+    if not cleanup_ok:
+        logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
 
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
@@ -85,7 +96,7 @@ def setup_helm_weld_environment(request):
         telegraf_input_plugin = request.node.callspec.params['telegraf_input_plugin']
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
-    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-anomaly-detection"
+    sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
 
     logger.debug(
         f"Installing Helm release... "
@@ -98,15 +109,14 @@ def setup_helm_weld_environment(request):
     
     # Wait for pods to be ready before yielding to tests
     logger.debug(f"Waiting for pods to be ready in namespace '{namespace}'...")
-    assert helm_utils.verify_pods(namespace, timeout=300) == True, "Failed to verify pods are running after installation."
+    assert helm_utils.verify_pods(namespace, timeout=constants.PODS_VERIFY_TIMEOUT) == True, "Failed to verify pods are running after installation."
     
     yield
     # Stop helm releases
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT}s cleanup timeout - continuing anyway for CI/CD compatibility")
 
 @pytest.fixture(scope="function")
 def setup_multimodal_helm_environment():
@@ -125,7 +135,6 @@ def setup_multimodal_helm_environment():
     time.sleep(3)
     yield
     assert helm_utils.uninstall_helm_charts(release_name_multi, namespace_multi) == True, "Failed to uninstall multimodal Helm release if exists."
-    # Use shorter timeout for cleanup and make it non-blocking for CI/CD
-    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=60)
+    cleanup_result = helm_utils.check_pods(namespace_multi, timeout=constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI)
     if not cleanup_result:
-        logger.warning("Pods still running after 60s cleanup timeout - continuing anyway for CI/CD compatibility")
+        logger.warning(f"Pods still running after {constants.PODS_HEALTHY_CHECK_STATUS_TIMEOUT_MULTI}s cleanup timeout - continuing anyway for CI/CD compatibility")

@@ -43,7 +43,7 @@ Info available at [third-party-programs.txt](https://github.com/open-edge-platfo
 
 ----------------------------------------------------------------------
 
-apps/weld-anomaly-detection/time-series-analytics-microservice/udfs/requirements.txt
+apps/weld-defect-detection/time-series-analytics-microservice/udfs/requirements.txt
 ================================================================
 License-Identifier: Apache License 2.0
 catboost==1.2.10

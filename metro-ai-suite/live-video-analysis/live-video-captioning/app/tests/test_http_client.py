@@ -9,7 +9,7 @@ from urllib.error import HTTPError, URLError
 import pytest
 from fastapi import HTTPException
 
-from backend.services.http_client import http_json
+from backend.services.http_client import http_json, try_get_json
 
 
 class TestHttpJsonSuccess:
@@ -96,3 +96,107 @@ class TestHttpJsonErrors:
             with pytest.raises(HTTPException) as exc_info:
                 http_json("DELETE", "http://example.com/api")
         assert exc_info.value.status_code == 502
+
+    def test_os_error_raises_502(self):
+        """A low-level OSError is wrapped in a 502 HTTPException."""
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen",
+            side_effect=OSError("broken pipe"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                http_json("GET", "http://example.com/api")
+
+        assert exc_info.value.status_code == 502
+        assert "connection failed" in str(exc_info.value.detail)
+
+
+class TestTryGetJson:
+    """Non-raising JSON GET helper behavior."""
+
+    def test_success_returns_status_and_json(self):
+        """Valid JSON body returns (status, parsed_dict)."""
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.read.return_value = b'{"ok": true}'
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen",
+            return_value=mock_resp,
+        ):
+            status, body = try_get_json("http://example.com/status")
+
+        assert status == 200
+        assert body == {"ok": True}
+
+    def test_success_with_invalid_json_returns_none_body(self):
+        """Invalid JSON response body returns (status, None)."""
+        mock_resp = MagicMock()
+        mock_resp.status = 200
+        mock_resp.read.return_value = b"not-json"
+        mock_resp.__enter__ = lambda s: s
+        mock_resp.__exit__ = MagicMock(return_value=False)
+
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen",
+            return_value=mock_resp,
+        ):
+            status, body = try_get_json("http://example.com/status")
+
+        assert status == 200
+        assert body is None
+
+    def test_http_error_returns_status_and_parsed_body(self):
+        """HTTPError is converted into (status, body) instead of raising."""
+        err = HTTPError(
+            url="http://example.com",
+            code=503,
+            msg="Service Unavailable",
+            hdrs={},
+            fp=MagicMock(read=MagicMock(return_value=b'{"error": "down"}')),
+        )
+
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen", side_effect=err
+        ):
+            status, body = try_get_json("http://example.com/status")
+
+        assert status == 503
+        assert body == {"error": "down"}
+
+    def test_http_error_with_invalid_body_returns_none_body(self):
+        """HTTPError with non-JSON body returns (status, None)."""
+        err = HTTPError(
+            url="http://example.com",
+            code=500,
+            msg="Internal Server Error",
+            hdrs={},
+            fp=MagicMock(read=MagicMock(return_value=b"oops")),
+        )
+
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen", side_effect=err
+        ):
+            status, body = try_get_json("http://example.com/status")
+
+        assert status == 500
+        assert body is None
+
+    def test_connection_failure_returns_none_tuple(self):
+        """URLError and OSError both return (None, None)."""
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen",
+            side_effect=URLError("connection refused"),
+        ):
+            status, body = try_get_json("http://example.com/status")
+        assert status is None
+        assert body is None
+
+        with patch(
+            "backend.services.http_client.urllib_request.urlopen",
+            side_effect=OSError("network down"),
+        ):
+            status, body = try_get_json("http://example.com/status")
+        assert status is None
+        assert body is None

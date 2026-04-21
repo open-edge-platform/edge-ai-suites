@@ -54,12 +54,17 @@ Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
 ## Quick Start
 
-### Step 1: Clone the repo
+### Step 1: Build from Source
+
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-# Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/metro-ai-suite/smart-nvr
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/smart-nvr
 ```
 
 ### Step 2: Configure Environment
@@ -100,7 +105,7 @@ source setup.sh start
 
 This launches all required containers:
 
-![Services overview](./_assets/containers.png)
+![Services overview](./_assets/containers.png "services overview")
 
 ### Step 4: Access the Interface
 
@@ -125,29 +130,29 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
 
 1. Ensure VLM Service Availability
 
-Verify the VLM microservice is running and accessible at the configured endpoint.
+   Verify the VLM microservice is running and accessible at the configured endpoint.
 
 2. Set Environment Variable
 
-```bash
-export NVR_GENAI=true
-export VLM_SERVING_IP=<vlm-serving-device-ip>
-export VLM_SERVING_PORT=<vlm-serving-port>
-```
+   ```bash
+   export NVR_GENAI=true
+   export VLM_SERVING_IP=<vlm-serving-device-ip>
+   export VLM_SERVING_PORT=<vlm-serving-port>
+   ```
 
 3. Run the application
 
-Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
+   Re-run the application after [configuring](#step-2-configure-environment) the rest of environment variables. Ensure that the environment value `export NVR_GENAI=true` is set.
 
-> **Important:**
->
-> - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
-> - Requires VLM microservice to be running.
-> - Disabled by default for system stability.
-> - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
->   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
->   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
-> - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
+   > **Important:**
+   >
+   > - This feature is experimental and may be unstable due to underlying Frigate GenAI implementation.
+   > - Requires VLM microservice to be running.
+   > - Disabled by default for system stability.
+   > - SmartNVR uses either Frigate or Intel® SceneScape for GenAI capabilities.
+   >   GenAI in both cannot be enabled at the same time. If Intel® SceneScape is enabled,
+   >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
+   > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 
 ### Running Tests and Generating Coverage Report
 

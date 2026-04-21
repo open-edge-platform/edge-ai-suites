@@ -74,4 +74,4 @@ When this environment variable is set to `true`, it allows the Dockerfiles to co
 - [System Requirements](./system-requirements.md): Review hardware and software requirements
 - [How to Use the Application](../how-to-use-application.md): Learn about the application's features and functionality
 - [API Reference](../api-reference.md): Explore the available REST API endpoints
-- [Troubleshooting](../troubleshooting.md#troubleshooting-docker-containers): Find solutions to common deployment issues
+- [Troubleshooting](../troubleshooting.md#troubleshooting-docker-deployments): Find solutions to common deployment issues
