@@ -16,7 +16,6 @@ import warnings
 from kapacitor.udf.agent import Agent, Handler
 from kapacitor.udf import udf_pb2
 import numpy as np
-import requests
 from sklearnex import patch_sklearn, config_context
 patch_sklearn()
 
@@ -119,7 +118,7 @@ class AnomalyDetectorHandler(Handler):
     def point(self, point):
         """ A point has arrived.
         """
-        logger.info("Processing point %s", point.time)
+        logger.debug("Processing point %s", point.time)
         start_time = time.time_ns()
         check_for_anomalies = 1
         x = None
@@ -139,7 +138,7 @@ class AnomalyDetectorHandler(Handler):
             if self.points_received[stream_src] >= self.max_points:
                 return
             self.points_received[stream_src] += 1
-        logger.info("Processing point %s %s for source %s", point.time, time.time(), stream_src)
+        logger.debug("Processing point %s %s for source %s", point.time, time.time(), stream_src)
 
         def process_the_point(x,y):
             """Check if point is within valid operating range for anomaly detection."""
