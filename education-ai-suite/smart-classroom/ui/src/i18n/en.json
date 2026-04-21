@@ -234,7 +234,9 @@
     "processing":"Processing...",
     "failed":"Failed",
     "uploaded":"Uploaded ✔",
-    "alreadyExists":"Already Exists"
+    "alreadyExists":"Already Exists",
+    "summarizing":"Summarizing...",
+    "summarizationFailed":"Video summarization failed. Please try again"
   },
   "searchSection": {
     "title": "Search",

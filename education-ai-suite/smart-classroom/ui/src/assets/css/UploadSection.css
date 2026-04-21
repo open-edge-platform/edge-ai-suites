@@ -204,6 +204,23 @@
   color: #ffffff;
 }
 
+/* ─── Summarizing Label ──────────────────────────────────── */
+
+.cs-summarizing-label {
+  display: block;
+  font-size: 10px;
+  color: #0071c5;
+  font-style: italic;
+  font-weight: 500;
+  margin-top: 3px;
+  animation: cs-summarizing-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes cs-summarizing-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
 /* ─── Progress Bar ───────────────────────────────────────── */
 
 /* ─── Progress Track & Bar ───────────────────────────────── */

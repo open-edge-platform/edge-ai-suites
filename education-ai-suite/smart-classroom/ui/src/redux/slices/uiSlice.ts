@@ -71,6 +71,7 @@ export interface UIState {
     topic: string;
   } | null;
   csProcessing: boolean;
+  csSummarizing: boolean;
   transcriptionDone: boolean;
   csUploadsComplete: boolean;
   csHasUploads: boolean;
@@ -131,6 +132,7 @@ const initialState: UIState = {
   contentSegmentationError: null,
   timelineHighlight: null,
   csProcessing: false,
+  csSummarizing: false,
   csUploadsComplete: false,
   csHasUploads: false,
   csTags: [],
@@ -510,6 +512,10 @@ const uiSlice = createSlice({
       state.csProcessing = action.payload;
     },
 
+    setCsSummarizing(state, action: PayloadAction<boolean>) {
+      state.csSummarizing = action.payload;
+    },
+
     setCsUploadsComplete(state, action: PayloadAction<boolean>) {
       state.csUploadsComplete = action.payload;
     },
@@ -609,6 +615,7 @@ export const {
   setShowSearchResults,
   setTimelineHighlight,
   setCsProcessing,
+  setCsSummarizing,
   setCsUploadsComplete,
   setCsHasUploads,
   setCsTags,
