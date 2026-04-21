@@ -11,9 +11,9 @@ Key Kubernetes specifics translated from docker-compose.yaml:
   - /dev and /run/udev mounts via hostPath
   - /tmp dir via emptyDir
   - vol_evam_pipeline_root (tmpfs in compose) via emptyDir
-  - models and detection_models from parent PVCs
+  - models and detection_models mounted via subPath from shared models PVC
   - config.json and detection_filter.py from ConfigMap
-  - initContainer waits for the models PVC to be populated by the download Job
+  - initContainers wait for MQTT broker and video-caption-service health
 */}}
 apiVersion: apps/v1
 kind: Deployment
@@ -56,8 +56,9 @@ spec:
       #   1. wait-for-mqtt   — mirrors compose depends_on: mqtt-broker; ensures
       #                        the MQTT broker is accepting connections before
       #                        DL Streamer starts so MQTTPublisher can connect.
-      #   2. wait-for-models — ensures the model download Job has finished before
-      #                        DL Streamer starts.
+      #   2. wait-for-video-caption-service — waits for caption service health,
+      #                        which indicates model preparation/download init
+      #                        completed successfully for the configured mode.
       initContainers:
         - name: wait-for-mqtt
           image: busybox:1.36
@@ -72,35 +73,22 @@ spec:
                 sleep 5
               done
               echo "MQTT broker is ready. Proceeding."
-        - name: wait-for-models
+        - name: wait-for-video-caption-service
           image: busybox:1.36
           imagePullPolicy: IfNotPresent
           command:
             - /bin/sh
             - -c
             - |
-              {{- if .Values.global.models }}
-              echo "Waiting for model sentinel files..."
-              {{- range .Values.global.models }}
-              until [ -f "/models/{{ .outputName }}/.complete" ]; do
-                echo "  /models/{{ .outputName }}/.complete not found — model not yet downloaded/converted. Retrying in 10s..."
-                sleep 10
+              CAPTION_SERVICE_HOST="video-caption-service"
+              CAPTION_SERVICE_PORT="4173"
+              HEALTH_PATH="/api/health"
+              echo "Waiting for video-caption-service at ${CAPTION_SERVICE_HOST}:${CAPTION_SERVICE_PORT}${HEALTH_PATH} ..."
+              until wget -q -T 5 -O - "http://${CAPTION_SERVICE_HOST}:${CAPTION_SERVICE_PORT}${HEALTH_PATH}" >/dev/null 2>&1; do
+                echo "video-caption-service not ready — retrying in 5s..."
+                sleep 5
               done
-              echo "  ✔ /models/{{ .outputName }}/.complete ready."
-              {{- end }}
-              echo "All models ready. Proceeding."
-              {{- else }}
-              echo "Waiting for models PVC to be populated..."
-              until [ "$(ls -A /models)" ]; do
-                echo "Models directory is empty — download Job still running. Retrying in 10s..."
-                sleep 10
-              done
-              echo "Models PVC is populated. Proceeding."
-              {{- end }}
-          volumeMounts:
-            - name: models
-              mountPath: /models
-              readOnly: true
+              echo "video-caption-service is ready. Proceeding."
       containers:
         - name: dlstreamer-pipeline-server
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -150,9 +138,11 @@ spec:
           volumeMounts:
             - name: models
               mountPath: {{ .Values.modelsPath }}
+              subPath: ov_models
               readOnly: true
-            - name: detection-models
+            - name: models
               mountPath: {{ .Values.detectionModelsPath }}
+              subPath: detection-models
               readOnly: true
             - name: pipeline-config
               mountPath: /home/pipeline-server/config.json
@@ -171,17 +161,12 @@ spec:
               readOnly: true
             - name: tmp
               mountPath: /tmp
-          {{- if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- end }}
       volumes:
         - name: models
           persistentVolumeClaim:
             claimName: {{ include "dlstreamer-pipeline-server.modelsPvcName" . }}
-        - name: detection-models
-          persistentVolumeClaim:
-            claimName: {{ include "dlstreamer-pipeline-server.detectionModelsPvcName" . }}
         - name: pipeline-config
           configMap:
             name: {{ include "dlstreamer-pipeline-server.fullname" . }}-config

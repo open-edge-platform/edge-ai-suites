@@ -44,7 +44,7 @@ def test_invalid_values():
     
 
 def test_valid_values():
-    logger.info("TC_003: Changed Test Case - Verifying make check_env_variables with all valid values in .env file")
+    logger.info("TC_003: Verifying make check_env_variables with all valid values in .env file")
     case = docker_utils.generate_test_credentials(case_type="valid")
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)
@@ -73,8 +73,8 @@ def test_make_up_opcua(setup_docker_environment):
     
 
 def test_make_up_mqtt(setup_docker_environment):
-    """TC_005: Testing make up MQTT and make down with valid values in .env file - MODIFIED to use OPC-UA with specific app"""
-    logger.info("TC_005: Testing make up_opcua_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
+    """TC_005: Testing make up MQTT and make down with valid values in .env file"""
+    logger.info("TC_005: Testing make up_mqtt_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
     context = setup_docker_environment
     
     # Use enhanced deploy_mqtt function with app parameter
@@ -127,6 +127,22 @@ def test_multiple_runs_opcua(setup_docker_environment):
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
         assert containers, "No containers found after OPCUA deployment"
+
+        # Step 1: Configure OPC UA alert in TICK script
+        logger.info(f"Cycle {i+1} Step 1: Configuring OPC UA alert in TICK script...")
+        tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
+        assert tick_result is not None, f"Cycle {i+1}: Failed to configure OPC UA alert in TICK script"
+
+        # Step 2: Upload UDF deployment package
+        logger.info(f"Cycle {i+1} Step 2: Uploading UDF deployment package...")
+        upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
+        assert upload_result == True, f"Cycle {i+1}: Failed to upload UDF deployment package"
+
+        # Step 3: Configure OPC UA alert in config.json
+        logger.info(f"Cycle {i+1} Step 3: Configuring OPC UA alert in config.json...")
+        config_result = docker_utils.update_config_file("opcua")
+        assert config_result == True, f"Cycle {i+1}: Failed to configure OPC UA alert in config.json"
+
         # Cleanup between iterations (except last one which is handled by fixture)
         if i < 2:
             make_down_result = docker_utils.invoke_make_down()
@@ -143,6 +159,21 @@ def test_switch_mqtt_to_opcua_ingestion(setup_docker_environment):
     switch_result = docker_utils.invoke_switch_mqtt_opcua()
     logger.info(f"Switch MQTT to OPCUA result: {switch_result}")
     assert switch_result == True
+
+    # Step 1: Configure OPC UA alert in TICK script
+    logger.info("Step 1: Configuring OPC UA alert in TICK script...")
+    tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
+    assert tick_result is not None, "Failed to configure OPC UA alert in TICK script"
+
+    # Step 2: Upload UDF deployment package
+    logger.info("Step 2: Uploading UDF deployment package...")
+    upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
+    assert upload_result == True, "Failed to upload UDF deployment package"
+
+    # Step 3: Configure OPC UA alert in config.json
+    logger.info("Step 3: Configuring OPC UA alert in config.json...")
+    config_result = docker_utils.update_config_file("opcua")
+    assert config_result == True, "Failed to configure OPC UA alert in config.json"
     # Cleanup handled by fixture
     
 
@@ -464,7 +495,22 @@ def test_opcua_multi_stream_scalability(setup_docker_environment):
             logger.info(f"OPC-UA multi-stream ingestion with {num_streams} streams succeeded")
             # Wait for containers to stabilize
             docker_utils.wait_for_stability(30)
-            
+
+            # Step 1: Configure OPC UA alert in TICK script
+            logger.info(f"Step 1: Configuring OPC UA alert in TICK script for {num_streams} streams...")
+            tick_result = docker_utils.check_and_update_tick_script(setup="opcua")
+            assert tick_result is not None, f"Failed to configure OPC UA alert in TICK script for {num_streams} streams"
+
+            # Step 2: Upload UDF deployment package
+            logger.info(f"Step 2: Uploading UDF deployment package for {num_streams} streams...")
+            upload_result = docker_utils.upload_udf_tar_package(constants.WIND_SAMPLE_APP)
+            assert upload_result == True, f"Failed to upload UDF deployment package for {num_streams} streams"
+
+            # Step 3: Configure OPC UA alert in config.json
+            logger.info(f"Step 3: Configuring OPC UA alert in config.json for {num_streams} streams...")
+            config_result = docker_utils.update_config_file("opcua")
+            assert config_result == True, f"Failed to configure OPC UA alert in config.json for {num_streams} streams"
+
             # Verify containers are running
             containers = docker_utils.get_the_deployed_containers()
             logger.info(f"Deployed containers for {num_streams} streams: {len(containers)} total")

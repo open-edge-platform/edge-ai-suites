@@ -79,6 +79,9 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("RERANKER_DEDUP_TIME_THRESHOLD", str(reranker.get("dedup_time_threshold", 5)))
         _set("RERANKER_OVERFETCH_MULTIPLIER", str(reranker.get("overfetch_multiplier", 3)))
 
+        # Video Summarization
+        _set("VIDEO_SUMMARIZATION_ENABLED", str(cs.get("video_summarization_enabled", True)).lower())
+
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
         _set("CS_PORT", cs.get("port", "9011"))
@@ -175,6 +178,14 @@ def main() -> None:
     for v in args.services:
         requested.extend(p.strip().lower() for p in v.split(",") if p.strip())
     requested = list(dict.fromkeys(requested))
+
+    # Skip VLM and video preprocess services when video summarization is globally disabled
+    vs_enabled = _env("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
+    if not vs_enabled:
+        skipped = [s for s in ("vlm", "preprocess") if s in requested]
+        if skipped:
+            print(f"[launcher] VIDEO_SUMMARIZATION_ENABLED=false, skipping: {', '.join(skipped)}")
+            requested = [s for s in requested if s not in ("vlm", "preprocess")]
 
     logs_dir = CONTENT_SEARCH_DIR / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)

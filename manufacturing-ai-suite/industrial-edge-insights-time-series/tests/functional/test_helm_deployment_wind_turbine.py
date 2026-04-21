@@ -14,7 +14,6 @@ import constants
 #import subprocess
 import time
 import logging
-import logging
 
 logger = logging.getLogger(__name__)  # Get a logger for this module specifically
 
@@ -159,7 +158,23 @@ def test_verify_pods_stability_after_udf_activation(setup_helm_environment, tele
     assert result == False, "Pod logs didn't show error type logs when udf package is not activated"
     logger.info("Pod logs shows error message as udf package is not activated")
 
-    result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP)
+    # Step 1: Configure OPC UA alert in TICK script
+    logger.info("Step 1: Configuring OPC UA alert in TICK script...")
+    result = helm_utils.setup_opcua_alerts(chart_path)
+    logger.info(f"setup_opcua_alerts result: {result}")
+    assert result == True, "Failed to configure OPC UA alert in TICK script."
+    logger.info("OPC UA alert configured in TICK script successfully")
+
+    # Step 2: Upload UDF deployment package
+    logger.info("Step 2: Uploading UDF deployment package...")
+    result = helm_utils.upload_udf_tar_package(chart_path, constants.WIND_SAMPLE_APP)
+    logger.info(f"upload_udf_tar_package result: {result}")
+    assert result == True, "Failed to upload UDF deployment package."
+    logger.info("UDF deployment package uploaded successfully")
+
+    # Step 3: Configure OPC UA alert in config.json and activate
+    logger.info("Step 3: Configuring OPC UA alert in config.json and activating...")
+    result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP, alert_mode="opcua")
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
@@ -280,17 +295,27 @@ def test_opcua_alerts(setup_helm_environment, telegraf_input_plugin):
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for OPC UA input plugin."
     logger.info("All pods are running for opcua input plugin")
-    # Set up OPC UA alerts
+
+    # Step 1: Configure OPC UA alert in TICK script
+    logger.info("Step 1: Configuring OPC UA alert in TICK script...")
     result = helm_utils.setup_opcua_alerts(chart_path)
     logger.info(f"setup_opcua_alerts result: {result}")
     assert result == True, "Failed to set up OPC UA alerts."
-    logger.info("OPC UA alerts are set up successfully")
-    
-    # Copy UDF package and activate
+    logger.info("OPC UA alert configured in TICK script successfully")
+
+    # Step 2: Upload UDF deployment package
+    logger.info("Step 2: Uploading UDF deployment package...")
+    result = helm_utils.upload_udf_tar_package(chart_path, constants.WIND_SAMPLE_APP)
+    logger.info(f"upload_udf_tar_package result: {result}")
+    assert result == True, "Failed to upload UDF deployment package."
+    logger.info("UDF deployment package uploaded successfully")
+
+    # Step 3: Configure OPC UA alert in config.json and activate
+    logger.info("Step 3: Configuring OPC UA alert in config.json and activating...")
     result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, alert_mode="opcua")
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
-    logger.info("UDF package copied and activated successfully")
+    logger.info("UDF package configured and activated successfully")
     
     # Wait for Kapacitor to fully start after UDF installation (includes pip install with PyPI timeouts)
     max_wait_seconds = 420
