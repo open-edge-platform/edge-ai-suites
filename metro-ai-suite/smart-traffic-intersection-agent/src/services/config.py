@@ -18,6 +18,12 @@ def hash_intersection_name(name: str, length: int = 16) -> str:
     return hex_digest[:length]
 
 
+class MetricsConfig:
+    def __init__(self):
+        self.ws_url = os.getenv("METRICS_WS_URL", "ws://localhost:9090/ws/clients")
+        self.health_url = os.getenv("METRICS_HEALTH_URL", "http://localhost:9090/health")
+
+
 class ConfigService:
     """
     Configuration service for Traffic Intersection Agent.
@@ -26,12 +32,13 @@ class ConfigService:
     MQTT topics, weather API, and VLM service settings.
     """
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """Initialize configuration service."""
         self._config_dir = Path(__file__).resolve().parent.parent / "config"
         self.config = self._load_config()
         logger.info("Configuration service initialized", 
                    intersection_id=self.get_intersection_id())
+        self.metrics = MetricsConfig()
     
     def _load_config(self) -> dict:
         """Load configuration from environment and file."""

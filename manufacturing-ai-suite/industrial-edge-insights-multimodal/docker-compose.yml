@@ -108,14 +108,11 @@ services:
       SSL_CERT_FILE: /run/secrets/ca_certificate.pem
       MODEL_REGISTRY_URL: http://model-registry:8111
       REST_API_ROOT_PATH: "/ts-api"
+      UDF_MAX_FILE_SIZE_MB: 100
     networks:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./configs/time-series-analytics-microservice/udfs/:/tmp/weld_anomaly_detector/udfs/:ro
-    - ./configs/time-series-analytics-microservice/tick_scripts/:/tmp/weld_anomaly_detector/tick_scripts/:ro
-    - ./configs/time-series-analytics-microservice/config.json:/app/config.json:ro
-    - ./configs/time-series-analytics-microservice/models/:/tmp/weld_anomaly_detector/models/:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:

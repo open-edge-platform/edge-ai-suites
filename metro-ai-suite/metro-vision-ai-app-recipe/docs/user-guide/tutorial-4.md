@@ -39,7 +39,6 @@ Note: The underlying application architecture remains the same.
 
 We will leverage the 'Smart Parking' application as the existing 'Metro Vision AI App Recipe powered application' and turn it into a 'AI Crowd Analytics' application.
 
-
 ### 1. **Create the Crowd Analytics Application Directory**
 
 Navigate to the metro vision AI recipe directory and create the crowd-analytics application by copying the Smart Parking template:
@@ -81,7 +80,7 @@ cd /home/dlstreamer/metro-suite/
 
 mkdir -p crowd-analytics/src/dlstreamer-pipeline-server/models/public
 export MODELS_PATH=/home/dlstreamer/metro-suite/crowd-analytics/src/dlstreamer-pipeline-server/models
-/home/dlstreamer/dlstreamer/samples/download_public_models.sh yolo11s coco128
+/home/open-edge-platform/dlstreamer/samples/download_public_models.sh yolo11s coco128
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" crowd-analytics/src/dlstreamer-pipeline-server/models crowd-analytics/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
@@ -94,7 +93,6 @@ The installation script downloads and sets up essential AI models:
 | **Model Name** | **Purpose** | **Framework** |
 |----------------|-------------|---------------|
 | YOLO11s | Vehicle detection and localization | PyTorch/OpenVINO |
-
 
 ### 4. **Configure the AI Processing Pipeline**
 
@@ -144,7 +142,6 @@ The GStreamer pipeline configuration defines the crowd analytics AI processing w
 - **gvafpscounter**: Monitors processing performance
 
 </details>
-
 
 ### 5. **Configure Application Environment**
 
@@ -682,7 +679,6 @@ Add a function node to calculate inter-vehicle distances and detect hotspots:
         return msg;
         ```
 
-
 #### 7.9 **Add Hotspot Analytics Output Processing**
 
 Create a function node to generate hotspot analytics summaries and alerts:
@@ -807,6 +803,7 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
 #### 8.1 **Access Grafana**: Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`)
 
 #### 8.2 **Create New Dashboard**:
+
    - Click the "+" icon in the right sidebar
    - Select "New Dashboard" from the top right menu
    - Click "Add Visualization"
@@ -829,6 +826,7 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
      frameborder="0">
    </iframe>
    ```
+
 2. **Save Dashboard**
    - Click the "save dashboard" icon at the top right corner of the dashboard
    - Name your dashboard "Title" as "Vehicle Crowd Analytics Dashboard"
@@ -870,6 +868,7 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
             }
         }'
         ```
+
     **Note: It is essential for the pipeline to remain running while applying the transformations in the next step**
 
 3. **Add Transformations** (Transform tab at bottom):
@@ -934,15 +933,14 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
             }
         }'
         ```
-        Note: You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
 
+        Note: You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
 
 #### 8.5 **Expected Results**
 
 As per the business logic mentioned in previous steps, you would see that when a minimum of 2 cars are together (parked next to each other), you would see that it is detected as a hotspot. The metadata of the hotspot such as the cars involved in the hotspot, for how long the cars are parked, for how many frames the cars are parked etc., can be seen in the table.
 
 ![Crowd Analytics Grafana](_images/crowd-analytics-grafana.png)
-
 
 ## Troubleshooting
 
@@ -969,6 +967,7 @@ As per the business logic mentioned in previous steps, you would see that when a
 3. **Container Startup Issues**
 
     If containers fail to start:
+
     ```bash
     # Check container logs for specific errors
     docker logs <container_name>
@@ -1005,7 +1004,7 @@ As per the business logic mentioned in previous steps, you would see that when a
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://dlstreamer.github.io/)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
 - [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)

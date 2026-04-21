@@ -14,6 +14,7 @@ from ..config import (
     PIPELINE_SERVER_URL,
     MQTT_TOPIC_PREFIX,
     WEBRTC_BITRATE,
+    ENABLE_EMBEDDING,
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
@@ -73,7 +74,7 @@ def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
         "detection_threshold": req.detectionThreshold,
         "mqtt_publisher": {
             "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-            "publish_frame": False,
+            "publish_frame": bool(ENABLE_EMBEDDING),  # Only publish frames if embedding is enabled
         },
     }
 
@@ -173,7 +174,12 @@ async def list_runs() -> list[RunInfo]:
 
 
 async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
-    """Generator that receives metadata from MQTT and multiplexes into a single SSE stream."""
+    """Generator that receives metadata from MQTT and multiplexes into a single SSE stream.
+
+    A status heartbeat is sent every second when no MQTT message arrives, carrying
+    the current status of every active run so the frontend can react when a run
+    transitions to ``"error"`` (detected by the background health monitor).
+    """
     message_queue: asyncio.Queue = asyncio.Queue()
     subscribed_runs: set[str] = set()
 
@@ -186,8 +192,8 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
         except Exception as e:
             logger.error(f"Error queueing MQTT message: {e}")
 
+    mqtt_subscriber = await get_mqtt_subscriber()
     try:
-        mqtt_subscriber = await get_mqtt_subscriber()
 
         while True:
             try:
@@ -223,8 +229,13 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
                     yield f"data: {json.dumps(envelope)}\n\n"
 
                 except asyncio.TimeoutError:
-                    # No message received, send heartbeat
-                    yield ": heartbeat\n\n"
+                    # No MQTT message – send a status heartbeat so the frontend
+                    # learns when a run transitions to "error".
+                    status_payload = {
+                        "type": "status",
+                        "runs": {rid: info.status for rid, info in RUNS.items()},
+                    }
+                    yield f"data: {json.dumps(status_payload)}\n\n"
 
             except Exception as e:
                 logger.error(f"Error in multiplexed metadata generator: {e}")
@@ -232,8 +243,8 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
                 await asyncio.sleep(1)
 
     finally:
-        # Cleanup subscriptions when generator is closed
-        mqtt_subscriber = await get_mqtt_subscriber()
+        # Reuse the already-resolved subscriber — avoids creating a new connection
+        # during app shutdown when the global subscriber may already be torn down.
         for run_id in subscribed_runs:
             mqtt_subscriber.unsubscribe_from_run(run_id)
         logger.info("Cleaned up MQTT subscriptions")

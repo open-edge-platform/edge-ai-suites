@@ -1,0 +1,515 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[Industrial Edge Insights Multimodal and Time Series] Functional Tests"
+run-name: "[Industrial Edge Insights Multimodal and Time Series] Functional Tests workflow (by @${{ github.actor }} via ${{ github.event_name }})"
+
+on:
+  schedule:
+    - cron: '0 14 * * *' # 14:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Branch or tag to checkout (default: main)'
+        required: false
+        type: string
+        default: 'main'
+      build:
+        description: 'Build Docker images before running tests (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+      tests:
+        description: 'Which tests to run'
+        type: choice
+        options:
+        - all-tests
+        - timeseries-all
+        - multimodal-all
+        - test_docker_deployment_stability
+        - test_docker_deployment_weld_anomaly
+        - test_docker_deployment_wind_turbine
+        - test_docker_helm_deployment_security
+        - test_docker_influxdb_retention
+        - test_helm_deployment_weld_anomaly
+        - test_helm_deployment_wind_turbine
+        - test_helm_influxdb_retention
+        - test_docker_deployment_multimodal
+        - test_helm_deployment_multimodal
+        default: all-tests
+      skip_long_tests:
+        description: 'Skip long-running tests that take 1 hour or more (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Branch or tag to checkout (default: main)'
+        required: false
+        type: string
+        default: 'main'
+      build:
+        description: 'Build Docker images before running tests (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+      tests:
+        description: 'Which tests to run (all-tests, timeseries-all, multimodal-all, or specific test file name)'
+        required: false
+        type: string
+        default: 'all-tests'
+      skip_long_tests:
+        description: 'Skip long-running tests that take 1 hour or more (yes/no)'
+        required: false
+        type: string
+        default: 'yes'
+permissions: {}
+
+
+jobs:
+  functional-tests:
+    name: Functional Tests for Multimodal and TimeSeries
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Print workflow inputs
+        env:
+          TAG: ${{ inputs.tag || 'main' }}
+          BUILD: ${{ inputs.build || 'yes' }}
+          TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+        run: |
+          echo "tag             : $TAG"
+          echo "build           : $BUILD"
+          echo "tests           : $TESTS"
+          echo "skip_long_tests : $SKIP_LONG_TESTS"
+
+      - name: Checkout current repository
+        id: checkout_current_tag
+        continue-on-error: true
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.tag || 'main' }}
+          persist-credentials: false
+
+      - name: Checkout current repository - fallback to main
+        if: steps.checkout_current_tag.outcome == 'failure'
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Checkout Time Series Analytics microservice (edge-ai-libraries)
+        if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        id: checkout_tag
+        continue-on-error: true
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: open-edge-platform/edge-ai-libraries
+          ref: ${{ inputs.tag || 'main' }}
+          path: edge-ai-libraries
+          persist-credentials: false
+
+      - name: Checkout Time Series Analytics microservice (edge-ai-libraries) - fallback to main
+        if: ${{ (inputs.build != 'no' || inputs.tag == 'main') && steps.checkout_tag.outcome == 'failure' }}
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: open-edge-platform/edge-ai-libraries
+          ref: main
+          path: edge-ai-libraries
+          persist-credentials: false
+
+      - name: Building Time Series Analytics microservices
+        if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        run: |
+          cd ./edge-ai-libraries/microservices/time-series-analytics/docker
+          docker compose down -v
+          docker compose build
+
+      - name: Building Multimodal Sample App images
+        if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        run: |
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/"
+          make down
+          make build
+
+      - name: Building Time Series Sample App images
+        if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        run: |
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/"
+          make down
+          make build
+
+      - name: Install k3s
+        run: |
+          curl -sfL https://get.k3s.io | INSTALL_K3S_SELINUX_WARN=true INSTALL_K3S_VERSION=${K3S_VERSION} \
+          sh -s - --disable=traefik --write-kubeconfig-mode=644
+          echo "KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> "$GITHUB_ENV"
+
+      - name: Load images into k3s
+        if: ${{ inputs.build != 'no' || inputs.tag == 'main' }}
+        run: |
+          echo "Loading docker images into k3s..."
+          docker images --format "{{.Repository}}:{{.Tag}}" | grep "^intel/ia-" | grep -v "<none>" | while read image; do
+              echo "Importing image: $image"
+              docker save "$image" | sudo k3s ctr images import -
+          done
+
+      - name: Run Time Series Sample Apps functional tests
+        env:
+          TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+        run: |
+          # Timeseries-specific test files
+          TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
+            test_docker_deployment_wind_turbine test_docker_helm_deployment_security \
+            test_docker_influxdb_retention test_helm_deployment_weld_anomaly \
+            test_helm_deployment_wind_turbine test_helm_influxdb_retention"
+
+          # Skip if only multimodal tests are selected
+          if [[ "$TESTS" == "multimodal-all" || "$TESTS" == "test_docker_deployment_multimodal" || "$TESTS" == "test_helm_deployment_multimodal" ]]; then
+            echo "Skipping time-series tests (only multimodal tests selected)"
+            exit 0
+          fi
+
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-time-series/tests/functional"
+          echo "Running Time Series Sample Apps functional tests"
+          python3 -m venv env
+          source env/bin/activate
+          pip3 install -r ../requirements.txt
+          mkdir -p /tmp/test_timeseries_report
+          rm -f /tmp/test_timeseries_report/report.html /tmp/test_timeseries_report/junit.xml
+
+          # Build marker expression to skip long-running tests when requested
+          MARKER_ARGS=()
+          if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
+            echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
+            MARKER_ARGS=(-m "not longrun")
+          fi
+
+          # List tests that will be collected (helps debug which tests run/are skipped)
+          echo ""
+          echo "========== Collecting tests =========="
+          if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          fi
+          echo "======================================"
+          echo ""
+
+          # Run specific test file if selected, otherwise run all tests
+          set +e
+          if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
+          else
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}"
+          fi
+          PYTEST_RC=$?
+          set -e
+          echo "TIMESERIES_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
+
+          # Print test results summary with failure details
+          python3 - <<'PYEOF'
+          import xml.etree.ElementTree as ET, os
+          from collections import defaultdict
+          xml_path = '/tmp/test_timeseries_report/junit.xml'
+          if not os.path.exists(xml_path):
+              print("No test results found (JUnit XML not generated)")
+          else:
+              root = ET.parse(xml_path).getroot()
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              failures = []
+              errors = []
+              for tc in root.findall('.//testcase'):
+                  parts = tc.get('classname', '').split('.')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
+                  files[fname]['total'] += 1
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
+                      files[fname]['failed'] += 1
+                      msg = fail_el.get('message', '')[:200]
+                      failures.append(f"  FAILED  {test_id}\n          {msg}")
+                  elif err_el is not None:
+                      files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      errors.append(f"  ERROR   {test_id}\n          {msg}")
+                  elif tc.find('skipped') is not None:
+                      files[fname]['skipped'] += 1
+                  else:
+                      files[fname]['passed'] += 1
+              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5}")
+              print('-' * 80)
+              for fname, c in sorted(files.items()):
+                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+              if failures:
+                  print(f"\n--- Failures ({len(failures)}) ---")
+                  print('\n'.join(failures))
+              if errors:
+                  print(f"\n--- Errors ({len(errors)}) ---")
+                  print('\n'.join(errors))
+              print()
+          PYEOF
+          deactivate
+          exit $PYTEST_RC
+
+      - name: Upload Time Series Sample Apps HTML test report to GitHub
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: timeseries-test-report
+          path: /tmp/test_timeseries_report
+
+      - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
+        if: always()
+        env:
+          TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+        run: |
+          # Multimodal-specific test files
+          MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal"
+
+          # Skip if only timeseries tests are selected
+          if [[ "$TESTS" == "timeseries-all" ]] || echo "$TESTS" | grep -qw "test_docker_deployment_stability\|test_docker_deployment_weld_anomaly\|test_docker_deployment_wind_turbine\|test_docker_helm_deployment_security\|test_docker_influxdb_retention\|test_helm_deployment_weld_anomaly\|test_helm_deployment_wind_turbine\|test_helm_influxdb_retention"; then
+            echo "Skipping multimodal tests (only time-series tests selected)"
+            exit 0
+          fi
+
+          cd "${{ github.workspace }}/manufacturing-ai-suite/industrial-edge-insights-multimodal/tests/functional"
+          echo "Running Multimodal Weld Defect Detection Sample Apps functional tests"
+          python3 -m venv env
+          source env/bin/activate
+          pip3 install -r ../requirements.txt
+          mkdir -p /tmp/test_multimodal_report
+          rm -f /tmp/test_multimodal_report/report.html /tmp/test_multimodal_report/junit.xml
+
+          # Build marker expression to skip long-running tests when requested
+          MARKER_ARGS=()
+          if [[ "$SKIP_LONG_TESTS" == "yes" ]]; then
+            echo "Skipping long-running tests (marked with @pytest.mark.longrun)"
+            MARKER_ARGS=(-m "not longrun")
+          fi
+
+          # List tests that will be collected (helps debug which tests run/are skipped)
+          echo ""
+          echo "========== Collecting tests =========="
+          if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          fi
+          echo "======================================"
+          echo ""
+
+          # Run specific test file if selected, otherwise run all tests
+          set +e
+          if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
+          else
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}"
+          fi
+          PYTEST_RC=$?
+          set -e
+          echo "MULTIMODAL_EXIT_CODE=$PYTEST_RC" >> "$GITHUB_ENV"
+
+          # Print test results summary with failure details
+          python3 - <<'PYEOF'
+          import xml.etree.ElementTree as ET, os
+          from collections import defaultdict
+          xml_path = '/tmp/test_multimodal_report/junit.xml'
+          if not os.path.exists(xml_path):
+              print("No test results found (JUnit XML not generated)")
+          else:
+              root = ET.parse(xml_path).getroot()
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              failures = []
+              errors = []
+              for tc in root.findall('.//testcase'):
+                  parts = tc.get('classname', '').split('.')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
+                  files[fname]['total'] += 1
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
+                      files[fname]['failed'] += 1
+                      msg = fail_el.get('message', '')[:200]
+                      failures.append(f"  FAILED  {test_id}\n          {msg}")
+                  elif err_el is not None:
+                      files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      errors.append(f"  ERROR   {test_id}\n          {msg}")
+                  elif tc.find('skipped') is not None:
+                      files[fname]['skipped'] += 1
+                  else:
+                      files[fname]['passed'] += 1
+              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5}")
+              print('-' * 80)
+              for fname, c in sorted(files.items()):
+                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+              if failures:
+                  print(f"\n--- Failures ({len(failures)}) ---")
+                  print('\n'.join(failures))
+              if errors:
+                  print(f"\n--- Errors ({len(errors)}) ---")
+                  print('\n'.join(errors))
+              print()
+          PYEOF
+          deactivate
+          exit $PYTEST_RC
+
+      - name: Upload Multimodal Weld Defect Detection Sample Apps HTML test report to GitHub
+        if: always()
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: multimodal-test-report
+          path: /tmp/test_multimodal_report
+
+      - name: Generate Test Summary
+        if: always()
+        env:
+          TAG: ${{ inputs.tag || 'main' }}
+          BUILD: ${{ inputs.build || 'yes' }}
+          TESTS: ${{ inputs.tests || 'all-tests' }}
+          SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
+        run: |
+          python3 - <<'PYEOF'
+          import xml.etree.ElementTree as ET, os
+
+          summary_path = os.environ['GITHUB_STEP_SUMMARY']
+          tag     = os.environ.get('TAG', 'main')
+          build   = os.environ.get('BUILD', 'yes')
+          tests   = os.environ.get('TESTS', 'all-tests')
+          skip_long = os.environ.get('SKIP_LONG_TESTS', 'yes')
+          event   = os.environ.get('GITHUB_EVENT_NAME', 'unknown')
+          ts_exit = os.environ.get('TIMESERIES_EXIT_CODE', '')
+          mm_exit = os.environ.get('MULTIMODAL_EXIT_CODE', '')
+
+          def parse_junit(xml_path):
+              if not os.path.exists(xml_path):
+                  return None, []
+              from collections import defaultdict
+              root = ET.parse(xml_path).getroot()
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              issue_details = []
+              for tc in root.findall('.//testcase'):
+                  parts = tc.get('classname', '').split('.')
+                  fname = next((p for p in parts if p.startswith('test_')), None)
+                  # Fall back to the testcase 'name' attribute for collection errors
+                  # where classname may be empty
+                  if not fname:
+                      raw_name = tc.get('name', parts[0] if parts else 'unknown')
+                      fname = raw_name.replace('.py', '') if raw_name else 'unknown'
+                  test_id = f"{fname}::{tc.get('name', 'unknown')}"
+                  files[fname]['total'] += 1
+                  fail_el = tc.find('failure')
+                  err_el = tc.find('error')
+                  if fail_el is not None:
+                      files[fname]['failed'] += 1
+                      msg = fail_el.get('message', '')[:200]
+                      issue_details.append(('FAIL', test_id, msg))
+                  elif err_el is not None:
+                      files[fname]['errors'] += 1
+                      msg = err_el.get('message', '')[:200]
+                      issue_details.append(('ERROR', test_id, msg))
+                  elif tc.find('skipped') is not None:
+                      files[fname]['skipped'] += 1
+                  else:
+                      files[fname]['passed'] += 1
+
+              # Also capture testsuite-level errors (e.g. collection errors)
+              # that prevented tests from running
+              for ts in root.findall('.//testsuite'):
+                  ts_errors = int(ts.get('errors', 0))
+                  ts_tests = int(ts.get('tests', 0))
+                  # If there are errors at the testsuite level but no testcases were run,
+                  # report the collection/setup failure
+                  if ts_errors > 0 and ts_tests == 0 and not files:
+                      suite_name = ts.get('name', 'unknown')
+                      files[suite_name] = {'total': ts_errors, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': ts_errors}
+
+              return [{'name': n, **c} for n, c in sorted(files.items())], issue_details
+
+          overall = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
+
+          with open(summary_path, 'a') as out:
+              out.write('## \U0001f4ca Test Execution Summary\n\n')
+
+              out.write('### \U0001f50d Run Information\n')
+              out.write(f'- **Event:** {event}\n')
+              out.write(f'- **Tag/Branch:** {tag}\n')
+              out.write(f'- **Build:** {build}\n')
+              out.write(f'- **Tests:** {tests}\n')
+              out.write(f'- **Skip Long Tests:** {skip_long}\n\n')
+
+              sections = [
+                  ('\U0001f3ed Time Series Tests', '/tmp/test_timeseries_report/junit.xml', ts_exit),
+                  ('\U0001f3ad Multimodal Tests',  '/tmp/test_multimodal_report/junit.xml',  mm_exit),
+              ]
+              for title, xml_path, exit_code in sections:
+                  out.write(f'### {title}\n')
+                  results, issues = parse_junit(xml_path)
+                  if results is None:
+                      out.write('\u23ed\ufe0f **Status:** SKIPPED (not run)\n\n')
+                      continue
+                  if exit_code == '0':
+                      out.write('\u2705 **Status:** PASSED\n\n')
+                  else:
+                      out.write(f'\u274c **Status:** FAILED (Exit Code: {exit_code or "?"})\n\n')
+                  out.write('| Test File | Total | Pass | Fail | Skip | Err |\n')
+                  out.write('|-----------|------:|-----:|-----:|-----:|----:|\n')
+                  sec = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
+                  for r in results:
+                      out.write(f"| `{r['name']}` | {r['total']} | {r['passed']} | {r['failed']} | {r['skipped']} | {r['errors']} |\n")
+                      for k in sec:
+                          sec[k] += r[k]
+                  out.write(f"| **Total** | **{sec['total']}** | **{sec['passed']}** | **{sec['failed']}** | **{sec['skipped']}** | **{sec['errors']}** |\n\n")
+                  if issues:
+                      out.write('<details><summary>\u274c Failure/Error Details</summary>\n\n')
+                      out.write('| Status | Test | Message |\n')
+                      out.write('|--------|------|--------|\n')
+                      for kind, test_id, msg in issues:
+                          safe_msg = msg.replace('|', '\\|').replace('\n', ' ')
+                          out.write(f'| {kind} | `{test_id}` | {safe_msg} |\n')
+                      out.write('\n</details>\n\n')
+                  for k in overall:
+                      overall[k] += sec[k]
+
+              out.write('### \U0001f3af Overall Summary\n')
+              out.write('| Metric | Count |\n')
+              out.write('|--------|------:|\n')
+              out.write(f"| **Total Tests** | **{overall['total']}** |\n")
+              out.write(f"| \u2705 Passed | {overall['passed']} |\n")
+              out.write(f"| \u274c Failed | {overall['failed']} |\n")
+              out.write(f"| \u23ed\ufe0f Skipped | {overall['skipped']} |\n")
+              out.write(f"| \u26a0\ufe0f Errors | {overall['errors']} |\n\n")
+
+              if overall['total'] > 0:
+                  rate = (overall['passed'] * 100) // overall['total']
+                  out.write(f'\U0001f4c8 **Success Rate:** {rate}%\n\n')
+              else:
+                  out.write('\U0001f4c8 **Success Rate:** N/A (No tests executed)\n\n')
+
+              if overall['total'] == 0:
+                  out.write('\U0001f50d **Overall Status:** NO TESTS EXECUTED\n')
+              elif overall['failed'] == 0 and overall['errors'] == 0:
+                  out.write('\u2705 **Overall Status:** ALL TESTS PASSED\n')
+              else:
+                  out.write('\u274c **Overall Status:** SOME TESTS FAILED\n')
+          PYEOF

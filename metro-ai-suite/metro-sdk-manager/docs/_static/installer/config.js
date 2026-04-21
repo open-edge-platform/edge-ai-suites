@@ -25,12 +25,12 @@ const CONFIG = {
       type: "single",
       options: [
         {
-          label: "Metro Vision AI SDK",
-          value: "METRO_VISION"
+          label: "OEP Vision AI SDK",
+          value: "OEP_VISION"
         },
         {
-          label: "Metro Gen AI SDK",
-          value: "METRO_GENAI"
+          label: "OEP Gen AI SDK",
+          value: "OEP_GENAI"
         },
         {
           label: "Visual AI Demo Kit",
@@ -66,7 +66,7 @@ const CONFIG = {
       rules: [
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -81,7 +81,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -112,7 +112,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -127,7 +127,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -160,7 +160,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
@@ -169,13 +169,17 @@ const CONFIG = {
             "DLStreamer Pipeline Server",
             "OpenVINO",
             "OpenVINO Model Server",
+            "SceneScape Manager",
+            "SceneScape Controller",
+            "SceneScape Autocalibration",
             "Edge AI Libraries - Repo",
-            "Edge AI Suites - Repo"
+            "Edge AI Suites - Repo",
+            "SceneScape - Repo"
           ]
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
@@ -215,7 +219,7 @@ const CONFIG = {
       rules: [
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -224,7 +228,7 @@ const CONFIG = {
 
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -241,7 +245,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -250,7 +254,7 @@ const CONFIG = {
 
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -267,20 +271,20 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
-          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-vision-ai-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-vision-ai-sdk.sh | bash`
         },
 
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
-          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/metro-gen-ai-sdk.sh | bash`
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-gen-ai-sdk.sh | bash`
         },
 
         {
@@ -301,7 +305,7 @@ const CONFIG = {
       rules: [
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -310,7 +314,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -328,7 +332,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -337,7 +341,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -355,21 +359,21 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/metro-vision-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/oep-vision-ai-sdk/get-started.html`
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/metro-gen-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/oep-gen-ai-sdk/get-started.html`
         },
         {
           when: {
@@ -389,7 +393,7 @@ const CONFIG = {
       rules: [
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
@@ -404,14 +408,14 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2025.2"
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
             { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
-            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/index.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
@@ -433,7 +437,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
@@ -448,14 +452,14 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "2026.0"
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
             { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
-            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/index.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
             { text: "Chat Q&A", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html" },
@@ -479,7 +483,7 @@ const CONFIG = {
         },
         {
           when: {
-            SDK: "METRO_VISION",
+            SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
@@ -488,20 +492,21 @@ const CONFIG = {
             { text: "DLStreamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
             { text: "OpenVINO", url: "https://docs.openvino.ai/2025/get-started.html" },
             { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html" },
+            { text: "Intel® SceneScape", url: "https://github.com/open-edge-platform/scenescape" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]
         },
         {
           when: {
-            SDK: "METRO_GENAI",
+            SDK: "OEP_GENAI",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
           },
           links: [
             { text: "Audio Analyzer", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html" },
             { text: "Document Ingestion - pgvector", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md" },
-            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/Overview.md" },
+            { text: "Multimodal Embedding Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/index.md" },
             { text: "Visual Data Preparation For Retrieval", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md" },
             { text: "VLM OpenVINO Serving", url: "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md" },
             { text: "Chat Q&A", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html" },

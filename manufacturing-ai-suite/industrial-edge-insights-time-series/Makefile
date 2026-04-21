@@ -5,8 +5,9 @@
 #
 
 DEFAULT_SAMPLE_APP := wind-turbine-anomaly-detection
-SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-anomaly-detection
+SAMPLE_APP_LIST := wind-turbine-anomaly-detection weld-defect-detection
 HELM_REGISTRY := oci://registry-1.docker.io/intel
+MAKEFLAGS += --no-print-directory
 
 ifdef app
 ifeq ($(filter $(app),$(SAMPLE_APP_LIST)),)
@@ -117,6 +118,84 @@ check_env_variables:
 		esac; \
 	done
 
+define post_config
+config_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/config.json; \
+if [ ! -f $$config_file ]; then \
+	echo "Error: config.json not found at $$config_file"; \
+	exit 1; \
+fi; \
+$(wait_for_tsam); \
+echo "Posting config for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
+response=$$(curl -s -o /tmp/config_response.json -w "%{http_code}" \
+	-X POST https://localhost:${GRAFANA_PORT}/ts-api/config \
+	-H 'accept: application/json' \
+	-H 'Content-Type: application/json' \
+	-d @$$config_file \
+	-k); \
+if [ "$$response" = "200" ]; then \
+	echo "Config posted successfully (HTTP $$response)."; \
+else \
+	echo "Config post failed (HTTP $$response). Response:"; \
+	cat /tmp/config_response.json; \
+	exit 1; \
+fi
+endef
+
+define wait_for_tsam
+echo "Waiting for nginx to be up and running..."; \
+max_retries=30; \
+retry=0; \
+until curl -sk -I https://localhost:${GRAFANA_PORT}/ 2>/dev/null | grep -iq '^server: nginx'; do \
+	retry=$$((retry + 1)); \
+	if [ $$retry -ge $$max_retries ]; then \
+		echo "Timed out waiting for nginx after $$max_retries attempts. Last error:"; \
+		curl -sk -I https://localhost:${GRAFANA_PORT}/ 2>&1 | head -5; \
+		exit 1; \
+	fi; \
+	echo "  nginx not accessible yet (attempt $$retry/$$max_retries), retrying in 5s..."; \
+	sleep 5; \
+done; \
+echo "nginx is up and running."; \
+echo "Waiting for Time-Series Analytics microservice to be accessible..."; \
+retry=0; \
+until { code=$$(curl -sk -o /dev/null -w '%{http_code}' https://localhost:${GRAFANA_PORT}/ts-api/health); [ "$$code" = "200" ] || [ "$$code" = "503" ]; }; do \
+	retry=$$((retry + 1)); \
+	if [ $$retry -ge $$max_retries ]; then \
+		echo "Timed out waiting for Time-Series Analytics microservice after $$max_retries attempts."; \
+		exit 1; \
+	fi; \
+	echo "  TSAM not accessible yet (attempt $$retry/$$max_retries), retrying in 5s..."; \
+	sleep 5; \
+done; \
+echo "Time-Series Analytics microservice is accessible."
+endef
+
+define upload_tar_file
+echo "Creating UDF deployment tar for $(SAMPLE_APP)..."; \
+config_dir=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config; \
+tar_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).tar; \
+rm -f $$tar_file; \
+cd $$config_dir && \
+folders="udfs tick_scripts"; \
+if [ -d models ] && [ -n "$$(ls -A models 2>/dev/null)" ]; then folders="$$folders models"; fi; \
+tar cf $$tar_file $$folders && \
+echo "Created: $$tar_file"; \
+$(wait_for_tsam); \
+echo "Uploading UDF deployment tar for $(SAMPLE_APP) to Time-Series Analytics microservice..."; \
+response=$$(curl -s -o /tmp/upload_response.json -w "%{http_code}" \
+	-X POST https://localhost:${GRAFANA_PORT}/ts-api/udfs/package \
+	-F "file=@$$tar_file" \
+	-k); \
+if [ "$$response" = "200" ]; then \
+	echo "Upload successful (HTTP $$response)."; \
+	$(post_config); \
+else \
+	echo "Upload failed (HTTP $$response). Response:"; \
+	cat /tmp/upload_response.json; \
+	exit 1; \
+fi
+endef
+
 .PHONY: up_mqtt_ingestion
 up_mqtt_ingestion: check_env_variables down
 	$(call multi_stream_check,mqtt)
@@ -137,14 +216,15 @@ up_mqtt_ingestion: check_env_variables down
 			$(DOCKER_COMPOSE) run -d --name ia-mqtt-publisher-$$i -e INSTANCE_ID=$$i ia-mqtt-publisher; \
 		done; \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=0 -d $(shell $(DOCKER_COMPOSE) config --services | grep -v ia-mqtt-publisher); \
-	fi;
+	fi
+	@$(upload_tar_file)
 
 # Run Docker containers
 .PHONY: up_opcua_ingestion
 up_opcua_ingestion: check_env_variables down
 	$(call multi_stream_check,opcua)
-	@if [ "$(app)" = "weld-anomaly-detection" ]; then \
-		echo "The weld-anomaly-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
+	@if [ "$(app)" = "weld-defect-detection" ]; then \
+		echo "The weld-defect-detection sample app supports only MQTT ingestion. Please use 'make up_mqtt_ingestion' command to start the services."; \
 		exit 1; \
 	fi; \
 	if [ $(num_of_streams) -gt 1 ]; then \
@@ -157,7 +237,8 @@ up_opcua_ingestion: check_env_variables down
 		$(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_FILE) -f $(DOCKER_COMPOSE_VALIDATION_FILE) up --scale ia-mqtt-publisher=0 -d ;\
 	else \
 		$(DOCKER_COMPOSE) up --scale ia-opcua-server=$(num_of_streams) --scale ia-mqtt-publisher=0 -d; \
-	fi;
+	fi
+	@$(upload_tar_file)
 
 
 # Status of the deployed containers
@@ -223,7 +304,6 @@ gen_helm_charts:
 	@rm -rf helm/simulation-data
 	@cp -rf apps/${SAMPLE_APP}/simulation-data helm/
 	@cp -f apps/${SAMPLE_APP}/telegraf-config/*.conf helm
-	@cp -f apps/${SAMPLE_APP}/time-series-analytics-config/config.json helm/
 	@cp -f configs/telegraf/entrypoint.sh helm/telegraf_entrypoint.sh
 	@cp -f configs/nginx/nginx-cert-gen.sh helm/nginx-cert-gen.sh
 	@cp -f configs/nginx/nginx.conf helm/nginx.conf
@@ -273,10 +353,10 @@ help:
 	@echo "      Example: make push_images DOCKER_REGISTRY=myregistry"
 	@echo "  make gen_helm_charts              - Generate Helm packages for the selected sample app"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make gen_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make gen_helm_charts app=weld-defect-detection"
 	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
-	@echo "      Example: make push_helm_charts app=weld-anomaly-detection"
+	@echo "      Example: make push_helm_charts app=weld-defect-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
 

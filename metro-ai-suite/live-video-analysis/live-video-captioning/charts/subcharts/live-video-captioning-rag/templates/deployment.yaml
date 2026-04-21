@@ -1,0 +1,223 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+{{/*
+live-video-captioning-rag uses hostPort binding — only one pod can bind a given host
+port per node.  Ensure replicaCount is always 1.
+*/}}
+{{- if gt (int .Values.replicaCount) 1 }}
+{{- fail "live-video-captioning-rag replicaCount must be 1: multiple replicas conflict on the host TCP port." }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "live-video-captioning-rag.fullname" . }}
+  labels:
+    {{- include "live-video-captioning-rag.labels" . | nindent 4 }}
+    app.kubernetes.io/component: live-video-captioning-rag
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "live-video-captioning-rag.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "live-video-captioning-rag.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: live-video-captioning-rag
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # initContainer waits until at least one model directory is present in the
+      # PVC, ensuring the download Job has completed before the service starts.
+      initContainers:
+        - name: download-models
+          image: "python:3.10.12"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              LLM_MODEL_ID_RAW={{ coalesce .Values.global.llmModel.modelId .Values.env.llmModel.modelId .Values.env.llmModelId "" | quote }}
+              LLM_MODEL_TYPE={{ coalesce .Values.global.llmModel.modelType .Values.env.llmModel.modelType "llm" | quote }}
+              LLM_WEIGHT_FORMAT={{ coalesce .Values.global.llmModel.weightFormat .Values.env.llmModel.weightFormat "" | quote }}
+              if [ -z "$LLM_MODEL_ID_RAW" ]; then
+                echo "ERROR: global.llmModel.modelId must be set"
+                exit 1
+              fi
+
+              # Use the first model ID if a CSV list is provided.
+              LLM_MODEL_ID="$(echo "$LLM_MODEL_ID_RAW" | cut -d',' -f1 | xargs)"
+
+              # Store models under the full modelId path (e.g. microsoft/Phi-3.5-mini-instruct).
+              MODEL_TARGET_DIR="/opt/data/llm_models/${LLM_MODEL_ID}"
+              if [ -d "$MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                echo "LLM output already exists at $MODEL_TARGET_DIR. Skipping download for $LLM_MODEL_ID"
+              else
+                /config/download-models.sh "$LLM_MODEL_ID" "$LLM_MODEL_TYPE" "$LLM_WEIGHT_FORMAT" "$HF_TOKEN" "$LLM_MODEL_ID"
+              fi
+
+              CACHE_TARGET_DIR="/tmp/model_cache/${LLM_MODEL_ID}"
+              mkdir -p "$(dirname "$CACHE_TARGET_DIR")"
+              rm -rf "$CACHE_TARGET_DIR"
+              mkdir -p "$CACHE_TARGET_DIR"
+              cp -a "$MODEL_TARGET_DIR"/. "$CACHE_TARGET_DIR"/
+              chmod -R 0777 "/tmp/model_cache"
+          env:
+            - name: MODEL_DOWNLOAD_HOST
+              value: {{ .Values.global.modelDownload.serviceName | quote }}
+            - name: MODEL_DOWNLOAD_PORT
+              value: {{ .Values.global.modelDownload.port | quote }}
+            - name: HF_TOKEN
+              value: {{ .Values.global.huggingface.apiToken | quote }}
+            - name: LLM_MODEL_ID
+              value: {{ .Values.global.llmModel.modelId | quote }}
+            - name: http_proxy
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.global.noProxy }},{{ .Values.global.modelDownload.serviceName }},mqtt-broker,dlstreamer-pipeline-server,mediamtx,coturn,video-caption-service,live-metrics-service,collector,live-video-captioning-rag,multimodal-embedding,vdms-vector-db
+          volumeMounts:
+            - name: scripts-volume
+              mountPath: /config
+            - name: shared-helper
+              mountPath: /shared
+            - name: models
+              mountPath: /opt/data
+              readOnly: false
+            - name: llm-cache
+              mountPath: /tmp/model_cache
+        - name: wait-for-multimodal-embedding
+          image: "python:3.10.12"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              python - <<'PY'
+              import os
+              import sys
+              import time
+              import urllib.error
+              import urllib.request
+
+              host = os.environ["EMBEDDING_HOST"]
+              port = os.environ["EMBEDDING_HOST_PORT"]
+              url = f"http://{host}:{port}/health"
+
+              for attempt in range(1, 61):
+                  try:
+                      with urllib.request.urlopen(url, timeout=5) as response:
+                          if response.status == 200:
+                              print(f"multimodal-embedding is ready at {url}")
+                              sys.exit(0)
+                          print(f"Attempt {attempt}/60: unexpected status {response.status} from {url}")
+                  except Exception as exc:
+                      print(f"Attempt {attempt}/60: waiting for {url}: {exc}")
+                  time.sleep(5)
+
+              print(f"ERROR: multimodal-embedding did not become ready at {url}")
+              sys.exit(1)
+              PY
+          env:
+            - name: EMBEDDING_HOST
+              value: {{ .Values.env.embeddingHost | quote }}
+            - name: EMBEDDING_HOST_PORT
+              value: {{ .Values.env.embeddingHostPort | quote }}
+            - name: http_proxy
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.global.noProxy }},localhost,127.0.0.1,.svc,.cluster.local,multimodal-embedding
+      containers:
+        - name: live-video-captioning-rag
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: rag-dashboard
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.nodePort }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "live-video-captioning-rag.fullname" . }}-config
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: rag-dashboard
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: rag-dashboard
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 10
+          startupProbe:
+            httpGet:
+              path: /api/health
+              port: rag-dashboard
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+            failureThreshold: 30
+          volumeMounts:
+            - name: scripts-volume
+              mountPath: /app/config
+            - name: shared-helper
+              mountPath: /app/shared
+            - name: llm-cache
+              mountPath: /tmp/model_cache
+      {{- if .Values.global.llmModel.useGPU.enabled }}
+            - name: dri-device
+              mountPath: /dev/dri
+      {{- end }}
+      {{- if .Values.global.llmModel.useGPU.enabled }}
+          resources:
+            requests:
+              {{ .Values.global.llmModel.useGPU.key}}: 1
+            limits:
+              {{ .Values.global.llmModel.useGPU.key}}: 1
+      {{- else if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- end }}
+      volumes:
+        - name: scripts-volume
+          configMap:
+            name: {{ include "live-video-captioning-rag.fullname" . }}-config
+            defaultMode: 0777
+        - name: shared-helper
+          configMap:
+            name: model-download-helper
+            defaultMode: 0777
+        - name: llm-cache
+          emptyDir: {}
+      {{- if .Values.global.llmModel.useGPU.enabled }}
+        - name: dri-device
+          hostPath:
+            path: /dev/dri
+            type: Directory
+      {{- end }}
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "live-video-captioning-rag.modelsPvcName" . }}

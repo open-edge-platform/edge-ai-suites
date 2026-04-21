@@ -2,7 +2,6 @@
 Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -50,12 +49,12 @@ spec:
             - name: HTTPS_PROXY
               value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
             - name: NO_PROXY
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ .Values.trafficAgent.mqtt.host }}"
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local,.scenescape.intel.com,{{ include "stia.vlmServing.fullname" . }},{{ include "stia.trafficAgent.fullname" . }},{{ include "stia.mqttHost" . }}{{- if index .Values "live-metrics-service" "enabled" }},{{ .Release.Name }}-live-metrics-service{{- end }}"
             # MQTT configuration
             - name: MQTT_HOST
-              value: {{ .Values.trafficAgent.mqtt.host | quote }}
+              value: {{ include "stia.mqttHost" . | quote }}
             - name: MQTT_PORT
               value: {{ .Values.trafficAgent.mqtt.port | quote }}
             # Intersection configuration
@@ -69,6 +68,8 @@ spec:
             - name: WEATHER_MOCK
               value: {{ .Values.trafficAgent.env.weatherMock | quote }}
             # VLM configuration - point to VLM K8s service
+            - name: VLM_BASE_URL
+              value: "http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}"
             - name: VLM_MODEL_NAME
               value: {{ .Values.vlmServing.env.modelName | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
@@ -86,17 +87,17 @@ spec:
             - name: TRAFFIC_BUFFER_DURATION
               value: {{ .Values.trafficAgent.traffic.bufferDuration | quote }}
             {{- end }}
+            # Live metrics WebSocket URL (connects to live-metrics-service subchart)
+            {{- if index .Values "live-metrics-service" "enabled" }}
+            - name: METRICS_WS_URL
+              value: "ws://{{ .Release.Name }}-live-metrics-service:9090/ws/clients"
+            {{- end }}
+          {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
           volumeMounts:
-            - name: agent-config
-              mountPath: /app/config
-              readOnly: true
-            - name: agent-data
-              mountPath: /app/data
-            {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
             - name: ca-cert
               mountPath: /app/secrets/certs
               readOnly: true
-            {{- end }}
+          {{- end }}
           livenessProbe:
             httpGet:
               path: /health
@@ -117,18 +118,8 @@ spec:
             {{- toYaml .Values.trafficAgent.resources | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
+      {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
       volumes:
-        - name: agent-config
-          configMap:
-            name: {{ include "stia.trafficAgent.fullname" . }}-config
-        - name: agent-data
-          {{- if .Values.trafficAgent.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: {{ include "stia.trafficAgent.fullname" . }}-data
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        {{- if or .Values.tls.caCert .Values.tls.caCertSecretName }}
         - name: ca-cert
           secret:
             secretName: {{ include "stia.caCertSecretName" . }}
@@ -137,4 +128,4 @@ spec:
               - key: {{ .Values.tls.caCertKey }}
                 path: scenescape-ca.pem
             {{- end }}
-        {{- end }}
+      {{- end }}

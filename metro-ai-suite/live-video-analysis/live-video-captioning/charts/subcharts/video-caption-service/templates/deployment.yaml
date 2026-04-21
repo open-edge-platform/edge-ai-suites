@@ -1,0 +1,196 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+{{- $enable_detection := eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
+metadata:
+  name: {{ include "video-caption-service.fullname" . }}
+  labels:
+    {{- include "video-caption-service.labels" . | nindent 4 }}
+    app.kubernetes.io/component: video-caption-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  selector:
+    matchLabels:
+      {{- include "video-caption-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "video-caption-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: video-caption-service
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      {{- include "lvc.nodeAffinity" . | nindent 6 }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # initContainer waits until at least one model directory is present in the
+      # PVC, ensuring the download Job has completed before the service starts.
+      initContainers:
+        - name: download-models
+          image: "python:3.10.12"
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              . /shared/download-model.sh
+{{- range $idx, $model := .Values.global.models }}
+              MODEL_TARGET_DIR="/opt/data/ov_models/{{ $model.outputName }}"
+              if [ -d "$MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                echo "Model output already exists at $MODEL_TARGET_DIR. Skipping download for {{ $model.modelId }}"
+              else
+                download_model "{{ $model.modelId }}" "{{ $model.modelType }}" "{{ $model.weightFormat }}" "$HF_TOKEN" "{{ $model.outputName }}"
+              fi
+{{- end }}
+{{- if eq (lower (toString .Values.env.enableDetectionPipeline)) "true" }}
+              if [ -n "$DETECTION_MODELS" ]; then
+                echo "Downloading detection models: $DETECTION_MODELS"
+                OLD_IFS="$IFS"
+                IFS=','
+                for det_model in $DETECTION_MODELS; do
+                  det_model="$(echo "$det_model" | xargs)"
+                  if [ -z "$det_model" ]; then
+                    continue
+                  fi
+                  DET_MODEL_TARGET_DIR="/opt/data/detection-models/${det_model}/public"
+                  if [ -d "$DET_MODEL_TARGET_DIR" ] && [ -n "$(ls -A "$DET_MODEL_TARGET_DIR" 2>/dev/null)" ]; then
+                    echo "Detection model output already exists at $DET_MODEL_TARGET_DIR. Skipping download for ${det_model}"
+                  else
+                    download_model "$det_model" "vision" "" "$det_model"
+                  fi
+                done
+                IFS="$OLD_IFS"
+              fi
+{{- end }}
+          env:
+            - name: MODEL_DOWNLOAD_HOST
+              value: {{ .Values.global.modelDownload.serviceName | quote }}
+            - name: MODEL_DOWNLOAD_PORT
+              value: {{ .Values.global.modelDownload.port | quote }}
+            - name: HF_TOKEN
+              value: {{ .Values.global.huggingface.apiToken | quote }}
+            - name: ENABLE_DETECTION_PIPELINE
+              value: {{ .Values.env.enableDetectionPipeline | quote }}
+            - name: DETECTION_MODELS
+              value: "{{ .Values.global.detectionModels | join "," }}"
+            - name: http_proxy
+              value: {{ .Values.global.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.httpsProxy | quote }}
+            - name: no_proxy
+              value: {{ .Values.global.noProxy }},{{ .Values.global.modelDownload.serviceName }}
+
+          volumeMounts:
+            - name: scripts-volume
+              mountPath: /config
+            - name: shared-helper
+              mountPath: /shared
+            - name: models
+              mountPath: /opt/data
+              readOnly: false
+      containers:
+        - name: video-caption-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: dashboard
+              containerPort: {{ .Values.service.port }}
+              hostPort: {{ .Values.service.nodePort }}
+              protocol: TCP
+          env:
+            - name: DASHBOARD_PORT
+              value: {{ .Values.env.dashboardPort | quote }}
+            - name: MQTT_BROKER_HOST
+              value: {{ .Values.env.mqttBrokerHost | quote }}
+            - name: MQTT_BROKER_PORT
+              value: {{ .Values.env.mqttBrokerPort | quote }}
+            - name: MQTT_TOPIC_PREFIX
+              value: {{ .Values.env.mqttTopicPrefix | quote }}
+            - name: WEBRTC_PEER_ID
+              value: {{ .Values.env.webrtcPeerId | quote }}
+            - name: WEBRTC_BITRATE
+              value: {{ .Values.env.webrtcBitrate | quote }}
+            # Signaling URL is constructed from global.hostIP + whipServerPort
+            - name: SIGNALING_URL
+              value: "http://{{ .Values.global.hostIP }}:{{ .Values.env.whipServerPort }}"
+            - name: ALERT_MODE
+              value: {{ .Values.env.alertMode | quote }}
+            - name: DEFAULT_RTSP_URL
+              value: {{ .Values.env.defaultRtspUrl | quote }}
+            - name: ENABLE_DETECTION_PIPELINE
+              value: {{ .Values.env.enableDetectionPipeline | quote }}
+            - name: CAPTION_HISTORY
+              value: {{ .Values.env.captionHistory | quote }}
+            - name: PIPELINE_SERVER_URL
+              value: {{ .Values.env.pipelineServerUrl | quote }}
+            - name: METRICS_SERVICE_PORT
+              value: {{ .Values.env.metricsServicePort | quote }}
+            {{- if .Values.global.enableRAG }}
+            - name: LIVE_VIDEO_RAG_HOST_PORT
+              value: {{ .Values.env.liveVideoRagHostPort | quote }}
+            - name: ENABLE_EMBEDDING
+              value: "true"
+            {{- else }}
+            - name: ENABLE_EMBEDDING
+              value: "false"
+            {{- end }}
+            {{- include "lvc.proxyEnv" . | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: dashboard
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: dashboard
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: scripts-volume
+              mountPath: /app/config
+            - name: shared-helper
+              mountPath: /app/shared
+            - name: models
+              mountPath: /app/ov_models
+              subPath: ov_models
+              readOnly: true
+            {{- if $enable_detection }}
+            - name: models
+              mountPath: /app/ov_detection_models
+              subPath: detection-models
+              readOnly: true
+            {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: scripts-volume
+          configMap:
+            name: {{ include "video-caption-service.fullname" . }}-config
+            defaultMode: 0777
+        - name: shared-helper
+          configMap:
+            name: model-download-helper
+            defaultMode: 0777
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ include "video-caption-service.modelsPvcName" . }}

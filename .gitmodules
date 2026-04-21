@@ -44,7 +44,7 @@
 [submodule "metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision"]
 	path = metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision
 	url = https://github.com/open-edge-platform/edge-ai-suites.git
-	branch = exp/smart-traffic-adapter
+	branch = smart-traffic-adapter-2026.0.0
   	shallow = true
 [submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
 	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp

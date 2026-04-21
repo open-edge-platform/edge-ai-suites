@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: minio-service-config
+  labels:
+    {{- include "lvs.minio.labels" . | nindent 4 }}
+data:
+  http_proxy: {{ .Values.global.proxy.httpProxy | quote }}
+  https_proxy: {{ .Values.global.proxy.httpsProxy | quote }}
+  no_proxy: "{{ .Values.global.proxy.noProxy }},localhost"

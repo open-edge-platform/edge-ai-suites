@@ -11,6 +11,7 @@ This tutorial walks you through creating an AI-powered tolling system that autom
 -->
 
 By following this guide, you will learn how to:
+
 - **Set up the AI Tolling Application**: Create a new application based on the Smart Parking template and configure it for tolling use cases
 - **Download and Configure AI Models**: Install YOLO object detection models and Intel's specialized license plate recognition models
 - **Configure Video Processing Pipeline**: Set up the DL Streamer pipeline for real-time vehicle detection and license plate recognition
@@ -31,8 +32,8 @@ By following this guide, you will learn how to:
 -->
 ![AI Tolling Sytem Diagram](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
-
 The AI Tolling system consists of several key components:
+
 - **Video Input**: Processes live camera feeds or video files from toll booth cameras
 - **Object Detection**: Uses YOLOv10s model to detect vehicles in the video stream
 - **License Plate Recognition**: Employs Intel's specialized model to extract license plate text
@@ -68,6 +69,7 @@ Video File Details
 </summary>
 
 The sample video contains:
+
 - Multiple vehicles passing through a toll booth scenario
 - Various vehicle types (cars, trucks)
 - Clear license plate visibility for testing recognition accuracy
@@ -90,7 +92,7 @@ cd /home/dlstreamer/metro-suite/
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/public
 export MODELS_PATH=/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models
-/home/dlstreamer/dlstreamer/samples/download_public_models.sh yolov10s
+/home/open-edge-platform/dlstreamer/samples/download_public_models.sh yolov10s
 
 mkdir -p ai-tolling/src/dlstreamer-pipeline-server/models/intel
 
@@ -98,12 +100,12 @@ python3 -m pip install openvino-dev[onnx,tensorflow2]
 
 omz_downloader --name license-plate-recognition-barrier-0007 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name license-plate-recognition-barrier-0007  -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/public/license-plate-recognition-barrier-0007/license-plate-recognition-barrier-0007.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/license-plate-recognition-barrier-0007.json"
 
 
 omz_downloader --name vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
 omz_converter --name  vehicle-attributes-recognition-barrier-0039 -o /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/ -d /home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/
-wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/dlstreamer/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
+wget -O "/home/dlstreamer/metro-suite/ai-tolling/src/dlstreamer-pipeline-server/models/intel/vehicle-attributes-recognition-barrier-0039/vehicle-attributes-recognition-barrier-0039.json" "https://raw.githubusercontent.com/open-edge-platform/dlstreamer/refs/heads/main/samples/gstreamer/model_proc/intel/vehicle-attributes-recognition-barrier-0039.json"
 
 echo "Fix ownership..."
 chown -R "$(id -u):$(id -g)" ai-tolling/src/dlstreamer-pipeline-server/models ai-tolling/src/dlstreamer-pipeline-server/videos 2>/dev/null || true
@@ -126,6 +128,7 @@ Model Download Process Details
 </summary>
 
 The installation script performs the following operations:
+
 1. Creates the required directory structure under `src/dlstreamer-pipeline-server/models/`
 2. Runs a DL Streamer container to access model download tools
 3. Downloads public YOLO models using the built-in download scripts
@@ -266,6 +269,7 @@ docker ps
 ```
 
 Expected output should show containers for:
+
 - `dlstreamer-pipeline-server`
 - `node-red`
 - `grafana`
@@ -367,6 +371,7 @@ ls -la ./ai-tolling/src/dlstreamer-pipeline-server/models/
 ### 4. **Performance Issues**
 
 For slow processing or high CPU usage:
+
 - **Reduce video resolution**: Use lower resolution input videos
 - **Adjust inference device**: Change from CPU to GPU if available
 - **Optimize pipeline**: Reduce queue sizes or disable unnecessary features
@@ -377,8 +382,7 @@ After successfully setting up the AI Tolling system, consider these enhancements
 
 [**Integration with Node Red for enhancing business logic**](./tutorial-2.md)
 
-
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://dlstreamer.github.io/)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
 - [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)

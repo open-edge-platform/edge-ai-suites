@@ -3,7 +3,7 @@
 <!--hide_directive
 <div class="component_card_widget">
 	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-search">
-		 GitHub project
+		 GitHub
 	</a>
 	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-search/README.md">
 		 Readme
@@ -51,12 +51,13 @@ Live Video Search combines two existing stacks:
 
 - **Get Started**
   - [Get Started](./get-started.md): Deploy the full stack locally.
-  - [System Requirements](./system-requirements.md): Hardware and software prerequisites.
+  - [System Requirements](./get-started/system-requirements.md): Hardware and software prerequisites.
 
 - **How It Works**
   - [Architecture](./how-it-works.md): End‑to‑end architecture and data flow.
 
 - **Deployment**
+  - [Deploy with Helm](./get-started/deploy-with-helm.md): Deploy LVS on Kubernetes using Helm profiles.
   - [Build from Source](./how-to-build-from-source.md): Build the required images.
 
 - **Usage & API**
@@ -70,12 +71,11 @@ Live Video Search combines two existing stacks:
 :maxdepth: 2
 :hidden:
 
-get-started
-system-requirements
-how-to-build-from-source
-how-it-works
-api-reference
-Release Notes <release-notes>
+get-started.md
+how-to-build-from-source.md
+how-it-works.md
+api-reference.md
+Release Notes <release-notes.md>
 
 :::
 hide_directive-->

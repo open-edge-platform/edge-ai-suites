@@ -1,7 +1,7 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-alert-agent">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-alert-agent/README.md">
      Readme
@@ -36,12 +36,11 @@ generate real-time alerts from natural language prompts, and monitor them on a u
 :::{toctree}
 :hidden:
 
-get-started
-system-requirements
-how-to-build-source
-how-it-works
-api-reference
-known-issues
+get-started.md
+how-to-build-source.md
+how-it-works.md
+api-reference.md
+known-issues.md
 Release Notes <release-notes.md>
 
 :::

@@ -49,6 +49,7 @@ export interface UIState {
   videoAnalyticsStopping: boolean;
   hasUploadedVideoFiles: boolean;
   monitoringActive: boolean;
+  monitoringPaused: boolean;
   videoPlaybackMode: boolean;
   uploadedVideoFiles: {
     front: File | null;
@@ -69,6 +70,11 @@ export interface UIState {
     endTime: number;
     topic: string;
   } | null;
+  csProcessing: boolean;
+  transcriptionDone: boolean;
+  csUploadsComplete: boolean;
+  csHasUploads: boolean;
+  csTags: string[];
 }
  
 const initialState: UIState = {
@@ -86,6 +92,7 @@ const initialState: UIState = {
   uploadedAudioPath: null,
   shouldStartSummary: false,
   shouldStartMindmap: false,
+  transcriptionDone: false,
   projectLocation: 'storage/',
   activeStream: null,
   frontCamera: '',
@@ -106,6 +113,7 @@ const initialState: UIState = {
   videoAnalyticsStopping: false,
   hasUploadedVideoFiles: false,
   monitoringActive: false,
+  monitoringPaused: false,
   videoPlaybackMode: false,
   uploadedVideoFiles: {
     front: null,
@@ -122,6 +130,10 @@ const initialState: UIState = {
   searchError: null,
   contentSegmentationError: null,
   timelineHighlight: null,
+  csProcessing: false,
+  csUploadsComplete: false,
+  csHasUploads: false,
+  csTags: [],
 };
 
 const uiSlice = createSlice({
@@ -142,6 +154,7 @@ const uiSlice = createSlice({
       state.uploadedAudioPath = null;
       state.shouldStartSummary = false;
       state.shouldStartMindmap = false;
+      state.transcriptionDone = false;
       state.videoAnalyticsLoading = false;
       state.videoAnalyticsActive = false;
       state.contentSegmentationStatus = 'idle';
@@ -176,6 +189,7 @@ const uiSlice = createSlice({
  
     transcriptionComplete(state) {
       console.log('transcriptionComplete reducer called');
+      state.transcriptionDone = true;
       state.summaryEnabled = true;
       state.summaryLoading = true;
       state.summaryComplete = false;
@@ -231,7 +245,7 @@ const uiSlice = createSlice({
       state.aiProcessing = false;
       state.summaryComplete = true;
       state.mindmapEnabled = true;
-      state.mindmapLoading = true;
+      state.mindmapLoading = false;
       state.shouldStartMindmap = true;
       state.audioStatus = 'mindmapping';
  
@@ -400,6 +414,10 @@ const uiSlice = createSlice({
     setMonitoringActive: (state, action) => {
       state.monitoringActive = action.payload;
     },
+
+    setMonitoringPaused: (state, action: PayloadAction<boolean>) => {
+      state.monitoringPaused = action.payload;
+    },
     
     setUploadedVideoFiles(state, action: PayloadAction<{
       front?: File | null;
@@ -488,6 +506,22 @@ const uiSlice = createSlice({
       state.timelineHighlight = action.payload;
     },
 
+    setCsProcessing(state, action: PayloadAction<boolean>) {
+      state.csProcessing = action.payload;
+    },
+
+    setCsUploadsComplete(state, action: PayloadAction<boolean>) {
+      state.csUploadsComplete = action.payload;
+    },
+
+    setCsHasUploads(state, action: PayloadAction<boolean>) {
+      state.csHasUploads = action.payload;
+    },
+
+    setCsTags(state, action: PayloadAction<string[]>) {
+      state.csTags = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -498,9 +532,13 @@ const uiSlice = createSlice({
     resetFlow(state) {
       const preservedAudioDevices = state.hasAudioDevices;
       const preservedAudioDevicesLoading = state.audioDevicesLoading;
+      const preservedCsHasUploads = state.csHasUploads;
+      const preservedCsUploadsComplete = state.csUploadsComplete;
       Object.assign(state, initialState);
       state.hasAudioDevices = preservedAudioDevices;
       state.audioDevicesLoading = preservedAudioDevicesLoading;
+      state.csHasUploads = preservedCsHasUploads;
+      state.csUploadsComplete = preservedCsUploadsComplete;
       state.audioStatus = preservedAudioDevicesLoading ? 'checking' : (preservedAudioDevices ? 'ready' : 'no-devices');
       state.contentSegmentationStatus = 'idle';
       state.contentSegmentationEnabled = false;
@@ -553,6 +591,7 @@ export const {
   startTranscription,
   setHasUploadedVideoFiles,
   setMonitoringActive,
+  setMonitoringPaused,
   setUploadedVideoFiles,
   setVideoPlaybackMode,
   setRecordedVideoType,
@@ -569,6 +608,10 @@ export const {
   clearSearchResults,
   setShowSearchResults,
   setTimelineHighlight,
+  setCsProcessing,
+  setCsUploadsComplete,
+  setCsHasUploads,
+  setCsTags,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

@@ -1,0 +1,11 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: collector
+description: >
+  Intel VIPPET Collector — privileged DaemonSet providing CPU/GPU/temperature
+  metrics via Telegraf, forwarded to the live-metrics-service WebSocket.
+type: application
+version: 0.1.0
+appVersion: "2026.0.0"

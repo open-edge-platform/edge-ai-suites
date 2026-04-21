@@ -68,7 +68,10 @@ services:
 
   live-video-alert-agent:
     image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
-    build: .
+    build:
+      context: .
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-video-alert-agent
     restart: unless-stopped
     ports:
@@ -96,6 +99,8 @@ services:
     build:
       context: ../live-metrics-service
       dockerfile: Dockerfile
+      args:
+        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-metrics-service
     restart: unless-stopped
     environment:

@@ -18,6 +18,7 @@
         pipelineInfo: document.getElementById('pipelineInfo'),
         runsContainer: document.getElementById('runsContainer'),
         themeToggle: document.getElementById('themeToggle'),
+        chatToggle: document.getElementById('chatToggle'),
         detectionModelField: document.getElementById('detectionModelField'),
         detectionThresholdField: document.getElementById('detectionThresholdField'),
         detectionModelNameSelect: document.getElementById('detectionModelNameSelect'),
@@ -35,12 +36,27 @@
     };
 
     const state = { selectedRunId: null, runs: new Map() };
+    const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
 
     (function initDetectionVisibility() {
         const enabledByFlag = cfg.enableDetectionPipeline === true;
         const detectionSection = document.getElementById('detectionSection');
         if (!enabledByFlag) {
             setSectionVisible(detectionSection, false);
+        }
+    })();
+
+    (function initChatToggleVisibility() {
+        if (cfg.enableEmbedding !== true) {
+            setSectionVisible(els.chatToggle, false);
+        } else if (els.chatToggle) {
+            els.chatToggle.addEventListener('click', () => {
+                const chatUrl = `http://${window.location.hostname}:${cfg.liveVideoRagHostPort}`;
+                const chatWindow = window.open(chatUrl, CHAT_TAB_NAME);
+                if (chatWindow) {
+                    chatWindow.focus();
+                }
+            });
         }
     })();
 
@@ -484,6 +500,13 @@
                 els.runsContainer.appendChild(ui.wrap);
                 attachRunStreams(run, ui);
                 state.selectedRunId = run.runId;
+
+                // If the pipeline was already in error state when the page loaded
+                // (detected by the background health monitor before this refresh),
+                // show the error immediately without waiting for the next SSE heartbeat.
+                if (runData.status === 'error') {
+                    RunCardComponent.setRunErrorState(ui);
+                }
             }
 
             updatePipelineInfo(`Restored ${runs.length} active run(s)`);
@@ -701,6 +724,12 @@
         restoreActiveRuns();
 
         els.form.addEventListener('submit', startPipeline);
+
+        // Wire run-error callback: when the health monitor reports a pipeline is gone,
+        // update the card UI immediately without waiting for the user to interact.
+        MetadataStreamService.setOnRunError((runId, ui) => {
+            RunCardComponent.setRunErrorState(ui);
+        });
 
         // Update lag display every 100ms for all active runs
         setInterval(() => {

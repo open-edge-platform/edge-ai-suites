@@ -118,17 +118,17 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
 
       videoResponse.results.forEach((result: any) => {
         console.log('Processing result:', result);
-        if (result.status === "success" && result.hls_stream) {
+        if (result.status === "success" && result.stream_url) {
           hasSuccessfulStreams = true;
           switch (result.pipeline_name) {
             case 'front':
-              dispatch(setFrontCameraStream(result.hls_stream));
+              dispatch(setFrontCameraStream(result.stream_url));
               break;
             case 'back':
-              dispatch(setBackCameraStream(result.hls_stream));
+              dispatch(setBackCameraStream(result.stream_url));
               break;
             case 'content':
-              dispatch(setBoardCameraStream(result.hls_stream));
+              dispatch(setBoardCameraStream(result.stream_url));
               break;
           }
         } else if (result.status === "error") {

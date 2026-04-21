@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pipeline-manager
+  labels:
+    {{- include "lvs.pipeline.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: pipeline-manager
+  template:
+    metadata:
+      labels:
+        app: pipeline-manager
+        {{- include "lvs.pipeline.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- if not .Values.global.persistence.rwxEnabled }}
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - vdms-dataprep
+              topologyKey: kubernetes.io/hostname
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+        - name: wait-for-minio
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until wget -q -O /dev/null http://minio-service/minio/health/live; do
+                echo "waiting for minio-service";
+                sleep 3;
+              done
+      containers:
+        - name: pipeline-manager
+          image: {{ include "lvs.pipeline.image" (dict "registry" (default .Values.global.registry .Values.imageOverride.registry) "repository" (default .Values.images.pipelineManager.repository .Values.imageOverride.repository) "tag" (default (include "lvs.pipeline.vssTag" .) .Values.imageOverride.tag)) }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: pipeline-manager-config
+          env:
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.pipeline.fullname" . }}-credentials
+                  key: MINIO_ROOT_USER
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.pipeline.fullname" . }}-credentials
+                  key: MINIO_ROOT_PASSWORD
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.pipeline.fullname" . }}-credentials
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "lvs.pipeline.fullname" . }}-credentials
+                  key: POSTGRES_PASSWORD
+          ports:
+            - containerPort: 3000
+              name: http
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: collector-signals
+              mountPath: /app/.collector-signals
+      volumes:
+        - name: collector-signals
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.pipeline.fullname" . }}-collector-signals

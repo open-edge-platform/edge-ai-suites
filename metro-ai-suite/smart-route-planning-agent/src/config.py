@@ -7,9 +7,8 @@ from pathlib import Path
 # Configs and Constants for the Route Planner Application
 
 # Default locations and coordinates
-DEFAULT_LOCATIONS = [
-    "Berkeley, California",
-    "Santa Clara, California",
+LOCATION_PAIRS = [
+    ["Berkeley, California", "Santa Clara, California"],
 ]
 
 # Coordinates mapping for locations with default values for lats and long
@@ -144,4 +143,6 @@ APP_DETAILS = """# Welcome to Agentic AI Route Planning
  3. Continously monitor the live traffic conditions on the optimized route and update the route as needed in real-time.
 """
 
-INITIAL_MAP_HTML = "<div style='text-align: center; padding: 50px; font-size: 18px; color: #666;'>Select locations and click 'Find Route' to see the route map</div>"
+INITIAL_MAP_HTML = (
+    "<div class='no-map-style'>Select locations to see the route map</div>"
+)
