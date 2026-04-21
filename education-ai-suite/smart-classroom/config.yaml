@@ -223,6 +223,8 @@ models:
 
   va:
     models_base_path: "models"
+    front_pose_model: yolov8m-pose # yolov8m-pose/yolo11m-pose/yolo26m-pose
+    back_pose_model: yolov8s-pose # yolov8s-pose/yolo11s-pose/yolo26s-pose
     threshold: 0.5 # confidence threshold for YOLO detections
   
   embedding:
@@ -396,8 +398,9 @@ va_pipeline:
     stale_unidentified_threshold: 30        # remove unidentified student after unseen for N frames
 
 content_search:
-  host_addr: "127.0.0.1" 
+  host_addr: "127.0.0.1"
   port: 9011
+  video_summarization_enabled: true
 
   chromadb:
     host: "127.0.0.1"

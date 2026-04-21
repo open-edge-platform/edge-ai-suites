@@ -542,3 +542,62 @@ Response:
     "timestamp": 1775723850
 }
 ```
+
+#### List Tags
+Returns all unique tags that have been assigned to uploaded files. Useful for populating filter dropdowns in the UI.
+
+* URL: /api/v1/object/tags
+* Method: GET
+* Pattern: SYNC
+
+Request:
+```bash
+curl --location 'http://127.0.0.1:9011/api/v1/object/tags'
+```
+Response (200 OK):
+```json
+{
+    "code": 20000,
+    "data": [
+        "English",
+        "Math",
+        "Physics"
+    ],
+    "message": "Tags retrieved",
+    "timestamp": 1776200000
+}
+```
+
+### System Endpoints
+
+#### Get System Configuration
+Returns the current Content Search model configuration and feature flags.
+
+* URL: /api/v1/system/config
+* Method: GET
+* Pattern: SYNC
+
+Request:
+```bash
+curl --location 'http://127.0.0.1:9011/api/v1/system/config'
+```
+Response (200 OK):
+```json
+{
+    "vlm_model": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "visual_embedding_model": "CLIP/clip-vit-b-16",
+    "doc_embedding_model": "BAAI/bge-small-en-v1.5",
+    "reranker_model": "BAAI/bge-reranker-large",
+    "vector_db": "ChromaDB (127.0.0.1:9090)",
+    "video_summarization_enabled": true
+}
+```
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `vlm_model` | `string` | Vision-Language Model used for video summarization. |
+| `visual_embedding_model` | `string` | Model used for image/video frame embedding. |
+| `doc_embedding_model` | `string` | Model used for document text embedding. |
+| `reranker_model` | `string` | Model used for search result reranking. |
+| `vector_db` | `string` | Vector database connection info. |
+| `video_summarization_enabled` | `boolean` | Whether the video summarization feature is enabled. When `false`, the UI should hide summarization-related controls. |

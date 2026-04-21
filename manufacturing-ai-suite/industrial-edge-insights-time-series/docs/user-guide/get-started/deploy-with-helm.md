@@ -119,6 +119,26 @@ Choose **one** of the following approaches to get the Helm charts:
 > 1. Uninstall the Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in `values.yaml` file.
+>
+> 3. To deploy with GPU support for inferencing, use the following command:
+>
+>       ```bash
+>       helm install <app_name> \
+>           --set privileged_access_required=true \
+>           --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
+>           . -n ts-sample-app --create-namespace
+>       ```
+>
+>       The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
+>
+>       E.g.:
+>       ```bash
+>        helm install ts-wind-turbine-anomaly \
+>        --set privileged_access_required=true \
+>        --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
+>        . -n ts-sample-app --create-namespace
+>       ```
+>
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -138,18 +158,6 @@ To install Helm charts, use one of the following options:
     helm install ts-wind-turbine-anomaly --set env.TELEGRAF_INPUT_PLUGIN=mqtt_consumer . -n ts-sample-app --create-namespace
     ```
 
-> **Note:**
-> To deploy with GPU support for inferencing, use the following command:
->
-> ```bash
-> helm install ts-wind-turbine-anomaly \
->   --set privileged_access_required=true \
->   --set env.TELEGRAF_INPUT_PLUGIN=<input_plugin> \
->   . -n ts-sample-app --create-namespace
-> ```
->
-> The `privileged_access_required=true` setting enables Time Series Analytics Microservice access to GPU device through `/dev/dri`.
-
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
@@ -163,13 +171,13 @@ helm install ts-weld-anomaly . -n ts-sample-app --create-namespace
 <!--hide_directive:::
 ::::hide_directive-->
 
-## Step 4: Copy the UDF package for Helm deployment to Time Series Analytics Microservice
+## Step 4: Upload the UDF package for Helm deployment to Time Series Analytics Microservice
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
 <!--hide_directive:sync: tab1hide_directive-->
 
-To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
+To upload your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config`.
 
@@ -184,7 +192,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
            - windturbine_anomaly_detector.py
    ```
 
-2. Copy your new UDF package (using the wind turbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Upload your new UDF package (using the wind turbine anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
 
    ```sh
    export SAMPLE_APP="wind-turbine-anomaly-detection"
@@ -199,7 +207,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
 :::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
-To copy your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
+To upload your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
 
 1. The following udf package is placed in the repository under `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
 
@@ -216,7 +224,7 @@ To copy your own or existing model into Time Series Analytics Microservice in or
            - weld_defect_detector.py
    ```
 
-2. Copy your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Upload your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
 
    ```sh
    export SAMPLE_APP="weld-defect-detection"

@@ -47,7 +47,7 @@ def test_authentication_influx_grafana(setup_helm_environment, telegraf_input_pl
     time.sleep(wait_time)  # Wait for the pods to stabilize
     ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
     logger.info(f"verify_ts_logs result: {ts_logs_result}")
-    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
+    assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     # Access the test cases dictionary
     influxdb_username, influxdb_password = security_utils.fetch_credentials(chart_path, "influxdb")
     logger.info(f"INFLUXDB_USERNAME: {influxdb_username}, INFLUXDB_PASSWORD: {influxdb_password}")
@@ -73,7 +73,7 @@ def test_nmap_open_ports_opcua(setup_helm_environment, telegraf_input_plugin):
     time.sleep(wait_time)  # Wait for the pods to stabilize
     ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
     logger.info(f"verify_ts_logs result: {ts_logs_result}")
-    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
+    assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     exposed_ports = security_utils.find_exposed_ports_helm(namespace)
     nmap_result = security_utils.check_nmap(target, exposed_ports)
     logger.info(f"check_nmap result: {nmap_result}")
@@ -111,7 +111,7 @@ def test_creds_in_pod_logs(setup_helm_environment, telegraf_input_plugin):
     time.sleep(wait_time)  # Wait for the pods to stabilize
     ts_logs_result = helm_utils.verify_ts_logs(namespace, "DEBUG")
     logger.info(f"verify_ts_logs result: {ts_logs_result}")
-    assert ts_logs_result is True, "Failed to verify pod logs for MQTT input plugin."
+    assert ts_logs_result is True, "Failed to verify pod logs for OPC-UA input plugin."
     influxdb_creds = security_utils.fetch_credentials(chart_path, "influxdb")
     grafana_creds = security_utils.fetch_credentials(chart_path, "grafana")
     pods_creds_result = security_utils.verify_pods_creds(namespace, influxdb_creds, grafana_creds)
