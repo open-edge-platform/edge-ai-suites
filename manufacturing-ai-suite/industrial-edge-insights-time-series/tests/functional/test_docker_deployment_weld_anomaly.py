@@ -44,7 +44,7 @@ def test_invalid_values():
     
 
 def test_valid_values():
-    logger.info("TC_003: Changed Test Case - Verifying make check_env_variables with all valid values in .env file")
+    logger.info("TC_003: Verifying make check_env_variables with all valid values in .env file")
     case = docker_utils.generate_test_credentials(case_type="valid")
     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     docker_utils.update_env_file(env_file_path, case)

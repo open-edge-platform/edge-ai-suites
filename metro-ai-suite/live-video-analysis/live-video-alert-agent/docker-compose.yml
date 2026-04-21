@@ -64,7 +64,8 @@ services:
       timeout: 5s
       retries: 5
       start_period: 300s
-    network_mode: host
+    networks:
+      - app_network
 
   live-video-alert-agent:
     image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
@@ -77,14 +78,14 @@ services:
     ports:
       - "${PORT:-9000}:${PORT:-9000}"
     environment:
-      - no_proxy=${no_proxy}
+      - no_proxy=${no_proxy},ovms
       - NO_PROXY=${no_proxy}
       - http_proxy=${http_proxy}
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
       - RTSP_URL=${RTSP_URL}
-      - VLM_URL=${VLM_URL:-http://localhost:8000/v3}
+      - VLM_URL=${VLM_URL:-http://ovms:8000/v3}
       - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
       - PORT=${PORT:-9000}
     volumes:
@@ -92,16 +93,19 @@ services:
     depends_on:
       ovms:
         condition: service_healthy
-    network_mode: host
+    networks:
+      - app_network
 
   live-metrics-service:
-    image: ${REGISTRY:-}live-metrics-service:1.0.0.rc.1
+    image: ${REGISTRY:-}live-metrics-service:1.0.0
     build:
       context: ../live-metrics-service
       dockerfile: Dockerfile
       args:
         COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
     container_name: live-metrics-service
+    ports:
+      - "${METRICS_PORT:-9090}:9090"
     restart: unless-stopped
     environment:
       - no_proxy=localhost,127.0.0.1,collector,${no_proxy}
@@ -119,11 +123,14 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    network_mode: host
+    networks:
+      - app_network
 
   collector:
-    image: docker.io/intel/vippet-collector:2025.2.0
+    image: intel/vippet-collector:2026.0.0
     container_name: collector
+    ports:
+      - "9273:9273"
     privileged: true
     devices:
       - "/sys:/sys"
@@ -132,17 +139,23 @@ services:
       - "/proc:/proc"
     pid: host
     volumes:
+      - "./shared/collector-signals:/app/.collector-signals"
       - "../live-metrics-service/telegraf.conf:/etc/telegraf/telegraf.conf:ro"
     restart: on-failure:5
     environment:
       - http_proxy=${http_proxy}
       - https_proxy=${https_proxy}
       - no_proxy=localhost,127.0.0.1,${no_proxy}
-      - WEBSOCKET_URL=ws://localhost:${METRICS_PORT:-9090}/ws/collector
+      - WEBSOCKET_URL=ws://live-metrics-service:${METRICS_PORT:-9090}/ws/collector
     depends_on:
       live-metrics-service:
         condition: service_healthy
-    network_mode: host
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
 
 volumes:
   ovms-models:

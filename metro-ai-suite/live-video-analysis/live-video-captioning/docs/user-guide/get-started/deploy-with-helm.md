@@ -55,6 +55,59 @@ Before you begin, ensure that you have the following:
 
 ## Prepare/Deploy live-video-captioning chart
 
+To set up the live-video-captioning application, you must obtain the charts and install them with optimal values and configurations. The following sections provide step-by-step instructions for this process.
+
+### Acquire the helm chart
+
+There are 2 options to obtain the charts in your workspace:
+
+#### Option 1: Get the charts from Docker Hub
+
+##### Step 1: Pull the Chart
+
+Use the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning/tags) from Docker Hub:
+
+```bash
+helm pull oci://registry-1.docker.io/intel/live-video-captioning --version <version-no>
+```
+
+Refer to the release notes for details on the latest version number to use for the sample application.
+
+##### Step 2: Extract the `.tgz` File
+
+After pulling the chart, extract the `.tgz` file:
+
+```bash
+tar -xvf live-video-captioning-<version-no>.tgz
+```
+
+This will create a directory named `live-video-captioning` containing the chart files. Navigate to the extracted directory to access the charts.
+
+```bash
+cd live-video-captioning
+```
+
+#### Option 2: Install from Source
+
+##### Step 1: Clone the repository
+
+Clone the repository containing the charts files:
+
+```bash
+# Clone the latest on mainline
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+# Alternatively, clone a specific release branch
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
+```
+
+##### Step 2: Navigate to the chart directory
+
+Navigate to the chart directory:
+
+```bash
+cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning/charts
+```
+
 ### Select the target node
 
 The chart pins the workloads that need to stay together to the target node selected in the chart values:

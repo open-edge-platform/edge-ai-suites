@@ -44,7 +44,7 @@ def test_blank_values():
     result = helm_utils.update_values_yaml(values_yaml_path, case)
     logger.info(f"update_values_yaml result: {result}")
     assert result == True, "Failed to update values.yaml."  
-    logger.info(f"Case 1 - Release Name: {release_name_weld}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
+    logger.info(f"Case 1 - Release Name: {release_name_weld}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
     result = helm_utils.helm_install(release_name_weld, chart_path, namespace, constants.TELEGRAF_MQTT_PLUGIN)
     logger.info(f"helm_install result: {result}")
     assert result == False
@@ -59,7 +59,7 @@ def test_invalid_values():
     logger.info(f"update_values_yaml result: {result}")
     assert result == True, "Failed to update values.yaml."
 
-    logger.info(f"Case 2 - Release Name: {release_name}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
+    logger.info(f"Case 2 - Release Name: {release_name}, Chart Path: {chart_path}, Namespace: {namespace}, Telegraf Input Plugin mqtt: {constants.TELEGRAF_MQTT_PLUGIN}")
     result = helm_utils.helm_install(release_name_weld, chart_path, namespace, constants.TELEGRAF_MQTT_PLUGIN, sample_app=constants.WELD_SAMPLE_APP)
     logger.info(f"helm_install result: {result}")
     assert result == False

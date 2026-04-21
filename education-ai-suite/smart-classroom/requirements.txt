@@ -21,7 +21,7 @@ optimum-intel==1.25.2
 nncf==2.17.0
 psutil==7.1.3
 py-cpuinfo==9.0.0
-ultralytics==8.3.201
+ultralytics==8.4.39
 speechbrain==1.0.3
 pyannote.audio==3.3.2
 faiss-cpu

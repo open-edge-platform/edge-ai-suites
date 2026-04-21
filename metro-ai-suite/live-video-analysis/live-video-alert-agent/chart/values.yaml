@@ -1,0 +1,149 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+global:
+  externalIP: ""
+  # Set to true to retain the OVMS model PVC on helm uninstall.
+  keepPvc: false
+  # Hugging Face token — required only for initial download of gated models.
+  huggingfaceToken: ""
+
+  proxy:
+    httpProxy: ""
+    httpsProxy: ""
+    noProxy: "localhost,127.0.0.1,.svc.cluster.local"
+
+  gpu:
+    enabled: false
+    # key: GPU resource label from device plugin (e.g. gpu.intel.com/i915 or gpu.intel.com/xe)
+    key: ""
+    device: ""
+    count: 1
+    # GIDs for render/video/i2c group access — verify on your GPU node with:
+    #   getent group render video | cut -d: -f3
+    supplementalGroups: [109, 110, 992]
+
+  serviceAccount:
+    create: true
+
+  # Registry prefix for first-party images, e.g. "myregistry.example.com/"
+  registry: ""
+
+  imagePullPolicy: IfNotPresent
+  imagePullSecrets: []
+
+  utilities:
+    curl:
+      image: curlimages/curl
+      tag: "8.7.1"
+    busybox:
+      image: busybox
+      tag: "1.36"
+
+  ovmsPort: 8000
+  metricsPort: 9090
+  ovmsModelName: "Phi-3.5-Vision"
+  appNodePort: 30900
+  metricsNodePort: 30090
+
+ovms:
+  image:
+    repository: openvino/model_server
+    tag: "2026.0-gpu"
+  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+  task: "text_generation"
+  pipelineType: "VLM"
+  runAsUser: 5000
+  modelStorage:
+    storageClassName: ""
+    size: "10Gi"
+  healthcheck:
+    startupFailureThreshold: 60
+    startupPeriodSeconds: 10
+    startupTimeoutSeconds: 5
+    periodSeconds: 30
+    timeoutSeconds: 5
+    failureThreshold: 3
+  resources:
+    requests:
+      cpu: "1"
+      memory: "4Gi"
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+app:
+  image:
+    registry: "intel/"  # Override global.registry for this component only
+    repository: live-video-alert-agent
+    tag: "latest"
+  port: 9000
+  service:
+    type: NodePort
+    port: 9000
+  rtspUrl: ""
+  logLevel: "INFO"
+  resources:
+    requests:
+      cpu: "200m"
+      memory: "256Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  healthcheck:
+    path: /streams
+    startupInitialDelaySeconds: 5
+    startupPeriodSeconds: 5
+    startupFailureThreshold: 30
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+metrics-service:
+  enabled: true
+  image:
+    repository: "intel/live-metrics-service"
+    tag: "1.0.0"
+  service:
+    type: NodePort
+  corsOrigins: "*"
+  logLevel: "INFO"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  healthcheck:
+    startupInitialDelaySeconds: 5
+    startupPeriodSeconds: 5
+    startupFailureThreshold: 30
+    initialDelaySeconds: 15
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []
+
+collector:
+  enabled: true
+  image:
+    registry: "intel/"
+    repository: vippet-collector
+    tag: "2026.0.0"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  nodeSelector: {}
+  affinity: {}
+  tolerations: []

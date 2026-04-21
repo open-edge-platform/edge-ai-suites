@@ -21,6 +21,7 @@ class Settings:
     
     # Metrics Config
     METRICS_SERVICE_URL: str = os.getenv("METRICS_SERVICE_URL", "ws://localhost:9090")
+    METRICS_NODEPORT: int = int(os.getenv("METRICS_NODEPORT", 9090))
 
 settings = Settings()
 

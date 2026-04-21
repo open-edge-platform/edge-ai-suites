@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "STAGED"
@@ -80,8 +80,13 @@ const UploadSection: React.FC = () => {
   useEffect(() => {
     if (entries.length > 0) {
       dispatch(setCsHasUploads(true));
+      // MP4 files in ACTIVE state have already been uploaded to the backend
+      // (summarization is a background step), so treat them as available for search.
       const anyUploaded = entries.some(
-        (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+        (e) =>
+          e.status === "COMPLETED" ||
+          e.status === "ALREADY_EXISTS" ||
+          (e.fileType === "MP4" && ACTIVE.includes(e.status))
       );
       dispatch(setCsUploadsComplete(anyUploaded));
     }
@@ -147,10 +152,17 @@ const UploadSection: React.FC = () => {
 
   const pollTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({}); 
 
-  // Drive csProcessing flag: true while any entry is actively uploading/processing
+  // Drive csProcessing flag: true while any non-video entry is actively uploading/processing.
+  // MP4 files in ACTIVE state are background summarization — they don't block search.
   useEffect(() => {
-    const anyActive = entries.some((e) => ACTIVE.includes(e.status));
+    const anyActive = entries.some((e) => ACTIVE.includes(e.status) && e.fileType !== "MP4");
     dispatch(setCsProcessing(anyActive));
+  }, [entries, dispatch]);
+
+  // Drive csSummarizing flag: true while any MP4 is still being summarized in the background.
+  useEffect(() => {
+    const anySummarizing = entries.some((e) => e.fileType === "MP4" && ACTIVE.includes(e.status));
+    dispatch(setCsSummarizing(anySummarizing));
   }, [entries, dispatch]);
 
   const updateEntry = useCallback(
@@ -490,6 +502,9 @@ return (
                     <span className="cs-file-name" title={entry.filename}>
                       {entry.filename}
                     </span>
+                    {entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
+                      <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
+                    )}
                     {entry.tags.length > 0 && (
                       <div className="cs-row-tags">
                         {entry.tags.map((t) => (
@@ -504,7 +519,9 @@ return (
                     {entry.status === "FAILED" ? (
                       <div className="cs-failed-cell">
                         <span className="cs-failed-msg" title={entry.error ?? ""}>
-                          Upload of &apos;{entry.filename}&apos; failed. Please try again
+                          {entry.fileType === "MP4"
+                            ? t("uploadSection.summarizationFailed")
+                            : `Upload of '${entry.filename}' failed. Please try again`}
                         </span>
                         <div className="cs-failed-actions">
                           <button
@@ -524,9 +541,15 @@ return (
                     ) : (
                       <>
                         <span
-                          className={`cs-status-badge cs-status-badge--${entry.status.toLowerCase()}`}
+                          className={`cs-status-badge cs-status-badge--${
+                            entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                              ? "completed"
+                              : entry.status.toLowerCase()
+                          }`}
                         >
-                          {getStatusLabel(entry.status)}
+                          {entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                            ? t("uploadSection.uploaded")
+                            : getStatusLabel(entry.status)}
                         </span>
                       </>
                     )}
