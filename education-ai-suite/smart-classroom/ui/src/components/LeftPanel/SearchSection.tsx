@@ -40,6 +40,7 @@ const SearchSection: React.FC = () => {
   const csUploadsComplete = useAppSelector((s) => s.ui.csUploadsComplete);
   const csHasUploads = useAppSelector((s) => s.ui.csHasUploads);
   const csProcessing = useAppSelector((s) => s.ui.csProcessing);
+  const csSummarizing = useAppSelector((s) => s.ui.csSummarizing);
   const csTags = useAppSelector((s) => s.ui.csTags);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const filterBoxRef = useRef<HTMLDivElement>(null);
@@ -266,12 +267,12 @@ const SearchSection: React.FC = () => {
         </div>
 
         {/* Processing warning when some files are still processing but search is available */}
-        {csUploadsComplete && csProcessing && (
+        {(csUploadsComplete && csProcessing) || csSummarizing ? (
           <div className="cs-search-warning-frame">
             <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
             <span className="cs-search-warning-frame-text">{t("search.processing")}</span>
           </div>
-        )}
+        ) : null}
 
         {isExpanded && (
           <>
