@@ -5,7 +5,7 @@ ROS 2-based Autonomous Mobile Robot APT packages.
 
 <!--hide_directive
 :::{toctree}
-:maxdepth: 2
+:maxdepth: 1
 
 realsense-ros2-sample-application
 pointcloud-groundfloor-segmentation

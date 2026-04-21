@@ -5,6 +5,7 @@ to assist an Autonomous Mobile Robot in navigating and mapping a room and offeri
 
 <!--hide_directive
 :::{toctree}
+:maxdepth: 1
 
 collaborative-slam
 run-fastmapping-algorithm
