@@ -1,4 +1,4 @@
-# How to Build Source
+# Build from Source
 
 This guide provides step-by-step instructions for building Live Video Alert Agent Sample Application from source.
 

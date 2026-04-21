@@ -29,7 +29,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    export TAG="latest"
    ```
 
-   Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./how-to-build-source.md) guide for details.
+   Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
 
 3. Configure the Environment:
 
@@ -185,5 +185,17 @@ docker compose up -d
 ```
 
 ## Learn More
-- [Build from Source](./how-to-build-source.md#how-to-build-source)
-- [Deploy with Helm](./deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
+- [Build from Source](./get-started/build-from-source.md)
+- [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+./get-started/system-requirements
+./get-started/build-from-source
+./get-started/deploy-with-helm
+
+
+:::
+hide_directive-->
