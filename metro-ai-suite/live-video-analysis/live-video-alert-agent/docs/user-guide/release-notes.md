@@ -1,5 +1,13 @@
 # Release Notes: Live Video Alert Agent
 
+## Version latest
+
+**April 21, 2026**
+
+**Features**
+
+- Added support for Helmchart
+
 ## Version 1.0.0
 
 **April 01, 2026**
@@ -21,4 +29,3 @@ usage.
 - Natural language alert configuration (max 4 alerts per stream).
 - Real-time SSE event broadcasting and interactive dashboard.
 - Configurable CPU/GPU inference via TARGET_DEVICE environment variable.
-- Helm chart for Kubernetes deployment.
