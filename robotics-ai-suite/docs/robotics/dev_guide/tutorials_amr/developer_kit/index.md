@@ -10,12 +10,20 @@ You can also have a look at the [AAEON robotic kit](legacy-aaeon-developer-kit.m
 
 <!--hide_directive
 :::{toctree}
-:hidden:
 
 create-your-robot-kit.md
 clearpath-jackal-robot.md
 irobot-create3-robot.md
 legacy-aaeon-developer-kit.md
+
+:::
+hide_directive-->
+
+Manually control a robot
+
+<!--hide_directive
+:::{toctree}
+
 robot-keyboard-teleop.md
 
 :::
