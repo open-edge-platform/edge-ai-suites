@@ -1,5 +1,17 @@
 # Release Notes: Live Video Search
 
+## Version latest
+
+**April 21, 2026**
+
+**Features**
+
+- Added support for Helmchart
+
+**Known Issues/Limitations**
+- First‑time model downloads may take several minutes.
+- Time‑range queries require the clock and timezone on the host to be accurate.
+
 ## Version 1.0.0
 
 **April 01, 2026**
