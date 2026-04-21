@@ -111,7 +111,7 @@ Points are **skipped** (marked as NORMAL, anomaly_status = NaN) if:
 #### Error Thresholds
 
 Once a point passes physics filter, anomaly is flagged if `relative_error > 0.1`:
-- **LOW**: 15% < error < 30% (small deviation)
+- **LOW**: 10% < error < 30% (small deviation)
 - **MEDIUM**: 30% < error < 60% (moderate deviation)
 - **HIGH**: error > 60% (severe deviation)
 
