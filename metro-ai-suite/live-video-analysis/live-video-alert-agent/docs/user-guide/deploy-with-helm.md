@@ -19,9 +19,9 @@ Before you begin, ensure that you have the following:
 
 #### Option 1: Get the chart from Docker Hub
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-alert-agent --version <version-no>
-tar -xvf live-video-alert-agent-<version-no>.tgz
-cd live-video-alert-agent
+helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version <version-no>
+tar -xvf live-video-alert-agent-chart<version-no>.tgz
+cd live-video-alert-agent-chart
 ```
 Refer to the [Release Notes](release-notes.md) for the latest version.
 
