@@ -26,6 +26,9 @@ for _noisy in [
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
+import langdetect
+langdetect.detector_factory.init_factory()
+
 import base64
 
 from fastapi import FastAPI, File, Form, HTTPException, Body, UploadFile
