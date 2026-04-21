@@ -43,4 +43,4 @@ export MODEL_NAME=InternVL2-2B
 
 ## Validation
 
-Proceed to [Get Started](./get-started.md) once Docker is installed and internet connectivity is available for model downloads.
+Proceed to [Get Started](../get-started.md) once Docker is installed and internet connectivity is available for model downloads.

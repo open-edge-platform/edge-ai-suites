@@ -28,3 +28,7 @@ Thumbs.db
 resources/streams.json
 resources/agents.json
 models/
+shared/
+# Helm
+chart/charts/*.tgz
+chart/charts.lock

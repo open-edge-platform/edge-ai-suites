@@ -665,7 +665,8 @@ function pushStatSample(chart, value) {
 }
 
 function initMetricsWebSocket() {
-    const wsUrl = `ws://${window.location.hostname}:9090/ws/clients`;
+    const port = (window.RUNTIME_CONFIG || {}).metricsPort || 9090;
+    const wsUrl = `ws://${window.location.hostname}:${port}/ws/clients`;
     
     if (metricsWs) metricsWs.close();
     

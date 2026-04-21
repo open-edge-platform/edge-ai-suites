@@ -37,7 +37,6 @@ generate real-time alerts from natural language prompts, and monitor them on a u
 :hidden:
 
 get-started.md
-how-to-build-source.md
 how-it-works.md
 api-reference.md
 known-issues.md

@@ -1,0 +1,71 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+{{- if .Values.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "collector.fullname" . }}-config
+  labels:
+    {{- include "collector.labels" . | nindent 4 }}
+    app.kubernetes.io/component: collector
+data:
+  telegraf.conf: |
+    [agent]
+      interval = "1s"
+      round_interval = true
+      metric_batch_size = 2000
+      metric_buffer_limit = 20000
+      collection_jitter = "0s"
+      flush_interval = "1s"
+      flush_jitter = "0s"
+      precision = "0s"
+
+    [[inputs.cpu]]
+      percpu = false
+      totalcpu = true
+      collect_cpu_time = false
+      report_active = false
+      core_tags = false
+
+    [[inputs.mem]]
+
+    [[inputs.exec]]
+      commands = ["/app/read_cpu_freq.sh"]
+      environment = []
+      name_suffix = ""
+      timeout = "5s"
+      data_format = "influx"
+      interval = "1s"
+
+    [[inputs.execd]]
+      command = ["python3", "/app/qmassa_reader.py"]
+      data_format = "influx"
+
+    [[inputs.temp]]
+
+    [[processors.starlark]]
+      namepass = ["temp"]
+      source = '''
+    def apply(metric):
+        return metric if metric.tags.get("sensor", "").startswith("coretemp_package_id_") else None
+    '''
+
+    [[inputs.file]]
+      files = ["/app/.collector-signals/fps.txt"]
+      data_format = "value"
+      data_type = "float"
+      name_override = "fps"
+
+    [[outputs.prometheus_client]]
+      listen = ":9273"
+      metric_version = 1
+      path = "/metrics"
+      collectors_exclude = ["gocollector", "process"]
+      string_as_label = true
+      export_timestamp = true
+
+    [[outputs.websocket]]
+      url = "${WEBSOCKET_URL}"
+      data_format = "json"
+      read_timeout = "0s"
+{{- end }}
