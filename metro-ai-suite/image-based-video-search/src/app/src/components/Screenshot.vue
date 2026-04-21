@@ -17,10 +17,12 @@
       <button @click="triggerFileUpload" :style="{ width: screenshot ? '20%' : '25%' }">Upload Image</button>
       <input type="file" ref="fileInput" @change="handleFileUpload" style="display: none;" accept="image/*" />
       <button v-if="screenshot" @click="cropImage" style="width: 20%" >Search Object</button>
-      <button @click="clearDatabase" :style="{ 
+      <button @click="clearDatabase" :disabled="pipeline != null" :style="{ 
         width: screenshot ? '20%' : '25%',
         backgroundColor: pipeline ? 'gray' : 'darkorange',
-        border: pipeline ? '1px solid gray' : '1px solid #7f4600e0'
+        border: pipeline ? '1px solid gray' : '1px solid #7f4600e0',
+        cursor: pipeline ? 'not-allowed' : 'pointer',
+        opacity: pipeline ? 0.7 : 1
       }">Clear Database</button>
     </div>
     <div v-if="screenshot" class="screenshot-preview">      
