@@ -35,6 +35,12 @@ def setup_helm_environment(request):
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
+
+    # Wait for pods from the previous release to fully terminate before installing
+    logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
+    if not cleanup_ok:
+        logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
     assert helm_utils.update_values_yaml(values_yaml_path, case) == True, "Failed to update values.yaml."
@@ -73,6 +79,12 @@ def setup_helm_weld_environment(request):
     logger.debug("Checking if Helm release exists...")
     assert helm_utils.uninstall_helm_charts(release_name_weld, namespace) == True, "Failed to uninstall Helm release if exists."
     assert helm_utils.uninstall_helm_charts(release_name, namespace) == True, "Failed to uninstall Helm release if exists."
+
+    # Wait for pods from the previous release to fully terminate before installing
+    logger.debug(f"Waiting for pods in namespace '{namespace}' to terminate...")
+    cleanup_ok = helm_utils.check_pods(namespace, timeout=constants.POD_TERMINATION_TIMEOUT)
+    if not cleanup_ok:
+        logger.warning("Some pods may still be terminating — proceeding with installation anyway.")
 
     case = helm_utils.password_test_cases["test_case_4"]
     values_yaml_path = os.path.expandvars(chart_path + '/values.yaml')
