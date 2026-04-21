@@ -8,7 +8,7 @@ import os
 import sys
 import json
 from fastapi import FastAPI, Body, HTTPException, Request
-from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from sse_starlette.sse import EventSourceResponse
@@ -193,6 +193,12 @@ async def update_agents_config(data: list = Body(...)):
     
     manager.save_agents_config(data)
     return JSONResponse(content={"status": "saved", "count": len(data)})
+
+@app.get("/runtime-config.js")
+async def runtime_config():
+    payload = {"metricsPort": settings.METRICS_NODEPORT}
+    body = f"window.RUNTIME_CONFIG = {json.dumps(payload)};"
+    return Response(content=body, media_type="application/javascript")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_root():

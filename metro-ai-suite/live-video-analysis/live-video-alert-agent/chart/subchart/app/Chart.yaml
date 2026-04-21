@@ -1,0 +1,8 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v2
+name: app
+description: Live Video Alert Agent – application container subchart
+type: application
+version: 1.0.1
+appVersion: "1.0.0"

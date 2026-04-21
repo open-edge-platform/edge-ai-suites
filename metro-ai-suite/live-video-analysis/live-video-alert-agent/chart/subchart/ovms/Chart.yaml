@@ -1,0 +1,7 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: ovms
+description: OpenVINO Model Server subchart for VLM inference
+version: 1.0.1
