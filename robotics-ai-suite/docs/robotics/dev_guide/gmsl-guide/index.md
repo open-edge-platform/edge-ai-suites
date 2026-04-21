@@ -218,6 +218,8 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
 | GMSL Camera suffix  | a          | g          | e          | k          |
@@ -237,6 +239,8 @@ Below is an ACPI device configuration example for [oToBrite oToCAM222](https://w
 <!--hide_directive :::{tab-item} hide_directive--> **oToCAM223**
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
+
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
@@ -259,6 +263,8 @@ Below is an ACPI device configuration example for [oToBrite oToCAM223](https://w
 ![Advantech GMSL layout](../../images/gmsl/gmsl-adv-mioe.png "advantech gmsl layout")
 
 Another example below illustrates how to configure ACPI devices for 6x Intel® RealSense Depth Camera D457 GMSL2 modules:
+
+_**Aggregated-link** `SerDes` CSI-2 port 0, 4 and 5 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   | Camera 5 or N/A | Camera 6 or N/A |
 | ------------------- | ---------- | ---------- | ---------- | ---------- | --------------- | --------------- |
@@ -290,6 +296,8 @@ The [SEAVO Embedded Computer HB03](https://www.seavo.com/en/products/products-in
 
 Below is an ACPI device configuration example for the GMSL2 Intel® RealSense Depth Camera D457:
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
 | GMSL Camera suffix  | a          | g          | e          | k          |
@@ -309,6 +317,8 @@ Below is an ACPI device configuration example for the GMSL2 Intel® RealSense De
 <!--hide_directive :::{tab-item} hide_directive--> **D3CMCXXX-115-084**
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module:
+
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1           | Camera 2           |
 | ------------------- | ------------------ | ------------------ |
@@ -332,6 +342,8 @@ Below is an ACPI device configuration example for the [D3 Embedded Discovery](ht
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/) GMSL2 camera module:
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1           | Camera 2           |
 | ------------------- | ------------------ | ------------------ |
 | GMSL Camera suffix  | a                  | e                  |
@@ -354,6 +366,8 @@ Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
 | GMSL Camera suffix  | a          | g          | e          | k          |
@@ -373,6 +387,8 @@ Below is an ACPI device configuration example for [oToBrite oToCAM222](https://w
 <!--hide_directive :::{tab-item} hide_directive--> **oToCAM223**
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
+
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
@@ -411,6 +427,8 @@ The [Axiomtek ROBOX500](https://www.axiomtek.com/ROBOX500/) may provide either 4
 
 Below is an ACPI device configuration example for 4x Intel® RealSense Depth Camera D457 GMSL2 modules:
 
+_Standalone-link `SerDes` CSI-2 port 0, 1, 2 and 3 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
 | Camera suffix       | a          | b          | c          | d          |
@@ -430,6 +448,8 @@ Below is an ACPI device configuration example for 4x Intel® RealSense Depth Cam
 <!--hide_directive :::{tab-item} hide_directive--> **D3CMCXXX-115-084**
 
 Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/):
+
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1           | Camera 2           | Camera 3           | Camera 4           |
 | ------------------- | ------------------ | ------------------ | ------------------ | ------------------ |
@@ -453,6 +473,8 @@ Below is an ACPI device configuration example for four GMSL2 camera modules from
 
 Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/):
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1           | Camera 2           | Camera 3           | Camera 4           |
 | ------------------- | ------------------ | ------------------ | ------------------ | ------------------ |
 | Camera suffix       | a                  | b                  | c                  | d                  |
@@ -475,6 +497,8 @@ Below is an ACPI device configuration example for four GMSL2 camera modules from
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
+
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
 | GMSL Camera suffix  | a          | b          | c          | d          |
@@ -494,6 +518,8 @@ Below is an ACPI device configuration example for [oToBrite oToCAM222](https://w
 <!--hide_directive :::{tab-item} hide_directive--> **oToCAM223**
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
+
+_**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor  | Camera 1   | Camera 2   | Camera 3   | Camera 4   |
 | ------------------- | ---------- | ---------- | ---------- | ---------- |
@@ -518,6 +544,8 @@ Below is an ACPI device configuration example for [oToBrite oToCAM223](https://w
 Another example below illustrates how to configure ACPI devices for 8x Intel® RealSense Depth Camera D457 GMSL2 modules:
 
 ![Axiomtek ROBOX500 8x layout](../../images/gmsl/gmsl2-robox500-x8.png "axiomtek robox500 x8 layout")
+
+_**Aggregated-link** `SerDes` CSI-2 port 0, 1, 2 and 3 and I2C settings for GMSL Add-in-Card (AIC)_
 
 | UEFI Custom Sensor     | Camera 1   | Camera 2   | Camera 3   | Camera 4   | N/A        | N/A        | N/A        | N/A        |
 | ---------------------- | ---------- | ---------- | ---------- | ---------- | ---------- | ---------- | ---------- | ---------- |
