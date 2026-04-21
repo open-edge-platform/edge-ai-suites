@@ -25,6 +25,13 @@ warnings.filterwarnings(
     message=".*Threading.*parallel backend is not supported by Extension for Scikit-learn.*"
 )
 
+warnings.filterwarnings(
+    "ignore",
+    message=".*X does not have valid feature names, but RandomForestRegressor was fitted with feature names*"
+)
+
+
+
 
 log_level = os.getenv('KAPACITOR_LOGGING_LEVEL', 'INFO').upper()
 enable_benchmarking = os.getenv('ENABLE_BENCHMARKING', 'false').upper() == 'TRUE'
@@ -64,7 +71,7 @@ class AnomalyDetectorHandler(Handler):
         self.y_name = "grid_active_power"
 
         # hyper-params for anomaly classification
-        self.error_threshold = 0.15
+        self.error_threshold = 0.1
         self.anomalies = []
         self.cut_in_speed = 3
         self.cut_out_speed = 14
