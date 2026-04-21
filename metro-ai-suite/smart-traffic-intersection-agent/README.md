@@ -6,6 +6,7 @@ The Smart Traffic Intersection Agent application analyzes various traffic scenar
 
 - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to get started with the agent.
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the agent.
+- [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Deploy on Kubernetes using Helm.
 
 ## How It Works
 

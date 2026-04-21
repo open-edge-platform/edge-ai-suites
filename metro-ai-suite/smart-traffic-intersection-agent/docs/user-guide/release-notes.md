@@ -1,6 +1,6 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version latest
+## Version 1.1.0
 
 **Features**
 - Integrate Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm)

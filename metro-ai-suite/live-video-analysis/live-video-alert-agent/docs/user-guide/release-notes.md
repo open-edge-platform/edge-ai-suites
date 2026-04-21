@@ -1,6 +1,6 @@
 # Release Notes: Live Video Alert Agent
 
-## Version latest
+## Version 1.1.0
 
 **April 21, 2026**
 
