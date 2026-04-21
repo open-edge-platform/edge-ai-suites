@@ -136,8 +136,8 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
 Refer to each tab below to understand the distinct ACPI camera device configuration tables for ODM hardware.
 
-<!--hide_directive::::{tab-set}
-:::{tab-item}hide_directive--> **Advantech AFE-R360 & ASR-A502 series**
+<!--hide_directive:::::{tab-set}
+::::{tab-item}hide_directive--> **Advantech AFE-R360 & ASR-A502 series**
 
 The [Advantech GMSL Input Module Card](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/mioe-gmsl/mod_fc1fc070-30f8-40c1-881f-56c967e26924) for [AFE-R360 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/afe-r360/mod_1e4a1980-9a31-46e6-87b6-affbd7a2cb44) and [ASR-A502 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/asr-a502/mod_ccca0f36-a50b-40c7-87b7-10fb96448605) may provide up to 6x GMSL camera interfaces (FAKRA universal type).
 
@@ -283,8 +283,8 @@ _**Aggregated-link** `SerDes` CSI-2 port 0, 4 and 5 and I2C settings for GMSL Ad
 >
 > For the [Advantech GMSL Input Module Card](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/mioe-gmsl/mod_fc1fc070-30f8-40c1-881f-56c967e26924) for [AFE-R360 series](https://www.advantech.com/en-eu/products/8d5aadd0-1ef5-4704-a9a1-504718fb3b41/afe-r360/mod_1e4a1980-9a31-46e6-87b6-affbd7a2cb44), the I2C1-channel **aggregated-link** deserializer at I2C device `0x48` can set the _Custom HID_, for example `INTC10CD`, and _Camera module label_, for example `d4xx`, tuple for both GMSL camera suffixes `a` and `g`, while the other **aggregated-link** deserializer at I2C device `0x4a` can use a different _Custom HID_, for example `INTC1031`, and _Camera module label_, for example `isx031`, tuple on GMSL camera suffixes `e` and `k`.
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **SEAVO HB03**
+<!--hide_directive::::
+::::{tab-item}hide_directive--> **SEAVO HB03**
 
 The [SEAVO Embedded Computer HB03](https://www.seavo.com/en/products/products-info_itemid_693.html) UEFI BIOS `Version: S1132C1133A11` allows an admin user to configure up to 4x GMSL2 camera interfaces (FAKRA universal type).
 
@@ -413,8 +413,8 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 >
 > For the [SEAVO Embedded Computer HB03](https://www.seavo.com/en/products/products-info_itemid_693.html) Add-in-Card (AIC), the I2C1-channel **aggregated-link** deserializer at I2C device `0x48` can set the _Custom HID_, for example `INTC10CD`, and _Camera module label_, for example `d4xx`, tuple for both GMSL camera suffixes `a` and `g`, while the other **aggregated-link** deserializer at I2C device `0x4a` can use a different _Custom HID_, for example `INTC1031`, and _Camera module label_, for example `isx031`, tuple on GMSL camera suffixes `e` and `k`.
 
-<!--hide_directive:::
-:::{tab-item}hide_directive--> **Axiomtek ROBOX500**
+<!--hide_directive::::
+::::{tab-item}hide_directive--> **Axiomtek ROBOX500**
 
 The [Axiomtek ROBOX500](https://www.axiomtek.com/ROBOX500/) may provide either 4x GMSL or 8x GMSL camera interfaces (FAKRA universal type).
 
@@ -558,5 +558,5 @@ _**Aggregated-link** `SerDes` CSI-2 port 0, 1, 2 and 3 and I2C settings for GMSL
 | Device1 I2C Address    | 42         | 44         | 62         | 64         | _43_       | _45_       | _63_       | _65_       |
 | Device2 I2C Address    | 48         | 4a         | 68         | 6c         | _48_       | _4a_       | _68_       | _6c_       |
 
-<!--hide_directive:::
-::::hide_directive-->
+<!--hide_directive::::
+:::::hide_directive-->
