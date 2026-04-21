@@ -235,7 +235,9 @@
     "processing": "处理中…",
     "failed": "失败",
     "uploaded": "已上传 ✓",
-    "alreadyExists": "已存在"
+    "alreadyExists": "已存在",
+    "summarizing": "正在摘要...",
+    "summarizationFailed": "视频摘要失败，请重试"
   },
   "searchSection": {
     "title": "搜索",
