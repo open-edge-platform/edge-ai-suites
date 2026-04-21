@@ -15,7 +15,7 @@ models:
     name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
-    diarization: False
+    diarization: True
     hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
@@ -23,6 +23,11 @@ models:
     logprob_threshold: -1.0
     min_duration_sec: 0.25
     min_words: 2
+  
+  diarization: #Only applicable when diarization is set to True for ASR
+    provider: "huggingface"
+    name: "pyannote/speaker-diarization-3.1"
+    models_base_path: "models"
 
   summarizer:
     provider: openvino 
