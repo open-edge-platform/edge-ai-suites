@@ -210,11 +210,8 @@ export TRAFFIC_INTELLIGENCE_UI_PORT=${TRAFFIC_INTELLIGENCE_UI_PORT:-7860}
 export LOG_LEVEL=${LOG_LEVEL:-INFO}
 export REFRESH_INTERVAL=${REFRESH_INTERVAL:-15}
 export USER_GROUP_ID=$(id -g)
-export UID
-export GID=${GID:-$(id -g)}
 export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "44")
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
-export HUGGINGFACE_TOKEN=${HUGGINGFACE_TOKEN:-}
 
 # VLM Service Configuration
 export VLM_MODEL_NAME=${VLM_MODEL_NAME}
@@ -226,33 +223,6 @@ export VLM_SEED=${VLM_SEED:-42}
 export VLM_WORKERS=${VLM_WORKERS:-1}
 export VLM_LOG_LEVEL=${VLM_LOG_LEVEL:-info}
 export VLM_ACCESS_LOG_FILE=${VLM_ACCESS_LOG_FILE:-/dev/null}
-
-NGINX_OVERRIDE_FILE="${APP_DIR}/docker/nginx-override.yaml"
-
-get_agent_compose_files() {
-    local -a compose_files=("${APP_DIR}/docker/ri-compose.yaml" "${APP_DIR}/docker/agent-compose.yaml")
-
-    # Add nginx override only when RI compose actually defines an nginx service.
-    if [ -f "${APP_DIR}/docker/ri-compose.yaml" ] && grep -qE '^[[:space:]]{2}nginx:' "${APP_DIR}/docker/ri-compose.yaml"; then
-        compose_files+=("${NGINX_OVERRIDE_FILE}")
-    fi
-
-    printf '%s\n' "${compose_files[@]}"
-}
-
-run_agent_compose() {
-    local -a compose_files
-    mapfile -t compose_files < <(get_agent_compose_files)
-
-    local -a cmd=(docker compose --project-directory "$DEPS_DIR")
-    local file
-    for file in "${compose_files[@]}"; do
-        cmd+=(-f "$file")
-    done
-    cmd+=(-p "$PROJECT_NAME")
-    cmd+=("$@")
-    "${cmd[@]}"
-}
 
 # Automatically adjust VLM settings for GPU
 if [[ "$VLM_DEVICE" == "GPU" ]]; then
@@ -314,7 +284,7 @@ build_service() {
 
     # Build the service images
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        run_agent_compose build
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
     else
         docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
     fi
@@ -332,7 +302,7 @@ build_and_start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
 
     # Build and start the services
-    run_agent_compose up -d --build
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -348,7 +318,7 @@ start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
     
     # Start the services
-    run_agent_compose up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
@@ -371,15 +341,15 @@ restart_service() {
             local AGENT_SERVICES="traffic-agent vlm-openvino-serving live-metrics-service collector"
             
             # Stop the Traffic Intersection Agent Backend/UI Service
-            run_agent_compose stop $AGENT_SERVICES
-            run_agent_compose rm -f $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME stop $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME rm -f $AGENT_SERVICES
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             
-            run_agent_compose up -d --force-recreate $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate $AGENT_SERVICES
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Traffic Intersection Agent Backend/UI restarted successfully!${NC}"
@@ -431,14 +401,14 @@ restart_service() {
             fi
             
             # Stop all services
-            run_agent_compose down
+            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME down
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop services for Traffic Intersection Agent!${NC}"
                 return 1
             fi
 
             # Restart all services
-            run_agent_compose up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
