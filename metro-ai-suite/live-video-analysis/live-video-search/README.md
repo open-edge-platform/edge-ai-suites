@@ -10,7 +10,7 @@ To see the system requirements and other installations, see the following guides
 
   - [Get Started](./docs/user-guide/get-started.md): Step‑by‑step setup.
   - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
-  -- [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Deploy on Kubernetes using Helm.
+  - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Deploy on Kubernetes using Helm.
 
 ## How It Works
 
