@@ -15,7 +15,7 @@ models:
     name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
-    diarization: True
+    diarization: False
     hf_token: None   # needed only if diarization=true
     models_base_path: "models"
     threads_limit: Null # applied only if > 0 (else defaults are used); value can be tuned based on CPU specifications
