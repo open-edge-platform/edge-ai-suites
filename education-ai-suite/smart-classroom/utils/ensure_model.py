@@ -54,7 +54,7 @@ def _download_hf_model(
     logger.info("✅ Download successful" if success else "❌ Download incomplete")
     return success, output_dir
 
-def _rewrite_diarization_config_for_offline(pipeline_dir: str, hf_token: str = None) -> None:
+def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = None) -> None:
     config_path = os.path.join(pipeline_dir, "config.yaml")
     if not os.path.exists(config_path):
         return
@@ -152,7 +152,7 @@ def ensure_model():
             required_files=["config.yaml"]
         )
         if success:
-            _rewrite_diarization_config_for_offline(output_dir, hf_token=config.models.asr.hf_token)
+            _cache_diarization_dependencies_locally(output_dir, hf_token=config.models.asr.hf_token)
     
     output_dir = get_va_model_path()
     convert_yolo_models(output_dir)
