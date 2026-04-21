@@ -61,7 +61,7 @@ def test_invalid_values():
 
 def test_valid_values():
     """TC_003: Testing valid values in .env file for multimodal deployment"""
-    logger.info("TC_003: Changed Test Case - Verifying make check_env_variables with all valid values in .env file")
+    logger.info("TC_003: Testing valid values, verifying make check_env_variables with all valid values in .env file")
     case = docker_utils.generate_multimodal_test_credentials(case_type="valid")
     
     # Validate that S3 credentials are present and valid
@@ -715,8 +715,8 @@ def test_s3_stored_images_access(setup_multimodal_environment):
 
 
 def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
-    """TC_018: Validate RTP sender timestamps in vision measurement stored in InfluxDB"""
-    logger.info("TC_018: Verifying RTP sender timestamps persisted in InfluxDB vision measurement")
+    """TC_019: Validate RTP sender timestamps in vision measurement stored in InfluxDB"""
+    logger.info("TC_019: Verifying RTP sender timestamps persisted in InfluxDB vision measurement")
 
     context = setup_multimodal_environment
     context["deploy_multimodal"]()

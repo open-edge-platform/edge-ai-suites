@@ -53,8 +53,8 @@ class VideoAnalyticsPipelineService:
         # Set model paths
         self.model_base_dir = Path(config.models.va.models_base_path).resolve() / "va"
         self.models = {
-            "yolov8m": "yolov8m-pose.xml",
-            "yolov8s": "yolov8s-pose.xml",
+            "front-pose": f"{config.models.va.front_pose_model}.xml",
+            "back-pose": f"{config.models.va.back_pose_model}.xml",
             "resnet18": "resnet18.xml",
             "mobilenetv2": "mobilenetv2.xml",
             "reid": "person-reidentification-retail-0288.xml",
@@ -123,7 +123,7 @@ class VideoAnalyticsPipelineService:
                 ["gst-discoverer-1.0.exe", file_path],
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=10,
             )
             combined_output = result.stdout + result.stderr
             if "An error was encountered while discovering the file" in combined_output:
@@ -186,6 +186,8 @@ class VideoAnalyticsPipelineService:
     def _get_rtsp_sink_elements(self, rtsp_url: str, pipeline_name: str) -> List[str]:
         """Get RTSP sink elements for pushing to RTSP server"""
         return [
+            "d3d11convert",
+            "!",
             "mfh264enc",
             "bitrate=3000",
             "gop-size=15",
@@ -397,7 +399,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8m')}",
+            f"model={self._get_model_path('front-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",
@@ -512,7 +514,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8s')}",
+            f"model={self._get_model_path('back-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",
@@ -563,10 +565,10 @@ class VideoAnalyticsPipelineService:
         pipeline = [
             *self._get_source_elements(source, input_type),
             # Branch 1: ResNet18 classification
-            "videorate",
-            "!",
-            "video/x-raw(memory:D3D11Memory),framerate=1/1",
-            "!",
+            # "videorate",
+            # "!",
+            # "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            # "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",

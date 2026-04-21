@@ -3,7 +3,8 @@
 
 """Tests for the pipeline health monitoring service."""
 
-from unittest.mock import MagicMock, patch
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -290,3 +291,44 @@ async def test_stop_monitor_cancels_task(monkeypatch):
 
     await ph.stop_pipeline_health_monitor()
     assert ph._health_task is None
+
+
+@pytest.mark.asyncio
+async def test_pipeline_health_loop_reraises_cancelled_error(monkeypatch):
+    """_pipeline_health_loop re-raises CancelledError from check function."""
+    import backend.services.pipeline_health as ph
+
+    monkeypatch.setattr(
+        ph,
+        "check_pipeline_health",
+        AsyncMock(side_effect=asyncio.CancelledError()),
+    )
+    info_mock = MagicMock()
+    monkeypatch.setattr(ph.logger, "info", info_mock)
+
+    with pytest.raises(asyncio.CancelledError):
+        await ph._pipeline_health_loop()
+
+    info_mock.assert_called()
+
+
+@pytest.mark.asyncio
+async def test_pipeline_health_loop_logs_error_and_sleeps(monkeypatch):
+    """Unexpected check errors are logged and loop continues after sleeping."""
+    import backend.services.pipeline_health as ph
+
+    monkeypatch.setattr(
+        ph,
+        "check_pipeline_health",
+        AsyncMock(side_effect=[RuntimeError("boom"), asyncio.CancelledError()]),
+    )
+    error_mock = MagicMock()
+    sleep_mock = AsyncMock(return_value=None)
+    monkeypatch.setattr(ph.logger, "error", error_mock)
+    monkeypatch.setattr(asyncio, "sleep", sleep_mock)
+
+    with pytest.raises(asyncio.CancelledError):
+        await ph._pipeline_health_loop()
+
+    error_mock.assert_called_once()
+    sleep_mock.assert_awaited_once_with(ph.PIPELINE_POLL_INTERVAL)

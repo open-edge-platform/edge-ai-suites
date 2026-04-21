@@ -82,6 +82,8 @@ detectionModelsPvcName: ""
 modelsPath: "/home/pipeline-server/models"
 detectionModelsPath: "/home/pipeline-server/detection_models"
 
+# Whether to mount the detection models PVC into this pod.
+# Set false when detection pipeline is disabled or when only one shared models PVC exists.
 podSecurityContext: {}
 securityContext:
   privileged: true

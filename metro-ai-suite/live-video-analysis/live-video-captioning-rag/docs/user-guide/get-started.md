@@ -109,6 +109,43 @@ By following this guide, you will learn how to:
 This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
 For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
+## Testing and Coverage
+
+The sample application uses **pytest** for unit testing. Test files are located in the `tests/` directory under the `app/` folder.
+
+### Install Test Dependencies
+
+```bash
+cd app
+uv sync --group test
+```
+
+### Run All Tests
+
+```bash
+uv run pytest
+```
+
+### Run a Specific Test File
+
+```bash
+uv run pytest tests/test_main.py
+```
+
+### Run Tests with Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=term-missing
+```
+
+### Generate an HTML Coverage Report
+
+```bash
+uv run pytest --cov=backend --cov=main --cov-report=html
+```
+
+Open `htmlcov/index.html` in a browser to view the detailed coverage report.
+
 ## Learn More
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)

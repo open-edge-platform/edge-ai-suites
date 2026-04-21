@@ -94,6 +94,16 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
             chunk_size = 1000
             start_time = time.time()
             row_served = 0
+            # Create a more human-readable filename by removing the extension and splitting on delimiters. It will also capitalize the words for better readability.
+            # For example, crater_cracks_03-20-23-0122-11 will become Crater_Cracks
+            filename_only = os.path.basename(filename).split('.')[0]
+            name_parts = [part for part in re.split(r'[-_.]', filename_only) if part]
+            readable_parts = []
+            for part in name_parts:
+                if part.isdigit():
+                    break
+                readable_parts.append(part)
+            filename_only = "_".join(part.capitalize() for part in readable_parts) if readable_parts else filename_only.title()
 
             tick = g_tick(float(subsample) / float(sampling_rate))
 
@@ -103,7 +113,7 @@ def stream_csv(mqttc, topic, subsample, sampling_rate, folder_name="/simulation-
                         row_served += 1
                         continue
                     try:
-                        msg = jencoder.encode({**{col: row[col] for col in columns}, 'source': source})
+                        msg = jencoder.encode({**{col: row[col] for col in columns}, 'source': source, 'filename': filename_only})
                         print("Publishing message %s", msg)
                         mqttc.publish(topic, msg)
                     except (ValueError, IndexError):

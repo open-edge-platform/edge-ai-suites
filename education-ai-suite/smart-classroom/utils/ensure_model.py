@@ -58,7 +58,7 @@ def ensure_model():
         _download_openvino_model(f"openai/{config.models.asr.name}", output_dir, None)
     
     output_dir = get_va_model_path()
-    convert_yolo_models(output_dir)
+    convert_yolo_models(output_dir, [config.models.va.front_pose_model, config.models.va.back_pose_model])
     convert_classification_models(output_dir)
 
 def get_model_path() -> str:

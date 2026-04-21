@@ -9,7 +9,7 @@ from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
 from dto.video_metadata_dto import VideoDurationRequest
 from pipeline import Pipeline
-import json, os
+import json, os, time
 import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
@@ -328,9 +328,9 @@ def start_video_analytics_pipeline(
                         }
                     else:
                         if config.va_pipeline.stream_protocol == "webrtc":
-                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{request.pipeline_name}_stream"
+                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
                         else:
-                            stream_url = f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream"
+                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
                         return {
                             "status": "success",
                             "pipeline_name": req.pipeline_name,
@@ -348,12 +348,16 @@ def start_video_analytics_pipeline(
                         "error": str(e),
                     }
 
+            def _launch_single_delayed(req, record, delay):
+                time.sleep(delay)
+                return _launch_single(req, record)
+
             with ThreadPoolExecutor(max_workers=len(requests)) as executor:
                 futures = [
                     executor.submit(
-                        _launch_single, req, req.pipeline_name == record_pipeline
+                        _launch_single_delayed, req, req.pipeline_name == record_pipeline, i
                     )
-                    for req in requests
+                    for i, req in enumerate(requests)
                 ]
                 results = [f.result() for f in futures]
 

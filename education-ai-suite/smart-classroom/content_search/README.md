@@ -49,6 +49,20 @@ python -m pip install -r requirements.txt
 
 > **To Exit Venv**: Simply type `deactivate` in your terminal to leave the virtual environment.
 
+### Configuration
+
+Before launching, review the `config.yaml` file in the smart-classroom root directory. Key settings for Content Search are under the `content_search` section.
+
+**Video Summarization** uses a Vision Language Model (VLM) to generate text summaries for uploaded videos, enabling text-based search to surface relevant video segments. It can be globally toggled:
+
+```yaml
+content_search:
+  video_summarization_enabled: true   # set to false to disable globally
+```
+
+- When `true` (default): the `vlm` and `preprocess` services are started, and users can control summarization per file via the UI upload table.
+- When `false`: the `vlm` and `preprocess` services are **not** started (saving resources). Videos are still ingested for visual search, but no text summaries are generated.
+
 ### Launching Content Search Services
 Once the environment is configured, activate the virtual environment and launch the Content Search service:
 
