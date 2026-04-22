@@ -1,6 +1,20 @@
 #!/bin/bash
 
-set -e
+set -o errexit  # Exit immediately if a command fails (-e)
+set -o errtrace # Ensure ERR traps are inherited by functions (-E)
+set -o pipefail # Catch errors in the middle of pipelines
+
+# Define the error handler
+failure_handler() {
+  local rc="${2}"
+  echo "!!! Express setup failed !!!"
+  echo "Please attempt the setup manually:"
+  echo "https://docs.openedgeplatform.intel.com/canonical/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#step-by-step-setup"
+  exit "${rc}"
+}
+
+trap 'failure_handler ${LINENO} $?' ERR
+
 export DEBIAN_FRONTEND=noninteractive
 
 DEBUG=${DEBUG:-0}
