@@ -1,4 +1,4 @@
-# Tutorials ![Tutorial Robot icon](../images/icons/Tutorial_Robot.png)
+# Tutorials
 
 Prerequisite: Follow the instructions in [Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
@@ -8,6 +8,7 @@ these tutorials provide a learning path for developers to use and configure the 
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
+:hidden:
 
 tutorials_amr/developer_kit/index
 tutorials_amr/perception/index
