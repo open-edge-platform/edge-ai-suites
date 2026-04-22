@@ -43,6 +43,11 @@ on:
         required: false
         type: string
         default: 'yes'
+      runner_label:
+        description: 'Labels for self-hosted or github hosted runners'
+        required: false
+        type: string
+        default: 'ubuntu-24.04'
   workflow_call:
     inputs:
       tag:
@@ -71,7 +76,7 @@ permissions: {}
 jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
-    runs-on: ubuntu-24.04
+    runs-on: ${{ inputs.runner_label }}
     permissions:
       contents: read
       packages: read
