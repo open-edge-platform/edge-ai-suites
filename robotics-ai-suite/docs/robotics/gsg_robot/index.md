@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Get Started Guide
 
 This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
