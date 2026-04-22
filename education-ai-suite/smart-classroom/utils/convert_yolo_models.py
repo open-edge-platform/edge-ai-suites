@@ -176,6 +176,7 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
 
     print(f"Quantized model will be saved to {int8_model_pose_path}")
     ov.save_model(quantized_pose_model, str(int8_model_pose_path))
+    shutil.rmtree(pose_model_dir)
 
 
 def convert_yolo_models(output_dir: str = "models/va", models: Optional[List[str]] = None):
