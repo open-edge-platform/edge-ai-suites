@@ -11,7 +11,7 @@ This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
 ### Hardware Requirements
 
-```{include} ../shared/requirements_robot.md
+```{include} get-started/requirements_robot.md
 ```
 
 ## Express Setup
@@ -1054,7 +1054,7 @@ If the APT package manager is unable to connect to the repositories, follow thes
 :::{toctree}
 :hidden:
 
-../shared/requirements_robot.md
+get-started/requirements_robot.md
 
 :::
 hide_directive-->

@@ -53,7 +53,7 @@ Click each icon to learn more.
    :hidden:
 
    gsg_robot/index
-   shared/requirements_robot
+   gsg_robot/get-started/requirements_robot
    dev_guide/index_howitworks
    dev_guide/index_tutorials
    dev_guide/index_systemintegrator
