@@ -134,7 +134,7 @@ export ROS_DOMAIN_ID=42
 
 ### 4. Express Setup: Next steps
 
-At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## OS Image Composer Setup
 
@@ -182,7 +182,7 @@ For detailed instructions, see the [os-image-composer installation guide](https:
 
 8. Boot from the USB drive and install the image to your system.
 
-9. **Setup complete!** Next Steps: Explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+9. **Setup complete!** Next Steps: Explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## Step-by-step Setup
 
@@ -940,7 +940,7 @@ sudo reboot
 
 ### 9. Next steps
 
-At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## Optional - Enabling Intel® GPU
 
