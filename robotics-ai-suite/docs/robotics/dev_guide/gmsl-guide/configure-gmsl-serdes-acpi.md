@@ -24,6 +24,7 @@ The [Advantech® GMSL Input Module Card](https://www.advantech.com/en-eu/product
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **RealSense™ D457**
+<!--hide_directive:sync: realsensehide_directive-->
 
 Below is an ACPI device configuration example for the GMSL2 Intel® RealSense Depth Camera D457:
 
@@ -46,6 +47,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
+<!--hide_directive:sync: d3cmc115hide_directive-->
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module:
 
@@ -70,6 +72,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
+<!--hide_directive:sync: d3cmc106hide_directive-->
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/) GMSL2 camera module:
 
@@ -94,6 +97,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM222**
+<!--hide_directive:sync: otocam222hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -116,6 +120,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM223**
+<!--hide_directive:sync: otocam223hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
@@ -171,6 +176,7 @@ The [SEAVO® Embedded Computer HB03](https://www.seavo.com/en/products/products-
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **RealSense™ D457**
+<!--hide_directive:sync: realsensehide_directive-->
 
 Below is an ACPI device configuration example for the GMSL2 Intel® RealSense Depth Camera D457:
 
@@ -193,6 +199,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
+<!--hide_directive:sync: d3cmc115hide_directive-->
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/) GMSL2 camera module:
 
@@ -217,6 +224,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
+<!--hide_directive:sync: d3cmc106hide_directive-->
 
 Below is an ACPI device configuration example for the [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/) GMSL2 camera module:
 
@@ -241,6 +249,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM222**
+<!--hide_directive:sync: otocam222hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -263,6 +272,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM223**
+<!--hide_directive:sync: otocam223hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
@@ -301,6 +311,7 @@ The [Axiomtek® ROBOX500](https://www.axiomtek.com/ROBOX500/) may provide either
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **RealSense™ D457**
+<!--hide_directive:sync: realsensehide_directive-->
 
 Below is an ACPI device configuration example for 4x Intel® RealSense Depth Camera D457 GMSL2 modules:
 
@@ -323,6 +334,7 @@ _**Standalone-link** `SerDes` CSI-2 port 0, 1, 2 and 3 and I2C settings for GMSL
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-115-084**
+<!--hide_directive:sync: d3cmc115hide_directive-->
 
 Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery](https://www.d3embedded.com/product/isx031-smart-camera-narrow-fov-gmsl2-unsealed/):
 
@@ -347,6 +359,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **D3CMCXXX-106-084**
+<!--hide_directive:sync: d3cmc106hide_directive-->
 
 Below is an ACPI device configuration example for four GMSL2 camera modules from [D3 Embedded Discovery PRO](https://www.d3embedded.com/product/imx390-medium-fov-gmsl2-sealed/):
 
@@ -371,6 +384,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM222**
+<!--hide_directive:sync: otocam222hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM222](https://www.otobrite.com/product/automotive-camera/isx021_gmsl2_otocam222-s195m) GMSL2 camera modules:
 
@@ -393,6 +407,7 @@ _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-i
 
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **oToCAM223**
+<!--hide_directive:sync: otocam223hide_directive-->
 
 Below is an ACPI device configuration example for [oToBrite oToCAM223](https://www.otobrite.com/product/automotive-camera/isx031_gmsl2_otocam223-s195m) GMSL2 camera modules:
 
