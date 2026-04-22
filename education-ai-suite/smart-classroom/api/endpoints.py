@@ -110,15 +110,19 @@ async def summarize_audio(request: SummaryRequest):
 
 @router.post("/mindmap")
 async def generate_mindmap(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
+    for _ in range(30):
+        if not audio_pipeline_lock.locked():
+            break
+        await asyncio.sleep(0.5)
+    else:
         raise HTTPException(status_code=429, detail="Session Active, Try Later")
     pipeline = Pipeline(request.session_id)
     try:
         mindmap_text = pipeline.run_mindmap()
         logger.info("Mindmap generated successfully.")
-        return {"mindmap": mindmap_text, "error": ""} 
+        return {"mindmap": mindmap_text, "error": ""}
     except HTTPException as http_exc:
-        raise http_exc      
+        raise http_exc
     except Exception as e:
         logger.exception(f"Error during mindmap generation: {e}")
         raise HTTPException(
