@@ -14,7 +14,7 @@ Troubleshooting
 
         export OCL_ICD_VENDORS=/etc/OpenCL/vendors
 
-#. **MESA: warning: Driver does not support the 0x7d51 PCI ID** 
+#. **MESA: warning: Driver does not support the 0x7d51 PCI ID**
 
     .. code-block:: console
 
@@ -57,7 +57,7 @@ Troubleshooting
 
     .. _ov_inference_troubleshooting:
 
-    If you encounter some errors when running OpenVINO inference of models from :doc:`Model Tutorials <developer_tools_tutorials/model_tutorials>`, please check the OpenVINO version used for model conversion and the runtime version used for inference. The OpenVINO version used for model conversion should be the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version.
+    If you encounter some errors when running OpenVINO inference of models from :doc:`Model Tutorials <model_tutorials>`, please check the OpenVINO version used for model conversion and the runtime version used for inference. The OpenVINO version used for model conversion should be the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version.
 
     You can check the OpenVINO version used for model conversion at the end of the OpenVINO IR file ``*.xml``. For example:
 
@@ -74,12 +74,12 @@ Troubleshooting
         ...
 
 #. **IOMMU deivce assigned failed when ACRN hypervisor boot up**
-  
+
     .. code-block:: console
 
         failed to unassign iommu device!
 
-    1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in :doc:`OS Setup <installation_setup/prerequisites/os_setup>`. 
+    1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in :doc:`OS Setup <installation_setup/prerequisites/os_setup>`.
     2. Please check all PCIe devices plugged in have been enabled correctly.
 
 #. **Docker pull time out**

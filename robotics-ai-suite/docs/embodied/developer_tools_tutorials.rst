@@ -1,4 +1,4 @@
-Developer Tools & Tutorials
+Developer Tools
 ############################
 
 | Intel provides a range of developer tools which cover a wide range of topics from heterogeneous computing to deep learning optimization, to help you build and optimize your Embodied Intelligence models and workflows.
@@ -18,20 +18,18 @@ Please get more information in the following sections:
 
 Also, you can find some advice for arranging heterogeneous computing through different workloads in the following section:
 
-- :doc:`Heterogeneous Computing <developer_tools_tutorials/heterogeneous_computing>`
+- :doc:`Heterogeneous Computing <heterogeneous_computing>`
 
 Some of the models used in Embodied Intelligence solutions are enabled on Intel platforms, please see here to get tutorials:
 
-- :doc:`Model Tutorials <developer_tools_tutorials/model_tutorials>`
+- :doc:`Model Tutorials <model_tutorials>`
 
 .. toctree::
     :maxdepth: 1
     :hidden:
 
-    developer_tools_tutorials/heterogeneous_computing
     developer_tools_tutorials/openvino
     developer_tools_tutorials/ipex
     developer_tools_tutorials/ipex-llm
     developer_tools_tutorials/oneapi
     developer_tools_tutorials/iopenxla
-    developer_tools_tutorials/model_tutorials

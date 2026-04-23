@@ -1,13 +1,13 @@
 :next_page: None
 :prev_page: None
 
-Troubleshootings
+Troubleshooting
 ##############################
 
 #. Inference on GPU does not work?
 
     .. code-block:: bash
-    
+
          sudo -E apt install clinfo
          clinfo
 
