@@ -10,7 +10,7 @@ Before you begin, ensure that you have the following prerequisites:
 - The cluster must support **dynamic provisioning of Persistent Volumes (PV)**. Refer to the [Kubernetes Dynamic Provisioning Guide](https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/) for more details.
 - Install `kubectl` on your system. Refer to the [Installation Guide](https://kubernetes.io/docs/tasks/tools/install-kubectl/). Ensure access to the Kubernetes cluster.
 - Helm installed on your system: [Installation Guide](https://helm.sh/docs/intro/install/).
-- A running **Smart Intersection** deployment (provides MQTT broker, camera pipelines, and scene analytics). See [Step 4](#step-4-deploy-smart-intersection) below.
+- A running **Smart Intersection** deployment (provides MQTT broker, camera pipelines, and scene analytics). See [Step 4](#step-5-deploy-smart-intersection) below.
 - The SceneScape CA certificate file (`scenescape-ca.pem`) for TLS connections to the MQTT broker (created during the Smart Intersection installation).
 - *(Optional)* A [Hugging Face](https://huggingface.co/) API token if the VLM model requires authentication.
 - **Storage Requirement:** The VLM model cache PVC requests 20 GiB by default. Ensure the cluster has sufficient storage available.

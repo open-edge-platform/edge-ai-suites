@@ -6,7 +6,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    | ACPI custom HID | Camera module label | Sensor type         | GMSL2 serializer | Max resolution | Vendor URL                                                                             |
    | --------------- | ------------------- | ------------------- | ---------------- | -------------- | -------------------------------------------------------------------------------------- |
-   | `INTC10CD`      | `d4xx`              | OV9782 + D450 Depth | MAX9295          | 2x (1280x720)  | [Intel® RealSense Depth Camera D457](https://realsenseai.com/products/d457-gmsl-fakra) |
+   | `INTC10CD`      | `d4xx`              | OV9782 + D450 Depth | MAX9295          | 2x (1280x720)  | [RealSense Depth Camera D457](https://realsenseai.com/products/d457-gmsl-fakra) |
    | `D3000004`      | `D3CMCXXX-115-084`  | ISX031              | MAX9295          | 1920x1536      | [D3 Embedded](https://www.d3embedded.com/)                                             |
    | `D3000005`      | `D3CMCXXX-106-084`  | IMX390              | MAX9295          | 1920x1080      | sensor Linux drivers package available upon `sales@d3embedded.com` camera purchase     |
    | `D3000006`      | `D3CMCXXX-089-084`  | AR0234              | MAX9295          | 1280x960       |                                                                                        |
@@ -26,7 +26,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    :::{tab-item}hide_directive--> **RealSense™ D457**
    <!--hide_directive:sync: realsensehide_directive-->
 
-   Below is an ACPI device configuration example for the GMSL2 Intel® RealSense Depth Camera D457:
+   Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
    _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
@@ -146,7 +146,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    ![Advantech GMSL layout](../../images/gmsl/gmsl-adv-mioe.png "advantech gmsl layout")
 
-   Another example below illustrates how to configure ACPI devices for 6x Intel® RealSense Depth Camera D457 GMSL2 modules:
+   Another example below illustrates how to configure ACPI devices for 6x RealSense Depth Camera D457 GMSL2 modules:
 
    _**Aggregated-link** `SerDes` CSI-2 port 0, 4 and 5 and I2C settings for GMSL Add-in-Card (AIC)_
 
@@ -178,7 +178,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    :::{tab-item}hide_directive--> **RealSense™ D457**
    <!--hide_directive:sync: realsensehide_directive-->
 
-   Below is an ACPI device configuration example for the GMSL2 Intel® RealSense Depth Camera D457:
+   Below is an ACPI device configuration example for the GMSL2 RealSense Depth Camera D457:
 
    _**Aggregated-link** `SerDes` CSI-2 port 0 and 4 and I2C settings for GMSL Add-in-Card (AIC)_
 
@@ -313,7 +313,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
    :::{tab-item}hide_directive--> **RealSense™ D457**
    <!--hide_directive:sync: realsensehide_directive-->
 
-   Below is an ACPI device configuration example for 4x Intel® RealSense Depth Camera D457 GMSL2 modules:
+   Below is an ACPI device configuration example for 4x RealSense Depth Camera D457 GMSL2 modules:
 
    _**Standalone-link** `SerDes` CSI-2 port 0, 1, 2 and 3 and I2C settings for GMSL Add-in-Card (AIC)_
 
@@ -433,7 +433,7 @@ To enable multiple GMSL cameras, for the same or different vendors, define the M
 
    ![Axiomtek ROBOX500](../../images/gmsl/gmsl2-robox500.jpg "axiomtek robox500")
 
-   Another example below illustrates how to configure ACPI devices for 8x Intel® RealSense Depth Camera D457 GMSL2 modules:
+   Another example below illustrates how to configure ACPI devices for 8x RealSense Depth Camera D457 GMSL2 modules:
 
    ![Axiomtek ROBOX500 8x layout](../../images/gmsl/gmsl2-robox500-x8.png "axiomtek robox500 x8 layout")
 

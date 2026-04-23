@@ -11,11 +11,10 @@ This tutorial shows you how to set up a real-time system to control a JAKA robot
 Ensure you have completed the setup steps in [Installation Setup](../installation_setup.rst) and have the following:
 
 | Specification | Recommendation                      |
-|---------------|-------------------------------------|
+| ------------- | ----------------------------------- |
 | Processor     | Intel® Core™ Ultra 7 Processor 265H |
 | Storage       | 256G                                |
 | Memory        | LPDDR5, 6400 MHz, 16G x 2           |
-
 
 ## Set up JAKA Robot Arm
 
@@ -24,6 +23,7 @@ This section shows how to set up a simulation of the JAKA robot-arm ROS2 applica
 ### Install PLCopen Library
 
 1. Install the dependencies:
+
    ```bash
    sudo apt install libeigen3-dev python3-pip python3-venv cmake
    sudo python3 -m pip install pymodbus==v3.6.9
@@ -115,7 +115,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
    sudo bash install_funasr.sh
    ```
 
-2. Install the ``asr-openvino`` model script:
+2. Install the `asr-openvino` model script:
 
    ```bash
    sudo chown -R $USER /opt/funasr/
@@ -133,7 +133,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
    pip install modelscope==1.17.1 onnx==1.16.2 humanfriendly==10.0 pyaudio websocket==0.2.1 websockets==12.0 translate==3.6.1 kaldi_native_fbank==1.20.0 onnxruntime==1.18.1 torchaudio==2.4.0 openvino==2024.3.0
    ```
 
-4. Build the ``asr-openvino`` model:
+4. Build the `asr-openvino` model:
 
    ```bash
    cd /opt/funasr/FunASR/
@@ -142,7 +142,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
    cp -r ~/.cache/modelscope/hub/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch /opt/llm-robotics/asr-openvino-demo/
    ```
 
-5. Quantize the model using ``ovc``:
+5. Quantize the model using `ovc`:
 
    ```bash
    cd /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
@@ -150,7 +150,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
    ovc model_eb.onnx --output_model=model_eb_fp16
    ```
 
-6. Modify the ``configuration.json`` file of the speech model:
+6. Modify the `configuration.json` file of the speech model:
 
    ```shell
 
@@ -171,7 +171,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
       }
    ```
 
-7. Reinstall the ``funasr`` model of FunASR toolkit:
+7. Reinstall the `funasr` model of FunASR toolkit:
 
    ```bash
    cd /opt/funasr/FunASR/
@@ -185,7 +185,7 @@ This section shows how to set up a virtual Python environment to run the LLM dem
 
 ### Set up a Virtual Environment for the Application
 
-1. Install the ``pip`` packages for LLM:
+1. Install the `pip` packages for LLM:
 
    ```bash
    cd /opt/llm-robotics/LLM/
@@ -206,23 +206,23 @@ This section shows how to set up a virtual Python environment to run the LLM dem
 
 ### Set up the SAM Model
 
-See the following OpenVINO documentation to export and save the ``SAM`` model:
+See the following OpenVINO documentation to export and save the `SAM` model:
 
-- SAM: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/segment-anything
+- [Segment Anything](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/segment-anything)
 
 Modify the loading PATH of models to the exported model path, the default path is:
 
-   ```bash
-   # /opt/llm-robotics/LLM/utils/mobilesam_helper.py:L88-L89
-   ov_sam_encoder_path = f"/home/intel/ov_models/sam_image_encoder.xml"
-   ov_sam_predictor_path = f"/home/intel/ov_models/sam_mask_predictor.xml"
-   ```
+```bash
+# /opt/llm-robotics/LLM/utils/mobilesam_helper.py:L88-L89
+ov_sam_encoder_path = f"/home/intel/ov_models/sam_image_encoder.xml"
+ov_sam_predictor_path = f"/home/intel/ov_models/sam_mask_predictor.xml"
+```
 
 ### Set up the CLIP Model
 
-See the following OpenVINO documentation to export and save ``CLIP (ViT-B)`` model:
+See the following OpenVINO documentation to export and save `CLIP (ViT-B)` model:
 
-- CLIP: https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/clip-zero-shot-image-classification
+- [CLIP](https://github.com/openvinotoolkit/openvino_notebooks/tree/latest/notebooks/clip-zero-shot-image-classification)
 
 Modify the loading PATH of models to the exported model path, the default path is:
 
@@ -231,9 +231,9 @@ Modify the loading PATH of models to the exported model path, the default path i
 clip_model_path = f"/home/intel/ov_models/clip-vit-base-patch16.xml"
 ```
 
-### Set up the ``Phi-4-mini-instruct-int8-ov`` Model
+### Set up the `Phi-4-mini-instruct-int8-ov` Model
 
-Download ``Phi-4-mini-instruct-int8-ov`` models:
+Download `Phi-4-mini-instruct-int8-ov` models:
 
 ```bash
 sudo apt install git-lfs
@@ -259,17 +259,17 @@ This section shows how to launch the LLM robotics demo.
 
 Connect the following to the Intel® Core™ Ultra Processors IPC.
 
-| Item    | Explanation                                     | LINK                                              |
-|---------|-------------------------------------------------|---------------------------------------------------|
-| Camera  | Intel® RealSense™ Depth Camera D435             | https://www.intelrealsense.com/depth-camera-d435/ |
-| USB Mic | Audio input device of FunASR, 16k sampling rate | UGREEN CM564                                      |
+| Item    | Explanation                                     | LINK                                                             |
+| ------- | ----------------------------------------------- | ---------------------------------------------------------------- |
+| Camera  | RealSense™ Depth Camera D435                    | <https://www.realsenseai.com/products/stereo-depth-camera-d435/> |
+| USB Mic | Audio input device of FunASR, 16k sampling rate | UGREEN CM564                                                     |
 
 ### Launch the LLM Robotic Demo
 
 The LLM Robotic demo includes the real-time component, non-real-time ROS2 component, and non-real-time LLM component.
 
 > **Important:**
-  Ensure a stable network connection before running the demo. The FunASR and LLM applications require an active network connection.
+> Ensure a stable network connection before running the demo. The FunASR and LLM applications require an active network connection.
 
 1. Launch the OpenVINO FunASR server:
 
@@ -302,11 +302,11 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
 3. Launch the JAKA robot arm ROS2 node:
 
    > **Important:**
-     Execute the following commands as a privileged user (``root``). Open a root terminal:
+   > Execute the following commands as a privileged user (`root`). Open a root terminal:
 
-      ```bash
-      sudo -i
-      ```
+   ```bash
+   sudo -i
+   ```
 
    ```bash
    source /opt/ros/iron/setup.bash
@@ -315,7 +315,8 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
    ```
 
    If the ROS2 node launches successfully, the RVIZ2 tool will display the following:
-    ![jaka-robot-arm](./assets/images/jaka-robot-arm.png)
+
+   ![jaka-robot-arm](./assets/images/jaka-robot-arm.png)
 
 4. Launch the LLM application:
 
@@ -330,7 +331,6 @@ The LLM Robotic demo includes the real-time component, non-real-time ROS2 compon
    ![llm-robotics-demo-UI](./assets/images/llm-robotics-demo-UI.png)
 
    In the "Apps" tab:
-
    - Camera Stream and Depth Stream: displays the real-time color and depth streams from the camera.
    - App status: indicates the status and outcome of code generation.
    - Inference Result: presents the results from the SAM and CLIP models.
