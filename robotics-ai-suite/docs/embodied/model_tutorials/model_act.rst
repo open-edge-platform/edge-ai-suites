@@ -5,7 +5,7 @@ Action Chunking with Transformers - ACT
 
 Action Chunking with Transformers (ACT) is an **end-to-end imitation learning** model designed for fine manipulation tasks in robotics,  learned directly from real demonstrations. ACT aims to overcome the limitations of imitation learning, where policy errors can compound over time and lead to drifting out of the training distribution. By predicting actions in chunks, ACT effectively reduces the horizon, enabling the system to perform complex tasks such as opening a translucent condiment cup and slotting a battery with high success rates (80-90%) using only 10 minutes of demonstration data. ACT model is proposed as an algorithm component of a system, which focus on learning fine-grained bimanual manipulation with low-cost hardware.
 
-.. image:: assets/images/act.png
+.. image:: ../developer_tools_tutorials/assets/images/act.png
    :width: 85%
    :align: center
 

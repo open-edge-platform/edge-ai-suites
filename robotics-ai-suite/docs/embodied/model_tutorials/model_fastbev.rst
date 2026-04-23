@@ -32,9 +32,9 @@ In summary, Bird's Eye View is a powerful tool that enhances the capabilities of
 a comprehensive and intuitive understanding of the environment. This leads to improved safety, efficiency, and
 interaction in various applications across autonomous driving, mobile robotics, and humanoid robotics.
 
-Fast-BEV, as an representative of BEV algorithms, 
+Fast-BEV, as an representative of BEV algorithms,
 
-.. image:: assets/images/fastbev.png
+.. image:: ../developer_tools_tutorials/assets/images/fastbev.png
    :width: 85%
    :align: center
 
@@ -54,7 +54,7 @@ Fast-BEV, as an representative of BEV algorithms,
 Model Conversion
 ================
 
-The FastBEV model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO.  
+The FastBEV model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO.
 To enable this, the PyTorch model must first be converted to the OpenVINO IR format.
 
 All models (model.zip) can be downloaded from `Google Drive <https://drive.google.com/file/d/1wwwckM0vux5ub3U4R_zS9pm01QFmMPru/view>`_. The zip file contains the following:
@@ -92,11 +92,11 @@ Convert ONNX to OpenVINO IR Using `ovc`
 -------------------------------------------
 
 Ensure OpenVINO is Installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. note::  
-   Make sure OpenVINO is installed by following the guide:  
-   :ref:`Install OpenVINO via pip <openvino_install>` 
+.. note::
+   Make sure OpenVINO is installed by following the guide:
+   :ref:`Install OpenVINO via pip <openvino_install>`
 
 Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, ``ovc``.
 
@@ -105,32 +105,32 @@ The ``ovc`` tool simplifies the process of converting an ONNX model to OpenVINO 
 Steps to Convert ONNX Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-1. **Navigate to the `resnet18` Folder**    
-   
+1. **Navigate to the `resnet18` Folder**
+
    Open a terminal and navigate to the folder containing the models:
 
    .. code-block::  bash
-   
+
       cd resnet18
 
-2. **Run the `ovc` Command for Each ONNX Model**  
+2. **Run the `ovc` Command for Each ONNX Model**
 
    To convert `fastbev_post_trt_decode.onnx`:
 
    .. code-block::  bash
-   
+
       ovc fastbev_post_trt_decode.onnx
 
    To convert `fastbev_post_trt.onnx`:
 
    .. code-block::  bash
-   
+
       ovc fastbev_post_trt.onnx
 
    To convert `fastbev_pre_trt.onnx`:
 
    .. code-block::  bash
-   
+
       ovc fastbev_pre_trt.onnx
 
 By default, this command converts the ONNX model to FP16 IR format. The conversion will generate the following files for each model:
@@ -139,13 +139,13 @@ By default, this command converts the ONNX model to FP16 IR format. The conversi
 - ``<model_name>.bin`` : Contains the model weights and binary data.
 
 Expected Output
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^  
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 After running the ``ovc`` command, you should see the following output files for each model:
 
 ::
 
-    fastbev_post_trt_decode.xml  
+    fastbev_post_trt_decode.xml
     fastbev_post_trt_decode.bin
     fastbev_post_trt.xml
     fastbev_post_trt.bin
