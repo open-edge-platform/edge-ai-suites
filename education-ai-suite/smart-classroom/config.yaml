@@ -23,6 +23,11 @@ models:
     logprob_threshold: -1.0
     min_duration_sec: 0.25
     min_words: 2
+  
+  diarization: #Only applicable when diarization is set to True for ASR
+    provider: "huggingface"
+    name: "pyannote/speaker-diarization-3.1"
+    models_base_path: "models"
 
   summarizer:
     provider: openvino 

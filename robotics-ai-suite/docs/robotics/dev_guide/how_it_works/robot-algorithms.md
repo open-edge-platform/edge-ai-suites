@@ -10,7 +10,7 @@ For details, see [Model Zoo](https://github.com/openvinotoolkit/open_model_zoo).
 
 ## ADBSCAN
 
-**Tutorial**: [ADBSCAN Algorithm](../tutorials_amr/navigation/adbscan/index.rst)
+**Tutorial**: [ADBSCAN Algorithm](../tutorials_amr/navigation/adbscan/index.md)
 
 DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is an unsupervised clustering algorithm that clusters high-dimensional points based on their distribution density. Adaptive DBSCAN (ADBSCAN) has clustering parameters that are adaptive based on range and are especially suitable for processing LiDAR data. It improves the object detection range by 20-30% on average.
 
@@ -85,6 +85,6 @@ robot_localization (from <https://github.com/cra-ros-pkg/robot_localization>) is
 
 ## Navigation 2
 
-**Tutorials**: [Navigation](../tutorials_amr/navigation/index.rst)
+**Tutorials**: [Navigation](../tutorials_amr/navigation/index.md)
 
 ROS 2 Navigation stack seeks a safe way to have a mobile robot move from point A to point B. This completes dynamic path planning, computes velocities for motors, detects and avoids obstacles, and structures recovery behaviors. Navigation 2 uses behavior trees to call modular servers to complete an action. An action can be computing a path, controlling effort, recovery, or any other navigation-related action. These are separate nodes that communicate with the behavior tree over a ROS 2 action server.

@@ -24,14 +24,14 @@ Click each icon to learn more.
         :link-type: doc
         :link-alt: clickable cards
 
-        Describes how the software works
+        Describes how the software works.
 
     .. grid-item-card:: Tutorials
         :link: dev_guide/index_tutorials
         :link-type: doc
         :link-alt: clickable cards
 
-        Provides a learning path for developers to use and configure Autonomous Mobile Robot
+        Provides a learning path for developers to use and configure Autonomous Mobile Robot.
 
     .. grid-item-card:: System Integrators
         :link: dev_guide/index_systemintegrator
@@ -39,6 +39,13 @@ Click each icon to learn more.
         :link-alt: clickable cards
 
         Information specifically for System Integrators.
+
+    .. grid-item-card:: GMSL Guide
+        :link: dev_guide/index_gmslguide
+        :link-type: doc
+        :link-alt: clickable cards
+
+        Using GMSL cameras with the Autonomous Mobile Robot.
 
 
 .. toctree::
@@ -50,5 +57,5 @@ Click each icon to learn more.
    dev_guide/index_howitworks
    dev_guide/index_tutorials
    dev_guide/index_systemintegrator
-   dev_guide/index_gmslguide
+   GMSL Guide <dev_guide/index_gmslguide>
    Release Notes <release-notes>

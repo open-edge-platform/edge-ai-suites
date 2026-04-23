@@ -5,6 +5,7 @@ import logging
 import copy
 import os
 import sys
+import threading
 
 from moviepy import VideoFileClip
 from PIL import Image
@@ -24,7 +25,7 @@ def create_chroma_data(embedding, meta=None):
     return {"id": generate_unique_id(), "meta": meta, "vector": embedding}
 
 class Indexer:
-    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None):
+    def __init__(self, collection_name="content-search", visual_embedding_model=None, document_embedding_model=None, video_summary_id_map=None, doc_embed_lock=None):
         self.client = ChromaClientWrapper()
         run_device = os.getenv("INGEST_DEVICE", "CPU")
         self.visual_collection_name = collection_name
@@ -64,6 +65,8 @@ class Indexer:
         # Shared map: video file_path -> list of summary embedding IDs.
         # Owned and recovered externally in server.py
         self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
+
+        self._embed_lock = doc_embed_lock or threading.Lock()
 
     def _init_collection(self, collection_name, id_map_dict):
         """Generic method to initialize a collection."""
@@ -277,7 +280,8 @@ class Indexer:
     def get_document_embedding(self, text):
         if not self.document_embedding_model:
             raise RuntimeError("Document embedding model not available.")
-        return self.document_embedding_model.get_text_embedding(text)
+        with self._embed_lock:
+            return self.document_embedding_model.get_text_embedding(text)
 
     def process_video(self, video_path, meta, frame_extract_interval=15, do_detect_and_crop=True):
         entities = []

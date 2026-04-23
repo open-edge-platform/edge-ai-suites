@@ -1,44 +1,41 @@
-.. adbscan-algorithm:
-
-ADBSCAN Algorithm
-==================
+# ADBSCAN Algorithm
 
 ADBSCAN (Adaptive DBSCAN) is an Intel® patented algorithm. It is a highly adaptive and scalable object detection and localization (clustering) algorithm, tested successfully to detect objects at all ranges for 2D Lidar, 3D Lidar, and Intel® RealSense™ Depth Camera.
 This method automatically computes clustering parameters (radius and minimum number of points that define a cluster) based on the distance from the sensor and the data density in its field of view, thus alleviating the guesswork from parameter selection and enabling efficient hierarchical clustering.
 ADBSCAN increases detection range by 30%-40% and detects 20%-30% more objects, compared to the state-of-the-art methods. It has been gainfully used in multiple applications such as 2D/3D Lidar or Intel® RealSense™ camera based object tracking, multi-modal object classification (Camera + Lidar), surface segmentation, Lidar-based object classification, occupancy grid generation etc.
 
+## Source Code
 
-Source Code
------------
+The source code of this component can be found here: [ADBScan](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/adbscan)
 
-The source code of this component can be found here: `ADBScan <https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/adbscan>`_
+## ADBSCAN Tutorials
 
+<!--hide_directive
+:::{toctree}
+:maxdepth: 1
 
-ADBSCAN Tutorials
------------------
+adbscan-rplidar
+adbscan-realsense
+adbscan_aaeon_robot
 
-.. toctree::
-   :maxdepth: 1
+:::
+hide_directive-->
 
-   adbscan-rplidar
-   adbscan-realsense
-   adbscan_aaeon_robot
+## ADBSCAN Optimization
 
+<!--hide_directive
+:::{toctree}
+:maxdepth: 1
 
-ADBSCAN Optimization
---------------------
+IA-optimized-adbscan-algorithm
 
-.. toctree::
-   :maxdepth: 1
+:::
+hide_directive-->
 
-   IA-optimized-adbscan-algorithm
+## Troubleshooting
 
+- Failed to install Deb package: Please make sure to run `sudo apt update` before installing the necessary Deb packages.
 
-Troubleshooting
-----------------------------
+- You can stop the demo anytime by pressing `ctrl-C`.
 
-- Failed to install Deb package: Please make sure to run ``sudo apt update`` before installing the necessary Deb packages.
-
-- You can stop the demo anytime by pressing ``ctrl-C``.
-
-- For general robot issues, go to: :doc:`../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting`.
+- For general robot issues, go to: [Robot Tutorials Troubleshooting](../../../../dev_guide/tutorials_amr/robot-tutorials-troubleshooting.md).

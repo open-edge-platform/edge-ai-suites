@@ -25,11 +25,9 @@ The OpenVINO™ toolkit supports most TensorFlow and PyTorch models. The followi
 
 Please also find information for the models of imitation learning, grasp generation, simultaneous localization and mapping (SLAM) and bird's-eye view (BEV):
 
-> **Note:**
-  Before using these models, read the [AI Content Disclaimer](../../legal.rst).
-
 <!--hide_directive:::{toctree}
 :maxdepth: 1
+:hidden:
 
 model_tutorials/model_act
 model_tutorials/model_cns
