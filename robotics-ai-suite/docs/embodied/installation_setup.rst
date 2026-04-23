@@ -1,4 +1,4 @@
-Installation & Setup
+Get Started
 ######################
 
 Embodied Intelligence SDK provides necessary steps to install the packages and set up the environment.
