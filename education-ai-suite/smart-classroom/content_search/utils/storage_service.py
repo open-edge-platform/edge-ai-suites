@@ -3,10 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+import hashlib
 import uuid
 import logging
-from fastapi import UploadFile
+from fastapi import HTTPException, UploadFile
 from typing import Optional
+
+# Stream in 1 MiB chunks so memory stays bounded even for multi-GB uploads.
+_STREAM_CHUNK_SIZE = 1024 * 1024
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +37,12 @@ class StorageService:
     def is_available(self) -> bool:
         return self._store is not None
 
-    async def upload_and_prepare_payload(self, file: UploadFile, asset_id: str = "default") -> dict:
+    async def upload_and_prepare_payload(
+        self,
+        file: UploadFile,
+        asset_id: str = "default",
+        max_size_bytes: Optional[int] = None,
+    ) -> dict:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
         run_id = str(uuid.uuid4())
@@ -44,15 +53,44 @@ class StorageService:
             asset_id=asset_id,
             filename=file.filename
         )
-        content = await file.read()
-        self._store.put_bytes(object_key, content, content_type=file.content_type)
+
+        # Stream the upload to disk while computing the hash in one pass.
+        # Avoids loading the whole file into memory (previously ~2x file size).
+        dst_path = self._store._object_path(object_key)
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+
+        hasher = hashlib.sha256()
+        total_bytes = 0
+        try:
+            with open(dst_path, "wb") as out:
+                while True:
+                    chunk = await file.read(_STREAM_CHUNK_SIZE)
+                    if not chunk:
+                        break
+                    total_bytes += len(chunk)
+                    if max_size_bytes is not None and total_bytes > max_size_bytes:
+                        raise HTTPException(
+                            status_code=413,
+                            detail=f"File exceeds maximum size of {max_size_bytes} bytes",
+                        )
+                    hasher.update(chunk)
+                    out.write(chunk)
+        except HTTPException:
+            # Remove the partial file so we don't leave junk on disk.
+            try:
+                dst_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+            raise
 
         return {
             "source": "local",
             "file_key": object_key,
             "bucket": self._store.bucket,
             "filename": file.filename,
-            "run_id": run_id
+            "run_id": run_id,
+            "file_hash": hasher.hexdigest(),
+            "size_bytes": total_bytes,
         }
 
     async def get_file_stream(self, file_key: str):
