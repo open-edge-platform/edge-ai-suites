@@ -47,7 +47,7 @@ on:
         description: 'Labels for self-hosted or github hosted runners'
         required: false
         type: string
-        default: 'ubuntu-24.04'
+        default: ubuntu-24.04
   workflow_call:
     inputs:
       tag:
@@ -74,7 +74,7 @@ on:
         description: 'Labels for self-hosted or github hosted runners'
         required: false
         type: string
-        default: 'ubuntu-24.04'
+        default: ubuntu-24.04
 permissions: {}
 
 
