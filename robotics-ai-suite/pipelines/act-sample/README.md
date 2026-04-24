@@ -44,7 +44,7 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 ### Install Intel® Extension for PyTorch
 
 > [!IMPORTANT]
-> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/troubleshooting.html).
+> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/troubleshooting.html).
 
 Install the Intel® Extension for PyTorch with the following command:
 

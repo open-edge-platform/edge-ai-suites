@@ -4,7 +4,7 @@ Get Started
 Embodied Intelligence SDK provides necessary steps to install the packages and set up the environment.
 
 | Before getting installation, please check the prerequisites and make sure you have all the requirements.
-| If any problems are encountered during installation, please refer to the :doc:`Troubleshooting <troubleshooting>` section.
+| If any problems are encountered during installation, please refer to the :ref:`Troubleshooting <humanoid_embodied_troubleshooting>` section.
 
 Prerequisites
 ================
