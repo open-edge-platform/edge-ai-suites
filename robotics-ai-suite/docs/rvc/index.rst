@@ -70,7 +70,7 @@ Stationary Robot Vision & Control Resources
 
 - :doc:`Release Notes <releasenotes>`
 
-- :doc:`Troubleshooting </troubleshooting>`
+- :doc:`Troubleshooting <../troubleshooting>`
 
 .. toctree::
    :maxdepth: 2
