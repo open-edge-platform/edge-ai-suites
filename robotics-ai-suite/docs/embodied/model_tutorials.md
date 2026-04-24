@@ -20,7 +20,7 @@ The OpenVINO™ toolkit supports most TensorFlow and PyTorch models. The followi
 | FunASR        | Automatic speech recognition                                                                                                        | [FunASR Setup in LLM Robotics - sample pipeline](sample_pipelines/llm_robotics.md#set-up-the-fundamental-end-to-end-speech-recognition-funasr-toolkit)                                                       |
 
 > **Attention:**
-  When following these tutorials for model conversion, ensure that the OpenVINO toolkit version used for model conversion is the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version. See details in the [Troubleshooting](../troubleshooting.md#humanoid-imitation-learning) section.
+  When following these tutorials for model conversion, ensure that the OpenVINO toolkit version used for model conversion is the same as the runtime version used for inference. Otherwise, unexpected errors may occur, especially if the model is converted using a newer version and the runtime is an older version. See details in the [Troubleshooting](../troubleshooting.md#humanoid_embodied_troubleshooting) section.
 
 Please also find information for the models of imitation learning, grasp generation, simultaneous localization and mapping (SLAM) and bird's-eye view (BEV):
 
