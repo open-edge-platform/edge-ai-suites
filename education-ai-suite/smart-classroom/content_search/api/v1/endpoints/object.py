@@ -6,6 +6,7 @@
 import urllib.parse
 import mimetypes
 import json
+import logging
 from fastapi import APIRouter, Depends, HTTPException, File, UploadFile, BackgroundTasks, Form, Request
 from fastapi.responses import StreamingResponse, Response
 from sqlalchemy.orm import Session
@@ -19,6 +20,8 @@ from utils.search_service import search_service
 from utils.core_responses import resp_200, fail_task_not_found, fail_process_failed, fail_processing
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -279,3 +282,134 @@ async def delete_specific_task(
     except Exception as e:
         db.rollback()
         return resp_200(**fail_process_failed(str(e)))
+
+@router.get("/files/list")
+async def list_all_files(
+    page: int = 1,
+    page_size: int = 50,
+    file_type: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    try:
+        page_size = min(max(1, page_size), 200)
+        skip = (page - 1) * page_size
+
+        from utils.core_models import FileAsset
+        query = db.query(FileAsset)
+
+        if file_type:
+            query = query.filter(FileAsset.meta.contains(f'"type": "{file_type.lower()}"'))
+
+        total = query.count()
+
+        file_assets = query.order_by(FileAsset.created_at.desc()).offset(skip).limit(page_size).all()
+
+        id_maps = await search_service.get_id_maps()
+        visual_map = id_maps.get("visual", {})
+        document_map = id_maps.get("document", {})
+        video_summary_map = id_maps.get("video_summary", {})
+
+        files_info = []
+        for file_asset in file_assets:
+            file_path = file_asset.file_path
+
+            storage_exists = storage_service.file_exists(file_asset.file_path)
+
+            collections_info = []
+            total_vectors = 0
+            indexed = False
+
+            if file_path in visual_map:
+                vector_ids = visual_map[file_path]
+                collections_info.append({
+                    "name": "visual",
+                    "vector_count": len(vector_ids)
+                })
+                total_vectors += len(vector_ids)
+                indexed = True
+
+            if file_path in document_map:
+                vector_ids = document_map[file_path]
+                collections_info.append({
+                    "name": "documents",
+                    "vector_count": len(vector_ids)
+                })
+                total_vectors += len(vector_ids)
+                indexed = True
+
+            has_summary = file_path in video_summary_map
+            if has_summary:
+                summary_ids = video_summary_map[file_path]
+                collections_info.append({
+                    "name": "documents",
+                    "type": "summary",
+                    "vector_count": len(summary_ids)
+                })
+                total_vectors += len(summary_ids)
+
+            if storage_exists and indexed:
+                status = "synced"
+            elif storage_exists and not indexed:
+                status = "not_indexed"
+            elif not storage_exists and indexed:
+                status = "missing_file"
+            else:
+                status = "inconsistent"
+
+            meta = file_asset.meta
+            if isinstance(meta, str):
+                try:
+                    meta = json.loads(meta)
+                except:
+                    meta = {}
+
+            file_info = {
+                "file_hash": file_asset.file_hash,
+                "file_name": file_asset.file_name,
+                "file_path": file_asset.file_path,
+                "bucket_name": file_asset.bucket_name,
+                "content_type": file_asset.content_type,
+                "size_bytes": file_asset.size_bytes,
+                "meta": meta,
+                "created_at": file_asset.created_at.isoformat() if file_asset.created_at else None,
+                "storage": {
+                    "exists": storage_exists
+                },
+                "index": {
+                    "indexed": indexed,
+                    "vector_count": total_vectors,
+                    "collections": collections_info,
+                    "has_summary": has_summary
+                },
+                "status": status
+            }
+
+            files_info.append(file_info)
+
+        stats = {
+            "by_status": {},
+            "by_type": {}
+        }
+
+        for file_info in files_info:
+            status = file_info["status"]
+            stats["by_status"][status] = stats["by_status"].get(status, 0) + 1
+
+            file_type_from_meta = file_info.get("meta", {}).get("type", "unknown")
+            stats["by_type"][file_type_from_meta] = stats["by_type"].get(file_type_from_meta, 0) + 1
+
+        return resp_200(
+            data={
+                "total": total,
+                "page": page,
+                "page_size": page_size,
+                "total_pages": (total + page_size - 1) // page_size,
+                "files": files_info,
+                "statistics": stats
+            },
+            message="Files retrieved successfully"
+        )
+
+    except Exception as e:
+        logger.error(f"Error listing files: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error listing files: {str(e)}")

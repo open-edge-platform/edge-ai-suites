@@ -93,6 +93,11 @@ class StorageService:
             "size_bytes": total_bytes,
         }
 
+    def get_file_disk_path(self, file_key: str):
+        if not self.is_available:
+            raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+        return self._store._object_path(file_key)
+
     async def get_file_stream(self, file_key: str):
         if not self.is_available:
             raise RuntimeError(f"Storage Service unavailable: {self._error_msg}")
@@ -145,5 +150,31 @@ class StorageService:
         except Exception as e:
             logger.error(f"Failed to delete file {file_key}: {str(e)}")
             raise e
+
+    def list_all_files(self) -> list[str]:
+        """List all files in LocalStorage across all buckets"""
+        if not self.is_available:
+            logger.warning(f"Storage Service is unavailable: {self._error_msg}")
+            return []
+
+        try:
+            all_files = []
+            # List all buckets
+            buckets = self._store.list_buckets()
+
+            for bucket in buckets:
+                # Create a store instance for this bucket
+                from providers.local_storage.store import LocalStore
+                store = LocalStore(self._store._data_dir, bucket)
+
+                # List all files in this bucket (recursive)
+                for object_name in store.list_object_names("", recursive=True):
+                    all_files.append(object_name)
+
+            logger.info(f"Found {len(all_files)} files in LocalStorage across {len(buckets)} bucket(s)")
+            return all_files
+        except Exception as e:
+            logger.error(f"Error listing all files: {str(e)}")
+            return []
 
 storage_service = StorageService()
