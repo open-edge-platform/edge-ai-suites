@@ -21,23 +21,18 @@ on:
         type: string
         default: 'yes'
       tests:
-        description: 'Which tests to run'
-        type: choice
-        options:
-        - all-tests
-        - timeseries-all
-        - multimodal-all
-        - test_docker_deployment_stability
-        - test_docker_deployment_weld_anomaly
-        - test_docker_deployment_wind_turbine
-        - test_docker_helm_deployment_security
-        - test_docker_influxdb_retention
-        - test_helm_deployment_weld_anomaly
-        - test_helm_deployment_wind_turbine
-        - test_helm_influxdb_retention
-        - test_docker_deployment_multimodal
-        - test_helm_deployment_multimodal
-        default: all-tests
+        description: >
+          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
+          or a comma-separated list of file names or pytest node IDs for individual tests.
+          File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
+          test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
+          test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
+          test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
+          test_docker_deployment_multimodal, test_helm_deployment_multimodal.
+          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification
+        required: false
+        type: string
+        default: 'all-tests'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
@@ -61,7 +56,7 @@ on:
         type: string
         default: 'yes'
       tests:
-        description: 'Which tests to run (all-tests, timeseries-all, multimodal-all, or specific test file name)'
+        description: 'Which tests to run (all-tests, timeseries-all, multimodal-all, comma-separated file names, or pytest node IDs e.g. test_file::test_func)'
         required: false
         type: string
         default: 'all-tests'
@@ -186,8 +181,36 @@ jobs:
             test_helm_deployment_wind_turbine test_helm_influxdb_retention"
 
           # Skip if only multimodal tests are selected
-          if [[ "$TESTS" == "multimodal-all" || "$TESTS" == "test_docker_deployment_multimodal" || "$TESTS" == "test_helm_deployment_multimodal" ]]; then
-            echo "Skipping time-series tests (only multimodal tests selected)"
+          # Parse comma-separated input, trim whitespace from each entry
+          IFS=',' read -ra SELECTED <<< "$TESTS"
+          SELECTED_TESTS=()
+          for t in "${SELECTED[@]}"; do
+            t="$(echo "$t" | xargs)"
+            [[ -n "$t" ]] && SELECTED_TESTS+=("$t")
+          done
+
+          # Determine which timeseries test files to run
+          # Supports file names (test_foo), file names with .py, and node IDs (test_foo::test_bar)
+          TS_TEST_FILES=()
+          RUN_ALL_TS=false
+          for t in "${SELECTED_TESTS[@]}"; do
+            if [[ "$t" == "all-tests" || "$t" == "timeseries-all" ]]; then
+              RUN_ALL_TS=true; break
+            fi
+            # Extract base file name (strip .py suffix and anything after ::)
+            file_part="${t%%::*}"
+            file_part="${file_part%.py}"
+            if echo "$TIMESERIES_TESTS" | grep -qw "$file_part"; then
+              if [[ "$t" == *"::"* ]]; then
+                TS_TEST_FILES+=("${file_part}.py::${t#*::}")
+              else
+                TS_TEST_FILES+=("${file_part}.py")
+              fi
+            fi
+          done
+
+          if [[ "$RUN_ALL_TS" == "false" && "${#TS_TEST_FILES[@]}" -eq 0 ]]; then
+            echo "Skipping time-series tests (no time-series tests selected)"
             exit 0
           fi
 
@@ -209,22 +232,22 @@ jobs:
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
           echo "========== Collecting tests =========="
-          if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
-            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
-          else
+          if [[ "$RUN_ALL_TS" == "true" ]]; then
             pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}" 2>&1 || true
           fi
           echo "======================================"
           echo ""
 
-          # Run specific test file if selected, otherwise run all tests
+          # Run selected tests (all or specific files)
           set +e
-          if echo "$TIMESERIES_TESTS" | grep -qw "$TESTS"; then
-            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
-          else
+          if [[ "$RUN_ALL_TS" == "true" ]]; then
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
               --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}"
+          else
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}"
           fi
           PYTEST_RC=$?
           set -e
@@ -234,12 +257,15 @@ jobs:
           python3 - <<'PYEOF'
           import xml.etree.ElementTree as ET, os
           from collections import defaultdict
+          def fmt_time(s):
+              s = float(s); m = int(s) // 60; r = s - m * 60
+              return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
           xml_path = '/tmp/test_timeseries_report/junit.xml'
           if not os.path.exists(xml_path):
               print("No test results found (JUnit XML not generated)")
           else:
               root = ET.parse(xml_path).getroot()
-              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0})
               failures = []
               errors = []
               for tc in root.findall('.//testcase'):
@@ -250,6 +276,7 @@ jobs:
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
+                  files[fname]['time'] += float(tc.get('time', 0))
                   fail_el = tc.find('failure')
                   err_el = tc.find('error')
                   if fail_el is not None:
@@ -264,10 +291,10 @@ jobs:
                       files[fname]['skipped'] += 1
                   else:
                       files[fname]['passed'] += 1
-              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5}")
-              print('-' * 80)
+              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5} {'Time':>8}")
+              print('-' * 90)
               for fname, c in sorted(files.items()):
-                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5} {fmt_time(c['time']):>8}")
               if failures:
                   print(f"\n--- Failures ({len(failures)}) ---")
                   print('\n'.join(failures))
@@ -296,8 +323,36 @@ jobs:
           MULTIMODAL_TESTS="test_docker_deployment_multimodal test_helm_deployment_multimodal"
 
           # Skip if only timeseries tests are selected
-          if [[ "$TESTS" == "timeseries-all" ]] || echo "$TESTS" | grep -qw "test_docker_deployment_stability\|test_docker_deployment_weld_anomaly\|test_docker_deployment_wind_turbine\|test_docker_helm_deployment_security\|test_docker_influxdb_retention\|test_helm_deployment_weld_anomaly\|test_helm_deployment_wind_turbine\|test_helm_influxdb_retention"; then
-            echo "Skipping multimodal tests (only time-series tests selected)"
+          # Parse comma-separated input, trim whitespace from each entry
+          IFS=',' read -ra SELECTED <<< "$TESTS"
+          SELECTED_TESTS=()
+          for t in "${SELECTED[@]}"; do
+            t="$(echo "$t" | xargs)"
+            [[ -n "$t" ]] && SELECTED_TESTS+=("$t")
+          done
+
+          # Determine which multimodal test files to run
+          # Supports file names (test_foo), file names with .py, and node IDs (test_foo::test_bar)
+          MM_TEST_FILES=()
+          RUN_ALL_MM=false
+          for t in "${SELECTED_TESTS[@]}"; do
+            if [[ "$t" == "all-tests" || "$t" == "multimodal-all" ]]; then
+              RUN_ALL_MM=true; break
+            fi
+            # Extract base file name (strip .py suffix and anything after ::)
+            file_part="${t%%::*}"
+            file_part="${file_part%.py}"
+            if echo "$MULTIMODAL_TESTS" | grep -qw "$file_part"; then
+              if [[ "$t" == *"::"* ]]; then
+                MM_TEST_FILES+=("${file_part}.py::${t#*::}")
+              else
+                MM_TEST_FILES+=("${file_part}.py")
+              fi
+            fi
+          done
+
+          if [[ "$RUN_ALL_MM" == "false" && "${#MM_TEST_FILES[@]}" -eq 0 ]]; then
+            echo "Skipping multimodal tests (no multimodal tests selected)"
             exit 0
           fi
 
@@ -319,22 +374,22 @@ jobs:
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
           echo "========== Collecting tests =========="
-          if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
-            pytest --collect-only -q "${MARKER_ARGS[@]}" "${TESTS}.py" 2>&1 || true
-          else
+          if [[ "$RUN_ALL_MM" == "true" ]]; then
             pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+          else
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${MM_TEST_FILES[@]}" 2>&1 || true
           fi
           echo "======================================"
           echo ""
 
-          # Run specific test file if selected, otherwise run all tests
+          # Run selected tests (all or specific files)
           set +e
-          if echo "$MULTIMODAL_TESTS" | grep -qw "$TESTS"; then
-            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
-              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${TESTS}.py"
-          else
+          if [[ "$RUN_ALL_MM" == "true" ]]; then
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
               --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}"
+          else
+            pytest -vv --tb=short --self-contained-html --html=/tmp/test_multimodal_report/report.html \
+              --junitxml=/tmp/test_multimodal_report/junit.xml "${MARKER_ARGS[@]}" "${MM_TEST_FILES[@]}"
           fi
           PYTEST_RC=$?
           set -e
@@ -344,12 +399,15 @@ jobs:
           python3 - <<'PYEOF'
           import xml.etree.ElementTree as ET, os
           from collections import defaultdict
+          def fmt_time(s):
+              s = float(s); m = int(s) // 60; r = s - m * 60
+              return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
           xml_path = '/tmp/test_multimodal_report/junit.xml'
           if not os.path.exists(xml_path):
               print("No test results found (JUnit XML not generated)")
           else:
               root = ET.parse(xml_path).getroot()
-              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0})
               failures = []
               errors = []
               for tc in root.findall('.//testcase'):
@@ -360,6 +418,7 @@ jobs:
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
+                  files[fname]['time'] += float(tc.get('time', 0))
                   fail_el = tc.find('failure')
                   err_el = tc.find('error')
                   if fail_el is not None:
@@ -374,10 +433,10 @@ jobs:
                       files[fname]['skipped'] += 1
                   else:
                       files[fname]['passed'] += 1
-              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5}")
-              print('-' * 80)
+              print(f"\n{'Test File':<55} {'Run':>5} {'Pass':>5} {'Fail':>5} {'Skip':>5} {'Err':>5} {'Time':>8}")
+              print('-' * 90)
               for fname, c in sorted(files.items()):
-                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5}")
+                  print(f"{fname:<55} {c['total']:>5} {c['passed']:>5} {c['failed']:>5} {c['skipped']:>5} {c['errors']:>5} {fmt_time(c['time']):>8}")
               if failures:
                   print(f"\n--- Failures ({len(failures)}) ---")
                   print('\n'.join(failures))
@@ -416,12 +475,16 @@ jobs:
           ts_exit = os.environ.get('TIMESERIES_EXIT_CODE', '')
           mm_exit = os.environ.get('MULTIMODAL_EXIT_CODE', '')
 
+          def fmt_time(s):
+              s = float(s); m = int(s) // 60; r = s - m * 60
+              return f"{m}m{r:.0f}s" if m else f"{s:.1f}s"
+
           def parse_junit(xml_path):
               if not os.path.exists(xml_path):
                   return None, []
               from collections import defaultdict
               root = ET.parse(xml_path).getroot()
-              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0})
+              files = defaultdict(lambda: {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0})
               issue_details = []
               for tc in root.findall('.//testcase'):
                   parts = tc.get('classname', '').split('.')
@@ -433,6 +496,7 @@ jobs:
                       fname = raw_name.replace('.py', '') if raw_name else 'unknown'
                   test_id = f"{fname}::{tc.get('name', 'unknown')}"
                   files[fname]['total'] += 1
+                  files[fname]['time'] += float(tc.get('time', 0))
                   fail_el = tc.find('failure')
                   err_el = tc.find('error')
                   if fail_el is not None:
@@ -461,7 +525,7 @@ jobs:
 
               return [{'name': n, **c} for n, c in sorted(files.items())], issue_details
 
-          overall = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
+          overall = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0}
 
           with open(summary_path, 'a') as out:
               out.write('## \U0001f4ca Test Execution Summary\n\n')
@@ -487,14 +551,14 @@ jobs:
                       out.write('\u2705 **Status:** PASSED\n\n')
                   else:
                       out.write(f'\u274c **Status:** FAILED (Exit Code: {exit_code or "?"})\n\n')
-                  out.write('| Test File | Total | Pass | Fail | Skip | Err |\n')
-                  out.write('|-----------|------:|-----:|-----:|-----:|----:|\n')
-                  sec = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0}
+                  out.write('| Test File | Total | Pass | Fail | Skip | Err | Time |\n')
+                  out.write('|-----------|------:|-----:|-----:|-----:|----:|-----:|\n')
+                  sec = {'total': 0, 'passed': 0, 'failed': 0, 'skipped': 0, 'errors': 0, 'time': 0.0}
                   for r in results:
-                      out.write(f"| `{r['name']}` | {r['total']} | {r['passed']} | {r['failed']} | {r['skipped']} | {r['errors']} |\n")
+                      out.write(f"| `{r['name']}` | {r['total']} | {r['passed']} | {r['failed']} | {r['skipped']} | {r['errors']} | {fmt_time(r['time'])} |\n")
                       for k in sec:
                           sec[k] += r[k]
-                  out.write(f"| **Total** | **{sec['total']}** | **{sec['passed']}** | **{sec['failed']}** | **{sec['skipped']}** | **{sec['errors']}** |\n\n")
+                  out.write(f"| **Total** | **{sec['total']}** | **{sec['passed']}** | **{sec['failed']}** | **{sec['skipped']}** | **{sec['errors']}** | **{fmt_time(sec['time'])}** |\n\n")
                   if issues:
                       out.write('<details><summary>\u274c Failure/Error Details</summary>\n\n')
                       out.write('| Status | Test | Message |\n')
@@ -513,7 +577,8 @@ jobs:
               out.write(f"| \u2705 Passed | {overall['passed']} |\n")
               out.write(f"| \u274c Failed | {overall['failed']} |\n")
               out.write(f"| \u23ed\ufe0f Skipped | {overall['skipped']} |\n")
-              out.write(f"| \u26a0\ufe0f Errors | {overall['errors']} |\n\n")
+              out.write(f"| \u26a0\ufe0f Errors | {overall['errors']} |\n")
+              out.write(f"| \u23f1\ufe0f Total Duration | {fmt_time(overall['time'])} |\n\n")
 
               if overall['total'] > 0:
                   rate = (overall['passed'] * 100) // overall['total']
