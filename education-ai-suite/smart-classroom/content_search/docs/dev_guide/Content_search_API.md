@@ -765,8 +765,8 @@ Response (200 OK):
 | :------ | :------------------- | :------------------------ |
 | **Input** | file_hash (from `/files/list`) | task_id (from task APIs) |
 | **Use Case** | Delete files directly | Delete by task workflow |
-| **Orphan Files** | ✅ Can delete | ❌ Requires task record |
-| **Task Check** | ❌ No status check | ✅ Checks if processing |
+| **Orphan Files** | √ Can delete | × Requires task record |
+| **Task Check** | × No status check | √ Checks if processing |
 
 **Workflow Example:**
 
