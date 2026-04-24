@@ -77,6 +77,9 @@ on:
         default: ubuntu-24.04
 permissions: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   functional-tests:
@@ -277,14 +280,14 @@ jobs:
           exit $PYTEST_RC
 
       - name: Upload Time Series Sample Apps HTML test report to GitHub
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: timeseries-test-report
           path: /tmp/test_timeseries_report
 
       - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           TESTS: ${{ inputs.tests || 'all-tests' }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
@@ -387,14 +390,14 @@ jobs:
           exit $PYTEST_RC
 
       - name: Upload Multimodal Weld Defect Detection Sample Apps HTML test report to GitHub
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: multimodal-test-report
           path: /tmp/test_multimodal_report
 
       - name: Generate Test Summary
-        if: always()
+        if: ${{ !cancelled() }}
         env:
           TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
