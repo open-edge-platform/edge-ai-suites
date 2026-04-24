@@ -70,7 +70,7 @@ Stationary Robot Vision & Control Resources
 
 - :doc:`Release Notes <releasenotes>`
 
-- :ref:`Troubleshootings <rvc_troubleshooting>`
+- :doc:`Troubleshooting </troubleshooting>`
 
 - `Notices and Disclaimers <https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/legal.html>`__
 
