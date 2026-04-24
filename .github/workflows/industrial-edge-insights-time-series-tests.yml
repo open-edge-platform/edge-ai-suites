@@ -101,7 +101,7 @@ jobs:
           echo "tests           : $TESTS"
           echo "skip_long_tests : $SKIP_LONG_TESTS"
 
-      - name: Checkout current repository
+      - name: Checkout edge-ai-suites repository
         id: checkout_current_tag
         continue-on-error: true
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -110,7 +110,7 @@ jobs:
           ref: ${{ inputs.tag || 'main' }}
           persist-credentials: false
 
-      - name: Checkout current repository - fallback to main
+      - name: Checkout edge-ai-suites repository - fallback to main
         if: steps.checkout_current_tag.outcome == 'failure'
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
