@@ -27,7 +27,7 @@ As seen in the following architecture diagram, the sample app at a high-level co
 
 ### Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the weld anomaly detection use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
+Let's discuss how this architecture translates to data flow in the `Weld Defect Detection` use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
 
 #### **Data Sources**
 
