@@ -111,7 +111,6 @@ class SearchService:
                 return {"error": str(e)}
 
     async def get_id_maps(self) -> dict:
-        """Get all indexed file paths from the indexer service."""
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.get(self.id_maps_url, timeout=10.0)

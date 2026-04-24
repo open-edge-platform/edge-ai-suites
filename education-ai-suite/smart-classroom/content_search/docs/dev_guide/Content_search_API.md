@@ -689,6 +689,108 @@ Response (200 OK):
 - **Bulk Operations**: Get file lists for batch cleanup or re-indexing
 - **Debugging**: Investigate storage/index inconsistencies
 
+#### Delete File by Hash
+Deletes a file and all its associated data using the file_hash obtained from `/api/v1/object/files/list`.
+
+* URL: /api/v1/object/files/{file_hash}
+* Method: DELETE
+* Pattern: SYNC
+* Parameters:
+
+| Parameter | Type | Required | Default | Description |
+| :-------- | :--- | :------- | :------ | :---------- |
+| `file_hash` | `string` | Yes | - | SHA-256 hash of the file (from `/files/list` response) |
+| `force` | `boolean` | No | `false` | If `true`, continue deletion even if some steps fail |
+
+Request:
+```bash
+# Example 1: Standard deletion
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb'
+
+# Example 2: Force deletion (ignore errors)
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb?force=true'
+```
+
+Response (200 OK):
+```json
+{
+    "code": 20000,
+    "data": {
+        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+        "file_name": "classroom_8.mp4",
+        "file_path": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4",
+        "bucket_name": "content-search",
+        "storage_deleted": true,
+        "index_deleted": true,
+        "metadata_deleted": true,
+        "tasks_deleted": 2,
+        "errors": []
+    },
+    "message": "File and all associated data deleted successfully",
+    "timestamp": 1776200456
+}
+```
+
+**Deletion Process (4 Phases):**
+
+1. **Phase 1: LocalStorage** - Deletes the physical file from disk
+2. **Phase 2: ChromaDB** - Removes all vector indices for this file
+3. **Phase 3: SQLite file_assets** - Deletes metadata record
+4. **Phase 4: SQLite edu_ai_tasks** - Removes associated task records
+
+**Response Fields:**
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `storage_deleted` | `boolean` | Whether the physical file was deleted from LocalStorage |
+| `index_deleted` | `boolean` | Whether vector indices were deleted from ChromaDB |
+| `metadata_deleted` | `boolean` | Whether the file_assets record was deleted |
+| `tasks_deleted` | `integer` | Number of associated tasks deleted |
+| `errors` | `array` | List of errors encountered (empty if all successful) |
+
+**Error Handling:**
+
+- **force=false** (default): Stops at first error and returns HTTP 500
+- **force=true**: Continues deletion even if some steps fail, reports errors in response
+
+**Use Cases:**
+
+- **Direct file management**: Delete files directly from the files list UI
+- **Cleanup orphaned files**: Remove files that are no longer needed
+- **Manual intervention**: Delete specific files after reviewing `/files/list`
+
+**Comparison with /cleanup-task/{task_id}:**
+
+| Feature | `/files/{file_hash}` | `/cleanup-task/{task_id}` |
+| :------ | :------------------- | :------------------------ |
+| **Input** | file_hash (from `/files/list`) | task_id (from task APIs) |
+| **Use Case** | Delete files directly | Delete by task workflow |
+| **Orphan Files** | ✅ Can delete | ❌ Requires task record |
+| **Task Check** | ❌ No status check | ✅ Checks if processing |
+
+**Workflow Example:**
+
+```bash
+# Step 1: List all files
+curl 'http://127.0.0.1:9011/api/v1/object/files/list'
+
+# Step 2: Identify file to delete (copy file_hash)
+# Example: "file_hash": "080c00cf05bc..."
+
+# Step 3: Delete the file
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc...'
+
+# Step 4: Verify deletion
+curl 'http://127.0.0.1:9011/api/v1/object/files/list'
+# File should no longer appear in the list
+```
+
+**Security Notes:**
+- This operation is **irreversible** - deleted files cannot be recovered
+- Deletes data from all three storage layers simultaneously
+- Consider backing up important files before deletion
+- Use `force=true` cautiously as it may leave partial data
+
 #### List Tags
 Returns all unique tags that have been assigned to uploaded files. Useful for populating filter dropdowns in the UI.
 

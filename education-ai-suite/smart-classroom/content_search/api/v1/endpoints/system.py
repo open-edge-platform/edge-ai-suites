@@ -57,23 +57,9 @@ async def reconcile_storage_data(
     report_detail: str = "summary",
     db: Session = Depends(get_db)
 ):
-    """
-    Complete bidirectional consistency check and cleanup across SQLite, LocalStorage, and ChromaDB.
-
-    Parameters:
-    - dry_run: If True, only check without deleting (default: True for safety)
-    - cleanup_sqlite_orphans: Clean SQLite records when both storage and index are missing
-    - cleanup_storage_orphans: Clean LocalStorage files when SQLite has no record
-    - cleanup_index_orphans: Clean ChromaDB indices when SQLite has no record
-    - auto_reindex: Automatically trigger reindexing for files without indices
-    - report_detail: "summary" or "detailed" (shows file lists)
-
-    Returns comprehensive report of inconsistencies found and actions taken.
-    """
     import logging
     logger = logging.getLogger(__name__)
 
-    # Initialize counters and collectors
     stats = {
         "sqlite_total": 0,
         "storage_total": 0,
@@ -94,38 +80,33 @@ async def reconcile_storage_data(
         "reindex_triggered": [],
     }
 
-    # ============ Phase 1: SQLite → Storage/Index Check ============
-    logger.info("Phase 1: Checking SQLite records against physical storage...")
+    logger.info("Phase 1: Checking SQLite records against physical storage")
 
     sqlite_records = db.execute(
         text("SELECT file_hash, file_name, file_path, bucket_name FROM file_assets")
     ).fetchall()
     stats["sqlite_total"] = len(sqlite_records)
 
-    sqlite_paths = set()  # Track all valid SQLite paths
+    sqlite_paths = set()
 
     for row in sqlite_records:
         f_hash, f_name, f_path, f_bucket = row
         sqlite_paths.add(f_path)
 
-        # Check existence in both storage layers
         local_exists = storage_service.file_exists(f_path)
         chroma_exists = await search_service.check_file_exists(f_path, bucket_name=f_bucket)
 
-        # Classify the state
         if local_exists and chroma_exists:
             stats["synced"] += 1
         elif local_exists and not chroma_exists:
             stats["missing_index"] += 1
             if auto_reindex and not dry_run:
-                # Trigger reindexing (would need to implement)
                 actions["reindex_triggered"].append({
                     "file_path": f_path,
                     "file_name": f_name
                 })
         elif not local_exists and chroma_exists:
             stats["missing_storage"] += 1
-            # Index exists but file is gone - orphaned index in SQLite context
             if cleanup_sqlite_orphans and not dry_run:
                 await search_service.delete_file_index(f_path, bucket_name=f_bucket)
                 db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash})
@@ -136,7 +117,7 @@ async def reconcile_storage_data(
                     "reason": "file_missing_but_index_exists"
                 })
                 stats["sqlite_orphans"] += 1
-        else:  # Both missing
+        else:
             stats["missing_both"] += 1
             if cleanup_sqlite_orphans and not dry_run:
                 db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash})
@@ -151,15 +132,13 @@ async def reconcile_storage_data(
     if not dry_run and stats["sqlite_orphans"] > 0:
         db.commit()
 
-    # ============ Phase 2: LocalStorage → SQLite Check ============
-    logger.info("Phase 2: Checking LocalStorage for orphaned files...")
+    logger.info("Phase 2: Checking LocalStorage for orphaned files")
 
     all_storage_files = storage_service.list_all_files()
     stats["storage_total"] = len(all_storage_files)
 
     for file_path in all_storage_files:
         if file_path not in sqlite_paths:
-            # Orphaned file: exists in storage but not in SQLite
             if cleanup_storage_orphans and not dry_run:
                 storage_service.delete_file(file_path, missing_ok=True)
                 actions["storage_deleted"].append({
@@ -168,10 +147,8 @@ async def reconcile_storage_data(
                 })
             stats["storage_orphans"] += 1
 
-    # ============ Phase 3: ChromaDB → SQLite Check ============
-    logger.info("Phase 3: Checking ChromaDB for orphaned indices...")
+    logger.info("Phase 3: Checking ChromaDB for orphaned indices")
 
-    # Get all indexed paths from ChromaDB
     id_maps = await search_service.get_id_maps()
     all_indexed_paths = set()
     all_indexed_paths.update(id_maps.get("visual", {}).keys())
@@ -182,9 +159,7 @@ async def reconcile_storage_data(
 
     for indexed_path in all_indexed_paths:
         if indexed_path not in sqlite_paths:
-            # Orphaned index: exists in ChromaDB but not in SQLite
             if cleanup_index_orphans and not dry_run:
-                # Extract bucket name from path (assumes format like "local://bucket/path")
                 bucket = None
                 if indexed_path.startswith("local://"):
                     parts = indexed_path.replace("local://", "").split("/", 1)
@@ -198,7 +173,6 @@ async def reconcile_storage_data(
                 })
             stats["index_orphans"] += 1
 
-    # ============ Build Response ============
     response = {
         "status": "ok",
         "mode": "dry_run" if dry_run else "executed",
@@ -224,41 +198,39 @@ async def reconcile_storage_data(
         }
     }
 
-    # Add detailed lists if requested
     if report_detail == "detailed":
         response["details"] = {
-            "sqlite_deleted": actions["sqlite_deleted"][:50],  # Limit to first 50
+            "sqlite_deleted": actions["sqlite_deleted"][:50],
             "storage_deleted": actions["storage_deleted"][:50],
             "index_deleted": actions["index_deleted"][:50],
             "reindex_triggered": actions["reindex_triggered"][:50],
             "note": "Lists truncated to first 50 items for each category"
         }
 
-    # Add recommendations if in dry_run mode
     if dry_run:
         recommendations = []
         if stats["sqlite_orphans"] > 0:
             recommendations.append(
-                f"Found {stats['sqlite_orphans']} SQLite orphan(s). "
+                f"Found {stats['sqlite_orphans']} SQLite orphans. "
                 f"Run with dry_run=false and cleanup_sqlite_orphans=true to clean them."
             )
         if stats["storage_orphans"] > 0:
             recommendations.append(
-                f"Found {stats['storage_orphans']} orphaned file(s) in LocalStorage. "
+                f"Found {stats['storage_orphans']} orphaned files in LocalStorage. "
                 f"Run with dry_run=false and cleanup_storage_orphans=true to delete them."
             )
         if stats["index_orphans"] > 0:
             recommendations.append(
-                f"Found {stats['index_orphans']} orphaned index/indices in ChromaDB. "
+                f"Found {stats['index_orphans']} orphaned indices in ChromaDB. "
                 f"Run with dry_run=false and cleanup_index_orphans=true to delete them."
             )
         if stats["missing_index"] > 0:
             recommendations.append(
-                f"Found {stats['missing_index']} file(s) without indices. "
+                f"Found {stats['missing_index']} files without indices. "
                 f"Consider running with auto_reindex=true to reindex them."
             )
 
-        response["recommendations"] = recommendations if recommendations else ["No inconsistencies found. System is healthy!"]
+        response["recommendations"] = recommendations if recommendations else ["No inconsistencies found"]
 
     logger.info(f"Reconciliation complete: {json.dumps(response['summary'], indent=2)}")
     return response

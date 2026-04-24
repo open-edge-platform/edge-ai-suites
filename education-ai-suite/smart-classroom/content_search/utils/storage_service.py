@@ -152,26 +152,22 @@ class StorageService:
             raise e
 
     def list_all_files(self) -> list[str]:
-        """List all files in LocalStorage across all buckets"""
         if not self.is_available:
             logger.warning(f"Storage Service is unavailable: {self._error_msg}")
             return []
 
         try:
             all_files = []
-            # List all buckets
             buckets = self._store.list_buckets()
 
             for bucket in buckets:
-                # Create a store instance for this bucket
                 from providers.local_storage.store import LocalStore
                 store = LocalStore(self._store._data_dir, bucket)
 
-                # List all files in this bucket (recursive)
                 for object_name in store.list_object_names("", recursive=True):
                     all_files.append(object_name)
 
-            logger.info(f"Found {len(all_files)} files in LocalStorage across {len(buckets)} bucket(s)")
+            logger.info(f"Found {len(all_files)} files in LocalStorage across {len(buckets)} buckets")
             return all_files
         except Exception as e:
             logger.error(f"Error listing all files: {str(e)}")
