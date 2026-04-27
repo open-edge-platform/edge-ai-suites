@@ -79,7 +79,7 @@ concurrency:
 jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
-    runs-on: ${{ inputs.runner_label }}
+    runs-on: ${{ inputs.runner_label || 'ubuntu-24.04' }}
     permissions:
       contents: read
       packages: read
