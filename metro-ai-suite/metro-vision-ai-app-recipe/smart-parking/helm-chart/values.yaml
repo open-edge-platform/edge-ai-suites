@@ -34,6 +34,7 @@ node_red:
 nginx:
   image: nginx
   imageTag: 1.27-alpine
+timezone: ""  # Leave empty; set dynamically at install time: --set timezone=$(cat /etc/timezone)
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
