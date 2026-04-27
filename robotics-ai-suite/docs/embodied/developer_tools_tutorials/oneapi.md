@@ -12,7 +12,7 @@ The Intel® oneAPI™ Base Toolkit (Base Kit) is a core set of tools and librari
 
 It includes:
 
-| Component | Description |
+| | |
 |---|---|
 | Intel® oneAPI DPC++/C++ Compiler | Compile and optimize C++ and SYCL code for CPU, GPU, and FPGA target architectures. |
 | Intel® DPC++ Compatibility Tool | Migrate legacy CUDA code to open multiarchitecture SYCL code with this assistant. |
@@ -55,7 +55,7 @@ High-performance computing (HPC) is at the core of AI, machine learning, and dee
 
 It includes:
 
-| Component | Description |
+| | |
 |---|---|
 | Intel® Fortran Compiler | Compile and optimize standard Fortran code for CPU and GPU architectures. |
 | Intel® MPI Library | Deliver flexible, efficient, scalable cluster messaging on CPU and GPU architectures and a variety of network fabrics. |
