@@ -22,7 +22,6 @@ hide_directive-->
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
-:hidden:
 
 installation_setup/installation/rt_linux
 installation_setup/installation/gpu_firmware
