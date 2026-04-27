@@ -10,7 +10,6 @@ This page summarizes the recommended environment for running Live Video Alert Ag
 ## Operating Systems used for validation
 
 - Ubuntu: Refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu 24.04 or Ubuntu 24.10 depending on the GPU used.
-- Validation on latest version of EMT-S and EMT-D is also done periodically though there could be gaps in validation regression. Raise an issue if any defects are observed.
 
 ## Minimum Requirements
 
