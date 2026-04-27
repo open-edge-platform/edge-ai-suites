@@ -11,7 +11,7 @@ Also, IPEX-LLM provides seamless integration with llama.cpp, Ollama, HuggingFace
 
 For robotics software developers, IPEX-LLM offers the opportunity to empower the development of new applications that combine robotics with LLMs, helping LLMs achieve better performance on Intel® platforms.
 
-For details, see: https://github.com/intel/ipex-llm/.
+For details, see: [ipex-llm](https://github.com/intel/ipex-llm/).
 
 Before installing Intel® LLM Library for PyTorch, ensure to complete the environment setup in [Get Started](../installation_setup) and have Intel® oneAPI™ Base Toolkit installed.
 Then, install Intel® LLM Library for PyTorch in your Python environment:
