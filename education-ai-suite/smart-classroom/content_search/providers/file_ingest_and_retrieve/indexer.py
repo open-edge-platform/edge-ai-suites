@@ -45,15 +45,24 @@ class Indexer:
 
         self.document_embedding_model = document_embedding_model or get_document_embedding_model()
 
-        self.document_parser = DocumentParser(
-            chunk_size=250,
-            chunk_overlap=50,
-            # embed_model=self.document_embedding_model,
-            # semantic_breakpoint_percentile=95,
-            # semantic_min_chunk_size=150,
-            extract_images=False,  # Don't extract images for now
-            use_hi_res_strategy=False  # Use fast strategy for better performance
+        chunk_method = os.getenv("DOC_CHUNK_METHOD", "fixed").lower()
+        chunk_size = int(os.getenv("DOC_CHUNK_SIZE", "250"))
+        chunk_overlap = int(os.getenv("DOC_CHUNK_OVERLAP", "50"))
+
+        parser_kwargs = dict(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            extract_images=False,
+            use_hi_res_strategy=False,
         )
+
+        if chunk_method == "semantic":
+            parser_kwargs["embed_model"] = self.document_embedding_model
+            parser_kwargs["semantic_breakpoint_percentile"] = int(os.getenv("DOC_SEMANTIC_BREAKPOINT_PERCENTILE", "85"))
+            parser_kwargs["semantic_buffer_size"] = int(os.getenv("DOC_SEMANTIC_BUFFER_SIZE", "2"))
+            parser_kwargs["semantic_min_chunk_size"] = int(os.getenv("DOC_SEMANTIC_MIN_CHUNK_SIZE", "250"))
+
+        self.document_parser = DocumentParser(**parser_kwargs)
         logger.info("Document parser initialized successfully.")
         self.document_id_map = {}
         self.document_db_inited = False
