@@ -17,8 +17,7 @@ This page summarizes the recommended environment for running Live Video Captioni
 | **Component**       | **Minimum**                     | **Recommended**                                  |
 |---------------------|---------------------------------|--------------------------------------------------|
 | **Memory**          | 16 GB                           | 32 GB                                            |
-| **Disk Space**      | 64 GB SSD                      | 128 GB SSD                                       |
-|
+| **Disk Space**      | 64 GB SSD                      | 128 GB SSD                                        |
 
 ## Software Requirements
 
