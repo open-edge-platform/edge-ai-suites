@@ -10,7 +10,6 @@ If any problems are encountered during installation, please refer to the [Troubl
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
-:hidden:
 
 installation_setup/prerequisites/system_requirement
 installation_setup/prerequisites/os_setup

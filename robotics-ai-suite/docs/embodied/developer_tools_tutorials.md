@@ -21,7 +21,6 @@ Some of the models used in Embodied Intelligence solutions are enabled on Intel 
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
-:hidden:
 
 developer_tools_tutorials/openvino
 developer_tools_tutorials/ipex
