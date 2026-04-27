@@ -1,6 +1,6 @@
-(target-system)=
-
 # System Requirements
+
+(target-system)=
 
 This section outlines the system requirements for the Embodied Intelligence SDK, detailing the necessary hardware and software components to ensure functionality, compatibility and optimal performance.
 
