@@ -1,0 +1,376 @@
+/* ─── Q&A Section ─────────────────────────────────────────── */
+
+/* Content is hosted inside .cs-search-card — no own card wrapper needed */
+.cs-qa-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Disabled state ── */
+
+.cs-qa-disabled {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  text-align: center;
+}
+
+.cs-qa-disabled-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+}
+
+.cs-qa-disabled-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #6A6D75;
+}
+
+.cs-qa-disabled-hint {
+  font-size: 12px;
+  color: #9A9DA5;
+}
+
+/* ── Tag filter row ── */
+
+.cs-qa-filter-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.cs-qa-filter-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+.cs-qa-tag-filter {
+  position: relative;
+  flex: 1;
+  min-width: 120px;
+}
+
+.cs-qa-tag-trigger {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #f9f9f9;
+  cursor: pointer;
+  font-size: 13px;
+  color: #555;
+  transition: border-color 0.2s;
+}
+
+.cs-qa-tag-trigger:hover {
+  border-color: #1976d2;
+}
+
+.cs-qa-tag-chevron {
+  margin-left: auto;
+  color: #888;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.cs-qa-tag-chevron.open {
+  transform: rotate(180deg);
+}
+
+.cs-qa-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #e3f0ff;
+  color: #1565c0;
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+.cs-qa-tag-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #1565c0;
+  padding: 0;
+  line-height: 1;
+  font-size: 14px;
+  opacity: 0.7;
+}
+.cs-qa-tag-chip-remove:hover {
+  opacity: 1;
+}
+
+.cs-qa-tag-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.cs-qa-tag-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #333;
+  transition: background 0.15s;
+}
+
+.cs-qa-tag-option:hover {
+  background: #f0f7ff;
+}
+
+.cs-qa-tag-option input[type="checkbox"] {
+  accent-color: #1976d2;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ── Message history ── */
+
+.cs-qa-messages {
+  flex: 1;
+  min-height: 200px;
+  max-height: 420px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-right: 4px;
+
+  /* Subtle scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+}
+
+.cs-qa-messages::-webkit-scrollbar {
+  width: 4px;
+}
+.cs-qa-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cs-qa-messages::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.cs-qa-empty-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: #aaa;
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  padding: 0 16px;
+}
+
+/* ── Individual message ── */
+
+.cs-qa-message {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cs-qa-message--user {
+  align-items: flex-end;
+}
+
+.cs-qa-message--assistant {
+  align-items: flex-start;
+}
+
+.cs-qa-bubble {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cs-qa-message--user .cs-qa-bubble {
+  background: #1976d2;
+  color: white;
+  border-bottom-right-radius: 3px;
+}
+
+.cs-qa-message--assistant .cs-qa-bubble {
+  background: #f2f3f5;
+  color: #2B2C30;
+  border-bottom-left-radius: 3px;
+}
+
+.cs-qa-message--error .cs-qa-bubble {
+  background: #fff0f0;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+/* ── Typing indicator ── */
+
+.cs-qa-bubble--typing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 16px;
+  background: #f2f3f5;
+  border-radius: 12px;
+  border-bottom-left-radius: 3px;
+  width: fit-content;
+}
+
+.cs-qa-dot {
+  width: 7px;
+  height: 7px;
+  background: #888;
+  border-radius: 50%;
+  animation: cs-qa-bounce 1.2s infinite;
+}
+
+.cs-qa-dot:nth-child(1) { animation-delay: 0s; }
+.cs-qa-dot:nth-child(2) { animation-delay: 0.2s; }
+.cs-qa-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes cs-qa-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30%            { transform: translateY(-5px); opacity: 1; }
+}
+
+/* ── Sources ── */
+
+.cs-qa-sources {
+  max-width: 88%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.cs-qa-sources-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cs-qa-source-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cs-qa-source-chip {
+  display: inline-flex;
+  align-items: center;
+  background: #f0f7ff;
+  border: 1px solid #bbdefb;
+  color: #1565c0;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 11.5px;
+  white-space: nowrap;
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Input row ── */
+
+.cs-qa-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px 8px 8px 12px;
+  background: #f9f9f9;
+  transition: border-color 0.2s;
+}
+
+.cs-qa-input-row:focus-within {
+  border-color: #1976d2;
+  background: white;
+}
+
+.cs-qa-textarea {
+  flex: 1;
+  border: none;
+  resize: none;
+  background: transparent;
+  font-size: 13.5px;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #2B2C30;
+  outline: none;
+  min-height: 40px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.cs-qa-textarea::placeholder {
+  color: #aaa;
+}
+
+.cs-qa-send-btn {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #e0e0e0;
+  color: #999;
+  cursor: not-allowed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.cs-qa-send-btn--active {
+  background: #1976d2;
+  color: white;
+  cursor: pointer;
+}
+
+.cs-qa-send-btn--active:hover {
+  background: #1565c0;
+  transform: scale(1.05);
+}
+
+.cs-qa-input-hint {
+  font-size: 11px;
+  color: #b0b3bb;
+  margin-top: 4px;
+  text-align: right;
+}

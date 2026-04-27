@@ -3,12 +3,14 @@ import { useTranslation } from "react-i18next";
 import "../../assets/css/SearchSection.css";
 import { csSearch } from "../../services/api";
 import ResultSection, { type CsSearchResult } from "./ResultSection";
+import QASection from "./QASection";
 import warningIcon from "../../assets/images/warning-info.svg";
 import infoIcon from "../../assets/images/info-icon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
 import noSearchIcon from "../../assets/images/no-search-icon.svg";
 import { useAppSelector } from "../../redux/hooks";
 
+type SectionTab = "search" | "qa";
 type SearchTab = "text" | "image";
 type SearchType = "document" | "image" | "video";
 
@@ -45,6 +47,9 @@ const SearchSection: React.FC = () => {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const filterBoxRef = useRef<HTMLDivElement>(null);
 
+  // Top-level section tab: Search or Q&A
+  const [sectionTab, setSectionTab] = useState<SectionTab>("search");
+
   const [activeTab, setActiveTab] = useState<SearchTab>("text");
 
   const [query, setQuery] = useState("");
@@ -56,8 +61,6 @@ const SearchSection: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<Set<SearchType>>(
     new Set(["document", "image", "video"])
   );
-
-  const [isExpanded, setIsExpanded] = useState(true);
 
   const [selectedLabels, setSelectedLabels] = useState<string[]>([]);
   const [isLabelDropdownOpen, setIsLabelDropdownOpen] = useState(false);
@@ -252,20 +255,30 @@ const SearchSection: React.FC = () => {
   return (
     <>
       <div className="cs-search-card">
-        {/* Header */}
-        <div className="cs-search-header">
-          <span className="cs-search-title">{t("searchSection.title")}</span>
-          <button 
-            className={`cs-search-chevron ${isExpanded ? "cs-search-chevron--expanded" : ""}`}
-            onClick={() => setIsExpanded(!isExpanded)}
-            aria-label={isExpanded ? "Collapse" : "Expand"}
+        {/* ── Section-level tab bar: Search | Q&A (mirrors Transcripts/Summary/Mindmap) ── */}
+        <div className="cs-search-section-tabs">
+          <button
+            className={`cs-search-section-tab ${sectionTab === "search" ? "cs-search-section-tab--active" : ""}`}
+            onClick={() => setSectionTab("search")}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            {t("searchSection.title")}
+          </button>
+          <button
+            className={`cs-search-section-tab ${sectionTab === "qa" ? "cs-search-section-tab--active" : ""}`}
+            onClick={() => setSectionTab("qa")}
+          >
+            {t("qaSection.title", "Q&A")}
           </button>
         </div>
 
+        {/* ── Q&A panel: always mounted to preserve chat history ── */}
+        <div style={{ display: sectionTab === "qa" ? "block" : "none" }}>
+          <QASection />
+        </div>
+
+        {/* ── Search panel: always mounted to preserve search results ── */}
+        <div style={{ display: sectionTab === "search" ? "block" : "none" }}>
+          <>
         {/* Processing warning when some files are still processing but search is available */}
         {(csUploadsComplete && csProcessing) || csSummarizing ? (
           <div className="cs-search-warning-frame">
@@ -274,9 +287,7 @@ const SearchSection: React.FC = () => {
           </div>
         ) : null}
 
-        {isExpanded && (
-          <>
-          {!csHasUploads ? (
+        {!csHasUploads ? (
           /* No files uploaded */
           <div className="cs-search-disabled">
             <img 
@@ -510,8 +521,8 @@ const SearchSection: React.FC = () => {
             )}
           </>
         )}
-        </>
-        )}
+          </>
+        </div>
       </div>
     </>
   );
