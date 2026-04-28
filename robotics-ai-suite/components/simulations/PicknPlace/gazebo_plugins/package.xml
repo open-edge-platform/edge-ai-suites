@@ -18,6 +18,7 @@ SPDX-License-Identifier: Apache-2.0
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>rosidl_default_generators</build_depend>
+  <build_depend>libprotobuf-dev</build_depend>
   
   <!-- Core ROS dependencies -->
   <depend>rclcpp</depend>

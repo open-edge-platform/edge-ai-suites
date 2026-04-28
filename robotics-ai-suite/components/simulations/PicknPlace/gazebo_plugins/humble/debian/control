@@ -4,6 +4,7 @@ Priority: optional
 Maintainer: ECI Maintainer <eci.maintainer@intel.com>
 Build-Depends: debhelper (>= 9.0.0), 
  ros-humble-ament-cmake, 
+ libprotobuf-dev, 
  libgz-sim7-dev, 
  ros-humble-ros-gz, 
  ros-humble-rclcpp, 
