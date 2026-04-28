@@ -6,9 +6,9 @@ The Weld Defect Detection sample application demonstrates a powerful fusion of v
 
 To see the system requirements and other installation, see the following guides:
 
-  - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to getting started with
+- [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to getting started with
   the docker compose deployment of the sample application.
-  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and
   software requirements for running the sample application.
 
 ## Architecture and Functionality Overview

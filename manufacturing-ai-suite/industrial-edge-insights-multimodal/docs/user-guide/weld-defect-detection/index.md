@@ -49,23 +49,24 @@ defect classification model, publishes the frame metadata results over MQTT, sto
 
 | Key            | Description                                                                 | Example Value                          |
 |----------------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`        |
-| `source`       | The source type for video ingestion.                                        | `"gstreamer"`                         |
-| `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                  |
+| `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`         |
+| `source`       | The source type for video ingestion.                                        | `"gstreamer"`                          |
+| `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                   |
 | `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvawatermark ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
 | `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
 
 **Parameters Properties**:
 
-| Key                          | Description                                                                 | Value                          |
-|------------------------------|-----------------------------------------------------------------------------|--------------------------------|
+| Key                          | Description                                                                 | Value                                   |
+|------------------------------|-----------------------------------------------------------------------------|-----------------------------------------|
 | `classification-properties`  | Properties for the classification element in the pipeline.                  | Object containing element configuration |
-| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`            |
-| `element.format`             | Format type for element properties.                                         | `"element-properties"`        |
+| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`                      |
+| `element.format`             | Format type for element properties.                                         | `"element-properties"`                  |
 
 **Destination Configuration**:
 
 The `destination` key contains two main properties:
+
 - `metadata` - defines where to send inference results
 - `frame` - an array defining one or more video output destinations
 
@@ -112,10 +113,10 @@ at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/co
 
 The `udfs` section specifies the details of the UDFs used in the task.
 
-| Key     | Description                                                                 | Example Value                          |
-|---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                 | `"weld_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                 | `"weld_anomaly_detector.cb"`   |
+| Key     | Description                                         | Example Value                   |
+|---------|-----------------------------------------------------|---------------------------------|
+| `name`  | The name of the UDF script.                         | `"weld_anomaly_detector"`       |
+| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.cb"`    |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
@@ -127,11 +128,11 @@ The `alerts` section defines the settings for alerting mechanisms, such as MQTT 
 
 The `mqtt` section specifies the MQTT broker details for sending alerts.
 
-| Key                 | Description                                                                 | Example Value          |
-|---------------------|-----------------------------------------------------------------------------|------------------------|
-| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-| `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-| `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+| Key                 | Description                                       | Example Value         |
+|---------------------|---------------------------------------------------|-----------------------|
+| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.    | `"ia-mqtt-broker"`    |
+| `mqtt_broker_port`  | The port number of the MQTT broker.               | `1883`                |
+| `name`              | The name of the MQTT broker configuration.        | `"my_mqtt_broker"`    |
 
 ###### `udfs/`
 
@@ -139,7 +140,7 @@ Contains the python script to process the incoming data.
 Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
 detect anomalous weld data points using sensor data.
 
-**Note**: Please note, CatBoost models don't run on Intel GPUs.
+> **Note:** CatBoost models do not run on Intel GPUs.
 
 ###### `tick_scripts/`
 
