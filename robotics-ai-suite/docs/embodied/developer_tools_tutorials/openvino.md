@@ -10,7 +10,7 @@ For robotics software developers, the OpenVINO™ toolkit provides essential too
 
 
 Please see more details on [OpenVINO™ Toolkit Overview Website](https://www.intel.com/content/www/us/en/developer/tools/openvino-toolkit/overview.html).
-Simply install OpenVINO in your python environment by running the following command:
+Simply install OpenVINO™ in your Python environment by running the following command:
 
 ```bash
 pip install openvino==2025.2
