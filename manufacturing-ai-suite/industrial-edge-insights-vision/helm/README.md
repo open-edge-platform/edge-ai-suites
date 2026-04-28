@@ -1,4 +1,4 @@
-# Helm based deployment 
+# Helm based deployment
 
 General instructions for helm based deployment is as follows. This assumes you have the Kubernetes cluster already setup and running.
 
@@ -11,9 +11,9 @@ General instructions for helm based deployment is as follows. This assumes you h
 7. Run `sample_stop.sh` to abort any running pipeline(s).
 8. Uninstall the helm chart.
 
-Using the template above, several industrial recipies have been provided for users to deploy using helm on k8s cluster. Click on the applications below to get started.
+Using the template above, several industrial recipes have been provided for users to deploy using helm on k8s cluster. Click on the applications below to get started.
 
 * [Pallet Defect Detection](apps/pallet-defect-detection/README.md)
 * [PCB Anomaly Detection](apps/pcb-anomaly-detection/README.md)
-* [Weld Porosity Classfication](apps/weld-porosity/README.md)
+* [Weld Porosity Classification](apps/weld-porosity/README.md)
 * [Worker Safety Gear Detection](apps/worker-safety-gear-detection/README.md)

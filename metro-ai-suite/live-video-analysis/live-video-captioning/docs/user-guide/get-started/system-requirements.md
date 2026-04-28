@@ -2,24 +2,21 @@
 
 This page summarizes the recommended environment for running Live Video Captioning.
 
-## Operating Systems
+## Hardware Platforms used for validation
 
-- Ubuntu 24.04.1 LTS
+- This application is specifically targeting the Core&trade; platforms. Intel® Core&trade; Ultra 2 and 3 with integrated GPU are supported currently.
+- While there is no hard restriction in using this application on Intel® Xeon® platforms with/without Intel® Arc&trade; GPUs, the user is requested to raise a feature ticket in case of any requirement.
 
-<!--
-**Hardware Platforms**
-- Intel® Core™ processors (Intel® Core™ i5 processor or higher)
-- Intel® Xeon® processors (recommended for large deployments)
--->
+## Operating Systems used for validation
+
+- Ubuntu: Refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu 24.04 or Ubuntu 24.10 depending on the GPU used. 
 
 ## Minimum Requirements
 
-| **Component**       | **Minimum**                     | **Recommended**                      |
-|---------------------|---------------------------------|--------------------------------------|
-| **Processor**       | 11th Gen Intel® Core™ Processor | Intel® Core™ Ultra 7 Processor 155H  |
-| **Memory**          | 8 GB                            | 8 GB                                 |
-| **Disk Space**      | 256 GB SSD                      | 256 GB SSD                           |
-| **GPU/Accelerator** | Intel® UHD Graphics             | Intel® Arc™ Graphics                 |
+| **Component**       | **Minimum**                     | **Recommended**                                  |
+|---------------------|---------------------------------|--------------------------------------------------|
+| **Memory**          | 16 GB                           | 32 GB                                            |
+| **Disk Space**      | 64 GB SSD                      | 128 GB SSD                                        |
 
 ## Software Requirements
 
@@ -36,13 +33,11 @@ Default ports (configurable via `.env`):
 
 ## Model Requirements
 
-Models directory must be present under `ov_models/` and include OpenVINO IR artifacts (for
-example):
+Models directory must be present under `ov_models/` and include OpenVINO IR artifacts (for example):
 
 - `openvino_language_model.xml`
 - `openvino_vision_embeddings_model.xml`
 
 ## Validation
 
-Proceed to [Get Started](../get-started.md) once Docker is installed and at least one model is
-available in `ov_models/`.
+Proceed to [Get Started](../get-started.md) once Docker is installed and at least one model is available in `ov_models/`.

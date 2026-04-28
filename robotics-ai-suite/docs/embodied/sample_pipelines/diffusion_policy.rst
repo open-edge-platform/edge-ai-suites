@@ -92,7 +92,7 @@ Inference
 
 .. note::
 
-    For detailed instructions on the model conversion process, please refer to the model tutorial at :doc:`../developer_tools_tutorials/model_tutorials/model_dp`.
+    For detailed instructions on the model conversion process, please refer to the model tutorial at :doc:`../model_tutorials/model_dp`.
 
 .. list-table::
    :widths: 15 30 15 20 20

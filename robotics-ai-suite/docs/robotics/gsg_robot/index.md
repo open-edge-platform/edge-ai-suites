@@ -1,18 +1,12 @@
-# Getting Started Guide
+# Get Started
 
 This Get Started Guide explains how to install the Autonomous Mobile Robot.
 
 ## Requirements
 
-### Knowledge Requirements
-
 - You are familiar with executing Linux commands.
 - ROS 2 background strongly recommended.
-
-### Hardware Requirements
-
-```{include} ../shared/requirements_robot.md
-```
+- [Hardware Requirements](./get-started/requirements_robot.md)
 
 ## Express Setup
 
@@ -134,7 +128,7 @@ export ROS_DOMAIN_ID=42
 
 ### 4. Express Setup: Next steps
 
-At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## OS Image Composer Setup
 
@@ -145,44 +139,52 @@ OS Image Composer supports creating both ISO images (for installation via USB) a
 For detailed instructions, see the [os-image-composer installation guide](https://github.com/open-edge-platform/os-image-composer/blob/main/docs/tutorial/installation.md). An abbreviated ISO image creation follows:
 
 1. Install Go (Go 1.24+ required) + build dependencies:
+
    ```bash
    sudo apt update && sudo apt install golang-1.24 git systemd-ukify mmdebstrap
    ```
+
 2. Update go path since 1.24 isn't default:
+
    ```bash
    export PATH=$PATH:/usr/lib/go-1.24/bin
    source ~/.bashrc
    ```
 
 3. Clone OS Image Composer repository:
+
    ```bash
    git clone https://github.com/open-edge-platform/os-image-composer.git
    cd os-image-composer
    ```
 
 4. Build the tool (output: ``./os-image-composer``):
+
    ```bash
    go build -buildmode=pie -ldflags "-s -w" ./cmd/os-image-composer
    ```
 
 5. Build the live-installer (required for ISO images):
+
    ```bash
    go build -buildmode=pie -o ./build/live-installer -ldflags "-s -w" ./cmd/live-installer
    ```
 
 6. Build ISO image:
+
    ```bash
    sudo -E ./os-image-composer build image-templates/ubuntu24-x86_64-robotics-jazzy-iso.yml
    ```
 
 7. Once image is successfully built, modify the below command to point to the built image location (shown after build). Change ``/dev/sdX`` to proper USB drive location (i.e. ``/dev/sdb``). Flash ISO Image to USB drive:
+
    ```bash
    sudo dd if=builds/robotics-jazzy-ubuntu24-24.04.iso of=/dev/sdX bs=4M status=progress conv=fsync
    ```
 
 8. Boot from the USB drive and install the image to your system.
 
-9. **Setup complete!** Next Steps: Explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+9. **Setup complete!** Next Steps: Explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## Step-by-step Setup
 
@@ -327,7 +329,6 @@ echo "export ROS_DOMAIN_ID=42" >> ~/.bashrc
     expected to participate in a given ROS 2 graph.
   - Ensure you use an individual ``ROS_DOMAIN_ID`` for every ROS 2 communication
     graph, in order to avoid conflicts in message handling.
-
 
 ### 3. Set up the Autonomous Mobile Robot APT Repositories
 
@@ -521,7 +522,6 @@ The following steps will install the OpenVINO™ packages:
 
    ![configure_ros-2-openvino-node](../images/configure_ros-humble-openvino-node.png)
 
-
 #### 4.2 OpenVINO™ Re-Installation and Troubleshooting
 
 If you need to reinstall OpenVINO™ or clean your system after a failed
@@ -551,7 +551,6 @@ sudo apt install ros-humble-openvino-node
 
 :::
 ::::
-
 
 ### 5. Install RealSense™ Camera SDK
 
@@ -636,7 +635,6 @@ access to commonly used robotic functionality with ease.
    :::::
 
    > **Note:** The pinned version ensures stability across tutorials. To upgrade in the future, update the version in `/etc/apt/preferences.d/librealsense` before installing.
-
 
 ### 6. Install Autonomous Mobile Robot Deb packages
 
@@ -931,7 +929,6 @@ To install the Intel® NPU driver, complete the following steps:
    crw-rw---- 1 root render 261, 0 Jul  1 13:10 /dev/accel/accel0
    ```
 
-
 ### 8. Reboot to load latest Linux kernel and firmware
 
 ```bash
@@ -940,7 +937,7 @@ sudo reboot
 
 ### 9. Next steps
 
-At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.rst) for ready-to-use applications and examples.
+At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
 ## Optional - Enabling Intel® GPU
 
@@ -1013,7 +1010,6 @@ development.
 
 6. Reboot the system to allow the latest Linux kernel to boot.
 
-
 ## Installation Troubleshooting
 
 ### Support Forum
@@ -1045,14 +1041,14 @@ If the APT package manager is unable to connect to the repositories, follow thes
       no_proxy="localhost,127.0.0.1,127.0.0.0/8"
       ```
 
-    After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
-    you will have to reboot the device, so these settings become effective.
+     After setting the proxy values in `/etc/apt/apt.conf.d/proxy.conf` and `/etc/environment`
+     you will have to reboot the device, so these settings become effective.
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-../shared/requirements_robot.md
+get-started/requirements_robot.md
 
 :::
 hide_directive-->

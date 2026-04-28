@@ -3,7 +3,7 @@
 This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application
 for following a target person where the movement of the robot can be controlled
 by the person's location and hand gestures. The entire pipeline diagram can be
-found in the [Simulation Demos](../index.rst) page.
+found in the [Follow-me Algorithm](../index.md#applications-processing-outputs) page.
 This demo contains only the ADBSCAN and Gesture recognition modules in the
 input-processing application stack. No text-to-speech synthesis module is
 present in the output-processing application stack. This demo has been tested
@@ -139,7 +139,7 @@ the following conditions are true:
 
 - The target (guide robot) moves to a distance of more than the tracking radius
   of the TurtleBot3 robot. Radius is a reconfigurable parameter in:
-  `/opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`).
+  `/opt/ros/jazzy/share/adbscan_ros2_follow_me/config/adbscan_sub_2D.yaml`.
 
   In ROS 2 Humble, the file is located at the similar directory path.
 

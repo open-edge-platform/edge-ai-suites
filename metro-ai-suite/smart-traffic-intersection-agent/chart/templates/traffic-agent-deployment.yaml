@@ -67,11 +67,15 @@ spec:
             # Weather configuration
             - name: WEATHER_MOCK
               value: {{ .Values.trafficAgent.env.weatherMock | quote }}
-            # VLM configuration - point to VLM K8s service
+            # VLM configuration - point to OVMS K8s service
             - name: VLM_BASE_URL
               value: "http://{{ include "stia.vlmServing.fullname" . }}:{{ .Values.vlmServing.service.port }}"
             - name: VLM_MODEL_NAME
               value: {{ .Values.vlmServing.env.modelName | quote }}
+            - name: VLM_TARGET_DEVICE
+              value: {{ if .Values.vlmServing.gpu.enabled }}"GPU"{{ else }}{{ .Values.vlmServing.env.targetDevice | quote }}{{ end }}
+            - name: VLM_WEIGHT_FORMAT
+              value: {{ .Values.vlmServing.env.weightFormat | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
               value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
             - name: VLM_TIMEOUT_SECONDS

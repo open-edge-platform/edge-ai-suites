@@ -262,8 +262,12 @@ Response:
     "timestamp": 1774878031
 }
 ```
+
 #### Text file ingestion
-Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in storage.
+
+Embeds the raw text string passed in the request body as a single node, **no chunking** and stores it in the vector database. Use this when you already have clean, pre-processed text and want to **skip file preprocess and chunking** entirely.
+
+It also supports fetching content from existing text-based objects in storage.
 
 * URL: /api/v1/object/ingest-text
 * Method: POST
@@ -272,7 +276,7 @@ Primarily processes raw text strings passed in the request body for semantic ind
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `text` | `string` | **Yes** | **Raw text content** to be embedded, and stored in the vector database. |
 | `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
 | `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
 | `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
@@ -421,7 +425,7 @@ Response (200 OK):
                     "video_pin_second": 11.01,
                     "video_start_second": 7.76,
                     "video_end_second": 14.26,
-                    "summary_text": "The video depicts a scene inside a store filled with shelves of white ceramic dishes, including bowls, plates, mugs, and cups. The store appears to be a pottery or ceramics shop, as evidenced by the variety of items available for purchase.\n\nIn the foreground, a man wearing a brown jacket is browsing through the shelves, examining the ceramic dishes. He seems interested in the selection and is carefully inspecting each item. Nearby, a woman in a green jacket is also looking at the dishes, possibly considering purchasing some. Another person, dressed in a blue jacket, is seen walking past the shelves, seemingly uninterested in the products.\n\nAs the camera pans around the store, more people can be observed engaging with the ceramic items. Some individuals are standing near the shelves, closely examining the dishes, while others are walking through the aisles, browsing the available options. The store has a well-lit environment, making it easy for customers to see the details of the ceramic pieces.\n\nThroughout the video, the focus remains on the interaction between the customers and the ceramic dishes, showcasing the variety of items available for purchase. The store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
+                    "summary_text": "The video ... e store's layout and organization allow customers to easily navigate through the aisles and find their desired items."
                 },
                 "score": 53.65
             },
@@ -543,6 +547,254 @@ Response:
 }
 ```
 
+#### List All Indexed Files
+Returns a comprehensive inventory of all files stored in the system, including their metadata, storage status, and indexing information. This endpoint aggregates data from SQLite (file metadata), LocalStorage (physical file existence), and ChromaDB (vector indices).
+
+* URL: /api/v1/object/files/list
+* Method: GET
+* Pattern: SYNC
+* Parameters:
+
+| Parameter | Type | Required | Default | Description |
+| :-------- | :--- | :------- | :------ | :---------- |
+| `page` | `integer` | No | 1 | Page number for pagination (Min: 1) |
+| `page_size` | `integer` | No | 50 | Number of items per page (Min: 1, Max: 200) |
+| `file_type` | `string` | No | None | Filter by file type: `video`, `image`, or `document` |
+
+Request:
+```bash
+# Example 1: Get first page with default settings
+curl --location 'http://127.0.0.1:9011/api/v1/object/files/list'
+
+# Example 2: Get specific page with custom page size
+curl --location 'http://127.0.0.1:9011/api/v1/object/files/list?page=2&page_size=10'
+
+# Example 3: Filter by file type
+curl --location 'http://127.0.0.1:9011/api/v1/object/files/list?file_type=video'
+```
+
+Response (200 OK):
+```json
+{
+    "code": 20000,
+    "data": {
+        "total": 6,
+        "page": 1,
+        "page_size": 50,
+        "total_pages": 1,
+        "files": [
+            {
+                "file_hash": "ec2c2b5d7088dd212acd4fca2ecfd0abe4fca2379f3f02035d028d7423963666",
+                "file_name": "SW-Physics-Sample.pdf",
+                "file_path": "runs/95351707-a723-4af5-92df-579f18707871/raw/application/default/SW-Physics-Sample.pdf",
+                "bucket_name": "content-search",
+                "content_type": "application/pdf",
+                "size_bytes": 6847573,
+                "meta": {},
+                "created_at": "2026-04-24T09:32:18.779690",
+                "storage": {
+                    "exists": true
+                },
+                "index": {
+                    "indexed": false,
+                    "vector_count": 0,
+                    "collections": [],
+                    "has_summary": false
+                },
+                "status": "not_indexed"
+            },
+            ... ...
+            {
+                "file_hash": "6f3fd0ad5a592a8bd2fd877ab613bb3a7837ab04ad62baac9067e6f583629a75",
+                "file_name": "ComputerScienceOne.pdf",
+                "file_path": "runs/266c1ba1-0684-41cd-891d-621b240f1877/raw/application/default/ComputerScienceOne.pdf",
+                "bucket_name": "content-search",
+                "content_type": "application/pdf",
+                "size_bytes": 2300943,
+                "meta": {
+                    "tags": [
+                        "computer",
+                        "pdf",
+                        "book"
+                    ],
+                    "course": "CS101",
+                    "semester": "Spring 2026"
+                },
+                "created_at": "2026-04-15T13:19:49.777220",
+                "storage": {
+                    "exists": false
+                },
+                "index": {
+                    "indexed": false,
+                    "vector_count": 0,
+                    "collections": [],
+                    "has_summary": false
+                },
+                "status": "inconsistent"
+            }
+        ],
+        "statistics": {
+            "by_status": {
+                "not_indexed": 4,
+                "inconsistent": 2
+            },
+            "by_type": {
+                "unknown": 6
+            }
+        }
+    },
+    "message": "Files retrieved successfully",
+    "timestamp": 1777009127
+}
+```
+
+**Response Fields**:
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `total` | `integer` | Total number of files matching the filter |
+| `page` | `integer` | Current page number |
+| `page_size` | `integer` | Number of items per page |
+| `total_pages` | `integer` | Total number of pages available |
+| `files` | `array` | Array of file objects (see File Object below) |
+| `statistics` | `object` | Aggregated statistics by status and type |
+
+**File Object Fields**:
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `file_hash` | `string` | SHA-256 hash of the file (unique identifier) |
+| `file_name` | `string` | Original filename |
+| `file_path` | `string` | Full path in storage system |
+| `bucket_name` | `string` | Storage bucket name |
+| `content_type` | `string` | MIME type of the file |
+| `size_bytes` | `integer` | File size in bytes |
+| `meta` | `object` | Custom metadata (tags, course info, etc.) |
+| `created_at` | `string` | ISO 8601 timestamp of file creation |
+| `storage.exists` | `boolean` | Whether the physical file exists in LocalStorage |
+| `index.indexed` | `boolean` | Whether the file has been indexed in ChromaDB |
+| `index.vector_count` | `integer` | Total number of vector embeddings for this file |
+| `index.collections` | `array` | List of ChromaDB collections containing this file's vectors |
+| `index.has_summary` | `boolean` | Whether the video has AI-generated text summaries |
+| `status` | `string` | Overall status: `synced`, `not_indexed`, `missing_file`, or `inconsistent` |
+
+**Status Values**:
+
+| Status | Description | Action Required |
+| :----- | :---------- | :-------------- |
+| `synced` | File exists in storage and is fully indexed | None - healthy state |
+| `not_indexed` | File exists but hasn't been indexed yet | Wait for indexing or trigger manual ingest |
+| `missing_file` | Index exists but physical file is missing | File was deleted externally - consider cleanup |
+| `inconsistent` | Neither storage nor index exists | Database corruption - consider record cleanup |
+
+**Use Cases**:
+- **Frontend File Browser**: Display all uploaded files with their processing status
+- **Admin Dashboard**: Monitor system health and identify orphaned records
+- **Bulk Operations**: Get file lists for batch cleanup or re-indexing
+- **Debugging**: Investigate storage/index inconsistencies
+
+#### Delete File by Hash
+Deletes a file and all its associated data using the file_hash obtained from `/api/v1/object/files/list`.
+
+* URL: /api/v1/object/files/{file_hash}
+* Method: DELETE
+* Pattern: SYNC
+* Parameters:
+
+| Parameter | Type | Required | Default | Description |
+| :-------- | :--- | :------- | :------ | :---------- |
+| `file_hash` | `string` | Yes | - | SHA-256 hash of the file (from `/files/list` response) |
+| `force` | `boolean` | No | `false` | If `true`, continue deletion even if some steps fail |
+
+Request:
+```bash
+# Example 1: Standard deletion
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb'
+
+# Example 2: Force deletion (ignore errors)
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb?force=true'
+```
+
+Response (200 OK):
+```json
+{
+    "code": 20000,
+    "data": {
+        "file_hash": "080c00cf05bc7b31e2b1c4bcfc9b16a61b29608fdbfc5451d1cbd8eadbdd34cb",
+        "file_name": "classroom_8.mp4",
+        "file_path": "runs/a955dbfc-59eb-4e40-953f-0cfe55e54464/raw/video/default/classroom_8.mp4",
+        "bucket_name": "content-search",
+        "storage_deleted": true,
+        "index_deleted": true,
+        "metadata_deleted": true,
+        "tasks_deleted": 2,
+        "errors": []
+    },
+    "message": "File and all associated data deleted successfully",
+    "timestamp": 1776200456
+}
+```
+
+**Deletion Process (4 Phases):**
+
+1. **Phase 1: LocalStorage** - Deletes the physical file from disk
+2. **Phase 2: ChromaDB** - Removes all vector indices for this file
+3. **Phase 3: SQLite file_assets** - Deletes metadata record
+4. **Phase 4: SQLite edu_ai_tasks** - Removes associated task records
+
+**Response Fields:**
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `storage_deleted` | `boolean` | Whether the physical file was deleted from LocalStorage |
+| `index_deleted` | `boolean` | Whether vector indices were deleted from ChromaDB |
+| `metadata_deleted` | `boolean` | Whether the file_assets record was deleted |
+| `tasks_deleted` | `integer` | Number of associated tasks deleted |
+| `errors` | `array` | List of errors encountered (empty if all successful) |
+
+**Error Handling:**
+
+- **force=false** (default): Stops at first error and returns HTTP 500
+- **force=true**: Continues deletion even if some steps fail, reports errors in response
+
+**Use Cases:**
+
+- **Direct file management**: Delete files directly from the files list UI
+- **Cleanup orphaned files**: Remove files that are no longer needed
+- **Manual intervention**: Delete specific files after reviewing `/files/list`
+
+**Comparison with /cleanup-task/{task_id}:**
+
+| Feature | `/files/{file_hash}` | `/cleanup-task/{task_id}` |
+| :------ | :------------------- | :------------------------ |
+| **Input** | file_hash (from `/files/list`) | task_id (from task APIs) |
+| **Use Case** | Delete files directly | Delete by task workflow |
+| **Orphan Files** | √ Can delete | × Requires task record |
+| **Task Check** | × No status check | √ Checks if processing |
+
+**Workflow Example:**
+
+```bash
+# Step 1: List all files
+curl 'http://127.0.0.1:9011/api/v1/object/files/list'
+
+# Step 2: Identify file to delete (copy file_hash)
+# Example: "file_hash": "080c00cf05bc..."
+
+# Step 3: Delete the file
+curl -X DELETE 'http://127.0.0.1:9011/api/v1/object/files/080c00cf05bc...'
+
+# Step 4: Verify deletion
+curl 'http://127.0.0.1:9011/api/v1/object/files/list'
+# File should no longer appear in the list
+```
+
+**Security Notes:**
+- This operation is **irreversible** - deleted files cannot be recovered
+- Deletes data from all three storage layers simultaneously
+- Consider backing up important files before deletion
+- Use `force=true` cautiously as it may leave partial data
+
 #### List Tags
 Returns all unique tags that have been assigned to uploaded files. Useful for populating filter dropdowns in the UI.
 
@@ -601,3 +853,83 @@ Response (200 OK):
 | `reranker_model` | `string` | Model used for search result reranking. |
 | `vector_db` | `string` | Vector database connection info. |
 | `video_summarization_enabled` | `boolean` | Whether the video summarization feature is enabled. When `false`, the UI should hide summarization-related controls. |
+
+#### Reconcile Storage Consistency
+Performs bidirectional consistency checks across SQLite, LocalStorage, and ChromaDB. Detects and optionally cleans up orphaned records, missing files, and inconsistent data.
+
+* URL: /api/v1/system/reconcile
+* Method: POST
+* Pattern: SYNC
+* Parameters:
+
+| Parameter | Type | Required | Default | Description |
+| :-------- | :--- | :------- | :------ | :---------- |
+| `dry_run` | `boolean` | No | `true` | If `true`, only checks without deleting. Set to `false` to execute cleanup. |
+| `cleanup_sqlite_orphans` | `boolean` | No | `true` | Clean SQLite records when both storage and index are missing. |
+| `cleanup_storage_orphans` | `boolean` | No | `true` | Delete LocalStorage files without SQLite records. |
+| `cleanup_index_orphans` | `boolean` | No | `true` | Delete ChromaDB indices without SQLite records. |
+| `auto_reindex` | `boolean` | No | `false` | Automatically trigger reindexing for files without indices (experimental). |
+| `report_detail` | `string` | No | `"summary"` | Report level: `"summary"` or `"detailed"` (includes file lists). |
+
+Request:
+```bash
+# Safe check (dry run - default)
+curl -X POST 'http://127.0.0.1:9011/api/v1/system/reconcile'
+
+# Execute cleanup (destructive)
+curl -X POST 'http://127.0.0.1:9011/api/v1/system/reconcile?dry_run=false'
+
+# Get detailed report
+curl -X POST 'http://127.0.0.1:9011/api/v1/system/reconcile?report_detail=detailed'
+```
+
+Response (200 OK):
+```json
+{
+    "status": "ok",
+    "mode": "dry_run",
+    "summary": {
+        "total_files_in_sqlite": 150,
+        "total_files_in_storage": 155,
+        "total_indexed_paths": 148,
+        "synced_files": 145,
+        "inconsistencies_found": {
+            "sqlite_orphans": 3,
+            "storage_orphans": 5,
+            "index_orphans": 2,
+            "missing_storage": 1,
+            "missing_index": 4,
+            "missing_both": 2
+        },
+        "actions_taken": {
+            "sqlite_records_deleted": 0,
+            "storage_files_deleted": 0,
+            "index_entries_deleted": 0,
+            "reindex_triggered": 0
+        }
+    },
+    "recommendations": [
+        "Found 3 SQLite orphan(s). Run with dry_run=false and cleanup_sqlite_orphans=true to clean them.",
+        "Found 5 orphaned file(s) in LocalStorage. Run with dry_run=false and cleanup_storage_orphans=true to delete them.",
+        "Found 2 orphaned index/indices in ChromaDB. Run with dry_run=false and cleanup_index_orphans=true to delete them.",
+        "Found 4 file(s) without indices. Consider running with auto_reindex=true to reindex them."
+    ]
+}
+```
+
+**Three-Phase Check Process:**
+
+1. **Phase 1: SQLite → Storage/Index** - Checks each database record against physical storage
+2. **Phase 2: LocalStorage → SQLite** - Finds orphaned files without database records  
+3. **Phase 3: ChromaDB → SQLite** - Finds orphaned indices without database records
+
+**Inconsistency States:**
+
+| SQLite | LocalStorage | ChromaDB | Status | Action |
+|--------|--------------|----------|--------|--------|
+| √ | √ | √ | Synced | None (healthy) |
+| √ | √ | × | Missing Index | Reindex (if enabled) |
+| √ | × | √ | Missing Storage | Delete SQLite + Index |
+| √ | × | × | Missing Both | Delete SQLite record |
+| × | √ | - | Storage Orphan | Delete file |
+| × | - | √ | Index Orphan | Delete index |

@@ -71,6 +71,16 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_PORT", ingest.get("port", "9990"))
         _set("FRAME_EXTRACT_INTERVAL", str(ingest.get("frame_extract_interval", 15)))
         _set("DO_DETECT_AND_CROP", str(ingest.get("do_detect_and_crop", False)).lower())
+        _set("INGEST_DEVICE", ingest.get("doc_embedding_device", "CPU"))
+
+        # Document Parser
+        doc_parser = ingest.get("document_parser", {})
+        _set("DOC_CHUNK_METHOD", doc_parser.get("chunk_method", "fixed"))
+        _set("DOC_CHUNK_SIZE", doc_parser.get("chunk_size", 250))
+        _set("DOC_CHUNK_OVERLAP", doc_parser.get("chunk_overlap", 50))
+        _set("DOC_SEMANTIC_BREAKPOINT_PERCENTILE", doc_parser.get("semantic_breakpoint_percentile", 85))
+        _set("DOC_SEMANTIC_BUFFER_SIZE", doc_parser.get("semantic_buffer_size", 2))
+        _set("DOC_SEMANTIC_MIN_CHUNK_SIZE", doc_parser.get("semantic_min_chunk_size", 250))
 
         # Reranker
         reranker = ingest.get("reranker", {})

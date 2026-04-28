@@ -66,11 +66,9 @@ As you can see, the sample devices are on I2C bus `0` at addresses `0x1a`, `0x27
 
 ## GMSL2 Driver
 
-Prerequisites for the GMSL driver can be found in the ECI APT repository.
+Prerequisites for the GMSL driver can be found in the [Get Started Guide](../../gsg_robot/index.md).
 
-Follow the [Set up ECI APT Repository](https://eci.intel.com/docs/3.3/getstarted/download_eci.html#setupecirepo) guide first.
-
-Once the ECI APT repository is set up, install the GMSL driver with:
+Install the GMSL driver by running the following command:
 
 ```bash
 sudo apt-get update

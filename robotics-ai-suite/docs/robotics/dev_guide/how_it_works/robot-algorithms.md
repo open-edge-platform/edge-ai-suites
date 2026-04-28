@@ -16,9 +16,9 @@ DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is an unsup
 
 ## 3D Pointcloud Groundfloor Segmentation
 
-**Tutorial**: [3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR](../tutorials_amr/perception/pointcloud-groundfloor-segmentation.md)
+**Tutorial**: [3D Pointcloud Groundfloor Segmentation for RealSense™ Camera and 3D LiDAR](../tutorials_amr/perception/pointcloud-groundfloor-segmentation.md)
 
-An algorithm, along with a demo application, transforms Intel® RealSense™ Depth Camera images to 3D pointclouds. This algorithm further assigns classification labels such as ground floor or obstacle to each point, delivering both the resulting and filtered pointclouds as output.
+An algorithm, along with a demo application, transforms RealSense™ Depth Camera images to 3D pointclouds. This algorithm further assigns classification labels such as ground floor or obstacle to each point, delivering both the resulting and filtered pointclouds as output.
 
 ## ROS 2 Depth Image to Laser Scan
 
@@ -36,7 +36,7 @@ IMU Tools, filters and visualizers, from [IMU Tools for ROS](https://github.com/
 
 **Tutorial**: [FastMapping Algorithm](../tutorials_amr/navigation/run-fastmapping-algorithm.md)
 
-FastMapping is an algorithm to create a 3D voxel map of a robot's surroundings based on Intel® RealSense™ Depth Camera sensor data.
+FastMapping is an algorithm to create a 3D voxel map of a robot's surroundings based on RealSense™ Depth Camera sensor data.
 
 ## Collaborative Visual SLAM
 

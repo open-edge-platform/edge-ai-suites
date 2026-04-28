@@ -1,13 +1,13 @@
-# Install Intel® RealSense™ SDK
+# Install RealSense™ SDK
 
-Intel® RealSense™ SDK 2.0 is a cross-platform library for Intel® RealSense™ depth cameras.
+RealSense™ SDK 2.0 is a cross-platform library for RealSense™ depth cameras.
 The SDK allows depth and color streaming, and provides intrinsic and extrinsic calibration information.
 The library also offers synthetic streams (pointcloud, depth aligned to color and vise-versa), and a built-in
 support for record and playback of streaming sessions.
 
-Intel® RealSense™ SDK 2.0 supports Robot Operating System (ROS) and ROS 2, allowing you to access commonly used robotic functionality with ease.
+RealSense™ SDK 2.0 supports Robot Operating System (ROS) and ROS 2, allowing you to access commonly used robotic functionality with ease.
 
-ROS is a set of open-source software libraries and tools that help you build robot applications. For more information, see https://www.ros.org/.
+ROS is a set of open-source software libraries and tools that help you build robot applications. For more information, see the [ROS website](https://www.ros.org/).
 
 ## Installation
 
@@ -55,19 +55,19 @@ ROS is a set of open-source software libraries and tools that help you build rob
    sudo apt install librealsense2
    ```
 
-   >  **Note:**
-   The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
+   > **Note:**
+   > The pinned version ensures stability across tutorials. If you need to upgrade to a newer version in the future, update the pin configuration in `/etc/apt/preferences.d/librealsense` before running `apt install`.
 
-7. (Optional) Install the ROS wrappers for Intel RealSense depth cameras:
+7. (Optional) Install the ROS wrappers for RealSense depth cameras:
 
    ```bash
    sudo apt install ros-humble-realsense2-camera
    ```
 
-8. (Optional) Install other tools or packages of Intel RealSense depth cameras:
+8. (Optional) Install other tools or packages of RealSense depth cameras:
 
     See the [installation link](https://github.com/realsenseai/librealsense/blob/master/doc/distribution_linux.md)
-    to install librealsense packages and more other tools from Intel® RealSense™ depth camera sources.
+    to install librealsense packages and more other tools from RealSense depth camera sources.
 
 ## Troubleshooting
 
@@ -77,7 +77,7 @@ If errors occur during ``librealsense2-dkms`` package installation, you have opt
 
 - Install librealsense SDK by using original Linux drivers.
 
-  Once errors occur during installing ``librealsenses2-dkms`` package, it probably is introduced by unmatched kernel version. You can try the following workaround:
+  Once errors occur during installing ``librealsense2-dkms`` package, it probably is introduced by unmatched kernel version. You can try the following workaround:
 
   ```bash
 
@@ -85,13 +85,13 @@ If errors occur during ``librealsense2-dkms`` package installation, you have opt
   sudo apt install librealsense2-dkms
   ```
 
-- If the option above doesn't work , try to build and install from the source code.
+- If the option above does not work, try to build and install from the source code.
 
-  Follow the steps in `the link <https://github.com/IntelRealSense/librealsense/blob/development/doc/installation.md>`_ to download the librealsense source code and build it.
+  Follow the steps in the [Installation Guide](https://github.com/realsenseai/librealsense/blob/development/doc/installation.md) to download the librealsense source code and build it.
 
 ### Errors for unmet dependencies
 
-If you encounter unmet dependencies during the installation of ROS wrappers for Intel RealSense depth cameras, for example:
+If you encounter unmet dependencies during the installation of ROS wrappers for RealSense depth cameras, for example:
 
 ```shell
 

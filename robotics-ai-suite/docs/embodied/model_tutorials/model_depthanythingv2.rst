@@ -46,7 +46,7 @@ Depth Anything V2, is an active powerful foundation model for monocular depth es
 - 2) supporting extensive applications with varied model sizes (from 25M to 1.3B parameters),
 - 3) being easily fine-tuned to downstream tasks as a promising model initialization.
 
-.. image:: assets/images/depthanythingv2.png
+.. image:: ../developer_tools_tutorials/assets/images/depthanythingv2.png
    :width: 85%
    :align: center
 

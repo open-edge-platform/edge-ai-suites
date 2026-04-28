@@ -11,7 +11,7 @@ LightGlue is designed to address the challenges of feature matching by providing
 efficient and capable of producing high-quality matches. It leverages advancements in deep learning to improve the
 robustness and accuracy of feature matching, while also being optimized for real-time performance.
 
-.. image:: assets/images/lightglue.png
+.. image:: ../developer_tools_tutorials/assets/images/lightglue.png
    :width: 85%
    :align: center
 

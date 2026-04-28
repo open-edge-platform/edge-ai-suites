@@ -3,7 +3,7 @@
 The Follow-me algorithm is a Autonomous Mobile Robot application for following a target person without any manual or external control dependency. The complete pipeline is described here.
 A comprehensive diagram of the application is showed in the figure below. The Deb packages are outlined with *blue* rectangles in the figure.
 
-**Applications (processing inputs)**
+## Applications (processing inputs)
 
 This multimodal solution can control robot motion by any combination of the following three factors:
 
@@ -17,7 +17,7 @@ This multimodal solution can control robot motion by any combination of the foll
 
 ---
 
-**Applications (processing outputs)**
+## Applications (processing outputs)
 
 The outputs of all or a combination of the above modules are used to determine robot's velocity and publish `twist` `msg`, which can be subsequently used by a real robot or a simulated robot in `Gazebo`.
 The demos on real robots and simulation environments are referred to as `Tutorials` and `Simulation Demos` respectively. You can navigate to each of these categories using the following links:
@@ -37,8 +37,8 @@ of the robot's activity during the course of its movement. This module uses pre-
 
 ![Follow-me complete diagram](../../../../images/follow-me_complete_2024.png)
 
-**Note:**
-Please display a disclaimer/signage/visible notice to the surrounding people stating the use of voice-activated/gesture recognition technology while the follow-me application with audio and/or gesture is in use.
+> **Note:**
+> Please display a disclaimer/signage/visible notice to the surrounding people stating the use of voice-activated/gesture recognition technology while the follow-me application with audio and/or gesture is in use.
 
-**Note:**
-Also please keep in mind that the accuracy of the speech recognition model may vary depending on the user demography. We recommend that any application using `follow-me with audio control` to undergo bias testing (dependence on the voice of the user demography) appropriate to the context of use.
+> **Note:**
+> Also please keep in mind that the accuracy of the speech recognition model may vary depending on the user demography. We recommend that any application using `follow-me with audio control` to undergo bias testing (dependence on the voice of the user demography) appropriate to the context of use.
