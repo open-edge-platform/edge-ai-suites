@@ -7,7 +7,7 @@ Also, IPEX-LLM provides seamless integration with llama.cpp, Ollama, HuggingFace
 
 | | |
 |---|---|
-| ![IPEX-LLM diagram 1](assets/images/ipex-llm1.jpg) | ![IPEX-LLM diagram 2](assets/images/ipex-llm2.jpg) |
+| ![IPEX-LLM diagram 1](../assets/images/ipex-llm1.jpg) | ![IPEX-LLM diagram 2](../assets/images/ipex-llm2.jpg) |
 
 For robotics software developers, IPEX-LLM offers the opportunity to empower the development of new applications that combine robotics with LLMs, helping LLMs achieve better performance on Intel® platforms.
 

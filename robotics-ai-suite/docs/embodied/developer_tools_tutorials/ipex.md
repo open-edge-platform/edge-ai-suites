@@ -4,7 +4,7 @@ Intel® Extension for PyTorch extends the PyTorch library with the latest perfor
 
 The extension can be loaded as a Python module for Python programs or linked as a C++ library for C++ programs. In Python scripts users can enable it dynamically by importing `intel_extension_for_pytorch`.
 
-![Intel Extension for PyTorch structure](assets/images/intel_extension_for_pytorch_structure.png)
+![Intel Extension for PyTorch structure](../assets/images/intel_extension_for_pytorch_structure.png)
 
 Intel® Extension for PyTorch allows developers run their applications on Intel® XPU and get optimized performance without excessive changes from PyTorch code, which shortens development and validation cycles.
 

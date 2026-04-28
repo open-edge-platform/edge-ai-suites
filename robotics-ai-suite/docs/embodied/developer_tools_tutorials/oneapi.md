@@ -2,7 +2,7 @@
 
 [oneAPI](https://www.intel.com/content/www/us/en/developer/tools/oneapi/overview.html) is a cross-industry, open, standards-based unified programming model that provides a common developer experience across accelerator architectures, which provides a comprehensive set of libraries, open source repositories, SYCL-based C++ language extensions, and optimized reference implementations.
 
-![oneAPI overview](assets/images/oneapi.png)
+![oneAPI overview](../assets/images/oneapi.png)
 
 Robotics software developers can use the Intel® oneAPI Toolkit and oneAPI-powered applications to enhance AI deep learning and heterogeneous computing capabilities, thereby leveraging the full value of all hardware.
 
