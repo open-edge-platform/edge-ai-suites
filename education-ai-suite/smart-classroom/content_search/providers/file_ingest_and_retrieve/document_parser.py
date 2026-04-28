@@ -11,6 +11,7 @@ from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter, SemanticSplitterNodeParser
 from llama_index.core.schema import BaseNode, TextNode
 from llama_index.readers.file import UnstructuredReader
+from unstructured.partition.auto import partition
 from unstructured.partition.docx import register_picture_partitioner
 
 # ---------------------------------------------------------------------------
@@ -45,6 +46,22 @@ logger = logging.getLogger(__name__)
 # Splits after: 。！？；…… \n\n  or  . ! ? followed by whitespace
 _SENT_SPLIT_RE = re.compile(r'(?<=[。！？；…\n])|(?<=[.!?])(?=\s)')
 
+# Matches a lowercase letter directly followed by an uppercase letter (e.g. "systemsAre")
+_GLUED_LOWER_UPPER_RE = re.compile(r'([a-z])([A-Z])')
+# Matches a letter directly followed by a CJK character or vice versa
+_GLUED_CJK_RE = re.compile(r'([a-zA-Z])([一-鿿])')
+_GLUED_CJK_REV_RE = re.compile(r'([一-鿿])([a-zA-Z])')
+
+
+def _clean_text(text: str) -> str:
+    """Collapse newlines to spaces and insert spaces between glued words."""
+    text = re.sub(r'\s*\n+\s*', ' ', text)
+    text = _GLUED_LOWER_UPPER_RE.sub(r'\1 \2', text)
+    text = _GLUED_CJK_RE.sub(r'\1 \2', text)
+    text = _GLUED_CJK_REV_RE.sub(r'\1 \2', text)
+    text = re.sub(r' {2,}', ' ', text)
+    return text.strip()
+
 
 def _bilingual_sentence_splitter(text: str) -> List[str]:
     """Split text into sentences supporting both Chinese and English."""
@@ -54,6 +71,8 @@ def _bilingual_sentence_splitter(text: str) -> List[str]:
     for part in parts:
         buf += part
         if len(buf.strip()) >= 10:
+            if buf and not buf[-1].isspace():
+                buf += " "
             sentences.append(buf)
             buf = ""
     if buf.strip():
@@ -206,27 +225,65 @@ class DocumentParser:
             })
 
         try:
-            nodes = self.reader.load_data(
-                file=file_path,
-                unstructured_kwargs=unstructured_kwargs,
-                split_documents=self.splitter is None,
-                document_kwargs={
-                    "excluded_embed_metadata_keys": self.excluded_embed_metadata_keys,
-                    "excluded_llm_metadata_keys": self.excluded_llm_metadata_keys,
-                },
-            )
             if self.splitter is not None:
-                # reader returned a single Document; attach file_path meta and semantic-split
-                nodes[0].metadata["file_path"] = file_path
-                logger.info(f"SemanticSplitter input: {len(nodes[0].get_content())} chars")
-                nodes = self.splitter.get_nodes_from_documents(nodes)
-                for _n in nodes:
-                    _n.set_content(re.sub(r'\s*\n+\s*', ' ', _n.get_content()).strip())
-                nodes = self._merge_short_chunks(nodes)
-                logger.info(f"SemanticSplitter: {file_path} → {len(nodes)} chunks")
+                nodes = self._parse_file_semantic(file_path, unstructured_kwargs)
+            else:
+                nodes = self.reader.load_data(
+                    file=file_path,
+                    unstructured_kwargs=unstructured_kwargs,
+                    split_documents=True,
+                    document_kwargs={
+                        "excluded_embed_metadata_keys": self.excluded_embed_metadata_keys,
+                        "excluded_llm_metadata_keys": self.excluded_llm_metadata_keys,
+                    },
+                )
+            for _n in nodes:
+                _n.set_content(_clean_text(_n.get_content()))
             return nodes
         except Exception as e:
             raise RuntimeError(f"Failed to parse {file_path}: {str(e)}")
+
+    def _parse_file_semantic(self, file_path: str, unstructured_kwargs: dict) -> List[BaseNode]:
+        """Semantic-split per page: partition → group elements by page → split each page."""
+
+        elements = partition(filename=file_path, **unstructured_kwargs)
+        if not elements:
+            return []
+
+        pages: Dict[int, list] = {}
+        for el in elements:
+            pg = getattr(el.metadata, "page_number", None) or 1
+            pages.setdefault(pg, []).append(el)
+
+        all_nodes: List[BaseNode] = []
+        for page_num in sorted(pages):
+            page_elements = pages[page_num]
+            text = " ".join(" ".join(str(el).split()) for el in page_elements)
+            text = _clean_text(text)
+            if not text.strip():
+                continue
+
+            doc = Document(
+                text=text,
+                metadata={
+                    "file_path": file_path,
+                    "page_number": page_num,
+                    "excluded_embed_metadata_keys": self.excluded_embed_metadata_keys,
+                    "excluded_llm_metadata_keys": self.excluded_llm_metadata_keys,
+                },
+                excluded_embed_metadata_keys=self.excluded_embed_metadata_keys,
+                excluded_llm_metadata_keys=self.excluded_llm_metadata_keys,
+            )
+            page_nodes = self.splitter.get_nodes_from_documents([doc])
+            for _n in page_nodes:
+                _n.set_content(_clean_text(_n.get_content()))
+                _n.metadata["page_number"] = page_num
+                _n.metadata["file_path"] = file_path
+            all_nodes.extend(page_nodes)
+
+        all_nodes = self._merge_short_chunks(all_nodes)
+        logger.info(f"SemanticSplitter: {file_path} → {len(all_nodes)} chunks across {len(pages)} pages")
+        return all_nodes
 
     def _merge_short_chunks(self, nodes: List[BaseNode]) -> List[BaseNode]:
         """Merge chunks shorter than semantic_min_chunk_size into the following chunk."""
