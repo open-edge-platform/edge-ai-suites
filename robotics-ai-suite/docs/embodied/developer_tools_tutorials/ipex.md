@@ -8,7 +8,7 @@ The extension can be loaded as a Python module for Python programs or linked as 
 
 Intel® Extension for PyTorch allows developers run their applications on Intel® XPU and get optimized performance without excessive changes from PyTorch code, which shortens development and validation cycles.
 
-Please see more details on [intel-extension-for-pytorch Documentation Website](https://intel.github.io/intel-extension-for-pytorch/) and github repository [intel-extension-for-pytorch](https://github.com/intel/intel-extension-for-pytorch/).
+Please see more details on the [Intel® Extension for PyTorch* Documentation Website](https://intel.github.io/intel-extension-for-pytorch/) and GitHub repository [Intel® Extension for PyTorch*](https://github.com/intel/intel-extension-for-pytorch/).
 Install Intel® Extension for PyTorch in your python environment by running the following command:
 
 ```bash
