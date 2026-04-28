@@ -8,6 +8,10 @@ run-name: "[Industrial Edge Insights Multimodal and Time Series] Functional Test
 on:
   schedule:
     - cron: '0 14 * * *' # 14:00 UTC daily
+
+  env:
+  DEFAULT_RUNNER: ubuntu-24.04
+
   workflow_dispatch:
     inputs:
       tag:
@@ -42,7 +46,7 @@ on:
         description: 'Labels for self-hosted or github hosted runners'
         required: false
         type: string
-        default: 'ubuntu-24.04'
+        default: ${{ env.DEFAULT_RUNNER }}
   workflow_call:
     inputs:
       tag:
@@ -69,17 +73,19 @@ on:
         description: 'Labels for self-hosted or github hosted runners'
         required: false
         type: string
-        default: 'ubuntu-24.04'
+        default: ${{ env.DEFAULT_RUNNER }}
 permissions: {}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+
+
 jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
-    runs-on: ${{ inputs.runner_label }}
+    runs-on: ${{ inputs.runner_label || env.DEFAULT_RUNNER }}
     permissions:
       contents: read
       packages: read
