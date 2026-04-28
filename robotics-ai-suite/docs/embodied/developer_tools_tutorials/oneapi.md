@@ -31,7 +31,6 @@ It includes:
 
 [Intel® oneAPI Base Toolkit Overview](https://www.intel.com/content/www/us/en/develop/tools/oneapi/base-toolkit.html) page for more information.
 
-(oneapi_install_label)=
 
 Install Intel® oneAPI™ Base Toolkit **2024.2.1**:
 
