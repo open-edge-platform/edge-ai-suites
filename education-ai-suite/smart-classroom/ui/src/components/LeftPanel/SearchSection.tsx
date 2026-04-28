@@ -15,7 +15,7 @@ type SearchType = "document" | "image" | "video";
 const MAX_QUERY_LENGTH = 100;
 const DEFAULT_MAX_RESULTS = 10;
 
-const ALLOWED_IMAGE_EXTENSIONS = new Set([".png"]);
+const ALLOWED_IMAGE_EXTENSIONS = new Set([".png", ".jpg", ".jpeg"]);
 
 function isAllowedImage(filename: string): boolean {
   const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
@@ -372,7 +372,7 @@ const SearchSection: React.FC = () => {
                 <input
                   ref={imageInputRef}
                   type="file"
-                  accept=".jpg"
+                  accept=".jpg,.jpeg,.png"
                   style={{ display: "none" }}
                   onChange={handleImageChange}
                 />
