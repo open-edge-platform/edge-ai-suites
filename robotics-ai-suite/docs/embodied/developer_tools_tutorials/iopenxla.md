@@ -6,4 +6,4 @@ Intel® Extension for OpenXLA* includes PJRT plugin implementation, which seamle
 
 ![Intel Extension for OpenXLA](assets/images/openxla_for_intel_gpu.png)
 
-Please see more details and get installation guide on github repository: [intel-extension-for-openxla](https://github.com/intel/intel-extension-for-openxla).
+Please see more details and get the installation guide on the [Intel® Extension for OpenXLA*](https://github.com/intel/intel-extension-for-openxla) repository.
