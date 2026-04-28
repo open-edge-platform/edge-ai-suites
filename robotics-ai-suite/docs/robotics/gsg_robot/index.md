@@ -130,13 +130,13 @@ export ROS_DOMAIN_ID=42
 
 At this point, the setup is complete! For next steps, explore the [Tutorials](../dev_guide/index_tutorials.md) for ready-to-use applications and examples.
 
-## OS Image Composer Setup
+## Image Composer Tool Setup
 
-An alternative method for setup is to create a pre-configured OS image with ROS 2 and the appropriate repositories using the OS Image Composer tool. This approach is similar to the Express Setup convenience script above, but instead of configuring an existing system, it creates a complete bootable OS image that can be deployed to multiple systems or used for fresh installations.
+An alternative method for setup is to create a pre-configured OS image with ROS 2 and the appropriate repositories using the Image Composer Tool. This approach is similar to the Express Setup convenience script above, but instead of configuring an existing system, it creates a complete bootable OS image that can be deployed to multiple systems or used for fresh installations.
 
-OS Image Composer supports creating both ISO images (for installation via USB) and raw disk images (for direct deployment to storage devices or VMs). ISO images are suitable for interactive installations, while raw images can be directly written to storage media or VMs for immediate use. If you prefer to start with a base Ubuntu installation, without needing to reimage a system, use the [Express Setup](#express-setup) or the [Step-by-step Setup](#step-by-step-setup) guide.
+Image Composer Tool supports creating both ISO images (for installation via USB) and raw disk images (for direct deployment to storage devices or VMs). ISO images are suitable for interactive installations, while raw images can be directly written to storage media or VMs for immediate use. If you prefer to start with a base Ubuntu installation, without needing to reimage a system, use the [Express Setup](#express-setup) or the [Step-by-step Setup](#step-by-step-setup) guide.
 
-For detailed instructions, see the [os-image-composer installation guide](https://github.com/open-edge-platform/os-image-composer/blob/main/docs/tutorial/installation.md). An abbreviated ISO image creation follows:
+For detailed instructions, see the [image-composer-tool installation guide](https://github.com/open-edge-platform/image-composer-tool/blob/main/docs/tutorial/installation.md). An abbreviated ISO image creation follows:
 
 1. Install Go (Go 1.24+ required) + build dependencies:
 
@@ -151,17 +151,17 @@ For detailed instructions, see the [os-image-composer installation guide](https:
    source ~/.bashrc
    ```
 
-3. Clone OS Image Composer repository:
+3. Clone Image Composer Tool repository:
 
    ```bash
-   git clone https://github.com/open-edge-platform/os-image-composer.git
-   cd os-image-composer
+   git clone https://github.com/open-edge-platform/image-composer-tool.git
+   cd image-composer-tool
    ```
 
-4. Build the tool (output: ``./os-image-composer``):
+4. Build the tool (output: ``./image-composer-tool``):
 
    ```bash
-   go build -buildmode=pie -ldflags "-s -w" ./cmd/os-image-composer
+   go build -buildmode=pie -ldflags "-s -w" ./cmd/image-composer-tool
    ```
 
 5. Build the live-installer (required for ISO images):
@@ -173,7 +173,7 @@ For detailed instructions, see the [os-image-composer installation guide](https:
 6. Build ISO image:
 
    ```bash
-   sudo -E ./os-image-composer build image-templates/ubuntu24-x86_64-robotics-jazzy-iso.yml
+   sudo -E ./image-composer-tool build image-templates/ubuntu24-x86_64-robotics-jazzy-iso.yml
    ```
 
 7. Once image is successfully built, modify the below command to point to the built image location (shown after build). Change ``/dev/sdX`` to proper USB drive location (i.e. ``/dev/sdb``). Flash ISO Image to USB drive:
@@ -546,7 +546,7 @@ sudo apt install ros-jazzy-openvino-node
 sudo apt purge ros-humble-openvino-node
 sudo apt autoremove -y
 echo PURGE | sudo debconf-communicate ros-humble-openvino-node
-sudo apt install ros-humble-openvino-node
+sudo -E apt install ros-humble-openvino-node
 ```
 
 :::
