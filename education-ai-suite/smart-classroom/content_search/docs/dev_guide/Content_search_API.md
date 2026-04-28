@@ -262,8 +262,12 @@ Response:
     "timestamp": 1774878031
 }
 ```
+
 #### Text file ingestion
-Primarily processes raw text strings passed in the request body for semantic indexing. It also supports fetching content from existing text-based objects in storage.
+
+Embeds the raw text string passed in the request body as a single node, **no chunking** and stores it in the vector database. Use this when you already have clean, pre-processed text and want to **skip file preprocess and chunking** entirely.
+
+It also supports fetching content from existing text-based objects in storage.
 
 * URL: /api/v1/object/ingest-text
 * Method: POST
@@ -272,7 +276,7 @@ Primarily processes raw text strings passed in the request body for semantic ind
 
 | Field | Type | Required | Description |
 | :--- | :--- | :--- | :--- |
-| `text` | `string` | **Yes** | **Raw text content** to be segmented, embedded, and stored in the vector database. |
+| `text` | `string` | **Yes** | **Raw text content** to be embedded, and stored in the vector database. |
 | `bucket_name` | `string` | No | Storage bucket name (used to logically group the data or build the identifier). |
 | `file_path` | `string` | No | Logical path or filename (used as a unique identifier for the text source). |
 | `meta` | `object` | No | Extra metadata to store alongside the text (e.g., `course`, `author`, `tags`). |
