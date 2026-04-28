@@ -28,12 +28,12 @@ The following patches are provided to enhance the ORB_SLAM3 source:
 
 > [!IMPORTANT]
 > Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) before proceeding.
-> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup/installation/realsense.html) to install Realsense SDK.
+> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense SDK.
 
 ## Installation
 
 1. Make sure Realsense SDK installed. If not, follow [Install Realsense SDK](
-https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup/installation/realsense.html) to install Realsense packages.
+https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense packages.
 
 Here is a minimal installation:
 

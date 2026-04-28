@@ -31,7 +31,7 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../get-started/installation/rt_linux>`).
 
    **Note**: Replace ``/opt/plcopen/plc_rt_rrbot`` with ``/opt/plcopen/plc_rt_rrbot_igh -n <path_to_ethercat_eni_file>`` to run this demo using two IEC-61158 EtherCAT servo-controlled joint.
 
@@ -117,7 +117,7 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../get-started/installation/rt_linux>`).
 
 #. Open a second terminal with elevated permissions:
 
@@ -213,7 +213,7 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../installation_setup/installation/rt_linux.rst)).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../get-started/installation/rt_linux.rst)).
 
    **Note**: ``/opt/plcopen/plc_rt_amr_rtmotion_symg`` is a sample application using EtherCAT to control the Mecanum Wheel Platform.
 
