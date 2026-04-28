@@ -554,7 +554,7 @@ sudo apt install ros-jazzy-openvino-node
 sudo apt purge ros-humble-openvino-node
 sudo apt autoremove -y
 echo PURGE | sudo debconf-communicate ros-humble-openvino-node
-sudo apt install ros-humble-openvino-node
+sudo -E apt install ros-humble-openvino-node
 ```
 
 :::
