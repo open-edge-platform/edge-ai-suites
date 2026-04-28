@@ -41,11 +41,6 @@
 [submodule "robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2"]
 	path = robotics-ai-suite/pipelines/mpc-demo/ocs2/ocs2
 	url = https://github.com/leggedrobotics/ocs2.git
-[submodule "metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision"]
-	path = metro-ai-suite/smart-traffic-intersection-agent/deps/metro-vision
-	url = https://github.com/open-edge-platform/edge-ai-suites.git
-	branch = smart-traffic-adapter-2026.0.0
-  	shallow = true
 [submodule "health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp"]
 	path = health-and-life-sciences-ai-suite/multi_modal_patient_monitoring/services/mdpnp/mdpnp
 	url = https://github.com/mdpnp/mdpnp.git
