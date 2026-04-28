@@ -33,7 +33,7 @@ Overall, the Humanoid - Imitation Learning provides a highly optimized, AI-drive
 Humanoid - Imitation Learning Resources
 =========================================
 
-- :doc:`Get Started <installation_setup>`
+- :doc:`Get Started <get_started>`
 
 - :doc:`Heterogeneous Computing <heterogeneous_computing>`
 
@@ -56,7 +56,7 @@ Humanoid - Imitation Learning Resources
    :maxdepth: 2
    :hidden:
 
-   installation_setup
+   get_started
    heterogeneous_computing
    model_tutorials
    developer_tools_tutorials

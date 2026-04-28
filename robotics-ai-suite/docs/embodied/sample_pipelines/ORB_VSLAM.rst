@@ -30,7 +30,7 @@ The source code of this component can be found here: `ORB-SLAM3-Sample <https://
 Prerequisites
 =============
 
-| Please make sure you have all the prerequisites and installation in :doc:`../installation_setup` before proceeding.
+| Please make sure you have all the prerequisites and installation in :doc:`../get_started` before proceeding.
 | And follow the guide :doc:`../installation_setup/installation/realsense` to install realsense SDK.
 
 Installation
