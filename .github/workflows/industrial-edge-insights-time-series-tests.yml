@@ -76,8 +76,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-
-
 jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
