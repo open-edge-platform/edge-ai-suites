@@ -213,7 +213,7 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../get-started/installation/rt_linux.rst)).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../get-started/installation/rt_linux.md)).
 
    **Note**: ``/opt/plcopen/plc_rt_amr_rtmotion_symg`` is a sample application using EtherCAT to control the Mecanum Wheel Platform.
 
