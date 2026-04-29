@@ -15,7 +15,7 @@
    ['CPU']
    ```
 
-   Please firstly make sure you have installed the [firmware](embodied/installation_setup/installation/gpu_firmware.rst) and [driver](embodied/installation_setup/installation/client_gpu_driver.rst) for GPU. If you are still encountering this issue:
+   Please firstly make sure you have installed the [firmware](embodied/get-started/installation/gpu_firmware.rst) and [driver](embodied/get-started/installation/client_gpu_driver.rst) for GPU. If you are still encountering this issue:
 
    ```bash
    export OCL_ICD_VENDORS=/etc/OpenCL/vendors
@@ -41,7 +41,7 @@
    RuntimeError: Native API failed. Native API returns: -1102 (PI_ERROR_UNINITIALIZED) -1102 (PI_ERROR_UNINITIALIZED)
    ```
 
-   To run IPEX workloads, please uninstall the NPU debs package installed as according to [NPU firmware](embodied/installation_setup/installation/npu_firmware.rst).
+   To run IPEX workloads, please uninstall the NPU debs package installed as according to [NPU firmware](embodied/get-started/installation/npu_firmware.rst).
 
    ```bash
    sudo dpkg --purge --force-remove-reinstreq intel-driver-compiler-npu intel-fw-npu intel-level-zero-npu
@@ -86,7 +86,7 @@
    failed to unassign iommu device!
    ```
 
-   1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in [OS Setup](embodied/installation_setup/prerequisites/os_setup.rst).
+   1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in [OS Setup](embodied/get-started/prerequisites/os_setup.rst).
 
    2. Please check all PCIe devices plugged in have been enabled correctly.
 

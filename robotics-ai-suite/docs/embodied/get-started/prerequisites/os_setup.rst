@@ -28,7 +28,7 @@ Automated Setup Script
 
 You can automate the software setup flow on this page with:
 
-`os_setup_install.sh <https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/robotics-ai-suite/docs/embodied/installation_setup/prerequisites/os_setup_install.sh>`_
+`os_setup_install.sh <https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/get-started/prerequisites/os_setup_install.sh>`_
 
 Default OS setup automation (locale + APT repositories):
 

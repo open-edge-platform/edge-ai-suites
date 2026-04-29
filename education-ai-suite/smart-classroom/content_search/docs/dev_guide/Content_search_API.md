@@ -320,7 +320,7 @@ A unified workflow that first saves the file to local storage and then immediate
 | `file` | `Binary` | Yes | The video file to be uploaded. |
 | `prompt` | `string` | No | Summarization instructions (passed as a Form field). |
 | `chunk_duration` | `integer` | No | Segment duration in seconds (passed as a Form field). |
-| `meta` | `string` | No | JSON string of metadata (e.g., '{"course": "CS101"}'). |
+| `meta` | `string` | No | JSON string of metadata (e.g., `'{"course": "CS101", "vs_enabled": true}'`). `vs_enabled` (optional): set to `true` to enable video summarization for this upload, default is `false`. |
 
 * Example:
 Request:
