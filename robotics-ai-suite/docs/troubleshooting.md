@@ -86,7 +86,7 @@
    failed to unassign iommu device!
    ```
 
-   1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in [OS Setup](embodied/get-started/prerequisites/os_setup.rst).
+   1. Please check VT-d Enabled in BIOS, refer to the BIOS configuration listed in [OS Setup](embodied/get-started/prerequisites/os_setup.md).
 
    2. Please check all PCIe devices plugged in have been enabled correctly.
 

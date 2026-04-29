@@ -83,7 +83,7 @@ The following three sections are always skipped because they require manual, pla
      Installed: 20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
    ```
 
-3. Install the real-time Linux kernel. For details, see {ref}`LinuxBSP <linuxbsp>`.
+3. Install the real-time Linux kernel. For details, see [LinuxBSP](../../packages/linuxbsp.rst).
 
    ```bash
    sudo apt install -y linux-intel-rt-experimental
@@ -213,7 +213,7 @@ Below is an example to boost the real-time core to 3GHz, with the Energy Perform
 
 ### Per-core C-State Disable
 
-Refer to [OS Setup](../prerequisites/os_setup.rst) for BIOS optimization and Linux boot parameter optimization on real-time performance, Intel C-state and P-state are enabled. It brings more power consumption to improve on GPU AI performance, but C-state can introduce jitter due to the varying times required to transition between states in isolate cores. **Per-core C-state Disable** helps minimize this jitter, providing a more stable environment for real-time task.
+Refer to [OS Setup](../prerequisites/os_setup.md) for BIOS optimization and Linux boot parameter optimization on real-time performance, Intel C-state and P-state are enabled. It brings more power consumption to improve on GPU AI performance, but C-state can introduce jitter due to the varying times required to transition between states in isolate cores. **Per-core C-state Disable** helps minimize this jitter, providing a more stable environment for real-time task.
 
 Follow with below command to disable C-state in isolate core:
 
@@ -309,4 +309,4 @@ T: 0 ( 3407) P:99 I:1000 C: 100000 Min:      928 Act:   1376 Avg:   1154 Max:   
 
 This result indicates an apparent short-term worst-case latency of 18 us. According to this, it is important to pay attention to the Max values as these are indicators of outliers. Even if the system has decent Avg (average) values, a single outlier as indicated by Max is enough to break or disturb a real-time system.
 
-If the real-time data is not good by default installation, please refer to [OS Setup](../prerequisites/os_setup.rst) for BIOS optimization and [Optimize Performance](https://eci.intel.com/docs/3.3/development/performance.html) to optimize Linux OS and application runtime on Intel® Processors.
+If the real-time data is not good by default installation, please refer to [OS Setup](../prerequisites/os_setup.md) for BIOS optimization and [Optimize Performance](https://eci.intel.com/docs/3.3/development/performance.html) to optimize Linux OS and application runtime on Intel® Processors.
