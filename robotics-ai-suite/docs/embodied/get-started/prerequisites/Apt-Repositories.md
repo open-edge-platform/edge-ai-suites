@@ -2,7 +2,7 @@ This section explains the procedure to configure the APT package manager to use 
 
 Make sure that you have the right [OS Setup](os_setup.md).
 
-## Set up ECI APT Repository
+# Set up ECI APT Repository
 
 1. Open a terminal prompt which will be used to execute the remaining steps.
 
@@ -33,7 +33,7 @@ Make sure that you have the right [OS Setup](os_setup.md).
    sudo bash -c 'echo -e "Package: libze-intel-gpu1,libze1,intel-opencl-icd,libze-dev,intel-ocloc\nPin: origin repositories.intel.com/gpu/ubuntu\nPin-Priority: 1000" >> /etc/apt/preferences.d/isar'
    ```
 
-## Set up ROS2 APT Repository
+# Set up ROS2 APT Repository
 
 1. First ensure that the [Ubuntu Universe repository](https://help.ubuntu.com/community/Repositories/Ubuntu) is enabled.
 

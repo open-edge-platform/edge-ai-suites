@@ -77,6 +77,7 @@ sudo date -s "2025-03-30 12:00"
 ## Setup Sources
 
 <!--hide_directive
-```{include} Apt-Repositories.md
-```
+:::{include} Apt-Repositories.md
+:heading-offset: 1
+:::
 hide_directive-->
