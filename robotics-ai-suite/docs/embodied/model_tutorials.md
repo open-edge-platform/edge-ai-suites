@@ -26,7 +26,6 @@ Please also find information for the models of imitation learning, grasp generat
 
 <!--hide_directive:::{toctree}
 :maxdepth: 1
-:hidden:
 
 model_tutorials/model_act
 model_tutorials/model_cns

@@ -8,7 +8,7 @@ This tutorial shows you how to set up a real-time system to control a JAKA robot
 
 ## Prerequisites
 
-Ensure you have completed the setup steps in [Installation Setup](../installation_setup.rst) and have the following:
+Ensure you have completed the setup steps in [Get Started](../get_started.md) and have the following:
 
 | Specification | Recommendation                      |
 | ------------- | ----------------------------------- |
