@@ -82,6 +82,13 @@ spec:
               items:
               - key: tls.crt
                 path: scenescape-ca.pem
+          - secret:
+              name: {{ .Release.Name }}-vdms-client-tls
+              items:
+              - key: vdms-client-cert
+                path: scenescape-vdms-c.crt
+              - key: vdms-client-key
+                path: scenescape-vdms-c.key
       - name: scene-secrets-data
         persistentVolumeClaim:
           claimName: {{ .Release.Name }}-scene-secrets-pvc

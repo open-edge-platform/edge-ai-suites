@@ -10,7 +10,7 @@ cp /config/install_package.sh /data/install_package.sh && \
 cp -r /mosquitto/secrets /run/ && \
 chmod +x /data/install_package.sh && \
 sed -i "s/<influx-api-token>/$INFLUX_TOKEN/g" /data/flows_cred.json && \
-echo "$SMART_INTERSECTION_BROKER_SERVICE_HOST    broker.scenescape.intel.com" >> /etc/hosts && \
+echo "$SMART_CORRIDOR_BROKER_SERVICE_HOST    broker.scenescape.intel.com" >> /etc/hosts && \
 /data/install_package.sh && \
 chown -R node-red:node-red /data/nodered && \
 chown -R node-red:node-red /data && \

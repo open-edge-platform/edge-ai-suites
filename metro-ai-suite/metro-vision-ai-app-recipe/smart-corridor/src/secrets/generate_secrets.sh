@@ -79,6 +79,20 @@ openssl x509 -passin pass:$CERTPASS -req -in $SECRETSDIR/certs/scenescape-vdms-s
     -out $SECRETSDIR/certs/scenescape-vdms-s.crt -days 360 -extensions x509_ext -extfile \
     <(sed -e "s/##SAN##/DNS.1=vdms.$CERTDOMAIN/" -e "s/##KEYUSAGE##/serverAuth/" $EXEC_PATH/openssl.cnf)
 
+# Generate VDMS client key and certificate
+echo Generating vdms-c.key
+openssl ecparam -name secp384r1 -genkey -noout -out $SECRETSDIR/certs/scenescape-vdms-c.key
+echo Generating CSR for vdms-client.$CERTDOMAIN
+openssl req -new -out $SECRETSDIR/certs/scenescape-vdms-c.csr -key $SECRETSDIR/certs/scenescape-vdms-c.key \
+    -config <(sed -e "s/##CN##/vdms-client.$CERTDOMAIN/" -e "s/##SAN##/DNS.1=vdms.$CERTDOMAIN/" \
+    -e "s/##KEYUSAGE##/clientAuth/" $EXEC_PATH/openssl.cnf)
+echo Generating certificate for vdms-client.$CERTDOMAIN
+openssl x509 -passin pass:$CERTPASS -req -in $SECRETSDIR/certs/scenescape-vdms-c.csr \
+    -CA $SECRETSDIR/certs/scenescape-ca.pem -CAkey $SECRETSDIR/ca/scenescape-ca.key -CAcreateserial \
+    -out $SECRETSDIR/certs/scenescape-vdms-c.crt -days 360 -extensions x509_ext -extfile \
+    <(sed -e "s/##SAN##/DNS.1=vdms.$CERTDOMAIN/" -e "s/##KEYUSAGE##/clientAuth/" $EXEC_PATH/openssl.cnf)
+chmod 644 "${SECRETSDIR}/certs/scenescape-vdms-c.key"
+
 # Generate Django secrets
 echo Generating Django secrets
 mkdir -p $SECRETSDIR/django

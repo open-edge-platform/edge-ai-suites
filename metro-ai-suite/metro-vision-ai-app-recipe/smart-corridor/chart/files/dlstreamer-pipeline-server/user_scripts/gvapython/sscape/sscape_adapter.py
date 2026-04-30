@@ -112,8 +112,15 @@ def reidPolicy(pobj, item, fw, fh):
   detectionPolicy(pobj, item, fw, fh)
   reid_vector = item['tensors'][1]['data']
   # following code snippet is from percebro/modelchain.py
-  v = struct.pack("256f",*reid_vector)
-  pobj['reid'] = base64.b64encode(v).decode('utf-8')
+  n = len(reid_vector)
+  v = struct.pack(f"{n}f",*reid_vector)
+  reid_b64 = base64.b64encode(v).decode('utf-8')
+  if 'metadata' not in pobj:
+    pobj['metadata'] = {}
+  pobj['metadata']['reid'] = {
+    'embedding_vector': reid_b64,
+    'model_name': 'vehicle-reid-0001'
+  }
   return
 
 def classificationPolicy(pobj, item, fw, fh):

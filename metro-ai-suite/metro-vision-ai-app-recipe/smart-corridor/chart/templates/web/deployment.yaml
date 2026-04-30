@@ -17,7 +17,7 @@ spec:
       annotations:
         checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
     spec:
-      {{- if .Values.externalUrls.githubRepo }}
+      {{- if and .Values.externalUrls.githubRepo (default true .Values.web.enableExampleDb) }}
       initContainers:
       - name: download-example-db
         image: {{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}
@@ -57,8 +57,10 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-supass-secret
               key: supass
+        {{- if default true .Values.web.enableExampleDb }}
         - name: EXAMPLEDB
-          value: /home/scenescape/SceneScape/example_db/smart-corridor-ri.tar.bz2
+          value: {{ default "/home/scenescape/SceneScape/example_db/smart-corridor-ri.tar.bz2" .Values.web.exampleDbPath | quote }}
+        {{- end }}
         volumeMounts:
         - name: pgserver-media
           mountPath: /workspace/media

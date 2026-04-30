@@ -198,6 +198,69 @@ spec:
             }" \
             "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
 
+          echo "Generating VDMS server certificate..."
+          openssl req -nodes -newkey rsa:2048 \
+            -keyout /tmp/certs/vdms-s.key \
+            -out /tmp/certs/vdms-s.csr \
+            -subj "/CN=vdms.scenescape.intel.com/O=smart-corridor"
+          echo "subjectAltName=DNS:vdms,DNS:vdms.scenescape.intel.com" > /tmp/certs/vdms-s.ext
+          openssl x509 -req -in /tmp/certs/vdms-s.csr -CA /tmp/certs/ca.crt -CAkey /tmp/certs/ca.key \
+            -CAcreateserial -out /tmp/certs/vdms-s.crt -days 365 -extfile /tmp/certs/vdms-s.ext
+
+          echo "Generating VDMS client certificate..."
+          openssl req -nodes -newkey rsa:2048 \
+            -keyout /tmp/certs/vdms-c.key \
+            -out /tmp/certs/vdms-c.csr \
+            -subj "/CN=vdms-client.scenescape.intel.com/O=smart-corridor"
+          echo "subjectAltName=DNS:vdms.scenescape.intel.com" > /tmp/certs/vdms-c.ext
+          openssl x509 -req -in /tmp/certs/vdms-c.csr -CA /tmp/certs/ca.crt -CAkey /tmp/certs/ca.key \
+            -CAcreateserial -out /tmp/certs/vdms-c.crt -days 365 -extfile /tmp/certs/vdms-c.ext
+
+          VDMS_S_CRT=$(base64 -w 0 /tmp/certs/vdms-s.crt)
+          VDMS_S_KEY=$(base64 -w 0 /tmp/certs/vdms-s.key)
+          VDMS_C_CRT=$(base64 -w 0 /tmp/certs/vdms-c.crt)
+          VDMS_C_KEY=$(base64 -w 0 /tmp/certs/vdms-c.key)
+
+          echo ""
+          echo "Creating VDMS server TLS secret..."
+          curl -k -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"apiVersion\": \"v1\",
+              \"kind\": \"Secret\",
+              \"metadata\": {
+                \"name\": \"smart-corridor-vdms-tls\",
+                \"namespace\": \"{{ .Release.Namespace }}\"
+              },
+              \"type\": \"Opaque\",
+              \"data\": {
+                \"vdms-server-cert\": \"$VDMS_S_CRT\",
+                \"vdms-server-key\": \"$VDMS_S_KEY\"
+              }
+            }" \
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
+          echo ""
+          echo "Creating VDMS client TLS secret..."
+          curl -k -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"apiVersion\": \"v1\",
+              \"kind\": \"Secret\",
+              \"metadata\": {
+                \"name\": \"smart-corridor-vdms-client-tls\",
+                \"namespace\": \"{{ .Release.Namespace }}\"
+              },
+              \"type\": \"Opaque\",
+              \"data\": {
+                \"vdms-client-cert\": \"$VDMS_C_CRT\",
+                \"vdms-client-key\": \"$VDMS_C_KEY\"
+              }
+            }" \
+            "{{ .Values.kubernetesAPIEndpoint }}/api/v1/namespaces/{{ .Release.Namespace }}/secrets"
+
           echo "All TLS secrets created successfully"
         volumeMounts:
         - name: service-account-token

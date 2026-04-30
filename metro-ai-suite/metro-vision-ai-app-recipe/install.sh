@@ -66,8 +66,10 @@ if docker compose ps >/dev/null 2>&1; then
 fi
 
 # Copy appropriate docker-compose file
-if [ "$SAMPLE_APP" = "smart-intersection" ] || [ "$SAMPLE_APP" = "smart-corridor" ]; then
+if [ "$SAMPLE_APP" = "smart-intersection" ]; then
     cp compose-scenescape.yml docker-compose.yml
+elif [ "$SAMPLE_APP" = "smart-corridor" ]; then
+    cp compose-scenescape-reid.yml docker-compose.yml
 else
     cp compose-without-scenescape.yml docker-compose.yml
 fi

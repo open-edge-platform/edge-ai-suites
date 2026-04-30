@@ -6,7 +6,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122north.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -66,7 +66,7 @@
                         },
                         "camera_config": {
                             "cameraid": "camera1",
-                            "metadatagenpolicy": "detectionPolicy"
+                            "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
@@ -76,7 +76,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -136,7 +136,7 @@
                         },
                         "camera_config": {
                             "cameraid": "camera2",
-                            "metadatagenpolicy": "detectionPolicy"
+                            "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
@@ -146,7 +146,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122south.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -206,7 +206,7 @@
                         },
                         "camera_config": {
                             "cameraid": "camera3",
-                            "metadatagenpolicy": "detectionPolicy"
+                            "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
@@ -216,7 +216,7 @@
                 "source": "gstreamer",
                 "queue_maxsize": 50,
                 "auto_start": true,
-                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122west.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -276,7 +276,77 @@
                         },
                         "camera_config": {
                             "cameraid": "camera4",
-                            "metadatagenpolicy": "detectionPolicy"
+                            "metadatagenpolicy": "reidPolicy"
+                        }
+                    }
+                }
+            },
+            {
+            "name": "intersection2-cam5-gpu",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "auto_start": false,
+                "pipeline": "multifilesrc loop=true location=/home/pipeline-server/videos/1122east.ts name=source ! decodebin3 ! gvapython class=PostDecodeTimestampCapture function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=timesync ! gvadetect device=GPU model-instance-id=gpudetect1 inference-interval=1 model=/home/pipeline-server/models/object_detection/intersection/openvino.xml ! queue ! gvainference model=/home/pipeline-server/models/vehicle_reid/FP16/vehicle-reid-0001.xml inference-region=roi-list ! gvametaconvert add-tensor-data=true name=metaconvert ! vapostproc ! video/x-raw,format=BGRA ! videoconvert ! video/x-raw,format=BGR ! gvapython class=PostInferenceDataPublish function=processFrame module=/home/pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py name=datapublisher ! gvametapublish name=destination ! appsink sync=true",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "ntp_config": {
+                            "element": {
+                                "name": "timesync",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "ntpServer": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "camera_config": {
+                            "element": {
+                                "name": "datapublisher",
+                                "property": "kwarg",
+                                "format": "json"
+                            },
+                            "type": "object",
+                            "properties": {
+                                "intrinsics": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "number",
+                                        "description": "Camera intrinsics as [diagonal_fov] or [horizontal_fov, vertical_fov] or [fx,fy,cx,cy] "
+                                    }
+                                },
+                                "cameraid": {
+                                    "type": "string"
+                                },
+                                "metadatagenpolicy" : {
+                                    "type": "string",
+                                    "description" : "Meta data generation policy, one of detectionPolicy(default),reidPolicy,classificationPolicy"
+                                },
+                                "publish_frame": {
+                                    "type": "boolean",
+                                    "description": "Publish frame to mqtt"
+                                }
+                            }
+                        }
+                    }
+                },
+                "payload": {
+                    "destination":{
+                        "frame": {
+                            "type": "rtsp",
+                            "path": "camera5"
+                        }
+                    },
+                    "parameters": {
+                        "ntp_config": {
+                            "ntpServer": "ntpserv"
+                        },
+                        "camera_config": {
+                            "cameraid": "camera5",
+                            "metadatagenpolicy": "reidPolicy"
                         }
                     }
                 }
