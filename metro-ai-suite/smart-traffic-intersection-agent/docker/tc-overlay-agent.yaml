@@ -15,10 +15,10 @@ services:
       resources:
         limits:
           cpus: '12'
-          memory: 14G
+          memory: 16G
         reservations:
           cpus: '8'
-          memory: 10G
+          memory: 12G
 
 networks:
   scenescape:
