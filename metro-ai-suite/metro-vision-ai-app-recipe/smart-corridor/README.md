@@ -48,6 +48,7 @@ For more details, see [Overview ](./docs/user-guide/Overview.md)
 
 ## Learn More
 
+- [Dummy Collision Detection Logic](./docs/user-guide/dummy-collision-detection.md): Details of the temporary collision metric used for Node-RED, InfluxDB, and Grafana validation.
 - [How to Deploy with Helm](./docs/user-guide/how-to-deploy-helm.md): How to deploy the application using Helm on a Kubernetes cluster.
 - [Support and Troubleshooting](./docs/user-guide/support.md): Find solutions to common issues and troubleshooting steps.
 
