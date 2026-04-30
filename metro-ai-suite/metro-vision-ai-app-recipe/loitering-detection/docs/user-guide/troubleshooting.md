@@ -64,25 +64,25 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 5. **Resolving Time Sync Issues in Prometheus**
   
-        If you see the following warning in Prometheus, it indicates a time sync issue.
+      If you see the following warning in Prometheus, it indicates a time sync issue.
       
         **Warning: Error fetching server time: Detected xxx.xxx seconds time difference between your browser and the server.**
       
-        You can following the below steps to synchronize system time using NTP.
+      You can follow the below steps to synchronize system time using NTP.
       
-        1. **Install systemd-timesyncd** if not already installed:
+      1. **Install systemd-timesyncd** if not already installed:
       
           ```bash
           sudo apt install systemd-timesyncd
           ```
       
-        2. **Check service status**:
+      2. **Check service status**:
       
           ```bash
           systemctl status systemd-timesyncd
           ```
       
-        3. **Configure an NTP server** (if behind a corporate proxy):
+      3. **Configure an NTP server** (if behind a corporate proxy):
       
           ```bash
           sudo nano /etc/systemd/timesyncd.conf
@@ -97,19 +97,19 @@ to file new tickets there (after learning about the guidelines for [Contributing
       
           Replace `corp.intel.com` with a different ntp server that is supported on your network.
       
-        4. **Restart the service**:
+      4. **Restart the service**:
       
           ```bash
           sudo systemctl restart systemd-timesyncd
           ```
       
-        5. **Verify the status**:
+      5. **Verify the status**:
       
           ```bash
           systemctl status systemd-timesyncd
           ```
       
-        This should resolve the time discrepancy in Prometheus.  
+      This should resolve the time discrepancy in Prometheus.  
 
 ## Troubleshooting Helm Deployments
 
