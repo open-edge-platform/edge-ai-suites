@@ -24,7 +24,7 @@ services:
     image: coredns/coredns:1.14.2
     networks:
       scenescape:
-        ipv4_address: 172.20.0.200
+        ipv4_address: ${TC_DNS_IP}
     configs:
       - source: corefile
         target: /Corefile
@@ -40,7 +40,7 @@ networks:
   scenescape:
     ipam:
       config:
-        - subnet: 172.20.0.0/16
+        - subnet: ${TC_SUBNET}
 
 configs:
   corefile:
