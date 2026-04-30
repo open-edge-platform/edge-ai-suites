@@ -21,7 +21,7 @@ services:
           memory: 4G
 
   tc-dns-relay:
-    image: coredns/coredns:1.14.2
+    image: coredns/coredns:1.14.3
     networks:
       scenescape:
         ipv4_address: ${TC_DNS_IP}
