@@ -61,16 +61,12 @@ spec:
               mountPath: /app/.collector-signals
             - name: host-sys
               mountPath: /sys
-              readOnly: true
             - name: host-dev
               mountPath: /dev
-              readOnly: true
             - name: host-run
               mountPath: /run
-              readOnly: true
             - name: host-proc
               mountPath: /proc
-              readOnly: true
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
