@@ -1,9 +1,10 @@
-:orphan:
+---
+orphan: true
+---
 
-.. _model_graspnet:
+(model-graspnet)=
 
-GraspNet - Baseline
-####################
+# GraspNet - Baseline
 
 Robotic grasping is a fundamental challenge in robotics, requiring the generation of stable and feasible grasps for a wide variety of objects. Existing methods often struggle with generalization across diverse objects and lack large-scale datasets for training and evaluation. The GraspNet project introduced a **GraspNet-1Billion Dataset** and a baseline **Grasp Generation Model**:
 
@@ -21,13 +22,13 @@ Robotic grasping is a fundamental challenge in robotics, requiring the generatio
 **Grasp Representation:**
 - Grasps are represented as 6-DoF poses of a robotic gripper, defined by:
 
-  - A 3D position (where the gripper should be placed).
-  - A 3D orientation (how the gripper should be aligned).
-  - Each grasp is also associated with a quality score that indicates its stability and feasibility.
+> - A 3D position (where the gripper should be placed).
+> - A 3D orientation (how the gripper should be aligned).
+> - Each grasp is also associated with a quality score that indicates its stability and feasibility.
 
-.. .. image:: ../../assets/images/graspnet.png
-   :width: 85%
-   :align: center
+% .. image:: ../../assets/images/graspnet.png
+% :width: 85%
+% :align: center
 
 **Model Architecture:**
 
@@ -49,9 +50,8 @@ Robotic grasping is a fundamental challenge in robotics, requiring the generatio
 
 **More Information:**
 
-- Full paper: https://openaccess.thecvf.com/content_CVPR_2020/papers/Fang_GraspNet-1Billion_A_Large-Scale_Benchmark_for_General_Object_Grasping_CVPR_2020_paper.pdf
-- Homepage: https://graspnet.net/
-- Github link: https://github.com/graspnet/graspnet-baseline?tab=readme-ov-file
+- Full paper: <https://openaccess.thecvf.com/content_CVPR_2020/papers/Fang_GraspNet-1Billion_A_Large-Scale_Benchmark_for_General_Object_Grasping_CVPR_2020_paper.pdf>
+- Homepage: <https://graspnet.net/>
+- Github link: <https://github.com/graspnet/graspnet-baseline?tab=readme-ov-file>
 
-Model Conversion
-================
+## Model Conversion

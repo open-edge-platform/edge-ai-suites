@@ -1,7 +1,6 @@
-.. _model_fastbev:
+(model-fastbev)=
 
-Bird's Eye View Perception: Fast-BEV
-####################################
+# Bird's Eye View Perception: Fast-BEV
 
 Bird's eye view (BEV) perception refers to a perspective in which the scene or objects are viewed from directly above,
 resembling the view one would have if they were looking down from the sky onto the scene.
@@ -34,9 +33,10 @@ interaction in various applications across autonomous driving, mobile robotics, 
 
 Fast-BEV, as an representative of BEV algorithms,
 
-.. image:: ../developer_tools_tutorials/assets/images/fastbev.png
-   :width: 85%
-   :align: center
+```{image} ../developer_tools_tutorials/assets/images/fastbev.png
+:align: center
+:width: 85%
+```
 
 **Model Architecture:**
 
@@ -48,110 +48,106 @@ Fast-BEV, as an representative of BEV algorithms,
 
 **More Information:**
 
-- Full paper: https://arxiv.org/pdf/2301.12511
-- Github link: https://github.com/Sense-GVT/Fast-BEV
+- Full paper: <https://arxiv.org/pdf/2301.12511>
+- Github link: <https://github.com/Sense-GVT/Fast-BEV>
 
-Model Conversion
-================
+## Model Conversion
 
 The FastBEV model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO.
 To enable this, the PyTorch model must first be converted to the OpenVINO IR format.
 
-All models (model.zip) can be downloaded from `Google Drive <https://drive.google.com/file/d/1wwwckM0vux5ub3U4R_zS9pm01QFmMPru/view>`_. The zip file contains the following:
+All models (model.zip) can be downloaded from [Google Drive](https://drive.google.com/file/d/1wwwckM0vux5ub3U4R_zS9pm01QFmMPru/view). The zip file contains the following:
 
 - FastBEV ONNX models and PyTorch models.
 - ResNet18 INT8 ONNX and PTQ models.
 
-For additional details, refer to the official `CUDA-FastBEV GitHub repository`_.
+For additional details, refer to the official [CUDA-FastBEV GitHub repository].
 
-.. contents:: Table of Contents
-   :local:
+<!--hide_directive
+:::{contents} Table of Contents
+:local: true
+:::
+hide_directive-->
 
-ONNX Model Directory Structure
-------------------------------
+### ONNX Model Directory Structure
 
 After unzipping `model.zip`, the following directory structure will be created:
 
-::
+```
+├── resnet18
+│   ├── fastbev-det.pth
+│   ├── fastbev_post_trt_decode.onnx
+│   ├── fastbev_post_trt.onnx
+│   ├── fastbev_pre_trt.onnx
+├── resnet18int8
+│   ├── fastbev_post_trt_decode.onnx
+│   ├── fastbev_pre_trt.onnx
+│   └── fastbev_ptq.pth
+└── resnet18int8head
+    ├── bev_ptq_head.pth
+    ├── fastbev_post_trt_decode.onnx
+    └── fastbev_pre_trt.onnx
+```
 
-    ├── resnet18
-    │   ├── fastbev-det.pth
-    │   ├── fastbev_post_trt_decode.onnx
-    │   ├── fastbev_post_trt.onnx
-    │   ├── fastbev_pre_trt.onnx
-    ├── resnet18int8
-    │   ├── fastbev_post_trt_decode.onnx
-    │   ├── fastbev_pre_trt.onnx
-    │   └── fastbev_ptq.pth
-    └── resnet18int8head
-        ├── bev_ptq_head.pth
-        ├── fastbev_post_trt_decode.onnx
-        └── fastbev_pre_trt.onnx
+### Convert ONNX to OpenVINO IR Using `ovc`
 
-Convert ONNX to OpenVINO IR Using `ovc`
--------------------------------------------
+#### Ensure OpenVINO is Installed
 
-Ensure OpenVINO is Installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> **Note:** Make sure OpenVINO is installed by following the guide:
+> [Install OpenVINO via pip](../developer_tools_tutorials/openvino.md)
 
-.. note::
-   Make sure OpenVINO is installed by following the guide:
-   :ref:`Install OpenVINO via pip <openvino_install>`
+Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, `ovc`.
 
-Once the model is in ONNX format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, ``ovc``.
+The `ovc` tool simplifies the process of converting an ONNX model to OpenVINO IR format.
 
-The ``ovc`` tool simplifies the process of converting an ONNX model to OpenVINO IR format.
+#### Steps to Convert ONNX Models
 
-Steps to Convert ONNX Models
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-1. **Navigate to the `resnet18` Folder**
+1. **Navigate to the \`resnet18\` Folder**
 
    Open a terminal and navigate to the folder containing the models:
 
-   .. code-block::  bash
+   ```bash
+   cd resnet18
+   ```
 
-      cd resnet18
-
-2. **Run the `ovc` Command for Each ONNX Model**
+2. **Run the \`ovc\` Command for Each ONNX Model**
 
    To convert `fastbev_post_trt_decode.onnx`:
 
-   .. code-block::  bash
-
-      ovc fastbev_post_trt_decode.onnx
+   ```bash
+   ovc fastbev_post_trt_decode.onnx
+   ```
 
    To convert `fastbev_post_trt.onnx`:
 
-   .. code-block::  bash
-
-      ovc fastbev_post_trt.onnx
+   ```bash
+   ovc fastbev_post_trt.onnx
+   ```
 
    To convert `fastbev_pre_trt.onnx`:
 
-   .. code-block::  bash
-
-      ovc fastbev_pre_trt.onnx
+   ```bash
+   ovc fastbev_pre_trt.onnx
+   ```
 
 By default, this command converts the ONNX model to FP16 IR format. The conversion will generate the following files for each model:
 
-- ``<model_name>.xml`` : Defines the model topology.
-- ``<model_name>.bin`` : Contains the model weights and binary data.
+- `<model_name>.xml` : Defines the model topology.
+- `<model_name>.bin` : Contains the model weights and binary data.
 
-Expected Output
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#### Expected Output
 
-After running the ``ovc`` command, you should see the following output files for each model:
+After running the `ovc` command, you should see the following output files for each model:
 
-::
-
-    fastbev_post_trt_decode.xml
-    fastbev_post_trt_decode.bin
-    fastbev_post_trt.xml
-    fastbev_post_trt.bin
-    fastbev_pre_trt.xml
-    fastbev_pre_trt.bin
+```
+fastbev_post_trt_decode.xml
+fastbev_post_trt_decode.bin
+fastbev_post_trt.xml
+fastbev_post_trt.bin
+fastbev_pre_trt.xml
+fastbev_pre_trt.bin
+```
 
 You can now use these `.xml` and `.bin` files with OpenVINO for optimized inference on Intel hardware.
 
-.. _CUDA-FastBEV GitHub repository: https://github.com/Mandylove1993/CUDA-FastBEV?tab=readme-ov-file
+[cuda-fastbev github repository]: https://github.com/Mandylove1993/CUDA-FastBEV?tab=readme-ov-file

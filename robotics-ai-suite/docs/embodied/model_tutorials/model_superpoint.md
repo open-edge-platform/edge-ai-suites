@@ -1,7 +1,6 @@
-.. _model_superpoint:
+(model-superpoint)=
 
-Feature Extraction Model: SuperPoint
-####################################
+# Feature Extraction Model: SuperPoint
 
 SuperPoint is a self-supervised framework for interest point detection and description in images, suitable for a large
 number of multiple-view geometry problems in computer vision. As opposed to patch-based neural networks,
@@ -12,9 +11,10 @@ multi-homography approach for boosting interest point detection repeatability an
 the initial pre-adapted deep model and any other traditional corner detector. The final system gives a state-of-the-art
 homography estimation results comparing the traditional feature extraction algorithms such as LIFT, SIFT and ORB.
 
-.. image:: ../developer_tools_tutorials/assets/images/superpoint.png
-   :width: 85%
-   :align: center
+```{image} ../developer_tools_tutorials/assets/images/superpoint.png
+:align: center
+:width: 85%
+```
 
 **Model Architecture:**
 
@@ -35,49 +35,50 @@ homography estimation results comparing the traditional feature extraction algor
 
 **More Information:**
 
-- Full paper: https://arxiv.org/pdf/1712.07629
-- Github link: https://github.com/rpautrat/SuperPoint
+- Full paper: <https://arxiv.org/pdf/1712.07629>
+- Github link: <https://github.com/rpautrat/SuperPoint>
 
-Model Conversion
-================
+## Model Conversion
+
 The SuperPoint model is trained using TensorFlow but can achieve optimized inference performance on Intel devices using OpenVINO™.
 To enable this, the TensorFlow model can be directly converted to the OpenVINO™ IR format.
 
-.. contents:: Table of Contents
-   :local:
+<!--hide_directive
+:::{contents} Table of Contents
+:local: true
+:::
+hide_directive-->
 
-Download the Pretrained Model
------------------------------
+### Download the Pretrained Model
+
 The pretrained model **sp_v6.tgz** can be downloaded directly from the repository:
-`SuperPoint Pretrained Models <https://github.com/rpautrat/SuperPoint/tree/master/pretrained_models>`_
+[SuperPoint Pretrained Models](https://github.com/rpautrat/SuperPoint/tree/master/pretrained_models)
 
 After downloading, extract the model using the following command:
 
-.. code-block:: bash
+```bash
+tar -xvzf sp_v6.tgz
+```
 
-   tar -xvzf sp_v6.tgz
+### Convert TensorFlow Model to OpenVINO IR
 
-Convert TensorFlow Model to OpenVINO IR
----------------------------------------
+#### Ensure OpenVINO is Installed
 
-Ensure OpenVINO is Installed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. note::
-   Make sure OpenVINO is installed by following the guide:
-   :ref:`Install OpenVINO via pip <openvino_install>`
+> **Note:** Make sure OpenVINO is installed by following the guide:
+> [Install OpenVINO via pip](../developer_tools_tutorials/openvino.md)
 
-Convert the Model using OpenVINO Conversion Tool
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Since the model is in TensorFlow format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, ``ovc``.
+#### Convert the Model using OpenVINO Conversion Tool
+
+Since the model is in TensorFlow format, it can be converted to OpenVINO's Intermediate Representation (IR) format using OpenVINO's command-line model conversion tool, `ovc`.
 
 Run the following command to perform the conversion:
 
-.. code-block:: bash
+```bash
+cd sp_v6
+ovc ./ --input [1,1280,720,1]
+```
 
-   cd sp_v6
-   ovc ./ --input [1,1280,720,1]
-
-- **\--input [1,1280,720,1]**: Specifies the input dimensions of the model. The parameters represent:
+- **--input [1,1280,720,1]**: Specifies the input dimensions of the model. The parameters represent:
 
   - `1`: Batch size (process 1 image at a time).
   - `1280`: Height of the input image (adjust according to your input data).
@@ -89,13 +90,13 @@ By default, this command converts the model to FP16 IR format, generating the fo
 - **sp_v6.xml**: Defines the model topology (structure and layers).
 - **sp_v6.bin**: Contains the model weights and binary data.
 
-If you need an FP32 precision model, add the following parameter to the ``ovc`` conversion command:
+If you need an FP32 precision model, add the following parameter to the `ovc` conversion command:
 
-.. code-block:: bash
+```bash
+ovc ./ --input [1,1280,720,1] --compress_to_fp16=False
+```
 
-   ovc ./ --input [1,1280,720,1] --compress_to_fp16=False
+### Additional Notes
 
-Additional Notes
-----------------
 - Converting to FP16 (default) generally results in better performance on Intel devices (especially those with AVX-512 support) while maintaining a good balance of accuracy.
 - FP32 models should be used if you need higher accuracy but are willing to trade some inference speed for it.

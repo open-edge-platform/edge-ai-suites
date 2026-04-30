@@ -1,15 +1,16 @@
-:orphan:
+---
+orphan: true
+---
 
-.. _model_pi0:
+(model-pi0)=
 
-General-purpose robot foundation model (Pi0)
-#############################################
+# General-purpose robot foundation model (Pi0)
 
 Pi0 created by Physical Intelligence introduces a groundbreaking robotic model designed to integrate vision, language, and action (VLA) for general-purpose robotic tasks.
 
-.. .. image:: ../../assets/images/pi0.png
-   :width: 85%
-   :align: center
+% .. image:: ../../assets/images/pi0.png
+% :width: 85%
+% :align: center
 
 **Model Architecture:**
 
@@ -18,11 +19,8 @@ Pi0 created by Physical Intelligence introduces a groundbreaking robotic model d
 
 **More Information:**
 
-- Full paper: https://www.pi.website/download/pi0.pdf
-- Homepage: https://www.pi.website/blog/pi0
-- Github link: https://github.com/Physical-Intelligence/openpi
+- Full paper: <https://www.pi.website/download/pi0.pdf>
+- Homepage: <https://www.pi.website/blog/pi0>
+- Github link: <https://github.com/Physical-Intelligence/openpi>
 
-Model Conversion
-================
-
-
+## Model Conversion

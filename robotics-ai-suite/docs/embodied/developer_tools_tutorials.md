@@ -12,7 +12,7 @@ Please get more information in the following sections:
 
 Also, you can find some advice for arranging heterogeneous computing through different workloads in the following section:
 
-- [Heterogeneous Computing](heterogeneous_computing.rst)
+- [Heterogeneous Computing](heterogeneous_computing.md)
 
 Some of the models used in Embodied Intelligence solutions are enabled on Intel platforms, please see here to get tutorials:
 

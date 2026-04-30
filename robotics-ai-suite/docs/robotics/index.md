@@ -1,5 +1,4 @@
-Autonomous Mobile Robot
-************************
+# Autonomous Mobile Robot
 
 The Autonomous Mobile Robot provides software packages and pre-validated hardware modules for sensor data ingestion, classification, environment modeling, action planning, action control. Built on the (ROS 2 Humble) robot operating system, it also features reference algorithms and working examples.
 
@@ -10,51 +9,55 @@ Develop, build, and deploy end-to-end mobile robot applications with this purpos
 
 Click each icon to learn more.
 
-.. grid:: 2
+<!--hide_directive
+::::{grid} 1 2 2 2
+:::{grid-item-card} Get Started with Autonomous Mobile Robot
+:class-card: homepage-card-container-big
+:link: ./gsg_robot/index.html
 
-    .. grid-item-card:: Get Started with Autonomous Mobile Robot
-        :link: gsg_robot/index
-        :link-type: doc
-        :link-alt: clickable cards
+Install a Robot Kit.
+:::
 
-        Install a Robot Kit.
+:::{grid-item-card} How it works
+:class-card: homepage-card-container-big
+:link: ./dev_guide/index_howitworks.html
 
-    .. grid-item-card:: How it works
-        :link: dev_guide/index_howitworks
-        :link-type: doc
-        :link-alt: clickable cards
+Describes how the software works.
+:::
 
-        Describes how the software works.
+:::{grid-item-card} Tutorials
+:class-card: homepage-card-container-big
+:link: ./dev_guide/index_tutorials.html
 
-    .. grid-item-card:: Tutorials
-        :link: dev_guide/index_tutorials
-        :link-type: doc
-        :link-alt: clickable cards
+Provides a learning path for developers to use and configure Autonomous Mobile Robot.
+:::
 
-        Provides a learning path for developers to use and configure Autonomous Mobile Robot.
+:::{grid-item-card} System Integrators
+:class-card: homepage-card-container-big
+:link: ./dev_guide/index_systemintegrator.html
 
-    .. grid-item-card:: System Integrators
-        :link: dev_guide/index_systemintegrator
-        :link-type: doc
-        :link-alt: clickable cards
+Information specifically for System Integrators.
+:::
 
-        Information specifically for System Integrators.
+:::{grid-item-card} GMSL Guide
+:class-card: homepage-card-container-big
+:link: ./dev_guide/index_gmslguide.html
 
-    .. grid-item-card:: GMSL Guide
-        :link: dev_guide/index_gmslguide
-        :link-type: doc
-        :link-alt: clickable cards
+Using GMSL cameras with the Autonomous Mobile Robot.
+:::
+::::
+hide_directive-->
 
-        Using GMSL cameras with the Autonomous Mobile Robot.
+<!--hide_directive
+:::{toctree}
+:hidden:
 
+gsg_robot/index
+dev_guide/index_howitworks
+dev_guide/index_tutorials
+dev_guide/index_systemintegrator
+GMSL Guide <dev_guide/index_gmslguide>
+Release Notes <release-notes>
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   gsg_robot/index
-   dev_guide/index_howitworks
-   dev_guide/index_tutorials
-   dev_guide/index_systemintegrator
-   GMSL Guide <dev_guide/index_gmslguide>
-   Release Notes <release-notes>
+:::
+hide_directive-->

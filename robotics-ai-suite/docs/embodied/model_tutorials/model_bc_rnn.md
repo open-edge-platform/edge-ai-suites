@@ -1,9 +1,10 @@
-:orphan:
+---
+orphan: true
+---
 
-.. _model_bc_rnn:
+(model-bc-rnn)=
 
-BC-RNN & BC-Transformer
-########################
+# BC-RNN & BC-Transformer
 
 **Behavior Cloning with Recurrent Neural Networks (BC-RNN)** is a behavior cloning model that uses a recurrent neural network (RNN) to encode temporal dependencies in demonstration data. The model learns to map observations (e.g., images, sensor data) to actions by imitating expert demonstrations. **Behavioral Cloning with an Transformer network (BC-Transformer)** is a behavioral cloning model share the similar architecture with BC-RNN but replace the RNN backbone with a Transformer backbone.
 
@@ -27,9 +28,8 @@ BC-RNN & BC-Transformer
 
 **More Information:**
 
-- Full paper: https://arxiv.org/abs/2108.03298
-- Homepage: https://robomimic.github.io/
-- Github link: https://github.com/ARISE-Initiative/robomimic
+- Full paper: <https://arxiv.org/abs/2108.03298>
+- Homepage: <https://robomimic.github.io/>
+- Github link: <https://github.com/ARISE-Initiative/robomimic>
 
-Model Conversion
-================
+## Model Conversion
