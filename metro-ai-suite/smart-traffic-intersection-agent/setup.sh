@@ -39,43 +39,46 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CO
 
 # Set TC overlay if ENABLE_TC env variable is set
 if [ "$ENABLE_TC" = "true" ]; then
-    if [ -f "${APP_DIR}/check_tc_deployment.sh" ]; then
-        if ! bash "${APP_DIR}/check_tc_deployment.sh" 2>/dev/null; then
-            echo -e "${RED}ERROR: Trusted Compute deployment verification failed${NC}"
-            echo -e "${YELLOW}Please ensure Kata Containers is properly installed and configured${NC}"
-            return 1
-        fi
-    fi
-    
-    # Validate GPU and Trusted Compute compatibility
-    if [ "$VLM_DEVICE" = "GPU" ]; then
-        echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
-        echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
-        return 1
-    fi
-    
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
     TC_OVERLAY_DEPS="-f ${APP_DIR}/docker/tc-overlay-deps.yaml"
     TC_OVERLAY_ALL="${TC_OVERLAY_AGENT} ${TC_OVERLAY_DEPS}"
-
-    #Configure TC network settings and create resolv.conf for DNS relay
-    export TC_SUBNET="${TC_SUBNET:-172.20.0.0/16}"
-    if ! [[ "$TC_SUBNET" =~ ^172\.([0-9]+)\.0\.0/16$ ]] || [ "${BASH_REMATCH[1]}" -lt 18 ] || [ "${BASH_REMATCH[1]}" -gt 31 ]; then
-        echo -e "${RED}ERROR: TC_SUBNET must be exactly 172.X.0.0/16 where X is 18-31 (current: ${TC_SUBNET})${NC}"
-        return 1
-    fi
-
-    # Check if subnet is already in use by Docker networks
-    if docker network inspect $(docker network ls -q) 2>/dev/null | grep -q "\"Subnet\": \"${TC_SUBNET}\""; then
-        echo -e "${RED}ERROR: Subnet ${TC_SUBNET} is already in use by an existing Docker network${NC}"
-        return 1
-    fi
     
-    export TC_DNS_IP="$(echo "$TC_SUBNET" | sed -E 's/\.[0-9]+\/[0-9]+$//').200"
-    echo -e "${CYAN}==> Configuring TC network settings - Subnet: ${TC_SUBNET}, DNS Relay IP: ${TC_DNS_IP}${NC}"
-    echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/docker/tc-resolv.conf"
-    echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf"
-    echo -e "${BLUE}==> Trusted Compute security enabled ${NC}"
+    # Only validate and configure network for operations that start containers
+    if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
+        if [ -f "${APP_DIR}/check_tc_deployment.sh" ]; then
+            if ! bash "${APP_DIR}/check_tc_deployment.sh" 2>/dev/null; then
+                echo -e "${RED}ERROR: Trusted Compute deployment verification failed${NC}"
+                echo -e "${YELLOW}Please ensure Kata Containers is properly installed and configured${NC}"
+                return 1
+            fi
+        fi
+        
+        # Validate GPU and Trusted Compute compatibility
+        if [ "$VLM_DEVICE" = "GPU" ]; then
+            echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
+            echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
+            return 1
+        fi
+        
+        #Configure TC network settings and create resolv.conf for DNS relay
+        export TC_SUBNET="${TC_SUBNET:-172.20.0.0/16}"
+        if ! [[ "$TC_SUBNET" =~ ^172\.([0-9]+)\.0\.0/16$ ]] || [ "${BASH_REMATCH[1]}" -lt 18 ] || [ "${BASH_REMATCH[1]}" -gt 31 ]; then
+            echo -e "${RED}ERROR: TC_SUBNET must be exactly 172.X.0.0/16 where X is 18-31 (current: ${TC_SUBNET})${NC}"
+            return 1
+        fi
+
+        # Check if subnet is already in use by Docker networks
+        if docker network inspect $(docker network ls -q) 2>/dev/null | grep -q "\"Subnet\": \"${TC_SUBNET}\""; then
+            echo -e "${RED}ERROR: Subnet ${TC_SUBNET} is already in use by an existing Docker network${NC}"
+            return 1
+        fi
+        
+        export TC_DNS_IP="$(echo "$TC_SUBNET" | sed -E 's/\.[0-9]+\/[0-9]+$//').200"
+        echo -e "${CYAN}==> Configuring TC network settings - Subnet: ${TC_SUBNET}, DNS Relay IP: ${TC_DNS_IP}${NC}"
+        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/docker/tc-resolv.conf"
+        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf"
+        echo -e "${BLUE}==> Trusted Compute security enabled ${NC}"
+    fi
 else
     TC_OVERLAY_AGENT=""; TC_OVERLAY_DEPS=""; TC_OVERLAY_ALL=""
 fi
