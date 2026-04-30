@@ -7,7 +7,7 @@ starting from Intel® Core™ Ultra generation of CPUs (formerly known as Meteor
 It enables energy-efficient execution of artificial neural network tasks.
 
 To make sure that your system has an NPU available, please follow
-[the steps](https://www.intel.com/content/www/us/en/support/articles/000097597/processors.html).
+the steps in the [dedicated guide on how to do so](https://www.intel.com/content/www/us/en/support/articles/000097597/processors.html).
 
 The full device name is Neural Processing Unit, but the Linux kernel driver uses
 the older name - Versatile Processing Unit (VPU).
@@ -82,7 +82,7 @@ the older name - Versatile Processing Unit (VPU).
    # user needs to restart the session to use the new group (log out and log in)
    ```
 
-   The above steps must be repeated each time module is reloaded or on every reboot.
+   The above steps must be repeated each time the module is reloaded or on every reboot.
    To avoid manual setup of the group for `accel` device, the udev rules can be used:
 
    ```bash
@@ -91,7 +91,7 @@ the older name - Versatile Processing Unit (VPU).
    sudo udevadm trigger --subsystem-match=accel
    ```
 
-> **Tip:** In case of NPU is not visible, always check the access to the device with following command:
+> **Tip:** In case the NPU is not visible, always check the access to the device with the following command:
 >
 > ```console
 > ls -lah /dev/accel/accel0

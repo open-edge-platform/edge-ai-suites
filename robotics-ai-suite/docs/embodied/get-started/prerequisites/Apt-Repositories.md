@@ -19,7 +19,7 @@ Make sure that you have the right [OS Setup](os_setup.md).
    echo "deb-src [signed-by=/usr/share/keyrings/eci-archive-keyring.gpg] https://eci.intel.com/repos/$(source /etc/os-release && echo $VERSION_CODENAME) isar main" | sudo tee -a /etc/apt/sources.list.d/eci.list
    ```
 
-   **Note**: The auto upgrade feature in Canonical Ubuntu will change the deployment environment over time. If you do not want to auto upgrade, execute the following commands to disable auto upgrade:
+   **Note**: The auto upgrade feature in Canonical Ubuntu will change the deployment environment over time. If you do not want to auto upgrade, execute the following commands to disable the feature:
 
    ```bash
    sudo sed -i "s/APT::Periodic::Update-Package-Lists \"1\"/APT::Periodic::Update-Package-Lists \"0\"/g" "/etc/apt/apt.conf.d/20auto-upgrades"

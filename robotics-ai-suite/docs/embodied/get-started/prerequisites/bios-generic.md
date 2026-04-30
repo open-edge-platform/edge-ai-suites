@@ -26,7 +26,7 @@
 | Legacy IO Low Latency | Enabled | Intel Advanced Menu ⟶ PCH-IO Configuration |
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> Generic (non real-time)
+:::{tab-item}hide_directive--> Generic (non-real-time)
 
 | Setting Name | Option | Setting Menu |
 |---|---|---|
