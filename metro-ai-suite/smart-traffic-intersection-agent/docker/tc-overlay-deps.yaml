@@ -15,10 +15,10 @@ services:
       resources:
         limits:
           cpus: '8'
-          memory: 8G
+          memory: 4G
         reservations:
           cpus: '4'
-          memory: 4G
+          memory: 2G
 
   tc-dns-relay:
     image: coredns/coredns:1.14.3

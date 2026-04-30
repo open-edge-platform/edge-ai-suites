@@ -177,6 +177,8 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         if [ -d "$RI_DIR" ]; then
             rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
         fi
+        rm -f "${APP_DIR}/docker/tc-resolv.conf" 2>/dev/null || true
+        rm -f "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf" 2>/dev/null || true
         echo -e "${GREEN}Cleanup completed successfully. ${NC}"
     fi
 
@@ -236,10 +238,8 @@ check_and_setup_dependencies() {
     # Create symbolic link to compose-scenescape.yml in docker dir of agent application
     rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
     ln -sf "$DEPS_DIR/compose-scenescape.yml" "$APP_DIR/docker/ri-compose.yaml"
-    return 0
 
-    rm -f "${APP_DIR}/docker/tc-resolv.conf" 2>/dev/null || true
-    rm -f "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf" 2>/dev/null || true
+    return 0
 }
 
 # Verify dependencies and setup (skip if stopping/cleaning services or only showing help or setting env vars)
@@ -695,7 +695,7 @@ restart_service() {
             fi
 
             # Restart all services
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --force-recreate 
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"

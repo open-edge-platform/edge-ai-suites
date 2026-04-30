@@ -281,24 +281,9 @@ Follow the [Trusted Compute baremetal installation guide](https://github.com/ope
 
 ### 2. Deploy the Smart Traffic Intersection Agent with Trusted Compute
 
-```bash
-export ENABLE_TC=true
-source ./setup.sh --setup
-```
+#### Configure Network Settings
 
-The DL Streamer Pipeline Server and openvino model server (OVMS) containers will run
-inside hardware-isolated TC VMs, protecting inference workloads and video data from
-untrusted co-tenants on the same host.
-
-#### Custom Network Configuration
-
-By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. You can customize this subnet to avoid conflicts with existing networks:
-
-```bash
-export ENABLE_TC=true
-export TC_SUBNET=172.25.0.0/16
-source ./setup.sh --setup
-```
+By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
 
 **Requirements:**
 - Subnet format must be exactly `172.X.0.0/16` where X is between 18-31 (RFC 1918 private IP range)
@@ -307,9 +292,20 @@ source ./setup.sh --setup
 
 **Example:**
 ```bash
-# Using custom subnet 172.25.0.0/16 (DNS relay at 172.25.0.200)
-export TC_SUBNET=172.25.0.0/16
+# Optional: Customize the subnet if needed (default is 172.20.0.0/16)
+export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
 ```
+
+#### Deploy with Trusted Compute
+
+```bash
+export ENABLE_TC=true
+source ./setup.sh --setup
+```
+
+The DL Streamer Pipeline Server and openvino model server (OVMS) containers will run
+inside hardware-isolated TC VMs, protecting inference workloads and video data from
+untrusted co-tenants on the same host.
 
 > **Note:** All other setup and configuration steps remain the same as described in the
 > [Quick Start with Setup Script](#quick-start-with-setup-script) section above.
