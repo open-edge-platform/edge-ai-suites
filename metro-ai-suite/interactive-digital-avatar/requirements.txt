@@ -1,46 +1,46 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
 # baisc
-torch==2.8.0
-torchvision==0.16.2
-torchaudio==2.1.2
-numpy==1.22.4
-opencv-python==4.8.1.78
-openvino-dev==2024.3.0
-openvino-genai==2024.3.0
+torch==2.11.0+cpu
+torchvision==0.26.0+cpu
+torchaudio==2.11.0+cpu
+numpy==2.4.4
+opencv-python==4.13.0.92
+openvino-dev==2024.6.0
+openvino-genai==2026.1.0.0
 
 # paddle speech
-paddlepaddle==2.6.1
+paddlepaddle==3.3.1
 paddlespeech==1.5.0
-typeguard==2.13.3
-nltk==3.9.3
+typeguard==4.5.1
+nltk==3.9.4
 
 # funasr
-funasr==1.1.4
-modelscope==1.16.1
+funasr==1.3.1
+modelscope==1.36.3
 funasr-onnx==0.4.1
-onnxruntime==1.20.0
+onnxruntime==1.25.1
 
 # museTalk
-transformers==4.53.0
-soundfile==0.12.1
-diffusers==0.27.2
-accelerate==0.28.0
-huggingface_hub==0.25.0
+transformers==5.7.0
+soundfile==0.13.1
+diffusers==0.38.0
+accelerate==1.13.0
+huggingface_hub==1.13.0
 
 # mmcv
 openmim==0.3.9
 
 # misc
 ffmpeg-python==0.2.0
-scipy==1.7.3
-moviepy==1.0.3
-playsound==1.2.2
+scipy==1.17.1
+moviepy==2.2.1
+playsound==1.3.0
 pyaudio==0.2.14
 keyboard==0.13.5
-PyGObject==3.48.2; sys_platform == 'linux'
-tomli==2.0.1
+PyGObject==3.56.2; sys_platform == 'linux'
+tomli==2.4.1
 
 # 3D render client
-python-socketio==5.14.0
-eventlet==0.40.3
+python-socketio==5.16.1
+eventlet==0.41.0
