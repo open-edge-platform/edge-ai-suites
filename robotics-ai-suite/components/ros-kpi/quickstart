@@ -94,22 +94,22 @@ case $choice in
 
         case $w_choice in
             1)
-                read -rp "Goals to reach (default=3, 0=ignore): " goals
-                goals=${goals:-3}
+                read -rp "Goals to reach (default=5, 0=ignore): " goals
+                goals=${goals:-5}
                 read -rp "Timeout in seconds (default=120): " timeout
                 timeout=${timeout:-120}
                 bash src/wandering_run.sh --goals "$goals" --timeout "$timeout"
                 ;;
             2)
-                read -rp "Goals to reach (default=3, 0=ignore): " goals
-                goals=${goals:-3}
+                read -rp "Goals to reach (default=5, 0=ignore): " goals
+                goals=${goals:-5}
                 read -rp "Timeout in seconds (default=120): " timeout
                 timeout=${timeout:-120}
                 bash src/wandering_run.sh --goals "$goals" --timeout "$timeout" --record
                 ;;
             3)
-                read -rp "Goals to reach (default=3, 0=ignore): " goals
-                goals=${goals:-3}
+                read -rp "Goals to reach (default=5, 0=ignore): " goals
+                goals=${goals:-5}
                 read -rp "Timeout in seconds (default=120): " timeout
                 timeout=${timeout:-120}
                 bash src/wandering_run.sh --goals "$goals" --timeout "$timeout" --record --plot
@@ -197,20 +197,21 @@ case $choice in
         echo "  ${GREEN}3)${NC} Analyze a specific bag (enter path)"
         echo "  ${GREEN}4)${NC} Aggregate benchmark results (enter bench dir)"
         echo "  ${GREEN}5)${NC} View cross-session KPI averages"
+        echo "  ${GREEN}6)${NC} Level 2 pipeline KPI (end-to-end latency + drop rate)"
         echo "  ${GREEN}0)${NC} Back"
         echo ""
         read -rp "Choice: " analyze_choice
 
         case $analyze_choice in
             1)
-                last_bag=$(find monitoring_sessions/wandering -maxdepth 2 -type d -name 'rosbag2_*' 2>/dev/null | sort -r | head -1)
+                last_bag=$(find monitoring_sessions/wandering -maxdepth 2 -type d -name 'bag' 2>/dev/null | sort -r | head -1)
                 if [ -z "$last_bag" ]; then echo "No wandering bag found."; exit 1; fi
-                uv run python src/analyze_rosbag.py "$last_bag"
+                uv run python src/analyze_trigger_latency.py --bag "$last_bag" --summary-only
                 ;;
             2)
-                last_bag=$(find monitoring_sessions/picknplace -maxdepth 2 -type d -name 'rosbag2_*' 2>/dev/null | sort -r | head -1)
+                last_bag=$(find monitoring_sessions/picknplace -maxdepth 2 -type d -name 'bag' 2>/dev/null | sort -r | head -1)
                 if [ -z "$last_bag" ]; then echo "No pick-n-place bag found."; exit 1; fi
-                uv run python src/analyze_rosbag.py "$last_bag"
+                uv run python src/analyze_trigger_latency.py --bag "$last_bag" --summary-only
                 ;;
             3)
                 read -rp "Path to rosbag2 directory: " bag_path
@@ -232,6 +233,14 @@ case $choice in
                 read -rp "Number of recent sessions to average (default=5): " runs
                 runs=${runs:-5}
                 uv run python src/view_average.py --runs "$runs"
+                ;;
+            6)
+                last_kpi=$(find monitoring_sessions/wandering -maxdepth 2 -name 'kpi.json' 2>/dev/null | sort -r | head -1)
+                if [ -z "$last_kpi" ]; then echo "No wandering kpi.json found. Run option 4→1 first."; exit 1; fi
+                session_dir=$(dirname "$last_kpi")
+                uv run python src/analyze_pipeline_latency.py \
+                    --kpi "$last_kpi" \
+                    --json-out "${session_dir}/kpi_level2.json"
                 ;;
             0) echo "Back."; exit 0 ;;
             *) echo "Invalid choice"; exit 1 ;;

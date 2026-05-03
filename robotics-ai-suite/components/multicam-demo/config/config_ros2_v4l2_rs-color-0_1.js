@@ -9,7 +9,10 @@
 		"device": 	"GPU",
 		"data_type": "FP16",
 		"source": 	"/dev/video-rs-color-0",
-		"adapter":  "yolov8"
+		"adapter":  "yolov8",
+        "width":        640,
+        "height":       480,
+        "format":   "YUYV"
 	},
 	{
 		"name": 	"yolov8n",
@@ -17,6 +20,9 @@
 		"device": 	"GPU",
 		"data_type": "FP16",
 		"source": 	"/dev/video-rs-color-1",
-		"adapter":  "yolov8"
+		"adapter":  "yolov8",
+        "width":        640,
+        "height":       480,
+        "format":   "YUYV"
 	}
 ]
