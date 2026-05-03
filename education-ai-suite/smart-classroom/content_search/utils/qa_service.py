@@ -41,7 +41,7 @@ _MAX_HISTORY_TURNS = int(os.getenv("QA_MAX_HISTORY_TURNS", "3"))
 # Default retrieval and generation limits read from config.yaml via env vars.
 # These are the server-side defaults; the caller (endpoint) may override per-request
 # as long as the per-request value does not exceed these maximums.
-_DEFAULT_MAX_CONTEXT = int(os.getenv("QA_MAX_CONTEXT", "5"))
+_DEFAULT_MAX_CONTEXT = int(os.getenv("QA_MAX_CONTEXT", "10"))
 _DEFAULT_MAX_TOKENS = int(os.getenv("QA_MAX_TOKENS", "1024"))
 
 
@@ -103,18 +103,30 @@ class QAService:
             meta = r.get("meta") or {}
             # Text content: document chunks store it in chunk_text;
             # video frame results have summary_text attached by the PostProcessor.
+            # For visual results (video frames, images) without any text, build a
+            # descriptive fallback so the VLM still receives context about every
+            # match — consistent with what the Search functionality returns.
             chunk_text = (
                 meta.get("chunk_text")
                 or meta.get("summary_text")
                 or ""
             )
-            if not chunk_text:
-                continue
 
             file_name = meta.get("file_name") or meta.get("file_path", "unknown").rsplit("/", 1)[-1]
             source_label = f"[Source: {file_name}]"
             if meta.get("video_pin_second") is not None:
                 source_label += f" [at {_format_seconds(meta['video_pin_second'])}]"
+
+            if not chunk_text:
+                # Visual result (video frame or image) with no extracted text yet.
+                content_type = meta.get("type") or "content"
+                if meta.get("video_pin_second") is not None:
+                    chunk_text = (
+                        f"[Relevant {content_type} frame from '{file_name}' "
+                        f"at {_format_seconds(meta['video_pin_second'])}]"
+                    )
+                else:
+                    chunk_text = f"[Relevant {content_type} from '{file_name}']"
 
             context_parts.append(f"{source_label}\n{chunk_text}")
             sources.append({
