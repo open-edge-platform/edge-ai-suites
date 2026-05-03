@@ -5235,3 +5235,79 @@ def get_seaweedfs_bucket_files(bucket_url):
             "total_files": 0
         }
 
+
+def log_vision_pipeline_diagnostics(context, reason, log_tail=120):
+    """Emit a structured diagnostic dump for vision/fusion/InfluxDB pipeline failures.
+
+    Logs:
+      - The reason / failing step
+      - Running status of every multimodal container
+      - Last N log lines of dlstreamer-pipeline-server, ia-fusion-analytics, ia-influxdb
+      - List of measurements currently present in InfluxDB (to detect name drift)
+      - Configured topic/measurement names for cross-check
+    """
+    logger.error("=" * 80)
+    logger.error("VISION PIPELINE DIAGNOSTICS - reason: %s", reason)
+    logger.error("=" * 80)
+
+    # 1) Container running status
+    try:
+        container_list = constants.SAMPLE_APPS_CONFIG[constants.MULTIMODAL_SAMPLE_APP][
+            "multimodal_container_list"
+        ]
+        logger.error("[diag] Container running status:")
+        for name in container_list:
+            running = container_is_running(name)
+            logger.error("  - %s: running=%s", name, running)
+    except Exception as e:
+        logger.error("[diag] Failed to enumerate containers: %s", e)
+
+    # 2) Tail logs of the producers in the vision path
+    for cname_key in ("dlstreamer", "fusion_analytics", "influxdb"):
+        try:
+            cname = constants.CONTAINERS[cname_key]["name"]
+        except Exception:
+            continue
+        try:
+            logs = get_container_logs(cname, tail=log_tail)
+            logger.error("[diag] Last %d log lines of %s:\n%s", log_tail, cname, logs)
+        except Exception as e:
+            logger.error("[diag] Could not read logs for %s: %s", cname, e)
+
+    # 3) List InfluxDB measurements to surface name drift
+    try:
+        creds = (context or {}).get("credentials", {}) if isinstance(context, dict) else {}
+        username = creds.get("INFLUXDB_USERNAME", "")
+        password = creds.get("INFLUXDB_PASSWORD", "")
+        influx = constants.CONTAINERS["influxdb"]["name"]
+        if username and password:
+            cmd = (
+                f'docker exec {influx} influx '
+                f'-username {username} -password {password} '
+                f'-database {constants.INFLUXDB_DATABASE} '
+                f'-execute "SHOW MEASUREMENTS"'
+            )
+            rc, out = run_command(cmd, capture_output=True)
+            logger.error("[diag] InfluxDB SHOW MEASUREMENTS (rc=%s):\n%s", rc, out)
+        else:
+            logger.error("[diag] Skipping SHOW MEASUREMENTS - credentials not available")
+    except Exception as e:
+        logger.error("[diag] Failed to list InfluxDB measurements: %s", e)
+
+    # 4) Configured topic / measurement names for cross-check
+    try:
+        cfg = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP)
+        logger.error(
+            "[diag] Configured names: vision_topic=%s, vision_measurement=%s, "
+            "fusion_measurement=%s, ingested_topic=%s, analytics_topic=%s",
+            cfg.get("vision_topic"),
+            cfg.get("vision_measurement"),
+            cfg.get("fusion_measurement"),
+            cfg.get("ingested_topic"),
+            cfg.get("analytics_topic"),
+        )
+    except Exception as e:
+        logger.error("[diag] Failed to read app config: %s", e)
+
+    logger.error("=" * 80)
+

@@ -22,6 +22,7 @@ pytest_plugins = ["conftest_docker"]
 
 logger = logging.getLogger(__name__)
 
+
 def test_blank_values():
     """TC_001: Testing blank values in .env file for multimodal deployment"""
     logger.info("TC_001: Testing blank values, checking make check env variables with blank values in .env file")
@@ -392,7 +393,11 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
     # they are written by the fusion analytics service which may not have processed any
     # matched pairs yet within the test window.
     logger.info(f"Stored measurements: {stored_measurements}")
+    if multimodal_config.get("ingested_topic") not in stored_measurements:
+        docker_utils.log_vision_pipeline_diagnostics(context, "ingested_topic measurement missing from InfluxDB")
     assert multimodal_config.get("ingested_topic") in stored_measurements, "Raw sensor data not stored in InfluxDB"  # nosec B101
+    if multimodal_config.get("analytics_topic") not in stored_measurements:
+        docker_utils.log_vision_pipeline_diagnostics(context, "analytics_topic measurement missing from InfluxDB")
     assert multimodal_config.get("analytics_topic") in stored_measurements, "Analytics results not stored in InfluxDB"  # nosec B101
 
     vision_measurement = multimodal_config.get("vision_measurement")
@@ -401,6 +406,7 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
         logger.info(f"✓ Vision analytics results also stored in {vision_measurement}")
     else:
         logger.info(f"ℹ Vision measurement '{vision_measurement}' not yet stored (fusion analytics may still be processing)")
+        docker_utils.log_vision_pipeline_diagnostics(context, f"vision_measurement '{vision_measurement}' not stored")
     if fusion_measurement in stored_measurements:
         logger.info(f"✓ Fusion decision results also stored in {fusion_measurement}")
     else:
@@ -662,6 +668,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     if not s3_check["success"]:
         logger.error(f"Failed to retrieve S3 bucket contents: {s3_check['error']}")
         logger.info(f"S3 check results: success={s3_check['success']}, error={s3_check.get('error')}")
+        docker_utils.log_vision_pipeline_diagnostics(context, f"SeaweedFS S3 API not accessible: {s3_check['error']}")
         assert False, f"SeaweedFS S3 API not accessible: {s3_check['error']}"  # nosec B101
     
     logger.info(f"✓ SeaweedFS S3 API accessible - Found {len(s3_check['jpg_files'])} .jpg files out of {s3_check['total_files']} total")
@@ -678,6 +685,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
             logger.info(f"  {i+1}. {jpg_file}")
     else:
         logger.info(f"No jpg files found in S3 storage, jpg_files count: {len(jpg_files)}")
+        docker_utils.log_vision_pipeline_diagnostics(context, "No jpg files found in SeaweedFS S3 storage")
         assert False, "No .jpg files found in S3 storage. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, images must be present."  # nosec B101
 
     # If InfluxDB had no vision data, derive img_handle from S3 filename (stem == handle).
@@ -702,6 +710,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
             logger.info(f"  Matched file: {matched_file}")
     else:
         logger.info(f"Cross-verify results: img_handle_found={cross_verify_check['img_handle_found']}, selected_handle={cross_verify_check['selected_handle']}")
+        docker_utils.log_vision_pipeline_diagnostics(context, f"img_handle '{cross_verify_check['selected_handle']}' not found in S3")
         assert False, f"img_handle '{cross_verify_check['selected_handle']}' not found in S3 image store. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, this handle must be present."  # nosec B101
     
     # Step 6: Validate that matched image files have actual content (not empty)
@@ -821,6 +830,11 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
             logger.warning(f"MQTT fallback connection failed: {mqtt_err}")
 
         logger.info(f"Captured {len(captured_payloads)} vision MQTT payloads for RTP timestamp extraction")
+        if not captured_payloads:
+            docker_utils.log_vision_pipeline_diagnostics(
+                context,
+                f"No vision messages received on MQTT topic '{vision_topic}' within timeout",
+            )
         assert captured_payloads, (
             f"No vision messages received on MQTT topic '{vision_topic}' within timeout - "
             "DLStreamer pipeline may not be running"
@@ -830,6 +844,7 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
 
     if not timestamps:
         logger.error("No RTP timestamps found in vision metadata")
+        docker_utils.log_vision_pipeline_diagnostics(context, "No RTP sender timestamps found in vision metadata")
 
     assert timestamps, "No RTP sender timestamps found in vision metadata entries"  # nosec B101
     all_positive = all(ts > 0 for ts in timestamps)
