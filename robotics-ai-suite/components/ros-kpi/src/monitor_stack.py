@@ -36,7 +36,8 @@ class MonitoringSession:
                  remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
                  ros_domain_id: Optional[int] = None,
                  enable_gpu: bool = False, enable_npu: bool = False,
-                 algorithm: Optional[str] = None):
+                 algorithm: Optional[str] = None,
+                 use_sim_time: bool = False):
         """
         Initialize a monitoring session.
 
@@ -74,6 +75,7 @@ class MonitoringSession:
         self.ros_domain_id = ros_domain_id  # explicit override; None = auto-detect
         self.enable_gpu = enable_gpu or bool(remote_ip)  # auto-enable GPU when remote
         self.enable_npu = enable_npu  # explicit only — not auto-enabled
+        self.use_sim_time = use_sim_time
 
         # Process tracking
         self.processes: List[subprocess.Popen] = []
@@ -212,6 +214,9 @@ class MonitoringSession:
             if self.remote_ip:
                 cmd.extend(["--remote-ip", self.remote_ip,
                              "--remote-user", self.remote_user])
+
+            if self.use_sim_time:
+                cmd.append("--use-sim-time")
 
             # Skip the interactive countdown when launched programmatically
             cmd.append("--no-countdown")
@@ -585,6 +590,15 @@ All data is automatically saved and visualized (unless --no-visualize is used).
     )
 
     parser.add_argument(
+        '--use-sim-time',
+        action='store_true',
+        default=False,
+        help='Pass --use-sim-time to the graph monitor. Auto-detected when '
+             '/clock is published (Gazebo/sim); only needed if auto-detection '
+             'fires too late or is not desired.'
+    )
+
+    parser.add_argument(
         '--list-sessions',
         action='store_true',
         help='List all previous monitoring sessions and exit'
@@ -664,6 +678,7 @@ All data is automatically saved and visualized (unless --no-visualize is used).
         enable_gpu=args.gpu,
         enable_npu=args.npu,
         algorithm=args.algorithm,
+        use_sim_time=args.use_sim_time,
     )
 
     # Handle duration if specified

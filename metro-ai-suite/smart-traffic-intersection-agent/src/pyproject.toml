@@ -10,24 +10,24 @@ dependencies = [
     "fastapi==0.128.0",
     "uvicorn[standard]==0.40.0",
     "paho-mqtt==2.1.0",
-    "aiohttp==3.13.3",
+    "aiohttp>=3.13.4",
     "structlog==23.2.0",
     "pydantic==2.9.2",
     "python-dateutil==2.8.2",
-    "python-dotenv==1.0.0",
-    "gradio==6.7.0",
-    "pillow>=12.1.1,<13.0",
+    "python-dotenv>=1.2.2",
+    "gradio==6.13.0",
+    "pillow>=12.2.0",
     "markdown>=3.4.0",
-    "requests==2.32.5",
+    "requests>=2.33.0",
     "huggingface_hub==0.36.0",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest==7.4.3",
+    "pytest>=9.0.3",
     "pytest-asyncio==0.21.1",
     "httpx==0.25.2",
-    "black==26.1.0",
+    "black>=26.3.1",
     "flake8==6.1.0",
     "mypy==1.7.1",
 ]

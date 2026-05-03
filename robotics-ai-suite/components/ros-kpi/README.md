@@ -541,6 +541,85 @@ found — NPU monitoring skipped.` and continues normally.
 
 ---
 
+## 📤 KPI Export: CSV & Excel
+
+All benchmark scripts support exporting results to **CSV** and optionally **Excel (`.xlsx`)** for analysis in spreadsheet tools.
+
+### Level 1 — Per-pair latency (analyze_trigger_latency.py)
+
+```bash
+uv run python src/analyze_trigger_latency.py \
+    --json-out <session>/kpi.json \
+    --csv-out  <session>/kpi_pairs.csv \
+    --xlsx-out <session>/kpi_pairs.xlsx   # requires: pip install openpyxl
+```
+
+One row per node/input→output pair:
+
+| Column | Description |
+|--------|-------------|
+| `session` | Session directory name (timestamp) |
+| `node` | ROS 2 node name |
+| `pipeline_stage` | Classified stage: Sensor / Perception / Planning / Control / Other |
+| `input` | Input topic |
+| `output` | Output topic |
+| `n` | Number of trigger samples |
+| `mean_ms` | Mean processing latency (ms) |
+| `stdev_ms` | Standard deviation (ms) |
+| `min_ms` | Minimum latency (ms) |
+| `p50_ms` | 50th percentile / median (ms) |
+| `p90_ms` | 90th percentile (ms) |
+| `p99_ms` | 99th percentile (ms) |
+| `max_ms` | Maximum observed latency (ms) |
+| `trigger_count` | Total trigger events counted |
+| `fps` | Estimated output throughput (Hz) |
+| `jitter_mean_ms` | Mean inter-message jitter (ms) |
+| `jitter_max_ms` | Maximum inter-message jitter (ms) |
+
+### Level 2 — Pipeline end-to-end (analyze_pipeline_latency.py)
+
+```bash
+uv run python src/analyze_pipeline_latency.py \
+    --kpi      <session>/kpi.json \
+    --csv-out  <session>/kpi_level2.csv \
+    --xlsx-out <session>/kpi_level2.xlsx  # requires: pip install openpyxl
+```
+
+One **e2e summary row** (`type=e2e`) followed by one row per pipeline **stage** (`type=stage`):
+
+| Column | e2e row | stage row |
+|--------|---------|-----------|
+| `type` | `e2e` | `stage` |
+| `session` | Session name | Session name |
+| `stage` | `e2e` | Stage name (e.g. `Perception`) |
+| `representative_node` | _(blank)_ | Node with highest trigger count in stage |
+| `representative_input` | Pipeline input topic | Stage input topic |
+| `representative_output` | Pipeline output topic | Stage output topic |
+| `mean_ms` | Chained e2e mean (ms) | Stage mean (ms) |
+| `p50_ms` | Chained p50 (ms) | Stage p50 (ms) |
+| `p90_ms` | Chained p90 (ms) | Stage p90 (ms) |
+| `p99_ms` | Chained p99 (ms) | Stage p99 (ms) |
+| `max_ms` | Chained max (ms) | Stage max (ms) |
+| `n` | Min samples across stages | Stage sample count |
+| `throughput_hz` | Pipeline throughput (Hz) | Stage throughput (Hz) |
+| `drop_rate_pct` | Message drop rate (%) | _(blank)_ |
+| `bottleneck_stage` | Slowest stage name | _(blank)_ |
+| `cpu_mean_pct` | Mean CPU utilisation (%) | _(blank)_ |
+| `cpu_max_pct` | Peak CPU utilisation (%) | _(blank)_ |
+
+### Multi-run aggregated (aggregate_kpi.py)
+
+```bash
+uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_XXXX \
+    --csv-out results_aggregated.csv
+```
+
+One row per (node, input, output) pair aggregated across all runs in the bench directory. Columns: `node`, `input`, `output`, `category`, `runs_seen`, `total_runs`, `mean_fps`, `fps_stdev`, `mean_ms`, `stdev_runs`, `cv_pct`, `min_mean_ms`, `max_mean_ms`, `mean_p90_ms`, `worst_p90_ms`, `best_p90_ms`, `mean_p50_ms`, `mean_stdev_ms`, `mean_n`.
+
+> **Excel support**: install `openpyxl` once with `pip install openpyxl`. If not installed, `--xlsx-out` prints a warning and is skipped; all other outputs are unaffected.
+
+---
+
 ## Session Data Layout
 
 ```text

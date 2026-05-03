@@ -11,7 +11,8 @@
                 "source":       "/dev/video-isx031-a-0",
                 "adapter":      "yolov8",
                 "width":        1920,
-                "height":       1536
+                "height":       1536,
+                "format":   "UYUV"
         },
         {
                 "name":         "yolov8n-seg",
@@ -21,7 +22,9 @@
                 "source":       "/dev/video-isx031-b-0",
                 "adapter":      "yolov8",
                 "width":        1920,
-                "height":       1536
+                "height":       1536,
+                "format":   "UYUV"
+
         },
         {
                 "name":         "yolov8n",
@@ -31,7 +34,8 @@
                 "source":       "/dev/video-isx031-c-0",
                 "adapter":      "yolov8",
                 "width":        1920,
-                "height":       1536
+                "height":       1536,
+                "format":   "UYUV"
         },
         {
                 "name":         "yolov8n",
@@ -41,6 +45,8 @@
                 "source":       "/dev/video-isx031-d-0",
                 "adapter":      "yolov8",
                 "width":        1920,
-                "height":       1536
+                "height":       1536,
+                "format":   "UYUV"
+
         }
 ]

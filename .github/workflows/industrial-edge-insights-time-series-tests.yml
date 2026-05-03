@@ -72,10 +72,6 @@ on:
         default: 'ubuntu-24.04'
 permissions: {}
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   functional-tests:
     name: Functional Tests for Multimodal and TimeSeries
