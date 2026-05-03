@@ -561,8 +561,7 @@ def test_system_resources_multimodal():
 
 
 def test_nginx_proxy_integration(setup_multimodal_environment):
-    """TC_017: Nginx reverse proxy integration test - validates container health, 
-    port mappings, and proxy access to Grafana/TS API endpoints"""
+    """TC_017: Nginx reverse proxy integration test"""
     logger.info("TC_017: Testing nginx reverse proxy integration")
     
     context = setup_multimodal_environment
@@ -627,8 +626,8 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     logger.info("Waiting for system stabilization...")
     time.sleep(constants.TEST_MQTT_TIMEOUT)
     
-    # Wait additional time for S3 image storage to complete (DLStreamer writes images asynchronously)
-    s3_wait_time = 90  # Additional 90 seconds for S3 image writes
+    # Wait for async S3 image writes by DLStreamer.
+    s3_wait_time = 90
     logger.info(f"Waiting {s3_wait_time}s for DLStreamer to process video and write images to S3 storage...")
     time.sleep(s3_wait_time)
     
@@ -643,10 +642,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     
     logger.info(f"✓ All {container_check['total_checked']} essential containers are running")
     
-    # Step 2: Query InfluxDB for vision metadata to extract IMG_HANDLE values.
-    # If InfluxDB does not yet have vision data (fusion analytics may not have written it),
-    # derive an img_handle directly from the S3 jpg filenames instead so the S3 validation
-    # steps can still run.
+    # Step 2: Query InfluxDB for vision metadata IMG_HANDLE values; fall back to S3 filenames if missing.
     logger.info("Step 2: Querying InfluxDB for vision detection results")
     influx_check = docker_utils.get_vision_img_handles_from_influxdb(context["credentials"])
 
@@ -684,8 +680,7 @@ def test_s3_stored_images_access(setup_multimodal_environment):
         logger.info(f"No jpg files found in S3 storage, jpg_files count: {len(jpg_files)}")
         assert False, "No .jpg files found in S3 storage. Since the solution is deployed fresh per test and SeaweedFS has 30min retention, images must be present."  # nosec B101
 
-    # If InfluxDB had no vision data, extract an img_handle from a S3 filename
-    # (S3 files are stored as <img_handle>.jpg so the stem is the handle itself).
+    # If InfluxDB had no vision data, derive img_handle from S3 filename (stem == handle).
     if influx_derived_handle is None:
         import os as _os
         first_jpg = jpg_files[0]
@@ -783,9 +778,7 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
         timestamps = common_utils.extract_sender_ntp_timestamps(metadata_values)
         logger.info(f"Extracted RTP timestamps from InfluxDB - count: {len(timestamps)}, values: {timestamps}")
     else:
-        # Fallback path: fusion analytics has not written vision data to InfluxDB yet.
-        # Verify RTP sender timestamps by subscribing to the live MQTT vision topic instead,
-        # which is the source DLStreamer publishes to before fusion analytics processes it.
+        # Fallback: subscribe to live MQTT vision topic when InfluxDB has no vision data yet.
         logger.info(
             f"InfluxDB has no vision data ({query_result.get('error')}) - "
             "falling back to MQTT topic for RTP timestamp verification"
