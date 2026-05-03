@@ -4866,13 +4866,21 @@ def extract_img_handles_from_influxdb(measurement, database, container_name, use
             return []
         
         # Parse CSV output to extract img_handle values
+        # InfluxDB 1.x CSV format: name,tags,time,<fields>
+        # e.g.: vision-weld-classification-results,,2026-05-03T10:00:00Z,HANDLE123
         img_handles = []
         lines = result.stdout.strip().split('\n')
         for line in lines[1:]:  # Skip header
             if line and ',' in line:
                 parts = line.split(',')
-                if len(parts) >= 3 and parts[2].strip():
-                    img_handles.append(parts[2].strip())
+                if len(parts) >= 4 and parts[3].strip():
+                    handle = parts[3].strip()
+                    # Only accept alphanumeric handles (e.g. OXCV8C89KF), not timestamps
+                    if (handle != 'img_handle'
+                            and not handle.startswith('20')  # filter out timestamp-like strings
+                            and any(c.isalpha() for c in handle)
+                            and any(c.isdigit() for c in handle)):
+                        img_handles.append(handle)
         
         # Remove duplicates and empty values
         img_handles = list(set([h for h in img_handles if h and h != 'img_handle']))
