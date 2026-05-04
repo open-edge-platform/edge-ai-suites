@@ -67,7 +67,7 @@ This command builds your Docker image using the steps defined above.
 
 ### Step 4: Verify the Image
 
-After the build completes, update .env and start the container:
+After the build completes, inside `dlstreamer-pipeline-server/docker` directory, update .env and start the container:
 
 > update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-balluff
 
