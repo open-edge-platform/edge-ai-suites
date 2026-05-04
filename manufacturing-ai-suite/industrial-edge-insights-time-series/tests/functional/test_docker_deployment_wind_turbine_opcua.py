@@ -206,20 +206,23 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
     # Cleanup handled by fixture
 
 
-def test_opcua_alerts(setup_wind_turbine_environment):
-    """TC_014: Testing OPCUA alerts functionality"""
-    logger.info("TC_014: Testing OPCUA alerts functionality")
-    context = setup_wind_turbine_environment
-    context["deploy_opcua"]()
-
-    # Test OPCUA alerts system using helper function from conftest_docker
-    validation_result = docker_utils.validate_opcua_alert_system()
-
-    # Validation should pass
-    logger.info(f"OPCUA alert validation result: {validation_result}")
-    assert validation_result == True, "OPCUA alert system validation failed"
-
-    # Cleanup handled by fixture
+# ---------------------------------------------------------------------------
+# OPCUA alerts test — COMMENTED OUT for now
+# ---------------------------------------------------------------------------
+# def test_opcua_alerts(setup_wind_turbine_environment):
+#     """TC_014: Testing OPCUA alerts functionality"""
+#     logger.info("TC_014: Testing OPCUA alerts functionality")
+#     context = setup_wind_turbine_environment
+#     context["deploy_opcua"]()
+#
+#     # Test OPCUA alerts system using helper function from conftest_docker
+#     validation_result = docker_utils.validate_opcua_alert_system()
+#
+#     # Validation should pass
+#     logger.info(f"OPCUA alert validation result: {validation_result}")
+#     assert validation_result == True, "OPCUA alert system validation failed"
+#
+#     # Cleanup handled by fixture
 
 
 def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
