@@ -2,8 +2,8 @@
 Template for Web server startup script
 */}}
 {{- define "web.startup-script" -}}
-echo $SMART_INTERSECTION_BROKER_SERVICE_HOST    broker.scenescape.intel.com >> /etc/hosts &&
-echo $SMART_INTERSECTION_WEB_SERVICE_HOST    web.scenescape.intel.com >> /etc/hosts &&
+echo $SMART_CORRIDOR_BROKER_SERVICE_HOST    broker.scenescape.intel.com >> /etc/hosts &&
+echo $SMART_CORRIDOR_WEB_SERVICE_HOST    web.scenescape.intel.com >> /etc/hosts &&
 mkdir -p /run/secrets/certs &&
 mkdir -p /run/secrets/django &&
 cp /tmp/secrets/secrets.py /run/secrets/django/secrets.py &&

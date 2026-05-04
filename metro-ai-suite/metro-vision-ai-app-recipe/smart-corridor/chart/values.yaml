@@ -18,13 +18,14 @@ imagePullPolicy: IfNotPresent
 
 # Global version configuration for external dependencies and assets
 version:
-  release: "v1.2.0-20250819"
-  modelsRelease: "v1.2.0-20250624"
+  release: "v2026.0.0-rc1"
+  modelsRelease: "main"
+  modelsReleaseType: branch  # Options: 'tag' or 'branch'
 
 # External URLs and repositories
 externalUrls:
   githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
-  videosRepo: "https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos"
+  videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
 
 # Container images for utilities and init containers
 images:
@@ -47,7 +48,7 @@ nodered:
   tag: "latest"
   # Overrides the storage class name
   storageClassName: "standard"
-
+  storageSize: "1Gi"
 broker:
   repository: eclipse-mosquitto
   tag: 2.0.21
@@ -104,7 +105,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: v2025.2
+  tag: v2026.0.0
 
   service:
     type: ClusterIP
@@ -124,19 +125,25 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: v2025.2
+    tag: v2026.0.0
   dbhost: pgserver
   broker: broker.scenescape.intel.com
+  enableExampleDb: true
+  exampleDbPath: /home/scenescape/SceneScape/example_db/smart-corridor-ri.tar.bz2
   service:
     type: NodePort
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2025.2.0-ubuntu24
+  tag: 2026.0.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
   gpuWorkload: false
   npuWorkload: false
+
+vdms:
+  repository: intellabs/vdms
+  tag: v2.12.0
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 

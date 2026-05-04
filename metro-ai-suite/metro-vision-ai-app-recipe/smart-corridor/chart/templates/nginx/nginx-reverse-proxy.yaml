@@ -13,7 +13,7 @@ data:
         include /etc/nginx/mime.types;
         default_type application/octet-stream;
 
-        upstream smart_intersection_web {
+        upstream smart_corridor_web {
             server smart-corridor-web:443;
         }
 
@@ -61,7 +61,7 @@ data:
 
             # Smart Intersection API endpoints (more specific than /api/)
             location /api/v1/ {
-                proxy_pass https://smart_intersection_web/api/v1/;
+                proxy_pass https://smart_corridor_web/api/v1/;
                 proxy_ssl_verify off;
                 proxy_ssl_session_reuse on;
                 proxy_set_header Host $host;
@@ -147,7 +147,7 @@ data:
 
             # Smart Intersection Web Interface - Main UI
             location / {
-                proxy_pass https://smart_intersection_web/;
+                proxy_pass https://smart_corridor_web/;
                 proxy_ssl_verify off;
                 proxy_ssl_session_reuse on;
                 proxy_set_header Host $host;
