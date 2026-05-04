@@ -1,4 +1,4 @@
-# Weld Defect Detection
+# Time-Series - Weld Defect Detection
 
 <!--hide_directive
 <div class="component_card_widget">
@@ -23,11 +23,11 @@ for Time-series applications.
 
 As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
-![Weld Defect Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-defect-detection-timeseries-ai-stack-architecture.png)
+![Time-Series Weld Defect Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-defect-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the `Weld Defect Detection` use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
+Let's discuss how this architecture translates to data flow in the `Time-Series Weld Defect Detection` use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
 
 #### **Data Sources**
 
@@ -43,7 +43,7 @@ Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/indust
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
+**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Time-Series Weld Defect Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
 
 Directory details is as below:
 
@@ -99,6 +99,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 ##### **`models/`**
 
 Contains serialized model files:
+
 - `weld_defect_detector.pkl`: Trained RandomForestClassifier pipeline (scikit-learn format)
 - `weld_defect_detector_labels.pkl`: Label encoder for class names
 - `weld_defect_detector.json`: Model metadata including feature statistics and class information for model explainability

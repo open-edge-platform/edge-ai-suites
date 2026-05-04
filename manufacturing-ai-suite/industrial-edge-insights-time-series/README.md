@@ -13,7 +13,7 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-Refer to [Wind Turbine Anomaly Detection](./docs/user-guide/wind-turbine-anomaly-detection/index.md) and [Weld Defect Detection](./docs/user-guide/weld-defect-detection/index.md).
+Refer to [Wind Turbine Anomaly Detection](./docs/user-guide/wind-turbine-anomaly-detection/index.md) and [Time-Series Weld Defect Detection](./docs/user-guide/weld-defect-detection/index.md).
 
 ## Learn More
 

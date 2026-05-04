@@ -62,21 +62,22 @@ Directory details is as below:
 
 The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
 
-| Key                     | Description                                                                                     | Example Value                          |
-|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+| Key    | Description                                          | Example Value          |
+| ------ | ---------------------------------------------------- | ---------------------- |
+| `udfs` | Configuration for the User-Defined Functions (UDFs). | See below for details. |
 
 **UDFs Configuration**:
 
 The `udfs` section specifies the details of the UDFs used in the task.
 
-| Key     | Description                                                                                 | Example Value                          |
-|---------|---------------------------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                                 | `"windturbine_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                                 | `"windturbine_anomaly_detector.pkl"`   |
-| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu`| `cpu`                                  |
+| Key      | Description                                                                                  | Example Value                        |
+| -------- | -------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `name`   | The name of the UDF script.                                                                  | `"windturbine_anomaly_detector"`     |
+| `models` | The name of the model file used by the UDF.                                                  | `"windturbine_anomaly_detector.pkl"` |
+| `device` | Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu` | `cpu`                                |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
+
 ---
 
 **Alerts Configuration**:
@@ -85,23 +86,24 @@ The `alerts` section defines the settings for alert mechanisms, using the MQTT p
 default.
 For publishing OPC-UA alerts in Docker, refer to [Docker OPC-UA Alerts](../how-to-guides/configure-alerts.md#docker---publish-opc-ua-alerts).
 For OPC-UA Alerts in Helm, refer to [Helm OPC-UA Alerts](../how-to-guides/configure-alerts.md#helm---publish-opc-ua-alerts)
+
 > **Note:** Enable only one type of alerts: either MQTT or OPC-UA.
 
 **MQTT Configuration**:
 
 The `mqtt` section specifies the MQTT broker details for sending alerts.
 
-| Key                 | Description                                                                 | Example Value          |
-|---------------------|-----------------------------------------------------------------------------|------------------------|
-| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-| `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-| `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+| Key                | Description                                    | Example Value      |
+| ------------------ | ---------------------------------------------- | ------------------ |
+| `mqtt_broker_host` | The hostname or IP address of the MQTT broker. | `"ia-mqtt-broker"` |
+| `mqtt_broker_port` | The port number of the MQTT broker.            | `1883`             |
+| `name`             | The name of the MQTT broker configuration.     | `"my_mqtt_broker"` |
 
 ##### **`udfs/`**
 
 Contains the Python script to process the incoming data.
 Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with
-[Intel® Extension for Scikit-learn*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
+[Intel® Extension for Scikit-learn\*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
 to run on CPU/GPU to detect the anomalous power generation data points relative to wind speed.
 
 ##### **`tick_scripts/`**

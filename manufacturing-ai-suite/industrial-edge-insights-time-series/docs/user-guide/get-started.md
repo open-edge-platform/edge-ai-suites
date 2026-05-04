@@ -99,7 +99,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-time-series
    ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
+:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
@@ -130,7 +130,7 @@ make up_mqtt_ingestion app="wind-turbine-anomaly-detection" num_of_streams=<NUMB
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
+:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```bash
@@ -171,7 +171,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
      value updated to gpu from cpu>'
 ```
 
-- **For Weld Defect Detection**:
+- **For Time-Series Weld Defect Detection**:
 
 ```sh
  curl -k -X 'POST' \
@@ -237,7 +237,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
      ![Anomaly prediction in grid active power](./_assets/anomaly_power_prediction.png)
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Weld Defect Detection**
+:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 1. Get into the InfluxDB* container:
