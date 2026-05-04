@@ -25,7 +25,8 @@ on:
           Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
           or a comma-separated list of file names or pytest node IDs for individual tests.
           File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
-          test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
+          test_docker_deployment_wind_turbine_mqtt, test_docker_deployment_wind_turbine_opcua,
+          test_docker_deployment_wind_turbine_kpi, test_docker_helm_deployment_security,
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
@@ -176,7 +177,8 @@ jobs:
         run: |
           # Timeseries-specific test files
           TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
-            test_docker_deployment_wind_turbine test_docker_helm_deployment_security \
+            test_docker_deployment_wind_turbine_mqtt test_docker_deployment_wind_turbine_opcua \
+            test_docker_deployment_wind_turbine_kpi test_docker_helm_deployment_security \
             test_docker_influxdb_retention test_helm_deployment_weld_anomaly \
             test_helm_deployment_wind_turbine test_helm_influxdb_retention"
 
@@ -229,11 +231,24 @@ jobs:
             MARKER_ARGS=(-m "not longrun")
           fi
 
+          # When running the full suite, ignore the per-protocol split wind-turbine
+          # files (mqtt/opcua/kpi) so their tests are not collected twice — the
+          # original test_docker_deployment_wind_turbine.py already covers them.
+          # The split files remain individually selectable via the `tests` input.
+          IGNORE_ARGS=()
+          if [[ "$RUN_ALL_TS" == "true" ]]; then
+            IGNORE_ARGS=(
+              --ignore=test_docker_deployment_wind_turbine_mqtt.py
+              --ignore=test_docker_deployment_wind_turbine_opcua.py
+              --ignore=test_docker_deployment_wind_turbine_kpi.py
+            )
+          fi
+
           # List tests that will be collected (helps debug which tests run/are skipped)
           echo ""
           echo "========== Collecting tests =========="
           if [[ "$RUN_ALL_TS" == "true" ]]; then
-            pytest --collect-only -q "${MARKER_ARGS[@]}" 2>&1 || true
+            pytest --collect-only -q "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}" 2>&1 || true
           else
             pytest --collect-only -q "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}" 2>&1 || true
           fi
@@ -244,7 +259,7 @@ jobs:
           set +e
           if [[ "$RUN_ALL_TS" == "true" ]]; then
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
-              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}"
+              --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${IGNORE_ARGS[@]}"
           else
             pytest -vv --tb=short --self-contained-html --html=/tmp/test_timeseries_report/report.html \
               --junitxml=/tmp/test_timeseries_report/junit.xml "${MARKER_ARGS[@]}" "${TS_TEST_FILES[@]}"
