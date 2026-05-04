@@ -89,12 +89,14 @@ class VLMAdapter(CustomLLM):
             message=ChatMessage(role=MessageRole.ASSISTANT, content=content)
         )
 
-    def _complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
+    @llm_completion_callback()
+    def complete(self, prompt: str, **kwargs: Any) -> CompletionResponse:
         """Sync completion — wraps the prompt as a single user message."""
         response = self.chat([ChatMessage(role=MessageRole.USER, content=prompt)])
         return CompletionResponse(text=response.message.content or "")
 
-    def _stream_complete(self, prompt: str, **kwargs: Any) -> CompletionResponseGen:
+    @llm_completion_callback()
+    def stream_complete(self, prompt: str, **kwargs: Any) -> CompletionResponseGen:
         raise NotImplementedError(
             "Streaming is not supported by VLMAdapter (TreeSummarize does not stream)."
         )
