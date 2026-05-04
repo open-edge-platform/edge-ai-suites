@@ -14,16 +14,16 @@ import backend.routes.runs as runs_module
 
 
 # ===================================================================
-# POST /api/runs, start a new run
+# POST /api/generate_captions_alerts, start a new run
 # ===================================================================
 class TestStartRun:
-    """POST /api/runs endpoint."""
+    """POST /api/generate_captions_alerts endpoint."""
 
     def test_start_run_success(self, client):
         """A valid request creates a run and returns RunInfo."""
         with patch("backend.routes.runs.http_json", return_value='"pipeline-abc"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         assert resp.status_code == 200
@@ -35,7 +35,7 @@ class TestStartRun:
         """A run with a custom runName uses it as the run ID."""
         with patch("backend.routes.runs.http_json", return_value='"p1"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "My Run",
@@ -50,7 +50,7 @@ class TestStartRun:
         """Special characters in runName are removed."""
         with patch("backend.routes.runs.http_json", return_value='"p1"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "test@run!#",
@@ -66,7 +66,7 @@ class TestStartRun:
         )
         with patch("backend.routes.runs.http_json", return_value='"p2"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "demo",
@@ -79,7 +79,7 @@ class TestStartRun:
         """Long run names keep their run ID while peer IDs stay within the server limit."""
         with patch("backend.routes.runs.http_json", return_value='"p1"') as mock_http:
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "white car stream",
@@ -97,7 +97,7 @@ class TestStartRun:
         """Duplicate long names get a suffixed run ID and a distinct short peer ID."""
         with patch("backend.routes.runs.http_json", return_value='"p1"'):
             first = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "white car stream",
@@ -105,7 +105,7 @@ class TestStartRun:
             )
         with patch("backend.routes.runs.http_json", return_value='"p2"'):
             second = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "white car stream",
@@ -124,7 +124,7 @@ class TestStartRun:
         """An empty pipeline ID from the server returns 502."""
         with patch("backend.routes.runs.http_json", return_value='""'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         assert resp.status_code == 502
@@ -133,7 +133,7 @@ class TestStartRun:
         """Optional frame and chunk settings are forwarded to the pipeline server."""
         with patch("backend.routes.runs.http_json", return_value='"p1"') as mock_http:
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "frameRate": 3,
@@ -153,7 +153,7 @@ class TestStartRun:
     def test_start_run_invalid_rtsp_url(self, client):
         """An invalid RTSP URL returns 422 (validation error)."""
         resp = client.post(
-            "/api/runs",
+            "/api/generate_captions_alerts",
             json={"rtspUrl": "http://not-rtsp.com/stream"},
         )
         assert resp.status_code == 422
@@ -162,7 +162,7 @@ class TestStartRun:
         """The newly created run is stored in the global RUNS dict."""
         with patch("backend.routes.runs.http_json", return_value='"p-store"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         run_id = resp.json()["runId"]
@@ -170,14 +170,14 @@ class TestStartRun:
 
 
 # ===================================================================
-# GET /api/runs, list all runs
+# GET /api/generate_captions_alerts, list all runs
 # ===================================================================
 class TestListRuns:
-    """GET /api/runs endpoint."""
+    """GET /api/generate_captions_alerts endpoint."""
 
     def test_list_runs_empty(self, client):
         """Returns an empty list when no runs exist."""
-        resp = client.get("/api/runs")
+        resp = client.get("/api/generate_captions_alerts")
         assert resp.status_code == 200
         assert resp.json() == []
 
@@ -189,38 +189,38 @@ class TestListRuns:
         RUNS["r2"] = RunInfo(
             runId="r2", pipelineId="p2", peerId="peer2", mqttTopic="t/r2"
         )
-        resp = client.get("/api/runs")
+        resp = client.get("/api/generate_captions_alerts")
         assert resp.status_code == 200
         ids = {r["runId"] for r in resp.json()}
         assert ids == {"r1", "r2"}
 
 
 # ===================================================================
-# GET /api/runs/{run_id}, get single run
+# GET /api/generate_captions_alerts/{run_id}, get single run
 # ===================================================================
 class TestGetRun:
-    """GET /api/runs/{run_id} endpoint."""
+    """GET /api/generate_captions_alerts/{run_id} endpoint."""
 
     def test_get_existing_run(self, client):
         """Returns details for an existing run."""
         RUNS["r1"] = RunInfo(
             runId="r1", pipelineId="p1", peerId="peer1", mqttTopic="t/r1"
         )
-        resp = client.get("/api/runs/r1")
+        resp = client.get("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert resp.json()["runId"] == "r1"
 
     def test_get_nonexistent_run_returns_404(self, client):
         """Returns 404 when the run ID does not exist."""
-        resp = client.get("/api/runs/nonexistent")
+        resp = client.get("/api/generate_captions_alerts/nonexistent")
         assert resp.status_code == 404
 
 
 # ===================================================================
-# DELETE /api/runs/{run_id}, stop a run
+# DELETE /api/generate_captions_alerts/{run_id}, stop a run
 # ===================================================================
 class TestStopRun:
-    """DELETE /api/runs/{run_id} endpoint."""
+    """DELETE /api/generate_captions_alerts/{run_id} endpoint."""
 
     def test_stop_existing_run(self, client):
         """Stopping an existing run removes it and returns 'stopped'."""
@@ -228,14 +228,14 @@ class TestStopRun:
             runId="r1", pipelineId="p1", peerId="peer1", mqttTopic="t/r1"
         )
         with patch("backend.routes.runs.http_json", return_value=""):
-            resp = client.delete("/api/runs/r1")
+            resp = client.delete("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
         assert "r1" not in RUNS
 
     def test_stop_nonexistent_run_returns_404(self, client):
         """Returns 404 when trying to stop a non-existent run."""
-        resp = client.delete("/api/runs/nonexistent")
+        resp = client.delete("/api/generate_captions_alerts/nonexistent")
         assert resp.status_code == 404
 
     def test_stop_run_pipeline_error_still_cleans_up(self, client):
@@ -249,7 +249,7 @@ class TestStopRun:
             "backend.routes.runs.http_json",
             side_effect=HTTPException(status_code=502, detail="gone"),
         ):
-            resp = client.delete("/api/runs/r1")
+            resp = client.delete("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert "r1" not in RUNS
 
@@ -396,7 +396,7 @@ class TestMetadataStream:
             yield "data: {}\n\n"
 
         with patch("backend.routes.runs._multiplexed_metadata_generator", return_value=_dummy_generator()):
-            resp = client.get("/api/runs/metadata-stream")
+            resp = client.get("/api/generate_captions_alerts/metadata-stream")
 
         assert resp.status_code == 200
         assert resp.headers["content-type"].startswith("text/event-stream")

@@ -67,7 +67,6 @@ spec:
               readOnly: true
             - name: host-run
               mountPath: /run
-              readOnly: true
             - name: host-proc
               mountPath: /proc
               readOnly: true

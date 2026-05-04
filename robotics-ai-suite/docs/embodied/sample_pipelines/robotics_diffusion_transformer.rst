@@ -57,7 +57,7 @@ Each task consists of 400 steps. The following GIFs demonstrate the two tasks.
 Prerequisites
 =============
 
-Please make sure you have finished setup steps in :doc:`../installation_setup`.
+Please make sure you have finished setup steps in :doc:`../get_started`.
 
 .. _rdt_installation:
 

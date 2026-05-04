@@ -31,7 +31,7 @@ The maximum step of the task is 300, and the reward is defined as the maximum ov
 Prerequisites
 =============
 
-Please make sure you have finished setup steps in :doc:`../installation_setup`.
+Please make sure you have finished setup steps in :doc:`../get_started`.
 
 Installation
 =============

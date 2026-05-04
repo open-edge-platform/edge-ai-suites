@@ -1,19 +1,22 @@
 # System Requirements
 
-This page summarizes the recommended environment for running Live Video Alert.
+This page summarizes the recommended environment for running Live Video Alert Agent.
 
-## Operating Systems
+## Hardware Platforms used for validation
 
-- Ubuntu 24.04.1 LTS
+- This application is specifically targeting the Core&trade; platforms. Intel® Core&trade; Ultra 2 and 3 with integrated GPU are supported currently.
+- While there is no hard restriction in using this application on Intel® Xeon® platforms with/without Intel® Arc&trade; GPUs, the user is requested to raise a feature ticket in case of any requirement.
+
+## Operating Systems used for validation
+
+- Ubuntu: Refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu 24.04 or Ubuntu 24.10 depending on the GPU used. 
 
 ## Minimum Requirements
 
 | **Component**       | **Minimum**                     | **Recommended**                                  |
 |---------------------|---------------------------------|--------------------------------------------------|
-| **Processor**       | 11th Gen Intel® Core™ Processor | Intel® Xeon® Platinum 8351N CPU @ 2.40GHz        |
 | **Memory**          | 16 GB                           | 32 GB                                            |
-| **Disk Space**      | 256 GB SSD                      | 256 GB SSD                                       |
-| **GPU/Accelerator** | Intel® UHD Graphics             | Intel® Arc™ Graphics                             |
+| **Disk Space**      | 64 GB SSD                      | 128 GB SSD                                        |
 
 ## Software Requirements
 
@@ -30,16 +33,17 @@ Default ports (configurable via environment variables):
 
 ## Model Requirements
 
-The application automatically downloads VLM models on first run (~2GB). Supported models:
+The application automatically downloads VLM models on first run (~2GB). The models are left to user to configure. Validation has been done using the following models.
 
-- `OpenVINO/Phi-3.5-vision-instruct-int4-ov` (default)
-- `OpenVINO/InternVL2-2B-int4-ov` (alternative)
+- `OpenVINO/Phi-3.5-vision-instruct-int4-ov`
+- `OpenVINO/InternVL2-2B-int4-ov` 
 
 Configure via environment variables:
 ```bash
 export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
 export MODEL_NAME=InternVL2-2B
 ```
+The user is expected to acknowledge the licensing terms and conditions before selecting the model. 
 
 ## Validation
 

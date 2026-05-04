@@ -1,3 +1,11 @@
+ros-jazzy-robot-config-plugins (3.6-3) noble; urgency=medium
+
+  * Fix CMake link-time errors: add find_package for gz-sim8, gz-msgs10,
+    sdformat14, and Protobuf; use correct imported targets for Jazzy vendor
+    packages; fix GAZEBO_LIBS vs IGNITION_LIBS variable name for Humble.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 22 Apr 2026 00:00:00 +0000
+
 ros-jazzy-robot-config-plugins (3.6-2) noble; urgency=high
 
   * Enhance vacuum tool plugin for Gazebo Harmonic compatibility.

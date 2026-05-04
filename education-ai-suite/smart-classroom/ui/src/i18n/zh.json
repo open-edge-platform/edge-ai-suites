@@ -274,6 +274,9 @@
     "time": "时间：",
     "relevance": "相关性：",
     "labels": "标签",
-    "score": "分数"
+    "score": "分数",
+    "summarization": "总结",
+    "showMore": "显示更多",
+    "showLess": "收起"
   }
 }

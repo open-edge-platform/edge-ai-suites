@@ -438,11 +438,18 @@ content_search:
     host_addr: "127.0.0.1"
     port: 9990
     collection_name: "content-search"
-    device: "CPU"
+    doc_embedding_device: "CPU"
     visual_embedding_model: "CLIP/clip-vit-b-16"
     doc_embedding_model: "BAAI/bge-small-en-v1.5"
     frame_extract_interval: 30      # for video: extract a frame every N frames
     do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
+    document_parser:
+      chunk_method: "semantic"              # "fixed": split by character count; "semantic": split by topic/meaning using embeddings
+      chunk_size: 250                    # (fixed mode) max characters per chunk
+      chunk_overlap: 50                  # (fixed mode) overlapping characters between consecutive chunks
+      semantic_min_chunk_size: 250       # (semantic mode) chunks shorter than this are merged into the next one
+      semantic_breakpoint_percentile: 85 # (semantic mode) higher = fewer, larger chunks; lower = more, smaller chunks (range: 0-100)
+      semantic_buffer_size: 2            # (semantic mode) how many neighboring sentences to group when comparing similarity; larger = less sensitive to noise
     reranker:
       model: "BAAI/bge-reranker-large"
       device: "GPU"

@@ -108,6 +108,8 @@ To stop the service and all associated microservices, press `Ctrl` + `C` in the 
 | `/api/v1/object/upload-ingest` | **POST** | ASYNC | **Atomic Upload & Ingestion**: Unified workflow for saving files to local storage and initiating the ingestion pipeline. | [Details](./docs/dev_guide/Content_search_API.md#file-upload-and-ingestion) |
 | `/api/v1/object/search` | **POST** | SYNC | **Semantic Content Retrieval**: Executes similarity search across vector collections using natural language or base64 images. | [Details](./docs/dev_guide/Content_search_API.md#retrieve-and-search) |
 | `/api/v1/object/download` | **POST** | STREAM | **Original File Download**: Securely fetches the raw source file via stream-bridging. | [Details](./docs/dev_guide/Content_search_API.md#resource-download-videoimagedocument) |
+| `/api/v1/object/tags` | **GET** | SYNC | **List Tags**: Returns all unique tags assigned to uploaded files. Useful for populating filter dropdowns in the UI. | [Details](./docs/dev_guide/Content_search_API.md#list-tags) |
 | `/api/v1/object/cleanup-task/{task_id}` | **DELETE** | SYNC | **Resource & Task Purge**: Irreversibly deletes local storage files, vector indices, and database records for a specific task. | [Details](./docs/dev_guide/Content_search_API.md#cleanup-file-storage-and-record) |
+| `/api/v1/system/config` | **GET** | SYNC | **System Configuration**: Returns Content Search model and database configuration, including VLM model, embedding models, reranker model, vector DB connection, and feature flags. | [Details](./docs/dev_guide/Content_search_API.md#get-system-configuration) |
 
 For detailed descriptions and examples of each endpoint, please refer to the: [Content Search API reference](./docs/dev_guide/Content_search_API.md)

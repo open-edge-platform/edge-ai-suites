@@ -31,7 +31,7 @@ cd ./models/yolov8/ || exit
 i=1
 status=0
 for i in "${yolov8_models[@]}"; do
-  python3 /opt/ros/"$ros_version"/share/pyrealsense2-ai-demo/src/mo.py --model="$i".pt --data_type="$datatype"
+  python3 ../../src/mo.py --model="$i".pt --data_type="$datatype"
   if [[ $? -ne 0 ]]
   then
     status=1

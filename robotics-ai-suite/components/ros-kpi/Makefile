@@ -15,6 +15,9 @@ endif
 .PHONY: help install check-deps check-domain setup-remote-gpu \
         clean clean-last clean-session \
         grafana-start grafana-stop grafana-pull grafana-status grafana-logs grafana-open \
+        wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
+        picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
+        analyze-benchmark \
         package license-check lint lint-all
 
 
@@ -570,23 +573,73 @@ monitor-remote-repeat:
 	echo "   uv run python src/visualize_graph.py <session>/graph_timing.csv --show"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Simulation benchmarking — delegate to src/Makefile
+# Simulation benchmarking
 #
-# Params forwarded: RUNS  TIMEOUT  PN_TIMEOUT  PAUSE  BENCH  NODE
-# Full target list: make -f src/Makefile help
+# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE
 # ─────────────────────────────────────────────────────────────────────────────
 
-_SRC_FWD = $(if $(RUNS),RUNS=$(RUNS)) $(if $(TIMEOUT),TIMEOUT=$(TIMEOUT)) \
-           $(if $(PN_TIMEOUT),PN_TIMEOUT=$(PN_TIMEOUT)) $(if $(PAUSE),PAUSE=$(PAUSE)) \
-           $(if $(BENCH),BENCH=$(BENCH)) $(if $(NODE),NODE=$(NODE))
+wandering:
+	bash src/wandering_run.sh $(if $(TIMEOUT),--timeout $(TIMEOUT))
 
-wandering wandering-record wandering-plot wandering-record-plot wandering-benchmark \
-picknplace-run picknplace-record picknplace-plot picknplace-record-plot picknplace-benchmark \
+wandering-record:
+	bash src/wandering_run.sh --record $(if $(TIMEOUT),--timeout $(TIMEOUT))
+
+wandering-plot:
+	bash src/wandering_run.sh --plot $(if $(TIMEOUT),--timeout $(TIMEOUT))
+
+wandering-record-plot:
+	bash src/wandering_run.sh --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT))
+
+wandering-benchmark:
+	@RUNS=$(if $(RUNS),$(RUNS),25); \
+	TIMEOUT=$(if $(TIMEOUT),$(TIMEOUT),300); \
+	PAUSE=$(if $(PAUSE),$(PAUSE),30); \
+	BENCH_DIR=monitoring_sessions/wandering/bench_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p "$$BENCH_DIR"; \
+	echo "▶  Wandering benchmark: $$RUNS runs × $${TIMEOUT}s  →  $$BENCH_DIR"; \
+	for i in $$(seq 1 $$RUNS); do \
+		echo "--- Run $$i / $$RUNS ---"; \
+		bash src/wandering_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+
+picknplace-run:
+	bash src/picknplace_run.sh $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+
+picknplace-record:
+	bash src/picknplace_run.sh --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+
+picknplace-plot:
+	bash src/picknplace_run.sh --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+
+picknplace-record-plot:
+	bash src/picknplace_run.sh --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+
+picknplace-benchmark:
+	@RUNS=$(if $(RUNS),$(RUNS),25); \
+	TIMEOUT=$(if $(PN_TIMEOUT),$(PN_TIMEOUT),300); \
+	PAUSE=$(if $(PAUSE),$(PAUSE),30); \
+	BENCH_DIR=monitoring_sessions/picknplace/bench_$$(date +%Y%m%d_%H%M%S); \
+	mkdir -p "$$BENCH_DIR"; \
+	echo "▶  Pick-n-place benchmark: $$RUNS runs × $${TIMEOUT}s  →  $$BENCH_DIR"; \
+	for i in $$(seq 1 $$RUNS); do \
+		echo "--- Run $$i / $$RUNS ---"; \
+		bash src/picknplace_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+
 analyze-benchmark:
-	$(MAKE) -f src/Makefile $@ $(_SRC_FWD)
+	@if [ -z "$(BENCH)" ]; then \
+		echo "Error: Please specify BENCH=<bench_directory>"; \
+		echo "Example: make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260421_120000"; \
+		exit 1; \
+	fi
+	uv run python src/aggregate_kpi.py "$(BENCH)" $(if $(NODE),--node $(NODE))
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Simulation benchmarking — delegate to src/Makefile
+# Check Grafana stack status
+grafana-status:
 	@echo "📊 Grafana Dashboard Stack Status"
 	@echo "=================================="
 	@if docker compose ps 2>/dev/null | grep -q "Up"; then \
@@ -601,7 +654,7 @@ analyze-benchmark:
 			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
 		else \
 			echo "⚠️  Metrics exporter not running"; \
-			echo "   Start with: uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(ls -t monitoring_sessions | head -1)"; \
+			echo "   Start with: uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$(ls -t monitoring_sessions | head -1)"; \
 		fi; \
 	else \
 		echo "⚠️  Services not running"; \
