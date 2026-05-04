@@ -11,10 +11,10 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (defaults to the branch this workflow was dispatched from)'
+        description: 'Branch or tag to checkout (default: feature/rashmi/wind_sample_app_optimization for testing; change to main for production)'
         required: false
         type: string
-        default: ''
+        default: 'feature/rashmi/wind_sample_app_optimization'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -47,10 +47,10 @@ on:
   workflow_call:
     inputs:
       tag:
-        description: 'Branch or tag to checkout (defaults to the branch this workflow was dispatched from)'
+        description: 'Branch or tag to checkout (default: feature/rashmi/wind_sample_app_optimization for testing; change to main for production)'
         required: false
         type: string
-        default: ''
+        default: 'feature/rashmi/wind_sample_app_optimization'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
