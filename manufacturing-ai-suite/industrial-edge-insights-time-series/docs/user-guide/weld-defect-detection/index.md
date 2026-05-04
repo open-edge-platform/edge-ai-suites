@@ -99,6 +99,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 ##### **`models/`**
 
 Contains serialized model files:
+
 - `weld_defect_detector.pkl`: Trained RandomForestClassifier pipeline (scikit-learn format)
 - `weld_defect_detector_labels.pkl`: Label encoder for class names
 - `weld_defect_detector.json`: Model metadata including feature statistics and class information for model explainability

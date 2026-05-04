@@ -38,8 +38,8 @@ class TestAppRouterInclusion:
         assert resp.status_code == 200
 
     def test_runs_route_registered(self, client):
-        """The /api/runs route is accessible."""
-        resp = client.get("/api/runs")
+        """The /api/generate_captions_alerts route is accessible."""
+        resp = client.get("/api/generate_captions_alerts")
         assert resp.status_code == 200
 
     def test_runtime_config_route_registered(self, client):

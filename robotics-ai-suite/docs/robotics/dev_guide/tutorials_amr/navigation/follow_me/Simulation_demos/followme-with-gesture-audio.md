@@ -3,7 +3,7 @@
 This demo of the Follow-me algorithm shows a Autonomous Mobile Robot application
 for following a target person where the movement of the robot can be controlled
 by the person's location, hand gestures as well as audio command. The entire
-pipeline diagram can be found in the [Simulation Demos](../index.rst) page.
+pipeline diagram can be found in the [Follow-me Algorithm](../index.md#applications-processing-outputs) page.
 
 It takes point cloud sensor (2D Lidar/depth camera) as well as RGB camera image
 as inputs. These inputs are passed through Intel®-patented Adaptive DBScan and
