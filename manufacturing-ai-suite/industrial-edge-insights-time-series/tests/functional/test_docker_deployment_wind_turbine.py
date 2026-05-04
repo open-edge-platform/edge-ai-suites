@@ -21,6 +21,24 @@ pytest_plugins = ["conftest_docker"]
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Container lists used by wait_until_containers_up in multi-stream tests
+# ---------------------------------------------------------------------------
+_WIND_MQTT_CONTAINERS = [
+    constants.CONTAINERS["influxdb"]["name"],
+    constants.CONTAINERS["telegraf"]["name"],
+    constants.CONTAINERS["time_series_analytics"]["name"],
+    constants.CONTAINERS["mqtt_broker"]["name"],
+    constants.CONTAINERS["mqtt_publisher"]["name"],
+]
+_WIND_OPCUA_CONTAINERS = [
+    constants.CONTAINERS["influxdb"]["name"],
+    constants.CONTAINERS["telegraf"]["name"],
+    constants.CONTAINERS["time_series_analytics"]["name"],
+    constants.CONTAINERS["mqtt_broker"]["name"],
+    constants.CONTAINERS["opcua_server"]["name"],
+]
+
 def test_blank_values():
     logger.info("TC_001: Testing blank values, checking make check env variables with blank values in .env file")
     case = docker_utils.generate_test_credentials(case_type="blank")
@@ -53,10 +71,10 @@ def test_valid_values():
     logger.info(f"make check env variables returned: {result}, expected: True")
     assert result == True
 
-def test_make_up_opcua(setup_docker_environment):
+def test_make_up_opcua(setup_wind_turbine_environment):
     """TC_004: Testing make up OPCUA and make down with valid values in .env file"""
     logger.info("TC_004: Testing make up_opcua_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Use the deploy_opcua function with app parameter
     result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
@@ -72,10 +90,10 @@ def test_make_up_opcua(setup_docker_environment):
     # No manual cleanup needed - handled by fixture
     
 
-def test_make_up_mqtt(setup_docker_environment):
+def test_make_up_mqtt(setup_wind_turbine_environment):
     """TC_005: Testing make up MQTT and make down with valid values in .env file"""
     logger.info("TC_005: Testing make up_mqtt_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Use enhanced deploy_mqtt function with app parameter
     deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
@@ -89,19 +107,19 @@ def test_make_up_mqtt(setup_docker_environment):
     assert containers, "No containers found after MQTT deployment"
     # No manual cleanup needed - handled by fixture    
 
-def test_multiple_runs_mqtt(setup_docker_environment):
+def test_multiple_runs_mqtt(setup_wind_turbine_environment):
     """
     TC_006: Testing multiple runs of make up MQTT
     """
     logger.info("TC_006: Testing multiple runs of make up MQTT (refactored)")
 
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     for i in range(3):
         logger.info(f"Cycle {i+1}:")
         deploy_result = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP)
         logger.info(f"MQTT deploy result in cycle {i+1}: {deploy_result}")
         assert deploy_result == True
-        docker_utils.wait_for_stability(10)
+        docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
         assert containers, "No containers found after MQTT deployment"
@@ -111,19 +129,19 @@ def test_multiple_runs_mqtt(setup_docker_environment):
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
             assert make_down_result == True
 
-def test_multiple_runs_opcua(setup_docker_environment):
+def test_multiple_runs_opcua(setup_wind_turbine_environment):
     """
     TC_007: Testing multiple runs of make up OPCUA
     """
     logger.info("TC_007: Testing multiple runs of make up OPCUA (refactored)")
 
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     for i in range(3):
         logger.info(f"Cycle {i+1}:")
         deploy_result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
         logger.info(f"OPCUA deploy result in cycle {i+1}: {deploy_result}")
         assert deploy_result == True
-        docker_utils.wait_for_stability(10)
+        docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
         containers = docker_utils.get_the_deployed_containers()
         logger.info(f"Containers found in cycle {i+1}: {len(containers) if containers else 0}")
         assert containers, "No containers found after OPCUA deployment"
@@ -149,12 +167,12 @@ def test_multiple_runs_opcua(setup_docker_environment):
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
             assert make_down_result == True
 
-def test_switch_mqtt_to_opcua_ingestion(setup_docker_environment):
+def test_switch_mqtt_to_opcua_ingestion(setup_wind_turbine_environment):
     """TC_008: Testing switch between MQTT and OPCUA ingestion"""
     logger.info("TC_008: Testing switch between MQTT and OPCUA ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_mqtt"]()
-    docker_utils.wait_for_stability(10)
+    docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
     logger.info("Verifying Switch from mqtt to opcua succeeded")
     switch_result = docker_utils.invoke_switch_mqtt_opcua()
     logger.info(f"Switch MQTT to OPCUA result: {switch_result}")
@@ -177,26 +195,26 @@ def test_switch_mqtt_to_opcua_ingestion(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_switch_opcua_to_mqtt_ingestion(setup_docker_environment):
+def test_switch_opcua_to_mqtt_ingestion(setup_wind_turbine_environment):
     """TC_009: Testing switch from OPCUA back to MQTT ingestion"""
     logger.info("TC_009: Testing switch from OPCUA back to MQTT ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
-    docker_utils.wait_for_stability(10)
+    docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
     logger.info("Verifying switch from opcua to mqtt succeeded")
     switch_result = docker_utils.invoke_switch_opcua_mqtt()
     logger.info(f"Switch OPCUA to MQTT result: {switch_result}")
     assert switch_result == True
     # Cleanup handled by fixture
 
-def test_stability_with_mqtt_ingestion(setup_docker_environment):
+def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     """TC_010: Testing stability of MQTT ingestion"""
     logger.info("TC_010: Testing stability of MQTT ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_mqtt"]()
     
-    # Wait for a while to ensure stability
-    docker_utils.wait_for_stability(60)
+    # Poll until service is ready instead of sleeping blindly
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="mqtt")
@@ -211,14 +229,14 @@ def test_stability_with_mqtt_ingestion(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_stability_with_opcua_ingestion(setup_docker_environment):
+def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     """TC_011: Testing stability of OPCUA ingestion"""
     logger.info("TC_011: Testing stability of OPCUA ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
     
-    # Wait for a while to ensure stability
-    docker_utils.wait_for_stability(60)
+    # Poll until service is ready instead of sleeping blindly
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="opcua")
@@ -233,10 +251,10 @@ def test_stability_with_opcua_ingestion(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_loglevel_configuration(setup_docker_environment):
+def test_loglevel_configuration(setup_wind_turbine_environment):
     """TC_012: Testing log level configuration in .env file"""
     logger.info("TC_012: Testing log level configuration in .env file")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
     
     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
@@ -259,16 +277,16 @@ def test_loglevel_configuration(setup_docker_environment):
     logger.info(f"Container restart exit code: {restart_exit_code}")
     assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
     
-    # Wait for container to stabilize after restart
+    # Poll until service is ready after restart instead of sleeping blindly
     logger.info("Waiting for container to stabilize after restart...")
-    docker_utils.wait_for_stability(60)
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
     
     # Trigger some activity to generate DEBUG logs by checking container status
     logger.info("Triggering activity to generate DEBUG logs...")
     docker_utils.invoke_make_status()
     
-    # Wait a bit more for new logs to be generated
-    docker_utils.wait_for_stability(30)
+    # Brief wait for new log lines to flush
+    docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
     
     # Check for DEBUG logs
     result_debug = common_utils.check_logs_by_level(container_name, "DEBUG", update_config=False)
@@ -289,10 +307,10 @@ def test_loglevel_configuration(setup_docker_environment):
     logger.info(f"Log level configuration test completed: INFO ✓, DEBUG {'✓' if result_debug else '⚠'}")
     # Cleanup handled by fixture
 
-def test_mqtt_alerts(setup_docker_environment):
+def test_mqtt_alerts(setup_wind_turbine_environment):
     """TC_013: Testing MQTT alerts functionality"""
     logger.info("TC_013: Testing MQTT alerts functionality")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_mqtt"]()
     
     # Test MQTT alerts system with wind turbine app parameter
@@ -304,10 +322,10 @@ def test_mqtt_alerts(setup_docker_environment):
     
     # Cleanup handled by fixture
 
-def test_opcua_alerts(setup_docker_environment):
+def test_opcua_alerts(setup_wind_turbine_environment):
     """TC_014: Testing OPCUA alerts functionality"""
     logger.info("TC_014: Testing OPCUA alerts functionality")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
     
     # Test OPCUA alerts system using helper function from conftest_docker
@@ -320,15 +338,15 @@ def test_opcua_alerts(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_influxdb_data_with_mqtt(setup_docker_environment):
+def test_influxdb_data_with_mqtt(setup_wind_turbine_environment):
     """TC_017: Testing InfluxDB data with MQTT ingestion"""
     logger.info("TC_017: Testing InfluxDB data with MQTT ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_mqtt"]()
 
-    # Wait for containers to stabilize and data to be generated
-    logger.info("Waiting for containers to stabilize and data to be generated...")
-    docker_utils.wait_for_stability(60)
+    # Poll until service is ready before querying InfluxDB
+    logger.info("Polling until service is ready and data is flowing...")
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
@@ -340,16 +358,16 @@ def test_influxdb_data_with_mqtt(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_influxdb_data_with_opcua(setup_docker_environment):
+def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
     """TC_018: Testing InfluxDB data with OPC UA ingestion"""
     logger.info("TC_018: Testing InfluxDB data with OPC UA ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
     logger.info("opcua deployment succeeded")
 
-    # Wait for containers to stabilize and data to be generated
-    logger.info("Waiting for containers to stabilize and data to be generated...")
-    docker_utils.wait_for_stability(60)
+    # Poll until service is ready before querying InfluxDB
+    logger.info("Polling until service is ready and data is flowing...")
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
@@ -365,36 +383,36 @@ def test_influxdb_data_with_opcua(setup_docker_environment):
     # Cleanup handled by fixture
     
 
-def test_stability_mqtt_for_3_Minutes(setup_docker_environment):
+def test_stability_mqtt_for_3_Minutes(setup_wind_turbine_environment):
     """TC_019: Testing make up MQTT and make down for longer duration for 3 Minutes."""
     logger.info("TC_019: Testing make up MQTT and make down for longer duration for 3 Minutes")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_mqtt"]()
     
     # Wait for a while to ensure stability (3 minutes)
     logger.info("Waiting for 3 minutes to ensure stability...")
-    docker_utils.wait_for_stability(180)
+    docker_utils.wait_for_stability(constants.EXTENDED_STABILITY_TIME)
 
     # Cleanup handled by fixture
     
 
-def test_stability_opcua_for_3_Minutes(setup_docker_environment):
+def test_stability_opcua_for_3_Minutes(setup_wind_turbine_environment):
     """TC_020: Testing make up OPCUA and make down for longer duration for 3 Minutes."""
     logger.info("TC_020: Testing make up OPCUA and make down for longer duration for 3 Minutes")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"]()
    
     # Wait for a while to ensure stability (3 minutes)
     logger.info("Waiting for 3 minutes to ensure stability...")
-    docker_utils.wait_for_stability(180)
+    docker_utils.wait_for_stability(constants.EXTENDED_STABILITY_TIME)
 
     # Cleanup handled by fixture
 
 
-def test_opcua_multi_stream_ingestion(setup_docker_environment):
+def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
     """TC_025: Testing OPC-UA multi-stream ingestion with wind-turbine-anomaly-detection app"""
     logger.info("TC_025: Testing OPC-UA multi-stream ingestion with 3 streams")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Set the number of streams for testing
     num_streams = 3
@@ -403,8 +421,8 @@ def test_opcua_multi_stream_ingestion(setup_docker_environment):
     success = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP, num_of_streams=num_streams)
     if success:
         logger.info(f"OPC-UA multi-stream ingestion with {num_streams} streams succeeded")
-        # Wait for containers to stabilize
-        docker_utils.wait_for_stability(45)  # Increased wait time for multi-stream
+        # Poll until all containers are up instead of sleeping blindly
+        docker_utils.wait_until_containers_up(_WIND_OPCUA_CONTAINERS, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
         
         # Verify containers are running
         containers = docker_utils.get_the_deployed_containers()
@@ -434,10 +452,10 @@ def test_opcua_multi_stream_ingestion(setup_docker_environment):
     # No manual cleanup needed - handled by fixture
 
 
-def test_mqtt_multi_stream_ingestion(setup_docker_environment):
+def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
     """TC_026: Testing MQTT multi-stream ingestion with wind-turbine-anomaly-detection app"""
     logger.info("TC_026: Testing MQTT multi-stream ingestion with 3 streams")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Set the number of streams for testing
     num_streams = 3
@@ -446,8 +464,8 @@ def test_mqtt_multi_stream_ingestion(setup_docker_environment):
     success = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP, num_of_streams=num_streams)
     if success:
         logger.info(f"MQTT multi-stream ingestion with {num_streams} streams succeeded")
-        # Wait for containers to stabilize
-        docker_utils.wait_for_stability(45)  # Increased wait time for multi-stream
+        # Poll until all containers are up instead of sleeping blindly
+        docker_utils.wait_until_containers_up(_WIND_MQTT_CONTAINERS, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
         
         # Verify containers are running
         containers = docker_utils.get_the_deployed_containers()
@@ -478,10 +496,10 @@ def test_mqtt_multi_stream_ingestion(setup_docker_environment):
     # No manual cleanup needed - handled by fixture
 
 
-def test_opcua_multi_stream_scalability(setup_docker_environment):
+def test_opcua_multi_stream_scalability(setup_wind_turbine_environment):
     """TC_027: Testing OPC-UA multi-stream scalability with different stream counts"""
     logger.info("TC_027: Testing OPC-UA multi-stream scalability with different stream counts")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Test with different numbers of streams
     stream_counts = [2, 5]
@@ -493,8 +511,8 @@ def test_opcua_multi_stream_scalability(setup_docker_environment):
         success = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP, num_of_streams=num_streams)
         if success:
             logger.info(f"OPC-UA multi-stream ingestion with {num_streams} streams succeeded")
-            # Wait for containers to stabilize
-            docker_utils.wait_for_stability(30)
+            # Poll until all containers are up instead of sleeping blindly
+            docker_utils.wait_until_containers_up(_WIND_OPCUA_CONTAINERS, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
 
             # Step 1: Configure OPC UA alert in TICK script
             logger.info(f"Step 1: Configuring OPC UA alert in TICK script for {num_streams} streams...")
@@ -536,15 +554,15 @@ def test_opcua_multi_stream_scalability(setup_docker_environment):
         if num_streams != stream_counts[-1]:
             logger.info(f"Cleaning up after {num_streams} streams test")
             docker_utils.invoke_make_down()
-            docker_utils.wait_for_stability(10)
+            docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
     
     # Final cleanup handled by fixture
 
 
-def test_mqtt_multi_stream_scalability(setup_docker_environment):
+def test_mqtt_multi_stream_scalability(setup_wind_turbine_environment):
     """TC_028: Testing MQTT multi-stream scalability with different stream counts"""
     logger.info("TC_028: Testing MQTT multi-stream scalability with different stream counts")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Test with different numbers of streams
     stream_counts = [2, 5]
@@ -556,8 +574,8 @@ def test_mqtt_multi_stream_scalability(setup_docker_environment):
         success = context["deploy_mqtt"](app=constants.WIND_SAMPLE_APP, num_of_streams=num_streams)
         if success:
             logger.info(f"MQTT multi-stream ingestion with {num_streams} streams succeeded")
-            # Wait for containers to stabilize
-            docker_utils.wait_for_stability(30)
+            # Poll until all containers are up instead of sleeping blindly
+            docker_utils.wait_until_containers_up(_WIND_MQTT_CONTAINERS, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
             
             # Verify containers are running
             containers = docker_utils.get_the_deployed_containers()
@@ -584,13 +602,13 @@ def test_mqtt_multi_stream_scalability(setup_docker_environment):
         if num_streams != stream_counts[-1]:
             logger.info(f"Cleaning up after {num_streams} streams test")
             docker_utils.invoke_make_down()
-            docker_utils.wait_for_stability(10)
+            docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
     
     # Final cleanup handled by fixture
 
 
 @pytest.mark.kpi
-def test_mqtt_deployment_time_kpi(setup_docker_environment):
+def test_mqtt_deployment_time_kpi(setup_wind_turbine_environment):
     """
     TC_021: Test Docker deployment time KPI for MQTT ingestion
     
@@ -600,7 +618,7 @@ def test_mqtt_deployment_time_kpi(setup_docker_environment):
     3. All deployment attempts are successful
     """
     logger.info("TC_021: Testing Docker deployment time KPI for MQTT ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     success_rate, avg_time, min_time, max_time, times = docker_utils.measure_deployment_time(
         ingestion_type="mqtt",
@@ -616,7 +634,7 @@ def test_mqtt_deployment_time_kpi(setup_docker_environment):
 
 
 @pytest.mark.kpi
-def test_opcua_deployment_time_kpi(setup_docker_environment):
+def test_opcua_deployment_time_kpi(setup_wind_turbine_environment):
     """
     TC_022: Test Docker deployment time KPI for OPCUA ingestion
     
@@ -626,7 +644,7 @@ def test_opcua_deployment_time_kpi(setup_docker_environment):
     3. All deployment attempts are successful
     """
     logger.info("TC_022: Testing Docker deployment time KPI for OPCUA ingestion")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     success_rate, avg_time, min_time, max_time, times = docker_utils.measure_deployment_time(
         ingestion_type="opcua",
@@ -642,7 +660,7 @@ def test_opcua_deployment_time_kpi(setup_docker_environment):
 
 
 @pytest.mark.kpi
-def test_container_sizes_kpi(setup_docker_environment):
+def test_container_sizes_kpi(setup_wind_turbine_environment):
     """
     TC_023: Test Docker container sizes after build
     
@@ -652,7 +670,7 @@ def test_container_sizes_kpi(setup_docker_environment):
     3. All expected images are created with acceptable sizes
     """
     logger.info("TC_023: Testing Docker container sizes after build")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Use size threshold from constants
     size_threshold = constants.CONTAINER_IMAGE_SIZE_THRESHOLD
@@ -677,7 +695,7 @@ def test_container_sizes_kpi(setup_docker_environment):
 
 
 @pytest.mark.kpi
-def test_build_time_kpi(setup_docker_environment):
+def test_build_time_kpi(setup_wind_turbine_environment):
     """
     TC_024: Test Docker build time KPI
     
@@ -687,7 +705,7 @@ def test_build_time_kpi(setup_docker_environment):
     3. All build attempts are successful
     """
     logger.info("TC_024: Testing Docker build time KPI")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     
     # Measure build time using our helper function
     success_rate, avg_time, min_time, max_time, times = docker_utils.measure_build_time(
@@ -703,10 +721,10 @@ def test_build_time_kpi(setup_docker_environment):
 
 
 
-def test_nginx_proxy_integration_wind_turbine(setup_docker_environment):
+def test_nginx_proxy_integration_wind_turbine(setup_wind_turbine_environment):
     """TC_030: Testing nginx proxy integration for wind turbine deployment"""
     logger.info("TC_030: Testing nginx proxy integration for wind turbine deployment")
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
     
     # Use common nginx validation utility
@@ -730,19 +748,27 @@ def test_nginx_proxy_integration_wind_turbine(setup_docker_environment):
     ("opcua", "TC_031", "deploy_opcua"),
     ("mqtt", "TC_032", "deploy_mqtt")
 ])
-def test_gpu(setup_docker_environment, protocol, test_case, deploy_func):
+def test_gpu(setup_wind_turbine_environment, protocol, test_case, deploy_func):
     """Testing GPU device configuration in time-series analytics config with different ingestion protocols"""
     logger.info(f"{test_case}: Testing GPU device configuration with {protocol.upper()} ingestion in time-series analytics config")
     
     # Deploy the specified protocol
-    context = setup_docker_environment
+    context = setup_wind_turbine_environment
     context[deploy_func](app=constants.WIND_SAMPLE_APP)
     logger.info(f"{protocol} deployment succeeded")
 
-    # Wait for containers to stabilize and data to be generated
-    logger.info("Waiting for containers to stabilize and data to be generated...")
-    docker_utils.wait_for_stability(60)
-    
+    # Poll until service is ready instead of sleeping blindly
+    logger.info("Polling until service is ready...")
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+
+    # Mirror the manual procedure: wait a short settle period after `make up` so
+    # TSAM/kapacitor finishes the initial CPU UDF startup before we send the GPU
+    # POST.  Without this the OPC-UA path is observed to ack the POST but never
+    # actually restart the UDF subprocess (kapacitor is mid-init), and the test
+    # then sees only CPU offload messages for the entire log tail window.
+    logger.info(f"Settle period {constants.WIND_TURBINE_POST_DEPLOY_SETTLE}s before GPU POST...")
+    time.sleep(constants.WIND_TURBINE_POST_DEPLOY_SETTLE)
+
     # Execute curl command to post GPU configuration to the API using REST API approach
     curl_result = docker_utils.execute_gpu_config_curl(device="gpu")
     
@@ -750,9 +776,21 @@ def test_gpu(setup_docker_environment, protocol, test_case, deploy_func):
     logger.info(f"GPU configuration curl result: {curl_result}")
     assert curl_result, "GPU configuration test via REST API failed"
 
+    # Wait for TSAM to restart and apply the GPU config before checking logs.
+    # Pass accept_503=False so we wait until kapacitor has fully restarted with the
+    # new DEVICE=gpu env (HTTP 503 means up-but-not-ready; a POST acknowledged then
+    # would not yet have produced GPU UDF logs).
+    logger.info("Waiting for service to restart and apply GPU configuration...")
+    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, accept_503=False)
+    # Even after HTTP 200, kapacitor's child UDF process may take a few extra seconds
+    # to actually initialize sklearnex with target_offload="gpu". Without this grace
+    # period the log tail can miss the first GPU offload messages.
+    logger.info(f"Grace period {constants.WIND_TURBINE_GPU_RESTART_GRACE}s for kapacitor UDF to bind GPU...")
+    time.sleep(constants.WIND_TURBINE_GPU_RESTART_GRACE)
+
     logger.info(f"Verifying if logs contain GPU keywords...")
     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
-    gpu_result = docker_utils.check_log_gpu(container_name, timeout=120, interval=10)
+    gpu_result = docker_utils.check_log_gpu(container_name, timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT, interval=10)
     
     logger.info(f"GPU log check result: {gpu_result}")
     assert gpu_result == True, f"GPU keywords not found in logs"

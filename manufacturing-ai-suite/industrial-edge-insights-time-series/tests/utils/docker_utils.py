@@ -328,6 +328,88 @@ def wait_for_stability(seconds=30):
     logger.info(f"Waiting {seconds} seconds for services to stabilize...")
     time.sleep(seconds)
 
+
+def wait_until_containers_up(expected_containers, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, poll_interval=constants.WIND_TURBINE_POLL_INTERVAL):
+    """Poll docker ps until all expected containers are running, instead of sleeping blindly.
+
+    This is the Docker equivalent of helm's verify_pods — it returns as soon as every
+    container in ``expected_containers`` is confirmed running, or raises after ``timeout``
+    seconds.
+
+    Args:
+        expected_containers (list): List of container name strings to wait for.
+        timeout (int): Maximum seconds to wait before giving up (default: 120).
+        poll_interval (int): Seconds between each poll attempt (default: 5).
+
+    Returns:
+        bool: True if all containers are up within the timeout, False otherwise.
+    """
+    logger.info(f"Polling until {len(expected_containers)} container(s) are up "
+                f"(timeout={timeout}s, interval={poll_interval}s): {expected_containers}")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        not_up = [c for c in expected_containers if not container_is_running(c)]
+        if not not_up:
+            elapsed = timeout - (deadline - time.time())
+            logger.info(f"✓ All containers up after ~{elapsed:.0f}s")
+            return True
+        logger.info(f"  Waiting — not yet up: {not_up}")
+        time.sleep(poll_interval)
+    not_up = [c for c in expected_containers if not container_is_running(c)]
+    logger.error(f"✗ Containers still not up after {timeout}s: {not_up}")
+    return False
+
+
+def wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, poll_interval=constants.WIND_TURBINE_POLL_INTERVAL, accept_503=True):
+    """Poll the ts-api health endpoint until the service responds, instead of sleeping blindly.
+
+    This is the Docker equivalent of helm's verify_pods at the service layer — it returns
+    as soon as the time-series analytics REST API acknowledges the request (HTTP 200 or 503),
+    or gives up after ``timeout`` seconds.
+
+    Args:
+        timeout (int): Maximum seconds to wait (default: 120).
+        poll_interval (int): Seconds between poll attempts (default: 5).
+        accept_503 (bool): If True (default) treat HTTP 503 as ready (service up,
+            no config yet — common right after ``make up`` before initial POST).
+            Pass ``False`` after a config POST to wait for the kapacitor restart
+            to fully complete (HTTP 200 only).
+
+    Returns:
+        bool: True if the service is responding within the timeout, False otherwise.
+    """
+    container_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    ready_codes = ("200", "503") if accept_503 else ("200",)
+    logger.info(f"Polling ts-api health endpoint until service is ready "
+                f"(timeout={timeout}s, interval={poll_interval}s, ready_codes={ready_codes})...")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if not container_is_running(container_name):
+            logger.info(f"  Container {container_name} not yet running — waiting...")
+            time.sleep(poll_interval)
+            continue
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}",
+                 "https://localhost:3000/ts-api/health"],
+                capture_output=True, text=True, timeout=constants.WIND_TURBINE_CURL_TIMEOUT
+            )
+            http_code = result.stdout.strip() if result.returncode == 0 else "000"
+            if http_code in ready_codes:
+                elapsed = timeout - (deadline - time.time())
+                logger.info(f"✓ Service ready (HTTP {http_code}) after ~{elapsed:.0f}s")
+                return True
+            logger.info(f"  Service not ready yet (HTTP {http_code}, awaiting {ready_codes}) — retrying...")
+        except subprocess.TimeoutExpired:
+            logger.info("  Health check timed out — retrying...")
+        except OSError as exc:
+            # curl not found or similar unrecoverable error — stop polling
+            logger.error(f"✗ Health check OS error (is curl installed?): {exc}")
+            return False
+        time.sleep(poll_interval)
+    logger.error(f"✗ Service did not become ready within {timeout}s")
+    return False
+
 def generate_password(length=10):
     """Generate a secure random password with at least one digit."""
 
@@ -496,7 +578,22 @@ def invoke_make_up_opcua_ingestion(measure_time=False, app=None, num_of_streams=
             command += f" app=\"{app}\""
         if num_of_streams:
             command += f" num_of_streams={num_of_streams}"
-        result = run_command(command)
+        # Multi-stream OPC-UA needs a host port range so each scaled ia-opcua-server
+        # container binds to a unique host port (single-stream binds to 30003 only).
+        # See docs/user-guide/get-started.md - "Multi-Stream Ingestion support".
+        prev_port_mapping = os.environ.get("OPCUA_SERVER_PORT_MAPPING")
+        if num_of_streams and int(num_of_streams) > 1:
+            os.environ["OPCUA_SERVER_PORT_MAPPING"] = constants.WIND_TURBINE_OPCUA_PORT_MAPPING
+            logger.info(f"Set OPCUA_SERVER_PORT_MAPPING={constants.WIND_TURBINE_OPCUA_PORT_MAPPING} for multi-stream deployment")
+        try:
+            result = run_command(command)
+        finally:
+            # Restore previous env value to avoid bleeding into other tests
+            if num_of_streams and int(num_of_streams) > 1:
+                if prev_port_mapping is None:
+                    os.environ.pop("OPCUA_SERVER_PORT_MAPPING", None)
+                else:
+                    os.environ["OPCUA_SERVER_PORT_MAPPING"] = prev_port_mapping
         deployment_time = time.time() - start_time
         
         # Return to original directory before returning result
@@ -1038,15 +1135,29 @@ def get_current_loglevel(file_path=None):
         logger.error(f"Failed to read LOG_LEVEL from .env file: {str(e)}")
         return None
 
-def collect_live_logs(container_name, monitor_duration, search_pattern=None):
-    """Collect logs from a container for a specified duration with threading and pattern search."""
-    
+def collect_live_logs(container_name, monitor_duration, search_pattern=None, since=None):
+    """Collect logs from a container for a specified duration with threading and pattern search.
+
+    Args:
+        container_name: Name of the container to stream logs from.
+        monitor_duration: Maximum number of seconds to stream logs.
+        search_pattern: Optional substring; function early-exits as soon as it appears.
+        since: Optional value passed to ``docker logs --since`` (e.g. "30s", "1m" or
+            an epoch timestamp) to skip historical backlog and only stream recent
+            entries. When ``None``, the full container log history is streamed.
+    """
+
     logs_output = []
-    
+    pattern_found = False
+
     try:
+        cmd = ["docker", "logs", "-f"]
+        if since is not None:
+            cmd += ["--since", str(since)]
+        cmd.append(container_name)
         # Run docker logs -f command
         process = subprocess.Popen(
-            ["docker", "logs", "-f", container_name],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -1054,13 +1165,18 @@ def collect_live_logs(container_name, monitor_duration, search_pattern=None):
             universal_newlines=True
         )
         
-        # Collect logs for the specified duration
+        # Collect logs for the specified duration, exiting early if pattern is found
         start_time = time.time()
         while time.time() - start_time < monitor_duration:
             line = process.stdout.readline()
             if line:
-                logs_output.append(line.strip())
-                logger.info(f"[LOG] {line.strip()}")  # Show live logs
+                stripped = line.strip()
+                logs_output.append(stripped)
+                logger.info(f"[LOG] {stripped}")  # Show live logs
+                # Early-exit as soon as the search pattern appears in any line
+                if search_pattern and search_pattern in stripped:
+                    pattern_found = True
+                    break
         
         # Terminate the process
         process.terminate()
@@ -1071,6 +1187,9 @@ def collect_live_logs(container_name, monitor_duration, search_pattern=None):
     
     # If search pattern is provided, check for it in collected logs
     if search_pattern:
+        if pattern_found:
+            logger.info(f"✓ Found '{search_pattern}' in live logs (early-exit on first match)")
+            return True
         all_logs = "\n".join(logs_output)
         if search_pattern in all_logs:
             count = all_logs.count(search_pattern)
@@ -1263,25 +1382,22 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
             return False
         pattern_display = f"{pattern_type.upper()} pattern"
 
-    # Use collect_live_logs with pattern search in intervals until timeout
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        elapsed_time = time.time() - start_time
-        remaining_time = timeout - elapsed_time
-        monitor_duration = min(interval, remaining_time)
-        
-        logger.info(f"Monitoring for {monitor_duration}s (elapsed: {elapsed_time:.1f}s, remaining: {remaining_time:.1f}s)...")
-        
-        # Use collect_live_logs to check for the pattern
-        result = collect_live_logs(container_name, monitor_duration, search_pattern)
-        
-        if result is True:
-            logger.info(f"✓ {pattern_display} found in logs for container {container_name}")
-            return True
-        
-        # If we haven't found the pattern and have time left, continue monitoring
-        if remaining_time <= interval:
-            break
+    # Stream logs in a single docker-logs subprocess for the full timeout window.
+    # Using ``--since`` skips historical backlog so we don't repeatedly replay old
+    # lines (which previously caused early-exit to never reach the new entries
+    # produced after a config change).  ``collect_live_logs`` early-exits the
+    # moment ``search_pattern`` is observed.
+    since_seconds = max(int(timeout) + int(interval), 60)
+    found = collect_live_logs(
+        container_name,
+        monitor_duration=timeout,
+        search_pattern=search_pattern,
+        since=f"{since_seconds}s",
+    )
+
+    if found is True:
+        logger.info(f"✓ {pattern_display} found in logs for container {container_name}")
+        return True
 
     logger.info(f"Timeout reached ({timeout}s). No {pattern_display} found in logs for container {container_name}.")
     return False
@@ -1669,7 +1785,7 @@ def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
     
     # Step 2: Check container logs for alert pattern using common_utils for proper weld support
     logger.info(f"\nStep 2: Checking container logs for {alert_type.upper()} alert pattern...")
-    logs_validation = common_utils.check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], alert_type, timeout=60, interval=5)
+    logs_validation = common_utils.check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], alert_type, timeout=constants.WIND_TURBINE_ALERT_LOG_TIMEOUT, interval=5)
     if not logs_validation:
         logger.error(f"✗ Step 2 FAILED: {alert_type.upper()} alert pattern not found in container logs")
         return False
