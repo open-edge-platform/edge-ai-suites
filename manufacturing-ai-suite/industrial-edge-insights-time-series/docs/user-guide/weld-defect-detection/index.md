@@ -1,4 +1,4 @@
-# Time-Series - Weld Defect Detection
+# Weld Defect Detection
 
 <!--hide_directive
 <div class="component_card_widget">
