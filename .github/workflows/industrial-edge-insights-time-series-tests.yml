@@ -11,10 +11,10 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Branch, tag, or commit SHA to checkout (defaults to the ref the workflow was triggered from)'
+        description: 'Branch, tag, or commit SHA to checkout (hardcoded for testing)'
         required: false
         type: string
-        default: ''
+        default: 'feature/rashmi/multimodal_issuesfix'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
@@ -46,10 +46,10 @@ on:
   workflow_call:
     inputs:
       ref:
-        description: 'Branch, tag, or commit SHA to checkout (defaults to the ref the workflow was triggered from)'
+        description: 'Branch, tag, or commit SHA to checkout (hardcoded for testing)'
         required: false
         type: string
-        default: ''
+        default: 'feature/rashmi/multimodal_issuesfix'
       build:
         description: 'Build Docker images before running tests (yes/no)'
         required: false
