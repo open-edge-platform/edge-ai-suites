@@ -98,7 +98,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
         _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
         # VLM context-window in tokens (used by TreeSummarize token budgeting).
-        _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 8192)))
+        _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 32768)))
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
