@@ -7,7 +7,7 @@ In the Energy Sector unexpected equipment failures result in costly downtime and
 [Wind Turbine Anomaly Detection](./wind-turbine-anomaly-detection/index.md) demonstrates a time series use case by detecting anomalous power generation patterns in wind turbines,
 relative to wind speed.
 
-[Time-Series Weld Defect Detection](./weld-defect-detection/index.md) demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
+[Weld Defect Detection](./weld-defect-detection/index.md) demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
 
 They demonstrate how AI driven analytics can improve safety and preventive maintenance in industrial environments.
 
@@ -28,7 +28,7 @@ sample application provide detailed architectural descriptions.
 
 Monitoring power generation anomalies for preventive maintenance.
 :::
-:::{grid-item-card} Time-Series Weld Defect Detection
+:::{grid-item-card} Weld Defect Detection
 :class-card: homepage-card-container-big
 :link: ./weld-defect-detection/index.html
 

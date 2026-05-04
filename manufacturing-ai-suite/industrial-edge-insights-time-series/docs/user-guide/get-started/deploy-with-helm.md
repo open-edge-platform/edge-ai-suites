@@ -56,7 +56,7 @@ Choose **one** of the following approaches to get the Helm charts:
 3. Proceed to Step 2 to configure your `values.yaml` file present in the current directory.
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 **Option A: Download the Helm charts**
@@ -159,7 +159,7 @@ To install Helm charts, use one of the following options:
     ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 To install Helm charts, run the following command:
@@ -204,7 +204,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
    ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 To upload your own or existing model into Time Series Analytics Microservice in order to run this sample application in Kubernetes environment:
@@ -224,7 +224,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
            - weld_defect_detector.py
    ```
 
-2. Upload your new UDF package (using the `Time-Series Weld Defect Detection` UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Upload your new UDF package (using the `Weld Defect Detection` UDF package as an example) to the `time-series-analytics-microservice` pod:
 
    ```sh
    export SAMPLE_APP="weld-defect-detection"
@@ -280,7 +280,7 @@ kubectl get all -n ts-sample-app # It may take a few minutes for all application
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 ```sh

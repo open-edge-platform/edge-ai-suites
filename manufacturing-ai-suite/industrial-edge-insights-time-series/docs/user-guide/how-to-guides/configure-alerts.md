@@ -9,7 +9,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 #### Configure MQTT Alerts
 
 The following MQTT alerts are configured for both `Wind Turbine Anomaly Detection`
-and `Time-Series Weld Defect Detection` sample apps.
+and `Weld Defect Detection` sample apps.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -29,7 +29,7 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
  ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 [weld-defect-detection/time-series-analytics-config/config.json](
@@ -51,7 +51,7 @@ https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-
 #### Configure MQTT Alert in TICK Script
 
 The following code snippets show how to add the MQTT, if not
-already added, to `Wind Turbine Anomaly Detection` and `Time-Series Weld Defect Detection`
+already added, to `Wind Turbine Anomaly Detection` and `Weld Defect Detection`
 sample apps. The TICK script has the following configuration done by default.
 
 <!--hide_directive::::{tab-set}
@@ -74,7 +74,7 @@ data0
 ```
 
 <!--hide_directive:::
-:::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+:::{tab-item}hide_directive--> **Weld Defect Detection**
 <!--hide_directive:sync: tab2hide_directive-->
 
 
@@ -122,7 +122,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
   docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t alerts/wind_turbine -p 1883
   ```
   <!--hide_directive:::
-  :::{tab-item}hide_directive--> **Time-Series Weld Defect Detection**
+  :::{tab-item}hide_directive--> **Weld Defect Detection**
   <!--hide_directive:sync: tab2hide_directive-->
 
   [weld-defect-detection/time-series-analytics-config/tick_scripts/weld_defect_detector.tick](
@@ -139,7 +139,7 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 
 > **Note:**
 > This section is applicable to `Wind Turbine Anomaly Detection` sample app only.
-> In other words, OPC UA alerts are not supported for the `Time-Series Weld Defect Detection` sample app.
+> In other words, OPC UA alerts are not supported for the `Weld Defect Detection` sample app.
 
 #### Prerequisite
 
@@ -293,7 +293,7 @@ To subscribe to MQTT topics in a Helm deployment, execute the following command:
   ```
 
   <!--hide_directive:::
-  :::{tab-item} hide_directive--> **Time-Series Weld Defect Detection**
+  :::{tab-item} hide_directive--> **Weld Defect Detection**
   <!--hide_directive:sync: tab2hide_directive-->
 
   ```bash
