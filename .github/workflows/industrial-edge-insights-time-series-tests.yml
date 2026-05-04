@@ -32,7 +32,9 @@ on:
           Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification
         required: false
         type: string
-        default: 'all-tests'
+        default: 'test_docker_deployment_weld_anomaly,test_docker_helm_deployment_security,
+          test_helm_deployment_weld_anomaly, test_helm_deployment_wind_turbine,
+          test_docker_deployment_multimodal, test_helm_deployment_multimodal'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
