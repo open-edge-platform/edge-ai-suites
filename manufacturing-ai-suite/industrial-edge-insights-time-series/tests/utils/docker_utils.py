@@ -5235,7 +5235,6 @@ def get_seaweedfs_bucket_files(bucket_url):
             "total_files": 0
         }
 
-
 def log_vision_pipeline_diagnostics(context, reason, log_tail=120):
     """Emit a structured diagnostic dump for vision/fusion/InfluxDB pipeline failures.
 
