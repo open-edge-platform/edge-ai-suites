@@ -149,94 +149,90 @@ def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     # Cleanup handled by fixture
 
 
-# ---------------------------------------------------------------------------
-# TC_012 (test_loglevel_configuration) — COMMENTED OUT for now.
-# Re-enable once the LOG_LEVEL toggle behaviour is stabilised.
-# ---------------------------------------------------------------------------
-# def test_loglevel_configuration(setup_wind_turbine_environment):
-#     """TC_012: Testing log level configuration in .env file"""
-#     logger.info("TC_012: Testing log level configuration in .env file")
-#     context = setup_wind_turbine_environment
-#     context["deploy_opcua"]()
-#
-#     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
-#
-#     # Capture the original LOG_LEVEL so we can restore it on teardown — this
-#     # test mutates the shared .env (LOG_LEVEL=DEBUG) and without restoration
-#     # the value would leak into every subsequent test in the module.
-#     env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
-#     original_log_level = None
-#     try:
-#         with open(env_file_path, "r") as _f:
-#             for _line in _f:
-#                 if _line.startswith("LOG_LEVEL="):
-#                     original_log_level = _line.split("=", 1)[1].strip()
-#                     break
-#     except Exception as _exc:
-#         logger.warning(f"Could not read original LOG_LEVEL from {env_file_path}: {_exc}")
-#     logger.info(f"Captured original LOG_LEVEL='{original_log_level}' for restoration on teardown")
-#
-#     try:
-#         # Test INFO log level first
-#         logger.info("Testing INFO log level configuration")
-#         result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
-#         logger.info(f"INFO log level check result: {result_info}")
-#         assert result_info == True, "INFO log level verification failed"
-#
-#         # Test DEBUG log level with proper container restart
-#         logger.info("Testing DEBUG log level configuration with container restart")
-#
-#         # Update log level to DEBUG
-#         common_utils.update_log_level("DEBUG")
-#
-#         # Restart container to apply the new log level setting
-#         logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
-#         restart_exit_code = docker_utils.restart_container(container_name)
-#         logger.info(f"Container restart exit code: {restart_exit_code}")
-#         assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
-#
-#         # Poll until service is ready after restart instead of sleeping blindly
-#         logger.info("Waiting for container to stabilize after restart...")
-#         docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
-#
-#         # Trigger some activity to generate DEBUG logs by checking container status
-#         logger.info("Triggering activity to generate DEBUG logs...")
-#         docker_utils.invoke_make_status()
-#
-#         # Brief wait for new log lines to flush
-#         docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
-#
-#         # Check for DEBUG logs
-#         result_debug = common_utils.check_logs_by_level(container_name, "DEBUG", update_config=False)
-#
-#         # If DEBUG logs are still not found, log this as a known limitation but don't fail the test
-#         if not result_debug:
-#             logger.warning("DEBUG logs not found - this may be expected if the application doesn't generate DEBUG logs during normal operation")
-#             logger.info("Checking if container is running and responsive instead...")
-#
-#             # Alternative verification: check if container is running and log level was updated
-#             status_result = docker_utils.check_make_status()
-#             logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
-#             assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
-#
-#             logger.info("Container is running properly with DEBUG log level configuration")
-#             result_debug = True  # Consider test passed if container is healthy
-#
-#         logger.info(f"Log level configuration test completed: INFO ✓, DEBUG {'✓' if result_debug else '⚠'}")
-#     finally:
-#         # Restore the original LOG_LEVEL so subsequent tests in this module
-#         # are not contaminated with our DEBUG override.  The container itself
-#         # is wiped by the next ``deploy_*`` (Makefile targets depend on
-#         # ``down``) so we only need to restore the .env file here.
-#         if original_log_level is not None:
-#             try:
-#                 common_utils.update_log_level(original_log_level)
-#                 logger.info(f"Restored LOG_LEVEL='{original_log_level}' in {env_file_path}")
-#             except Exception as _exc:
-#                 logger.warning(f"Failed to restore LOG_LEVEL='{original_log_level}': {_exc}")
-#         else:
-#             logger.warning("Original LOG_LEVEL was not captured; .env left at DEBUG")
-#     # Cleanup handled by fixture
+def test_loglevel_configuration(setup_wind_turbine_environment):
+    """TC_012: Testing log level configuration in .env file"""
+    logger.info("TC_012: Testing log level configuration in .env file")
+    context = setup_wind_turbine_environment
+    context["deploy_opcua"]()
+
+    container_name = constants.CONTAINERS["time_series_analytics"]["name"]
+
+    # Capture the original LOG_LEVEL so we can restore it on teardown — this
+    # test mutates the shared .env (LOG_LEVEL=DEBUG) and without restoration
+    # the value would leak into every subsequent test in the module.
+    env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
+    original_log_level = None
+    try:
+        with open(env_file_path, "r") as _f:
+            for _line in _f:
+                if _line.startswith("LOG_LEVEL="):
+                    original_log_level = _line.split("=", 1)[1].strip()
+                    break
+    except Exception as _exc:
+        logger.warning(f"Could not read original LOG_LEVEL from {env_file_path}: {_exc}")
+    logger.info(f"Captured original LOG_LEVEL='{original_log_level}' for restoration on teardown")
+
+    try:
+        # Test INFO log level first
+        logger.info("Testing INFO log level configuration")
+        result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
+        logger.info(f"INFO log level check result: {result_info}")
+        assert result_info == True, "INFO log level verification failed"
+
+        # Test DEBUG log level with proper container restart
+        logger.info("Testing DEBUG log level configuration with container restart")
+
+        # Update log level to DEBUG
+        common_utils.update_log_level("DEBUG")
+
+        # Restart container to apply the new log level setting
+        logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
+        restart_exit_code = docker_utils.restart_container(container_name)
+        logger.info(f"Container restart exit code: {restart_exit_code}")
+        assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
+
+        # Poll until service is ready after restart instead of sleeping blindly
+        logger.info("Waiting for container to stabilize after restart...")
+        docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+
+        # Trigger some activity to generate DEBUG logs by checking container status
+        logger.info("Triggering activity to generate DEBUG logs...")
+        docker_utils.invoke_make_status()
+
+        # Brief wait for new log lines to flush
+        docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
+
+        # Check for DEBUG logs
+        result_debug = common_utils.check_logs_by_level(container_name, "DEBUG", update_config=False)
+
+        # If DEBUG logs are still not found, log this as a known limitation but don't fail the test
+        if not result_debug:
+            logger.warning("DEBUG logs not found - this may be expected if the application doesn't generate DEBUG logs during normal operation")
+            logger.info("Checking if container is running and responsive instead...")
+
+            # Alternative verification: check if container is running and log level was updated
+            status_result = docker_utils.check_make_status()
+            logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
+            assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
+
+            logger.info("Container is running properly with DEBUG log level configuration")
+            result_debug = True  # Consider test passed if container is healthy
+
+        logger.info(f"Log level configuration test completed: INFO ✓, DEBUG {'✓' if result_debug else '⚠'}")
+    finally:
+        # Restore the original LOG_LEVEL so subsequent tests in this module
+        # are not contaminated with our DEBUG override.  The container itself
+        # is wiped by the next ``deploy_*`` (Makefile targets depend on
+        # ``down``) so we only need to restore the .env file here.
+        if original_log_level is not None:
+            try:
+                common_utils.update_log_level(original_log_level)
+                logger.info(f"Restored LOG_LEVEL='{original_log_level}' in {env_file_path}")
+            except Exception as _exc:
+                logger.warning(f"Failed to restore LOG_LEVEL='{original_log_level}': {_exc}")
+        else:
+            logger.warning("Original LOG_LEVEL was not captured; .env left at DEBUG")
+    # Cleanup handled by fixture
 
 
 
