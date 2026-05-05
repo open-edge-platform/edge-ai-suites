@@ -1,0 +1,74 @@
+# Frontend ignore patterns merged from nicu-dashboard
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js (include nested dashboard build artifacts)
+# Leading slash limited this to NICU-Warmer/.next only; add recursive pattern for any nested .next
+/.next/
+.next/
+**/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# vercel
+.vercel
+
+# Ignore nested node_modules recursively
+**/node_modules
+
+venv/
+vtest.avi
+*.avi
+__pycache__/
+*.pyc
+
+node_modules/
+model_cache/
+*.blob
+dist/
+.cache/
+
+metrics/
+*.xml
+*.bin
+*.mp4
+*.hdf5
+uploads/
+model_artifacts/
+models_rppg/
+DATA/
+*.onnx
+*.pt
+*.pth
+*.tflite
+*.mov
+*.webm
+nicu-warmer-offline-assets.zip
+model_artifacts/
+models_rppg/
+reference/
+*.pptx
