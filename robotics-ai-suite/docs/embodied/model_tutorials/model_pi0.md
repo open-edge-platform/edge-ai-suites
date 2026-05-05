@@ -10,9 +10,7 @@ hide_directive-->
 
 Pi0 created by Physical Intelligence introduces a groundbreaking robotic model designed to integrate vision, language, and action (VLA) for general-purpose robotic tasks.
 
-% .. image:: ../../assets/images/pi0.png
-% :width: 85%
-% :align: center
+![pi0](../../assets/images/pi0.png)
 
 **Model Architecture:**
 
