@@ -179,7 +179,6 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       minio
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
-127.0.0.1       model_registry
 ```
 
 ---
