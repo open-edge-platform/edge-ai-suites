@@ -60,11 +60,6 @@ All models (model.zip) can be downloaded from [Google Drive](https://drive.googl
 
 For additional details, refer to the official [CUDA-FastBEV GitHub repository].
 
-<!--hide_directive
-:::{contents} Table of Contents
-:local: true
-:::
-hide_directive-->
 
 ### ONNX Model Directory Structure
 
