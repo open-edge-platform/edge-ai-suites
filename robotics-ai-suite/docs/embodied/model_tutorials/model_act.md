@@ -43,7 +43,7 @@ The following steps will guide you through the process of converting the ACT mod
 
 Checkpoint files (.ckpt) which include parameter state will be saved after training. Rebuilding the model structure and loading the parameter state will be needed for model conversion.
 
-> **Attention:** Please be sure that the model configuration especially `kl_weight`, `chunk_size`, `hidden_dim`, `dim_feedforward`, `camera_names` are same to the configuration while training. Failure to do so will result in a shape mismatch between the model checkpoint and the structure.
+> **Attention:** Ensure that the model configuration, especially `kl_weight`, `chunk_size`, `hidden_dim`, `dim_feedforward` and `camera_names`, is identical to the configuration used while training. Failure to do so will result in a shape mismatch between the model checkpoint and the structure.
 
 ```python
 # Build the torch model. ACTPolicy definition can be found in policy.py.
