@@ -45,11 +45,6 @@ robustness and accuracy of feature matching, while also being optimized for real
 The LightGlue model is trained using PyTorch but can achieve optimized inference performance on Intel devices using OpenVINO™.
 To enable this, the PyTorch model must first be converted to the OpenVINO™ IR format. This process is done in two stages: first converting to ONNX, and then converting to IR format.
 
-<!--hide_directive
-:::{contents} Table of Contents
-:local: true
-:::
-hide_directive-->
 
 ### Export LightGlue to ONNX
 
