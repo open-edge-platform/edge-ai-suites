@@ -131,7 +131,7 @@ By default, this command converts the ONNX model to FP16 IR format. The conversi
 
 After running the `ovc` command, you should see the following output files for each model:
 
-```
+```text
 fastbev_post_trt_decode.xml
 fastbev_post_trt_decode.bin
 fastbev_post_trt.xml
