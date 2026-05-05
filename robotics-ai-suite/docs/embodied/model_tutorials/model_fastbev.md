@@ -33,10 +33,7 @@ interaction in various applications across autonomous driving, mobile robotics, 
 
 Fast-BEV, as an representative of BEV algorithms,
 
-```{image} ../developer_tools_tutorials/assets/images/fastbev.png
-:align: center
-:width: 85%
-```
+![fast-bev](../developer_tools_tutorials/assets/images/fastbev.png)
 
 **Model Architecture:**
 
