@@ -37,7 +37,7 @@ ACT model is trained by PyTorch, but can get an optimized inference performance 
 
 The following steps will guide you through the process of converting the ACT model to OpenVINO IR format.
 
-> **Note:** We provide a pretrained checkpoint and also a model conversion script to help you convert model to OpenVINO IR format. Please get the information at the Imitation Learning sample pipeline page [Install ACT pipeline of OpenVINO](../sample_pipelines/imitation_learning_act.md).
+> **Note:** We provide a pretrained checkpoint and also a model conversion script to help you convert model to OpenVINO IR format. Get the information at the Imitation Learning sample pipeline page [Install ACT pipeline of OpenVINO](../sample_pipelines/imitation_learning_act.md#install-act-package).
 
 ### Load the trained checkpoint
 
