@@ -208,17 +208,111 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
 
 
 def test_opcua_alerts(setup_wind_turbine_environment):
-    """TC_014: Testing OPCUA alerts functionality"""
+    """TC_014: Testing OPCUA alerts functionality.
+
+    The underlying ``validate_opcua_alert_system`` helper performs 5 sequential
+    steps (TICK script update → UDF tar upload → config POST → OPC-UA server
+    restart → log pattern search).  When the helper returns False the only
+    signal is the assertion message, which makes triage hard.
+
+    This test adds explicit pre-checks and on-failure log dumps so CI output
+    pinpoints which subsystem (deployment / TSAM / OPC-UA server / log
+    pattern) caused the failure without needing to re-run locally.
+    """
+    import subprocess as _subprocess
+
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
-    context["deploy_opcua"]()
 
-    # Test OPCUA alerts system using helper function from conftest_docker
+    # ------------------------------------------------------------------
+    # Phase 1: Deploy OPC-UA stack
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 1/4: Deploying OPC-UA stack...")
+    deploy_ok = context["deploy_opcua"]()
+    logger.info(f"[DEBUG] deploy_opcua returned: {deploy_ok}")
+    assert deploy_ok, "OPC-UA deployment failed before alert validation could start"
+
+    # ------------------------------------------------------------------
+    # Phase 2: Pre-validation health checks — confirm prerequisites the
+    # validate_opcua_alert_system helper assumes are already in place.
+    # ------------------------------------------------------------------
+    tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    opcua_name = constants.CONTAINERS["opcua_server"]["name"]
+
+    logger.info("[DEBUG] Phase 2/4: Pre-validation health checks")
+    logger.info(f"[DEBUG] Checking TSAM container '{tsam_name}' is running...")
+    tsam_running = docker_utils.container_is_running(tsam_name)
+    logger.info(f"[DEBUG]   tsam_running={tsam_running}")
+    assert tsam_running, f"TSAM container '{tsam_name}' is not running before OPC-UA alert validation"
+
+    logger.info(f"[DEBUG] Checking OPC-UA server container '{opcua_name}' is running...")
+    opcua_running = docker_utils.container_is_running(opcua_name)
+    logger.info(f"[DEBUG]   opcua_running={opcua_running}")
+    assert opcua_running, f"OPC-UA server container '{opcua_name}' is not running before alert validation"
+
+    logger.info("[DEBUG] Polling ts-api health endpoint until ready...")
+    svc_ready = docker_utils.wait_until_service_ready(
+        timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT
+    )
+    logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
+    assert svc_ready, "ts-api health endpoint did not become ready before OPC-UA alert validation"
+
+    # Snapshot of running containers + their status — useful when triaging
+    # failures that show up later as "container X not running".
+    try:
+        ps_out = _subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
+            capture_output=True, text=True, timeout=15,
+        ).stdout.strip()
+        logger.info(f"[DEBUG] docker ps snapshot:\n{ps_out}")
+    except Exception as exc:
+        logger.warning(f"[DEBUG] Failed to capture docker ps snapshot: {exc}")
+
+    # ------------------------------------------------------------------
+    # Phase 3: Run the actual validation helper
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 3/4: Invoking validate_opcua_alert_system()...")
     validation_result = docker_utils.validate_opcua_alert_system()
+    logger.info(f"[DEBUG] validate_opcua_alert_system returned: {validation_result}")
 
-    # Validation should pass
+    # ------------------------------------------------------------------
+    # Phase 4: On failure, dump container state + key logs so the CI
+    # output is self-sufficient for diagnosis.
+    # ------------------------------------------------------------------
+    if not validation_result:
+        logger.error("[DEBUG] Phase 4/4: Validation FAILED — collecting diagnostics")
+
+        # Re-snapshot container state (something may have crashed / restarted)
+        try:
+            ps_out = _subprocess.run(
+                ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
+                capture_output=True, text=True, timeout=15,
+            ).stdout.strip()
+            logger.error(f"[DEBUG] docker ps -a (post-failure):\n{ps_out}")
+        except Exception as exc:
+            logger.warning(f"[DEBUG] Failed to capture docker ps -a: {exc}")
+
+        # Tail logs from the containers that participate in the OPC-UA
+        # alert pipeline.  We use --tail to bound output size in CI logs.
+        for cname in (tsam_name, opcua_name, constants.CONTAINERS["telegraf"]["name"]):
+            try:
+                logs_out = _subprocess.run(
+                    ["docker", "logs", "--tail", "120", cname],
+                    capture_output=True, text=True, timeout=15,
+                )
+                stdout = (logs_out.stdout or "").strip()
+                stderr = (logs_out.stderr or "").strip()
+                logger.error(f"[DEBUG] ----- {cname} stdout (last 120) -----\n{stdout}")
+                if stderr:
+                    logger.error(f"[DEBUG] ----- {cname} stderr (last 120) -----\n{stderr}")
+            except Exception as exc:
+                logger.warning(f"[DEBUG] Failed to capture logs for {cname}: {exc}")
+
     logger.info(f"OPCUA alert validation result: {validation_result}")
-    assert validation_result == True, "OPCUA alert system validation failed"
+    assert validation_result == True, (
+        "OPCUA alert system validation failed — see [DEBUG] log lines above for "
+        "container state and TSAM/OPC-UA/Telegraf log tails captured at failure time."
+    )
 
     # Cleanup handled by fixture
 
