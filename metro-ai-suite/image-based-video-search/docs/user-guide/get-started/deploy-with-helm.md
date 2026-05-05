@@ -27,11 +27,11 @@ Before You Begin, ensure the following:
 
 - Download helm chart with the following command
     ```bash
-    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.2.0-rc3
+    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.2.0
     ```
 - unzip the package using the following command
     ```bash
-    tar -xvf image-based-video-search-1.2.0-rc3.tgz
+    tar -xvf image-based-video-search-1.2.0.tgz
     ```
 - Get into the helm directory
     ```bash

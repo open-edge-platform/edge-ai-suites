@@ -67,20 +67,19 @@ const ApiService = (function () {
                 : [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
 
             return pipelineCache;
-        } catch (_err) {
-            pipelineCache = [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
-            return pipelineCache;
+        } catch (err) {
+            throw err;
         }
     }
 
     async function fetchRuns() {
-        const resp = await fetch('/api/runs');
+        const resp = await fetch('/api/generate_captions_alerts');
         if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
         return await resp.json();
     }
 
     async function startRun(requestBody) {
-        const resp = await fetch('/api/runs', {
+        const resp = await fetch('/api/generate_captions_alerts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestBody)
@@ -118,7 +117,7 @@ const ApiService = (function () {
     }
 
     async function stopRun(runId) {
-        const resp = await fetch(`/api/runs/${runId}`, { method: 'DELETE' });
+        const resp = await fetch(`/api/generate_captions_alerts/${runId}`, { method: 'DELETE' });
         if (!resp.ok) {
             if (resp.status === 404 || resp.status === 502) {
                 return { notFound: true };

@@ -106,7 +106,7 @@ grafana:
 
 scene:
   repository: intel/scenescape-controller
-  tag: v2026.0.0-rc2
+  tag: v2026.0.0
 
   service:
     type: ClusterIP
@@ -126,7 +126,7 @@ web:
   replicas: 1
   image:
     repository: intel/scenescape-manager
-    tag: v2026.0.0-rc2
+    tag: v2026.0.0
   dbhost: pgserver
   broker: broker.scenescape.intel.com
   service:
@@ -134,7 +134,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.0.0-ubuntu24-rc3
+  tag: 2026.0.0-ubuntu24
   # Overrides the storage class name
   storageClassName: "standard"
   gpuWorkload: false

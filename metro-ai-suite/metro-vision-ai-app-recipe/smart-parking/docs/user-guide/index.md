@@ -3,7 +3,7 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md">
      Readme
@@ -41,6 +41,7 @@ The DL Streamer Pipeline Server is a core component, designed to handle video an
 It integrates various components such as MQTT, Node-RED, and Grafana to provide a robust and flexible solution for real-time video inference pipelines. The tool is built to be user-friendly, allowing customization without the need for extensive coding knowledge. Validate your ideas by developing an end-to-end solution faster.
 
 ## Learn More
+
 - [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
 - [Customize the Application](./how-to-guides/customize-application.md)

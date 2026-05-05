@@ -1,0 +1,60 @@
+{{- if and .Values.initResources.enabled (ne (.Values.global.videos.source | default "download") "local") }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "lvs.initresources.fullname" . }}-init-resources
+  labels:
+    {{- include "lvs.initresources.labels" . | nindent 4 }}
+spec:
+  ttlSecondsAfterFinished: {{ .Values.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        app: init-resources
+    spec:
+      restartPolicy: OnFailure
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: init-resources
+          image: {{ .Values.images.initResources }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | default "" | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | default "" | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy | default "localhost,127.0.0.1,.svc.cluster.local" }},localhost"
+            - name: HTTP_PROXY
+              value: {{ .Values.global.proxy.httpProxy | default "" | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.global.proxy.httpsProxy | default "" | quote }}
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy | default "localhost,127.0.0.1,.svc.cluster.local" }},localhost"
+          command: ["/bin/sh", "/scripts/init.sh"]
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: init-script
+              mountPath: /scripts/init.sh
+              subPath: init.sh
+            - name: videos
+              mountPath: /videos
+      volumes:
+        - name: init-script
+          configMap:
+            name: {{ include "lvs.initresources.fullname" . }}-init-resources
+            defaultMode: 0755
+        - name: videos
+          persistentVolumeClaim:
+            claimName: {{ include "lvs.initresources.fullname" . }}-videos
+{{- end }}

@@ -1,0 +1,130 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# values-override.yaml — User-facing overrides for Live Video Captioning
+#
+# Quick start:
+#   1) helm dependency update ./charts
+#   2) helm install lvc ./charts -f ./charts/values-override.yaml -n <namespace> --create-namespace
+#
+# Upgrade:
+#   helm upgrade lvc ./charts -f ./charts/values-override.yaml -n <namespace>
+#
+# Note: model download/conversion can take 30-60+ minutes depending on network and model size.
+
+# -----------------------------------------------------------------------------
+# 1) REQUIRED PLATFORM SETTINGS
+# -----------------------------------------------------------------------------
+global:
+  # REQUIRED: worker node IP/hostname reachable by browser clients.
+  hostIP: ""
+
+  # REQUIRED: Kubernetes node name to schedule workloads.
+  # Note: Please specify the nodeName where the model-download chart runs, as this chart shareds the same PVC for model storage.
+  # If using GPU, ensure that the node has the appropriate GPU resources and drivers installed for charts.
+  nodeName: ""
+
+  # REQUIRED: model-download service location.
+  modelDownload:
+    serviceName: "model-download"
+    port: 8000
+
+  # REQUIRED: at least one VLM entry.
+  # This VLM model is used in DLSPS pipeline to generate captions text for input video stream.
+  # Parameters:
+    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "OpenGVLab/InternVL2-1B"
+    # outputName: directory created under /models/ in the PVC to show under the model selection dropdown in the UI. e.g. "InternVL2-1B".
+    # modelType: "vlm"
+    # weightFormat: "int8", or "int4" or "fp16"
+  models:
+    - modelId: "OpenGVLab/InternVL2-1B"
+      outputName: "InternVL2-1B"
+      modelType: "vlm"
+      weightFormat: "int8"
+
+  # OPTIONAL: downloaded only when detection pipeline is enabled.
+  detectionModels:
+    - "yolov8s"
+
+  # OPTIONAL: required only for gated Hugging Face models.
+  huggingface:
+    apiToken: ""
+
+  # OPTIONAL: proxy settings (leave empty if not needed).
+  httpProxy: ""
+  httpsProxy: ""
+  # Add camera host/IP and any internal services that must bypass proxy.
+  noProxy: ""
+
+  # OPTIONAL: enable RAG subchart which deploys a retrieval-augmented generation service for enhanced captions. Set to true to enable.
+  enableRAG: false
+
+  # When set enableRAG to true, the RAG subchart deploys a retrieval-augmented generation service that enhances captions with LLM-generated descriptions.
+  # The following values configure the RAG service and its choice of LLM and embedding models.
+  # LLM Model for RAG
+  # Parameters:
+    # modelId: HuggingFace repo ID passed to optimum-cli for downloading the model, e.g. "microsoft/Phi-3.5-mini-instruct"
+    # modelType: "llm",
+    # weightFormat: "int8", or "int4" or "fp16"
+    # useGPU: set to true to enable GPU usage for the LLM; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
+    #         please make sure that the key label used matches/available on the `nodeName` that is set above as it shared the pvc that model-download uses.
+  llmModel:
+    modelId: "microsoft/Phi-3.5-mini-instruct"
+    modelType: "llm"
+    weightFormat: "int8"
+    useGPU:
+      enabled: false
+      key: ""
+
+  # Multimodal embedding model for RAG (handled by the multimodal-embedding subchart)
+  # Parameters:
+    # modelId: HuggingFace repo ID for the embedding model, e.g. "QwenText/qwen3-embedding-0.6b"
+    # useGPU: set to true to enable GPU usage for the embedding model; key is the GPU resource key for your cluster, e.g. "gpu.intel.com/i915" or "gpu.intel.com/xe"
+  embeddingModel:
+    modelId: "QwenText/qwen3-embedding-0.6b"
+    useGPU:
+      enabled: false
+      key: ""
+
+# -----------------------------------------------------------------------------
+# 2) VIDEO CAPTION SERVICE
+# -----------------------------------------------------------------------------
+video-caption-service:
+  # Set when reusing a pre-created/shared PVC (for example: models-pvc).
+  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
+  # Leave empty to use release-derived default name.
+  modelsPvcName: "models-pvc"
+  env:
+    # Optional default RTSP URL pre-filled in UI.
+    defaultRtspUrl: ""
+
+    # true: binary alert-style responses, false: descriptive captions.
+    alertMode: "false"
+
+    # true: enable object-detection pipeline and detection model downloads.
+    enableDetectionPipeline: "false"
+
+    # Number of previous captions shown in timeline ("0" = current only).
+    captionHistory: "3"
+
+# -----------------------------------------------------------------------------
+# 3) DLSTREAMER PIPELINE SERVER
+# -----------------------------------------------------------------------------
+dlstreamer-pipeline-server:
+  # Must point to the same shared models PVC used by video-caption-service.
+  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
+  modelsPvcName: "models-pvc"
+
+# -----------------------------------------------------------------------------
+# 4) LIVE VIDEO CAPTIONING RAG (RETRIEVAL-AUGMENTED GENERATION)
+# -----------------------------------------------------------------------------
+live-video-captioning-rag:
+  # Set when reusing a pre-created/shared PVC (for example: models-pvc).
+  # In this setup, the model-download service handles model download and preparation, so the PVC must be pre-created and pre-populated with the required models.
+  # Leave empty to use release-derived default name.
+  modelsPvcName: "models-pvc"
+  env:
+    # Number of output tokens for the LLM response.
+    maxTokens: 1024
+    # Number of candidate captions returned by the RAG retriever.
+    topK: 1

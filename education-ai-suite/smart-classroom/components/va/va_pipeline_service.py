@@ -53,8 +53,8 @@ class VideoAnalyticsPipelineService:
         # Set model paths
         self.model_base_dir = Path(config.models.va.models_base_path).resolve() / "va"
         self.models = {
-            "yolov8m": "yolov8m-pose.xml",
-            "yolov8s": "yolov8s-pose.xml",
+            "front-pose": f"{config.models.va.front_pose_model}.xml",
+            "back-pose": f"{config.models.va.back_pose_model}.xml",
             "resnet18": "resnet18.xml",
             "mobilenetv2": "mobilenetv2.xml",
             "reid": "person-reidentification-retail-0288.xml",
@@ -81,6 +81,18 @@ class VideoAnalyticsPipelineService:
         self.pipeline_retry_counts: Dict[str, int] = {}
         self.max_retries = 10
 
+        # Pipeline error events for status reporting (consumed by monitor_pipeline_status)
+        self.pipeline_errors: Dict[str, List[str]] = {}
+
+        ps = getattr(config.va_pipeline, "pose_statistics", None)
+        self.min_frames_for_transition = getattr(ps, "min_frames_for_transition", 3) if ps else 3
+        self.min_frames_for_transition_unid = getattr(ps, "min_frames_for_transition_unid", 15) if ps else 15
+        self.absence_threshold = getattr(ps, "absence_threshold", 90) if ps else 90
+        self.min_stand_frames = getattr(ps, "min_stand_frames", 10) if ps else 10
+        self.center_dist_threshold = getattr(ps, "center_dist_threshold", 0.1) if ps else 0.1
+        self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
+        self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
+
         # Register cleanup handler
         atexit.register(self._cleanup)
 
@@ -96,6 +108,39 @@ class VideoAnalyticsPipelineService:
     def _get_model_path(self, model_key: str) -> str:
         """Get full path to model"""
         return (self.model_base_dir / self.models[model_key]).as_posix()
+
+    def _validate_file_with_discoverer(self, file_path: str) -> Optional[str]:
+        """Validate a file source using gst-discoverer-1.0
+
+        Args:
+            file_path: Path to the file to validate
+
+        Returns:
+            None if the file is valid, error message string if invalid
+        """
+        try:
+            result = subprocess.run(
+                ["gst-discoverer-1.0.exe", file_path],
+                capture_output=True,
+                text=True,
+                timeout=10,
+            )
+            combined_output = result.stdout + result.stderr
+            if "An error was encountered while discovering the file" in combined_output:
+                self.logger.error(
+                    f"File validation failed for '{file_path}': {combined_output}"
+                )
+                return combined_output.strip()
+            return None
+        except FileNotFoundError:
+            self.logger.error("gst-discoverer-1.0.exe not found")
+            return "gst-discoverer-1.0.exe not found"
+        except subprocess.TimeoutExpired:
+            self.logger.error(f"File validation timed out for '{file_path}'")
+            return "File validation timed out"
+        except Exception as e:
+            self.logger.error(f"File validation error: {e}")
+            return f"File validation error: {e}"
 
     def _get_source_elements(self, source: str, input_type: str) -> List[str]:
         """Get source elements based on input type"""
@@ -141,9 +186,15 @@ class VideoAnalyticsPipelineService:
     def _get_rtsp_sink_elements(self, rtsp_url: str, pipeline_name: str) -> List[str]:
         """Get RTSP sink elements for pushing to RTSP server"""
         return [
+            "d3d11convert",
+            "!",
             "mfh264enc",
-            "bitrate=2000",
+            "bitrate=3000",
             "gop-size=15",
+            "low-latency=true",
+            "bframes=0",
+            "rc-mode=cbr",
+            "quality-vs-speed=0",
             "!",
             "h264parse",
             "!",
@@ -164,15 +215,25 @@ class VideoAnalyticsPipelineService:
             self.logger.warning(f"Failed to check log file: {e}")
             return False
 
-    def _check_error(self, log_file: Path) -> bool:
-        """Check if 'ERROR' appears in log file"""
+    def _check_error(self, log_file: Path) -> Optional[str]:
+        """Check if 'ERROR' appears in log file and return error text.
+
+        Returns:
+            The error text from 'ERROR: from element' to end of file,
+            or None if no error found.
+        """
         try:
             with open(log_file, "r") as f:
                 content = f.read()
-                return "ERROR: from element" in content
+                idx = content.find("WARNING: erroneous pipeline")
+                if idx < 0:
+                    idx = content.find("ERROR: from element")
+                if idx >= 0:
+                    return content[idx:].strip()
+                return None
         except Exception as e:
             self.logger.warning(f"Failed to check log file: {e}")
-            return False
+            return None
 
     def _check_normal_exit(self, log_file: Path) -> bool:
         """Check if pipeline exited normally (has EOS message)"""
@@ -212,7 +273,16 @@ class VideoAnalyticsPipelineService:
                     )
                     break
                 else:
-                    # Unexpected exit
+                    # Unexpected exit — record error for status reporting
+                    log_error = self._check_error(log_file) if log_file else None
+                    error_detail = log_error or f"Pipeline exited with code {process.returncode}"
+                    if pipeline_name not in self.pipeline_errors:
+                        self.pipeline_errors[pipeline_name] = []
+                    self.pipeline_errors[pipeline_name].append(error_detail)
+                    self.logger.warning(
+                        f"Pipeline '{pipeline_name}' exited unexpectedly: {error_detail}"
+                    )
+
                     retry_count = self.pipeline_retry_counts.get(pipeline_name, 0)
 
                     if retry_count < self.max_retries:
@@ -234,7 +304,6 @@ class VideoAnalyticsPipelineService:
                         # Restart pipeline using saved parameters
                         params = self.pipeline_params.get(pipeline_name)
                         if params:
-                            time.sleep(2)  # Wait a bit before restarting
                             self._launch_pipeline_internal(
                                 pipeline_name, params["options"], params["command"]
                             )
@@ -308,12 +377,15 @@ class VideoAnalyticsPipelineService:
                 self.logger.info("Pipeline initialized successfully")
             else:
                 self.logger.warning("Pipeline may not have initialized properly")
-            if self._check_error(log_file):
-                self.logger.error("Errors detected in pipeline log")
-                return False
+            error_text = self._check_error(log_file)
+            if error_text:
+                self.logger.error(f"Errors detected in pipeline log:\n{error_text}")
+                raise RuntimeError(error_text)
 
             return True
 
+        except RuntimeError:
+            raise
         except Exception as e:
             self.logger.error(f"Failed to launch pipeline '{pipeline_name}': {e}")
             return False
@@ -329,7 +401,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8m')}",
+            f"model={self._get_model_path('front-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",
@@ -444,7 +516,7 @@ class VideoAnalyticsPipelineService:
             *self._get_source_elements(source, input_type),
             # YOLO detection
             "gvadetect",
-            f"model={self._get_model_path('yolov8s')}",
+            f"model={self._get_model_path('back-pose')}",
             f"device={options.device}",
             "pre-process-backend=d3d11",
             "batch-size=1",
@@ -495,10 +567,10 @@ class VideoAnalyticsPipelineService:
         pipeline = [
             *self._get_source_elements(source, input_type),
             # Branch 1: ResNet18 classification
-            "videorate",
-            "!",
-            "video/x-raw(memory:D3D11Memory),framerate=1/1",
-            "!",
+            # "videorate",
+            # "!",
+            # "video/x-raw(memory:D3D11Memory),framerate=1/1",
+            # "!",
             "gvaclassify",
             f"model={self._get_model_path('resnet18')}",
             f"device={options.device}",
@@ -566,7 +638,11 @@ class VideoAnalyticsPipelineService:
             # Verify file exists
             if not Path(source).exists():
                 self.logger.error(f"Source file not found: {source}")
-                return False
+                raise ValueError(f"Source file not found: {source}")
+            # Validate file with gst-discoverer
+            error_msg = self._validate_file_with_discoverer(source)
+            if error_msg:
+                raise ValueError(f"Invalid source file '{source}': {error_msg}")
 
         try:
             # Setup environment
@@ -666,6 +742,8 @@ class VideoAnalyticsPipelineService:
 
             return True
 
+        except RuntimeError:
+            raise
         except Exception as e:
             self.logger.error(f"Failed to launch pipeline '{pipeline_name}': {e}")
             return False
@@ -747,6 +825,8 @@ class VideoAnalyticsPipelineService:
                 del self.pipeline_retry_counts[pipeline_name]
             if pipeline_name in self.monitor_stop_flags:
                 del self.monitor_stop_flags[pipeline_name]
+            if pipeline_name in self.pipeline_errors:
+                del self.pipeline_errors[pipeline_name]
 
             return True
 
@@ -815,14 +895,20 @@ class VideoAnalyticsPipelineService:
                     process = self.pipelines[pipeline_name_lower]
                     return_code = process.poll()
 
+                    # Collect any error events recorded by the monitor thread
+                    errors = self.pipeline_errors.pop(pipeline_name_lower, [])
+
                     # Pipeline is running
                     if return_code is None:
                         all_stopped = False
-                        pipeline_statuses.append({
+                        status_entry = {
                             "pipeline_name": pipeline_name,
                             "status": "running",
                             "pid": process.pid,
-                        })
+                        }
+                        if errors:
+                            status_entry["errors"] = errors
+                        pipeline_statuses.append(status_entry)
 
                     # Pipeline has stopped
                     else:
@@ -837,14 +923,17 @@ class VideoAnalyticsPipelineService:
                                 "message": "Pipeline exited normally (EOS received)",
                             })
                         else:
-                            # Check for errors in log
-                            error_msg = "Pipeline exited unexpectedly. Auto-restarting."
+                            if not errors:
+                                log_error = self._check_error(log_file) if log_file else None
+                                if log_error:
+                                    errors = [log_error]
 
                             pipeline_statuses.append({
                                 "pipeline_name": pipeline_name,
                                 "status": "stopped_error",
                                 "return_code": return_code,
-                                "message": error_msg,
+                                "message": "Pipeline exited unexpectedly.",
+                                "errors": errors,
                             })
 
                 # Yield combined status
@@ -1070,7 +1159,9 @@ class VideoAnalyticsPipelineService:
         if previous_state is None:
             previous_state = {
                 "processed_lines": 0,
-                "frames": [],
+                "total_frames": 0,
+                "person_count_samples": [],  # person counts sampled at target frame indices
+                "last_person_count": 0,       # person count from the most recent frame
                 "student_states": {},
                 "student_stand_counts": {},
                 "student_raise_counts": {},
@@ -1087,7 +1178,6 @@ class VideoAnalyticsPipelineService:
             }, previous_state
 
         try:
-            # Read only new lines since last processed
             with open(posture_file, "r") as f:
                 all_lines = f.readlines()
 
@@ -1095,52 +1185,42 @@ class VideoAnalyticsPipelineService:
             new_lines = all_lines[processed_lines:]
 
             if not new_lines:
-                # No new data, return previous stats
-                frames = previous_state["frames"]
-                if not frames:
-                    return {
-                        "student_count": 0,
-                        "stand_count": 0,
-                        "raise_up_count": 0,
-                        "stand_reid": [],
-                    }, previous_state
+                return self._calculate_stats(previous_state), previous_state
 
-                # Recalculate stats from existing data
-                return (
-                    self._calculate_stats_from_frames(
-                        frames,
-                        previous_state["student_stand_counts"],
-                        previous_state["student_raise_counts"],
-                        previous_state["total_raise_count_no_id"],
-                    ),
-                    previous_state,
-                )
+            # Process frames directly — do not accumulate them in memory
+            TARGET_FRAMES = {900, 1800, 2700}
+            frame_base = previous_state["total_frames"]
+            new_frames = 0
 
-            # Parse new JSON objects
             for line in new_lines:
                 line = line.strip()
-                if line:
-                    try:
-                        obj = json.loads(line)
-                        previous_state["frames"].append(obj)
-                    except json.JSONDecodeError:
-                        continue
+                if not line:
+                    continue
+                try:
+                    frame = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
 
-            # Update processed line count
+                frame_idx = frame_base + new_frames
+                new_frames += 1
+
+                objects = frame.get("objects", [])
+                valid_objects = [
+                    obj for obj in objects
+                    if obj.get("detection", {}).get("bounding_box", {}).get("x_max", 0) > 0
+                ]
+
+                # Sample person count only at target frame indices
+                if frame_idx in TARGET_FRAMES:
+                    previous_state["person_count_samples"].append(len(valid_objects))
+                previous_state["last_person_count"] = len(valid_objects)
+
+                self._process_frame(frame_idx, valid_objects, previous_state)
+
             previous_state["processed_lines"] = len(all_lines)
+            previous_state["total_frames"] = frame_base + new_frames
 
-            # Process new frames with state tracking
-            self._process_frames_incremental(previous_state)
-
-            # Calculate and return current statistics
-            stats = self._calculate_stats_from_frames(
-                previous_state["frames"],
-                previous_state["student_stand_counts"],
-                previous_state["student_raise_counts"],
-                previous_state["total_raise_count_no_id"]
-            )
-
-            return stats, previous_state
+            return self._calculate_stats(previous_state), previous_state
 
         except Exception as e:
             self.logger.error(f"Error in incremental pose statistics: {e}")
@@ -1151,156 +1231,135 @@ class VideoAnalyticsPipelineService:
                 "stand_reid": [],
             }, previous_state
 
-    def _process_frames_incremental(self, state: Dict):
-        """Process frames incrementally, updating state"""
-        MIN_FRAMES_FOR_TRANSITION = 3
-        IOU_THRESHOLD = 0.3
-        ABSENCE_THRESHOLD = 15
+    def _process_frame(self, frame_idx: int, valid_objects: List, state: Dict):
+        """Process a single frame, updating tracking state in-place.
 
-        frames = state["frames"]
+        Improvements vs original _process_frames_incremental:
+        - ABSENCE_THRESHOLD raised 15 → 90 frames (~3s) to suppress ReID tracking noise
+        - MIN_STAND_FRAMES=10: stand counted only after ID persists ≥10 consecutive frames
+          (filters 81.7% of noise: ghost 1-2f=66% + very-short 3-5f=15.7%)
+        - Re-entry while already raising immediately counts as a raise event (no missed raises)
+        - Unidentified objects matched by bbox center distance instead of IoU (faster, more robust)
+        - unidentified_objects list capped at 50 entries to bound O(N) scan cost
+        """
+        MIN_FRAMES_FOR_TRANSITION = self.min_frames_for_transition
+        MIN_FRAMES_FOR_TRANSITION_UNID = self.min_frames_for_transition_unid
+        ABSENCE_THRESHOLD = self.absence_threshold
+        MIN_STAND_FRAMES = self.min_stand_frames
+        CENTER_DIST_THRESHOLD = self.center_dist_threshold
+        UNIDENTIFIED_MAX = self.unidentified_max
+
         student_states = state["student_states"]
         student_stand_counts = state["student_stand_counts"]
         student_raise_counts = state["student_raise_counts"]
         unidentified_objects = state["unidentified_objects"]
 
-        # Only process new frames (frames not yet processed for state tracking)
-        start_idx = state.get("last_processed_frame_idx", 0)
+        seen_student_ids = set()
+        matched_unidentified = set()
 
-        for frame_idx in range(start_idx, len(frames)):
-            frame = frames[frame_idx]
-            objects = frame.get("objects", [])
+        for obj in valid_objects:
+            detection = obj.get("detection", {})
+            label = detection.get("label", "")
+            student_id = obj.get("id", 0)
+            bbox = detection.get("bounding_box", {})
 
-            seen_student_ids = set()
-            matched_unidentified = set()
+            is_raising = label in ["sit_raise_up", "stand_raise_up"]
 
-            for obj in objects:
-                detection = obj.get("detection", {})
-                label = detection.get("label", "")
-                student_id = obj.get("id", 0)
-                bbox = detection.get("bounding_box", {})
+            if student_id > 0:
+                seen_student_ids.add(student_id)
 
-                if bbox.get("x_max", 0) == 0:
-                    continue
-
-                is_standing = label in ["stand", "stand_raise_up"]
-                is_raising = label in ["sit_raise_up", "stand_raise_up"]
-
-                if student_id > 0:
-                    seen_student_ids.add(student_id)
-
-                    if student_id not in student_states:
-                        student_states[student_id] = {
-                            "last_seen_frame": frame_idx,
-                            "is_raising": is_raising,
-                            "raise_buffer": 0,
-                        }
-                        student_stand_counts[student_id] = student_stand_counts.get(student_id, 0) + 1
-                        if student_id not in student_raise_counts:
-                            student_raise_counts[student_id] = 0
-                    else:
-                        st = student_states[student_id]
-                        st["last_seen_frame"] = frame_idx
-
-                        if is_raising != st["is_raising"]:
-                            st["raise_buffer"] += 1
-                            if st["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
-                                if is_raising:
-                                    student_raise_counts[student_id] += 1
-                                st["is_raising"] = is_raising
-                                st["raise_buffer"] = 0
-                        else:
-                            st["raise_buffer"] = 0
-
+                if student_id not in student_states:
+                    # First appearance — start confirmation window, don't count stand yet
+                    if student_id not in student_raise_counts:
+                        student_raise_counts[student_id] = 0
+                    # If reappearing while already raising, count it immediately
+                    if is_raising:
+                        student_raise_counts[student_id] += 1
+                    student_states[student_id] = {
+                        "last_seen_frame": frame_idx,
+                        "is_raising": is_raising,
+                        "raise_buffer": 0,
+                        "continuous_frames": 1,
+                        "stand_confirmed": False,
+                    }
                 else:
-                    # Handle unidentified objects
-                    best_match_idx = -1
-                    best_iou = 0
-
-                    for idx, unid_obj in enumerate(unidentified_objects):
-                        if idx in matched_unidentified:
-                            continue
-                        iou = self._calculate_iou(bbox, unid_obj["bbox"])
-                        if iou > best_iou and iou >= IOU_THRESHOLD:
-                            best_iou = iou
-                            best_match_idx = idx
-
-                    if best_match_idx >= 0:
-                        unid_obj = unidentified_objects[best_match_idx]
-                        matched_unidentified.add(best_match_idx)
-                        unid_obj["bbox"] = bbox
-
-                        if is_raising != unid_obj["is_raising"]:
-                            unid_obj["raise_buffer"] += 1
-                            if unid_obj["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
-                                if is_raising:
-                                    unid_obj["raise_count"] += 1
-                                    state["total_raise_count_no_id"] += 1
-                                unid_obj["is_raising"] = is_raising
-                                unid_obj["raise_buffer"] = 0
-                        else:
-                            unid_obj["raise_buffer"] = 0
-
-                        unid_obj["last_seen_frame"] = frame_idx
-                    else:
-                        unidentified_objects.append({
-                            "bbox": bbox,
-                            "is_raising": is_raising,
-                            "raise_buffer": 0,
-                            "raise_count": 0,
-                            "last_seen_frame": frame_idx,
-                        })
-
-            # Clean up stale unidentified objects
-            state["unidentified_objects"] = [
-                obj for obj in unidentified_objects
-                if frame_idx - obj["last_seen_frame"] < 30
-            ]
-
-            # Check for absent students
-            for student_id in list(student_states.keys()):
-                if student_id not in seen_student_ids:
                     st = student_states[student_id]
-                    if frame_idx - st["last_seen_frame"] >= ABSENCE_THRESHOLD:
-                        del student_states[student_id]
+                    st["last_seen_frame"] = frame_idx
+                    st["continuous_frames"] += 1
 
-        state["last_processed_frame_idx"] = len(frames)
+                    # Confirm stand once ID has persisted MIN_STAND_FRAMES consecutive frames
+                    if not st["stand_confirmed"] and st["continuous_frames"] >= MIN_STAND_FRAMES:
+                        student_stand_counts[student_id] = student_stand_counts.get(student_id, 0) + 1
+                        st["stand_confirmed"] = True
 
-    def _calculate_iou(self, bbox1: Dict, bbox2: Dict) -> float:
-        """Calculate IoU between two bounding boxes"""
-        x1_min = bbox1.get("x_min", 0)
-        y1_min = bbox1.get("y_min", 0)
-        x1_max = bbox1.get("x_max", 0)
-        y1_max = bbox1.get("y_max", 0)
+                    if is_raising != st["is_raising"]:
+                        st["raise_buffer"] += 1
+                        if st["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION:
+                            if is_raising:
+                                student_raise_counts[student_id] += 1
+                            st["is_raising"] = is_raising
+                            st["raise_buffer"] = 0
+                    else:
+                        st["raise_buffer"] = 0
 
-        x2_min = bbox2.get("x_min", 0)
-        y2_min = bbox2.get("y_min", 0)
-        x2_max = bbox2.get("x_max", 0)
-        y2_max = bbox2.get("y_max", 0)
+            else:
+                # Unidentified object: match by bbox center distance
+                cx = (bbox.get("x_min", 0) + bbox.get("x_max", 0)) / 2
+                cy = (bbox.get("y_min", 0) + bbox.get("y_max", 0)) / 2
 
-        x_left = max(x1_min, x2_min)
-        y_top = max(y1_min, y2_min)
-        x_right = min(x1_max, x2_max)
-        y_bottom = min(y1_max, y2_max)
+                best_match_idx = -1
+                best_dist = CENTER_DIST_THRESHOLD
 
-        if x_right < x_left or y_bottom < y_top:
-            return 0.0
+                for idx, unid_obj in enumerate(unidentified_objects):
+                    if idx in matched_unidentified:
+                        continue
+                    ux, uy = unid_obj["center"]
+                    dist = ((cx - ux) ** 2 + (cy - uy) ** 2) ** 0.5
+                    if dist < best_dist:
+                        best_dist = dist
+                        best_match_idx = idx
 
-        intersection = (x_right - x_left) * (y_bottom - y_top)
-        area1 = (x1_max - x1_min) * (y1_max - y1_min)
-        area2 = (x2_max - x2_min) * (y2_max - y2_min)
-        union = area1 + area2 - intersection
+                if best_match_idx >= 0:
+                    unid_obj = unidentified_objects[best_match_idx]
+                    matched_unidentified.add(best_match_idx)
+                    unid_obj["center"] = (cx, cy)
 
-        if union == 0:
-            return 0.0
+                    if is_raising != unid_obj["is_raising"]:
+                        unid_obj["raise_buffer"] += 1
+                        if unid_obj["raise_buffer"] >= MIN_FRAMES_FOR_TRANSITION_UNID:
+                            if is_raising:
+                                unid_obj["raise_count"] += 1
+                                state["total_raise_count_no_id"] += 1
+                            unid_obj["is_raising"] = is_raising
+                            unid_obj["raise_buffer"] = 0
+                    else:
+                        unid_obj["raise_buffer"] = 0
 
-        return intersection / union
+                    unid_obj["last_seen_frame"] = frame_idx
+                elif len(unidentified_objects) < UNIDENTIFIED_MAX:
+                    unidentified_objects.append({
+                        "center": (cx, cy),
+                        "is_raising": is_raising,
+                        "raise_buffer": 0,
+                        "raise_count": 0,
+                        "last_seen_frame": frame_idx,
+                    })
 
-    def _calculate_stats_from_frames(
-        self, frames: List, student_stand_counts: Dict, 
-        student_raise_counts: Dict, total_raise_count_no_id: int
-    ) -> Dict:
-        """Calculate statistics from processed frames and counters"""
-        if not frames:
+        # Remove stale unidentified objects
+        state["unidentified_objects"] = [
+            obj for obj in unidentified_objects
+            if frame_idx - obj["last_seen_frame"] < self.stale_unidentified_threshold
+        ]
+
+        # Remove students absent too long — re-appearance will count as a new stand-up
+        for student_id in list(student_states.keys()):
+            if student_id not in seen_student_ids:
+                if frame_idx - student_states[student_id]["last_seen_frame"] >= ABSENCE_THRESHOLD:
+                    del student_states[student_id]
+
+    def _calculate_stats(self, state: Dict) -> Dict:
+        """Calculate current statistics from accumulated state."""
+        if state["total_frames"] == 0:
             return {
                 "student_count": 0,
                 "stand_count": 0,
@@ -1308,31 +1367,20 @@ class VideoAnalyticsPipelineService:
                 "stand_reid": [],
             }
 
-        # Calculate student count at target frames
-        target_frames = [900, 1800, 2700]
-        person_counts = []
+        person_count_samples = state["person_count_samples"]
+        if person_count_samples:
+            student_count = int(sum(person_count_samples) / len(person_count_samples))
+        else:
+            student_count = state["last_person_count"]
 
-        if len(frames) < max(target_frames):
-            target_frames = [len(frames) - 1]
-
-        for target_idx in target_frames:
-            if target_idx < len(frames):
-                frame = frames[target_idx]
-                objects = frame.get("objects", [])
-                count = sum(
-                    1 for obj in objects
-                    if obj.get("detection", {}).get("bounding_box", {}).get("x_max", 0) > 0
-                )
-                person_counts.append(count)
-
-        student_count = int(sum(person_counts) / len(person_counts)) if person_counts else 0
-        stand_count = sum(student_stand_counts.values())
-        raise_up_count = sum(student_raise_counts.values()) + total_raise_count_no_id
-
+        stand_count = sum(state["student_stand_counts"].values())
+        raise_up_count = (
+            sum(state["student_raise_counts"].values()) + state["total_raise_count_no_id"]
+        )
         stand_reid = [
-            {"student_id": sid, "count": count}
-            for sid, count in sorted(student_stand_counts.items())
-            if count > 0
+            {"student_id": sid, "count": cnt}
+            for sid, cnt in sorted(state["student_stand_counts"].items())
+            if cnt > 0
         ]
 
         return {

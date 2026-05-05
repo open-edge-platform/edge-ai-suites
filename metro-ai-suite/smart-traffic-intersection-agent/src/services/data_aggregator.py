@@ -1,11 +1,9 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
-"""Data aggregator service for Traffic Intersection Agent."""
 
 import asyncio
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Any
-from collections import deque
+from typing import Dict, Optional, Any
 import structlog
 
 from models import (
@@ -50,8 +48,10 @@ class DataAggregatorService:
         
         # Current state
         self.current_vlm_analysis: Optional[VLMAnalysisData] = None
-        self.last_analysis_time: Optional[float] = 0.0
+        self.last_analysis_time: float = 0.0
         
+        # Event to notify WebSocket clients when new VLM-analyzed data is available
+        self.new_data_event: asyncio.Event = asyncio.Event()
         
         logger.info("Data aggregator service initialized")
 
@@ -204,14 +204,16 @@ class DataAggregatorService:
         """Save data that was used in VLM analysis as the current analyzed data."""
 
         self.current_vlm_analysis = vlm_analysis
-
         # Copy temporary camera data to VLM-analyzed storage
         self.vlm_analyzed_camera_images = traffic_snapshot.camera_images
         self.vlm_analyzed_intersection_data = traffic_snapshot.intersection_data
         self.vlm_analyzed_weather_data = self.vlm_service.get_weather_details()
     
-
-        # Add to historical snapshots (only VLM-analyzed data)
+        # Notify WebSocket clients of new data
+        old_event: asyncio.Event = self.new_data_event
+        self.new_data_event = asyncio.Event()
+        old_event.set()
+        logger.debug("Event notification sent for new VLM-analyzed data")
         
         logger.info("VLM-analyzed data saved",
                    total_density=traffic_snapshot.total_count,
@@ -228,7 +230,7 @@ class DataAggregatorService:
         # Get current threshold dynamically from config
         high_density_threshold = self.config.get_high_density_threshold()
         
-        logger.info("Checking if VLM analysis should be triggered",
+        logger.debug("Checking if VLM analysis should be triggered",
                    total_density=self.temp_intersection_data.total_density,
                    threshold=high_density_threshold,
                    last_analysis_time=self.last_analysis_time)
@@ -280,7 +282,7 @@ class DataAggregatorService:
         
             # Trigger VLM analysis
             try:
-                vlm_analysis: VLMAnalysisData = await self.vlm_service.analyze_traffic_non_blocking(
+                vlm_analysis: Optional[VLMAnalysisData] = await self.vlm_service.analyze_traffic_non_blocking(
                     traffic_snapshot=traffic_snapshot
                 )
             
@@ -321,13 +323,7 @@ class DataAggregatorService:
             # Prepare camera images for response (only VLM-analyzed images)
             camera_images_dict = {}
             for direction, camera_image in self.vlm_analyzed_camera_images.items():
-                camera_images_dict[f"{direction}_camera"] = {
-                    'camera_id': camera_image.camera_id,
-                    'direction': camera_image.direction,
-                    'timestamp': camera_image.timestamp,
-                    'image_base64': camera_image.image_base64,  # Include full base64 image
-                    'image_size_bytes': camera_image.image_size_bytes
-                }
+                camera_images_dict[f"{direction}_camera"] = camera_image
             
             # Create response with VLM-analyzed data only
             response = TrafficIntersectionAgentResponse(

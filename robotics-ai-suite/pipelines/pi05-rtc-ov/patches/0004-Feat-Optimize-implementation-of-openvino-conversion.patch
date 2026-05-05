@@ -1,0 +1,919 @@
+From 50e1d17bd8122734ea1aae52f45170b72bdb0580 Mon Sep 17 00:00:00 2001
+From: "Liu, Baihe" <baihe.liu@intel.com>
+Date: Wed, 11 Feb 2026 15:54:30 +0800
+Subject: [PATCH 4/6] [Feat] Optimize implementation of openvino conversion
+
+---
+ examples/pi05_with_openvino/README.md         |  10 +-
+ .../scripts/benchmark_pi05_ov_rtc.py          |  20 +-
+ .../pi05_with_openvino/scripts/convert_ov.py  |  80 +++----
+ .../scripts/convert_ov_rtc.py                 | 216 +++++++-----------
+ src/lerobot/policies/pi05/modeling_pi05.py    |  49 ++--
+ tests/policies/pi0_pi05/test_pi05_ov_rtc.py   |  50 ++--
+ 6 files changed, 187 insertions(+), 238 deletions(-)
+
+diff --git a/examples/pi05_with_openvino/README.md b/examples/pi05_with_openvino/README.md
+index eb3bbcd..7eba985 100644
+--- a/examples/pi05_with_openvino/README.md
++++ b/examples/pi05_with_openvino/README.md
+@@ -22,7 +22,7 @@ Using `--extra pi-ov` will force the use of the CPU version of PyTorch.
+ 
+ ### Convert Model without RTC (Original)
+ 
+-Use the `convert_ov.py` script to convert the standard Pi05 model to OpenVINO IR. This process typically goes through ONNX export.
++Use the `convert_ov.py` script to convert the standard Pi05 model to OpenVINO IR. 
+ 
+ 
+ Example:
+@@ -30,7 +30,6 @@ Example:
+ uv run --extra pi-ov scripts/convert_ov.py \
+     --torch_dir <path_to_pytorch_checkpoint> \
+     --ov_output_dir pi05_lerobot_ov_ir \
+-    --onnx_output_dir pi05_onnx \
+     --override
+ ```
+ If `--compress_int8`, `nncf` is required.
+@@ -38,7 +37,6 @@ If `--compress_int8`, `nncf` is required.
+ uv run --extra pi-ov --with nncf scripts/convert_ov.py \
+     --torch_dir <path_to_pytorch_checkpoint> \
+     --ov_output_dir pi05_lerobot_ov_ir \
+-    --onnx_output_dir pi05_onnx \
+     --compress_int8 \
+     --override
+ ```
+@@ -48,7 +46,6 @@ uv run --extra pi-ov --with nncf scripts/convert_ov.py \
+     --torch_dir <path_to_pytorch_checkpoint> \
+     --dataset_path <path_to_local_dataset> \
+     --ov_output_dir pi05_lerobot_ov_ir \
+-    --onnx_output_dir pi05_onnx \
+     --compress_int8 \
+     --override
+ ```
+@@ -56,8 +53,7 @@ uv run --extra pi-ov --with nncf scripts/convert_ov.py \
+ **Arguments:**
+ - `--torch_dir`: Path to the pretrained PyTorch model checkpoint or huggingface repo. Default: "lerobot/pi05_base"
+ - `--ov_output_dir`: Directory where the OpenVINO IR model will be saved.
+-- `--onnx_output_dir`: Directory where the intermediate ONNX model will be saved.
+-- `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs) for ONNX export.
++- `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs).
+ - `--compress_int8`: (Optional) Compress weights to INT8. `nncf` is required.
+ - `--save_fp32`: (Optional) Save OpenVINO model in FP32 format (FP16 by default).
+ - `--override`: (Optional) Overwrite existing files.
+@@ -73,7 +69,6 @@ Example:
+ uv run --extra pi-ov --with nncf scripts/convert_ov_rtc.py \
+     --torch_dir <path_to_pytorch_checkpoint> \
+     --dataset_path <path_to_local_dataset> \
+-    --onnx_output_dir pi05_rtc_onnx \
+     --ov_output_dir pi05_rtc_lerobot_ov_ir \
+     --compress_int8 \
+     --override
+@@ -95,6 +90,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
+ - `--device`: Target device for inference (e.g., "CPU", "GPU"). Default: "CPU".
+ - `-n`, `--num_runs`: Number of inference runs to average for benchmarking. Default: 10.
+ - `--camera_num`, `-c`: Number of cameras used in the model, should be same as the setting used during model conversion. Default: 4.
++- `--chunk_size`: (Optional) Override PI05 chunk_size (and n_action_steps). Must match with exported OV model. Default: 50.
+ - `--run_torch`: (Optional) Run the original PyTorch model for output comparison.
+ - `--torch_dir`: (Optional) Path to PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
+ - `--disable_rtc`: (Optional) Disable RTC functionality when loading model with RTC. Would be invalid when loading model without RTC support.
+diff --git a/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py b/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
+index e5364bb..b89e088 100644
+--- a/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
++++ b/examples/pi05_with_openvino/scripts/benchmark_pi05_ov_rtc.py
+@@ -26,6 +26,7 @@ parser.add_argument("--camera_num", "-c", type=int, default=4, help="Number of c
+ parser.add_argument("--device", type=str, default="CPU", help="Device to run inference on")
+ parser.add_argument("--run_torch", action="store_true", help="Whether to run the original PyTorch model for output comparison.")
+ parser.add_argument("--torch_dir",  type=str, default="lerobot/pi05_base", help="Path to PyTorch model directory for comparison if --run_torch is set")
++parser.add_argument("--chunk_size", type=int, default=50, help="Override PI05 chunk_size (and n_action_steps). Must match with exported OV model.")
+ parser.add_argument("--num_runs" , "-n", type=int, default=10, help="Number of runs for averaging inference time")
+ parser.add_argument("--num_warmup", type=int, default=3, help="Number of warmup runs, 0 to disable")
+ parser.add_argument("--disable_rtc", action="store_true", default=False, help="Disable RTC functionality")
+@@ -34,6 +35,9 @@ args = parser.parse_args()
+ if args.num_runs <= 0:
+     parser.error("--num_runs must be at least 1")
+ 
++if args.chunk_size <= 0:
++    parser.error("--chunk_size must be at least 1")
++
+ image_keys = [
+     "observation.images.cam_high",
+     "observation.images.cam_low",
+@@ -42,6 +46,8 @@ image_keys = [
+ ][:args.camera_num]
+ 
+ config = PI05Config(
++    chunk_size=args.chunk_size,
++    n_action_steps=args.chunk_size,
+     input_features={
+         **{key: PolicyFeature(type=FeatureType.VISUAL, shape=(3, 224, 224)) for key in image_keys},
+         "observation.state": PolicyFeature(type=FeatureType.STATE, shape=(14,)),
+@@ -51,6 +57,9 @@ config = PI05Config(
+     },
+ )
+ 
++if args.chunk_size != 50:
++    print(f"Using overridden chunk_size={config.chunk_size}")
++
+ dummy_input = {
+         "observation.state": torch.ones(14),
+         **{key: torch.randint(256, size=(3, 224, 224), dtype=torch.uint8) for key in image_keys},
+@@ -107,10 +116,13 @@ if args.disable_rtc:
+     rtc_args = {}
+ else:
+     print("Enable RTC...")
++    # Simulate inference delay and execution horizon based on chunk size for testing purposes
++    inference_delay = min(config.chunk_size // 4, max(config.chunk_size - 1, 0))
++    execution_horizon = config.chunk_size // 2
+     rtc_args = {
+-        "prev_chunk_left_over": torch.randn(1, 25, 32, dtype=torch.float32),
+-        "inference_delay": 8,
+-        "execution_horizon": 25,
++        "prev_chunk_left_over": torch.randn(1, config.chunk_size // 2, 14, dtype=torch.float32),
++        "inference_delay": inference_delay,
++        "execution_horizon": execution_horizon,
+     }
+ 
+ ov_config = OVConfig(model_dir=args.model_dir, device=args.device)
+@@ -125,7 +137,7 @@ if args.run_torch:
+     if not args.disable_rtc:
+         torch_policy.config.rtc_config = RTCConfig(
+             enabled=True,
+-            execution_horizon=10,
++            execution_horizon=config.chunk_size // 2,
+             max_guidance_weight=5.0,
+             prefix_attention_schedule=RTCAttentionSchedule.EXP,
+             debug=False,
+diff --git a/examples/pi05_with_openvino/scripts/convert_ov.py b/examples/pi05_with_openvino/scripts/convert_ov.py
+index 5fa936a..cea6736 100644
+--- a/examples/pi05_with_openvino/scripts/convert_ov.py
++++ b/examples/pi05_with_openvino/scripts/convert_ov.py
+@@ -15,11 +15,10 @@ import argparse
+ from pathlib import Path
+ 
+ 
+-parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to ONNX and OpenVINO IR")
++parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to OpenVINO IR")
+ parser.add_argument("--camera_num", "-c", type=int, default=4, help="Batch size for image input/number of cameras")
+ parser.add_argument("--torch_dir", type=str, default="lerobot/pi05_base", help="Path to the pretrained PyTorch model")
+ parser.add_argument("--dataset_path", type=str, default=None, help="Path to local LeRobot dataset for real inputs")
+-parser.add_argument("--onnx_output_dir", type=str, default="pi05_onnx", help="Path to save the ONNX model")
+ parser.add_argument("--ov_output_dir", type=str, default="pi05_lerobot_ov_ir", help="Path to save the OpenVINO IR model")
+ parser.add_argument("--compress_int8", action="store_true", help="Whether to compress models to INT8")
+ parser.add_argument("--save_fp32", action="store_true", help="Whether to save OpenVINO model in FP32 format (FP16 by default)")
+@@ -196,29 +195,7 @@ else:
+     noise = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
+ 
+ # -----------------------------
+-# Export to ONNX
+-# -----------------------------
+-onnx_dir = args.onnx_output_dir + f"_{args.camera_num}c"
+-onnx_path = os.path.join(onnx_dir, "pi05.onnx")
+-
+-if not os.path.exists(onnx_path) or args.override:
+-    os.makedirs(onnx_dir, exist_ok=True)
+-    print(f"Exporting ONNX model to {onnx_path}...")
+-    torch.onnx.export(
+-        inference_model,
+-        (images, img_masks, lang_tokens, lang_masks, noise),
+-        onnx_path,
+-        input_names=["images", "img_masks", "lang_tokens", "lang_masks", "noise"],
+-        output_names=["actions_out"],
+-        opset_version=14,
+-        do_constant_folding=False,
+-    )
+-    print(f"ONNX model exported to {onnx_path}")
+-else:
+-    print(f"ONNX model {onnx_path} already exists. Skipping export.")
+-
+-# -----------------------------
+-# OpenVINO Conversion
++# OpenVINO Conversion 
+ # -----------------------------
+ suffix = "_FP32" if args.save_fp32 else "_FP16"
+ suffix = f"_{args.camera_num}c" + suffix
+@@ -226,8 +203,23 @@ ov_model_path = os.path.join(args.ov_output_dir + suffix, "model.xml")
+ 
+ if not os.path.exists(ov_model_path) or args.override:
+     os.makedirs(args.ov_output_dir + suffix, exist_ok=True)
+-    print(f"Converting to OpenVINO IR: {ov_model_path}")
+-    ov_model = ov.convert_model(onnx_path)
++    print(f"Converting PyTorch model directly to OpenVINO IR: {ov_model_path}")
++
++    # We pass the example input to trace/convert the model
++    ov_model = ov.convert_model(
++        inference_model,
++        example_input=(images, img_masks, lang_tokens, lang_masks, noise),
++        input=[
++            ("images", list(images.shape)),
++            ("img_masks", list(img_masks.shape)),
++            ("lang_tokens", list(lang_tokens.shape)),
++            ("lang_masks", list(lang_masks.shape)),
++            ("noise", list(noise.shape))
++        ]
++    )
++    
++    # Set output name for consistency
++    ov_model.outputs[0].tensor.set_names({"actions_out"})
+ 
+     ov.save_model(ov_model, 
+                 output_model=ov_model_path, 
+@@ -321,27 +313,15 @@ def run_ov_inference(xml_path: str, inputs: dict) -> dict:
+             ov_inputs[name] = arr
+ 
+     results = compiled(ov_inputs)
+-    # compiled(inputs=...) returns a dict of output_name -> numpy array
+     return results
+ 
+-def run_onnx_inference(onnx_path: str, inputs: dict) -> dict:
+-    """Run ONNX Runtime inference and return output dict."""
+-    import onnxruntime as ort
+-    # Prepare inputs: convert torch tensors to numpy
+-    ort_inputs = {}
+-    for name, arr in inputs.items():
+-        ort_inputs[name] = arr.detach().cpu().numpy() if isinstance(arr, torch.Tensor) else np.asarray(arr)
+-
+-    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+-    out_names = [o.name for o in sess.get_outputs()]
+-    out = sess.run(out_names, ort_inputs)
+-    return dict(zip(out_names, out))
+-
+ print("Running PyTorch Inference for Baseline...")
+ with torch.no_grad():
+     torch_out = inference_model(images, img_masks, lang_tokens, lang_masks, noise)
++    # Get original output without wrapper just to be sure
++    original_torch_out = policy.model.sample_actions(images, img_masks, lang_tokens, lang_masks, noise)
+ 
+-print("Running ONNX Inference...")
++print("Running OpenVINO Inference...")
+ inputs = {
+     "images": images.cpu(),
+     "img_masks": img_masks.cpu(),
+@@ -349,22 +329,20 @@ inputs = {
+     "lang_masks": lang_masks.cpu(),
+     "noise": noise.cpu(),
+ }
+-onnx_results = run_onnx_inference(onnx_path, inputs)
+-onnx_out = onnx_results["actions_out"]
+-
+-print("Running OpenVINO Inference...")
+ ov_results = run_ov_inference(ov_model_path, inputs)
+-ov_out = ov_results["actions_out"]
++output_key = list(ov_results.keys())[0] if "actions_out" not in ov_results else "actions_out"
++ov_out = ov_results[output_key]
+ 
+ print("Comparing Results...")
+ print("=====================================================")
+-compare_tensors("PyTorch(Wrapper) vs ONNX", torch_out, onnx_out)
+-compare_tensors("ONNX vs OpenVINO", onnx_out, ov_out)
++compare_tensors("PyTorch(Original) vs PyTorch(Wrapper)", original_torch_out, torch_out)
+ compare_tensors("PyTorch(Wrapper) vs OpenVINO", torch_out, ov_out)
++
+ if args.compress_int8:
+     try:
+-        int8_result = run_ov_inference(os.path.join(args.ov_output_dir + f"_{args.camera_num}c_INT8", "model.xml"), inputs)
+-        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result["actions_out"])
++        int8_result = run_ov_inference(os.path.join(model_int8_dir, "model.xml"), inputs)
++        int8_out_key = list(int8_result.keys())[0]
++        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result[int8_out_key])
+     except Exception as e:
+         print(f"INT8 inference failed: {e}")
+ 
+diff --git a/examples/pi05_with_openvino/scripts/convert_ov_rtc.py b/examples/pi05_with_openvino/scripts/convert_ov_rtc.py
+index 4815d1f..28c06fd 100644
+--- a/examples/pi05_with_openvino/scripts/convert_ov_rtc.py
++++ b/examples/pi05_with_openvino/scripts/convert_ov_rtc.py
+@@ -16,11 +16,10 @@ from lerobot.datasets.lerobot_dataset import LeRobotDataset
+ from lerobot.policies.factory import make_pre_post_processors
+ from lerobot.utils.constants import ACTION, OBS_LANGUAGE_TOKENS, OBS_LANGUAGE_ATTENTION_MASK
+ 
+-parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to ONNX and OpenVINO IR")
++parser = argparse.ArgumentParser(description="Convert PyTorch Pi05Policy to OpenVINO IR with RTC support")
+ parser.add_argument("--camera_num", "-c", type=int, default=4, help="Batch size for image input/number of cameras")
+ parser.add_argument("--torch_dir", type=str, default="lerobot/pi05_base", help="Path to the pretrained PyTorch model")
+ parser.add_argument("--dataset_path", type=str, default=None, help="Path to local LeRobot dataset for real inputs")
+-parser.add_argument("--onnx_output_dir", type=str, default="pi05_rtc_onnx", help="Path to save the ONNX model")
+ parser.add_argument("--ov_output_dir", type=str, default="pi05_rtc_lerobot_ov_ir", help="Path to save the OpenVINO IR model")
+ parser.add_argument("--compress_int8", action="store_true", help="Whether to compress models to INT8")
+ parser.add_argument("--save_fp32", action="store_true", help="Whether to save OpenVINO model in FP32 format (FP16 by default)")
+@@ -92,22 +91,21 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+         self.rtc_processor = RTCProcessor(pi05_policy.config.rtc_config)
+         self.rtc_processor.denoise_step = self.rtc_denoise_step
+ 
+-    def forward(self, images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay, execution_horizon):
++    def forward(self, images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, prefix_weights):
+         # Ensure all internal constants are float32
+         images = images.float()
+         
+-        # Convert masks to int because ONNX doesn't support CumSum on booleans
++        # Convert masks to int because OpenVINO prefers int for CumSum
+         img_masks = img_masks.long()
+         lang_masks = lang_masks.long()
+         
+         # out = self.model(images, img_masks, lang_tokens, lang_masks, state, actions)
+-        out = self.sample_actions(images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay, execution_horizon)
++        out = self.sample_actions(images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, prefix_weights)
+ 
+-       
+         if torch.is_complex(out):
+             out = out.real
+         
+-        torch.save(out, "validation/lerobot_pytorch_pi05_output.pt")
++        # torch.save(out, "validation/lerobot_pytorch_pi05_output.pt")
+         return out
+     
+     @torch.no_grad()  # see openpi `sample_actions` (slightly adapted)
+@@ -119,8 +117,7 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+         masks,
+         noise,
+         prev_chunk_left_over,
+-        inference_delay,
+-        execution_horizon, 
++        prefix_weights, 
+         num_steps=None,
+     ) -> Tensor:
+         """Do a full inference forward and compute the action."""
+@@ -137,13 +134,16 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+         prefix_att_2d_masks_4d = self.model._prepare_attention_masks_4d(prefix_att_2d_masks.bool())
+         self.model.paligemma_with_expert.paligemma.language_model.config._attn_implementation = "eager"  # noqa: SLF001
+ 
+-        _, past_key_values = self.model.paligemma_with_expert.forward(
++        # Avoid passing [prefix_embs, None] which causes "None constant" error in OpenVINO
++        # Directly call the internal language model since the only valid input is prefix_embs
++        outputs = self.model.paligemma_with_expert.paligemma.language_model.forward(
+             attention_mask=prefix_att_2d_masks_4d,
+             position_ids=prefix_position_ids,
+             past_key_values=None,
+-            inputs_embeds=[prefix_embs, None],
++            inputs_embeds=prefix_embs,
+             use_cache=True,
+         )
++        past_key_values = outputs.past_key_values
+ 
+         dt = -1.0 / num_steps
+ 
+@@ -162,10 +162,9 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+             v_t = self.rtc_processor.denoise_step(
+                     x_t=x_t,
+                     prev_chunk_left_over=prev_chunk_left_over,
+-                    inference_delay=inference_delay,
++                    prefix_weights=prefix_weights,
+                     time=time,
+                     original_denoise_step_partial=denoise_step_partial_call,
+-                    execution_horizon=execution_horizon,
+                 )
+ 
+             x_t = x_t + dt * v_t
+@@ -175,10 +174,9 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+         self,
+         x_t,
+         prev_chunk_left_over,
+-        inference_delay,
++        prefix_weights,
+         time,
+         original_denoise_step_partial,
+-        execution_horizon=None,
+     ) -> Tensor:
+         
+         tau = 1 - time
+@@ -187,62 +185,41 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+             # Add batch dimension
+             prev_chunk_left_over = prev_chunk_left_over.unsqueeze(0)
+ 
+-        if execution_horizon > prev_chunk_left_over.shape[1]:
+-            execution_horizon = prev_chunk_left_over.shape[1]
+-
+         action_chunk_size = x_t.shape[1]
+-        # Instead of static slice assignment which breaks dynamic shapes, we use F.pad.
+-        # This allows ONNX to export a dynamic Pad operator that adapts to prev_chunk_left_over's actual length.
+-        # We only pad the length dimension (dim=1).
+-        
+         curr_len = prev_chunk_left_over.shape[1]
+         pad_len = action_chunk_size - curr_len
+         
++        # We assume that prev_chunk_left_over is always padded in pipeline preprocessing instead of in the model, so the default input shape is (b, chunk_size, max_action_dim).
++        # If that's not the case, and prev_chunk_left_over can be shorter than chunk_size without padding, then we need to pad it here to ensure the shape is consistent for OpenVINO export. 
++        # When parsing a shorter prev_chunk_left_over, use torch.cat instead of F.pad to preserve static dimensions (batches, channels)
+         if pad_len > 0:
+-            # F.pad format: (pad_last_dim_left, pad_last_dim_right, pad_2nd_last_dim_left, pad_2nd_last_dim_right)
+-            # We want to pad dim 1 (length), which is the 2nd last dim.
+-            # dim 2 (action_dim) gets (0, 0)
+-            # dim 1 (len) gets (0, pad_len) -> pad right side
+-            prev_chunk_left_over = torch.nn.functional.pad(
+-                prev_chunk_left_over, 
+-                pad=(0, 0, 0, pad_len), 
+-                mode='constant', 
+-                value=0
+-            )
+-
+-        # Also pad the action dimension (dim 2) if it's smaller than model's max_action_dim
+-        # This allows exporting with dynamic/smaller inputs (e.g. from dataset) while model state is fixed size.
+-        curr_action_dim = prev_chunk_left_over.shape[2]
+-        max_action_dim = x_t.shape[2] # x_t is noise/action with max_action_dim
+-        
+-        if curr_action_dim < max_action_dim:
+-            pad_action_dim = max_action_dim - curr_action_dim
+-            prev_chunk_left_over = torch.nn.functional.pad(
+-            prev_chunk_left_over,
+-            pad=(0, pad_action_dim), # (pad_last_dim_left, pad_last_dim_right) = (0, pad_action_dim)
+-            mode='constant',
+-            value=0
+-            )
+-
+-        # Use helper function to compute prefix weights for input tensors
+-        weights = (
+-            self.get_prefix_weights(inference_delay, execution_horizon, action_chunk_size)
+-            .to(x_t.device)
+-            .unsqueeze(0)
+-            .unsqueeze(-1)
+-        )
++            padding_shape = (prev_chunk_left_over.shape[0], pad_len, prev_chunk_left_over.shape[2])
++            padding = torch.zeros(
++                padding_shape,
++                dtype=prev_chunk_left_over.dtype,
++                device=prev_chunk_left_over.device
++                )
++            prev_chunk_left_over = torch.cat([prev_chunk_left_over, padding], dim=1)
++
+         v_t = original_denoise_step_partial(x_t)
+ 
+         x1_t = x_t - time * v_t  # noqa: N806
+-        err = (prev_chunk_left_over - x1_t) * weights
++        err = (prev_chunk_left_over - x1_t) * prefix_weights
+         correction = err
+ 
+         max_guidance_weight = torch.as_tensor(self.rtc_processor.rtc_config.max_guidance_weight)
+         tau_tensor = torch.as_tensor(tau)
+         squared_one_minus_tau = (1 - tau_tensor) ** 2
+         inv_r2 = (squared_one_minus_tau + tau_tensor**2) / (squared_one_minus_tau)
+-        c = torch.nan_to_num((1 - tau_tensor) / tau_tensor, posinf=max_guidance_weight)
+-        guidance_weight = torch.nan_to_num(c * inv_r2, posinf=max_guidance_weight)
++
++        # Manual nan_to_num equivalent for OpenVINO compatibility
++        c_raw = (1 - tau_tensor) / tau_tensor
++        is_inf = torch.isinf(c_raw)
++        c = torch.where(is_inf, max_guidance_weight, c_raw)
++        
++        guidance_weight_raw = c * inv_r2
++        guidance_weight = torch.where(torch.isinf(guidance_weight_raw), max_guidance_weight, guidance_weight_raw)
++        
+         guidance_weight = torch.minimum(guidance_weight, max_guidance_weight)
+ 
+         result = v_t - guidance_weight * correction
+@@ -252,6 +229,7 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+     
+     def get_prefix_weights(self, start, end, total):
+         # Helper function to compute prefix weights when inputs are tensors
++        # This function is only used in the conversion script to construct input
+         import math
+         # Ensure inputs are tensors for proper min/max operations if they aren't already
+         if not isinstance(start, torch.Tensor):
+@@ -261,20 +239,13 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+ 
+         start = torch.minimum(start, end)
+ 
+-        # This implementation supports both scalar and tensor inputs for start/end
+-        # significantly simplifying the logic and making it ONNX-export friendly.
+-        # It replaces the previous piecewise construction (ones + linspace + zeros)
+-        # with a unified linear decay formula clamped to [0, 1].
+-
+         # Create an index grid [0, 1, 2, ..., total-1]
+         idx = torch.arange(total, device=start.device, dtype=torch.float32)
+ 
+         # Safe denominator (end - start + 1), ensures no division by zero
+         denom = (end - start + 1).float()
+ 
+-        # Linear decay formula:
+-        # When idx <= start: (end - idx) >= (end - start) -> value >= (end-start)/denom ~ 1.0
+-        # When idx >= end:   (end - idx) <= 0             -> value <= 0.0
++        # Linear decay formula
+         weights = (end - idx) / denom
+ 
+         # Clamp to valid range [0, 1]
+@@ -282,10 +253,10 @@ class Pi05InferenceRTCWrapper(torch.nn.Module):
+ 
+         if self.rtc_processor.rtc_config.prefix_attention_schedule == RTCAttentionSchedule.EXP:
+                 weights = weights * (torch.exp(weights) - 1).div(math.e - 1)
+-        elif self.rtc_processor.rtc_config.prefix_attention_schedule != RTCAttentionSchedule.LINEAR:
++        elif self.rtc_processor.rtc_config.prefix_attention_schedule == RTCAttentionSchedule.LINEAR:
+                 pass
+         else:
+-            raise NotImplementedError(f"Unimplemented prefix attention schedule: {self.rtc_config.prefix_attention_schedule}")
++            raise NotImplementedError(f"Unimplemented prefix attention schedule: {self.rtc_processor.rtc_config.prefix_attention_schedule}")
+         return weights
+ 
+ inference_model = Pi05InferenceRTCWrapper(policy)
+@@ -328,6 +299,11 @@ lang_masks = None
+ 
+ inference_delay = 8
+ execution_horizon = policy.config.rtc_config.execution_horizon
++prefix_weights = (
++    inference_model.get_prefix_weights(inference_delay, execution_horizon, policy.config.chunk_size)
++    .unsqueeze(0)
++    .unsqueeze(-1)
++)
+ 
+ if args.dataset_path:
+     print(f"Using REAL DATASET from {args.dataset_path}")
+@@ -372,18 +348,15 @@ if args.dataset_path:
+     lang_masks = batch[OBS_LANGUAGE_ATTENTION_MASK]
+ 
+     # RTC inputs still need to be synthesized as they are not part of dataset
+-    # Use actual action dim from dataset for noise and prev_chunk_left_over
+-    # item["action"] is usually (T, action_dim), so last dim is action_dim
++    # Use max action dim for noise and prev_chunk_left_over, since input chunk will be padded before model inference.
+     action_dim = policy_cfg.output_features[ACTION].shape[0]
+     noise = torch.randn(1, policy_cfg.chunk_size, policy_cfg.max_action_dim, device=device).float()
+-    prev_chunk_left_over = torch.randn(1, execution_horizon, action_dim, device=device).float()
+-    inference_delay_tensor = torch.tensor(inference_delay, device=device)
+-    execution_horizon_tensor = torch.tensor(execution_horizon, device=device)
++    prev_chunk_left_over = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
+ 
+     print(f"Real inputs prepared.")
+     print(f"  Images shape: {images.shape}")
+     print(f"  Lang tokens shape: {lang_tokens.shape}")
+-    print(f"  Action dim from dataset: {action_dim} (Model max action dim: {policy.model.config.max_action_dim})")
++    print(f"  Model max action dim: {policy.model.config.max_action_dim} (Action dim from dataset: {action_dim})")
+ 
+ else:
+     print("Using DUMMY inputs")
+@@ -392,9 +365,7 @@ else:
+     lang_tokens = torch.randint(0, vocab_size, (B_lang, T_lang), device=device).long()
+     lang_masks = torch.ones(B_lang, T_lang, dtype=torch.bool, device=device)
+     noise = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
+-    prev_chunk_left_over = torch.randn(1, execution_horizon, policy.model.config.max_action_dim, device=device).float()
+-    inference_delay_tensor = torch.tensor(inference_delay, device=device)
+-    execution_horizon_tensor = torch.tensor(execution_horizon, device=device)
++    prev_chunk_left_over = torch.randn(1, policy.model.config.chunk_size, policy.model.config.max_action_dim, device=device).float()
+ 
+ os.makedirs("validation", exist_ok=True)
+ save_path = "validation/lerobot_pi05_input_tensor.pt"
+@@ -405,43 +376,11 @@ torch.save({
+     "lang_masks": lang_masks.cpu(),
+     "noise": noise.cpu(),
+     "prev_chunk_left_over": prev_chunk_left_over.cpu(),
+-    "inference_delay": inference_delay_tensor.cpu(),
+-    "execution_horizon": execution_horizon_tensor.cpu(),
++    "prefix_weights": prefix_weights.cpu()
+ }, save_path)
+ 
+ print(f"Saved to {save_path}")
+ 
+-# -----------------------------
+-# Export to ONNX
+-# -----------------------------
+-onnx_dir = args.onnx_output_dir + f"_{args.camera_num}c"
+-onnx_path = os.path.join(onnx_dir, "pi05.onnx")
+-
+-if not os.path.exists(onnx_path) or args.override:
+-    os.makedirs(onnx_dir, exist_ok=True)
+-    print(f"Exporting ONNX model to {onnx_path}...")
+-    torch.onnx.export(
+-        inference_model,
+-        (images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, inference_delay_tensor, execution_horizon_tensor),
+-        onnx_path,
+-        input_names=["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"],
+-        output_names=["actions_out"],
+-        dynamic_axes={
+-            # "images": {0: "batch"},
+-            # "img_masks": {0: "batch"},
+-            # "lang_tokens": {0: "batch"},
+-            # "lang_masks": {0: "batch"},
+-            # "noise": {0: "batch"},
+-            "prev_chunk_left_over": {1: "chunk_len"}, # <--- KEY: Make length dynamic
+-            # "actions_out": {0: "batch"}
+-        },
+-        opset_version=14,
+-        do_constant_folding=False,
+-    )
+-    print(f"ONNX model exported to {onnx_path}")
+-else:
+-    print(f"ONNX model {onnx_path} already exists. Skipping export.")
+-
+ # -----------------------------
+ # OpenVINO Conversion
+ # -----------------------------
+@@ -451,8 +390,25 @@ ov_model_path = os.path.join(args.ov_output_dir + suffix, "model.xml")
+ 
+ if not os.path.exists(ov_model_path) or args.override:
+     os.makedirs(args.ov_output_dir + suffix, exist_ok=True)
+-    print(f"Converting to OpenVINO IR: {ov_model_path}")
+-    ov_model = ov.convert_model(onnx_path)
++    print(f"Converting PyTorch model directly to OpenVINO IR: {ov_model_path}")
++    
++    # We pass the example input to trace/convert the model
++    ov_model = ov.convert_model(
++        inference_model,
++        example_input=(images, img_masks, lang_tokens, lang_masks, noise, prev_chunk_left_over, prefix_weights),
++        input=[
++            ("images", list(images.shape)),
++            ("img_masks", list(img_masks.shape)),
++            ("lang_tokens", list(lang_tokens.shape)),
++            ("lang_masks", list(lang_masks.shape)),
++            ("noise", list(noise.shape)),
++            ("prev_chunk_left_over", prev_chunk_left_over.shape),
++            ("prefix_weights", list(prefix_weights.shape))
++        ]
++    )
++    
++    # Set output name for consistency
++    ov_model.outputs[0].tensor.set_names({"actions_out"})
+ 
+     ov.save_model(ov_model, 
+                 output_model=ov_model_path, 
+@@ -546,30 +502,16 @@ def run_ov_inference(xml_path: str, inputs: dict) -> dict:
+             ov_inputs[name] = arr
+ 
+     results = compiled(ov_inputs)
+-    # compiled(inputs=...) returns a dict of output_name -> numpy array
+     return results
+ 
+-def run_onnx_inference(onnx_path: str, inputs: dict) -> dict:
+-    """Run ONNX Runtime inference and return output dict."""
+-    import onnxruntime as ort
+-    # Prepare inputs: convert torch tensors to numpy
+-    ort_inputs = {}
+-    for name, arr in inputs.items():
+-        ort_inputs[name] = arr.detach().cpu().numpy() if isinstance(arr, torch.Tensor) else np.asarray(arr)
+-
+-    sess = ort.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+-    out_names = [o.name for o in sess.get_outputs()]
+-    out = sess.run(out_names, ort_inputs)
+-    return dict(zip(out_names, out))
+-
+ print("Running PyTorch Inference for Baseline...")
+ with torch.no_grad():
+     torch_out = inference_model(images, img_masks, lang_tokens, lang_masks, noise, 
+-                                prev_chunk_left_over, inference_delay_tensor, execution_horizon_tensor)
++                                prev_chunk_left_over, prefix_weights)
+     original_torch_out = policy.model.sample_actions(images, img_masks, lang_tokens, lang_masks, noise,
+                                 prev_chunk_left_over=prev_chunk_left_over, inference_delay=inference_delay, execution_horizon=execution_horizon)
+ 
+-print("Running ONNX Inference...")
++print("Running OpenVINO Inference...")
+ inputs = {
+     "images": images.cpu(),
+     "img_masks": img_masks.cpu(),
+@@ -577,26 +519,22 @@ inputs = {
+     "lang_masks": lang_masks.cpu(),
+     "noise": noise.cpu(),
+     "prev_chunk_left_over": prev_chunk_left_over.cpu(),
+-    "inference_delay": inference_delay_tensor.cpu(),
+-    "execution_horizon": execution_horizon_tensor.cpu(),
++    "prefix_weights": prefix_weights.cpu(),
+ }
+-onnx_results = run_onnx_inference(onnx_path, inputs)
+-onnx_out = onnx_results["actions_out"]
+-
+-print("Running OpenVINO Inference...")
+ ov_results = run_ov_inference(ov_model_path, inputs)
+-ov_out = ov_results["actions_out"]
++output_key = list(ov_results.keys())[0] if "actions_out" not in ov_results else "actions_out"
++ov_out = ov_results[output_key]
+ 
+ print("Comparing Results...")
+ print("=====================================================")
+-compare_tensors("PyTorch(Original) vs Pytorch(Wrapper)", original_torch_out, torch_out)
+-compare_tensors("PyTorch(Wrapper) vs ONNX", torch_out, onnx_out)
+-compare_tensors("ONNX vs OpenVINO", onnx_out, ov_out)
++compare_tensors("PyTorch(Original) vs PyTorch(Wrapper)", original_torch_out, torch_out)
+ compare_tensors("PyTorch(Wrapper) vs OpenVINO", torch_out, ov_out)
++
+ if args.compress_int8:
+     try:
+-        int8_result = run_ov_inference(os.path.join(args.ov_output_dir + f"_{args.camera_num}c_INT8", "model.xml"), inputs)
+-        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result["actions_out"])
++        int8_result = run_ov_inference(os.path.join(model_int8_dir, "model.xml"), inputs)
++        int8_out_key = list(int8_result.keys())[0]
++        compare_tensors("PyTorch(Wrapper) vs OpenVINO(INT8)", torch_out, int8_result[int8_out_key])
+     except Exception as e:
+         print(f"INT8 inference failed: {e}")
+ 
+diff --git a/src/lerobot/policies/pi05/modeling_pi05.py b/src/lerobot/policies/pi05/modeling_pi05.py
+index 7a905b0..8726616 100644
+--- a/src/lerobot/policies/pi05/modeling_pi05.py
++++ b/src/lerobot/policies/pi05/modeling_pi05.py
+@@ -81,7 +81,7 @@ def create_sinusoidal_pos_embedding(  # see openpi `create_sinusoidal_pos_embedd
+     if time.ndim != 1:
+         raise ValueError("The time tensor is expected to be of shape `(batch_size, )`.")
+ 
+-    dtype = torch.float32
++    dtype = get_safe_dtype(torch.float64, device.type)
+     fraction = torch.linspace(0.0, 1.0, dimension // 2, dtype=dtype, device=device)
+     period = min_period * (max_period / min_period) ** fraction
+ 
+@@ -551,12 +551,15 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+         if ov_config is not None:
+             import openvino as ov
+             import os
++            from lerobot.policies.rtc.configuration_rtc import RTCConfig
+             core = ov.Core()
+             self.ov_model = core.read_model(os.path.join(ov_config.model_dir, "model.xml"))
+             self.ov_model = core.compile_model(self.ov_model, device_name=ov_config.device)
+             self.infer_request = self.ov_model.create_infer_request()
+ 
+             self.sample_actions = self._sample_actions_ov
++            rtc_config = config.rtc_config if config.rtc_config is not None else RTCConfig(enabled=True)
++            self.rtc_processor = RTCProcessor(rtc_config)
+         
+         else:
+             self.paligemma_with_expert = PaliGemmaWithExpertModel(
+@@ -911,6 +914,14 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+         images = torch.stack(images, dim=0)
+         img_masks = torch.stack(img_masks, dim=0)
+ 
++        inputs = {
++            "images": images.cpu(),
++            "img_masks": img_masks.cpu(),
++            "lang_tokens": tokens.cpu(),
++            "lang_masks": masks.cpu(),
++            "noise": noise.cpu(),
++        }
++
+         prev_chunk_left_over = None
+         # Check if model expects RTC inputs
+         has_rtc_inputs = False
+@@ -920,37 +931,29 @@ class PI05Pytorch(nn.Module):  # see openpi `PI0Pytorch`
+                 break
+ 
+         if has_rtc_inputs:
+-            inference_delay = kwargs.get("inference_delay")
+-            prev_chunk_left_over = kwargs.get("prev_chunk_left_over")
+-            execution_horizon = kwargs.get("execution_horizon")
+-
+             # Input arguments for RTC should be type of Tensor
+             # If RTC is disabled, set args to zero tensors
++            prev_chunk_left_over = kwargs.get("prev_chunk_left_over")
++            inference_delay = kwargs.get("inference_delay", 0)
++            execution_horizon = kwargs.get("execution_horizon", 0)
++
+             if prev_chunk_left_over is None:
+                 prev_chunk_left_over = torch.zeros(
+-                    (tokens.shape[0], self.config.chunk_size, self.config.output_features[ACTION].shape[0]), dtype=torch.float32
++                    (tokens.shape[0], self.config.chunk_size, self.config.max_action_dim), dtype=torch.float32
+                 )
+-                inference_delay_tensor = torch.tensor(0.0, dtype=torch.float32)
+-                execution_horizon_tensor = torch.tensor(0.0, dtype=torch.float32)
+             else:
+-                inference_delay_tensor = (torch.tensor(inference_delay, dtype=torch.float32)
+-                    if inference_delay is not None else torch.tensor(0.0, dtype=torch.float32))
+-                execution_horizon_tensor = (torch.tensor(execution_horizon, dtype=torch.float32)
+-                    if execution_horizon is not None else torch.tensor(self.rtc_config.execution_horizon, dtype=torch.float32))
+-
+-        inputs = {
+-            "images": images.cpu(),
+-            "img_masks": img_masks.cpu(),
+-            "lang_tokens": tokens.cpu(),
+-            "lang_masks": masks.cpu(),
+-            "noise": noise.cpu(),
+-        }
++                # pad prev_chunk
++                if prev_chunk_left_over.shape[1] < self.config.chunk_size or prev_chunk_left_over.shape[2] < self.config.max_action_dim:
++                    padded = torch.zeros(tokens.shape[0], self.config.chunk_size, self.config.max_action_dim).to(noise.device)
++                    padded[:, : prev_chunk_left_over.shape[1], : prev_chunk_left_over.shape[2]] = prev_chunk_left_over
++                    prev_chunk_left_over = padded
++        
++            prefix_weights = self.rtc_processor.get_prefix_weights(
++                inference_delay, execution_horizon, self.config.chunk_size).unsqueeze(0).unsqueeze(-1)
+ 
+-        if has_rtc_inputs:
+             inputs.update({
+                 "prev_chunk_left_over": prev_chunk_left_over.cpu(),
+-                "inference_delay": inference_delay_tensor.cpu(),
+-                "execution_horizon": execution_horizon_tensor.cpu(),
++                "prefix_weights": prefix_weights.cpu(),
+             })
+ 
+         outputs = self.infer_request.infer(inputs)
+diff --git a/tests/policies/pi0_pi05/test_pi05_ov_rtc.py b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+index 495a5c9..d1f4f53 100644
+--- a/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
++++ b/tests/policies/pi0_pi05/test_pi05_ov_rtc.py
+@@ -28,7 +28,7 @@ def mock_openvino():
+ 
+ @pytest.fixture
+ def pi05_config():
+-    config = PI05Config(max_action_dim=7, max_state_dim=14, dtype="float32", device="cpu")
++    config = PI05Config(max_action_dim=32, dtype="float32", device="cpu")
+     config.input_features = {
+         "observation.state": PolicyFeature(
+             type=FeatureType.STATE,
+@@ -42,7 +42,7 @@ def pi05_config():
+     config.output_features = {
+         "action": PolicyFeature(
+             type=FeatureType.ACTION,
+-            shape=(7,),
++            shape=(14,),
+         ),
+     }
+     return config
+@@ -112,6 +112,10 @@ def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config):
+     mock_infer_request.infer.return_value = {"actions_out": mock_output}
+ 
+     policy = PI05Policy(pi05_config, ov_config=ov_config)
++
++    # Mock get_prefix_weights if rtc_processor exists to verify it's not called later
++    if hasattr(policy.model, "rtc_processor") and policy.model.rtc_processor:
++        policy.model.rtc_processor.get_prefix_weights = MagicMock()
+     
+     batch = {
+         "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
+@@ -123,10 +127,14 @@ def test_predict_action_chunk_ov_non_rtc_model(mock_openvino, pi05_config):
+     
+     # Verify RTC keys are NOT in call_args
+     call_args = mock_infer_request.infer.call_args[0][0]
+-    rtc_keys = {"prev_chunk_left_over", "inference_delay", "execution_horizon"}
++    rtc_keys = {"prev_chunk_left_over", "inference_delay", "execution_horizon", "prefix_weights"}
+     for key in rtc_keys:
+         assert key not in call_args
+     
++    # Ensure get_prefix_weights is NOT called for non-RTC models
++    if hasattr(policy.model, "rtc_processor") and policy.model.rtc_processor:
++        policy.model.rtc_processor.get_prefix_weights.assert_not_called()
++    
+     assert actions.shape == (batch_size, pi05_config.chunk_size, pi05_config.output_features[ACTION].shape[0])
+ 
+ def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_config):
+@@ -134,7 +142,7 @@ def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_confi
+     ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
+     mock_compiled_model, mock_infer_request = setup_mock_ov(
+         mock_openvino, 
+-        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"]
++        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "prefix_weights"]
+     )
+     
+     batch_size = 1
+@@ -143,6 +151,8 @@ def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_confi
+     }
+ 
+     policy = PI05Policy(pi05_config, ov_config=ov_config)
++    # Mock rtc_processor on the model since it's required for get_prefix_weights
++    policy.model.rtc_processor = MagicMock()
+     
+     batch = {
+         "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
+@@ -160,15 +170,23 @@ def test_predict_action_chunk_ov_rtc_model_with_params(mock_openvino, pi05_confi
+     
+     call_args = mock_infer_request.infer.call_args[0][0]
+     assert torch.equal(call_args["prev_chunk_left_over"], rtc_kwargs["prev_chunk_left_over"])
+-    assert call_args["inference_delay"].item() == 5.0
+-    assert call_args["execution_horizon"].item() == 10.0
++    
++    # Verify get_prefix_weights calls with correct args
++    policy.model.rtc_processor.get_prefix_weights.assert_called_once_with(5, 10, pi05_config.chunk_size)
++    
++    # The return value is mocked, so we will not verify result
++    assert "prefix_weights" in call_args
++    
++    # Verify old keys are NOT passed
++    assert "inference_delay" not in call_args
++    assert "execution_horizon" not in call_args
+ 
+ def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config):
+     # Case 3: Model DOES expect RTC inputs, but we DON'T pass them (verify defaults)
+     ov_config = OVConfig(model_dir="/tmp/model", device="CPU")
+     mock_compiled_model, mock_infer_request = setup_mock_ov(
+         mock_openvino, 
+-        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "inference_delay", "execution_horizon"]
++        ["images", "img_masks", "lang_tokens", "lang_masks", "noise", "prev_chunk_left_over", "prefix_weights"]
+     )
+     
+     batch_size = 1
+@@ -177,6 +195,9 @@ def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config):
+     }
+ 
+     policy = PI05Policy(pi05_config, ov_config=ov_config)
++    # Mock rtc_processor on the model since it's required for get_prefix_weights
++    policy.model.rtc_processor = MagicMock()
++    policy.model.rtc_processor.get_prefix_weights.return_value = torch.ones(pi05_config.chunk_size)
+     
+     batch = {
+         "observation.images.base_0_rgb": torch.rand(batch_size, 3, 224, 224),
+@@ -186,18 +207,19 @@ def test_predict_action_chunk_ov_rtc_model_defaults(mock_openvino, pi05_config):
+     
+     policy.predict_action_chunk(batch)
+ 
+-    
+     call_args = mock_infer_request.infer.call_args[0][0]
+     
+     # Defaults checking
+     assert torch.all(call_args["prev_chunk_left_over"] == 0)
+-    # The shape should be (batch_size, chunk_size, original_action_dim) 
+-    # based on user's logic in modeling_pi05.py:936
+-    original_action_dim = pi05_config.output_features[ACTION].shape[0]
+-    assert call_args["prev_chunk_left_over"].shape == (batch_size, pi05_config.chunk_size, original_action_dim)
++    # The shape should be (batch_size, chunk_size, max_action_dim) 
++    assert call_args["prev_chunk_left_over"].shape == (batch_size, pi05_config.chunk_size, pi05_config.max_action_dim)
++    
++    # Verify get_prefix_weights calls with default args 0
++    policy.model.rtc_processor.get_prefix_weights.assert_called_once_with(0, 0, pi05_config.chunk_size)
+     
+-    assert call_args["inference_delay"].item() == 0.0
+-    assert call_args["execution_horizon"].item() == 0.0
++    assert "prefix_weights" in call_args
++    assert "inference_delay" not in call_args
++    assert "execution_horizon" not in call_args
+ 
+ 
+ 
+-- 
+2.34.1
+

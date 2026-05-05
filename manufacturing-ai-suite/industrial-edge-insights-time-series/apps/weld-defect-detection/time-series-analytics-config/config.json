@@ -1,0 +1,15 @@
+{
+    "udfs": {
+        "name": "weld_defect_detector",
+        "models": "weld_defect_detector.pkl",
+        "device": "cpu"
+
+    },
+    "alerts": {
+        "mqtt": {
+            "mqtt_broker_host": "ia-mqtt-broker",
+            "mqtt_broker_port": 1883,
+            "name": "my_mqtt_broker"
+        }
+    }
+}

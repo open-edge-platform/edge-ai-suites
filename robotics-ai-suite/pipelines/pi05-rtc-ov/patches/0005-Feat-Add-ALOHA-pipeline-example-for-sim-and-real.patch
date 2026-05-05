@@ -1,0 +1,1797 @@
+From db9ab359abc7cd603d234c1c85aa8e7f5f214fd3 Mon Sep 17 00:00:00 2001
+From: "Tang, Yichong" <yichong.tang@intel.com>
+Date: Thu, 15 Jan 2026 11:38:27 -0500
+Subject: [PATCH 5/6] [Feat] Add ALOHA pipeline example for sim and real
+
+---
+ examples/aloha/README.md           | 110 +++++
+ examples/aloha/eval_aloha.py       | 757 +++++++++++++++++++++++++++++
+ examples/aloha/robot_interfaces.py | 234 +++++++++
+ examples/aloha/sim/__init__.py     |  14 +
+ examples/aloha/sim/constants.py    |  89 ++++
+ examples/aloha/sim/sim_env.py      | 339 +++++++++++++
+ examples/aloha/sim/utils.py        | 187 +++++++
+ 7 files changed, 1730 insertions(+)
+ create mode 100644 examples/aloha/README.md
+ create mode 100644 examples/aloha/eval_aloha.py
+ create mode 100644 examples/aloha/robot_interfaces.py
+ create mode 100644 examples/aloha/sim/__init__.py
+ create mode 100644 examples/aloha/sim/constants.py
+ create mode 100644 examples/aloha/sim/sim_env.py
+ create mode 100644 examples/aloha/sim/utils.py
+
+diff --git a/examples/aloha/README.md b/examples/aloha/README.md
+new file mode 100644
+index 0000000..433b117
+--- /dev/null
++++ b/examples/aloha/README.md
+@@ -0,0 +1,110 @@
++
++# ALOHA Evaluation (`eval_aloha.py`)
++
++This folder provides an evaluation script for the ALOHA pipeline that can run:
++
++- **MuJoCo simulation** (`--robot_type mujoco_aloha`) for tasks like `sim_transfer_cube`.
++- **Real ALOHA robot** (`--robot_type real_aloha`) for tasks like `transfer_cube`.
++
++It supports three inference modes:
++
++- **PyTorch** (default)
++- **OpenVINO** (`--use_ov` + `--ov_model_path ...`)
++- **OpenVINO + RTC** (`--use_ov` + `--rtc_enabled`)
++
++## Environment Setup
++
++The script depends on different components depending on the robot type:
++
++- **MuJoCo simulation**: requires a working dm_control / MuJoCo setup. For headless rendering on Linux, set `MUJOCO_GL=egl`.
++- **Real ALOHA**: requires the ALOHA hardware stack and ROS dependencies (e.g. `aloha`, `interbotix_common_modules`, etc.).
++
++## Run Examples
++
++### 1) Run `sim_transfer_cube` in MuJoCo (PyTorch model)
++
++```bash
++MUJOCO_GL=egl python examples/aloha/eval_aloha.py \
++	--robot_type mujoco_aloha \
++	--task sim_transfer_cube \
++	--pretrained_model_path <path_to_pretrained_model>
++```
++
++### 2) Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
++
++```bash
++MUJOCO_GL=egl python examples/aloha/eval_aloha.py \
++	--robot_type mujoco_aloha \
++	--task sim_transfer_cube \
++    --pretrained_model_path <path_to_pretrained_model> \
++	--use_ov \
++	--ov_model_path <path_to_ov_model>
++```
++
++Note: Even when using `--use_ov`, you still need to provide `--pretrained_model_path`. It is used to construct the model inputs (preprocessing/tokenization), and determine model/config dimensions (e.g. action space) alongside the OpenVINO model.
++
++Note: For correct normalization, you should also provide dataset statistics via `--stats_path` (recommended) or `--dataset_path`. If neither is provided, the script will try to load `stats.json` from `--pretrained_model_path`.
++
++### 3) Run `transfer_cube` on a real ALOHA robot using an OpenVINO model
++
++```bash
++python examples/aloha/eval_aloha.py \
++	--robot_type real_aloha \
++	--task transfer_cube \
++	--max_steps 600 \
++	--pretrained_model_path <path_to_pretrained_model> \
++	--use_ov \
++	--ov_model_path <path_to_ov_model>
++```
++
++### 4) Run `transfer_cube` on a real ALOHA robot using OpenVINO + RTC
++
++```bash
++python examples/aloha/eval_aloha.py \
++	--robot_type real_aloha \
++	--task transfer_cube \
++	--max_steps 600 \
++	--pretrained_model_path <path_to_pretrained_model> \
++	--use_ov \
++	--ov_model_path <path_to_ov_model> \
++	--rtc_enabled \
++    --rtc_horizon 30
++```
++
++Tips: When running OpenVINO inference on Intel ARL platforms, pinning the process to P-cores can help achieve more stable inference performance. For example, prefix your command with `taskset`:
++
++```bash
++taskset -c 0-5 \
++  python examples/aloha/eval_aloha.py ...
++```
++
++## Arguments
++
++- `--pretrained_model_path`: Path to the pretrained model checkpoint or Hugging Face repo id. Default: `lerobot/pi05_base`.
++- `--pretrained_model_path`: Path to the pretrained model checkpoint or Hugging Face repo id. Default: `lerobot/pi05_base`.
++- `--dataset_path`: (Optional) Local dataset directory used to load metadata (e.g. task language) and, if needed, dataset statistics.
++- `--stats_path`: (Optional) Path to `stats.json` used for normalization. If omitted, the script will try to use `<pretrained_model_path>/stats.json`, and then fall back to stats from `--dataset_path` if available.
++- `--robot_type`: `mujoco_aloha` or `real_aloha`.
++- `--task`: Task name, e.g. `sim_transfer_cube`, `sim_insertion`, `transfer_cube`.
++- `--num_episodes`: Number of episodes to run. Default: `1`.
++- `--max_steps`: Max steps per episode. Default: `400`.
++
++**RTC (Real-Time Chunking):**
++
++- `--rtc_enabled`: Enable RTC logic.
++- `--rtc_horizon`: Execution horizon for RTC. Default: `30`.
++
++**OpenVINO:**
++
++- `--use_ov`: Use OpenVINO model for inference.
++- `--ov_model_path`: Path to an OpenVINO IR model directory (should contain `model.xml` and `model.bin`). Default: `pi05_lerobot_ov_ir_INT8`.
++- `--ov_device`: OpenVINO device string (e.g. `CPU`, `GPU`, `GPU.0`). Default: `GPU.0`.
++
++Note: OpenVINO inference still requires `--pretrained_model_path`. Dataset statistics are also needed for normalization; provide them via `--stats_path` (recommended) or `--dataset_path`.
++
++**Debug/Logging:**
++
++- `--plot`: Enable visualization (typically used with MuJoCo).
++- `--save_traj`: Save trajectory data and plots.
++- `--save_traj_path`: Output directory for saved trajectories/plots. Default: `trajectory_plots`.
++
+diff --git a/examples/aloha/eval_aloha.py b/examples/aloha/eval_aloha.py
+new file mode 100644
+index 0000000..cb38840
+--- /dev/null
++++ b/examples/aloha/eval_aloha.py
+@@ -0,0 +1,757 @@
++import argparse
++
++import torch
++import time
++import threading
++import logging
++import math
++import traceback
++import sys
++import matplotlib.pyplot as plt
++from pathlib import Path
++import numpy as np
++import json
++import pandas as pd
++from threading import Event, Thread
++
++from robot_interfaces import AlohaRobot, MujocoAlohaRobot, RobotWrapper
++
++from lerobot.policies.factory import make_pre_post_processors, _get_policy_cls_from_policy_name
++from lerobot.configs.policies import PreTrainedConfig
++from lerobot.policies.pi05.configuration_pi05 import OVConfig
++from lerobot.policies.rtc.action_queue import ActionQueue
++from lerobot.policies.rtc.configuration_rtc import RTCConfig
++from lerobot.policies.rtc.latency_tracker import LatencyTracker
++
++# Configure logging
++# Force reconfiguration to ensure we see output
++logging.basicConfig(
++    level=logging.INFO,
++    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
++    handlers=[
++        logging.StreamHandler(sys.stdout)
++    ],
++    force=True
++)
++logger = logging.getLogger(__name__)
++logger.setLevel(logging.INFO)
++
++class LocalDatasetMetadata:
++    def __init__(self, dataset_path):
++        self.root = Path(dataset_path)
++        self._load_meta()
++
++    def _load_meta(self):
++        info_path = self.root / "meta/info.json"
++        stats_path = self.root / "meta/stats.json"
++        tasks_path_parquet = self.root / "meta/tasks.parquet"
++        
++        if not info_path.exists():
++            raise FileNotFoundError(f"Info file not found at {info_path}")
++        if not stats_path.exists():
++            raise FileNotFoundError(f"Stats file not found at {stats_path}")
++            
++        with open(info_path, 'r') as f:
++            self.info = json.load(f)
++            
++        with open(stats_path, 'r') as f:
++            self.stats = json.load(f)
++
++        self.tasks = []
++        if tasks_path_parquet.exists():
++             try:
++                 df = pd.read_parquet(tasks_path_parquet)
++                 # If the parquet file has a custom index (e.g. task description string), reset it to preserve data
++                 if not isinstance(df.index, pd.RangeIndex):
++                     df.reset_index(inplace=True)
++                 self.tasks = df.to_dict(orient="records")
++             except Exception as e:
++                 logger.warning(f"Failed to load tasks from {tasks_path_parquet}: {e}")
++        else:
++             logger.warning(f"Tasks file not found at {tasks_path_parquet}")
++
++    @property
++    def fps(self):
++        return self.info.get("fps", 30)
++
++def get_actions(
++    policy,
++    robot: RobotWrapper,
++    action_queue: ActionQueue,
++    shutdown_event: Event,
++    fps: float,
++    rtc_enabled: bool,
++    preprocessor,
++    postprocessor,
++    ready_event: Event,
++    start_execution_event: Event,
++    actor_done_event: Event,
++    min_queue_size_before_refill: int = 30,
++    device: str = "cpu",
++    task_description: str = "Do something",
++    log_data: dict = None
++):
++    try:
++        ready_event.wait()
++        latency_tracker = LatencyTracker()
++        time_per_chunk = 1.0 / fps
++        
++        # Determine threshold
++        get_actions_threshold = min_queue_size_before_refill
++        if not rtc_enabled:
++            get_actions_threshold = 0
++
++        while not shutdown_event.is_set():
++            if action_queue.qsize() <= get_actions_threshold:
++                # 1. Prepare for inference
++                current_time = time.perf_counter()
++                action_index_before_inference = action_queue.get_action_index()
++                prev_actions = action_queue.get_left_over()
++                prev_actions = prev_actions.unsqueeze(0) if prev_actions is not None else None
++
++                if rtc_enabled:
++                    inference_latency = latency_tracker.max()
++                    inference_delay = math.ceil(inference_latency / time_per_chunk)
++                    if inference_delay == 0 and start_execution_event.is_set():
++                        inference_delay = 10  # Ensure at least 10 chunk delay
++                else:
++                    inference_delay = 0
++
++                # 2. Capture Observation
++                real_obs = robot.get_observation(render_image=True)
++                
++                # 3. Process Observation (Using preprocessor)
++                batch = {}
++                
++                # Image Mapping
++                if 'images' in real_obs:
++                    # Figure out which image feature keys this checkpoint expects
++                    cfg = getattr(policy, "config", None)
++                    image_feature_keys = set(getattr(cfg, "image_features", {}).keys()) if cfg is not None else set()
++
++                    for key, img in real_obs['images'].items():
++                        policy_key = None
++
++                        # Map high camera
++                        if key == 'camera_high':
++                            if "observation.images.cam_high" in image_feature_keys:
++                                policy_key = "observation.images.cam_high"
++                            elif "observation.images.top" in image_feature_keys:
++                                policy_key = "observation.images.top"
++
++                        # Map low/angle camera
++                        elif key == 'camera_low':
++                            if "observation.images.cam_low" in image_feature_keys:
++                                policy_key = "observation.images.cam_low"
++                            elif "observation.images.top" in image_feature_keys and "observation.images.cam_high" not in image_feature_keys:
++                                # Fallback: some configs only have a single "top" camera
++                                policy_key = "observation.images.top"
++
++                        # Map wrist cameras
++                        elif key == 'camera_wrist_left':
++                            if "observation.images.cam_left_wrist" in image_feature_keys:
++                                policy_key = "observation.images.cam_left_wrist"
++                            elif "observation.images.left_wrist" in image_feature_keys:
++                                policy_key = "observation.images.left_wrist"
++
++                        elif key == 'camera_wrist_right':
++                            if "observation.images.cam_right_wrist" in image_feature_keys:
++                                policy_key = "observation.images.cam_right_wrist"
++                            elif "observation.images.right_wrist" in image_feature_keys:
++                                policy_key = "observation.images.right_wrist"
++
++                        # As a very last resort, if we have image features but no specific match,
++                        # map this camera to the first available feature to avoid an empty batch.
++                        if policy_key is None and image_feature_keys:
++                            # Choose deterministically to avoid nondeterministic set iteration order
++                            policy_key = sorted(image_feature_keys)[0]
++
++                        if policy_key is not None:
++                            if img.strides[0] < 0 or img.strides[1] < 0 or img.strides[2] < 0:
++                                img = img.copy()
++                            # Preprocessors usually expect float [0,1] tensors on device
++                            img_tensor = torch.from_numpy(img).float() / 255.0
++                            img_tensor = img_tensor.permute(2, 0, 1).unsqueeze(0).to(device)  # [B, C, H, W]
++                            batch[policy_key] = img_tensor
++
++                # State Mapping
++                if 'qpos' in real_obs:
++                     qpos = real_obs['qpos']
++                     state_tensor = torch.from_numpy(qpos).float().unsqueeze(0).to(device) # [B, D]
++                     batch["observation.state"] = state_tensor
++                
++                # Task Mapping
++                batch["task"] = [task_description]
++
++                # Run Preprocessor
++                if preprocessor:
++                    batch = preprocessor(batch)
++
++                # 4. Run Inference
++                with torch.no_grad():
++                    inference_start_time = time.perf_counter()
++                    if rtc_enabled:
++                        # Apply prev_chunk_left_over correction
++                        actions = policy.predict_action_chunk(batch, prev_chunk_left_over=prev_actions, inference_delay=inference_delay, execution_horizon=policy.config.rtc_config.execution_horizon)
++                    else:
++                        actions = policy.predict_action_chunk(batch)
++                    dt = time.perf_counter() - inference_start_time
++                    latency_tracker.add(dt)
++                    logger.debug(f"Inference time: {dt*1000:.2f} ms")
++
++                # Capture raw actions for RTC loop (Normalized)
++                original_actions = actions.clone()
++
++                # Run Postprocessor
++                if postprocessor:
++                    actions = postprocessor(actions)
++
++                # 5. Post-process Actions
++                # The postprocessor should handle unnormalization.
++                # 'actions' is now in the original action space but might still have batch dim [B, T, D]
++                
++                processed_actions = actions
++                
++                # Squeeze batch dimension if present (assuming BS=1)
++                if original_actions.ndim == 3 and original_actions.shape[0] == 1:
++                    original_actions = original_actions.squeeze(0)
++                if processed_actions.ndim == 3 and processed_actions.shape[0] == 1:
++                    processed_actions = processed_actions.squeeze(0)
++                
++                if log_data is not None:
++                    log_data['chunks'].append({
++                        'time': time.time(),
++                        # processed_actions is already squeezed and on device, move to cpu numpy
++                        'action': processed_actions.cpu().numpy(),
++                        'latency': dt
++                    })
++
++                action_queue.merge(original_actions, processed_actions, inference_delay, action_index_before_inference)
++                
++                if not start_execution_event.is_set():
++                    start_execution_event.set()
++                    # Reset tracker to avoid using compilation time as latency for next steps
++                    latency_tracker.reset()
++
++            else:
++                 time.sleep(0.001)
++
++        logger.info("[GET_ACTIONS] Thread shutting down")
++        
++    except Exception as e:
++        logger.error(f"[GET_ACTIONS] Exception: {e}")
++        traceback.print_exc()
++        shutdown_event.set()
++    finally:
++        # Ensure the MuJoCo/EGL context is released from the same thread that
++        # performed rendering. Wait for actor to stop stepping before closing.
++        try:
++            actor_done_event.wait(timeout=2.0)
++        except Exception:
++            pass
++        try:
++            robot.close()
++        except Exception:
++            logger.exception("[GET_ACTIONS] Failed to close env during shutdown")
++
++def actor_control(
++    robot: RobotWrapper,
++    action_queue: ActionQueue,
++    shutdown_event: Event,
++    fps: float,
++    ready_event: Event,
++    start_execution_event: Event,
++    actor_done_event: Event,
++    episode_results: list = None,
++    log_data: dict = None,
++    max_steps: int = 400
++):
++    try:
++        robot.reset()
++        ready_event.set()
++        
++        start_execution_event.wait()
++        
++        action_interval = 1.0 / fps
++        max_reward = 0
++        steps_executed = 0
++        
++        while not shutdown_event.is_set():
++            start_time = time.perf_counter()
++            
++            action = action_queue.get()
++            
++            if action is not None:
++                if log_data is not None:
++                    # Capture state for logging
++                    try:
++                        obs = robot.get_observation(render_image=False)
++                        if 'qpos' in obs:
++                            action_to_log = action
++                            if isinstance(action_to_log, torch.Tensor):
++                                action_to_log = action_to_log.detach().cpu().numpy()
++                            log_data['steps'].append({
++                                'time': time.time(),
++                                'state': obs['qpos'],
++                                'action': action_to_log
++                            })
++                    except Exception as e:
++                        pass # Don't crash control loop for logging
++
++                reward = robot.send_action(action.float())
++                if reward is not None:
++                    max_reward = max(max_reward, reward)
++                    steps_executed += 1
++                    if steps_executed >= max_steps:
++                        logger.info(f"[ACTOR] Max steps {max_steps} reached.")
++                        shutdown_event.set()
++                        break
++            
++            dt_s = time.perf_counter() - start_time
++            time.sleep(max(0, (action_interval - dt_s) - 0.001))
++            
++        if episode_results is not None:
++            episode_results.append(max_reward)
++
++        logger.info("[ACTOR] Thread shutting down")
++    except Exception as e:
++        logger.error(f"[ACTOR] Exception: {e}")
++        shutdown_event.set()
++    finally:
++        # Signal that stepping is finished; env teardown happens in get_actions.
++        try:
++            actor_done_event.set()
++        except Exception:
++            pass
++
++
++import os
++
++def save_trajectory_plots(log_data, path, episode_idx, fps=50.0):
++    if not log_data or not log_data.get('steps'):
++        logger.warning(f"No step data to plot for episode {episode_idx}")
++        return
++
++    try:
++        # User requested to overwrite if path exists (even if it's a file)
++        if os.path.exists(path) and not os.path.isdir(path):
++            logger.warning(f"Path {path} exists but is not a directory. Removing it to create output directory.")
++            os.remove(path)
++
++        os.makedirs(path, exist_ok=True)
++        
++        steps = log_data['steps']
++        chunks = log_data.get('chunks', [])
++
++        # Convert to numpy
++        times = np.array([s['time'] for s in steps])
++        if len(times) == 0: return
++        start_time = times[0]
++        times = times - start_time
++        
++        states = np.array([s['state'] for s in steps])
++        actions = np.array([s['action'] for s in steps])
++        
++        # Determine dimensions
++        action_dim = actions.shape[1]
++        
++        fig, axes = plt.subplots(nrows=action_dim, ncols=1, figsize=(10, 4 * action_dim), sharex=True)
++        if action_dim == 1: axes = [axes]
++        
++        fig.suptitle(f'Episode {episode_idx} Trajectory', fontsize=16)
++
++        dt = 1.0 / fps
++
++
++        chunk_colors = ['red', 'orange']
++        for dim in range(action_dim):
++            ax = axes[dim]
++            # Plot State
++            ax.plot(times, states[:, dim], label='State', color='green', linewidth=1.5)
++            # Plot Executed Command
++            ax.plot(times, actions[:, dim], label='Command', color='blue', linestyle='--', linewidth=1.5)
++
++            # Plot Chunks as alternating colored points
++            for i, chunk in enumerate(chunks):
++                chunk_time = chunk['time'] - start_time
++                if i > 0:
++                    chunk_time = chunk_time - chunk['latency']
++                chunk_act = chunk['action']
++                # Ensure chunk_act is [T, D]
++                if chunk_act.ndim == 1:
++                    chunk_act = chunk_act[None, :]
++                chunk_len = chunk_act.shape[0]
++                t_chunk = np.linspace(chunk_time, chunk_time + (chunk_len-1) * dt, chunk_len)
++                color = chunk_colors[i % 2]
++                # Plot each action point as a scatter dot
++                ax.scatter(t_chunk, chunk_act[:, dim], color=color, alpha=0.5, s=8)
++
++            ax.set_ylabel(f'Dim {dim}')
++            if dim == 0:
++                ax.legend()
++            
++        plt.xlabel('Time (s)')
++        # Reserve space for suptitle to avoid squeezing subplots
++        fig.tight_layout(rect=[0, 0, 1, 0.96])
++        plot_file = os.path.join(path, f'episode_{episode_idx}_traj.png')
++        
++        if os.path.exists(plot_file):
++            logger.info(f"Overwriting existing trajectory plot: {plot_file}")
++            
++        plt.savefig(plot_file)
++        plt.close(fig)
++        logger.info(f"Saved trajectory plot to {plot_file}")
++        
++    except Exception as e:
++        logger.error(f"Failed to plot trajectory: {e}")
++        traceback.print_exc()
++
++def main():
++    parser = argparse.ArgumentParser(description="Eval Aloha Pipeline with RTC support")
++    parser.add_argument("--pretrained_model_path", type=str, default="lerobot/pi05_base", help="Path to the pretrained model")
++    parser.add_argument("--dataset_path", type=str, default=None, help="Local path to dataset (optional). Used to load meta/info.json, meta/tasks.parquet, etc.")
++    parser.add_argument("--stats_path", type=str, default=None, help="Path to dataset stats.json (optional).")
++    parser.add_argument("--num_episodes", type=int, default=1, help="Number of trajectories/episodes to run")
++    parser.add_argument("--max_steps", type=int, default=400, help="Max steps per episode")
++    parser.add_argument("--robot_type", type=str, default="mujoco_aloha", help="Robot type (mujoco_aloha, real_aloha)")
++    parser.add_argument("--task", type=str, default="sim_transfer_cube", help="Task name (e.g. sim_transfer_cube, sim_insertion)")
++    
++    # RTC Args
++    parser.add_argument("--rtc_enabled", action="store_true", help="Enable Real-Time Chunking")
++    parser.add_argument("--rtc_horizon", type=int, default=30, help="RTC Execution Horizon")
++    parser.add_argument("--plot", action="store_true", help="Enable visualization")
++    parser.add_argument("--fps", type=float, default=50.0, help="Control Frequency (Hz)")
++    parser.add_argument("--save_traj", action="store_true", help="Save trajectory data and plots")
++    parser.add_argument("--save_traj_path", type=str, default="trajectory_plots", help="Path to save trajectory plots")
++    # OpenVINO Args
++    parser.add_argument("--use_ov", action="store_true", help="Use OpenVINO model for inference")
++    parser.add_argument("--ov_model_path", type=str, default="pi05_lerobot_ov_ir_INT8", help="Path to OpenVINO model")
++    parser.add_argument("--ov_device", type=str, default="GPU.0", help="Device to use for OpenVINO inference (e.g. CPU, GPU)")
++    
++    args = parser.parse_args()
++    
++    logger.info("Arguments parsed successfully.")
++
++    # Load dataset stats.json independently of dataset metadata.
++    stats = None
++    stats_path = Path(args.stats_path).expanduser() if args.stats_path else None
++    if stats_path is None:
++        stats_path = Path(args.pretrained_model_path) / "stats.json"
++
++    if stats_path is not None and stats_path.exists():
++        try:
++            logger.info(f"Loading stats.json from {stats_path}")
++            with open(stats_path, "r") as f:
++                stats = json.load(f)
++        except Exception as e:
++            logger.warning(f"Failed to load stats.json from {stats_path}: {e}. Will attempt to load from dataset metadata if available.")
++            stats = None
++
++    # Load dataset metadata (optional)
++    ds_meta = None
++    if args.dataset_path:
++        try:
++            logger.info(f"Attempting to load dataset metadata from {args.dataset_path}")
++            ds_meta = LocalDatasetMetadata(args.dataset_path)
++            logger.info("Dataset metadata loaded successfully.")
++        except Exception as e:
++            logger.warning(f"Could not load local dataset metadata: {e}. Proceeding without it.")
++            ds_meta = None
++
++    # Load Policy
++    logger.info(f"Loading policy from {args.pretrained_model_path}...")
++    
++    # FIX: Handle extra keys in config that cause draccus to fail (e.g. deprecated params)
++    config_path = Path(args.pretrained_model_path) / "config.json"
++    if config_path.exists():
++        logger.info("Found config.json, checking for sanitation...")
++        import tempfile
++        with open(config_path, "r") as f:
++            cfg_dict = json.load(f)
++        
++        invalid_keys = ["use_peft", "freeze_vision_encoder", "train_expert_only", "gradient_checkpointing"]
++        dirty = False
++        for k in invalid_keys:
++            if k in cfg_dict:
++                del cfg_dict[k]
++                dirty = True
++                
++        if dirty:
++            logger.info(f"Sanitizing config: removed deprecated keys {invalid_keys}")
++            with tempfile.TemporaryDirectory() as temp_dir:
++                temp_config_path = Path(temp_dir) / "config.json"
++                with open(temp_config_path, "w") as f:
++                    json.dump(cfg_dict, f)
++                policy_cfg = PreTrainedConfig.from_pretrained(temp_dir)
++        else:
++             policy_cfg = PreTrainedConfig.from_pretrained(args.pretrained_model_path)
++    else:
++        policy_cfg = PreTrainedConfig.from_pretrained(args.pretrained_model_path)
++    
++    logger.info(f"Policy config loaded: {policy_cfg}")
++
++    # Configure RTC
++    rtc_config = RTCConfig(
++        enabled=args.rtc_enabled,
++        execution_horizon=args.rtc_horizon
++    )
++    policy_cfg.rtc_config = rtc_config
++
++    # If dataset metadata exists and explicit stats weren't provided, allow it to supply stats.
++    if stats is None and ds_meta is not None:
++        stats = getattr(ds_meta, "stats", None)
++    
++    # For Pi0.5 or others, bypass make_policy to avoid strict ds_meta requirement
++    policy_cls = _get_policy_cls_from_policy_name(policy_cfg.type)
++    logger.info(f"Initializing policy class: {policy_cls}")
++    
++    # Instantiate PyTorch policy (needed for preprocessing logic and config)
++    if args.use_ov:
++        ov_config = OVConfig(model_dir=args.ov_model_path, device=args.ov_device)
++        policy = policy_cls(config=policy_cfg, ov_config=ov_config)
++    else: 
++        policy = policy_cls.from_pretrained(args.pretrained_model_path, config=policy_cfg, dataset_stats=stats)
++    device = policy.device if hasattr(policy, 'device') else "cpu"
++    
++    # If using OpenVINO, wrap it
++    if args.use_ov:
++        logger.info(f"Using OpenVINO model from: {args.ov_model_path} on {args.ov_device}")
++    else:
++        policy.eval()
++        logger.info("Policy instantiated and set to eval mode.")
++        policy.to(device)
++    
++    # Init RTC processor if needed (some policies like Pi0 might need it)
++    if hasattr(policy, "init_rtc_processor"):
++        logger.info("Initializing RTC processor...")
++        policy.init_rtc_processor()
++        logger.info("RTC processor initialized.")
++    
++    # Create Processors
++    # This pipeline handles Normalization -> State Tokenization -> Text Tokenization
++    logger.info("Creating pre/post processors...")
++    preprocessor, postprocessor = make_pre_post_processors(policy_cfg, dataset_stats=stats)
++    logger.info("Processors created.")
++    
++    # Determine task description
++    task_description = None
++    if ds_meta and hasattr(ds_meta, "tasks") and len(ds_meta.tasks) > 0:
++        # Just pick the first task language instruction found
++        first_task = ds_meta.tasks[0]
++        
++        # Try common keys for task description
++        # Added "index" because reset_index() on nameless index creates "index" column
++        for key in ["index", "task", "instruction", "language_instruction", "description", "prompts"]:
++            if key in first_task:
++                task_description = first_task[key]
++                if isinstance(task_description, list): # prompts is often a list
++                    task_description = task_description[0]
++                break
++
++    
++    if task_description is None:
++        # Fallback if metadata is missing text (e.g. only has task_index)
++        if "transfer" in args.task.lower():
++            task_description = "Pick up the cube with the right arm and transfer it to the left arm."
++        elif "insertion" in args.task.lower():
++            task_description = "Pick up the yellow marker with the left arm, pick up the lid with the right arm, insert the marker into the lid."
++        else:
++             task_description = args.task.replace('_', ' ').capitalize()
++        logger.info(f"Task description using fallback: '{task_description}'")
++    else:
++        logger.info(f"Using task description from metadata: '{task_description}'")
++
++    # Setup Robot
++    if args.robot_type == "real_aloha":
++        logger.info("Initializing Real Aloha Robot...")
++        real_robot = AlohaRobot()
++    elif args.robot_type == "mujoco_aloha":
++        logger.info(f"Initializing Mujoco Aloha Robot (Task: {args.task})...")
++        real_robot = MujocoAlohaRobot(args.task)
++    else:
++        raise ValueError(
++            f"Unsupported robot_type '{args.robot_type}'. "
++            "Supported types are: 'real_aloha', 'mujoco_aloha'."
++        )
++
++    robot = RobotWrapper(real_robot)
++
++    action_queue = ActionQueue(rtc_config)
++    shutdown_event = Event()
++    ready_event = Event()
++    start_execution_event = Event()
++    actor_done_event = Event()
++    
++    all_rewards = []
++
++    # Visualization setup
++    image_plot = None
++    if args.plot:
++        plt.ion()
++        fig, ax = plt.subplots()
++        # Initialize with a dummy black image usually (480, 640, 3)
++        dummy_img = np.zeros((480, 640, 3), dtype=np.uint8)
++        image_plot = ax.imshow(dummy_img)
++        plt.show(block=False)
++
++    try:
++        t_get_action = None
++        t_actor = None
++        for episode in range(args.num_episodes):
++            logger.info(f"Starting Episode {episode + 1}")
++            ready_event.clear()
++            start_execution_event.clear()
++            actor_done_event.clear()
++            
++            episode_results = []
++            log_data = {'chunks': [], 'steps': []} if args.save_traj else None
++            
++            action_queue = ActionQueue(rtc_config) 
++            
++            # Start Threads
++            t_get_action = Thread(
++                target=get_actions,
++                name="get_actions",
++                args=(
++                    policy,
++                    robot,
++                    action_queue,
++                    shutdown_event,
++                    args.fps,
++                    args.rtc_enabled,
++                    preprocessor,
++                    postprocessor,
++                    ready_event,
++                    start_execution_event,
++                    actor_done_event,
++                ),
++                kwargs=dict(
++                    min_queue_size_before_refill=args.rtc_horizon,
++                    device=device,
++                    task_description=task_description,
++                    log_data=log_data,
++                ),
++            )
++            t_actor = Thread(
++                target=actor_control,
++                name="actor_control",
++                args=(
++                    robot,
++                    action_queue,
++                    shutdown_event,
++                    args.fps,
++                    ready_event,
++                    start_execution_event,
++                    actor_done_event,
++                    episode_results,
++                    log_data,
++                    args.max_steps)
++            )
++            
++            t_get_action.start()
++            t_actor.start()
++
++            logger.info("Waiting for execution start...")
++            start_execution_event.wait()
++            logger.info("Execution started!")
++
++            start_time = time.time()
++            render_dt = 1.0 / 20.0 # Limit rendering to 20 FPS to save resources
++            last_render_time = time.time()
++            
++            while not shutdown_event.is_set():
++                if not ready_event.is_set():
++                     time.sleep(0.1)
++                     # Check if threads died while waiting
++                     if not t_actor.is_alive() or not t_get_action.is_alive():
++                         logger.error("Threads died during init!")
++                         shutdown_event.set()
++                     continue
++
++                if not t_get_action.is_alive():
++                    logger.error("Get Actions thread died!")
++                    shutdown_event.set()
++                if not t_actor.is_alive():
++                    logger.error("Actor thread died!")
++                    shutdown_event.set()
++                    
++                if args.robot_type == "mujoco_aloha" and args.plot:
++                    try:
++                        now = time.time()
++                        if now - last_render_time > render_dt:
++                            cache_images = getattr(robot.robot, "cache_images", None) or {}
++                            render_img = cache_images.get("angle", None)
++
++                            if render_img is not None:
++                                # Ensure compatible format
++                                if isinstance(render_img, torch.Tensor):
++                                    render_img = render_img.cpu().numpy()
++                                if render_img.shape[0] == 3: # C, H, W -> H, W, C
++                                    render_img = np.transpose(render_img, (1, 2, 0))
++                                
++                                # Handle potential stride issues
++                                if render_img.strides[0] < 0 or render_img.strides[1] < 0:
++                                    render_img = render_img.copy()
++
++                                image_plot.set_data(render_img)
++                                plt.pause(render_dt) 
++                            last_render_time = now
++                        else:
++                            time.sleep(0.01)
++                    except Exception as e:
++                        logger.error(f"Error in plot loop: {e}")
++                else:
++                    time.sleep(1)
++                
++            # Stop episode
++            logger.info("Episode loop ended.")
++            if shutdown_event.is_set():
++                logger.warning("Shutdown event was set!")
++            
++            shutdown_event.set()
++            # if args.plot:
++            #     plt.close('all')
++            t_get_action.join()
++            t_actor.join()
++            
++            if episode_results:
++                max_r = episode_results[0]
++                if max_r == -np.inf: max_r = 0.0
++                all_rewards.append(max_r)
++                logger.info(f"Episode {episode+1} Max Reward: {max_r}")
++
++            if args.save_traj and log_data:
++                save_trajectory_plots(log_data, args.save_traj_path, episode+1, fps=args.fps)
++
++            shutdown_event.clear() # Reset for next episode
++            
++    finally:
++        shutdown_event.set()
++
++        # If we exit early due to an exception, ensure worker threads are stopped
++        # before closing the environment to avoid EGL context ownership issues.
++        try:
++            if t_get_action is not None and t_get_action.is_alive():
++                t_get_action.join(timeout=5)
++            if t_actor is not None and t_actor.is_alive():
++                t_actor.join(timeout=5)
++        except Exception:
++            logger.exception("Failed while joining threads during shutdown; continuing cleanup.")
++
++        robot.close()
++        
++        if all_rewards:
++            all_rewards_np = np.array(all_rewards)
++            success_rate = np.mean(all_rewards_np >= 4)
++            logger.info("\n" + "="*30)
++            logger.info(f"Results Summary ({len(all_rewards)} episodes):")
++            logger.info(f"Success Rate: {success_rate * 100:.2f}%")
++            for r in range(5):
++                 count = np.sum(all_rewards_np >= r)
++                 logger.info(f"Reward >= {r}: {count}/{len(all_rewards)} ({count/len(all_rewards)*100:.1f}%)")
++            logger.info("="*30 + "\n")
++
++        logger.info("Pipeline finished.")
++
++if __name__ == "__main__":
++    main()
+diff --git a/examples/aloha/robot_interfaces.py b/examples/aloha/robot_interfaces.py
+new file mode 100644
+index 0000000..bed28cd
+--- /dev/null
++++ b/examples/aloha/robot_interfaces.py
+@@ -0,0 +1,234 @@
++from __future__ import annotations
++
++import logging
++from pathlib import Path
++
++import numpy as np
++import torch
++
++logger = logging.getLogger(__name__)
++
++
++class AlohaRobot:
++    def __init__(self):
++        try:
++            from aloha.robot_utils import load_yaml_file
++            from aloha.real_env import make_real_env
++            import aloha as aloha_pkg
++            from interbotix_common_modules.common_robot.robot import (
++                create_interbotix_global_node,
++                get_interbotix_global_node,
++                robot_startup,
++            )
++            from interbotix_common_modules.common_robot.exceptions import InterbotixException
++        except ImportError:
++            logger.error(
++                "Aloha robot dependencies not found. Please ensure 'aloha', 'interbotix_common_modules' are installed."
++            )
++            raise
++
++        try:
++            self.node = get_interbotix_global_node()
++        except Exception:
++            self.node = create_interbotix_global_node("aloha")
++
++        # Derive config dir from the aloha package location.
++        # Example layout:
++        #   /home/intel/interbotix_ws/src/aloha/aloha/  (python package)
++        #   /home/intel/interbotix_ws/src/aloha/config/ (configs)
++        aloha_pkg_dir = Path(getattr(aloha_pkg, "__file__", "")).resolve().parent
++        aloha_config_dir = (aloha_pkg_dir.parent / "config").resolve()
++        if not aloha_config_dir.exists():
++            raise FileNotFoundError(
++                f"Aloha config directory not found at '{aloha_config_dir}'. "
++                "If your repo layout differs, please ensure the 'config' folder sits next to the 'aloha' package."
++            )
++
++        self.robot_config = load_yaml_file("robot", "aloha_stationary", str(aloha_config_dir)).get("robot", {})
++        self.env = make_real_env(node=self.node, setup_base=False, config=self.robot_config)
++
++        try:
++            robot_startup(self.node)
++        except InterbotixException:
++            pass
++
++    def reset(self):
++        self.env.reset()
++
++    def capture_observation(self, **kwargs):
++        obs = self.env.get_observation()
++
++        # The real Aloha env exposes qpos as [right 7, left 7].
++        # The policy was trained on [left 7, right 7], so we
++        # reorder qpos into policy order before passing it on.
++        if isinstance(obs, dict) and "qpos" in obs:
++            qpos = np.asarray(obs["qpos"], dtype=float).reshape(-1)
++            if qpos.shape[0] == 14:
++                right = qpos[:7].copy()
++                left = qpos[7:14].copy()
++                # Policy expects [left (7), right (7)]
++                obs["qpos"] = np.concatenate([left, right], axis=0)
++
++        return obs
++
++    def send_action(self, action):
++        # action: [14]
++        if isinstance(action, torch.Tensor):
++            action = action.detach().cpu().numpy()
++
++        # Convert to 1D numpy array in policy order [left(7), right(7)]
++        action_np = np.asarray(action, dtype=float).reshape(-1)
++
++        # For real Aloha, the low-level env and hardware expect [right 7, left 7].
++        if action_np.shape[0] == 14:
++            left = action_np[:7].copy()
++            right = action_np[7:14].copy()
++            env_cmd_np = np.concatenate([right, left], axis=0)
++        else:
++            env_cmd_np = action_np
++
++        cmd = [float(x) for x in env_cmd_np]
++        self.env.step(cmd)
++        return 0.0
++
++    def close_env(self):
++        pass
++
++    def close(self):
++        pass
++
++
++class MujocoAlohaRobot:
++    def __init__(self, task):
++        self.task = task
++
++        # Defer env creation to reset() to handle threading contexts
++        self.env = None
++        self.time_step = None
++
++        # reward threshold used for success statistics downstream
++        self.success_reward_threshold = 4
++
++        # Rendering options: render on-demand in capture_observation (not in env.step)
++        self._camera_ids = ("top", "angle", "left_wrist", "right_wrist")
++        self._render_height = 480
++        self._render_width = 640
++
++        self.cache_images = None
++
++    def reset(self):
++        # Re-create env to ensure fresh OpenGL context for the new thread
++        if self.env is not None:
++            try:
++                self.env.close()
++            except Exception:
++                pass
++
++        # Local dm_control sim: keep the repo's environment API/observations.
++        # Note: the sim loader may still reuse gym_aloha STL meshes via
++        # `ALOHA_MESH_ASSETS_DIR` or `gym_aloha.constants.ASSETS_DIR` (see sim/sim_env.py).
++        import sys
++
++        curr_dir = Path(__file__).parent
++        if str(curr_dir) not in sys.path:
++            sys.path.append(str(curr_dir))
++
++        from sim.sim_env import BOX_POSE, make_sim_env
++        from sim.utils import sample_box_pose, sample_insertion_pose
++
++        task_name = self.task
++        if "transfer" in (task_name or "").lower():
++            task_name = "sim_transfer_cube_scripted"
++        elif "insertion" in (task_name or "").lower():
++            task_name = "sim_insertion_scripted"
++
++        logger.info("Creating local dm_control simulation environment: %s", task_name)
++        self.env = make_sim_env(
++            task_name,
++            render_images=False,
++        )
++
++        if "sim_transfer_cube" in task_name:
++            BOX_POSE[0] = sample_box_pose()
++        elif "sim_insertion" in task_name:
++            BOX_POSE[0] = np.concatenate(sample_insertion_pose())
++
++        self.time_step = self.env.reset()
++
++    def capture_observation(self, render_image: bool = False):
++        obs = self.time_step.observation
++        mapped_obs = {"images": {}}
++
++        if render_image:
++            physics = self.env.physics
++            rendered = {}
++            for cam_id in self._camera_ids:
++                rendered[cam_id] = physics.render(
++                    height=self._render_height,
++                    width=self._render_width,
++                    camera_id=cam_id,
++                )
++
++            images = {}
++            if "top" in rendered:
++                images["camera_high"] = rendered["top"]
++            if "angle" in rendered:
++                images["camera_low"] = rendered["angle"]
++            if "left_wrist" in rendered:
++                images["camera_wrist_left"] = rendered["left_wrist"]
++            if "right_wrist" in rendered:
++                images["camera_wrist_right"] = rendered["right_wrist"]
++
++            mapped_obs["images"] = images
++            self.cache_images = rendered
++
++        if "qpos" in obs:
++            mapped_obs["qpos"] = obs["qpos"]
++
++        return mapped_obs
++
++    def send_action(self, action):
++        if isinstance(action, torch.Tensor):
++            action = action.cpu().numpy()
++        self.time_step = self.env.step(action)
++        return self.time_step.reward
++
++    def close_env(self):
++        if self.env is not None:
++            try:
++                self.env.close()
++            except Exception:
++                pass
++            self.env = None
++
++    def close(self):
++        self.close_env()
++
++
++class RobotWrapper:
++    def __init__(self, robot):
++        from threading import Lock
++
++        self.robot = robot
++        self.lock = Lock()
++
++    def reset(self):
++        with self.lock:
++            self.robot.reset()
++
++    def get_observation(self, render_image: bool = False):
++        with self.lock:
++            return self.robot.capture_observation(render_image=render_image)
++
++    def send_action(self, action):
++        with self.lock:
++            return self.robot.send_action(action)
++
++    def close_env(self):
++        with self.lock:
++            if hasattr(self.robot, "close_env"):
++                self.robot.close_env()
++
++    def close(self):
++        with self.lock:
++            self.robot.close()
+diff --git a/examples/aloha/sim/__init__.py b/examples/aloha/sim/__init__.py
+new file mode 100644
+index 0000000..3159bfe
+--- /dev/null
++++ b/examples/aloha/sim/__init__.py
+@@ -0,0 +1,14 @@
++# SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
++# SPDX-License-Identifier: Apache-2.0
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++# http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
+diff --git a/examples/aloha/sim/constants.py b/examples/aloha/sim/constants.py
+new file mode 100644
+index 0000000..bd27ca3
+--- /dev/null
++++ b/examples/aloha/sim/constants.py
+@@ -0,0 +1,89 @@
++import pathlib
++
++### Task parameters
++DATA_DIR = '<put your data dir here>'
++SIM_TASK_CONFIGS = {
++    'sim_transfer_cube_scripted':{
++        'dataset_dir': DATA_DIR + '/sim_transfer_cube_scripted',
++        'num_episodes': 50,
++        'episode_len': 400,
++        'camera_names': ['top']
++    },
++
++    'sim_transfer_cube_human':{
++        'dataset_dir': DATA_DIR + '/sim_transfer_cube_human',
++        'num_episodes': 50,
++        'episode_len': 400,
++        'camera_names': ['top']
++    },
++
++    'sim_insertion_scripted': {
++        'dataset_dir': DATA_DIR + '/sim_insertion_scripted',
++        'num_episodes': 50,
++        'episode_len': 400,
++        'camera_names': ['top', 'angle', 'left_wrist', 'right_wrist']
++        # 'camera_names': ['top']
++    },
++
++    'sim_insertion_human': {
++        'dataset_dir': DATA_DIR + '/sim_insertion_human',
++        'num_episodes': 50,
++        'episode_len': 500,
++        'camera_names': ['top']
++    },
++}
++
++TASK_CONFIGS = {
++    'insertion': {
++        'dataset_dir': DATA_DIR + '/insertion',
++        'num_episodes': 50,
++        'episode_len': 1000,
++        'camera_names': ['cam_high', 'cam_low', 'cam_left_wrist', 'cam_right_wrist']
++    },
++}
++### Simulation envs fixed constants
++DT = 0.02
++JOINT_NAMES = ["waist", "shoulder", "elbow", "forearm_roll", "wrist_angle", "wrist_rotate"]
++START_ARM_POSE = [0, -0.96, 1.16, 0, -0.3, 0, 0.02239, -0.02239,  0, -0.96, 1.16, 0, -0.3, 0, 0.02239, -0.02239]
++
++XML_DIR = str(pathlib.Path(__file__).parent.resolve()) + '/assets/' # note: absolute path
++
++# Note: sim_env.py is configured to load MuJoCo XML + STL assets directly from gym_aloha's
++# installed assets directory (gym_aloha.constants.ASSETS_DIR). XML_DIR remains for compatibility
++# with other scripts, but sim_env.py does not use local XML_DIR assets.
++
++# Left finger position limits (qpos[7]), right_finger = -1 * left_finger
++MASTER_GRIPPER_POSITION_OPEN = 0.02417
++MASTER_GRIPPER_POSITION_CLOSE = 0.01244
++PUPPET_GRIPPER_POSITION_OPEN = 0.05800
++PUPPET_GRIPPER_POSITION_CLOSE = 0.01844
++
++# Gripper joint limits (qpos[6])
++MASTER_GRIPPER_JOINT_OPEN = 0.3083
++MASTER_GRIPPER_JOINT_CLOSE = -0.6842
++PUPPET_GRIPPER_JOINT_OPEN = 1.4910
++PUPPET_GRIPPER_JOINT_CLOSE = -0.6213
++
++############################ Helper functions ############################
++
++MASTER_GRIPPER_POSITION_NORMALIZE_FN = lambda x: (x - MASTER_GRIPPER_POSITION_CLOSE) / (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE)
++PUPPET_GRIPPER_POSITION_NORMALIZE_FN = lambda x: (x - PUPPET_GRIPPER_POSITION_CLOSE) / (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE)
++MASTER_GRIPPER_POSITION_UNNORMALIZE_FN = lambda x: x * (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE) + MASTER_GRIPPER_POSITION_CLOSE
++PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN = lambda x: x * (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE) + PUPPET_GRIPPER_POSITION_CLOSE
++MASTER2PUPPET_POSITION_FN = lambda x: PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(MASTER_GRIPPER_POSITION_NORMALIZE_FN(x))
++
++MASTER_GRIPPER_JOINT_NORMALIZE_FN = lambda x: (x - MASTER_GRIPPER_JOINT_CLOSE) / (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE)
++PUPPET_GRIPPER_JOINT_NORMALIZE_FN = lambda x: (x - PUPPET_GRIPPER_JOINT_CLOSE) / (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE)
++MASTER_GRIPPER_JOINT_UNNORMALIZE_FN = lambda x: x * (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE) + MASTER_GRIPPER_JOINT_CLOSE
++PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN = lambda x: x * (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE) + PUPPET_GRIPPER_JOINT_CLOSE
++MASTER2PUPPET_JOINT_FN = lambda x: PUPPET_GRIPPER_JOINT_UNNORMALIZE_FN(MASTER_GRIPPER_JOINT_NORMALIZE_FN(x))
++
++MASTER_GRIPPER_VELOCITY_NORMALIZE_FN = lambda x: x / (MASTER_GRIPPER_POSITION_OPEN - MASTER_GRIPPER_POSITION_CLOSE)
++PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN = lambda x: x / (PUPPET_GRIPPER_POSITION_OPEN - PUPPET_GRIPPER_POSITION_CLOSE)
++
++MASTER_POS2JOINT = lambda x: MASTER_GRIPPER_POSITION_NORMALIZE_FN(x) * (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE) + MASTER_GRIPPER_JOINT_CLOSE
++MASTER_JOINT2POS = lambda x: MASTER_GRIPPER_POSITION_UNNORMALIZE_FN((x - MASTER_GRIPPER_JOINT_CLOSE) / (MASTER_GRIPPER_JOINT_OPEN - MASTER_GRIPPER_JOINT_CLOSE))
++PUPPET_POS2JOINT = lambda x: PUPPET_GRIPPER_POSITION_NORMALIZE_FN(x) * (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE) + PUPPET_GRIPPER_JOINT_CLOSE
++PUPPET_JOINT2POS = lambda x: PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN((x - PUPPET_GRIPPER_JOINT_CLOSE) / (PUPPET_GRIPPER_JOINT_OPEN - PUPPET_GRIPPER_JOINT_CLOSE))
++
++MASTER_GRIPPER_JOINT_MID = (MASTER_GRIPPER_JOINT_OPEN + MASTER_GRIPPER_JOINT_CLOSE)/2
+diff --git a/examples/aloha/sim/sim_env.py b/examples/aloha/sim/sim_env.py
+new file mode 100644
+index 0000000..0d70cf6
+--- /dev/null
++++ b/examples/aloha/sim/sim_env.py
+@@ -0,0 +1,339 @@
++import numpy as np
++import collections
++import matplotlib.pyplot as plt
++from pathlib import Path
++from dm_control import mujoco
++from dm_control.rl import control
++from dm_control.suite import base
++
++try:
++    # Preferred import path when examples/aloha is added to sys.path (e.g., eval_aloha.py)
++    from sim.constants import DT, XML_DIR,  START_ARM_POSE
++    from sim.constants import PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN
++    from sim.constants import MASTER_GRIPPER_POSITION_NORMALIZE_FN
++    from sim.constants import PUPPET_GRIPPER_POSITION_NORMALIZE_FN
++    from sim.constants import PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN
++except ModuleNotFoundError:
++    # Fallback: allow importing as a package module (examples.aloha.sim.sim_env)
++    from .constants import DT, XML_DIR, START_ARM_POSE
++    from .constants import PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN
++    from .constants import MASTER_GRIPPER_POSITION_NORMALIZE_FN
++    from .constants import PUPPET_GRIPPER_POSITION_NORMALIZE_FN
++    from .constants import PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN
++
++BOX_POSE = [None] # to be changed from outside
++
++
++def _gym_aloha_assets_dir() -> Path:
++    """Return the gym_aloha assets directory.
++
++    This simplified local sim always loads MuJoCo XML + STL directly from gym_aloha's
++    installed assets, relying on MuJoCo's standard relative-path resolution.
++    """
++
++    try:
++        from gym_aloha.constants import ASSETS_DIR
++
++        return Path(ASSETS_DIR)
++    except Exception as e:
++        raise RuntimeError(
++            "gym_aloha is required for the local Aloha sim assets. "
++            "Install gym-aloha or switch to a version of sim_env.py that supports local assets."
++        ) from e
++
++def make_sim_env(
++    task_name,
++    *,
++    render_images: bool = True,
++):
++    """
++    Environment for simulated robot bi-manual manipulation, with joint position control
++    Action space:      [left_arm_qpos (6),             # absolute joint position
++                        left_gripper_positions (1),    # normalized gripper position (0: close, 1: open)
++                        right_arm_qpos (6),            # absolute joint position
++                        right_gripper_positions (1),]  # normalized gripper position (0: close, 1: open)
++
++    Observation space: {"qpos": Concat[ left_arm_qpos (6),         # absolute joint position
++                                        left_gripper_position (1),  # normalized gripper position (0: close, 1: open)
++                                        right_arm_qpos (6),         # absolute joint position
++                                        right_gripper_qpos (1)]     # normalized gripper position (0: close, 1: open)
++                        "qvel": Concat[ left_arm_qvel (6),         # absolute joint velocity (rad)
++                                        left_gripper_velocity (1),  # normalized gripper velocity (pos: opening, neg: closing)
++                                        right_arm_qvel (6),         # absolute joint velocity (rad)
++                                        right_gripper_qvel (1)]     # normalized gripper velocity (pos: opening, neg: closing)
++                        "images": {"main": (480x640x3)}        # h, w, c, dtype='uint8'
++    """
++    assets_dir = _gym_aloha_assets_dir()
++    # assets_dir = Path(XML_DIR)
++    if 'sim_transfer_cube' in task_name:
++        xml_path = str(assets_dir / 'bimanual_viperx_transfer_cube.xml')
++        physics = mujoco.Physics.from_xml_path(xml_path)
++        task = TransferCubeTask(
++            random=False,
++            render_images=render_images,
++        )
++        env = control.Environment(physics, task, time_limit=20, control_timestep=DT,
++                                  n_sub_steps=None, flat_observation=False)
++    elif 'sim_insertion' in task_name:
++        xml_path = str(assets_dir / 'bimanual_viperx_insertion.xml')
++        physics = mujoco.Physics.from_xml_path(xml_path)
++        task = InsertionTask(
++            random=False,
++            render_images=render_images,
++        )
++        env = control.Environment(physics, task, time_limit=20, control_timestep=DT,
++                                  n_sub_steps=None, flat_observation=False)
++    else:
++        raise NotImplementedError(
++            f"Unsupported task_name {task_name!r}. Expected one of: "
++            "'sim_transfer_cube' (substring), 'sim_insertion' (substring)."
++        )
++    return env
++
++class BimanualViperXTask(base.Task):
++    def __init__(
++        self,
++        random=None,
++        *,
++        render_images: bool = True,
++    ):
++        super().__init__(random=random)
++        self._render_images = bool(render_images)
++
++    def before_step(self, action, physics):
++        left_arm_action = action[:6]
++        right_arm_action = action[7:7+6]
++        normalized_left_gripper_action = action[6]
++        normalized_right_gripper_action = action[7+6]
++
++        left_gripper_action = PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(normalized_left_gripper_action)
++        right_gripper_action = PUPPET_GRIPPER_POSITION_UNNORMALIZE_FN(normalized_right_gripper_action)
++
++        full_left_gripper_action = [left_gripper_action, -left_gripper_action]
++        full_right_gripper_action = [right_gripper_action, -right_gripper_action]
++
++        env_action = np.concatenate([left_arm_action, full_left_gripper_action, right_arm_action, full_right_gripper_action])
++        super().before_step(env_action, physics)
++        return
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_qpos(physics):
++        qpos_raw = physics.data.qpos.copy()
++        left_qpos_raw = qpos_raw[:8]
++        right_qpos_raw = qpos_raw[8:16]
++        left_arm_qpos = left_qpos_raw[:6]
++        right_arm_qpos = right_qpos_raw[:6]
++        left_gripper_qpos = [PUPPET_GRIPPER_POSITION_NORMALIZE_FN(left_qpos_raw[6])]
++        right_gripper_qpos = [PUPPET_GRIPPER_POSITION_NORMALIZE_FN(right_qpos_raw[6])]
++        return np.concatenate([left_arm_qpos, left_gripper_qpos, right_arm_qpos, right_gripper_qpos])
++
++    @staticmethod
++    def get_qvel(physics):
++        qvel_raw = physics.data.qvel.copy()
++        left_qvel_raw = qvel_raw[:8]
++        right_qvel_raw = qvel_raw[8:16]
++        left_arm_qvel = left_qvel_raw[:6]
++        right_arm_qvel = right_qvel_raw[:6]
++        left_gripper_qvel = [PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN(left_qvel_raw[6])]
++        right_gripper_qvel = [PUPPET_GRIPPER_VELOCITY_NORMALIZE_FN(right_qvel_raw[6])]
++        return np.concatenate([left_arm_qvel, left_gripper_qvel, right_arm_qvel, right_gripper_qvel])
++
++    @staticmethod
++    def get_env_state(physics):
++        raise NotImplementedError
++
++    def get_observation(self, physics):
++        obs = collections.OrderedDict()
++        obs['qpos'] = self.get_qpos(physics)
++        obs['qvel'] = self.get_qvel(physics)
++        obs['env_state'] = self.get_env_state(physics)
++        obs['images'] = dict()
++        if self._render_images:
++            obs['images']['top'] = physics.render(height=480, width=640, camera_id='top')
++            obs['images']['left_wrist'] = physics.render(height=480, width=640, camera_id='left_wrist')
++            obs['images']['right_wrist'] = physics.render(height=480, width=640, camera_id='right_wrist')
++            obs['images']['angle'] = physics.render(height=480, width=640, camera_id='angle')
++            # obs['images']['vis'] = physics.render(height=480, width=640, camera_id='front_close')
++
++        return obs
++
++    def get_reward(self, physics):
++        # return whether left gripper is holding the box
++        raise NotImplementedError
++
++
++class TransferCubeTask(BimanualViperXTask):
++    def __init__(
++        self,
++        random=None,
++        *,
++        render_images: bool = True,
++    ):
++        super().__init__(
++            random=random,
++            render_images=render_images,
++        )
++        self.max_reward = 4
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        # TODO Notice: this function does not randomize the env configuration. Instead, set BOX_POSE from outside
++        # reset qpos, control and box position
++        with physics.reset_context():
++            physics.named.data.qpos[:16] = START_ARM_POSE
++            np.copyto(physics.data.ctrl, START_ARM_POSE)
++            assert BOX_POSE[0] is not None
++            physics.named.data.qpos[-7:] = BOX_POSE[0]
++            # print(f"{BOX_POSE=}")
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_env_state(physics):
++        env_state = physics.data.qpos.copy()[16:]
++        return env_state
++
++    def get_reward(self, physics):
++        # return whether left gripper is holding the box
++        all_contact_pairs = set()
++        for i_contact in range(physics.data.ncon):
++            id_geom_1 = physics.data.contact[i_contact].geom1
++            id_geom_2 = physics.data.contact[i_contact].geom2
++            name_geom_1 = physics.model.id2name(id_geom_1, 'geom')
++            name_geom_2 = physics.model.id2name(id_geom_2, 'geom')
++            contact_pair = frozenset({name_geom_1, name_geom_2})
++            all_contact_pairs.add(contact_pair)
++        touch_left_gripper = frozenset({"red_box", "vx300s_left/10_left_gripper_finger"}) in all_contact_pairs
++        touch_right_gripper = frozenset({"red_box", "vx300s_right/10_right_gripper_finger"}) in all_contact_pairs
++        touch_table = frozenset({"red_box", "table"}) in all_contact_pairs
++
++        reward = 0
++        if touch_right_gripper:
++            reward = 1
++        if touch_right_gripper and not touch_table: # lifted
++            reward = 2
++        if touch_left_gripper: # attempted transfer
++            reward = 3
++        if touch_left_gripper and not touch_table: # successful transfer
++            reward = 4
++        return reward
++
++
++class InsertionTask(BimanualViperXTask):
++    def __init__(
++        self,
++        random=None,
++        *,
++        render_images: bool = True,
++    ):
++        super().__init__(
++            random=random,
++            render_images=render_images,
++        )
++        self.max_reward = 4
++
++    def initialize_episode(self, physics):
++        """Sets the state of the environment at the start of each episode."""
++        # TODO Notice: this function does not randomize the env configuration. Instead, set BOX_POSE from outside
++        # reset qpos, control and box position
++        with physics.reset_context():
++            physics.named.data.qpos[:16] = START_ARM_POSE
++            np.copyto(physics.data.ctrl, START_ARM_POSE)
++            assert BOX_POSE[0] is not None
++            physics.named.data.qpos[-7*2:] = BOX_POSE[0] # two objects
++            # print(f"{BOX_POSE=}")
++        super().initialize_episode(physics)
++
++    @staticmethod
++    def get_env_state(physics):
++        env_state = physics.data.qpos.copy()[16:]
++        return env_state
++
++    def get_reward(self, physics):
++        # return whether peg touches the pin
++        all_contact_pairs = set()
++        for i_contact in range(physics.data.ncon):
++            id_geom_1 = physics.data.contact[i_contact].geom1
++            id_geom_2 = physics.data.contact[i_contact].geom2
++            name_geom_1 = physics.model.id2name(id_geom_1, 'geom')
++            name_geom_2 = physics.model.id2name(id_geom_2, 'geom')
++            contact_pair = frozenset((name_geom_1, name_geom_2))
++            all_contact_pairs.add(contact_pair)
++        touch_right_gripper = frozenset(("red_peg", "vx300s_right/10_right_gripper_finger")) in all_contact_pairs
++        touch_left_gripper = frozenset(("socket-1", "vx300s_left/10_left_gripper_finger")) in all_contact_pairs or \
++                             frozenset(("socket-2", "vx300s_left/10_left_gripper_finger")) in all_contact_pairs or \
++                             frozenset(("socket-3", "vx300s_left/10_left_gripper_finger")) in all_contact_pairs or \
++                             frozenset(("socket-4", "vx300s_left/10_left_gripper_finger")) in all_contact_pairs
++        peg_touch_table = frozenset(("red_peg", "table")) in all_contact_pairs
++        socket_touch_table = frozenset(("socket-1", "table")) in all_contact_pairs or \
++                             frozenset(("socket-2", "table")) in all_contact_pairs or \
++                             frozenset(("socket-3", "table")) in all_contact_pairs or \
++                             frozenset(("socket-4", "table")) in all_contact_pairs
++        peg_touch_socket = frozenset(("red_peg", "socket-1")) in all_contact_pairs or \
++                           frozenset(("red_peg", "socket-2")) in all_contact_pairs or \
++                           frozenset(("red_peg", "socket-3")) in all_contact_pairs or \
++                           frozenset(("red_peg", "socket-4")) in all_contact_pairs
++        pin_touched = frozenset(("red_peg", "pin")) in all_contact_pairs
++
++        reward = 0
++        if touch_left_gripper and touch_right_gripper: # touch both
++            reward = 1
++        if touch_left_gripper and touch_right_gripper and (not peg_touch_table) and (not socket_touch_table): # grasp both
++            reward = 2
++        if peg_touch_socket and (not peg_touch_table) and (not socket_touch_table): # peg and socket touching
++            reward = 3
++        if pin_touched: # successful insertion
++            reward = 4
++        return reward
++
++
++def get_action(master_bot_left, master_bot_right):
++    action = np.zeros(14)
++    # arm action
++    action[:6] = master_bot_left.dxl.joint_states.position[:6]
++    action[7:7+6] = master_bot_right.dxl.joint_states.position[:6]
++    # gripper action
++    left_gripper_pos = master_bot_left.dxl.joint_states.position[7]
++    right_gripper_pos = master_bot_right.dxl.joint_states.position[7]
++    normalized_left_pos = MASTER_GRIPPER_POSITION_NORMALIZE_FN(left_gripper_pos)
++    normalized_right_pos = MASTER_GRIPPER_POSITION_NORMALIZE_FN(right_gripper_pos)
++    action[6] = normalized_left_pos
++    action[7+6] = normalized_right_pos
++    return action
++
++def test_sim_teleop():
++    """ Testing teleoperation in sim with ALOHA. Requires hardware and ALOHA repo to work. """
++    from interbotix_xs_modules.arm import InterbotixManipulatorXS
++
++    BOX_POSE[0] = [0.2, 0.5, 0.05, 1, 0, 0, 0]
++
++    # source of data
++    master_bot_left = InterbotixManipulatorXS(robot_model="wx250s", group_name="arm", gripper_name="gripper",
++                                              robot_name=f'master_left', init_node=True)
++    master_bot_right = InterbotixManipulatorXS(robot_model="wx250s", group_name="arm", gripper_name="gripper",
++                                              robot_name=f'master_right', init_node=False)
++
++    # setup the environment
++    env = make_sim_env('sim_transfer_cube')
++    ts = env.reset()
++    episode = [ts]
++    # setup plotting
++    ax = plt.subplot()
++    plt_img = ax.imshow(ts.observation['images']['angle'])
++    plt.ion()
++
++    for t in range(1000):
++        action = get_action(master_bot_left, master_bot_right)
++        ts = env.step(action)
++        episode.append(ts)
++
++        plt_img.set_data(ts.observation['images']['angle'])
++        plt.pause(0.02)
++
++
++if __name__ == '__main__':
++    test_sim_teleop()
++
+diff --git a/examples/aloha/sim/utils.py b/examples/aloha/sim/utils.py
+new file mode 100644
+index 0000000..67eeb53
+--- /dev/null
++++ b/examples/aloha/sim/utils.py
+@@ -0,0 +1,187 @@
++import numpy as np
++import torch
++import os
++import h5py
++from torch.utils.data import DataLoader
++
++class EpisodicDataset(torch.utils.data.Dataset):
++    def __init__(self, episode_ids, dataset_dir, camera_names, norm_stats):
++        super().__init__()
++        self.episode_ids = episode_ids
++        self.dataset_dir = dataset_dir
++        self.camera_names = camera_names
++        self.norm_stats = norm_stats
++        self.is_sim = None
++        if len(self.episode_ids) > 0:
++            self.__getitem__(0)  # initialize self.is_sim
++
++    def __len__(self):
++        return len(self.episode_ids)
++
++    def __getitem__(self, index):
++        sample_full_episode = False # hardcode
++
++        episode_id = self.episode_ids[index]
++        dataset_path = os.path.join(self.dataset_dir, f'episode_{episode_id}.hdf5')
++        with h5py.File(dataset_path, 'r') as root:
++            is_sim = root.attrs['sim']
++            original_action_shape = root['/action'].shape
++            episode_len = original_action_shape[0]
++            if sample_full_episode:
++                start_ts = 0
++            else:
++                start_ts = np.random.choice(episode_len)
++            # get observation at start_ts only
++            qpos = root['/observations/qpos'][start_ts]
++            qvel = root['/observations/qvel'][start_ts]
++            image_dict = dict()
++            for cam_name in self.camera_names:
++                image_dict[cam_name] = root[f'/observations/images/{cam_name}'][start_ts]
++            # get all actions after and including start_ts
++            if is_sim:
++                action = root['/action'][start_ts:]
++                action_len = episode_len - start_ts
++            else:
++                action = root['/action'][max(0, start_ts - 1):] # hack, to make timesteps more aligned
++                action_len = episode_len - max(0, start_ts - 1) # hack, to make timesteps more aligned
++
++        self.is_sim = is_sim
++        padded_action = np.zeros(original_action_shape, dtype=np.float32)
++        padded_action[:action_len] = action
++        is_pad = np.zeros(episode_len)
++        is_pad[action_len:] = 1
++
++        # new axis for different cameras
++        all_cam_images = []
++        for cam_name in self.camera_names:
++            all_cam_images.append(image_dict[cam_name])
++        all_cam_images = np.stack(all_cam_images, axis=0)
++
++        # construct observations
++        image_data = torch.from_numpy(all_cam_images)
++        qpos_data = torch.from_numpy(qpos).float()
++        action_data = torch.from_numpy(padded_action).float()
++        is_pad = torch.from_numpy(is_pad).bool()
++
++        # channel last -> channel first (K, H, W, C) -> (K, C, H, W)
++        image_data = image_data.permute(0, 3, 1, 2)
++
++        # normalize image and change dtype to float
++        image_data = image_data / 255.0
++        action_data = (action_data - self.norm_stats["action_mean"]) / self.norm_stats["action_std"]
++        qpos_data = (qpos_data - self.norm_stats["qpos_mean"]) / self.norm_stats["qpos_std"]
++
++        return image_data, qpos_data, action_data, is_pad
++
++
++def get_norm_stats(dataset_dir, num_episodes):
++    all_qpos_data = []
++    all_action_data = []
++    for episode_idx in range(num_episodes):
++        dataset_path = os.path.join(dataset_dir, f'episode_{episode_idx}.hdf5')
++        with h5py.File(dataset_path, 'r') as root:
++            qpos = root['/observations/qpos'][()]
++            qvel = root['/observations/qvel'][()]
++            action = root['/action'][()]
++        all_qpos_data.append(torch.from_numpy(qpos))
++        all_action_data.append(torch.from_numpy(action))
++    all_qpos_data = torch.stack(all_qpos_data)
++    all_action_data = torch.stack(all_action_data)
++    all_action_data = all_action_data
++
++    # normalize action data
++    action_mean = all_action_data.mean(dim=[0, 1], keepdim=True)
++    action_std = all_action_data.std(dim=[0, 1], keepdim=True)
++    action_std = torch.clip(action_std, 1e-2, np.inf) # clipping
++
++    # normalize qpos data
++    qpos_mean = all_qpos_data.mean(dim=[0, 1], keepdim=True)
++    qpos_std = all_qpos_data.std(dim=[0, 1], keepdim=True)
++    qpos_std = torch.clip(qpos_std, 1e-2, np.inf) # clipping
++
++    stats = {"action_mean": action_mean.numpy().squeeze(), "action_std": action_std.numpy().squeeze(),
++             "qpos_mean": qpos_mean.numpy().squeeze(), "qpos_std": qpos_std.numpy().squeeze(),
++             "example_qpos": qpos}
++
++    return stats
++
++
++def load_data(dataset_dir, num_episodes, camera_names, batch_size_train, batch_size_val):
++    print(f'\nData from: {dataset_dir}\n')
++    # obtain train test split
++    train_ratio = 0.8
++    shuffled_indices = np.random.permutation(num_episodes)
++    train_indices = shuffled_indices[:int(train_ratio * num_episodes)]
++    val_indices = shuffled_indices[int(train_ratio * num_episodes):]
++
++    # obtain normalization stats for qpos and action
++    norm_stats = get_norm_stats(dataset_dir, num_episodes)
++
++    # construct dataset and dataloader
++    train_dataset = EpisodicDataset(train_indices, dataset_dir, camera_names, norm_stats)
++    val_dataset = EpisodicDataset(val_indices, dataset_dir, camera_names, norm_stats)
++    train_dataloader = DataLoader(train_dataset, batch_size=batch_size_train, shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1)
++    val_dataloader = DataLoader(val_dataset, batch_size=batch_size_val, shuffle=True, pin_memory=True, num_workers=1, prefetch_factor=1)
++
++    return train_dataloader, val_dataloader, norm_stats, train_dataset.is_sim
++
++
++### env utils
++
++def sample_box_pose():
++    x_range = [0.0, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    cube_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    cube_quat = np.array([1, 0, 0, 0])
++    return np.concatenate([cube_position, cube_quat])
++
++def sample_insertion_pose():
++    # Peg
++    x_range = [0.1, 0.2]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    peg_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    peg_quat = np.array([1, 0, 0, 0])
++    peg_pose = np.concatenate([peg_position, peg_quat])
++
++    # Socket
++    x_range = [-0.2, -0.1]
++    y_range = [0.4, 0.6]
++    z_range = [0.05, 0.05]
++
++    ranges = np.vstack([x_range, y_range, z_range])
++    socket_position = np.random.uniform(ranges[:, 0], ranges[:, 1])
++
++    socket_quat = np.array([1, 0, 0, 0])
++    socket_pose = np.concatenate([socket_position, socket_quat])
++
++    return peg_pose, socket_pose
++
++### helper functions
++
++def compute_dict_mean(epoch_dicts):
++    result = {k: None for k in epoch_dicts[0]}
++    num_items = len(epoch_dicts)
++    for k in result:
++        value_sum = 0
++        for epoch_dict in epoch_dicts:
++            value_sum += epoch_dict[k]
++        result[k] = value_sum / num_items
++    return result
++
++def detach_dict(d):
++    new_d = dict()
++    for k, v in d.items():
++        new_d[k] = v.detach()
++    return new_d
++
++def set_seed(seed):
++    torch.manual_seed(seed)
++    np.random.seed(seed)
+-- 
+2.34.1
+

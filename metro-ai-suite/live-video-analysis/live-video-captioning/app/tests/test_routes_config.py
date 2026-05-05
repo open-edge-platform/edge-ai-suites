@@ -37,6 +37,7 @@ class TestRuntimeConfig:
             "defaultPrompt",
             "defaultRtspUrl",
             "enableDetectionPipeline",
+            "captionHistory",
             "metricsServicePort",
         }
         assert expected_keys.issubset(payload.keys())
@@ -47,3 +48,11 @@ class TestRuntimeConfig:
         json_str = resp.text.removeprefix("window.RUNTIME_CONFIG = ").removesuffix(";")
         payload = json.loads(json_str)
         assert isinstance(payload["alertMode"], bool)
+
+    def test_caption_history_is_non_negative_integer(self, client):
+        """captionHistory value is a non-negative integer."""
+        resp = client.get("/runtime-config.js")
+        json_str = resp.text.removeprefix("window.RUNTIME_CONFIG = ").removesuffix(";")
+        payload = json.loads(json_str)
+        assert isinstance(payload["captionHistory"], int)
+        assert payload["captionHistory"] >= 0

@@ -1,0 +1,126 @@
+{{/*
+Copyright (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+*/}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multimodal-embedding.fullname" . }}
+  labels:
+    {{- include "multimodal-embedding.labels" . | nindent 4 }}
+    app.kubernetes.io/component: multimodal-embedding
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "multimodal-embedding.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "multimodal-embedding.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: multimodal-embedding
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "lvc.imagePullSecrets" . | nindent 6 }}
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      containers:
+        - name: multimodal-embedding
+          envFrom:
+            - configMapRef:
+                name: {{ include "multimodal-embedding.fullname" . }}-config
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            privileged: false
+          ports:
+            - name: {{ .Values.service.containerPortName }}
+              containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          startupProbe:
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+      {{- if .Values.global.embeddingModel.useGPU.enabled }}
+          resources:
+            requests:
+               {{ .Values.global.embeddingModel.useGPU.key}}: 1
+            limits:
+              {{ .Values.global.embeddingModel.useGPU.key}}: 1
+      {{- else if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- end }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: volume-data
+              mountPath: /home/appuser/.cache/huggingface
+              subPath: huggingface
+      {{- if .Values.modelPvc.enabled }}
+            - name: models-data
+              mountPath: /app/ov_models
+              subPath: ovmodels
+      {{- else }}
+            - name: volume-data
+              mountPath: /app/ov_models
+              subPath: ovmodels
+      {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+      {{- if .Values.global.embeddingModel.useGPU.enabled }}
+        - name: dri-device
+          hostPath:
+            path: /dev/dri
+            type: Directory
+      {{- end }}
+      {{- if and (.Values.global.usePvc) (.Values.global.embeddingModel.useGPU.enabled) }}
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ include "multimodal-embedding.fullname" . }}-gpu-pvc
+      {{- end }}
+      {{- if .Values.modelPvc.enabled }}
+        - name: models-data
+          {{- if .Values.modelPvc.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.modelPvc.existingClaim }}
+          {{- else if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ include "multimodal-embedding.fullname" . }}-models-pvc
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- end }}
+        - name: volume-data
+          {{- if .Values.global.usePvc }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.modelPvc.sharedPvcName | default "multimodal-embedding-pvc" }}
+          {{- else if .Values.global.volumeHostPath }}
+          hostPath:
+            path: {{ .Values.global.volumeHostPath }}
+            type: DirectoryOrCreate
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

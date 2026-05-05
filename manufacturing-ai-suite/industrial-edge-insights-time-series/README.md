@@ -2,7 +2,7 @@
 
 Industrial Edge Insights - Time Series sample applications demonstrate a time series use cases by detecting anomalous
 [power generation patterns in wind turbines](./docs/user-guide/wind-turbine-anomaly-detection/index.md)
-and [anomalous weld patterns](./docs/user-guide/weld-anomaly-detection/index.md).
+and [anomalous weld patterns](./docs/user-guide/weld-defect-detection/index.md).
 
 ## Get Started
 
@@ -13,7 +13,7 @@ To see the system requirements and other installation, see the following guides:
 
 ## Architecture and Functionality Overview
 
-Refer to [Wind Turbine Anomaly Detection](./docs/user-guide/wind-turbine-anomaly-detection/index.md) and [Weld Anomaly Detection](./docs/user-guide/weld-anomaly-detection/index.md).
+Refer to [Wind Turbine Anomaly Detection](./docs/user-guide/wind-turbine-anomaly-detection/index.md) and [Weld Defect Detection](./docs/user-guide/weld-defect-detection/index.md).
 
 ## Learn More
 

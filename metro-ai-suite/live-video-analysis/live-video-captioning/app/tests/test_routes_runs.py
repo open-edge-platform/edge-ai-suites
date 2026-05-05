@@ -3,23 +3,27 @@
 
 """Tests for backend.routes.runs, run lifecycle endpoints."""
 
+import asyncio
+import json
+import pytest
 from unittest.mock import patch
-
+from unittest.mock import AsyncMock, MagicMock
 from backend.state import RUNS
 from backend.models.responses import RunInfo
+import backend.routes.runs as runs_module
 
 
 # ===================================================================
-# POST /api/runs, start a new run
+# POST /api/generate_captions_alerts, start a new run
 # ===================================================================
 class TestStartRun:
-    """POST /api/runs endpoint."""
+    """POST /api/generate_captions_alerts endpoint."""
 
     def test_start_run_success(self, client):
         """A valid request creates a run and returns RunInfo."""
         with patch("backend.routes.runs.http_json", return_value='"pipeline-abc"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         assert resp.status_code == 200
@@ -31,7 +35,7 @@ class TestStartRun:
         """A run with a custom runName uses it as the run ID."""
         with patch("backend.routes.runs.http_json", return_value='"p1"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "My Run",
@@ -46,7 +50,7 @@ class TestStartRun:
         """Special characters in runName are removed."""
         with patch("backend.routes.runs.http_json", return_value='"p1"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "test@run!#",
@@ -62,7 +66,7 @@ class TestStartRun:
         )
         with patch("backend.routes.runs.http_json", return_value='"p2"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={
                     "rtspUrl": "rtsp://10.0.0.1/stream",
                     "runName": "demo",
@@ -71,19 +75,85 @@ class TestStartRun:
         assert resp.status_code == 200
         assert resp.json()["runId"] == "demo_1"
 
+    def test_start_run_long_name_uses_short_peer_id(self, client):
+        """Long run names keep their run ID while peer IDs stay within the server limit."""
+        with patch("backend.routes.runs.http_json", return_value='"p1"') as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "runName": "white car stream",
+                },
+            )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["runId"] == "white_car_stream"
+        assert len(body["peerId"]) < 9
+        assert mock_http.call_args.kwargs["payload"]["destination"]["frame"]["peer-id"] == body[
+            "peerId"
+        ]
+
+    def test_start_run_duplicate_long_name_gets_unique_short_peer_id(self, client):
+        """Duplicate long names get a suffixed run ID and a distinct short peer ID."""
+        with patch("backend.routes.runs.http_json", return_value='"p1"'):
+            first = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "runName": "white car stream",
+                },
+            )
+        with patch("backend.routes.runs.http_json", return_value='"p2"'):
+            second = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "runName": "white car stream",
+                },
+            )
+        assert first.status_code == 200
+        assert second.status_code == 200
+        first_body = first.json()
+        second_body = second.json()
+        assert second_body["runId"] == "white_car_stream_1"
+        assert len(first_body["peerId"]) < 9
+        assert len(second_body["peerId"]) < 9
+        assert first_body["peerId"] != second_body["peerId"]
+
     def test_start_run_pipeline_empty_response(self, client):
         """An empty pipeline ID from the server returns 502."""
         with patch("backend.routes.runs.http_json", return_value='""'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         assert resp.status_code == 502
 
+    def test_start_run_includes_optional_pipeline_parameters(self, client):
+        """Optional frame and chunk settings are forwarded to the pipeline server."""
+        with patch("backend.routes.runs.http_json", return_value='"p1"') as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "frameRate": 3,
+                    "chunkSize": 4,
+                    "frameWidth": 1280,
+                    "frameHeight": 720,
+                },
+            )
+        assert resp.status_code == 200
+        payload = mock_http.call_args.kwargs["payload"]
+        assert payload["parameters"]["captioner_frame_rate"] == 3
+        assert payload["parameters"]["captioner_chunk_size"] == 4
+        assert payload["parameters"]["frame_width"] == 1280
+        assert payload["parameters"]["frame_height"] == 720
+        assert payload["parameters"]["captioner_queue_size"] == 4
+
     def test_start_run_invalid_rtsp_url(self, client):
         """An invalid RTSP URL returns 422 (validation error)."""
         resp = client.post(
-            "/api/runs",
+            "/api/generate_captions_alerts",
             json={"rtspUrl": "http://not-rtsp.com/stream"},
         )
         assert resp.status_code == 422
@@ -92,7 +162,7 @@ class TestStartRun:
         """The newly created run is stored in the global RUNS dict."""
         with patch("backend.routes.runs.http_json", return_value='"p-store"'):
             resp = client.post(
-                "/api/runs",
+                "/api/generate_captions_alerts",
                 json={"rtspUrl": "rtsp://10.0.0.1/stream"},
             )
         run_id = resp.json()["runId"]
@@ -100,14 +170,14 @@ class TestStartRun:
 
 
 # ===================================================================
-# GET /api/runs, list all runs
+# GET /api/generate_captions_alerts, list all runs
 # ===================================================================
 class TestListRuns:
-    """GET /api/runs endpoint."""
+    """GET /api/generate_captions_alerts endpoint."""
 
     def test_list_runs_empty(self, client):
         """Returns an empty list when no runs exist."""
-        resp = client.get("/api/runs")
+        resp = client.get("/api/generate_captions_alerts")
         assert resp.status_code == 200
         assert resp.json() == []
 
@@ -119,38 +189,38 @@ class TestListRuns:
         RUNS["r2"] = RunInfo(
             runId="r2", pipelineId="p2", peerId="peer2", mqttTopic="t/r2"
         )
-        resp = client.get("/api/runs")
+        resp = client.get("/api/generate_captions_alerts")
         assert resp.status_code == 200
         ids = {r["runId"] for r in resp.json()}
         assert ids == {"r1", "r2"}
 
 
 # ===================================================================
-# GET /api/runs/{run_id}, get single run
+# GET /api/generate_captions_alerts/{run_id}, get single run
 # ===================================================================
 class TestGetRun:
-    """GET /api/runs/{run_id} endpoint."""
+    """GET /api/generate_captions_alerts/{run_id} endpoint."""
 
     def test_get_existing_run(self, client):
         """Returns details for an existing run."""
         RUNS["r1"] = RunInfo(
             runId="r1", pipelineId="p1", peerId="peer1", mqttTopic="t/r1"
         )
-        resp = client.get("/api/runs/r1")
+        resp = client.get("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert resp.json()["runId"] == "r1"
 
     def test_get_nonexistent_run_returns_404(self, client):
         """Returns 404 when the run ID does not exist."""
-        resp = client.get("/api/runs/nonexistent")
+        resp = client.get("/api/generate_captions_alerts/nonexistent")
         assert resp.status_code == 404
 
 
 # ===================================================================
-# DELETE /api/runs/{run_id}, stop a run
+# DELETE /api/generate_captions_alerts/{run_id}, stop a run
 # ===================================================================
 class TestStopRun:
-    """DELETE /api/runs/{run_id} endpoint."""
+    """DELETE /api/generate_captions_alerts/{run_id} endpoint."""
 
     def test_stop_existing_run(self, client):
         """Stopping an existing run removes it and returns 'stopped'."""
@@ -158,14 +228,14 @@ class TestStopRun:
             runId="r1", pipelineId="p1", peerId="peer1", mqttTopic="t/r1"
         )
         with patch("backend.routes.runs.http_json", return_value=""):
-            resp = client.delete("/api/runs/r1")
+            resp = client.delete("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert resp.json()["status"] == "stopped"
         assert "r1" not in RUNS
 
     def test_stop_nonexistent_run_returns_404(self, client):
         """Returns 404 when trying to stop a non-existent run."""
-        resp = client.delete("/api/runs/nonexistent")
+        resp = client.delete("/api/generate_captions_alerts/nonexistent")
         assert resp.status_code == 404
 
     def test_stop_run_pipeline_error_still_cleans_up(self, client):
@@ -179,6 +249,155 @@ class TestStopRun:
             "backend.routes.runs.http_json",
             side_effect=HTTPException(status_code=502, detail="gone"),
         ):
-            resp = client.delete("/api/runs/r1")
+            resp = client.delete("/api/generate_captions_alerts/r1")
         assert resp.status_code == 200
         assert "r1" not in RUNS
+
+
+class TestRunsHelpers:
+    """Unit tests for helper functions in runs route."""
+
+    def test_build_unique_run_name_returns_none_when_sanitized_empty(self):
+        assert runs_module._build_unique_run_name("!!!@@@###") is None
+
+    def test_generate_peer_id_invalid_config_raises(self, monkeypatch):
+        monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_PREFIX", "toolongprefix")
+        monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_MAX_LENGTH", 3)
+        with patch.dict(RUNS, {}, clear=True):
+            with pytest.raises(RuntimeError, match="Invalid WebRTC peer ID configuration"):
+                runs_module._generate_peer_id()
+
+
+class TestMetadataStream:
+    """Tests for multiplexed metadata generator and endpoint."""
+
+    @pytest.mark.asyncio
+    async def test_generator_yields_status_heartbeat_on_timeout(self):
+        fake_subscriber = MagicMock()
+        fake_subscriber.subscribe_to_run = MagicMock()
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _raise_timeout(coro, timeout):
+            del timeout
+            coro.close()
+            raise asyncio.TimeoutError
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        with patch.dict(
+            RUNS,
+            {
+                "r1": RunInfo(
+                    runId="r1",
+                    pipelineId="p1",
+                    peerId="peer1",
+                    mqttTopic="t/r1",
+                    status="error",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_timeout
+        ):
+            gen = runs_module._multiplexed_metadata_generator()
+            event = await anext(gen)
+
+            assert event.startswith("data: ")
+            payload = json.loads(event.removeprefix("data: ").strip())
+            assert payload["type"] == "status"
+            assert payload["runs"] == {"r1": "error"}
+
+            await gen.aclose()
+
+        fake_subscriber.subscribe_to_run.assert_called_once()
+        fake_subscriber.unsubscribe_from_run.assert_called_once_with("r1")
+
+    @pytest.mark.asyncio
+    async def test_generator_yields_error_comment_on_internal_exception(self):
+        fake_subscriber = MagicMock()
+        fake_subscriber.subscribe_to_run = MagicMock()
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        async def _raise_runtime(coro, timeout):
+            del timeout
+            coro.close()
+            raise RuntimeError("boom")
+
+        with patch.dict(
+            RUNS,
+            {
+                "r2": RunInfo(
+                    runId="r2",
+                    pipelineId="p2",
+                    peerId="peer2",
+                    mqttTopic="t/r2",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_runtime
+        ), patch("backend.routes.runs.asyncio.sleep", AsyncMock()):
+            gen = runs_module._multiplexed_metadata_generator()
+            event = await anext(gen)
+            assert event.startswith(": error - boom")
+            await gen.aclose()
+
+    @pytest.mark.asyncio
+    async def test_generator_logs_queueing_error_from_callback(self):
+        subscribed_callback = {"cb": None}
+        fake_subscriber = MagicMock()
+
+        def _subscribe(_run_id, callback):
+            subscribed_callback["cb"] = callback
+
+        fake_subscriber.subscribe_to_run = _subscribe
+        fake_subscriber.unsubscribe_from_run = MagicMock()
+
+        async def _fake_get_subscriber():
+            return fake_subscriber
+
+        async def _raise_runtime(coro, timeout):
+            del timeout
+            coro.close()
+            raise RuntimeError("loop-fail")
+
+        sleep_mock = AsyncMock()
+        with patch.dict(
+            RUNS,
+            {
+                "r3": RunInfo(
+                    runId="r3",
+                    pipelineId="p3",
+                    peerId="peer3",
+                    mqttTopic="t/r3",
+                )
+            },
+            clear=True,
+        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+            "backend.routes.runs.asyncio.wait_for", _raise_runtime
+        ), patch("backend.routes.runs.asyncio.sleep", sleep_mock), patch(
+            "backend.routes.runs.asyncio.get_event_loop", side_effect=RuntimeError("no-loop")
+        ), patch("backend.routes.runs.logger.error") as error_mock:
+            gen = runs_module._multiplexed_metadata_generator()
+            _ = await anext(gen)
+
+            assert subscribed_callback["cb"] is not None
+            subscribed_callback["cb"]("r3", {"result": "ok"}, 1.23)
+            assert error_mock.called
+
+            await gen.aclose()
+
+    def test_metadata_stream_endpoint_returns_sse_headers(self, client):
+        async def _dummy_generator():
+            yield "data: {}\n\n"
+
+        with patch("backend.routes.runs._multiplexed_metadata_generator", return_value=_dummy_generator()):
+            resp = client.get("/api/generate_captions_alerts/metadata-stream")
+
+        assert resp.status_code == 200
+        assert resp.headers["content-type"].startswith("text/event-stream")
+        assert resp.headers["cache-control"] == "no-cache"

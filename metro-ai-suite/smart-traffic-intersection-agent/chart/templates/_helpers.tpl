@@ -79,3 +79,18 @@ Define the name of the CA cert secret.
 {{- include "stia.fullname" . }}-ca-cert
 {{- end }}
 {{- end }}
+
+{{/*
+MQTT broker FQDN.
+If .Values.trafficAgent.mqtt.host is set, use it directly.
+Otherwise, construct from serviceName + brokerNamespace.
+If brokerNamespace is empty, default to the release namespace.
+*/}}
+{{- define "stia.mqttHost" -}}
+{{- if .Values.trafficAgent.mqtt.host }}
+{{- .Values.trafficAgent.mqtt.host }}
+{{- else }}
+{{- $ns := default .Release.Namespace .Values.trafficAgent.mqtt.brokerNamespace }}
+{{- printf "%s.%s.svc.cluster.local" .Values.trafficAgent.mqtt.serviceName $ns }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,33 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+enabled: true
+
+service:
+  type: NodePort
+
+# Override CORS origins explicitly. When empty, derived from global.externalIP + global.appNodePort.
+corsOrigins: ""
+
+logLevel: "INFO"
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+healthcheck:
+  startupInitialDelaySeconds: 5
+  startupPeriodSeconds: 5
+  startupFailureThreshold: 30
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

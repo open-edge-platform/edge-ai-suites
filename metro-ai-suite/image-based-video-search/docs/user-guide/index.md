@@ -3,7 +3,7 @@
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/image-based-video-search/README.md">
      Readme
@@ -75,6 +75,7 @@ continuously and appears in the UI as soon as the application starts.
 *Screenshot of the Image-Based Video Search sample application interface displaying search input and matched results*
 
 ## Learn More
+
 - [Get Started](./get-started.md)
 - [System Requirements](./get-started/system-requirements.md)
 - [Release Notes](./release-notes.md)

@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.37.2
+    image: telegraf:1.38.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -45,7 +45,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.12.2
+    image: influxdb:1.12.4
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped
@@ -63,9 +63,7 @@ services:
       INFLUXDB_ADMIN_PASSWORD: ${INFLUXDB_PASSWORD}
       INFLUXDB_USER : ${INFLUXDB_USERNAME}
       INFLUXDB_USER_PASSWORD: ${INFLUXDB_PASSWORD}
-      # The InfluxDB retention policy durations can be configured using a combination 
-      # of time units such as hours(h), minutes(m), and seconds(s), eg., 1h0m0s for 1 hour.
-      RETENTION_DURATION: 1h0m0s
+      RETENTION_DURATION: ${INFLUXDB_RETENTION_DURATION:-1h0m0s}
       no_proxy: "ia-time-series-analytics-microservice,${no_proxy}"
       NO_PROXY: "ia-time-series-analytics-microservice,${no_proxy}"
       INFLUXDB_CONFIG_PATH: "/etc/influxdb/influxdb.conf"
@@ -114,14 +112,11 @@ services:
       REST_API_ROOT_PATH: "/ts-api"
       ENABLE_BENCHMARKING: ${ENABLE_BENCHMARKING:-false}
       BENCHMARK_TOTAL_PTS: ${BENCHMARK_TOTAL_PTS:-100}
+      UDF_MAX_FILE_SIZE_MB: 100
     networks:
     - timeseries_network
     volumes:
     - "vol_temp_time_series_analytics_microservice:/tmp/"
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/udfs/:/tmp/${SAMPLE_APP}/udfs/:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/tick_scripts/:/tmp/${SAMPLE_APP}/tick_scripts/:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/config.json:/app/config.json:ro
-    - ./apps/${SAMPLE_APP}/time-series-analytics-config/models/:/tmp/${SAMPLE_APP}/models/:ro
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
     - "/run/udev:/run/udev:ro"
     group_add:
@@ -129,15 +124,16 @@ services:
     - "109"
     # render group ID for ubuntu 22.04 host OS
     - "110"
-    # render group ID for ubuntu 24.04 host OS
+    # render group IDs for ubuntu 24.04 host OS
     - "992"
+    - "993"
     devices:
       # Following devices under /dev filesystem will be needed based on usecase
       # dri - GPU
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
-    image: grafana/grafana-oss:12.3.3-ubuntu
+    image: grafana/grafana-oss:13.0.1-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -224,7 +220,7 @@ services:
     networks:
     - timeseries_network
     ports:
-    - ${OPCUA_SERVER_PORT}-30048:4840
+    - ${OPCUA_SERVER_PORT_MAPPING:-30003}:4840
     volumes:
     - ./apps/${SAMPLE_APP}/simulation-data:/app/simulation-data
 
@@ -261,7 +257,7 @@ services:
     - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
-    image: nginx:1.29.1-bookworm-perl
+    image: nginx:1.29.8-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"

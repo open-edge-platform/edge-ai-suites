@@ -1,3 +1,11 @@
+ros-humble-robot-config (2.3-3) jammy; urgency=medium
+
+  * Remove deprecated ROS2 Foxy launch files and parameters for PicknPlace
+    demo, support auto start of the simulation
+  * Refactor ConveyorBeltPlugin to streamline ROS node initialization
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 19 Mar 2026 00:00:00 +0000
+
 ros-humble-robot-config (2.3-2) jammy; urgency=low
 
   * Refactor robot configuration for Gazebo Harmonic compatibility.

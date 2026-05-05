@@ -1,0 +1,25 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+apiVersion: v2
+name: live-video-alert-agent
+description: A Helm chart for deploying the Live Video Alert Agent with OpenVINO VLM inference
+
+type: application
+
+version: 1.0.1
+appVersion: "1.0.0"
+
+dependencies:
+  - name: ovms
+    version: 1.0.1
+    repository: "file://subchart/ovms"
+  - name: app
+    version: 1.0.1
+    repository: "file://subchart/app"
+  - name: metrics-service
+    version: 1.0.1
+    repository: "file://subchart/metrics-service"
+  - name: collector
+    version: 1.0.1
+    repository: "file://subchart/collector"

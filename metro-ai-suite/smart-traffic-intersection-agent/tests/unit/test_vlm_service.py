@@ -35,10 +35,10 @@ class TestVLMServiceInitialization:
         
         service = VLMService(mock_config, mock_weather)
         
-        assert service.base_url == "http://vlm-service:8080"
-        assert service.model == "gpt-4-vision-preview"
+        assert service.base_url == "http://ovms-service:8000"
+        assert service.model == ""
         assert service.timeout == 300
-        assert service.max_tokens == 2000
+        assert service.max_tokens == 1500
         assert service.temperature == 0.1
         assert service.top_p == 0.1
         assert service.weather_data is None
@@ -62,7 +62,7 @@ class TestVLMServiceInitialization:
         service = VLMService(mock_config, mock_weather)
         
         assert service.base_url == "http://custom-vlm:9000"
-        assert service.model == "custom-model"
+        assert service.model == "custom-model_CPU_int8"
         assert service.timeout == 60
         assert service.max_tokens == 1000
         assert service.temperature == 0.5
@@ -158,6 +158,38 @@ class TestVLMServiceHelpers:
         assert status["analysis_cache_size"] == 0
 
 
+class TestComputeOVMSModelName:
+    """Test cases for OVMS storage model name computation."""
+
+    def test_empty_model_returns_empty(self):
+        assert VLMService._compute_ovms_model_name("", "CPU", "") == ""
+
+    def test_cpu_auto_weight_format(self):
+        assert VLMService._compute_ovms_model_name(
+            "microsoft/Phi-3.5-vision-instruct", "CPU", ""
+        ) == "microsoft_Phi-3.5-vision-instruct_CPU_int8"
+
+    def test_gpu_auto_weight_format(self):
+        assert VLMService._compute_ovms_model_name(
+            "Qwen/Qwen2.5-VL-3B-Instruct", "GPU", ""
+        ) == "Qwen_Qwen2.5-VL-3B-Instruct_GPU_int4"
+
+    def test_explicit_weight_format(self):
+        assert VLMService._compute_ovms_model_name(
+            "Qwen/Qwen2.5-VL-3B-Instruct", "CPU", "int4"
+        ) == "Qwen_Qwen2.5-VL-3B-Instruct_CPU_int4"
+
+    def test_openvino_namespace_model(self):
+        assert VLMService._compute_ovms_model_name(
+            "OpenVINO/my-model", "CPU", "int8"
+        ) == "OpenVINO_my-model_CPU"
+
+    def test_sanitizes_special_chars(self):
+        assert VLMService._compute_ovms_model_name(
+            "org/model:v1.0", "CPU", "int8"
+        ) == "org_model_v1.0_CPU_int8"
+
+
 class TestVLMServicePromptBuilding:
     """Test cases for prompt building functionality."""
 
@@ -231,13 +263,16 @@ class TestVLMServicePromptBuilding:
         
         request = service._build_vlm_request("Test prompt", camera_images)
         
-        assert request["model"] == "gpt-4-vision-preview"
+        assert request["model"] == ""
         assert "messages" in request
         assert len(request["messages"]) == 1
         assert request["messages"][0]["role"] == "user"
         # Content should have text + 2 images
         content = request["messages"][0]["content"]
         assert len(content) == 3  # 1 text + 2 images
+        # Verify response_format is present
+        assert "response_format" in request
+        assert request["response_format"]["type"] == "json_schema"
 
     def test_build_vlm_request_limits_to_four_images(self):
         """Test VLM request limits to 4 images maximum."""
@@ -258,6 +293,37 @@ class TestVLMServicePromptBuilding:
         content = request["messages"][0]["content"]
         # Should have 1 text + 4 images max
         assert len(content) == 5
+
+    def test_build_response_format_schema(self):
+        """Test response_format contains valid JSON schema for traffic analysis."""
+        rf = VLMService._build_response_format()
+
+        assert rf["type"] == "json_schema"
+        schema = rf["json_schema"]["schema"]
+        assert schema["type"] == "object"
+        assert set(schema["required"]) == {"analysis", "alerts", "recommendations"}
+
+        # Verify alert schema has correct enum values
+        alert_schema = schema["properties"]["alerts"]
+        assert alert_schema["maxItems"] == 4
+        alert_props = alert_schema["items"]["properties"]
+        assert set(alert_props["alert_type"]["enum"]) == {
+            "congestion", "weather_related", "road_condition",
+            "accident", "maintenance", "normal",
+        }
+        assert set(alert_props["level"]["enum"]) == {"info", "warning", "critical"}
+        assert alert_props["weather_related"]["type"] == "boolean"
+        assert alert_props["description"]["maxLength"] == 200
+
+        # Verify recommendations schema
+        rec_schema = schema["properties"]["recommendations"]
+        assert rec_schema["maxItems"] == 3
+        rec_props = rec_schema["items"]["properties"]
+        assert "recommendation" in rec_props
+        assert rec_props["recommendation"]["maxLength"] == 200
+
+        # Verify analysis constraints
+        assert schema["properties"]["analysis"]["maxLength"] == 500
 
 
 class TestVLMServiceResponseParsing:

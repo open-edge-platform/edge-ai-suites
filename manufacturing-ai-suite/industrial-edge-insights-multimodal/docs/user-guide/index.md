@@ -1,6 +1,6 @@
 # Industrial Edge Insights - Multimodal
 
-MultiModal Weld Defect Detection sample application demonstrates how to use AI
+Multimodal Weld Defect Detection sample application demonstrates how to use AI
 at the edge to identify defects in manufacturing environments by analyzing both
 image and time series sensor data.
 

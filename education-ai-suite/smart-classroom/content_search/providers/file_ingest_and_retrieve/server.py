@@ -1,0 +1,578 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+import logging
+import warnings
+import os
+
+class _ShortNameFormatter(logging.Formatter):
+    def format(self, record):
+        record.name = record.name.rsplit('.', 1)[-1]
+        return super().format(record)
+
+_fmt = "%(levelname)s: [%(name)s] %(message)s"
+_datefmt = '%Y-%m-%d %H:%M:%S'
+logging.basicConfig(level=logging.INFO, format=_fmt, datefmt=_datefmt, force=True)
+for _h in logging.root.handlers:
+    _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
+for _noisy in [
+    "unstructured", "unstructured_inference", "detectron2",
+    "transformers", "urllib3", "httpx", "httpcore",
+    "opentelemetry", "PIL", "chromadb", "llama_index",
+    "sentence_transformers",
+    "huggingface_hub", "filelock", "optimum",
+    "pdfminer", "torch", "torch.jit", "timm",
+]:
+    logging.getLogger(_noisy).setLevel(logging.WARNING)
+warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
+
+import langdetect
+langdetect.detector_factory.init_factory()
+
+import base64
+
+from fastapi import FastAPI, File, Form, HTTPException, Body, UploadFile
+from fastapi.responses import JSONResponse
+import os
+
+from pydantic import BaseModel, field_validator
+from typing import Optional, Dict, Union
+
+import asyncio
+import tempfile
+import threading
+
+from providers.local_storage.store import LocalStore
+from providers.file_ingest_and_retrieve.indexer import Indexer
+from providers.file_ingest_and_retrieve.retriever import ChromaRetriever
+from providers.chromadb_wrapper.chroma_client import ChromaClientWrapper
+from providers.file_ingest_and_retrieve.utils import file_key_to_path, extract_bucket_name
+from providers.file_ingest_and_retrieve.models import (
+    get_visual_embedding_model,
+    get_document_embedding_model,
+)
+
+logger = logging.getLogger("server")
+
+class _IngestRequestBase(BaseModel):
+    @field_validator('meta', check_fields=False)
+    @classmethod
+    def validate_meta_tags(cls, v: dict) -> dict:
+        if 'tags' in v:
+            tags = v['tags']
+            if not isinstance(tags, list):
+                raise ValueError("'tags' must be a list of strings.")
+            if not all(isinstance(t, str) for t in tags):
+                raise ValueError("All elements in 'tags' must be strings.")
+        return v
+
+
+class RetrievalRequest(BaseModel):
+    query: Optional[str] = None
+    image_base64: Optional[str] = None
+    filter: Optional[Dict] = None
+    max_num_results: int = 10
+
+class IngestDirRequest(_IngestRequestBase):
+    bucket_name: str
+    folder_path: str
+    meta: dict = {}
+
+class IngestFileRequest(_IngestRequestBase):
+    bucket_name: str
+    file_path: str
+    meta: dict = {}
+
+class IngestTextRequest(_IngestRequestBase):
+    bucket_name: Optional[str] = None
+    file_path: Optional[str] = None
+    text: str
+    meta: dict = {}
+
+app = FastAPI()
+
+_collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
+
+_visual_model = get_visual_embedding_model()
+_document_model = get_document_embedding_model()
+
+video_summary_id_map = {}
+
+def _recover_video_summary_id_map():
+    """Rebuild video_summary_id_map from the document collection."""
+    video_summary_id_map.clear()
+    _client = ChromaClientWrapper()
+    _doc_collection = f"{_collection_name}_documents"
+    _client.load_collection(_doc_collection)
+    res = _client.query_all(_doc_collection, output_fields=["id", "meta"])
+    if not res:
+        return
+    for item in res:
+        meta = item.get("meta", {})
+        if "summary_key" in meta and "file_key" in meta and "file_path" in meta:
+            bucket = extract_bucket_name(meta["file_path"])
+            if bucket is None:
+                continue
+            video_fp = file_key_to_path(meta["file_key"], bucket)
+            if video_fp not in video_summary_id_map:
+                video_summary_id_map[video_fp] = []
+            video_summary_id_map[video_fp].append(int(item["id"]))
+    if video_summary_id_map:
+        logger.info(f"Recovered video_summary_id_map: {len(video_summary_id_map)} video(s).")
+
+_recover_video_summary_id_map()
+
+_doc_embed_lock = threading.Lock()
+
+indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map, doc_embed_lock=_doc_embed_lock)
+retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map, doc_embed_lock=_doc_embed_lock)
+
+local_store = LocalStore.from_config()
+
+_frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
+_do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
+logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, do_detect_and_crop={_do_detect_and_crop}")
+
+@app.get("/v1/dataprep/health")
+def health():
+    """
+    Health check endpoint.
+    """
+    try:
+        return JSONResponse(content={"status": "healthy"}, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+    
+@app.get("/v1/dataprep/info")
+def info():
+    """
+    Get current status info.
+    """
+    try:
+        status_info = {
+            "visual_collection_name": indexer.visual_collection_name,
+            "document_collection_name": indexer.document_collection_name,
+            "visual_db_inited": indexer.visual_db_inited,
+            "document_db_inited": indexer.document_db_inited,
+            "storage_available": local_store is not None,
+        }
+        return JSONResponse(content=status_info, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving status info: {str(e)}")
+
+@app.post("/v1/dataprep/ingest")
+async def ingest(request: Union[IngestDirRequest, IngestFileRequest] = Body(...)):
+    """
+    Ingest files from a directory or a single file.
+
+    Args:
+        request: The request body containing file_dir, file_path, metadata,
+                 frame_extract_interval, and do_detect_and_crop.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    if isinstance(request, IngestDirRequest):
+        logger.info(f"Received IngestDirRequest: {request}")
+        return await ingest_dir(request)
+    elif isinstance(request, IngestFileRequest):
+        logger.info(f"Received IngestFileRequest: {request}")
+        return await ingest_file(request)
+    else:
+        raise HTTPException(status_code=422, detail="Invalid request type. Provide 'bucket_name' with 'folder_path' or 'file_path'.")
+
+
+async def ingest_dir(request: IngestDirRequest = Body(...)):
+    """
+    Ingest files from a storage directory.
+    """
+    try:
+        bucket_name = request.bucket_name
+        folder_path = request.folder_path
+        meta = request.meta
+
+        if not local_store.bucket_exists(bucket_name):
+            raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
+
+        store = LocalStore(local_store._data_dir, bucket_name)
+
+        supported_extensions = ('.jpg', '.png', '.jpeg', '.mp4', '.txt', '.pdf', '.docx', '.doc',
+                                '.pptx', '.ppt', '.xlsx', '.xls', '.html', '.htm', '.xml', '.md')
+
+        def _blocking_ingest():
+            proc_files = []
+            metas = []
+            with tempfile.TemporaryDirectory() as temp_dir:
+                for object_name in store.list_object_names(prefix=folder_path, recursive=True):
+                    if not object_name.lower().endswith(supported_extensions):
+                        logger.warning(f"Unsupported file type: {object_name}, skipped.")
+                        continue
+
+                    local_file_path = os.path.join(temp_dir, os.path.basename(object_name))
+                    store.get_file(object_name, local_file_path)
+
+                    file_meta = {**meta, "file_path": f"local://{bucket_name}/{object_name}", "file_name": os.path.basename(object_name)}
+                    proc_files.append(local_file_path)
+                    metas.append(file_meta)
+
+                if not proc_files:
+                    return None
+
+                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
+
+        if res is None:
+            return JSONResponse(content={"message": "No supported files found in the specified path."}, status_code=200)
+
+        return JSONResponse(
+            content={"message": f"Files from directory successfully processed. db returns {res}"},
+            status_code=200,
+        )
+    except Exception as e:
+        logger.error(f"Error processing files from directory: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing files: {str(e)}")
+
+
+async def ingest_file(request: IngestFileRequest = Body(...)):
+    """
+    Ingest a single file from storage.
+    """
+    try:
+        bucket_name = request.bucket_name
+        file_path = request.file_path
+        meta = request.meta
+
+        if not local_store.bucket_exists(bucket_name):
+            raise HTTPException(status_code=404, detail=f"Bucket {bucket_name} not found.")
+
+        store = LocalStore(local_store._data_dir, bucket_name)
+
+        def _blocking_ingest():
+            with tempfile.TemporaryDirectory() as temp_dir:
+                local_file_path = os.path.join(temp_dir, os.path.basename(file_path))
+                store.get_file(file_path, local_file_path)
+                logger.info(f"Successfully loaded file from storage: {local_file_path}")
+                meta["file_path"] = f"local://{bucket_name}/{file_path}"
+                meta["file_name"] = os.path.basename(file_path)
+                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+
+        res = await asyncio.to_thread(_blocking_ingest)
+
+        return JSONResponse(
+            content={"message": f"File successfully processed. db returns {res}"},
+            status_code=200,
+        )
+    except Exception as e:
+        logger.error(f"Error processing file: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@app.post("/v1/dataprep/ingest_text")
+async def ingest_text(request: IngestTextRequest):
+    """
+    Ingest a raw text string as a single node (no chunking) into the document collection.
+    """
+    try:
+        if not request.text:
+            raise HTTPException(status_code=400, detail="'text' must be a non-empty string.")
+        meta = dict(request.meta)
+        if request.bucket_name and request.file_path:
+            meta["file_path"] = f"local://{request.bucket_name}/{request.file_path}"
+        else:
+            logger.info("'bucket_name' and 'file_path' not provided, will ingest as independent text")
+        res = await asyncio.to_thread(indexer.ingest_text, request.text, meta)
+        return JSONResponse(content={"message": f"Text successfully ingested. db returns {res}"}, status_code=200)
+    except ValueError as e:
+        logger.error(f"ValueError ingesting text: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error ingesting text: {e}")
+        raise HTTPException(status_code=500, detail=f"Error ingesting text: {str(e)}")
+
+
+@app.get("/v1/dataprep/get")
+def get_file_info(file_path: str):
+    """
+    Get file info from db.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        FileResponse: The requested file info.
+    """
+    try:
+        if not file_path or not isinstance(file_path, str):
+            raise HTTPException(status_code=400, detail="Invalid file_path parameter. It must be a non-empty string.")
+
+        if not (file_path.startswith("local://") or file_path.startswith("http")):
+            raise HTTPException(status_code=404, detail="File not found. Only 'local://' and 'http(s)://' paths are supported.")
+        
+        res, ids = indexer.query_file(file_path)
+
+        if not ids:
+            return JSONResponse(
+                content={"message": f"No entry related to '{file_path}' found in the database."},
+                status_code=200,
+            )
+        
+        return JSONResponse(
+            content={
+                "file_path": file_path,
+                "ids_in_db": ids,
+            },
+            status_code=200,
+        )
+    except HTTPException as http_exc:
+        # Re-raise HTTPExceptions to preserve their status code and message
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving file: {str(e)}")
+
+@app.get("/v1/dataprep/list")
+def get_id_maps():
+    """
+    Get the current in-memory id_maps content (file paths and their DB IDs).
+
+    Returns:
+        JSONResponse: Current visual and document id_maps.
+    """
+    try:
+        maps = indexer.get_id_maps()
+        return JSONResponse(content=maps, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving id_maps: {str(e)}")
+
+
+@app.post("/v1/dataprep/recover")
+def recover_id_maps():
+    """
+    Recover id_maps by re-querying the database.
+    Use this if the in-memory id_map is out of sync (e.g. after direct DB modifications).
+
+    Returns:
+        JSONResponse: Number of files recovered per collection.
+    """
+    try:
+        stats = indexer.recover_id_maps()
+        _recover_video_summary_id_map()
+        stats["video_summary_files"] = len(video_summary_id_map)
+        return JSONResponse(
+            content={
+                "message": "ID maps successfully recovered from database.",
+                "recovered": stats,
+            },
+            status_code=200,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error recovering id_maps: {str(e)}")
+
+
+@app.delete("/v1/dataprep/delete")
+def delete_file_in_db(file_path: str):
+    """
+    Delete file entity in db. Note that the orginal file will NOT be deleted.
+
+    Args:
+        file_path (str): The path to the file.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    try:
+        if not file_path or not isinstance(file_path, str):
+            raise HTTPException(status_code=400, detail="Invalid file_path parameter. It must be a non-empty string.")
+
+        if not (file_path.startswith("local://") or file_path.startswith("http")):
+            raise HTTPException(status_code=404, detail="File path should start with 'local://' or 'http(s)://'.")
+        
+        res, ids = indexer.delete_by_file_path(file_path)
+
+        if res is None and not ids:
+            return JSONResponse(
+                content={"message": f"No entry related to '{file_path}' found in the database."},
+                status_code=200,
+            )
+        
+        return JSONResponse(
+            content={
+                "message": f"File successfully deleted. db returns: {res}",
+                "removed_ids": ids,
+            },
+            status_code=200,
+        )
+    except HTTPException as http_exc:
+        # Re-raise HTTPExceptions to preserve their status code and message
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting file: {str(e)}")
+
+@app.delete("/v1/dataprep/delete_by_ids")
+def delete_by_ids(ids: list[str] = Body(..., embed=True)):
+    """
+    Delete specific entries by their IDs.
+
+    Args:
+        ids: List of integer IDs to delete.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    try:
+        if not ids:
+            raise HTTPException(status_code=400, detail="'ids' must be a non-empty list.")
+
+        res, removed_ids = indexer.delete_by_ids(ids)
+
+        if not removed_ids:
+            return JSONResponse(
+                content={"message": "No matching IDs found in the database.", "removed_ids": []},
+                status_code=200,
+            )
+
+        return JSONResponse(
+            content={
+                "message": f"Successfully deleted {len(removed_ids)} entries. db returns: {res}",
+                "removed_ids": removed_ids,
+            },
+            status_code=200,
+        )
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deleting by IDs: {str(e)}")
+
+
+@app.delete("/v1/dataprep/delete_all")
+def clear_db():
+    """
+    Clear the database. Note that the orginal file will NOT be deleted.
+
+    Returns:
+        JSONResponse: A response indicating success or failure.
+    """
+    try:
+        res, _ = indexer.delete_all()
+        return JSONResponse(
+            content={
+                "message": f"Database successfully cleared. db returns: {res}"
+            },
+            status_code=200,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error clearing database: {str(e)}")
+
+
+@app.get("/v1/retrieval/health")
+def health():
+    """
+    Health check endpoint.
+    """
+    try:
+        # Perform a simple health check
+        return JSONResponse(content={"status": "healthy"}, status_code=200)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Health check failed: {str(e)}")
+
+
+@app.post("/v1/retrieval")
+async def retrieval(request: RetrievalRequest):
+    """
+    Perform a retrieval task using the provided text or base64-encoded image input.
+
+    Args:
+        request (RetrievalRequest): The JSON body containing query, image_base64, filter, and max_num_results.
+
+    Returns:
+        JSONResponse: A response containing the top-k retrieved results.
+    """
+    try:
+        # Validate input
+        if not request.query and not request.image_base64:
+            raise HTTPException(status_code=400, detail="Either 'query' or 'image_base64' must be provided.")
+        if request.query and request.image_base64:
+            raise HTTPException(status_code=400, detail="Provide only one of 'query' or 'image_base64', not both.")
+        if not isinstance(request.max_num_results, int) or request.max_num_results <= 0:
+            raise HTTPException(status_code=400, detail="Invalid max_num_results. It must be a positive integer.")
+        if request.max_num_results > 16384:
+            raise HTTPException(status_code=400, detail="Invalid max_num_results. It must be in the range [1, 16384].")
+
+        # Process query or image_base64
+        if request.query:
+            # Search in both visual and document collections and merge results, return 2*top_k results
+            results = await asyncio.to_thread(retriever.search, query=request.query, filters=request.filter, top_k=request.max_num_results)
+        else:
+            try:
+                results = await asyncio.to_thread(retriever.search, image_base64=request.image_base64, filters=request.filter, top_k=request.max_num_results)
+            except Exception as e:
+                logger.error(f"Error processing image_base64: {e}")
+                raise HTTPException(status_code=400, detail=f"Error processing image_base64: {str(e)}")
+
+        return _format_retrieval_response(results)
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error during retrieval: {e}")
+        raise HTTPException(status_code=500, detail=f"Error during retrieval: {str(e)}")
+
+
+@app.post("/v1/retrieval/image")
+async def retrieval_by_image(
+    image: UploadFile = File(...),
+    filter: Optional[str] = Form(None),
+    max_num_results: int = Form(10),
+):
+    """
+    Perform image-based retrieval by uploading an image file directly.
+
+    Args:
+        image: The image file to use as query.
+        filter: Optional JSON string of filters (e.g. '{"course": "CS101"}').
+        max_num_results: Maximum number of results to return.
+    """
+    try:
+        if max_num_results <= 0 or max_num_results > 16384:
+            raise HTTPException(status_code=400, detail="max_num_results must be in [1, 16384].")
+
+        content = await image.read()
+        image_b64 = base64.b64encode(content).decode()
+
+        filters = None
+        if filter:
+            import json
+            try:
+                filters = json.loads(filter)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=400, detail="'filter' must be a valid JSON string.")
+
+        results = await asyncio.to_thread(
+            retriever.search, image_base64=image_b64, filters=filters, top_k=max_num_results,
+        )
+        return _format_retrieval_response(results)
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        logger.error(f"Error during image retrieval: {e}")
+        raise HTTPException(status_code=500, detail=f"Error during image retrieval: {str(e)}")
+
+
+def _format_retrieval_response(results: dict) -> JSONResponse:
+    """Format retrieval results into a JSON response."""
+    ret = []
+    scores = results.get("scores", [[]])[0] if results else []
+    reranker_scores = results.get("reranker_scores", [[]])[0] if results and "reranker_scores" in results else []
+    if results and results['ids']:
+        for i in range(len(results['ids'][0])):
+            item = {
+                "id": results['ids'][0][i],
+                "distance": results['distances'][0][i],
+                "meta": results['metadatas'][0][i],
+            }
+            if i < len(scores):
+                item["score"] = scores[i]
+            if i < len(reranker_scores) and reranker_scores[i] is not None:
+                item["reranker_score"] = reranker_scores[i]
+            ret.append(item)
+    return JSONResponse(content={"results": ret}, status_code=200)
+

@@ -1,5 +1,6 @@
 import asyncio
 from typing import Optional
+from concurrent.futures import ThreadPoolExecutor
 from fastapi import Header, UploadFile
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi import APIRouter, FastAPI, File, HTTPException, status
@@ -8,7 +9,7 @@ from dto.summarizer_dto import SummaryRequest
 from dto.video_analytics_dto import VideoAnalyticsRequest
 from dto.video_metadata_dto import VideoDurationRequest
 from pipeline import Pipeline
-import json, os
+import json, os, time
 import subprocess, re
 from fastapi.responses import StreamingResponse
 from utils.runtime_config_loader import RuntimeConfig
@@ -109,8 +110,6 @@ async def summarize_audio(request: SummaryRequest):
 
 @router.post("/mindmap")
 async def generate_mindmap(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
     pipeline = Pipeline(request.session_id)
     try:
         mindmap_text = pipeline.run_mindmap()
@@ -232,7 +231,7 @@ def start_video_analytics_pipeline(
         requests: List of VideoAnalyticsRequest with pipeline_name, source
 
     Returns:
-        JSON array with HLS stream addresses for each pipeline
+        JSON array with HLS/WebRTC stream addresses for each pipeline
     """
     if not x_session_id:
         raise HTTPException(
@@ -294,52 +293,71 @@ def start_video_analytics_pipeline(
             names = [r.pipeline_name for r in requests]
             record_pipeline = "back" if "back" in names else "content" if "content" in names else "front" if "front" in names else None
 
-            # Launch each pipeline
-            for request in requests:
+            # Launch all pipelines concurrently
+            def _launch_single(req, record):
                 try:
-
-                    options.record = (request.pipeline_name == record_pipeline)
-
-                    # Check if pipeline is already running
-                    if service.is_pipeline_running(request.pipeline_name):
-                        results.append({
+                    if service.is_pipeline_running(req.pipeline_name):
+                        return {
                             "status": "error",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "error": f"Pipeline '{request.pipeline_name}' already running"
-                        })
-                        continue
+                            "error": f"Pipeline '{req.pipeline_name}' already running",
+                        }
 
-                    # Launch pipeline
+                    pipe_options = PipelineOptions(
+                        output_dir=options.output_dir,
+                        output_rtsp=options.output_rtsp,
+                        threshold=options.threshold,
+                        record=record,
+                    )
+
                     success = service.launch_pipeline(
-                        pipeline_name=request.pipeline_name,
-                        source=request.source,
-                        options=options,
+                        pipeline_name=req.pipeline_name,
+                        source=req.source,
+                        options=pipe_options,
                     )
 
                     if not success:
-                        results.append({
+                        return {
                             "status": "error",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "error": f"Failed to start pipeline '{request.pipeline_name}'"
-                        })
+                            "error": f"Failed to start pipeline '{req.pipeline_name}'",
+                        }
                     else:
-                        results.append({
+                        if config.va_pipeline.stream_protocol == "webrtc":
+                            stream_url = f"{config.va_pipeline.webrtc_base_url}/{req.pipeline_name}_stream"
+                        else:
+                            stream_url = f"{config.va_pipeline.hls_base_url}/{req.pipeline_name}_stream"
+                        return {
                             "status": "success",
-                            "pipeline_name": request.pipeline_name,
+                            "pipeline_name": req.pipeline_name,
                             "session_id": x_session_id,
-                            "hls_stream": f"{config.va_pipeline.hls_base_url}/{request.pipeline_name}_stream",
-                            "overlays_embedded": True
-                        })
+                            "stream_url": stream_url,
+                            "stream_protocol": config.va_pipeline.stream_protocol,
+                            "overlays_embedded": True,
+                        }
                 except Exception as e:
-                    logger.error(f"Error starting pipeline '{request.pipeline_name}': {e}")
-                    results.append({
+                    logger.error(f"Error starting pipeline '{req.pipeline_name}': {e}")
+                    return {
                         "status": "error",
-                        "pipeline_name": request.pipeline_name,
+                        "pipeline_name": req.pipeline_name,
                         "session_id": x_session_id,
-                        "error": str(e)
-                    })
+                        "error": str(e),
+                    }
+
+            def _launch_single_delayed(req, record, delay):
+                time.sleep(delay)
+                return _launch_single(req, record)
+
+            with ThreadPoolExecutor(max_workers=len(requests)) as executor:
+                futures = [
+                    executor.submit(
+                        _launch_single_delayed, req, req.pipeline_name == record_pipeline, i
+                    )
+                    for i, req in enumerate(requests)
+                ]
+                results = [f.result() for f in futures]
 
             return JSONResponse(content={"results": results}, status_code=200)
 

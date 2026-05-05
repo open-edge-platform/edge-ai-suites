@@ -8,6 +8,7 @@ import signal
 import requests
 import zipfile
 import atexit
+import shutil
 from utils.config_loader import config
 
 
@@ -15,7 +16,7 @@ class MediaService:
     """Service to manage MediaMTX RTSP server"""
 
     # MediaMTX download URL
-    MEDIAMTX_VERSION = "v1.15.3"
+    MEDIAMTX_VERSION = "v1.17.1"
     MEDIAMTX_DOWNLOAD_URL = f"https://github.com/bluenviron/mediamtx/releases/download/{MEDIAMTX_VERSION}/mediamtx_{MEDIAMTX_VERSION}_windows_amd64.zip"
 
     def __init__(self):
@@ -29,12 +30,25 @@ class MediaService:
         self.process: Optional[subprocess.Popen] = None
         self.log_file = None
 
-        # Download MediaMTX if not found
-        if not self.mediamtx_exe.exists():
+        # Download MediaMTX if not found or outdated
+        if self._is_update_needed():
             self._download_mediamtx()
 
         # Register cleanup handler
         atexit.register(self._cleanup)
+
+    def _is_update_needed(self) -> bool:
+        """Check if MediaMTX needs to be downloaded or updated"""
+        if not self.mediamtx_exe.exists():
+            return True
+        version_file = self.mediamtx_dir / ".version"
+        try:
+            return (
+                version_file.read_text(encoding="utf-8").strip()
+                != self.MEDIAMTX_VERSION
+            )
+        except FileNotFoundError:
+            return True
 
     def _download_mediamtx(self):
         """Download and extract MediaMTX"""
@@ -49,6 +63,10 @@ class MediaService:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
 
+            # Clean existing installation to remove stale files
+            if self.mediamtx_dir.exists():
+                shutil.rmtree(self.mediamtx_dir)
+
             self.mediamtx_dir.mkdir(exist_ok=True)
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
                 zip_ref.extractall(self.mediamtx_dir)
@@ -62,11 +80,23 @@ class MediaService:
 
                 # Update RTP and RTCP addresses
                 import re
-                content = re.sub(r'^rtpAddress:.*$', 'rtpAddress: :8500', content, flags=re.MULTILINE)
-                content = re.sub(r'^rtcpAddress:.*$', 'rtcpAddress: :8501', content, flags=re.MULTILINE)
+
+                content = re.sub(
+                    r"^rtpAddress:.*$", "rtpAddress: :8500", content, flags=re.MULTILINE
+                )
+                content = re.sub(
+                    r"^rtcpAddress:.*$",
+                    "rtcpAddress: :8501",
+                    content,
+                    flags=re.MULTILINE,
+                )
 
                 with open(yml_path, "w", encoding="utf-8") as f:
                     f.write(content)
+
+            # Write version file
+            version_file = self.mediamtx_dir / ".version"
+            version_file.write_text(self.MEDIAMTX_VERSION, encoding="utf-8")
 
             self.logger.info(f"MediaMTX installed to {self.mediamtx_dir}")
 
@@ -108,6 +138,9 @@ class MediaService:
         if self.is_running():
             self.logger.warning("MediaMTX server is already running")
             return True
+
+        # Kill any stale mediamtx processes
+        self._kill_existing_instances()
 
         try:
             self.logger.info(f"Starting MediaMTX server")
@@ -169,6 +202,23 @@ class MediaService:
         except Exception as e:
             self.logger.error(f"Failed to start MediaMTX server: {e}")
             return False
+
+    def _kill_existing_instances(self):
+        """Kill all running mediamtx processes"""
+        try:
+            if sys.platform == "win32":
+                subprocess.run(
+                    ["taskkill", "/F", "/IM", "mediamtx.exe"],
+                    capture_output=True,
+                )
+            else:
+                subprocess.run(
+                    ["pkill", "-f", "mediamtx"],
+                    capture_output=True,
+                )
+            time.sleep(0.5)
+        except Exception as e:
+            self.logger.warning(f"Failed to kill existing mediamtx instances: {e}")
 
     def stop_server(self) -> bool:
         """

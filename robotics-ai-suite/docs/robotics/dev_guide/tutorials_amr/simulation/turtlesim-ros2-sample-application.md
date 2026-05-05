@@ -66,6 +66,8 @@ Complete the [get started guide](../../../gsg_robot/index.md) before continuing.
 
 4. In the rqt application, navigate to **Plugins** > **Services** > **Service Caller**.
 
+   ![turtlesim-service-caller](../../../images/turtlesim-service-caller.png)
+
    To move 'turtle1',
    choose `/turtle1/teleport_absolute` from the 'Service' dropdown list.
    Ensure to update the x and y values from their original settings.

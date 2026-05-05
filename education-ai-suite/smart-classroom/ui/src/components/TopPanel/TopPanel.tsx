@@ -11,9 +11,11 @@ interface TopPanelProps {
   setProjectName: (name: string) => void;
   isSettingsOpen: boolean;
   setIsSettingsOpen: (isOpen: boolean) => void;
+  activeScreen: 'main' | 'content-search';
+  setActiveScreen: (screen: 'main' | 'content-search') => void;
 }
 
-const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSettingsOpen, setIsSettingsOpen }) => {
+const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSettingsOpen, setIsSettingsOpen, activeScreen, setActiveScreen }) => {
   const menuIconRef = useRef<HTMLImageElement>(null);
   const { t } = useTranslation();
 
@@ -25,6 +27,26 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
     setIsSettingsOpen(false);
   };
 
+  if (activeScreen === 'content-search') {
+    return (
+      <header className="top-panel">
+        <div className="brand-slot">
+          <img src={BrandSlot} alt="Intel Logo" className="logo" />
+          <span className="app-title">{t('contentSearch.title', 'Content Search')}</span>
+        </div>
+        <div className="action-slot">
+          <button
+            className="content-search-back-btn"
+            onClick={() => setActiveScreen('main')}
+          >
+            {t('contentSearch.back', '← Back')}
+          </button>
+          <LanguageSwitcher />
+        </div>
+      </header>
+    );
+  }
+
   return (
     <header className="top-panel">
       <div className="brand-slot">
@@ -32,6 +54,12 @@ const TopPanel: React.FC<TopPanelProps> = ({ projectName, setProjectName, isSett
         <span className="app-title">{t('header.title')}</span>
       </div>
       <div className="action-slot">
+        <button
+          className="content-search-btn"
+          onClick={() => setActiveScreen('content-search')}
+        >
+          {t('contentSearch.title', 'Content Search')}
+        </button>
         <LanguageSwitcher />
         <img
           src={menu}

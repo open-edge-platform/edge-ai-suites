@@ -10,12 +10,17 @@ class RunInfo(BaseModel):
     pipelineId: str
     peerId: str
     mqttTopic: str
+    status: str = "running"
     modelName: Optional[str] = None
     pipelineName: Optional[str] = None
     runName: Optional[str] = None
     prompt: Optional[str] = None
     maxTokens: Optional[int] = None
     rtspUrl: Optional[str] = None
+    frameRate: Optional[int] = None
+    chunkSize: Optional[int] = None
+    frameWidth: Optional[int] = None
+    frameHeight: Optional[int] = None
 
 
 class ModelList(BaseModel):

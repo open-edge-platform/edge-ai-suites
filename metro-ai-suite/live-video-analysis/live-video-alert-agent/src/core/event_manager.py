@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 """EventManager - SSE Pub/Sub System for real-time event broadcasting."""
 
 import asyncio

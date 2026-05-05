@@ -112,7 +112,7 @@ spec:
             value: "read"
           - name: MTX_AUTHINTERNALUSERS_VIEWER_PATHS_0
             value: "cam1"
-        image: bluenviron/mediamtx:1.16.2
+        image: bluenviron/mediamtx:1.16.3
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         # Added security context to restrict container privileges
         securityContext:

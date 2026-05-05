@@ -1,6 +1,6 @@
 apiVersion: v2
-appVersion: 1.4.0-rc3
+appVersion: 1.4.0
 description: A Helm chart for Loitering Detection Sample Application
 name: loitering-detection
 type: application
-version: 1.4.0-rc3
+version: 1.4.0

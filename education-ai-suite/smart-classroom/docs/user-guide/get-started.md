@@ -16,16 +16,20 @@ Download the archive from [DL Streamer assets on GitHub](https://github.com/open
 
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
+> Note: DLStreamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
+
 **Run your shell with admin privileges before starting the application**
 
 ### C. Clone Repository
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-  git clone --no-checkout https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
-  git sparse-checkout init --cone
   git sparse-checkout set education-ai-suite
-  git checkout
   cd education-ai-suite
 ```
 

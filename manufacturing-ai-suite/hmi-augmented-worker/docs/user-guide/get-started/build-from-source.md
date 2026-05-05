@@ -1,18 +1,18 @@
 # Build from Source
 
-This document provides step-by-step instructions for building the `ChatQnA Core` sample application and File Watcher service from source. Refer to the [prerequisites section](../get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
+This document provides step-by-step instructions for building the `Chat Q&A Core` sample application and File Watcher service from source. Refer to the [prerequisites section](../get-started.md/#prerequisites) in the guide to install the appropriate software dependencies.
 
-## Build ChatQnA Core from Source
+## Build Chat Q&A Core from Source
 
 For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
 
-### ChatQnA Core Docker Compose Deployment
+### Chat Q&A Core Docker Compose Deployment
 
 For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
 ## Build File Watcher Service from Source
 
-In the Windows® environment, the File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `ChatQnA Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
+In the Windows® environment, the File Watcher Service works with the HMI application to continuously monitor file system activities such as creation, modification, and deletion. When it detects any changes, it sends the relevant file data over the network to the `Chat Q&A Core` service for ingestion and contextual processing, supporting Retrieval-Augmented Generation (RAG) workflows.
 
 ### Prerequisites
 
@@ -24,10 +24,14 @@ In the Windows® environment, the File Watcher Service works with the HMI applic
 
 To build the File Watcher executable binary, follow these steps:
 
-1. Clone and download the source code by either using Git clone or downloading the source code as a ZIP file directly from the [repository](https://github.com/open-edge-platform/edge-ai-suites).
+1. Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   cd edge-ai-suites
+   git sparse-checkout set manufacturing-ai-suite
    ```
 
 2. Set up the Virtual Environment with Python venv.
@@ -148,7 +152,7 @@ To build the File Watcher executable binary, follow these steps:
 
 8. Execute the File Watcher Service executable.
 
-   - Before starting the File Watcher Service, ensure that your backend `ChatQnA Core` service is up.
+   - Before starting the File Watcher Service, ensure that your backend `Chat Q&A Core` service is up.
 
      ```sh
      .\dist\file_watcher.exe

@@ -17,7 +17,7 @@ Here, we adopted an open-source MPC project named Optimal Control for Switched S
 Prerequisites
 =============
 
-Please make sure you have finished setup steps in :doc:`../installation_setup`.
+Please make sure you have finished setup steps in :doc:`../get_started`.
 
 ROS2 Humble Setup
 =================

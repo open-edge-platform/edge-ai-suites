@@ -633,6 +633,7 @@
  ```sh
  ./run.sh helm_uninstall
  ```
+Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## Storing frames to S3 storage
 
@@ -741,6 +742,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./run.sh helm_uninstall
    ```
+9. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## MLOps using Model Download
 

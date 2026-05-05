@@ -1,0 +1,36 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  registry: ""  # Override global.registry for this component only
+
+port: 9000
+
+service:
+  type: NodePort
+  port: 9000
+
+rtspUrl: ""
+logLevel: "INFO"
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "2"
+    memory: "2Gi"
+
+healthcheck:
+  path: /streams
+  startupInitialDelaySeconds: 5
+  startupPeriodSeconds: 5
+  startupFailureThreshold: 30
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 3
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

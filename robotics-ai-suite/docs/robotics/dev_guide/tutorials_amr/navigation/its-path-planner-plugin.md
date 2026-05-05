@@ -36,7 +36,7 @@ Path planning steps summary:
    (`nav_msgs::msg`).
 
 For customization options, see
-[ITS Path Planner Plugin Customization](#ITS-Path-Planner-Plugin-Customization).
+[ITS Path Planner Plugin Customization](#its-path-planner-plugin-customization).
 
 ## Source Code
 
@@ -239,7 +239,6 @@ To use the ITS path planner plugin, the following parameters are added in
 >       n: 2
 > ```
 
-
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **Humble**
 <!--hide_directive:sync: humblehide_directive-->
@@ -340,7 +339,6 @@ The minimum number of samples that is required in an area defined by `w` and `h`
 
 You can modify plugin parameters by editing the `planner_server` section
 in the configuration file below for the `default ITS planner`:
-
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Jazzy**

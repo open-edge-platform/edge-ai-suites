@@ -1,21 +1,32 @@
-# Release Notes
+# Release Notes: Weld Porosity Detection
 
-- [March 2026](./release-notes/march-2026.md)
-- [December 2025](./release-notes/december-2025.md)
-- [August 2025](./release-notes/august-2025.md)
-- [April 2025](./release-notes/april-2025.md)
-- [March 2025](./release-notes/march-2025.md)
+## Version 1.4.0
+
+**March 2026**
+
+**New**
+
+- Qualified on the Intel® Core™ Ultra Series 3 processor.
+- Added support for NPU and iGPU, for the Intel® Core™ Ultra Series 3 processor.
+- Added support for simultaneous deployment of multiple applications in the same
+host via Docker Compose tool and Helm chart.
+- MLOps is now demonstrated with the Model Download microservice instead of the
+Model Registry.
+
+**Improved**
+
+- Consumed the latest DL Streamer Pipeline Server 2026.0.0 image.
+Ubuntu24 variant of the image is the default now.
+- Retrained the Model with Geti software v2.13.1.
+- NGINX, COTURN and MINIO ports were made configurable as environment variables.
+- Removed the Model Registry service and its references.
+- The model has been quantized from 16-bit floating-point precision (FP16) to 8-bit integer precision (INT8).
 
 <!--hide_directive
 :::{toctree}
-:maxdepth: 5
 :hidden:
 
-./release-notes/march-2026.md
-./release-notes/december-2025.md
-./release-notes/august-2025.md
-./release-notes/april-2025.md
-./release-notes/march-2025.md
+Release Notes 2025 <./release-notes/release-notes-2025>
 
 :::
 hide_directive-->

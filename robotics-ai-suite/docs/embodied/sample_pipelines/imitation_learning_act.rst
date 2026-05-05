@@ -19,7 +19,7 @@ The source code of this component can be found here: `ACT-Sample <https://github
 Prerequisites
 =============
 
-Ensure you have completed the setup steps in :doc:`../installation_setup`.
+Ensure you have completed the setup steps in :doc:`../get_started`.
 
 Installation
 =============

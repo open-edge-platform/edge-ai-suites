@@ -114,6 +114,9 @@ class VideoCapWrapper(ImagesCapture):
     def __init__(self, input, loop):
         self.loop = loop
         self.cap = cv2.VideoCapture()
+        # Device nodes (e.g. /dev/video-isx031-a-0) are handled by CameraCapWrapper
+        if input.startswith('/dev/'):
+            raise InvalidInput("Device path - use CameraCapWrapper: {}".format(input))
         status = self.cap.open(input)
         if not status:
            raise InvalidInput("Can't open the video from {}".format(input))
@@ -183,21 +186,57 @@ class RealSenseCapWrapper(ImagesCapture):
 
 class CameraCapWrapper(ImagesCapture):
 
-    def __init__(self, input, camera_resolution):
+    def __init__(self, input, camera_resolution, fourcc=None):
 
         self.cap = cv2.VideoCapture()
+        # Accept both integer indices ("0") and device paths ("/dev/video-isx031-a-0").
+        # OpenCV's V4L2 backend cannot open devices by symlink name and falls back to
+        # FFMPEG. Resolve any symlink to /dev/videoN and pass as an integer so V4L2
+        # is used consistently across all camera nodes.
         try:
-            status = self.cap.open(int(input))
-            self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_resolution[0])
-            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_resolution[1])
-            self.cap.set(cv2.CAP_PROP_FPS, 30)
+            device = int(input)
+            is_ipu = False
+        except ValueError:
+            if not os.path.exists(input):
+                raise InvalidInput("Can't find the camera {}".format(input))
+            real = os.path.realpath(input)    # /dev/video-isx031-d-2 → /dev/video36
+            basename = os.path.basename(real)
+            if basename.startswith('video') and basename[5:].isdigit():
+                device = int(basename[5:])    # pass integer; forces V4L2 backend
+            else:
+                device = real
+            is_ipu = True
+
+        status = self.cap.open(device, cv2.CAP_V4L2)
+        # Do NOT set BUFFERSIZE=1 — IPU/CSI drivers require at least 3 MMAP buffers
+        # for stable streaming; constraining to 1 causes frame drops on some nodes.
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, camera_resolution[0])
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, camera_resolution[1])
+        self.cap.set(cv2.CAP_PROP_FPS, 30)
+        if fourcc:
+            # Caller-supplied FOURCC (e.g. 'YUYV', 'MJPG', 'UYVY', 'NV12') wins.
+            code = fourcc.upper().ljust(4)[:4]
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*code))
+            if not is_ipu:
+                self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+        elif is_ipu:
+            # ISX031 and similar IPU cameras output UYVY by default
+            self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'UYVY'))
+        else:
+            # MJPG and autofocus are only applicable to indexed USB cameras
             self.cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
             self.cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
-            if not status:
-                raise OpenError("Can't open the camera from {}".format(input))
-        except ValueError:
-            raise InvalidInput("Can't find the camera {}".format(input))
+        if not status:
+            raise OpenError("Can't open the camera from {}".format(input))
+
+        actual_fps = self.cap.get(cv2.CAP_PROP_FPS)
+        actual_w   = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        actual_h   = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        actual_fcc = int(self.cap.get(cv2.CAP_PROP_FOURCC))
+        fcc_str    = ''.join(chr((actual_fcc >> 8 * i) & 0xFF) for i in range(4)) if actual_fcc else '?'
+        backend    = self.cap.getBackendName()
+        print(f"[CAMERA] {input} (opened as {device}): backend={backend} "
+              f"{actual_w}x{actual_h}@{actual_fps:.0f}fps fourcc={fcc_str}")
 
     def read(self):
         status, image = self.cap.read()
@@ -212,13 +251,14 @@ class CameraCapWrapper(ImagesCapture):
         return 'CAMERA'
 
 class VideoCapture():
-    def __init__(self, input, loop=True, camera_resolution=(1280, 720)):
+    def __init__(self, input, loop=True, camera_resolution=(1280, 720), fourcc=None):
 
         self.inputs = input.split(',')
         self.nb_inputs = len(self.inputs)
         self.input_index = -1
         self.loop = loop
         self.camera_resolution = camera_resolution
+        self.fourcc = fourcc
         self.next()
 
     def read(self):
@@ -244,7 +284,7 @@ class VideoCapture():
                 except (InvalidInput, OpenError) as e:
                     errors[type(e)].append(e.message)
             try:
-                self.reader = CameraCapWrapper(input, self.camera_resolution)
+                self.reader = CameraCapWrapper(input, self.camera_resolution, fourcc=self.fourcc)
                 if self.reader is not None:
                     return
 

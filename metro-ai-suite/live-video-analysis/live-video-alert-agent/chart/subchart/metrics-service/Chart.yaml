@@ -1,0 +1,8 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: v2
+name: metrics-service
+description: Live Metrics Service subchart
+type: application
+version: 1.0.1
+appVersion: "1.0.0"

@@ -51,10 +51,10 @@ Optional: Pull the helm chart and replace the existing helm-chart folder with it
 cd loitering-detection
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.4.0-rc3
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.4.0
 
 #unzip the package using the following command
-tar -xvf loitering-detection-1.4.0-rc3.tgz
+tar -xvf loitering-detection-1.4.0.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv loitering-detection helm-chart

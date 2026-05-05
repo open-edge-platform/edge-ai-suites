@@ -1,0 +1,21 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+enabled: true
+
+image:
+  registry: "intel/"  # Collector always pulls from public docker.io
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+nodeSelector: {}
+# Override to provide custom affinity. When empty, collector is scheduled on the
+# same node as OVMS via podAffinity (required for metrics collection).
+affinity: {}
+tolerations: []

@@ -25,6 +25,10 @@ class StartRunRequest(BaseModel):
     maxNewTokens: int = Field(default=70, ge=1, le=4096)
     pipelineName: Optional[str] = Field(default=None)
     runName: Optional[str] = Field(default=None)
+    frameRate: Optional[int] = Field(default=None, ge=0)
+    chunkSize: Optional[int] = Field(default=None, ge=1)
+    frameWidth: Optional[int] = Field(default=None, ge=1)
+    frameHeight: Optional[int] = Field(default=None, ge=1)
 
     @field_validator("rtspUrl")
     @classmethod
@@ -50,14 +54,7 @@ class StartRunRequest(BaseModel):
             except ValueError:
                 pass
 
-            # For domain names, require at least one dot (FQDN)
-            if "." not in hostname:
-                raise ValueError(
-                    "Hostname must be a valid IP address or fully qualified domain name (e.g., camera.example.com)"
-                )
-
-            # Basic domain name validation
-            # Allow letters, numbers, hyphens, and dots
+            # Accept valid DNS hostnames, including single-label service names
             if not re.match(
                 r"^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$",
                 hostname,

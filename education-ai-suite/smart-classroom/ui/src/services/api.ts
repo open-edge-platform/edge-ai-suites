@@ -5,6 +5,7 @@ import {
   setVideoAnalyticsActive,
   setVideoPlaybackMode
 } from "../redux/slices/uiSlice";
+import type { CsSearchParams, CsSearchResult } from "../components/LeftPanel/ResultSection";
 
 export type ProjectConfig = { 
   name: string; 
@@ -42,7 +43,23 @@ export interface SearchResult {
 
 const env = (import.meta as any).env ?? {};
 const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+// Default to empty string (same-origin) so the Vite dev proxy routes /api/v1
+// to port 9011 without CORS. Set VITE_CONTENT_SEARCH_API_URL for remote hosts.
+const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
 const HEALTH_TIMEOUT_MS = 5000;
+
+/**
+ * Convert a local:// storage path from search results into a browser-loadable URL
+ * using the backend /download?inline=true endpoint.
+ * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
+ */
+export function getContentSearchFileUrl(filePath: string): string {
+  const LOCAL_PREFIX = 'local://content-search/';
+  const fileKey = filePath.startsWith(LOCAL_PREFIX)
+    ? filePath.slice(LOCAL_PREFIX.length)
+    : filePath;
+  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+}
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
@@ -661,15 +678,6 @@ export async function* monitorVideoAnalyticsPipelines(
     for (const line of lines) {
       if (!line.trim()) continue;
       const parsed = JSON.parse(line);
-
-    if (parsed.results) {
-      parsed.results = parsed.results.map((r: any) => ({
-        ...r,
-        hls_stream: r.hls_stream
-          ? `${r.hls_stream}/index.m3u8`
-          : null
-      }));
-    }
     yield parsed;
         }
       }
@@ -759,6 +767,94 @@ export async function startMicrophone(sessionId: string): Promise<{ status: stri
     status: "recording",
     message: "Microphone streaming started successfully."
   };
+}
+
+export async function csUploadIngest(
+  file: File,
+  meta?: Record<string, unknown>
+): Promise<{ task_id: string; status: string; file_key?: string }> {
+  return safeApiCall(async () => {
+    const form = new FormData();
+    form.append('file', file);
+    if (meta) {
+      form.append('meta', JSON.stringify(meta));
+    }
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/upload-ingest`, {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Upload-ingest failed (${res.status})`);
+    }
+    const data = await res.json();
+    // code 40901 = file already exists; backend returns task_id for cleanup
+    if (data.code === 40901) {
+      return { task_id: data.data?.task_id ?? '', status: 'ALREADY_EXISTS', file_key: data.data?.file_key };
+    }
+    const payload = data.data ?? data;
+    if (!payload?.task_id) {
+      throw new Error('upload-ingest response missing task_id');
+    }
+    return payload;
+  });
+}
+
+export async function csIngest(
+  fileKey: string,
+  meta: Record<string, unknown>,
+  bucketName = 'content-search'
+): Promise<{ task_id: string; status: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/ingest`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bucket_name: bucketName, file_key: fileKey, meta }),
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Ingest failed (${res.status})`);
+    }
+    const data = await res.json();
+    return data.data ?? data;
+  });
+}
+
+export async function csQueryTask(taskId: string): Promise<{
+  task_id: string;
+  status: string;
+  progress: number;
+  result?: Record<string, unknown>;
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/task/query/${encodeURIComponent(taskId)}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Task query failed (${res.status})`);
+    }
+    const data = await res.json();
+    return data.data ?? data;
+  });
+}
+
+export async function csCleanupTask(
+  taskId: string
+): Promise<{ code: number; task_id: string; status: string; message: string }> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/cleanup-task/${encodeURIComponent(taskId)}`,
+      { method: 'DELETE' }
+    );
+    const data = await res.json().catch(() => ({}));
+    return {
+      code: data.code ?? 20000,
+      task_id: data.data?.task_id ?? taskId,
+      status: data.data?.status ?? 'COMPLETED',
+      message: data.message ?? '',
+    };
+  });
 }
 
 export async function createSession(): Promise<{ sessionId: string }> {
@@ -942,12 +1038,35 @@ export async function searchContent(sessionId: string, query: string, topK: numb
         top_k: topK
       }),
     });
-
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(`Search failed: ${response.status} - ${errorText}`);
     }
-
     return await response.json();
   });
+}
+
+// Content Search API - search for objects
+export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]> {
+  try {
+    const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(params),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Content search failed: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    // API returns { code, data: { results: [...] }, message, timestamp }
+    return Array.isArray(data?.data?.results) ? data.data.results : [];
+  } catch (error) {
+    console.error('csSearch error:', error);
+    return [];
+  }
 }

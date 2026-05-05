@@ -62,7 +62,10 @@ set(SRC_FILES
 ## "rviz_plugin_tutorials", or whatever your version of this project
 ## is called) and specify the list of source files we collected above
 ## in ``${SRC_FILES}``. We also add the needed dependencies.
-add_library(${PROJECT_NAME} SHARED ${SRC_FILES})
+qt5_wrap_cpp(MOC_FILES
+  src/rvc_panel.hpp
+)
+add_library(${PROJECT_NAME} SHARED ${SRC_FILES} ${MOC_FILES})
 ament_target_dependencies(${PROJECT_NAME}
   geometry_msgs
   rclcpp

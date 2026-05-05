@@ -58,7 +58,7 @@ spec:
         - name: '{{ include "image_based_video_search.fullname" . }}-dlstreamer-pipeline-server-models'
           mountPath: /output
       - name: model-downloader
-        image: intel/dlstreamer:2026.0.0-ubuntu24-rc3
+        image: intel/dlstreamer:2026.0.0-ubuntu24
         securityContext:
           allowPrivilegeEscalation: false
           runAsNonRoot: true

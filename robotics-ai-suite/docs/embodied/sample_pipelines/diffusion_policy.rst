@@ -31,7 +31,7 @@ The maximum step of the task is 300, and the reward is defined as the maximum ov
 Prerequisites
 =============
 
-Please make sure you have finished setup steps in :doc:`../installation_setup`.
+Please make sure you have finished setup steps in :doc:`../get_started`.
 
 Installation
 =============
@@ -92,7 +92,7 @@ Inference
 
 .. note::
 
-    For detailed instructions on the model conversion process, please refer to the model tutorial at :doc:`../developer_tools_tutorials/model_tutorials/model_dp`.
+    For detailed instructions on the model conversion process, please refer to the model tutorial at :doc:`../model_tutorials/model_dp`.
 
 .. list-table::
    :widths: 15 30 15 20 20

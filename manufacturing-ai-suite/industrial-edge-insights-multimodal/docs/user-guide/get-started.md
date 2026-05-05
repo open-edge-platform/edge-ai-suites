@@ -50,9 +50,15 @@ To configure Docker:
 
 ## Clone source code
 
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 ```
 
 ## Deploy with Docker Compose
@@ -85,6 +91,9 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   Grafana’s minimum refresh interval is 5 seconds.
    > - The graph and table may initially display "No Data" because the Time Series Analytics Microservice requires some time to
    >   install its dependency packages before it can start running.
+   > - Fusion Analytics starts once the RTP sender timestamp is available in the metadata packet from the DL Streamer Pipeline Server.
+   > - **Known issue:** DL Streamer Pipeline Server may not send RTP sender timestamps for the first ~300 packets.
+   >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
@@ -102,7 +111,7 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
-## Verify the Weld Defect Detection Results
+## Verify the Multimodal Weld Defect Detection Results
 
 1. Get into the InfluxDB* container.
 

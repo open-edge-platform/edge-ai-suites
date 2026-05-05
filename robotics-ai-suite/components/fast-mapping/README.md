@@ -14,7 +14,7 @@ A ROS project to construct and maintain a volumetric map from a moving RGB-D cam
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/rvc/getstarted/prepare_system.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -27,7 +27,10 @@ ROS_DISTRO=jazzy make package
 You can list all built packages:
 
 ```bash
-$ ls|grep -i .deb
+ls|grep -i .deb
+```
+
+```text
 ros-jazzy-fast-mapping_2.3-1_amd64.deb
 ros-jazzy-fast-mapping-build-deps_2.3-1_amd64.deb
 ```
@@ -106,7 +109,10 @@ make license-check
 To see a full list of available Makefile targets:
 
 ```bash
-$ make help
+make help
+```
+
+```text
 Target               Description
 ------               -----------
 build                Build code using colcon
@@ -217,7 +223,6 @@ ros2 run fast_mapping fast_mapping_node
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
 [INFO] []: waiting for camera depth info from camera/aligned_depth_to_color/camera_info
-```
 
 In parallel start the rosbag file.
 

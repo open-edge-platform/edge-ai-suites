@@ -33,29 +33,34 @@ Overall, the Humanoid - Imitation Learning provides a highly optimized, AI-drive
 Humanoid - Imitation Learning Resources
 =========================================
 
-- :doc:`Installation and Setup <installation_setup>`
+- :doc:`Get Started <get_started>`
 
-- :doc:`Developer Tools and Tutorials <developer_tools_tutorials>`
+- :doc:`Heterogeneous Computing <heterogeneous_computing>`
+
+- :doc:`Model Tutorials <model_tutorials>`
+
+- :doc:`Developer Tools <developer_tools_tutorials>`
 
 - :doc:`Packages List <packages_list>`
 
 - :doc:`Sample Pipelines <sample_pipelines>`
-  
+
 - :doc:`OpenVINO Model Optimization <openvino_optimization>`
 
-- :doc:`Troubleshooting <troubleshooting>`
+- :doc:`Troubleshooting <../troubleshooting>`
 
-- :doc:`Release Notes <release_note>`
+- :doc:`Release Notes <release-notes>`
 
 
 .. toctree::
    :maxdepth: 2
    :hidden:
 
-   installation_setup
+   get_started
+   heterogeneous_computing
+   model_tutorials
    developer_tools_tutorials
    packages_list
    sample_pipelines
    openvino_optimization
-   troubleshooting
-   release_note
+   Release Notes <release-notes>

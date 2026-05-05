@@ -24,22 +24,4 @@ spec:
   storageClassName: {{ .Values.vlmServing.persistence.storageClass }}
   {{- end }}
 {{- end }}
-{{- if .Values.trafficAgent.persistence.enabled }}
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: {{ include "stia.trafficAgent.fullname" . }}-data
-  labels:
-    {{- include "stia.labels" . | nindent 4 }}
-    app.kubernetes.io/component: traffic-agent
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.trafficAgent.persistence.size }}
-  {{- if .Values.trafficAgent.persistence.storageClass }}
-  storageClassName: {{ .Values.trafficAgent.persistence.storageClass }}
-  {{- end }}
-{{- end }}
+

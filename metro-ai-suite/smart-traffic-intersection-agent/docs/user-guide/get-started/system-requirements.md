@@ -13,7 +13,7 @@ The agent currently supports CPU- and GPU-based runs, and runs in the context of
 
 | Component | Minimum | Recommended |
 |---|---|---|
-| CPU | Intel® Core™ i5 or equivalent | Intel® Core™ Ultra or Intel® Xeon® processor |
+| CPU | Intel® Core™ i5 or equivalent | Intel® Core™ Ultra Ultra 2 and 3 with integrated GPU or Intel® Xeon® processor |
 | RAM | 16 GB | 32 GB or more |
 | Disk Space | 50 GB free | 100 GB free |
 | GPU (optional) | — | Intel® integrated GPU (iGPU) for accelerated VLM inference |

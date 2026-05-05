@@ -6,7 +6,7 @@ import json
 import logging
 import re
 import uuid
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from ..config import (
@@ -14,68 +14,97 @@ from ..config import (
     PIPELINE_SERVER_URL,
     MQTT_TOPIC_PREFIX,
     WEBRTC_BITRATE,
+    ENABLE_EMBEDDING,
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
 from ..services import http_json, get_mqtt_subscriber
 from ..state import RUNS
 
-router = APIRouter(prefix="/api", tags=["runs"])
+router = APIRouter(prefix="/api", tags=["captions"])
 logger = logging.getLogger("app.runs")
+WEBRTC_PEER_ID_MAX_LENGTH = 8
+WEBRTC_PEER_ID_PREFIX = "s"
 
 
-@router.post("/runs")
-async def start_run(req: StartRunRequest) -> RunInfo:
-    """Start a new video captioning run."""
-    # Process optional runName - use it for run_id if provided
-    run_name = None
-    if req.runName and req.runName.strip():
-        # Sanitize: replace spaces with underscores, remove special chars
-        sanitized = re.sub(r"\s+", "_", req.runName.strip())
-        sanitized = re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
-        if sanitized:
-            run_name = sanitized
-            # Check for duplicates and append suffix if needed
-            base_name = sanitized
-            counter = 1
-            while run_name in RUNS:
-                run_name = f"{base_name}_{counter}"
-                counter += 1
+def _sanitize_run_name(run_name: str) -> str:
+    """Normalize a user-supplied run name into a safe run identifier."""
+    sanitized = re.sub(r"\s+", "_", run_name.strip())
+    return re.sub(r"[^a-zA-Z0-9_-]", "", sanitized)
 
-    # Use runName for run_id if provided, otherwise generate UUID
-    if run_name:
-        run_id = run_name
-    else:
-        run_id = uuid.uuid4().hex[:10]
 
-    peer_id = f"stream-{run_id[:10] if len(run_id) > 10 else run_id}"
+def _build_unique_run_name(requested_name: Optional[str]) -> Optional[str]:
+    """Return a sanitized, unique run name or None when no valid name was provided."""
+    if not requested_name or not requested_name.strip():
+        return None
 
-    # MQTT topic for this run's metadata
-    mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
+    sanitized = _sanitize_run_name(requested_name)
+    if not sanitized:
+        return None
 
-    pipeline_name = (req.pipelineName or PIPELINE_NAME).strip() or PIPELINE_NAME
+    run_name = sanitized
+    counter = 1
+    while run_name in RUNS:
+        run_name = f"{sanitized}_{counter}"
+        counter += 1
 
-    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
-    payload = {
+    return run_name
+
+
+def _generate_peer_id() -> str:
+    """Generate a short, unique WebRTC peer ID accepted by the pipeline server."""
+    existing_peer_ids = {run.peerId for run in RUNS.values()}
+    peer_body_length = WEBRTC_PEER_ID_MAX_LENGTH - len(WEBRTC_PEER_ID_PREFIX)
+    if peer_body_length < 1:
+        raise RuntimeError("Invalid WebRTC peer ID configuration")
+
+    while True:
+        candidate = f"{WEBRTC_PEER_ID_PREFIX}{uuid.uuid4().hex[:peer_body_length]}"
+        if candidate not in existing_peer_ids:
+            return candidate
+
+
+def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
+    parameters = {
+        "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
+        "captioner_model_name": (req.modelName or "").strip()
+        or "OpenGVLab/InternVL2-2B",
+        "captioner_max_new_tokens": req.maxNewTokens,
+        "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
+        "detection_threshold": req.detectionThreshold,
+        "mqtt_publisher": {
+            "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
+            "publish_frame": bool(ENABLE_EMBEDDING),  # Only publish frames if embedding is enabled
+        },
+    }
+
+    optional_parameters = {
+        "captioner_frame_rate": req.frameRate,
+        "captioner_chunk_size": req.chunkSize,
+        "frame_width": req.frameWidth,
+        "frame_height": req.frameHeight,
+    }
+    parameters.update(
+        {key: value for key, value in optional_parameters.items() if value is not None}
+    )
+
+    if req.chunkSize is not None:
+        parameters["captioner_queue_size"] = max(1, req.chunkSize)
+
+    return parameters
+
+
+def _build_start_payload(req: StartRunRequest, run_id: str, peer_id: str) -> dict:
+    return {
         "source": {"uri": req.rtspUrl, "type": "uri"},
         "destination": {
             "frame": {"type": "webrtc", "peer-id": peer_id, "bitrate": WEBRTC_BITRATE},
         },
-        "parameters": {
-            "captioner-prompt": (req.prompt or "").strip() or DEFAULT_PROMPT,
-            "captioner_model_name": (req.modelName or "").strip()
-            or "OpenGVLab/InternVL2-2B",
-            "captioner_max_new_tokens": req.maxNewTokens,
-            "detection_model_name": (req.detectionModelName or "").strip() or "yolov8s",
-            "detection_threshold": req.detectionThreshold,
-            "mqtt_publisher": {
-                "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-                "publish_frame": False,
-            },
-        },
+        "parameters": _build_pipeline_parameters(req, run_id),
     }
 
-    raw = http_json("POST", start_url, payload=payload)
+
+def _extract_pipeline_id(raw: str) -> str:
     pipeline_id = raw.replace('"', "").strip()
     if not pipeline_id:
         raise HTTPException(
@@ -85,6 +114,35 @@ async def start_run(req: StartRunRequest) -> RunInfo:
                 "body": raw,
             },
         )
+    return pipeline_id
+
+
+@router.post("/generate_captions_alerts")
+async def start_run(req: StartRunRequest) -> RunInfo:
+    """Start a new video captioning run and generate captions and alerts."""
+    run_name = _build_unique_run_name(req.runName)
+
+    # Use runName for run_id if provided, otherwise generate UUID
+    if run_name:
+        run_id = run_name
+    else:
+        run_id = uuid.uuid4().hex[:10]
+
+    peer_id = _generate_peer_id()
+
+    # MQTT topic for this run's metadata
+    mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
+
+    pipeline_name = (req.pipelineName or PIPELINE_NAME).strip() or PIPELINE_NAME
+
+    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
+    payload = _build_start_payload(req, run_id, peer_id)
+
+    logger.debug(f"Starting pipeline {pipeline_name} with URL: {start_url}")
+    logger.debug(f"Pipeline payload: {json.dumps(payload, indent=2)}")
+
+    raw = http_json("POST", start_url, payload=payload)
+    pipeline_id = _extract_pipeline_id(raw)
 
     model_name = (req.modelName or "").strip() or "InternVL2-2B"
     # Use full run_id for custom names, truncated for UUID-based
@@ -100,19 +158,28 @@ async def start_run(req: StartRunRequest) -> RunInfo:
         prompt=(req.prompt or "").strip() or DEFAULT_PROMPT,
         maxTokens=req.maxNewTokens,
         rtspUrl=req.rtspUrl,
+        frameRate=req.frameRate,
+        chunkSize=req.chunkSize,
+        frameWidth=req.frameWidth,
+        frameHeight=req.frameHeight,
     )
     RUNS[info.runId] = info
     return info
 
 
-@router.get("/runs")
+@router.get("/generate_captions_alerts")
 async def list_runs() -> list[RunInfo]:
-    """List all active runs."""
+    """List all active captioning runs."""
     return list(RUNS.values())
 
 
 async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
-    """Generator that receives metadata from MQTT and multiplexes into a single SSE stream."""
+    """Generator that receives metadata from MQTT and multiplexes into a single SSE stream.
+
+    A status heartbeat is sent every second when no MQTT message arrives, carrying
+    the current status of every active run so the frontend can react when a run
+    transitions to ``"error"`` (detected by the background health monitor).
+    """
     message_queue: asyncio.Queue = asyncio.Queue()
     subscribed_runs: set[str] = set()
 
@@ -125,8 +192,8 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
         except Exception as e:
             logger.error(f"Error queueing MQTT message: {e}")
 
+    mqtt_subscriber = await get_mqtt_subscriber()
     try:
-        mqtt_subscriber = await get_mqtt_subscriber()
 
         while True:
             try:
@@ -162,8 +229,13 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
                     yield f"data: {json.dumps(envelope)}\n\n"
 
                 except asyncio.TimeoutError:
-                    # No message received, send heartbeat
-                    yield ": heartbeat\n\n"
+                    # No MQTT message – send a status heartbeat so the frontend
+                    # learns when a run transitions to "error".
+                    status_payload = {
+                        "type": "status",
+                        "runs": {rid: info.status for rid, info in RUNS.items()},
+                    }
+                    yield f"data: {json.dumps(status_payload)}\n\n"
 
             except Exception as e:
                 logger.error(f"Error in multiplexed metadata generator: {e}")
@@ -171,16 +243,16 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
                 await asyncio.sleep(1)
 
     finally:
-        # Cleanup subscriptions when generator is closed
-        mqtt_subscriber = await get_mqtt_subscriber()
+        # Reuse the already-resolved subscriber — avoids creating a new connection
+        # during app shutdown when the global subscriber may already be torn down.
         for run_id in subscribed_runs:
             mqtt_subscriber.unsubscribe_from_run(run_id)
         logger.info("Cleaned up MQTT subscriptions")
 
 
-@router.get("/runs/metadata-stream")
+@router.get("/generate_captions_alerts/metadata-stream")
 async def multiplexed_metadata_stream() -> StreamingResponse:
-    """Multiplexed SSE stream that provides metadata for all active runs."""
+    """Multiplexed SSE stream that provides captions and alerts metadata for all active runs."""
     logger.info("Multiplexed metadata stream requested")
     headers = {
         "Cache-Control": "no-cache",
@@ -195,18 +267,18 @@ async def multiplexed_metadata_stream() -> StreamingResponse:
     )
 
 
-@router.get("/runs/{run_id}")
+@router.get("/generate_captions_alerts/{run_id}")
 async def get_run(run_id: str) -> RunInfo:
-    """Get details of a specific run."""
+    """Get details of a specific captioning run."""
     info = RUNS.get(run_id)
     if not info:
         raise HTTPException(status_code=404, detail={"message": "Run not found"})
     return info
 
 
-@router.delete("/runs/{run_id}")
+@router.delete("/generate_captions_alerts/{run_id}")
 async def stop_run(run_id: str) -> dict[str, str]:
-    """Stop a running pipeline."""
+    """Stop a running captioning pipeline."""
     info = RUNS.get(run_id)
     if not info:
         raise HTTPException(status_code=404, detail={"message": "Run not found"})
@@ -216,7 +288,7 @@ async def stop_run(run_id: str) -> dict[str, str]:
     # A failure (502) usually means the pipeline is already stopped
     try:
         http_json("DELETE", stop_url)
-    except HTTPException:
+    except Exception:
         # Pipeline may already be stopped or unreachable - continue cleanup
         pass
 

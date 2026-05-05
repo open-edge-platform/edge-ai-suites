@@ -73,7 +73,6 @@ if [ "$#" -eq 2 ]; then
 fi
 
 
-
 # Base configuration
 HOST_IP=$(ip route get 1 2>/dev/null | awk '{print $7}')  # Fetch the host IP
 

@@ -639,8 +639,10 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
     ./run.sh down
     ```
 
-1. Verify all containers are stopped:
+2. Verify all containers are stopped:
 
     ```bash
     docker ps
     ```
+
+3. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.

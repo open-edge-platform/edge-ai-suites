@@ -4,10 +4,11 @@ The Smart Route Planning Agent analyzes the route between a given source and des
 
 ## Get Started
 
-- [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to get started with the agent.
-- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the agent.
-- [Build from Source](./docs/user-guide/get-started/build-from-source.md): Instructions for building the agent from source code.
-- [Environment Variables](./docs/user-guide/get-started/environment-variables.md): Configure the microservice through environment variables.
+  - [Get Started](./docs/user-guide/get-started.md): Step-by-step guide to get started with the agent.
+  - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements for running the agent.
+  - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md): Deploy on Kubernetes using Helm.
+  - [Build from Source](./docs/user-guide/get-started/build-from-source.md): Instructions for building the agent from source code.
+  - [Environment Variables](./docs/user-guide/get-started/environment-variables.md): Configure the microservice through environment variables.
 
 ## Learn More
 

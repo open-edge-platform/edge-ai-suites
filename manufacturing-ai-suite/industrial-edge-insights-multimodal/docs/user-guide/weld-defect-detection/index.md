@@ -1,9 +1,9 @@
-# Weld Defect Detection
+# Multimodal - Weld Defect Detection
 
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal">
-     GitHub project
+     GitHub
   </a>
   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/README.md">
      Readme
@@ -11,13 +11,17 @@
 </div>
 hide_directive-->
 
-MultiModal Weld Defect Detection sample application demonstrates how to use AI
+Multimodal Weld Defect Detection sample application demonstrates how to use AI
 at the edge to identify defects in manufacturing environments by analyzing both
 image and time series sensor data.
 
+If you want to start working with it, check out the
+[Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides.md)
+for Multimodal applications.
+
 ## How It Works
 
-![MultiModal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
+![Multimodal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
 
 ### Data flow explanation
 
@@ -26,42 +30,43 @@ simulator, analytics and visualization components.
 Below is an explanation of how this architecture translates to data flow in the weld defect
 detection use case.
 
-#### 1. **Weld Data Simulator**
+#### 1. Weld Data Simulator
 
 The Weld Data Simulator uses sets of time synchronized .avi and .csv files from the `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/weld-data-simulator/simulation-data/` subset of test dataset coming from [Intel_Robotic_Welding_Multimodal_Dataset](https://huggingface.co/datasets/amr-lopezjos/Intel_Robotic_Welding_Multimodal_Dataset).
 It ingests the .avi files as RTSP streams via the **mediamtx** server. This enables real-time video ingestion, simulating camera feeds for weld defect detection.
 Similarly, it ingests the .csv files as data points into **Telegraf** using the **MQTT** protocol.
 
-#### 2. **Analytics Modules**
+#### 2. Analytics Modules
 
-##### 2.1 **DL Streamer Pipeline Server**
+##### 2.1 DL Streamer Pipeline Server
 
 The `DL Streamer Pipeline Server` microservice reads the frames/images from the MediaMTX server over RTSP protocol, runs the configured DL weld
 defect classification model, publishes the frame metadata results over MQTT, stores the processed frames in SeaweedFS S3 storage, and generates the WebRTC stream with bounded boxes for visualization in **Grafana**.
 
-###### **DL Streamer Pipeline Server `config.json`**
+###### DL Streamer Pipeline Server `config.json`
 
 **Pipeline Configuration**:
 
 | Key            | Description                                                                 | Example Value                          |
 |----------------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`        |
-| `source`       | The source type for video ingestion.                                        | `"gstreamer"`                         |
-| `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                  |
-| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! gvaclassify inference-region=full-frame name=classification ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
+| `name`         | The name of the pipeline configuration.                                     | `"weld_defect_classification"`         |
+| `source`       | The source type for video ingestion.                                        | `"gstreamer"`                          |
+| `queue_maxsize`| Maximum size of the queue for processing frames.                            | `50`                                   |
+| `pipeline`     | GStreamer pipeline string defining the video processing flow from RTSP source through classification to output. | `"rtspsrc add-reference-timestamp-meta=true location=\"rtsp://mediamtx:8554/live.stream\" latency=100 name=source ! rtph264depay ! h264parse ! decodebin ! videoconvert ! video/x-raw,format=BGR ! gvaclassify inference-region=full-frame name=classification ! gvawatermark ! gvametaconvert add-empty-results=true add-rtp-timestamp=true name=metaconvert ! queue ! gvafpscounter ! appsink name=destination"` |
 | `parameters`   | Configuration parameters for pipeline elements, specifically for the classification element properties. | See below for nested structure |
 
 **Parameters Properties**:
 
-| Key                          | Description                                                                 | Value                          |
-|------------------------------|-----------------------------------------------------------------------------|--------------------------------|
+| Key                          | Description                                                                 | Value                                   |
+|------------------------------|-----------------------------------------------------------------------------|-----------------------------------------|
 | `classification-properties`  | Properties for the classification element in the pipeline.                  | Object containing element configuration |
-| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`            |
-| `element.format`             | Format type for element properties.                                         | `"element-properties"`        |
+| `element.name`               | Name of the GStreamer element to configure.                                 | `"classification"`                      |
+| `element.format`             | Format type for element properties.                                         | `"element-properties"`                  |
 
 **Destination Configuration**:
 
 The `destination` key contains two main properties:
+
 - `metadata` - defines where to send inference results
 - `frame` - an array defining one or more video output destinations
 
@@ -94,7 +99,7 @@ An array defining one or more video output destinations. Each entry requires a `
 | `folder_prefix` | Directory path within the bucket for storing frames.                        | `"weld-defect-classification"`  |
 | `block`         | Controls S3 write synchronization with MQTT publishing. When false, metadata may arrive before S3 write completes. When true, MQTT metadata is sent only after S3 write completion. | `false` |
 
-##### 2.2 **Time Series Analytics Microservice**
+##### 2.2 Time Series Analytics Microservice
 
 **Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
 
@@ -102,16 +107,16 @@ The UDF deployment package used for
 weld data is available
 at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
 
-###### **`config.json`**
+###### `config.json`
 
 **UDFs Configuration**:
 
 The `udfs` section specifies the details of the UDFs used in the task.
 
-| Key     | Description                                                                 | Example Value                          |
-|---------|-----------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                 | `"weld_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.                                 | `"weld_anomaly_detector.cb"`   |
+| Key     | Description                                         | Example Value                   |
+|---------|-----------------------------------------------------|---------------------------------|
+| `name`  | The name of the UDF script.                         | `"weld_anomaly_detector"`       |
+| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.cb"`    |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
@@ -123,41 +128,41 @@ The `alerts` section defines the settings for alerting mechanisms, such as MQTT 
 
 The `mqtt` section specifies the MQTT broker details for sending alerts.
 
-| Key                 | Description                                                                 | Example Value          |
-|---------------------|-----------------------------------------------------------------------------|------------------------|
-| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-| `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-| `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+| Key                 | Description                                       | Example Value         |
+|---------------------|---------------------------------------------------|-----------------------|
+| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.    | `"ia-mqtt-broker"`    |
+| `mqtt_broker_port`  | The port number of the MQTT broker.               | `1883`                |
+| `name`              | The name of the MQTT broker configuration.        | `"my_mqtt_broker"`    |
 
-###### **`udfs/`**
+###### `udfs/`
 
 Contains the python script to process the incoming data.
 Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
 detect anomalous weld data points using sensor data.
 
-**Note**: Please note, CatBoost models don't run on Intel GPUs.
+> **Note:** CatBoost models do not run on Intel GPUs.
 
-###### **`tick_scripts/`**
+###### `tick_scripts/`
 
 The TICKScript `weld_anomaly_detector.tick` determines processing of the input data coming in.
 Mainly, has the details on execution of the UDF file, storage of processed data and publishing of alerts.
 By default, it is configured to publish the alerts to **MQTT**.
 
-###### **`models/`**
+###### `models/`
 
 The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
 library.
 
-##### 2.3 **Fusion Analytics**
+##### 2.3 Fusion Analytics
 
 **Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**
 It also stores the vision metadata from the `DL Streamer Pipeline Server` as a measurement in **InfluxDB**.
 
-#### 3. **Data Storage**
+#### 3. Data Storage
 
 **InfluxDB** stores the incoming data coming from **Telegraf**, **Time Series Analytics Microservice** and **Fusion Analytics** .
 
-#### 4. **Data Visualization**
+#### 4. Data Visualization
 
 **Grafana** provides an intuitive user interface for visualizing time series data stored in **InfluxDB** and also rendering the output of `DL Streamer Pipeline Server` coming as WebRTC stream. Additionally, it visualizes the fusion analytics results stored in **InfluxDB**.
 

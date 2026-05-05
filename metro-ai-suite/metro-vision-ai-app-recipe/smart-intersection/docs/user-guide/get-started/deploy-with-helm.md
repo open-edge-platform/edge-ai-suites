@@ -47,10 +47,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.18.0-rc3
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.18.0
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.18.0-rc3.tgz
+tar -xvf smart-intersection-1.18.0.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart

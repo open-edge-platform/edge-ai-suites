@@ -6,6 +6,8 @@
 import json
 from unittest.mock import patch
 
+import pytest
+from fastapi import HTTPException
 
 from backend.services.discovery import (
     discover_models,
@@ -190,8 +192,8 @@ class TestDiscoverPipelinesRemote:
             result = discover_pipelines_remote()
         assert result[0]["pipeline_name"] == "beta"
 
-    def test_fallback_on_exception(self):
-        """An exception from http_json returns the default pipeline."""
+    def test_fallback_on_generic_exception(self):
+        """A non-HTTP exception from http_json returns the default pipeline."""
         with patch(
             "backend.services.discovery.http_json",
             side_effect=Exception("boom"),
@@ -199,6 +201,16 @@ class TestDiscoverPipelinesRemote:
             result = discover_pipelines_remote()
         assert len(result) == 1
         assert result[0]["pipeline_type"] == "non-detection"
+
+    def test_http_exception_is_propagated(self):
+        """An HTTPException from http_json (e.g. server unreachable) is re-raised."""
+        with patch(
+            "backend.services.discovery.http_json",
+            side_effect=HTTPException(status_code=502, detail="Pipeline server unreachable"),
+        ):
+            with pytest.raises(HTTPException) as exc_info:
+                discover_pipelines_remote()
+        assert exc_info.value.status_code == 502
 
     def test_empty_list_returns_default(self):
         """An empty list from the server returns the default pipeline."""
@@ -218,3 +230,13 @@ class TestDiscoverPipelinesRemote:
             result = discover_pipelines_remote()
         # All detection pipelines filtered out; fallback returned
         assert all(r["pipeline_type"] == "non-detection" for r in result)
+
+    def test_proxy_pipelines_are_hidden_from_results(self):
+        """Proxy pipelines for default resolution are not exposed to the UI."""
+        payload = [
+            {"version": "captioner_Default_Resolution", "parameters": {"properties": {}}},
+            {"version": "captioner_Custom", "parameters": {"properties": {}}},
+        ]
+        with self._mock_http(payload):
+            result = discover_pipelines_remote()
+        assert [item["pipeline_name"] for item in result] == ["captioner_Custom"]

@@ -27,9 +27,7 @@ trafficAgent:
   service:
     type: NodePort
     backendPort: 8081
-    backendNodePort: 30881
     uiPort: 7860
-    uiNodePort: 30860
   # Intersection identification
   intersection:
     name: "intersection_1"
@@ -42,12 +40,13 @@ trafficAgent:
     weatherMock: "false"
     vlmTimeoutSeconds: "1800"
   # MQTT configuration (connects to SceneScape broker)
-  # For Helm/K8s: use the K8s service DNS of the SceneScape broker, e.g.:
-  #   smart-intersection-broker (same namespace)
-  #   smart-intersection-broker.<namespace>.svc.cluster.local (cross-namespace)
-  # For Docker Compose: broker.scenescape.intel.com
+  # The FQDN is built as: <serviceName>.<brokerNamespace>.svc.cluster.local
+  # If brokerNamespace is empty, it defaults to the release namespace.
+  # If host is set explicitly, it takes precedence over the constructed FQDN.
   mqtt:
-    host: "smart-intersection-broker"
+    host: ""
+    serviceName: "smart-intersection-broker"
+    brokerNamespace: ""
     port: "1883"
   # Traffic analysis thresholds
   traffic:
@@ -61,12 +60,6 @@ trafficAgent:
     timeoutSeconds: 10
     failureThreshold: 3
   resources:
-    limits:
-      cpu: "2"
-      memory: "2Gi"
-    requests:
-      cpu: "500m"
-      memory: "512Mi"
   # Volume for persistent agent data
   persistence:
     enabled: true
@@ -74,36 +67,39 @@ trafficAgent:
     storageClass: ""
 
 # =============================================================================
-# VLM OpenVINO Serving Configuration
+# OVMS (OpenVINO Model Server) Configuration
 # =============================================================================
 vlmServing:
-  name: vlm-openvino-serving
+  name: ovms-service
   image:
-    repository: intel/vlm-openvino-serving
-    tag: "1.3.2"
+    repository: openvino/model_server
+    tag: "2026.1"
+    gpuTag: "2026.1-gpu"
+    pullPolicy: IfNotPresent
+  # Init container image for model export (needs python3, pip3)
+  # Aligned with edge-ai-libraries sample apps (VSS, DocSum)
+  initImage:
+    repository: python
+    tag: "3.12-slim"
     pullPolicy: IfNotPresent
   replicas: 1
   service:
     type: NodePort
     port: 8000
-    nodePort: 30800
   env:
+    # Validated default VLM model for traffic scene analysis. Users can override
+    # with any compatible HuggingFace vision-language model via:
+    #   --set vlmServing.env.modelName="<org/model-name>"
     modelName: "microsoft/Phi-3.5-vision-instruct"
-    compressionWeightFormat: "int4"
-    device: "CPU"
-    seed: "42"
-    workers: "1"
+    targetDevice: "CPU"
+    # Weight format: auto-detected based on device (GPU/NPU → int4, CPU → int8)
+    # Override with: --set vlmServing.env.weightFormat="int4"
+    weightFormat: ""
     maxCompletionTokens: "1500"
-    logLevel: "info"
-    openvinoLogLevel: "1"
-    accessLogFile: "/dev/null"
-    # OpenVINO config – device-specific (INFERENCE_NUM_THREADS is CPU-only)
-    # CACHE_DIR enables GPU model caching to avoid costly recompilation on restarts
-    ovConfigCpu: '{"PERFORMANCE_HINT": "LATENCY", "INFERENCE_NUM_THREADS": 32}'
-    ovConfigGpu: '{"PERFORMANCE_HINT": "LATENCY", "CACHE_DIR": "/app/ov-model/gpu-cache"}'
+    logLevel: "INFO"
   huggingfaceToken: ""
   # GPU settings - set enabled=true to run VLM inference on Intel GPU
-  # When enabled, VLM_DEVICE is automatically set to "GPU" and workers forced to 1
+  # When enabled, target device is automatically set to "GPU"
   gpu:
     enabled: true
     # Intel GPU resource exposed by the device plugin
@@ -129,12 +125,8 @@ vlmServing:
     timeoutSeconds: 10
     failureThreshold: 180
   resources:
-    limits:
-      cpu: "32"
-      memory: "32Gi"
     requests:
-      cpu: "16"
-      memory: "16Gi"
+      memory: "12Gi"
   # Volume for model cache
   persistence:
     enabled: true
@@ -151,9 +143,33 @@ tls:
   # CA certificate for MQTT broker TLS
   caCert: ""
   # If caCertSecretName is set, use an existing secret instead of creating one
-  # e.g. smart-intersection-broker-rootcert (from SceneScape RI)
-  caCertSecretName: "smart-intersection-broker-rootcert"
+  # The Smart Intersection RI (release-2026.0.0) creates "smart-intersection-ca-secret"
+  caCertSecretName: "smart-intersection-ca-secret"
   # Key name inside the external secret (required when caCertSecretName is set)
   # The key will be mapped to the expected filename "scenescape-ca.pem"
   # e.g. "ca.pem" or "rootcert.pem" depending on the RI secret
   caCertKey: "root-cert"
+
+# =============================================================================
+# Live Metrics Service (subchart)
+# =============================================================================
+# Keys MUST match the subchart chart name "live-metrics-service".
+# The condition field in Chart.yaml enables/disables the subchart.
+live-metrics-service:
+  # Set to false to skip deploying the live-metrics relay
+  enabled: true
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+
+# =============================================================================
+# Collector / Telegraf (subchart)
+# =============================================================================
+# Keys MUST match the subchart chart name "collector".
+collector:
+  # Set to false to skip deploying the Telegraf collector.
+  # Requires live-metrics-service.enabled=true to function.
+  enabled: true
+  # Service name is derived from the Helm release name automatically.
+  # Do NOT set fullnameOverride to a static value — it breaks multi-instance deployments.
+  # The WebSocket URL is constructed dynamically in the collector deployment template
+  # to use the release-scoped live-metrics-service name.

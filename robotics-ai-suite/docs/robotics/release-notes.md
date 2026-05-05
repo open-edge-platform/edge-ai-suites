@@ -69,6 +69,17 @@ advantage of hardware accelerators such as the GPU and NPU.
   - Dependency and packaging fixes
     - Corrected Humble dependency definitions in simulation package metadata.
     - Updated Debian changelog/control-related package maintenance entries for both Humble and Jazzy package sets.
+- **ROS2 KPI**
+  - Introduced `ros2-kpi` (v0.1.0), a new monitoring and analysis framework for ROS2 systems.
+  - Real-time ROS2 graph monitoring: nodes, topics, message rates, and processing delays across the full pipeline.
+  - Automatic per-node input→output latency measurement for every node in the graph — no `--node` filter required.
+  - CPU, memory, and I/O monitoring via `pidstat` with support for both thread-level and PID-only modes.
+  - Cross-machine remote monitoring via SSH and DDS peer discovery (`--remote-ip`).
+  - Interactive visualizations: heatmaps, timelines, core utilization, and scatter plots.
+  - ROS bag analysis with per-topic latency tracking and CPU-cycle estimation.
+  - Grafana dashboard integration with a Prometheus metrics exporter.
+  - Unified entry point (`monitor_stack.py`) and an interactive `quickstart` launcher for guided onboarding.
+  - Supports ROS2 Humble and Jazzy.
 
 **Improved**
 

@@ -76,6 +76,19 @@ const RunCardComponent = (function () {
             <div class="info-tooltip-row"><strong>RTSP URL:</strong> <span>${run.rtspUrl || 'N/A'}</span></div>
             <div class="info-tooltip-row"><strong>Max Tokens:</strong> <span>${run.maxTokens || 'N/A'}</span></div>
             <div class="info-tooltip-row"><strong>Prompt:</strong> <span class="info-tooltip-prompt">${run.prompt || 'N/A'}</span></div>
+            ${(run.frameRate != null)
+                ? `<div class="info-tooltip-row"><strong>Frame Rate:</strong> <span>${run.frameRate || 'N/A'}</span></div>`
+                : ''}
+            ${(run.chunkSize != null)
+                ? `<div class="info-tooltip-row"><strong>Chunk Size:</strong> <span>${run.chunkSize || 'N/A'}</span></div>`
+                : ''}
+            ${(run.frameQuality != null)
+                ? `<div class="info-tooltip-row"><strong>Frame Quality:</strong> <span>${
+                    run.frameQuality === 'custom'
+                        ? `Custom (${run.frameWidth ?? '?'}×${run.frameHeight ?? '?'})`
+                        : ({ best: 'Best (1280×720)', better: 'Better (640×480)', good: 'Good (480×360)' }[run.frameQuality] || run.frameQuality)
+                }</span></div>`
+                : ''}
             ${(run.isEnabledDetection && (run.detectionModelName ?? '') !== '')
                 ? `<div class="info-tooltip-row"><strong>Detection Model:</strong> <span>${run.detectionModelName}</span></div>`
                 : ''}
@@ -84,13 +97,29 @@ const RunCardComponent = (function () {
                 : ''}
         `;
         tooltip.style.display = 'none';
+        document.body.appendChild(tooltip);
+
+        function positionTooltip() {
+            const rect = infoBtn.getBoundingClientRect();
+            const tooltipWidth = 360;
+            let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+            // Clamp to viewport with 8px margin
+            left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = (rect.bottom + 8) + 'px';
+        }
 
         // Toggle tooltip on click
         infoBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const isVisible = tooltip.style.display === 'block';
-            tooltip.style.display = isVisible ? 'none' : 'block';
+            if (!isVisible) {
+                tooltip.style.display = 'block';
+                positionTooltip();
+            } else {
+                tooltip.style.display = 'none';
+            }
         });
 
         // Close tooltip when clicking outside
@@ -100,11 +129,18 @@ const RunCardComponent = (function () {
             }
         });
 
+        // Reposition on scroll/resize
+        window.addEventListener('scroll', () => {
+            if (tooltip.style.display === 'block') positionTooltip();
+        }, true);
+        window.addEventListener('resize', () => {
+            if (tooltip.style.display === 'block') positionTooltip();
+        });
+
         // Wrapper for info button and tooltip
         const infoBtnWrapper = document.createElement('div');
         infoBtnWrapper.className = 'info-btn-wrapper';
         infoBtnWrapper.appendChild(infoBtn);
-        infoBtnWrapper.appendChild(tooltip);
         headerLeft.appendChild(infoBtnWrapper);
 
         const grid = document.createElement('div');
@@ -154,11 +190,15 @@ const RunCardComponent = (function () {
         const captionContent = document.createElement('div');
         captionContent.className = 'caption-content';
 
-        const caption = document.createElement('p');
-        caption.className = 'caption-text';
-        caption.textContent = 'Waiting for metadata...';
+        const captionTimeline = document.createElement('div');
+        captionTimeline.className = 'caption-timeline';
 
-        captionContent.appendChild(caption);
+        const initialEntry = document.createElement('div');
+        initialEntry.className = 'caption-entry caption-entry-placeholder';
+        initialEntry.textContent = 'Waiting for live captions...';
+        captionTimeline.appendChild(initialEntry);
+
+        captionContent.appendChild(captionTimeline);
 
         const stopBtn = document.createElement('button');
         stopBtn.className = 'btn btn-danger';
@@ -190,7 +230,7 @@ const RunCardComponent = (function () {
         wrap.appendChild(header);
         wrap.appendChild(grid);
 
-        return { wrap, video, caption, captionPanel, watcher, timestamp, chips, stopBtn };
+        return { wrap, video, captionTimeline, captionPanel, watcher, timestamp, chips, stopBtn };
     }
 
     function validateAndPrepareRunName(rawName) {
@@ -213,8 +253,46 @@ const RunCardComponent = (function () {
         return finalName;
     }
 
+    /**
+     * Transition a run card into the error state.
+     * Called when the backend reports the pipeline instance has gone away.
+     * Safe to call multiple times — subsequent calls are no-ops.
+     *
+     * @param {object} ui - The object returned by createRunElement.
+     */
+    function setRunErrorState(ui) {
+        // Switch dot to pulsing red
+        const dot = ui.wrap?.querySelector('.dot');
+        if (dot) {
+            dot.classList.remove('active');
+            dot.classList.add('error');
+        }
+
+        // Show error banner in the watcher row
+        if (ui.watcher) {
+            ui.watcher.innerHTML = `
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink:0">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span style="color:#ef4444;font-weight:600;">Pipeline lost, click Remove to clear</span>
+            `;
+            ui.watcher.style.gap = '6px';
+            ui.watcher.style.display = 'flex';
+            ui.watcher.style.alignItems = 'center';
+        }
+
+        // Re-enable and relabel the stop button so the user can dismiss the card
+        if (ui.stopBtn) {
+            ui.stopBtn.disabled = false;
+            ui.stopBtn.textContent = 'Remove';
+        }
+    }
+
     return {
         createRunElement,
+        setRunErrorState,
         validateAndPrepareRunName,
         getUniqueRunName,
         formatRunNameForDisplay

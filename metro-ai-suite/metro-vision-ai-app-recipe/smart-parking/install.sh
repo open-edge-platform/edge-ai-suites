@@ -3,7 +3,7 @@
 docker run --rm --user=root \
   -e http_proxy -e https_proxy -e no_proxy \
   -v "$(dirname "$(readlink -f "$0")"):/opt/project" \
-   intel/dlstreamer:2026.0.0-ubuntu24-rc3 bash -c "$(cat <<EOF
+   intel/dlstreamer:2026.0.0-ubuntu24 bash -c "$(cat <<EOF
 
 cd /opt/project
 export HOST_IP="${1:-$(hostname -I | cut -f1 -d' ')}"

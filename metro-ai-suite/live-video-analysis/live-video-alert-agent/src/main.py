@@ -1,3 +1,6 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 import cv2
 import asyncio
 import logging
@@ -5,7 +8,7 @@ import os
 import sys
 import json
 from fastapi import FastAPI, Body, HTTPException, Request
-from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
+from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from sse_starlette.sse import EventSourceResponse
@@ -15,7 +18,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.core.agent_manager import AgentManager
 from src.config import settings, setup_logging
-
 # Configure logging
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -192,6 +194,12 @@ async def update_agents_config(data: list = Body(...)):
     manager.save_agents_config(data)
     return JSONResponse(content={"status": "saved", "count": len(data)})
 
+@app.get("/runtime-config.js")
+async def runtime_config():
+    payload = {"metricsPort": settings.METRICS_NODEPORT}
+    body = f"window.RUNTIME_CONFIG = {json.dumps(payload)};"
+    return Response(content=body, media_type="application/javascript")
+
 @app.get("/", response_class=HTMLResponse)
 async def read_root():
     ui_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ui", "index.html")
@@ -199,6 +207,18 @@ async def read_root():
         return HTMLResponse(content="<h1>UI Not Found</h1>")
     with open(ui_path, "r") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/api/metrics/status")
+async def get_metrics_status():
+    """Application-level metrics for monitoring."""
+    return {
+        "active_streams": len(manager.streams) if manager else 0,
+        "active_agents": sum(1 for a in manager.agents_config if a.get('enabled', False)) if manager else 0,
+        "total_alerts": sum(
+            1 for results in (manager.latest_results.values() if manager else [])
+            for r in results.values() if r.get('answer', '').lower() == 'yes'
+        )
+    }
 
 if __name__ == "__main__":
     import uvicorn

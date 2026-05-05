@@ -7,7 +7,7 @@ This guide explains how to set up and run the RTSP camera capture and AI inferen
 First, download the necessary AI models and supporting libraries.
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b release-2026.0.0
 cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 wget -c https://github.com/open-edge-platform/edge-ai-resources/raw/a7c9522f5f936c47de8922046db7d7add13f93a0/models/INT8/pallet_defect_detection.zip
 unzip -q pallet_defect_detection.zip -d models/
