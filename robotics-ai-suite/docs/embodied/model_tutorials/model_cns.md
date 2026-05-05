@@ -74,8 +74,6 @@ pipeline = CorrespondenceBasedPipeline(
 
 To run this model on Intel iGPU, you will need `OpenVINO 2025.3.0` and run the following conversion code in CNS project:
 
-> **Attention:** OpenVINO 2025.3.0 will be released in early September 2025.
-
 ```python
 import openvino
 import torch
