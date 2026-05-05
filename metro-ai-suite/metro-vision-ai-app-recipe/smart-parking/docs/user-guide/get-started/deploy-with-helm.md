@@ -83,7 +83,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 1. Deploy Helm chart
 
     ```sh
-    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
+    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace --set timezone=$(cat /etc/timezone)
     ```
 
 2. Wait for all pods to be ready:
