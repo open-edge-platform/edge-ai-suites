@@ -40,11 +40,6 @@ homography estimation results comparing the traditional feature extraction algor
 The SuperPoint model is trained using TensorFlow but can achieve optimized inference performance on Intel devices using OpenVINO™.
 To enable this, the TensorFlow model can be directly converted to the OpenVINO™ IR format.
 
-<!--hide_directive
-:::{contents} Table of Contents
-:local: true
-:::
-hide_directive-->
 
 ### Download the Pretrained Model
 
