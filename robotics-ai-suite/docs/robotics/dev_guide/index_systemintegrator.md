@@ -1,7 +1,5 @@
 # System Integrators
 
-![System Integrator icon](../images/icons/Integrate.png)
-
 This chapter details information specifically for system integrators.
 
 <!--hide_directive
