@@ -41,7 +41,7 @@ The following steps will guide you through the process of converting the ACT mod
 
 ### Load the trained checkpoint
 
-Checkpoint files(.ckpt) which include parameters state will be saved after training. Rebuilding the model structure and loading the parameters state will be needed for model conversion.
+Checkpoint files (.ckpt) which include parameter state will be saved after training. Rebuilding the model structure and loading the parameter state will be needed for model conversion.
 
 > **Attention:** Please be sure that the model configuration especially `kl_weight`, `chunk_size`, `hidden_dim`, `dim_feedforward`, `camera_names` are same to the configuration while training. Failure to do so will result in a shape mismatch between the model checkpoint and the structure.
 
