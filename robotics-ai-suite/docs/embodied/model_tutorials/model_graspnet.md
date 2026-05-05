@@ -28,9 +28,7 @@ Robotic grasping is a fundamental challenge in robotics, requiring the generatio
 > - A 3D orientation (how the gripper should be aligned).
 > - Each grasp is also associated with a quality score that indicates its stability and feasibility.
 
-% .. image:: ../../assets/images/graspnet.png
-% :width: 85%
-% :align: center
+![graspnet](../../assets/images/graspnet.png)
 
 **Model Architecture:**
 
