@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-MultiModal Weld Defect Detection sample application demonstrates how to use AI
+Multimodal Weld Defect Detection sample application demonstrates how to use AI
 at the edge to identify defects in manufacturing environments by analyzing both
 image and time series sensor data.
 
@@ -21,7 +21,7 @@ for Multimodal applications.
 
 ## How It Works
 
-![MultiModal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
+![Multimodal Weld Defect Detection Architecture Diagram](../_assets/Multimodal-Weld-Defect-Detection-Architecture.png)
 
 ### Data flow explanation
 

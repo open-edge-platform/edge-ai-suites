@@ -2,7 +2,7 @@
 
 ## version 1.0.0
 
-This is the first version of the Multimodal - Weld Defect Detection sample app,
+This is the first version of the Multimodal Weld Defect Detection sample app,
 showcasing the Vision and Time Series defect detection use case by detecting anomalous welding.
 
 **Deployments**

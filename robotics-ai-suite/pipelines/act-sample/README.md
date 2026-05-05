@@ -23,7 +23,7 @@ The following patches are provided to enhance the ACT source:
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
 
 ## Installation
 

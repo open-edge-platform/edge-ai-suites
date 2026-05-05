@@ -12,7 +12,7 @@ print_usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME [options]
 
-Automates the software steps from docs/embodied/installation_setup/prerequisites/os_setup.rst
+Automates the software steps from docs/embodied/get-started/prerequisites/os_setup.rst
 and its included pages (locale + APT repositories).
 
 Options:

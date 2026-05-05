@@ -189,9 +189,13 @@
       "title": "Occupancy Status",
       "transformations": [
         {
-          "id": "limit",
+          "id": "reduce",
           "options": {
-            "limitField": "1"
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "reduceFields",
+            "includeTimeField": false
           }
         },
         {

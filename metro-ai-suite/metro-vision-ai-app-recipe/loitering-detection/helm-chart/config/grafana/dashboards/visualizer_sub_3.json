@@ -58,7 +58,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<iframe src=\"${WEBRTC_URL}/object_tracking_3/\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
+        "content": "<iframe src=\"${WEBRTC_URL}object_tracking_3/\" style=\"width:100%;height:500px\";  allow=\"autoplay; encrypted-media\">\n</iframe> ",
         "mode": "html"
       },
       "pluginVersion": "11.5.4",
@@ -132,9 +132,13 @@
       "title": "Loiter Table",
       "transformations": [
         {
-          "id": "limit",
+          "id": "reduce",
           "options": {
-            "limitField": "1"
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "reduceFields",
+            "includeTimeField": false
           }
         },
         {

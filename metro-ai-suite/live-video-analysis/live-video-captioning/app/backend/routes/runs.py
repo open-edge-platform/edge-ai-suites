@@ -21,7 +21,7 @@ from ..models.requests import DEFAULT_PROMPT
 from ..services import http_json, get_mqtt_subscriber
 from ..state import RUNS
 
-router = APIRouter(prefix="/api", tags=["runs"])
+router = APIRouter(prefix="/api", tags=["captions"])
 logger = logging.getLogger("app.runs")
 WEBRTC_PEER_ID_MAX_LENGTH = 8
 WEBRTC_PEER_ID_PREFIX = "s"
@@ -117,9 +117,9 @@ def _extract_pipeline_id(raw: str) -> str:
     return pipeline_id
 
 
-@router.post("/runs")
+@router.post("/generate_captions_alerts")
 async def start_run(req: StartRunRequest) -> RunInfo:
-    """Start a new video captioning run."""
+    """Start a new video captioning run and generate captions and alerts."""
     run_name = _build_unique_run_name(req.runName)
 
     # Use runName for run_id if provided, otherwise generate UUID
@@ -167,9 +167,9 @@ async def start_run(req: StartRunRequest) -> RunInfo:
     return info
 
 
-@router.get("/runs")
+@router.get("/generate_captions_alerts")
 async def list_runs() -> list[RunInfo]:
-    """List all active runs."""
+    """List all active captioning runs."""
     return list(RUNS.values())
 
 
@@ -250,9 +250,9 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
         logger.info("Cleaned up MQTT subscriptions")
 
 
-@router.get("/runs/metadata-stream")
+@router.get("/generate_captions_alerts/metadata-stream")
 async def multiplexed_metadata_stream() -> StreamingResponse:
-    """Multiplexed SSE stream that provides metadata for all active runs."""
+    """Multiplexed SSE stream that provides captions and alerts metadata for all active runs."""
     logger.info("Multiplexed metadata stream requested")
     headers = {
         "Cache-Control": "no-cache",
@@ -267,18 +267,18 @@ async def multiplexed_metadata_stream() -> StreamingResponse:
     )
 
 
-@router.get("/runs/{run_id}")
+@router.get("/generate_captions_alerts/{run_id}")
 async def get_run(run_id: str) -> RunInfo:
-    """Get details of a specific run."""
+    """Get details of a specific captioning run."""
     info = RUNS.get(run_id)
     if not info:
         raise HTTPException(status_code=404, detail={"message": "Run not found"})
     return info
 
 
-@router.delete("/runs/{run_id}")
+@router.delete("/generate_captions_alerts/{run_id}")
 async def stop_run(run_id: str) -> dict[str, str]:
-    """Stop a running pipeline."""
+    """Stop a running captioning pipeline."""
     info = RUNS.get(run_id)
     if not info:
         raise HTTPException(status_code=404, detail={"message": "Run not found"})

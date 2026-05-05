@@ -20,7 +20,7 @@ Comprehensive documentation on this component is available here: [Link](https://
 
 > [!IMPORTANT]
 > Please make sure you have all the prerequisites and installation in
-> [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html)
+> [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
 > and also ensure you have the following list-table prerequisites:
 
   -----------------------------------------------------------------------

@@ -562,7 +562,7 @@
           "resultFormat": "time_series"
         }
       ],
-      "title": "Simulation vs Prediction",
+      "title": "Prediction Results",
       "transparent": true,
       "type": "table"
     },

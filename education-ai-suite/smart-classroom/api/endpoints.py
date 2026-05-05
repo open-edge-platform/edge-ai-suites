@@ -110,8 +110,6 @@ async def summarize_audio(request: SummaryRequest):
 
 @router.post("/mindmap")
 async def generate_mindmap(request: SummaryRequest):
-    if audio_pipeline_lock.locked():
-        raise HTTPException(status_code=429, detail="Session Active, Try Later")
     pipeline = Pipeline(request.session_id)
     try:
         mindmap_text = pipeline.run_mindmap()

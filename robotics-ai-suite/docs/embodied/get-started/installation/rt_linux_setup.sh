@@ -25,7 +25,7 @@ print_usage() {
   cat <<EOF
 Usage: $SCRIPT_NAME [options]
 
-Automates the setup flow in docs/embodied/installation_setup/installation/rt_linux.rst
+Automates the setup flow in docs/embodied/get-started/installation/rt_linux.rst
 and linked prerequisites/docs references, including invoking os_setup_install.sh.
 
 Options:
