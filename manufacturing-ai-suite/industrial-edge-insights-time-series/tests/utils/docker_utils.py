@@ -328,6 +328,145 @@ def wait_for_stability(seconds=30):
     logger.info(f"Waiting {seconds} seconds for services to stabilize...")
     time.sleep(seconds)
 
+
+def wait_until_containers_up(expected_containers,
+                             timeout=constants.MULTIMODAL_CONTAINER_READY_TIMEOUT,
+                             poll_interval=constants.MULTIMODAL_POLL_INTERVAL):
+    """Poll docker ps until all expected containers are running, instead of sleeping blindly.
+
+    Args:
+        expected_containers (list): Container names to wait for.
+        timeout (int): Maximum seconds before giving up.
+        poll_interval (int): Seconds between poll attempts.
+
+    Returns:
+        bool: True if all containers are up within timeout, else False.
+    """
+    logger.info(f"Polling until {len(expected_containers)} container(s) are up "
+                f"(timeout={timeout}s, interval={poll_interval}s): {expected_containers}")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        not_up = [c for c in expected_containers if not container_is_running(c)]
+        if not not_up:
+            elapsed = timeout - (deadline - time.time())
+            logger.info(f"✓ All containers up after ~{elapsed:.0f}s")
+            return True
+        logger.info(f"  Waiting — not yet up: {not_up}")
+        time.sleep(poll_interval)
+    not_up = [c for c in expected_containers if not container_is_running(c)]
+    logger.error(f"✗ Containers still not up after {timeout}s: {not_up}")
+    return False
+
+
+def wait_until_service_ready(url=None,
+                             timeout=constants.MULTIMODAL_SERVICE_READY_TIMEOUT,
+                             poll_interval=constants.MULTIMODAL_POLL_INTERVAL,
+                             accept_503=True,
+                             container_name=None):
+    """Poll an HTTPS endpoint until the service responds, instead of sleeping blindly.
+
+    Defaults to the ts-api health endpoint behind nginx_proxy.
+
+    Args:
+        url (str): URL to probe. Defaults to ts-api /health on the nginx https port.
+        timeout (int): Maximum seconds to wait.
+        poll_interval (int): Seconds between poll attempts.
+        accept_503 (bool): Treat HTTP 503 as ready (service up but not yet configured).
+        container_name (str): Optional container that must be running before HTTP probes start.
+            Defaults to the time-series analytics microservice.
+
+    Returns:
+        bool: True if service responds within timeout, else False.
+    """
+    if container_name is None:
+        container_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    if url is None:
+        url = f"https://localhost:{constants.NGINX_HTTPS_PORT}/ts-api/health"
+    # SSRF guard: this helper is for in-stack health probes only - reject any
+    # URL that does not target localhost / 127.0.0.1 to avoid misuse.
+    if not re.match(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?(/|$)", url):
+        logger.error(f"✗ wait_until_service_ready: refusing non-local URL: {url}")
+        return False
+    ready_codes = ("200", "503") if accept_503 else ("200",)
+    logger.info(f"Polling {url} until ready "
+                f"(timeout={timeout}s, interval={poll_interval}s, ready_codes={ready_codes})...")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if container_name and not container_is_running(container_name):
+            logger.info(f"  Container {container_name} not yet running — waiting...")
+            time.sleep(poll_interval)
+            continue
+        try:
+            result = subprocess.run(
+                ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}", url],
+                capture_output=True, text=True,
+                timeout=constants.MULTIMODAL_POLL_CURL_TIMEOUT,
+            )
+            http_code = result.stdout.strip() if result.returncode == 0 else "000"
+            if http_code in ready_codes:
+                elapsed = timeout - (deadline - time.time())
+                logger.info(f"✓ Service ready (HTTP {http_code}) after ~{elapsed:.0f}s")
+                return True
+            logger.info(f"  Service not ready yet (HTTP {http_code}, awaiting {ready_codes}) — retrying...")
+        except subprocess.TimeoutExpired:
+            logger.info("  Health check timed out — retrying...")
+        except OSError as exc:
+            logger.error(f"✗ Health check OS error (is curl installed?): {exc}")
+            return False
+        time.sleep(poll_interval)
+    logger.error(f"✗ Service did not become ready within {timeout}s")
+    return False
+
+
+def wait_for_influxdb_measurement(measurement,
+                                  credentials,
+                                  database=None,
+                                  container_name=None,
+                                  timeout=constants.MULTIMODAL_INFLUX_DATA_TIMEOUT,
+                                  poll_interval=constants.MULTIMODAL_POLL_INTERVAL):
+    """Poll InfluxDB until ``measurement`` has at least one row, instead of sleeping blindly.
+
+    Args:
+        measurement (str): InfluxDB measurement name (e.g. an ingested/analytics topic).
+        credentials (dict): Dict with INFLUXDB_USERNAME / INFLUXDB_PASSWORD.
+        database (str): InfluxDB database. Defaults to ``constants.INFLUXDB_DATABASE``.
+        container_name (str): InfluxDB container name. Defaults to the influxdb container.
+        timeout (int): Max seconds to wait.
+        poll_interval (int): Seconds between polls.
+
+    Returns:
+        bool: True if data appeared within timeout, else False.
+    """
+    if database is None:
+        database = constants.INFLUXDB_DATABASE
+    if container_name is None:
+        container_name = constants.CONTAINERS["influxdb"]["name"]
+    username = (credentials or {}).get("INFLUXDB_USERNAME", "")
+    password = (credentials or {}).get("INFLUXDB_PASSWORD", "")
+    if not username or not password:
+        logger.error("✗ wait_for_influxdb_measurement: missing InfluxDB credentials")
+        return False
+
+    logger.info(f"Polling InfluxDB measurement '{measurement}' "
+                f"(timeout={timeout}s, interval={poll_interval}s)...")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if check_influxdb_data_with_auth(
+                measurement=measurement,
+                database=database,
+                container_name=container_name,
+                username=username,
+                password=password,
+                timeout=constants.MULTIMODAL_POLL_CURL_TIMEOUT):
+            elapsed = timeout - (deadline - time.time())
+            logger.info(f"✓ Measurement '{measurement}' has data after ~{elapsed:.0f}s")
+            return True
+        logger.info(f"  Measurement '{measurement}' empty — retrying...")
+        time.sleep(poll_interval)
+    logger.error(f"✗ Measurement '{measurement}' had no data after {timeout}s")
+    return False
+
+
 def generate_password(length=10):
     """Generate a secure random password with at least one digit."""
 
@@ -5145,77 +5284,124 @@ def validate_s3_images_content(matched_files, max_files_to_check=3):
     }
 
 
-def get_seaweedfs_bucket_files(bucket_url):
+def get_seaweedfs_bucket_files(bucket_url, max_attempts=6, retry_delay=10):
     """
-    Execute curl command to retrieve SeaweedFS bucket contents and parse .jpg files
-    
+    Execute curl command to retrieve SeaweedFS bucket contents and parse .jpg files.
+
+    The SeaweedFS Filer (proxied by nginx) returns an empty body or an HTML 404
+    page when the requested bucket/folder does not yet exist. That is a common
+    transient state right after deployment while the vision pipeline is still
+    starting up, so we poll a few times before giving up and we surface a clear
+    error (with HTTP status + body preview) instead of a bare JSON parse error.
+
     Args:
         bucket_url (str): SeaweedFS bucket URL to query
-        
+        max_attempts (int): How many times to poll before failing
+        retry_delay (int): Seconds to wait between attempts
+
     Returns:
-        dict: Result containing success status, jpg_files list, total_files count, and any errors
+        dict: success, jpg_files, total_files, error, http_status, body_preview
     """
+    # Use curl -w to append the HTTP status code on a separator we can split on,
+    # so we can distinguish "bucket not found" (404) from "bucket empty" (200).
+    status_sep = "\n__HTTP_STATUS__:"
+    curl_command = [
+        'curl', '-sk',
+        '-H', 'Accept: application/json',
+        '-w', f'{status_sep}%{{http_code}}',
+        bucket_url,
+    ]
+    logger.info(f"Executing curl command: {' '.join(curl_command)}")
+
+    last_error = "unknown"
+    last_status = ""
+    last_preview = ""
+
     try:
-        # Execute curl command to get bucket contents
-        curl_command = [
-            'curl', '-sk', 
-            '-H', 'Accept: application/json',
-            bucket_url
-        ]
-        
-        logger.info(f"Executing curl command: {' '.join(curl_command)}")
-        
-        # Run curl command
-        result = subprocess.run(
-            curl_command,
-            capture_output=True,
-            text=True,
-            timeout=30
+        for attempt in range(1, max_attempts + 1):
+            try:
+                result = subprocess.run(
+                    curl_command,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+            except subprocess.TimeoutExpired:
+                last_error = "Curl command timed out after 30 seconds"
+                logger.warning("[seaweedfs] attempt %d/%d: %s", attempt, max_attempts, last_error)
+                time.sleep(retry_delay)
+                continue
+
+            if result.returncode != 0:
+                last_error = (
+                    f"Curl command failed with return code {result.returncode}: {result.stderr.strip()}"
+                )
+                logger.warning("[seaweedfs] attempt %d/%d: %s", attempt, max_attempts, last_error)
+                time.sleep(retry_delay)
+                continue
+
+            # Split body from the trailing status code we appended via -w.
+            raw = result.stdout
+            if status_sep in raw:
+                body, _, status = raw.rpartition(status_sep)
+            else:
+                body, status = raw, ""
+            last_status = status.strip()
+            last_preview = body.strip()[:200]
+
+            if not body.strip():
+                last_error = (
+                    f"Empty response body from SeaweedFS Filer (HTTP {last_status or 'unknown'}). "
+                    f"Bucket folder likely does not exist yet - vision pipeline may not have produced frames."
+                )
+                logger.warning("[seaweedfs] attempt %d/%d: %s", attempt, max_attempts, last_error)
+                time.sleep(retry_delay)
+                continue
+
+            try:
+                response_data = json.loads(body)
+            except json.JSONDecodeError as e:
+                last_error = (
+                    f"Non-JSON response from SeaweedFS Filer (HTTP {last_status or 'unknown'}): {e}. "
+                    f"Body preview: {last_preview!r}"
+                )
+                logger.warning("[seaweedfs] attempt %d/%d: %s", attempt, max_attempts, last_error)
+                time.sleep(retry_delay)
+                continue
+
+            entries = response_data.get('Entries') or []
+            total_files = len(entries)
+            jpg_files = [
+                e.get('FullPath', '') for e in entries
+                if e.get('FullPath', '').lower().endswith('.jpg')
+            ]
+            logger.info(
+                f"Successfully retrieved bucket contents on attempt {attempt}: "
+                f"{len(jpg_files)} .jpg files out of {total_files} total (HTTP {last_status})"
+            )
+            return {
+                "success": True,
+                "jpg_files": jpg_files,
+                "total_files": total_files,
+                "http_status": last_status,
+                "body_preview": last_preview,
+                "error": None,
+            }
+
+        # Exhausted retries
+        logger.error(
+            "[seaweedfs] giving up after %d attempts - last_status=%s last_error=%s",
+            max_attempts, last_status, last_error,
         )
-        
-        if result.returncode != 0:
-            error_msg = f"Curl command failed with return code {result.returncode}: {result.stderr}"
-            logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg,
-                "jpg_files": [],
-                "total_files": 0
-            }
-        
-        # Parse JSON response
-        try:
-            response_data = json.loads(result.stdout)
-        except json.JSONDecodeError as e:
-            error_msg = f"Failed to parse JSON response: {e}"
-            logger.error(error_msg)
-            return {
-                "success": False,
-                "error": error_msg,
-                "jpg_files": [],
-                "total_files": 0
-            }
-        
-        # Extract entries from JSON response
-        entries = response_data.get('Entries', [])
-        total_files = len(entries)
-        
-        # Filter for .jpg files
-        jpg_files = []
-        for entry in entries:
-            full_path = entry.get('FullPath', '')
-            if full_path.lower().endswith('.jpg'):
-                jpg_files.append(full_path)
-        
-        logger.info(f"Successfully retrieved bucket contents: {len(jpg_files)} .jpg files out of {total_files} total")
-        
         return {
-            "success": True,
-            "jpg_files": jpg_files,
-            "total_files": total_files,
-            "error": None
+            "success": False,
+            "error": last_error,
+            "jpg_files": [],
+            "total_files": 0,
+            "http_status": last_status,
+            "body_preview": last_preview,
         }
-        
+
     except subprocess.TimeoutExpired:
         error_msg = "Curl command timed out after 30 seconds"
         logger.error(error_msg)
@@ -5261,8 +5447,10 @@ def log_vision_pipeline_diagnostics(context, reason, log_tail=120):
     except Exception as e:
         logger.error("[diag] Failed to enumerate containers: %s", e)
 
-    # 2) Tail logs of the producers in the vision path
-    for cname_key in ("dlstreamer", "fusion_analytics", "influxdb"):
+    # 2) Tail logs of the producers in the vision path. mediamtx and nginx_proxy
+    #    are included because a silent RTSP source (no publisher to mediamtx) or
+    #    a misrouted nginx upstream is the most common cause of an empty S3 bucket.
+    for cname_key in ("dlstreamer", "fusion_analytics", "influxdb", "mediamtx", "nginx_proxy"):
         try:
             cname = constants.CONTAINERS[cname_key]["name"]
         except Exception:
@@ -5309,4 +5497,59 @@ def log_vision_pipeline_diagnostics(context, reason, log_tail=120):
         logger.error("[diag] Failed to read app config: %s", e)
 
     logger.error("=" * 80)
+
+
+def log_test_step(step, total, description):
+    """Emit a clearly delimited banner for a test step to ease log root-causing.
+
+    Example:
+        log_test_step(3, 6, "Querying SeaweedFS for stored .jpg files")
+    """
+    logger.info("-" * 80)
+    logger.info("STEP %s/%s: %s", step, total, description)
+    logger.info("-" * 80)
+
+
+def log_multimodal_stack_snapshot(label="state"):
+    """Emit a one-line snapshot of every multimodal container's running state.
+
+    Useful at the start of a test (baseline) and just before assertions so that
+    a CI failure log makes it obvious which service was missing at that moment.
+    """
+    try:
+        names = constants.SAMPLE_APPS_CONFIG[constants.MULTIMODAL_SAMPLE_APP][
+            "multimodal_container_list"
+        ]
+    except Exception as exc:
+        logger.warning("[snapshot:%s] could not read container list: %s", label, exc)
+        return
+    statuses = []
+    for name in names:
+        statuses.append(f"{name}={'up' if container_is_running(name) else 'DOWN'}")
+    logger.info("[snapshot:%s] %s", label, " | ".join(statuses))
+
+
+def log_influxdb_measurements_snapshot(credentials, label="influx"):
+    """Emit current InfluxDB measurement names so missing topics are obvious in CI logs."""
+    try:
+        creds = credentials or {}
+        username = creds.get("INFLUXDB_USERNAME", "")
+        password = creds.get("INFLUXDB_PASSWORD", "")
+        if not username or not password:
+            logger.info("[snapshot:%s] skipping SHOW MEASUREMENTS - credentials unavailable", label)
+            return
+        influx = constants.CONTAINERS["influxdb"]["name"]
+        result = subprocess.run(
+            [
+                "docker", "exec", influx,
+                "influx", "-username", username, "-password", password,
+                "-database", constants.INFLUXDB_DATABASE,
+                "-execute", "SHOW MEASUREMENTS",
+            ],
+            capture_output=True, text=True, timeout=15,
+        )
+        out = (result.stdout or "").strip() or "<empty>"
+        logger.info("[snapshot:%s] SHOW MEASUREMENTS (rc=%s):\n%s", label, result.returncode, out)
+    except Exception as exc:
+        logger.warning("[snapshot:%s] failed to dump measurements: %s", label, exc)
 

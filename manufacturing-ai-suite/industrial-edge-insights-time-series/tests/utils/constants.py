@@ -305,6 +305,14 @@ MULTIMODAL_DOCKER_PRE_TEARDOWN_WAIT = 5   # seconds before teardown validations
 MULTIMODAL_DOCKER_POST_TEARDOWN_WAIT = 10 # seconds to let containers stop
 MULTIMODAL_DOCKER_FUSION_READY_WAIT = 10  # seconds to ensure fusion logs propagate
 
+# Polling helpers (used by wait_until_* helpers in docker_utils.py to replace
+# blind time.sleep() calls). Values mirror the wind-turbine MQTT test pattern.
+MULTIMODAL_CONTAINER_READY_TIMEOUT = 180  # max seconds to wait for containers to be up
+MULTIMODAL_SERVICE_READY_TIMEOUT = 180    # max seconds to wait for an HTTP endpoint
+MULTIMODAL_INFLUX_DATA_TIMEOUT = 180      # max seconds to wait for an InfluxDB measurement
+MULTIMODAL_POLL_INTERVAL = 5              # seconds between poll attempts
+MULTIMODAL_POLL_CURL_TIMEOUT = 10         # per-poll curl timeout
+
 # MediaMTX streaming constants - access via nginx proxy
 MEDIAMTX_STREAM_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/samplestream"
 

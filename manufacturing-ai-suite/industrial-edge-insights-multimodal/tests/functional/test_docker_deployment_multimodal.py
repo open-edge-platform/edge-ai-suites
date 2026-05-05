@@ -211,10 +211,11 @@ def test_time_series_ingested_data(setup_multimodal_environment):
         assert is_running, f"{container} container is not running. Deploy multimodal stack first."  # nosec B101
     
     logger.info("✓ Both InfluxDB and Telegraf containers are running")
-    
-    # Wait for containers to stabilize and Telegraf to start collecting data
-    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
-    
+
+    # Poll until ingestion appears in InfluxDB instead of sleeping blindly
+    ingested_topic = multimodal_config.get("ingested_topic")
+    docker_utils.wait_for_influxdb_measurement(ingested_topic, context["credentials"])
+
     # Check if data is being ingested into InfluxDB via Telegraf with authentication
     logger.info("Checking time series data ingestion from Telegraf to InfluxDB")
     
@@ -260,12 +261,13 @@ def test_time_series_analytics_processing(setup_multimodal_environment):
         is_running = docker_utils.container_is_running(container)
         logger.info(f"Container {container} running status: {is_running}")
         assert is_running, f"{container} is not running. Deploy multimodal stack first."  # nosec B101
-    
-    # Wait for processing to complete
-    time.sleep(constants.TEST_DATA_PROCESSING_DELAY * 2)
-    
-    # Check if processed data exists in InfluxDB using multimodal app config
+
+    # Poll until analytics output appears in InfluxDB instead of sleeping blindly
     analytics_topic = multimodal_config.get("analytics_topic")
+    docker_utils.wait_for_influxdb_measurement(analytics_topic, context["credentials"])
+
+    # Check if processed data exists in InfluxDB using multimodal app config
+    logger.info(f"Checking processed anomaly data in InfluxDB measurement: {analytics_topic}")
     logger.info(f"Checking processed anomaly data in InfluxDB measurement: {analytics_topic}")
     result = docker_utils.check_influxdb_data_with_auth(
         measurement=analytics_topic,
@@ -324,10 +326,11 @@ def test_fusion_analytics_mqtt_publish(setup_multimodal_environment):
 
     # Check fusion results in InfluxDB and MQTT publishing
     logger.info("Checking fusion analytics MQTT publish results in InfluxDB")
-    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)  # Allow time for fusion processing
-    
-    # Fusion analytics writes results back to InfluxDB using multimodal app config
+
+    # Poll until fusion output appears in InfluxDB instead of sleeping blindly
     fusion_topic = multimodal_config.get("fusion_topic")
+    docker_utils.wait_for_influxdb_measurement(fusion_topic, context["credentials"])
+
     result = docker_utils.check_influxdb_data_with_auth(
         measurement=fusion_topic,
         database=constants.INFLUXDB_DATABASE,
@@ -344,15 +347,32 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
     
     # Get multimodal app configuration
     multimodal_config = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP)
-    
+    # [debug] Surface expected measurement names upfront so a CI failure log shows what was checked.
+    logger.info(
+        "[debug] Expected InfluxDB measurements: ingested=%r analytics=%r vision=%r fusion=%r",
+        multimodal_config.get("ingested_topic"),
+        multimodal_config.get("analytics_topic"),
+        multimodal_config.get("vision_measurement"),
+        multimodal_config.get("fusion_measurement"),
+    )
+
     # Deploy the multimodal stack
     context = setup_multimodal_environment
     context["deploy_multimodal"]()
-    
-    # Wait for data generation and storage
-    logger.info("Waiting for data to be generated and stored in InfluxDB...")
-    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
-    
+    # [debug] Snapshot multimodal stack right after deploy, before polling for data.
+    docker_utils.log_multimodal_stack_snapshot(label="tc010-after-deploy")
+
+    # Poll until ingested data appears in InfluxDB instead of sleeping blindly
+    logger.info("Polling InfluxDB until data is generated and stored...")
+    _ingested_present = docker_utils.wait_for_influxdb_measurement(
+        multimodal_config.get("ingested_topic"), context["credentials"]
+    )
+    if not _ingested_present:
+        # [debug] If the ingested topic never showed up, dump current measurement set + stack
+        # state so we can tell whether Telegraf never wrote vs. InfluxDB unhealthy.
+        docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc010-after-wait")
+        docker_utils.log_multimodal_stack_snapshot(label="tc010-after-wait")
+
     # Verify InfluxDB container is running
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
     logger.info(f"InfluxDB container running status: {is_running}")
@@ -393,6 +413,13 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
     # they are written by the fusion analytics service which may not have processed any
     # matched pairs yet within the test window.
     logger.info(f"Stored measurements: {stored_measurements}")
+    # [debug] Summarize the missing set in one line and snapshot stack/influx state if anything
+    # is missing - so the assertion failure that follows already has full context attached.
+    _missing_measurements = [m for m in measurements_to_check if m not in stored_measurements]
+    if _missing_measurements:
+        logger.warning(f"[debug] Missing measurements at assertion time: {_missing_measurements}")
+        docker_utils.log_multimodal_stack_snapshot(label="tc010-on-missing")
+        docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc010-on-missing")
     if multimodal_config.get("ingested_topic") not in stored_measurements:
         docker_utils.log_vision_pipeline_diagnostics(context, "ingested_topic measurement missing from InfluxDB")
     assert multimodal_config.get("ingested_topic") in stored_measurements, "Raw sensor data not stored in InfluxDB"  # nosec B101
@@ -538,10 +565,7 @@ def test_fusion_decision_making_logic_validation(setup_multimodal_environment):
     assert categorized["vision_only"] > 0, "Should have vision-only detection cases"  # nosec B101
     assert categorized["ts_only"] > 0, "Should have TS-only detection cases"  # nosec B101
     assert categorized["no_anomaly"] > 0, "Should have no-anomaly cases"  # nosec B101
-    
-    # Wait for system to be active
-    common_utils.wait_for_stability(constants.MULTIMODAL_DOCKER_FUSION_READY_WAIT)
-    
+
     logger.info("✓ Fusion decision-making logic validation completed successfully")
     logger.info("✓ Multimodal weld defect detection system validated with OR fusion logic")
 
@@ -572,8 +596,11 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
     
     context = setup_multimodal_environment
     context["deploy_multimodal"]()
-    time.sleep(constants.TEST_NGINX_STARTUP_DELAY)
-    
+
+    # Poll until nginx is up and the ts-api endpoint responds, instead of sleeping blindly
+    docker_utils.wait_until_containers_up([constants.NGINX_CONTAINER])
+    docker_utils.wait_until_service_ready()
+
     # Verify nginx container health
     health_results = docker_utils.verify_nginx_container_health(constants.NGINX_CONTAINER)
     logger.info(f"Nginx container health: container_running={health_results['container_running']}, process_running={health_results['process_running']}")
@@ -625,18 +652,29 @@ def test_nginx_proxy_integration(setup_multimodal_environment):
 def test_s3_stored_images_access(setup_multimodal_environment):
     """TC_018: Testing S3 stored images infrastructure for DLStreamer integration"""
     logger.info("TC_018: Testing S3 stored images infrastructure and SeaweedFS integration")
-    
-    # Deploy the multimodal stack and wait for stabilization
+    # [debug] Surface the SeaweedFS Filer endpoint we expect to query so empty/HTML body
+    # responses later in the test can be matched against what was actually targeted.
+    logger.info(
+        "[debug] Expected SeaweedFS Filer endpoint: https://localhost:%s/image-store/buckets/"
+        "dlstreamer-pipeline-results/weld-defect-classification/",
+        constants.NGINX_HTTPS_PORT,
+    )
+
+    # Deploy the multimodal stack and poll for stabilization instead of sleeping blindly
     context = setup_multimodal_environment
     context["deploy_multimodal"]()
-    logger.info("Waiting for system stabilization...")
-    time.sleep(constants.TEST_MQTT_TIMEOUT)
-    
-    # Wait for async S3 image writes by DLStreamer.
-    s3_wait_time = 90
-    logger.info(f"Waiting {s3_wait_time}s for DLStreamer to process video and write images to S3 storage...")
-    time.sleep(s3_wait_time)
-    
+    # [debug] Snapshot multimodal stack right after deploy.
+    docker_utils.log_multimodal_stack_snapshot(label="tc018-after-deploy")
+    logger.info("Polling until multimodal containers are up...")
+    _tc018_containers_up = docker_utils.wait_until_containers_up(
+        constants.SAMPLE_APPS_CONFIG[constants.MULTIMODAL_SAMPLE_APP]["multimodal_container_list"]
+    )
+    if not _tc018_containers_up:
+        # [debug] Make container-wait timeouts visible in CI logs.
+        docker_utils.log_multimodal_stack_snapshot(label="tc018-containers-timeout")
+    # The seaweedfs bucket query helper itself polls/retries for image arrival,
+    # so no extra blind sleep is needed here.
+
     # Step 1: Verify essential containers are running
     logger.info("Step 1: Verifying required containers for S3 image storage")
     container_check = docker_utils.verify_seaweed_essential_containers()
@@ -644,12 +682,17 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     if not container_check["success"]:
         missing = container_check["missing_containers"]
         logger.info(f"Container check results: success={container_check['success']}, missing={missing}")
+        # [debug] Snapshot full stack so we know which other services are also down.
+        docker_utils.log_multimodal_stack_snapshot(label="tc018-seaweed-essentials-missing")
         assert False, f"Essential containers not running: {missing}"  # nosec B101
     
     logger.info(f"✓ All {container_check['total_checked']} essential containers are running")
     
     # Step 2: Query InfluxDB for vision metadata IMG_HANDLE values; fall back to S3 filenames if missing.
     logger.info("Step 2: Querying InfluxDB for vision detection results")
+    # [debug] Show what measurements actually exist before we ask for vision img_handles - this
+    # makes it trivial to tell "vision pipeline produced nothing" vs. "InfluxDB is empty".
+    docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc018-pre-vision-query")
     influx_check = docker_utils.get_vision_img_handles_from_influxdb(context["credentials"])
 
     if not influx_check["success"]:
@@ -664,7 +707,13 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     # Step 3: Execute SeaweedFS S3 API query via curl
     logger.info("Step 3: Testing SeaweedFS S3 API access via curl")
     s3_check = docker_utils.execute_seaweedfs_bucket_query()
-    
+    # [debug] Always log the raw HTTP status + a short body preview returned by the Filer so
+    # JSON parse failures (the historical TC_018 root cause) can be diagnosed from logs alone.
+    logger.info(
+        "[debug] S3 query summary: success=%s http_status=%s body_preview=%r",
+        s3_check.get("success"), s3_check.get("http_status"), s3_check.get("body_preview"),
+    )
+
     if not s3_check["success"]:
         logger.error(f"Failed to retrieve S3 bucket contents: {s3_check['error']}")
         logger.info(f"S3 check results: success={s3_check['success']}, error={s3_check.get('error')}")
@@ -695,7 +744,9 @@ def test_s3_stored_images_access(setup_multimodal_environment):
         influx_derived_handle = _os.path.splitext(_os.path.basename(first_jpg))[0]
         logger.info(f"InfluxDB had no vision data - derived img_handle from S3 filename: {influx_derived_handle}")
 
-    time.sleep(90)  # Wait before cross-verification to allow S3 to be fully populated
+    # No blind sleep here: get_seaweedfs_bucket_files (called above via
+    # execute_seaweedfs_bucket_query) already polled until the bucket returned
+    # the jpg list, so cross-verification can proceed immediately.
 
     # Step 5: Cross-verify img_handle with stored S3 images
     logger.info("Step 5: Cross-verifying img_handle values with stored S3 images")
@@ -748,16 +799,33 @@ def test_s3_stored_images_access(setup_multimodal_environment):
 def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     """TC_019: Validate RTP sender timestamps in vision measurement stored in InfluxDB"""
     logger.info("TC_019: Verifying RTP sender timestamps persisted in InfluxDB vision measurement")
+    # [debug] Surface expected vision measurement + fallback MQTT topic upfront so a failure
+    # log immediately shows what the test was looking for.
+    _tc019_cfg = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP)
+    logger.info(
+        "[debug] Expected vision_measurement=%r fallback_mqtt_topic=%r",
+        _tc019_cfg.get("vision_measurement", "vision-weld-classification-results"),
+        _tc019_cfg.get("vision_topic", "vision_weld_defect_classification"),
+    )
 
     context = setup_multimodal_environment
     context["deploy_multimodal"]()
+    # [debug] Snapshot multimodal stack right after deploy.
+    docker_utils.log_multimodal_stack_snapshot(label="tc019-after-deploy")
 
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
     logger.info(f"InfluxDB container running status: {is_running}")
     assert is_running, "InfluxDB container is not running"  # nosec B101
 
-    logger.info("Waiting for vision metadata to be written to InfluxDB")
-    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
+    logger.info("Polling InfluxDB until vision metadata is written...")
+    vision_measurement_for_wait = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get(
+        "vision_measurement", "vision-weld-classification-results"
+    )
+    _vision_present = docker_utils.wait_for_influxdb_measurement(vision_measurement_for_wait, context["credentials"])
+    if not _vision_present:
+        # [debug] Vision measurement never appeared - dump InfluxDB measurement set so we can
+        # tell whether vision pipeline never ran vs. stored under a different name.
+        docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc019-vision-missing")
 
     credentials = context["credentials"]
     username = credentials.get("INFLUXDB_USERNAME")
@@ -784,6 +852,10 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     if query_result["success"] and query_result["records"]:
         # Primary path: vision data already persisted to InfluxDB - extract timestamps from there.
         metadata_values = [record.get("metadata") for record in query_result["records"]]
+        # [debug] Log truncated previews of metadata so a timestamp-extraction failure is
+        # diagnosable without re-running the test.
+        for _i, _mv in enumerate(metadata_values[:3]):
+            logger.info(f"[debug] record[{_i}].metadata preview = {str(_mv)[:200]!r}")
         timestamps = common_utils.extract_sender_ntp_timestamps(metadata_values)
         logger.info(f"Extracted RTP timestamps from InfluxDB - count: {len(timestamps)}, values: {timestamps}")
     else:
