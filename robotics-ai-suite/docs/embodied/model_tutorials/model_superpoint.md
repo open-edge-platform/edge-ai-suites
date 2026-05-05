@@ -11,10 +11,7 @@ multi-homography approach for boosting interest point detection repeatability an
 the initial pre-adapted deep model and any other traditional corner detector. The final system gives a state-of-the-art
 homography estimation results comparing the traditional feature extraction algorithms such as LIFT, SIFT and ORB.
 
-```{image} ../developer_tools_tutorials/assets/images/superpoint.png
-:align: center
-:width: 85%
-```
+![superpoint](../developer_tools_tutorials/assets/images/superpoint.png)
 
 **Model Architecture:**
 
