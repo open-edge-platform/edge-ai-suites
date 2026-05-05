@@ -362,16 +362,14 @@ def test_influxdb_data_storage_multimodal(setup_multimodal_environment):
     # [debug] Snapshot multimodal stack right after deploy, before polling for data.
     docker_utils.log_multimodal_stack_snapshot(label="tc010-after-deploy")
 
-    # Poll until ingested data appears in InfluxDB instead of sleeping blindly
-    logger.info("Polling InfluxDB until data is generated and stored...")
-    _ingested_present = docker_utils.wait_for_influxdb_measurement(
-        multimodal_config.get("ingested_topic"), context["credentials"]
-    )
-    if not _ingested_present:
-        # [debug] If the ingested topic never showed up, dump current measurement set + stack
-        # state so we can tell whether Telegraf never wrote vs. InfluxDB unhealthy.
-        docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc010-after-wait")
-        docker_utils.log_multimodal_stack_snapshot(label="tc010-after-wait")
+    # Wait for data generation and storage (matches commit 57c6a45 working behavior:
+    # a single TEST_DATA_PROCESSING_DELAY sleep gives Telegraf + downstream time-series
+    # analytics microservice enough time to write both ingested + analytics measurements).
+    logger.info("Waiting for data to be generated and stored in InfluxDB...")
+    time.sleep(constants.TEST_DATA_PROCESSING_DELAY)
+    # [debug] Dump current InfluxDB measurement set after the wait so any "not stored"
+    # assertion below can be cross-checked against what actually exists.
+    docker_utils.log_influxdb_measurements_snapshot(context["credentials"], label="tc010-after-wait")
 
     # Verify InfluxDB container is running
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
