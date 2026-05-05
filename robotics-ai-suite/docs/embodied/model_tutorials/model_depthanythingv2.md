@@ -9,7 +9,7 @@ Here's an overview of how it works, along with its significance in autonomous dr
 
 Typically, monocular depth estimation brings such common features as below:
 
-> - **Deep Learning Models**: Modern monocular depth estimation primarily relies on deep learning. These models are trained on large datasets containing images with corresponding depth maps, learning to infer depth from visual cues such as texture, shading, and object size.
+- **Deep Learning Models**: Modern monocular depth estimation primarily relies on deep learning. These models are trained on large datasets containing images with corresponding depth maps, learning to infer depth from visual cues such as texture, shading, and object size.
 > - **Feature Extraction**: The process begins with extracting features from the input image using DNN layers. These features capture essential information about the scene's structure and objects.
 > - **Depth Prediction**: The extracted features are then processed by subsequent network layers to predict a depth map. This map assigns a depth value to each pixel, indicating the distance from the camera to the scene elements.
 > - **Post-Processing**: Some methods apply post-processing techniques to refine the depth map, addressing issues like noise and discontinuities.
