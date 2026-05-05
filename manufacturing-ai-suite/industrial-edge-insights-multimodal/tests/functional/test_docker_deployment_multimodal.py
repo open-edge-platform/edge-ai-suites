@@ -673,6 +673,21 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     # The seaweedfs bucket query helper itself polls/retries for image arrival,
     # so no extra blind sleep is needed here.
 
+    # Wait for the vision measurement to appear in InfluxDB before querying S3.
+    # CI evidence shows the dlstreamer inner pipeline can take up to ~6 minutes
+    # to produce its first frame, so allow up to 360 s here. Don't assert on the
+    # return value -- the existing S3 poll below will still validate end-to-end.
+    _tc018_vision_measurement = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get(
+        "vision_measurement", "vision-weld-classification-results"
+    )
+    _tc018_vision_present = docker_utils.wait_for_influxdb_measurement(
+        _tc018_vision_measurement, context["credentials"], timeout=360
+    )
+    logger.info(
+        "[debug] TC_018 vision measurement %r present after wait: %s",
+        _tc018_vision_measurement, _tc018_vision_present,
+    )
+
     # Step 1: Verify essential containers are running
     logger.info("Step 1: Verifying required containers for S3 image storage")
     container_check = docker_utils.verify_seaweed_essential_containers()
@@ -704,7 +719,17 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     
     # Step 3: Execute SeaweedFS S3 API query via curl
     logger.info("Step 3: Testing SeaweedFS S3 API access via curl")
-    s3_check = docker_utils.execute_seaweedfs_bucket_query()
+    # Call get_seaweedfs_bucket_files directly (mirroring execute_seaweedfs_bucket_query)
+    # so we can extend the S3 poll window to 180 s (18 attempts x 10 s) without
+    # touching the shared helper's default behavior used by other tests.
+    _tc018_bucket_url = (
+        f"https://localhost:{constants.NGINX_HTTPS_PORT}/image-store/buckets/"
+        "dlstreamer-pipeline-results/weld-defect-classification/?limit=5000"
+    )
+    s3_check = docker_utils.get_seaweedfs_bucket_files(
+        _tc018_bucket_url, max_attempts=18, retry_delay=10
+    )
+    s3_check["bucket_url"] = _tc018_bucket_url
     # [debug] Always log the raw HTTP status + a short body preview returned by the Filer so
     # JSON parse failures (the historical TC_018 root cause) can be diagnosed from logs alone.
     logger.info(
@@ -819,7 +844,11 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     vision_measurement_for_wait = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP).get(
         "vision_measurement", "vision-weld-classification-results"
     )
-    _vision_present = docker_utils.wait_for_influxdb_measurement(vision_measurement_for_wait, context["credentials"])
+    # Allow up to 360 s: the default 180 s expires ~20 s before the dlstreamer
+    # inner pipeline even starts producing data per CI evidence.
+    _vision_present = docker_utils.wait_for_influxdb_measurement(
+        vision_measurement_for_wait, context["credentials"], timeout=360
+    )
     if not _vision_present:
         # [debug] Vision measurement never appeared - dump InfluxDB measurement set so we can
         # tell whether vision pipeline never ran vs. stored under a different name.
@@ -888,7 +917,11 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
         try:
             _client.connect("localhost", constants.MQTT_PORT_INT, 60)
             _client.loop_start()
-            _deadline = time.time() + constants.TEST_MQTT_TIMEOUT
+            # Fallback only triggers when InfluxDB still has no data after the
+            # extended (360 s) wait above -- give a generous local window so we
+            # have a real chance of catching at least one MQTT message.
+            _mqtt_deadline_s = max(constants.TEST_MQTT_TIMEOUT, 180)
+            _deadline = time.time() + _mqtt_deadline_s
             while len(captured_payloads) < 3 and time.time() < _deadline:
                 time.sleep(1)
             _client.loop_stop()
