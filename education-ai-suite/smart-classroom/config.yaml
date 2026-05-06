@@ -455,3 +455,9 @@ content_search:
       device: "GPU"
       dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
       overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
+
+  qa:
+    max_context: 5          # number of top chunks retrieved from ChromaDB to use as RAG context
+    max_tokens: 1024        # maximum tokens the VLM can generate for an answer (prevents mid-sentence cutoff)
+    max_history_turns: 3    # number of prior conversation turns (user+assistant pairs) sent to the VLM
+    context_window: 16384   # token budget for dynamic context selection; 

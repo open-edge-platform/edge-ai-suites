@@ -19,7 +19,7 @@ from utils.asset_service import asset_service
 from utils.search_service import search_service
 from utils.core_responses import resp_200, fail_task_not_found, fail_process_failed, fail_processing
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -283,6 +283,52 @@ async def delete_specific_task(
         db.rollback()
         return resp_200(**fail_process_failed(str(e)))
 
+
+# ── Q&A ──────────────────────────────────────────────────────────────────────
+
+class QAHistoryMessage(BaseModel):
+    role: str   # "user" or "assistant"
+    content: str
+
+class QARequest(BaseModel):
+    question: str
+    history: List[QAHistoryMessage] = Field(default_factory=list)
+    filter: Optional[Dict[str, Any]] = None
+
+@router.post("/qa")
+async def qa_ask(request: QARequest):
+    """
+    Q&A over uploaded content using retrieval-augmented generation (RAG).
+
+    Retrieves relevant chunks from the vector DB for the question, then calls
+    the VLM to generate a grounded answer. Accepts an optional conversation
+    history for multi-turn chat context.
+    """
+    if not request.question.strip():
+        return resp_200(code=40000, message="'question' must not be empty")
+
+    from utils.qa_service import qa_service
+
+    result = await qa_service.ask(
+        question=request.question.strip(),
+        history=[m.model_dump() for m in request.history],
+        filters=request.filter,
+    )
+
+    if result.get("answer") is None:
+        return resp_200(
+            code=50003,
+            message=result.get("error", "QA generation failed"),
+            data={"sources": result.get("sources", [])},
+        )
+
+    return resp_200(
+        data={
+            "answer": result["answer"],
+            "sources": result.get("sources", []),
+        },
+        message="Answer generated",
+    )
 @router.delete("/files/{file_hash}")
 async def delete_file_by_hash(
     file_hash: str,

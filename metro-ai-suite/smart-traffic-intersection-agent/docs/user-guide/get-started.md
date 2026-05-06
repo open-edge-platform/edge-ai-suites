@@ -30,7 +30,7 @@ an introduction.
 ## Quick Start with Setup Script
 
 Intel recommends using the automated setup script that handles environment configuration,
-submodule and dependencies setup, secrets generation, building, and deployment of the Smart
+dependencies setup, secrets generation, building, and deployment of the Smart
 Traffic Intersection Agent.
 
 ### 1. Clone the Suite
@@ -67,7 +67,7 @@ source setup.sh --setup
 This single command will:
 
 - Set required environment variables with default values
-- Set up dependencies and submodules required for Smart Traffic Intersection Agent
+- Set up dependencies required for Smart Traffic Intersection Agent
 - Generate the required TLS certificates and authentication files
 - Download demo video files for testing
 - Build Docker images
@@ -274,22 +274,19 @@ to avoid common issues caused by stale data or configuration from a prior versio
 git pull origin <branch-or-tag>
 ```
 
-### 2. Sync Submodules
+### 2. Re-fetch Dependencies
 
-The RI dependency (`deps/metro-vision`) is managed as a git submodule. After pulling new
-code, sync the submodule to match the version pinned by the new release:
+The RI dependency (`deps/metro-vision`) is fetched automatically by `setup.sh` via `git clone`.
+After pulling new code, delete the old dependency directory so that `setup.sh --setup` clones
+the version required by the new release:
 
 ```bash
 cd metro-ai-suite/smart-traffic-intersection-agent
-git submodule sync deps/metro-vision
-git submodule update --init --depth 1 deps/metro-vision
+rm -rf deps/metro-vision
 ```
 
-> This manual step is required for **existing clones** because `setup.sh` only initializes
-> the submodule when the dependency directory does not yet exist. If the directory is
-> already present from a prior release, `setup.sh --setup` will skip the submodule update
-> and use the old version. For a **fresh clone** on a new machine, `source setup.sh --setup`
-> handles submodule initialization automatically and no manual step is needed.
+> `setup.sh --setup` automatically re-clones `deps/metro-vision` when the directory is absent.
+> Removing it before upgrading ensures the correct version is fetched.
 
 ### 3. Clean and Re-setup
 

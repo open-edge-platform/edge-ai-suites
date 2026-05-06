@@ -1,18 +1,18 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.13-slim@sha256:49b618b8afc2742b94fa8419d8f4d3b337f111a0527d417a1db97d4683cb71a6 AS base
+FROM python:3.12-slim AS base
 
 # Build stage
 FROM base AS builder
 
-# Install system dependencies needed for building
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Install system dependencies needed for building, upgrade to apply security patches
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
-RUN pip install --no-cache-dir uv==0.4.23
+RUN pip install --no-cache-dir uv==0.11.10
 
 # Set working directory
 WORKDIR /app
@@ -33,7 +33,7 @@ RUN mkdir -p ui/js/vendor && \
 # Production stage
 FROM base AS production
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+RUN apt-get update && apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user

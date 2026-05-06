@@ -474,6 +474,135 @@ Response (200 OK):
     "timestamp": 1776171542
 }
 ```
+#### Question & Answer (QA)
+Answers natural language questions over uploaded educational materials using Retrieval-Augmented Generation (RAG). The service retrieves the most relevant chunks from the vector database, injects them as context into the VLM prompt, and returns a grounded answer together with the source references used.
+
+* URL: /api/v1/object/qa
+* Method: POST
+* Content-Type: application/json
+* Pattern: SYNC
+* Parameters:
+
+| Field | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `question` | `string` | Yes | Natural language question to answer. Must not be empty. |
+| `history` | `array` | No | Conversation history for multi-turn chat. Each entry must have a `role` (`"user"` or `"assistant"`) and a `content` string. The last `max_history_turns` pairs are included (default: 3, configurable via `qa.max_history_turns` in `config.yaml`). |
+| `filter` | `object` | No | Metadata filters to narrow the retrieval scope (same syntax as `/search`). Example: `{"type": ["document"], "tags": ["lecture"]}`. |
+
+**How it works:**
+1. The question is used to retrieve the top `max_context` (default: 5) ranked chunks from ChromaDB.
+2. Chunks are included in the VLM context greedily (best-score-first) until the token budget (`context_window`, default: 16384) is exhausted.
+3. The conversation history and the context-enriched question are sent to the VLM, which generates a grounded answer.
+4. If no relevant content is found, the VLM is instructed to inform the user and suggest uploading relevant files.
+
+**Configuration** (set under `content_search.qa` in `config.yaml`):
+
+| Parameter | Default | Description |
+| :--- | :--- | :--- |
+| `max_context` | `5` | Number of top chunks retrieved from ChromaDB as RAG context. |
+| `max_tokens` | `1024` | Maximum tokens the VLM can generate for an answer. |
+| `max_history_turns` | `3` | Number of prior conversation turns (user+assistant pairs) sent to the VLM. |
+| `context_window` | `16384` | Token budget for dynamic context selection. |
+
+Request:
+```bash
+# Example 1: Single-turn question
+curl --location 'http://127.0.0.1:9011/api/v1/object/qa' \
+--header 'Content-Type: application/json' \
+--data '{
+    "question": "What is Newton's second law of motion?"
+}'
+
+# Example 2: Multi-turn with history
+curl --location 'http://127.0.0.1:9011/api/v1/object/qa' \
+--header 'Content-Type: application/json' \
+--data '{
+    "question": "Can you give a practical example of that?",
+    "history": [
+        {"role": "user",      "content": "What is Newton's second law of motion?"},
+        {"role": "assistant", "content": "Newton's second law states that F = ma ..."}
+    ]
+}'
+
+# Example 3: Scoped to a specific tag
+curl --location 'http://127.0.0.1:9011/api/v1/object/qa' \
+--header 'Content-Type: application/json' \
+--data '{
+    "question": "Explain the concept of recursion.",
+    "filter": {"tags": ["CS101"]}
+}'
+```
+
+Response (200 OK — answer generated):
+```json
+{
+    "code": 20000,
+    "data": {
+        "answer": "Newton's Second Law of Motion states that the net force acting on an object equals the product of its mass and acceleration (F = ma). For example, pushing a 2 kg box with 10 N of force produces an acceleration of 5 m/s².",
+        "sources": [
+            {
+                "file_name": "SW-Physics-Sample.pdf",
+                "file_path": "local://content-search/runs/95351707-a723-4af5-92df-579f18707871/raw/application/default/SW-Physics-Sample.pdf",
+                "type": "document",
+                "video_pin_second": null,
+                "video_start_second": null,
+                "video_end_second": null,
+                "score": 97.43
+            },
+            {
+                "file_name": "physics_lecture.mp4",
+                "file_path": "local://content-search/runs/2a6e14b6-da45-4e20-93a1-2291ab01d6f6/raw/video/default/physics_lecture.mp4",
+                "type": "video",
+                "video_pin_second": 142.5,
+                "video_start_second": 138.0,
+                "video_end_second": 148.0,
+                "summary_text": "The instructor explains Newton's second law using a block-on-surface experiment, deriving F = ma on the whiteboard.",
+                "score": 89.12
+            }
+        ]
+    },
+    "message": "Answer generated",
+    "timestamp": 1777200456
+}
+```
+
+Response (200 OK — no relevant content found):
+```json
+{
+    "code": 20000,
+    "data": {
+        "answer": "I could not find relevant information in the uploaded materials to answer your question. Please upload documents or videos related to this topic.",
+        "sources": []
+    },
+    "message": "Answer generated",
+    "timestamp": 1777200500
+}
+```
+
+**Response Fields:**
+
+| Field | Type | Description |
+| :---- | :--- | :---------- |
+| `answer` | `string` | VLM-generated answer grounded in the retrieved context. |
+| `sources` | `array` | Ordered list of source chunks used to build the context. Empty if no relevant content was found. |
+| `sources[].file_name` | `string` | Original filename of the source. |
+| `sources[].file_path` | `string` | Full storage path of the source file. |
+| `sources[].type` | `string` | Content type: `document`, `video`, or `image`. |
+| `sources[].video_pin_second` | `float\|null` | Timestamp (seconds) of the relevant moment in a video. `null` for documents/images. |
+| `sources[].video_start_second` | `float\|null` | Start of the video segment. `null` for documents/images. |
+| `sources[].video_end_second` | `float\|null` | End of the video segment. `null` for documents/images. |
+| `sources[].summary_text` | `string\|null` | AI-generated text summary for the video segment, produced by the VLM when video summarization is enabled. `null` when summarization is disabled or the source is a document/image. |
+| `sources[].score` | `float` | Relevance score (0–100); higher is more relevant. |
+
+**Error Responses:**
+
+| Application Code | Condition | Message |
+| :--- | :--- | :--- |
+| `40000` | `question` field is empty or whitespace | `'question' must not be empty` |
+| `50003` | VLM service unreachable or generation failed | `VLM service is not reachable...` or internal error detail |
+
+---
+
 #### Resource Download (Video/Image/Document)
 Download or preview existing resources from storage.
 
