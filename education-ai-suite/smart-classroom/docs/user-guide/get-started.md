@@ -12,7 +12,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 
 ### B. Install DL Streamer
 
-Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 

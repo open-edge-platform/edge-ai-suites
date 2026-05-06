@@ -1,6 +1,3 @@
-:next_page: None
-:prev_page: ../packages
-
 # Industrial Motion-Control ROS2 Gateway
 
 The Industrial Motion-Control ROS2 Gateway is the communication bridge between the DDS and RSTP wire-protocol ROS2 implementation, and Motion Control (MC) IEC-61131-3 standard Intel implementation. It subscribes velocity commands (commonly from Navigation2 stack) and joint trajectories (commonly from MoveIt2 stack), communicates real-time (RT) domain through the Shared Ring Buffer, and gathers the robot's status (Autonomous Mobile Robot's odometry or the industrial robotic arm's joint state) and publishes to the ROS domain.
