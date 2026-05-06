@@ -19,7 +19,7 @@ By following this guide, you will learn how to:
 1. **Clone the Repository and update `.env` file**:
     - Create and navigate to directory:
       ```bash
-        git clone https://github.com/open-edge-platform/edge-ai-suites.git
+        git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
         cd edge-ai-suites/metro-ai-suite/image-based-video-search
       ```
 
@@ -127,19 +127,19 @@ By following this guide, you will learn how to:
 
         if [ ! -e "src/dlstreamer-pipeline-server/models/public/yolo11s/FP16/yolo11s.xml" ]; then
           for attempt in 1 2 3; do
-            
+
             if /home/dlstreamer/dlstreamer/samples/download_public_models.sh yolo11s coco128; then
-              
+
               break
             else
-              
+
               sleep 2
             fi
           done
         fi
         '@
 
-      
+
       ```
 
       </details>

@@ -29,7 +29,7 @@ To get started:
 1. **Clone the Repository**:
    - Run:
      ```bash
-     git clone https://github.com/open-edge-platform/edge-ai-suites.git
+     git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.0.0
      cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
      ```
 
