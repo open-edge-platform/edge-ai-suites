@@ -12,10 +12,38 @@ from utils.config_loader import config
 # CONFIG
 # -----------------------------
 
-print(config.models.embedding.name)
 EMBEDDING_MODEL = config.models.embedding.name
 
-timestamp_pattern = re.compile(r"\[(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\]\s*(.*)")
+_timestamp_pattern = re.compile(r"\[(\d+\.?\d*)\s*-\s*(\d+\.?\d*)\]\s*(.*)")
+
+
+def parse_transcript_lines(transcript_text: str) -> list:
+    """Parse a timestamped transcript into a list of {start, end, text} dicts."""
+    lines = []
+    for raw_line in transcript_text.splitlines():
+        raw_line = raw_line.strip()
+        if not raw_line:
+            continue
+        match = _timestamp_pattern.match(raw_line)
+        if match:
+            lines.append({
+                "start": float(match.group(1)),
+                "end": float(match.group(2)),
+                "text": match.group(3)
+            })
+    return lines
+
+
+def build_topic_text(topic: dict, transcript_lines: list) -> str:
+    """Collect transcript lines whose time window overlaps with a topic."""
+    start_time = topic["start_time"]
+    end_time = topic["end_time"]
+    texts = [
+        line["text"]
+        for line in transcript_lines
+        if not (line["end"] < start_time or line["start"] > end_time)
+    ]
+    return " ".join(texts)
 
 
 class TopicFaissIndexer:
@@ -33,53 +61,16 @@ class TopicFaissIndexer:
         self.metadata = []
 
     # -----------------------------
-    # Transcript parsing
-    # -----------------------------
-
-    def load_transcript_lines(self, transcript_text: str):
-        lines = []
-        for raw_line in transcript_text.splitlines():
-            raw_line = raw_line.strip()
-            if not raw_line:
-                continue
-
-            match = timestamp_pattern.match(raw_line)
-            if match:
-                lines.append({
-                    "start": float(match.group(1)),
-                    "end": float(match.group(2)),
-                    "text": match.group(3)
-                })
-        return lines
-
-    # -----------------------------
-    # Topic text builder
-    # -----------------------------
-
-    def build_topic_text(self, topic, transcript_lines):
-        start_time = topic["start_time"]
-        end_time = topic["end_time"]
-
-        texts = []
-        for line in transcript_lines:
-            # ✅ overlap-based inclusion (CRITICAL FIX)
-            if not (line["end"] < start_time or line["start"] > end_time):
-                texts.append(line["text"])
-
-        return " ".join(texts)
-
-
-    # -----------------------------
     # Main entry point
     # -----------------------------
 
     def index_topics(self, session_id: str, topics: list, transcript_text: str):
-        transcript_lines = self.load_transcript_lines(transcript_text)
+        transcript_lines = parse_transcript_lines(transcript_text)
 
         vectors = []
 
         for topic in topics:
-            raw_text = self.build_topic_text(topic, transcript_lines)
+            raw_text = build_topic_text(topic, transcript_lines)
             if not raw_text.strip():
                 continue
 

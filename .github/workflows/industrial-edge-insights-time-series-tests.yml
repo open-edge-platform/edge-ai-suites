@@ -29,12 +29,10 @@ on:
           test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
           test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
           test_docker_deployment_multimodal, test_helm_deployment_multimodal.
-          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification
+          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
+          Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
-        default: 'test_docker_deployment_weld_anomaly,test_docker_helm_deployment_security,
-          test_helm_deployment_weld_anomaly, test_helm_deployment_wind_turbine,
-          test_docker_deployment_multimodal, test_helm_deployment_multimodal'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
@@ -58,10 +56,18 @@ on:
         type: string
         default: 'yes'
       tests:
-        description: 'Which tests to run (all-tests, timeseries-all, multimodal-all, comma-separated file names, or pytest node IDs e.g. test_file::test_func)'
+        description: >
+          Which tests to run. Use 'all-tests', 'timeseries-all', or 'multimodal-all' to run a group,
+          or a comma-separated list of file names or pytest node IDs for individual tests.
+          File names: test_docker_deployment_stability, test_docker_deployment_weld_anomaly,
+          test_docker_deployment_wind_turbine, test_docker_helm_deployment_security,
+          test_docker_influxdb_retention, test_helm_deployment_weld_anomaly,
+          test_helm_deployment_wind_turbine, test_helm_influxdb_retention,
+          test_docker_deployment_multimodal, test_helm_deployment_multimodal.
+          Node ID format (single function): test_docker_deployment_weld_anomaly::test_make_up_mqtt_weld_verification.
+          Leave empty to use the default set defined in DEFAULT_TESTS env variable.
         required: false
         type: string
-        default: 'all-tests'
       skip_long_tests:
         description: 'Skip long-running tests that take 1 hour or more (yes/no)'
         required: false
@@ -73,6 +79,12 @@ on:
         type: string
         default: 'ubuntu-24.04'
 permissions: {}
+
+env:
+  DEFAULT_TESTS: >-
+    test_docker_deployment_weld_anomaly,test_docker_helm_deployment_security,
+    test_helm_deployment_weld_anomaly,test_helm_deployment_wind_turbine,
+    test_docker_deployment_multimodal,test_helm_deployment_multimodal
 
 jobs:
   functional-tests:
@@ -86,7 +98,7 @@ jobs:
         env:
           TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
-          TESTS: ${{ inputs.tests || 'all-tests' }}
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           echo "tag             : $TAG"
@@ -169,7 +181,7 @@ jobs:
 
       - name: Run Time Series Sample Apps functional tests
         env:
-          TESTS: ${{ inputs.tests || 'all-tests' }}
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Timeseries-specific test files
@@ -314,7 +326,7 @@ jobs:
       - name: Run Multimodal Weld Defect Detection Sample Apps functional tests
         if: ${{ !cancelled() }}
         env:
-          TESTS: ${{ inputs.tests || 'all-tests' }}
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           # Multimodal-specific test files
@@ -458,7 +470,7 @@ jobs:
         env:
           TAG: ${{ inputs.tag || 'main' }}
           BUILD: ${{ inputs.build || 'yes' }}
-          TESTS: ${{ inputs.tests || 'all-tests' }}
+          TESTS: ${{ inputs.tests || env.DEFAULT_TESTS }}
           SKIP_LONG_TESTS: ${{ inputs.skip_long_tests || 'yes' }}
         run: |
           python3 - <<'PYEOF'

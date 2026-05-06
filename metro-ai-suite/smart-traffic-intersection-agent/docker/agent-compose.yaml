@@ -166,10 +166,6 @@ services:
       - scenescape
     restart: unless-stopped
 
-  # Override RI nginx to avoid hardcoded container_name conflict in multi-instance deployments
-  nginx:
-    container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy
-
 volumes:
   traffic-agent-data:
 

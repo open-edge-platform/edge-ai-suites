@@ -11,6 +11,39 @@
   font-family: 'IntelOne Text', sans-serif;
 }
 
+/* ───────── Section-level tab bar: Search | Q&A ───────── */
+
+.cs-search-section-tabs {
+  display: flex;
+  border-bottom: 2px solid #e6e7e8;
+  margin-bottom: 16px;
+}
+
+.cs-search-section-tab {
+  flex: 1;
+  padding: 10px 0;
+  background: none;
+  border: none;
+  font-family: 'IntelOne Text', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6A6D75;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  position: relative;
+}
+
+.cs-search-section-tab:hover {
+  color: #2B2C30;
+  background: #e6e7e8;
+}
+
+.cs-search-section-tab--active {
+  color: #2B2C30;
+  background: #e6e7e8;
+  border-bottom: 2px solid #0068b5;
+}
+
 /* ───────── Header ───────── */
 
 .cs-search-header {

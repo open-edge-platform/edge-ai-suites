@@ -1,0 +1,23 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# Override file for compose-scenescape.yml (RI stack).
+# Applied on top of ri-compose.yaml to ensure multi-instance compatibility
+# when multiple Smart Traffic Intersection Agent instances run on the same host.
+
+services:
+  # Remove host port publishing — influxdb2 is an internal service only
+  # accessible via the Docker network; no host binding needed.
+  influxdb2:
+    ports: []
+
+  # Remove host port publishing — pgserver is an internal service only
+  # accessible via the Docker network; no host binding needed.
+  pgserver:
+    ports: []
+
+  # Override hardcoded container_name so each STIA instance gets a unique nginx
+  # container name scoped to its INTERSECTION_NAME project.
+  # No ports override — base compose already uses ephemeral ports ("80", "443").
+  nginx:
+    container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy

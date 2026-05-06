@@ -236,6 +236,8 @@
     "uploaded":"Uploaded ✔",
     "alreadyExists":"Already Exists",
     "summarizing":"Summarizing...",
+    "summarize":"Summarize",
+    "videoSummarizationToggle":"Enable video summarization for this file",
     "summarizationFailed":"Video summarization failed. Please try again"
   },
   "searchSection": {

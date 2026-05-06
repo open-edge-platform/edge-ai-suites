@@ -239,6 +239,8 @@ class DocumentParser:
                 )
             for _n in nodes:
                 _n.set_content(_clean_text(_n.get_content()))
+                _n.metadata.pop("filename", None)
+                _n.metadata.pop("file_directory", None)
             return nodes
         except Exception as e:
             raise RuntimeError(f"Failed to parse {file_path}: {str(e)}")
@@ -249,6 +251,13 @@ class DocumentParser:
         elements = partition(filename=file_path, **unstructured_kwargs)
         if not elements:
             return []
+
+        file_meta = {
+            k: v for k, v in elements[0].metadata.to_dict().items()
+            if k not in {"orig_elements", "page_number", "coordinates", "languages", "file_directory", "filename"}
+               and isinstance(v, (str, int, float, type(None)))
+        }
+        file_meta["file_path"] = file_path
 
         pages: Dict[int, list] = {}
         for el in elements:
@@ -265,12 +274,7 @@ class DocumentParser:
 
             doc = Document(
                 text=text,
-                metadata={
-                    "file_path": file_path,
-                    "page_number": page_num,
-                    "excluded_embed_metadata_keys": self.excluded_embed_metadata_keys,
-                    "excluded_llm_metadata_keys": self.excluded_llm_metadata_keys,
-                },
+                metadata={**file_meta, "page_number": page_num},
                 excluded_embed_metadata_keys=self.excluded_embed_metadata_keys,
                 excluded_llm_metadata_keys=self.excluded_llm_metadata_keys,
             )

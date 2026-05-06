@@ -237,6 +237,8 @@
     "uploaded": "已上传 ✓",
     "alreadyExists": "已存在",
     "summarizing": "正在摘要...",
+    "summarize": "摘要",
+    "videoSummarizationToggle": "为此文件启用视频摘要",
     "summarizationFailed": "视频摘要失败，请重试"
   },
   "searchSection": {

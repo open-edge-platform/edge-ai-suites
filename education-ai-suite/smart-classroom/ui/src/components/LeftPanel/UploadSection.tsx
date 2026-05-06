@@ -26,6 +26,7 @@ interface UploadEntry {
   error: string | null;
   selected: boolean;
   tags: string[];
+  vsEnabled: boolean;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -223,11 +224,18 @@ const UploadSection: React.FC = () => {
         error: null,
         selected: false,
         tags: [],
+        vsEnabled: false,
       }));
       setEntries((prev) => [...prev, ...newEntries]);
     },
     []
   );
+
+  const toggleVsEnabled = useCallback((id: string) => {
+    setEntries((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, vsEnabled: !e.vsEnabled } : e))
+    );
+  }, []);
 
   // Upload all staged files (with their tags) when user clicks the Upload button
   const handleUploadAll = useCallback(async () => {
@@ -267,7 +275,10 @@ const UploadSection: React.FC = () => {
     await Promise.all(
       stagedEntries.map(async (entry) => {
         try {
-          const meta = entry.tags.length ? { tags: entry.tags } : undefined;
+          const isVideo = entry.fileType === "MP4";
+          const baseMeta: Record<string, unknown> = entry.tags.length ? { tags: entry.tags } : {};
+          if (isVideo) baseMeta.vs_enabled = entry.vsEnabled;
+          const meta = Object.keys(baseMeta).length ? baseMeta : undefined;
           // If file already exists on server (re-staged with new tags), re-ingest with updated tags
           // Otherwise do a fresh upload+ingest
           if (entry.fileKey) {
@@ -298,7 +309,10 @@ const UploadSection: React.FC = () => {
     async (entry: UploadEntry) => {
       updateEntry(entry.id, { status: "PROCESSING", progress: 0, error: null, taskId: null });
       try {
-        const meta = entry.tags.length ? { tags: entry.tags } : undefined;
+        const isVideo = entry.fileType === "MP4";
+        const baseMeta: Record<string, unknown> = entry.tags.length ? { tags: entry.tags } : {};
+        if (isVideo) baseMeta.vs_enabled = entry.vsEnabled;
+        const meta = Object.keys(baseMeta).length ? baseMeta : undefined;
         const res = await csUploadIngest(entry.file, meta);
         if (res.status === "ALREADY_EXISTS") {
           // Already fully processed — store task_id so cleanup works on remove
@@ -502,7 +516,21 @@ return (
                     <span className="cs-file-name" title={entry.filename}>
                       {entry.filename}
                     </span>
-                    {entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
+                    {entry.fileType === "MP4" && entry.status === "STAGED" && !entry.fileKey && (
+                      <label className="cs-vs-toggle" title={t("uploadSection.videoSummarizationToggle")}>
+                        <span className="cs-vs-toggle-label">{t("uploadSection.summarize")}</span>
+                        <input
+                          type="checkbox"
+                          checked={entry.vsEnabled}
+                          onChange={() => toggleVsEnabled(entry.id)}
+                          className="cs-vs-toggle-input"
+                        />
+                        <span className="cs-vs-toggle-track">
+                          <span className="cs-vs-toggle-thumb" />
+                        </span>
+                      </label>
+                    )}
+                    {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
                       <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
                     )}
                     {entry.tags.length > 0 && (
@@ -542,12 +570,12 @@ return (
                       <>
                         <span
                           className={`cs-status-badge cs-status-badge--${
-                            entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                            entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
                               ? "completed"
                               : entry.status.toLowerCase()
                           }`}
                         >
-                          {entry.fileType === "MP4" && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                          {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
                             ? t("uploadSection.uploaded")
                             : getStatusLabel(entry.status)}
                         </span>

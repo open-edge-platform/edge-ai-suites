@@ -92,6 +92,13 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         # Video Summarization
         _set("VIDEO_SUMMARIZATION_ENABLED", str(cs.get("video_summarization_enabled", True)).lower())
 
+        # Q&A
+        qa = cs.get("qa", {})
+        _set("QA_MAX_CONTEXT", str(qa.get("max_context", 5)))
+        _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
+        _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
+        _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
+
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
         _set("CS_PORT", cs.get("port", "9011"))
