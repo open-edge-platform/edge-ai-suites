@@ -12,10 +12,8 @@ from utils.runtime_config_loader import RuntimeConfig
 from utils.storage_manager import StorageManager
 from utils.markdown_cleaner import markdown_to_plain
 from monitoring import monitor
-from utils.topic_faiss_indexer import TopicFaissIndexer
 from pathlib import Path
 import json
-from utils.faiss_content_search import FaissContentSearcher
 from utils.media_validation_service import MediaValidationService
 from utils.session_state_manager import SessionState
 from utils.content_search_client import ContentSearchClient
@@ -249,25 +247,11 @@ class Pipeline:
 
             # Primary: content-search service handles embedding
             cs_client = ContentSearchClient()
-            ingested = cs_client.ingest_topics(
+            cs_client.ingest_topics(
                 session_id=self.session_id,
                 topics=topics,
                 transcript_text=transcript_text,
             )
-
-            if ingested == 0:
-                # Fallback: content-search unavailable — build local FAISS index
-                logger.warning(
-                    "Content-search ingest unavailable, building local FAISS fallback index."
-                )
-                index_dir = Path(session_dir) / "faiss"
-                indexer = TopicFaissIndexer(index_dir)
-                vector_count = indexer.index_topics(
-                    session_id=self.session_id,
-                    topics=topics,
-                    transcript_text=transcript_text,
-                )
-                logger.info(f"FAISS fallback index built with {vector_count} topic vectors.")
 
             # ✅ Return parsed Python object (not string)
             return topics
@@ -284,36 +268,9 @@ class Pipeline:
 
 
     def search_content(self, query: str, top_k: int = 5):
-
-        # Try content-search service first (persistent, cross-session capable)
-        try:
-            cs_client = ContentSearchClient()
-            cs_results = cs_client.search_topics(
-                query=query,
-                top_k=top_k,
-            )
-            if cs_results is not None:
-                logger.info("Search returned %d result(s) from content-search service.", len(cs_results))
-                return cs_results
-        except Exception as cs_err:
-            logger.warning("Content-search lookup failed, falling back to FAISS: %s", cs_err)
-
-        # Fall back to local FAISS index (only present when content-search was down at ingest time)
-        logger.info("Falling back to local FAISS search for session %s.", self.session_id)
-        project_config = RuntimeConfig.get_section("Project")
-        session_dir = Path(
-            project_config.get("location"),
-            project_config.get("name"),
-            self.session_id
-        )
-
-        faiss_dir = session_dir / "faiss"
-        try:
-            searcher = FaissContentSearcher(faiss_dir)
-            return searcher.search(query=query, top_k=top_k)
-        except FileNotFoundError:
-            logger.warning(
-                "No local FAISS index found for session %s — content-search was available at ingest time.",
-                self.session_id,
-            )
-            return []
+        cs_client = ContentSearchClient()
+        results = cs_client.search_topics(query=query, top_k=top_k)
+        if results is None:
+            results = []
+        logger.info("Search returned %d result(s) from content-search service.", len(results))
+        return results

@@ -1,15 +1,9 @@
-import math
 import requests
 import logging
 from utils.config_loader import config
 from utils.topic_faiss_indexer import parse_transcript_lines, build_topic_text
 
 logger = logging.getLogger(__name__)
-
-
-def _sigmoid(x: float) -> float:
-    """Convert a raw cross-encoder logit to a probability in [0, 1]."""
-    return 1.0 / (1.0 + math.exp(-x))
 
 # Explicitly bypass any system/corporate proxy for localhost calls.
 # The content-search service runs on 127.0.0.1; going through a proxy
@@ -37,22 +31,11 @@ class ContentSearchClient:
 
     @staticmethod
     def _map_results(raw_results: list) -> list:
-        """Normalise content-search results to match the FAISS result schema.
-
-        Score normalisation:
-        - reranker_score: raw cross-encoder logit → sigmoid → [0, 1]
-        - score:          cosine similarity, already in [-1, 1] → used as-is
-        - distance:       ChromaDB distance (lower = better) → 1 - distance
-        """
         results = []
         for item in raw_results:
             meta = item.get("meta", {})
-            reranker_score = item.get("reranker_score")
-            if reranker_score is not None:
-                # bge-reranker-large outputs unbounded logits; sigmoid → [0,1]
-                score = _sigmoid(float(reranker_score))
-            elif item.get("score") is not None:
-                score = float(item["score"])
+            if item.get("score") is not None:
+                score = float(item["score"]) / 100.0
             else:
                 score = 1.0 - float(item.get("distance", 1.0))
             results.append({
@@ -117,17 +100,7 @@ class ContentSearchClient:
         return ingested
 
     def search_topics(self, query: str, top_k: int = 5) -> list | None:
-        """Search for topics relevant to *query* across all ingested sessions.
-
-        The ``source: topic-search`` filter restricts results to timestamped
-        transcription topics only, excluding all other content-search
-        artifacts.  ``session_id`` is stored in each document's metadata for
-        provenance but is not used as a retrieval filter — cross-session
-        topic discovery is the intended behaviour.
-
-        Returns a normalised result list on success, or ``None`` if the
-        service is unreachable so the caller can fall back to FAISS.
-        """
+        """Search for topics relevant to *query* across all ingested sessions."""
         payload = {
             "query": query,
             "max_num_results": top_k,
