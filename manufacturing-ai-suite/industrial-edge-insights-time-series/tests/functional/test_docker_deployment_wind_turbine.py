@@ -71,6 +71,7 @@ def test_valid_values():
     logger.info(f"make check env variables returned: {result}, expected: True")
     assert result == True
 
+@pytest.mark.opcua
 def test_make_up_opcua(setup_wind_turbine_environment):
     """TC_004: Testing make up OPCUA and make down with valid values in .env file"""
     logger.info("TC_004: Testing make up_opcua_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
@@ -78,18 +79,19 @@ def test_make_up_opcua(setup_wind_turbine_environment):
     
     # Use the deploy_opcua function with app parameter
     result = context["deploy_opcua"](app=constants.WIND_SAMPLE_APP)
-    logger.info(f"OPC-UA deploy result: {result}")
-    assert result == True, "OPC-UA deployment with app parameter failed"
+    logger.info(f"OPCUA deploy result: {result}")
+    assert result == True, "OPCUA deployment with app parameter failed"
     
     # Verify containers are running
     containers = docker_utils.get_the_deployed_containers()
     logger.info(f"Deployed containers: {containers}")
     logger.info(f"Containers found: {len(containers) if containers else 0}")
-    assert containers, "No containers found after deployment"
+    assert containers, "No containers found after OPCUA deployment"
     
     # No manual cleanup needed - handled by fixture
     
 
+@pytest.mark.mqtt
 def test_make_up_mqtt(setup_wind_turbine_environment):
     """TC_005: Testing make up MQTT and make down with valid values in .env file"""
     logger.info("TC_005: Testing make up_mqtt_ingestion app=\"wind-turbine-anomaly-detection\" command execution")
@@ -107,6 +109,7 @@ def test_make_up_mqtt(setup_wind_turbine_environment):
     assert containers, "No containers found after MQTT deployment"
     # No manual cleanup needed - handled by fixture    
 
+@pytest.mark.mqtt
 def test_multiple_runs_mqtt(setup_wind_turbine_environment):
     """
     TC_006: Testing multiple runs of make up MQTT
@@ -129,6 +132,7 @@ def test_multiple_runs_mqtt(setup_wind_turbine_environment):
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
             assert make_down_result == True
 
+@pytest.mark.opcua
 def test_multiple_runs_opcua(setup_wind_turbine_environment):
     """
     TC_007: Testing multiple runs of make up OPCUA
@@ -167,6 +171,7 @@ def test_multiple_runs_opcua(setup_wind_turbine_environment):
             logger.info(f"make down result in cycle {i+1}: {make_down_result}")
             assert make_down_result == True
 
+@pytest.mark.opcua
 def test_switch_mqtt_to_opcua_ingestion(setup_wind_turbine_environment):
     """TC_008: Testing switch between MQTT and OPCUA ingestion"""
     logger.info("TC_008: Testing switch between MQTT and OPCUA ingestion")
@@ -195,6 +200,7 @@ def test_switch_mqtt_to_opcua_ingestion(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.mqtt
 def test_switch_opcua_to_mqtt_ingestion(setup_wind_turbine_environment):
     """TC_009: Testing switch from OPCUA back to MQTT ingestion"""
     logger.info("TC_009: Testing switch from OPCUA back to MQTT ingestion")
@@ -207,6 +213,7 @@ def test_switch_opcua_to_mqtt_ingestion(setup_wind_turbine_environment):
     assert switch_result == True
     # Cleanup handled by fixture
 
+@pytest.mark.mqtt
 def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     """TC_010: Testing stability of MQTT ingestion"""
     logger.info("TC_010: Testing stability of MQTT ingestion")
@@ -229,6 +236,7 @@ def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.opcua
 def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     """TC_011: Testing stability of OPCUA ingestion"""
     logger.info("TC_011: Testing stability of OPCUA ingestion")
@@ -251,6 +259,7 @@ def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.opcua
 def test_loglevel_configuration(setup_wind_turbine_environment):
     """TC_012: Testing log level configuration in .env file"""
     logger.info("TC_012: Testing log level configuration in .env file")
@@ -258,55 +267,85 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
     context["deploy_opcua"]()
     
     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
-    
-    # Test INFO log level first
-    logger.info("Testing INFO log level configuration")
-    result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
-    logger.info(f"INFO log level check result: {result_info}")
-    assert result_info == True, "INFO log level verification failed"
-    
-    # Test DEBUG log level with proper container restart
-    logger.info("Testing DEBUG log level configuration with container restart")
-    
-    # Update log level to DEBUG
-    common_utils.update_log_level("DEBUG")
-    
-    # Restart container to apply the new log level setting
-    logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
-    restart_exit_code = docker_utils.restart_container(container_name)
-    logger.info(f"Container restart exit code: {restart_exit_code}")
-    assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
-    
-    # Poll until service is ready after restart instead of sleeping blindly
-    logger.info("Waiting for container to stabilize after restart...")
-    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
-    
-    # Trigger some activity to generate DEBUG logs by checking container status
-    logger.info("Triggering activity to generate DEBUG logs...")
-    docker_utils.invoke_make_status()
-    
-    # Brief wait for new log lines to flush
-    docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
-    
-    # Check for DEBUG logs
-    result_debug = common_utils.check_logs_by_level(container_name, "DEBUG", update_config=False)
-    
-    # If DEBUG logs are still not found, log this as a known limitation but don't fail the test
-    if not result_debug:
-        logger.warning("DEBUG logs not found - this may be expected if the application doesn't generate DEBUG logs during normal operation")
-        logger.info("Checking if container is running and responsive instead...")
-        
-        # Alternative verification: check if container is running and log level was updated
-        status_result = docker_utils.check_make_status()
-        logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
-        assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
-        
-        logger.info("Container is running properly with DEBUG log level configuration")
-        result_debug = True  # Consider test passed if container is healthy
-    
-    logger.info(f"Log level configuration test completed: INFO ✓, DEBUG {'✓' if result_debug else '⚠'}")
+
+    # Capture the original LOG_LEVEL so we can restore it on teardown — this
+    # test mutates the shared .env (LOG_LEVEL=DEBUG) and without restoration
+    # the value would leak into every subsequent test in the module.
+    env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
+    original_log_level = None
+    try:
+        with open(env_file_path, "r") as _f:
+            for _line in _f:
+                if _line.startswith("LOG_LEVEL="):
+                    original_log_level = _line.split("=", 1)[1].strip()
+                    break
+    except Exception as _exc:
+        logger.warning(f"Could not read original LOG_LEVEL from {env_file_path}: {_exc}")
+    logger.info(f"Captured original LOG_LEVEL='{original_log_level}' for restoration on teardown")
+
+    try:
+        # Test INFO log level first
+        logger.info("Testing INFO log level configuration")
+        result_info = common_utils.check_logs_by_level(container_name, "INFO", update_config=True)
+        logger.info(f"INFO log level check result: {result_info}")
+        assert result_info == True, "INFO log level verification failed"
+
+        # Test DEBUG log level with proper container restart
+        logger.info("Testing DEBUG log level configuration with container restart")
+
+        # Update log level to DEBUG
+        common_utils.update_log_level("DEBUG")
+
+        # Restart container to apply the new log level setting
+        logger.info(f"Restarting container {container_name} to apply DEBUG log level...")
+        restart_exit_code = docker_utils.restart_container(container_name)
+        logger.info(f"Container restart exit code: {restart_exit_code}")
+        assert restart_exit_code == 0, f"Failed to restart container {container_name}, exit code: {restart_exit_code}"
+
+        # Poll until service is ready after restart instead of sleeping blindly
+        logger.info("Waiting for container to stabilize after restart...")
+        docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+
+        # Trigger some activity to generate DEBUG logs by checking container status
+        logger.info("Triggering activity to generate DEBUG logs...")
+        docker_utils.invoke_make_status()
+
+        # Brief wait for new log lines to flush
+        docker_utils.wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
+
+        # Check for DEBUG logs
+        result_debug = common_utils.check_logs_by_level(container_name, "DEBUG", update_config=False)
+
+        # If DEBUG logs are still not found, log this as a known limitation but don't fail the test
+        if not result_debug:
+            logger.warning("DEBUG logs not found - this may be expected if the application doesn't generate DEBUG logs during normal operation")
+            logger.info("Checking if container is running and responsive instead...")
+
+            # Alternative verification: check if container is running and log level was updated
+            status_result = docker_utils.check_make_status()
+            logger.info(f"Container status result: {status_result}, length: {len(status_result) if status_result else 0}")
+            assert status_result is not None and len(status_result) > 0, "Container status check failed after DEBUG log level update"
+
+            logger.info("Container is running properly with DEBUG log level configuration")
+            result_debug = True  # Consider test passed if container is healthy
+
+        logger.info(f"Log level configuration test completed: INFO ✓, DEBUG {'✓' if result_debug else '⚠'}")
+    finally:
+        # Restore the original LOG_LEVEL so subsequent tests in this module
+        # are not contaminated with our DEBUG override.  The container itself
+        # is wiped by the next ``deploy_*`` (Makefile targets depend on
+        # ``down``) so we only need to restore the .env file here.
+        if original_log_level is not None:
+            try:
+                common_utils.update_log_level(original_log_level)
+                logger.info(f"Restored LOG_LEVEL='{original_log_level}' in {env_file_path}")
+            except Exception as _exc:
+                logger.warning(f"Failed to restore LOG_LEVEL='{original_log_level}': {_exc}")
+        else:
+            logger.warning("Original LOG_LEVEL was not captured; .env left at DEBUG")
     # Cleanup handled by fixture
 
+@pytest.mark.mqtt
 def test_mqtt_alerts(setup_wind_turbine_environment):
     """TC_013: Testing MQTT alerts functionality"""
     logger.info("TC_013: Testing MQTT alerts functionality")
@@ -322,22 +361,118 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     
     # Cleanup handled by fixture
 
+@pytest.mark.opcua
 def test_opcua_alerts(setup_wind_turbine_environment):
-    """TC_014: Testing OPCUA alerts functionality"""
+    """TC_014: Testing OPCUA alerts functionality.
+
+    The underlying ``validate_opcua_alert_system`` helper performs 5 sequential
+    steps (TICK script update → UDF tar upload → config POST → OPC-UA server
+    restart → log pattern search).  When the helper returns False the only
+    signal is the assertion message, which makes triage hard.
+
+    This test adds explicit pre-checks and on-failure log dumps so CI output
+    pinpoints which subsystem (deployment / TSAM / OPC-UA server / log
+    pattern) caused the failure without needing to re-run locally.
+    """
+    import subprocess as _subprocess
+
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
-    context["deploy_opcua"]()
-    
-    # Test OPCUA alerts system using helper function from conftest_docker
-    validation_result = docker_utils.validate_opcua_alert_system()
 
-    # Validation should pass
+    # ------------------------------------------------------------------
+    # Phase 1: Deploy OPC-UA stack
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 1/4: Deploying OPC-UA stack...")
+    deploy_ok = context["deploy_opcua"]()
+    logger.info(f"[DEBUG] deploy_opcua returned: {deploy_ok}")
+    assert deploy_ok, "OPC-UA deployment failed before alert validation could start"
+
+    # ------------------------------------------------------------------
+    # Phase 2: Pre-validation health checks — confirm prerequisites the
+    # validate_opcua_alert_system helper assumes are already in place.
+    # ------------------------------------------------------------------
+    tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    opcua_name = constants.CONTAINERS["opcua_server"]["name"]
+
+    logger.info("[DEBUG] Phase 2/4: Pre-validation health checks")
+    logger.info(f"[DEBUG] Checking TSAM container '{tsam_name}' is running...")
+    tsam_running = docker_utils.container_is_running(tsam_name)
+    logger.info(f"[DEBUG]   tsam_running={tsam_running}")
+    assert tsam_running, f"TSAM container '{tsam_name}' is not running before OPC-UA alert validation"
+
+    logger.info(f"[DEBUG] Checking OPC-UA server container '{opcua_name}' is running...")
+    opcua_running = docker_utils.container_is_running(opcua_name)
+    logger.info(f"[DEBUG]   opcua_running={opcua_running}")
+    assert opcua_running, f"OPC-UA server container '{opcua_name}' is not running before alert validation"
+
+    logger.info("[DEBUG] Polling ts-api health endpoint until ready...")
+    svc_ready = docker_utils.wait_until_service_ready(
+        timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT
+    )
+    logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
+    assert svc_ready, "ts-api health endpoint did not become ready before OPC-UA alert validation"
+
+    # Snapshot of running containers + their status — useful when triaging
+    # failures that show up later as "container X not running".
+    try:
+        ps_out = _subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
+            capture_output=True, text=True, timeout=15,
+        ).stdout.strip()
+        logger.info(f"[DEBUG] docker ps snapshot:\n{ps_out}")
+    except Exception as exc:
+        logger.warning(f"[DEBUG] Failed to capture docker ps snapshot: {exc}")
+
+    # ------------------------------------------------------------------
+    # Phase 3: Run the actual validation helper
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 3/4: Invoking validate_opcua_alert_system()...")
+    validation_result = docker_utils.validate_opcua_alert_system()
+    logger.info(f"[DEBUG] validate_opcua_alert_system returned: {validation_result}")
+
+    # ------------------------------------------------------------------
+    # Phase 4: On failure, dump container state + key logs so the CI
+    # output is self-sufficient for diagnosis.
+    # ------------------------------------------------------------------
+    if not validation_result:
+        logger.error("[DEBUG] Phase 4/4: Validation FAILED — collecting diagnostics")
+
+        # Re-snapshot container state (something may have crashed / restarted)
+        try:
+            ps_out = _subprocess.run(
+                ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
+                capture_output=True, text=True, timeout=15,
+            ).stdout.strip()
+            logger.error(f"[DEBUG] docker ps -a (post-failure):\n{ps_out}")
+        except Exception as exc:
+            logger.warning(f"[DEBUG] Failed to capture docker ps -a: {exc}")
+
+        # Tail logs from the containers that participate in the OPC-UA
+        # alert pipeline.  We use --tail to bound output size in CI logs.
+        for cname in (tsam_name, opcua_name, constants.CONTAINERS["telegraf"]["name"]):
+            try:
+                logs_out = _subprocess.run(
+                    ["docker", "logs", "--tail", "120", cname],
+                    capture_output=True, text=True, timeout=15,
+                )
+                stdout = (logs_out.stdout or "").strip()
+                stderr = (logs_out.stderr or "").strip()
+                logger.error(f"[DEBUG] ----- {cname} stdout (last 120) -----\n{stdout}")
+                if stderr:
+                    logger.error(f"[DEBUG] ----- {cname} stderr (last 120) -----\n{stderr}")
+            except Exception as exc:
+                logger.warning(f"[DEBUG] Failed to capture logs for {cname}: {exc}")
+
     logger.info(f"OPCUA alert validation result: {validation_result}")
-    assert validation_result == True, "OPCUA alert system validation failed"
-    
+    assert validation_result == True, (
+        "OPCUA alert system validation failed — see [DEBUG] log lines above for "
+        "container state and TSAM/OPC-UA/Telegraf log tails captured at failure time."
+    )
+
     # Cleanup handled by fixture
     
 
+@pytest.mark.mqtt
 def test_influxdb_data_with_mqtt(setup_wind_turbine_environment):
     """TC_017: Testing InfluxDB data with MQTT ingestion"""
     logger.info("TC_017: Testing InfluxDB data with MQTT ingestion")
@@ -358,6 +493,7 @@ def test_influxdb_data_with_mqtt(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.opcua
 def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
     """TC_018: Testing InfluxDB data with OPC UA ingestion"""
     logger.info("TC_018: Testing InfluxDB data with OPC UA ingestion")
@@ -383,6 +519,7 @@ def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.mqtt
 def test_stability_mqtt_for_3_Minutes(setup_wind_turbine_environment):
     """TC_019: Testing make up MQTT and make down for longer duration for 3 Minutes."""
     logger.info("TC_019: Testing make up MQTT and make down for longer duration for 3 Minutes")
@@ -396,6 +533,7 @@ def test_stability_mqtt_for_3_Minutes(setup_wind_turbine_environment):
     # Cleanup handled by fixture
     
 
+@pytest.mark.opcua
 def test_stability_opcua_for_3_Minutes(setup_wind_turbine_environment):
     """TC_020: Testing make up OPCUA and make down for longer duration for 3 Minutes."""
     logger.info("TC_020: Testing make up OPCUA and make down for longer duration for 3 Minutes")
@@ -409,6 +547,7 @@ def test_stability_opcua_for_3_Minutes(setup_wind_turbine_environment):
     # Cleanup handled by fixture
 
 
+@pytest.mark.opcua
 def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
     """TC_025: Testing OPC-UA multi-stream ingestion with wind-turbine-anomaly-detection app"""
     logger.info("TC_025: Testing OPC-UA multi-stream ingestion with 3 streams")
@@ -452,6 +591,7 @@ def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
     # No manual cleanup needed - handled by fixture
 
 
+@pytest.mark.mqtt
 def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
     """TC_026: Testing MQTT multi-stream ingestion with wind-turbine-anomaly-detection app"""
     logger.info("TC_026: Testing MQTT multi-stream ingestion with 3 streams")
@@ -496,6 +636,7 @@ def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
     # No manual cleanup needed - handled by fixture
 
 
+@pytest.mark.opcua
 def test_opcua_multi_stream_scalability(setup_wind_turbine_environment):
     """TC_027: Testing OPC-UA multi-stream scalability with different stream counts"""
     logger.info("TC_027: Testing OPC-UA multi-stream scalability with different stream counts")
@@ -559,6 +700,7 @@ def test_opcua_multi_stream_scalability(setup_wind_turbine_environment):
     # Final cleanup handled by fixture
 
 
+@pytest.mark.mqtt
 def test_mqtt_multi_stream_scalability(setup_wind_turbine_environment):
     """TC_028: Testing MQTT multi-stream scalability with different stream counts"""
     logger.info("TC_028: Testing MQTT multi-stream scalability with different stream counts")
@@ -608,6 +750,7 @@ def test_mqtt_multi_stream_scalability(setup_wind_turbine_environment):
 
 
 @pytest.mark.kpi
+@pytest.mark.mqtt
 def test_mqtt_deployment_time_kpi(setup_wind_turbine_environment):
     """
     TC_021: Test Docker deployment time KPI for MQTT ingestion
@@ -634,6 +777,7 @@ def test_mqtt_deployment_time_kpi(setup_wind_turbine_environment):
 
 
 @pytest.mark.kpi
+@pytest.mark.opcua
 def test_opcua_deployment_time_kpi(setup_wind_turbine_environment):
     """
     TC_022: Test Docker deployment time KPI for OPCUA ingestion
@@ -721,6 +865,7 @@ def test_build_time_kpi(setup_wind_turbine_environment):
 
 
 
+@pytest.mark.opcua
 def test_nginx_proxy_integration_wind_turbine(setup_wind_turbine_environment):
     """TC_030: Testing nginx proxy integration for wind turbine deployment"""
     logger.info("TC_030: Testing nginx proxy integration for wind turbine deployment")
@@ -745,8 +890,8 @@ def test_nginx_proxy_integration_wind_turbine(setup_wind_turbine_environment):
 
 @pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
 @pytest.mark.parametrize("protocol,test_case,deploy_func", [
-    ("opcua", "TC_031", "deploy_opcua"),
-    ("mqtt", "TC_032", "deploy_mqtt")
+    pytest.param("opcua", "TC_031", "deploy_opcua", marks=pytest.mark.opcua),
+    pytest.param("mqtt", "TC_032", "deploy_mqtt", marks=pytest.mark.mqtt),
 ])
 def test_gpu(setup_wind_turbine_environment, protocol, test_case, deploy_func):
     """Testing GPU device configuration in time-series analytics config with different ingestion protocols"""
