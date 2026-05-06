@@ -1,0 +1,162 @@
+services:
+  nicu-backend:
+    image: ${NICU_BACKEND_IMAGE:-intel/hl-ai-nicu-backend:${TAG:-1.0.0}}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nicu-backend
+    ports:
+      - "5001:5001"
+    env_file:
+      - ${DEVICE_ENV:-configs/res/mixed-optimized.env}
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps,nicu-mqtt
+      - no_proxy=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps,nicu-mqtt
+    volumes:
+      - ./:/app
+      - dlsps-shared:/shared
+    devices:
+      - /dev/dri:/dev/dri          # Intel iGPU
+      - /dev/accel:/dev/accel      # Intel NPU
+    group_add:
+      - "44"       # video
+      - "992"      # render
+    healthcheck:
+      # Use /health (not /readiness): the container should remain healthy
+      # while the pipeline is running. /readiness only returns ready=true
+      # in the READY state, which makes the container go unhealthy as soon
+      # as the user clicks Start.
+      test: ["CMD", "python3", "-c", "import urllib.request,json; r=urllib.request.urlopen('http://localhost:5001/health',timeout=2); d=json.loads(r.read()); exit(0 if d.get('status')=='healthy' else 1)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on:
+      nicu-metrics-collector:
+        condition: service_healthy
+
+  nicu-ui:
+    image: ${NICU_UI_IMAGE:-intel/hl-ai-nicu-ui:${TAG:-1.0.0}}
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ""
+    container_name: nicu-ui
+    ports:
+      - "3001:3000"
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps
+      - no_proxy=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps
+    depends_on:
+      nicu-backend:
+        condition: service_healthy
+
+  nicu-metrics-collector:
+    image: intel/hl-ai-metrics-collector:2026.0-rc1
+    container_name: nicu-metrics-collector
+    pid: host
+    ports:
+      - "9100:9000"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:9000/metrics"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    environment:
+      - METRICS_DIR=/tmp/results
+      - NPU_LOG=/tmp/results/npu_usage.csv
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps
+      - no_proxy=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps
+    volumes:
+      - ./metrics:/tmp/results
+      - /sys:/sys
+      - /dev:/dev
+      - /run:/run
+    privileged: true
+
+  nicu-dlsps:
+    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24}
+    container_name: nicu-dlsps
+    user: "0:0"
+    profiles: ["dlsps"]
+    env_file:
+      - ${DEVICE_ENV:-configs/res/mixed-optimized.env}
+    ports:
+      - "8080:8080"
+    devices:
+      - /dev/dri:/dev/dri          # Intel iGPU (Arc / Meteor Lake)
+      - /dev/accel:/dev/accel      # Intel NPU
+    group_add:
+      - "44"       # video
+      - "992"      # render
+    environment:
+      - REST_SERVER_PORT=8080
+      - MQTT_HOST=nicu-mqtt
+      - MQTT_PORT=1883
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - http_proxy=${http_proxy:-}
+      - https_proxy=${https_proxy:-}
+      - NO_PROXY=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps,nicu-mqtt
+      - no_proxy=localhost,127.0.0.1,::1,nicu-backend,nicu-ui,nicu-metrics-collector,nicu-dlsps,nicu-mqtt
+    volumes:
+      - ./dlsps/config.json:/home/pipeline-server/config.json:ro
+      - ./dlsps/user_defined_pipelines:/var/cache/pipeline_root/user_defined_pipelines
+      - ./configs/workload_to_device.json:/configs/workload_to_device.json:ro
+      - ./configs/res:/configs/res:ro
+      - ./Warmer_Testbed_YTHD.mp4:/data/Warmer_Testbed_YTHD.mp4:ro
+      - ./person-detect-fp32.xml:/models/person-detect-fp32.xml:ro
+      - ./person-detect-fp32.bin:/models/person-detect-fp32.bin:ro
+      - ./patient-detect-fp32.xml:/models/patient-detect-fp32.xml:ro
+      - ./patient-detect-fp32.bin:/models/patient-detect-fp32.bin:ro
+      - ./latch-detect-fp32.xml:/models/latch-detect-fp32.xml:ro
+      - ./latch-detect-fp32.bin:/models/latch-detect-fp32.bin:ro
+      - ./models_rppg/mtts_can.xml:/models/rppg/mtts_can.xml:ro
+      - ./models_rppg/mtts_can.bin:/models/rppg/mtts_can.bin:ro
+      # Action recognition — FP32 (original, always available)
+      - ./action-recognition-0001-encoder.xml:/models/action/FP32/action-recognition-0001-encoder.xml:ro
+      - ./action-recognition-0001-encoder.bin:/models/action/FP32/action-recognition-0001-encoder.bin:ro
+      - ./action-recognition-0001-decoder.xml:/models/action/FP32/action-recognition-0001-decoder.xml:ro
+      - ./action-recognition-0001-decoder.bin:/models/action/FP32/action-recognition-0001-decoder.bin:ro
+      - ./data/kinetics.txt:/models/action/kinetics.txt:ro
+      - ./extensions:/extensions:ro
+      - ./extensions/publisher_utils_patched.py:/home/pipeline-server/utils/publisher_utils.py:ro
+      - ./uploads:/data/uploads:ro
+      - dlsps-shared:/shared
+    depends_on:
+      - nicu-mqtt
+
+  nicu-mqtt:
+    image: eclipse-mosquitto:2
+    container_name: nicu-mqtt
+    profiles: ["dlsps"]
+    ports:
+      - "1883:1883"
+    command: mosquitto -p 1883 -c /mosquitto-no-auth.conf
+    volumes:
+      - ./configs/mosquitto.conf:/mosquitto-no-auth.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mosquitto_pub -h localhost -t test -m ok -q 0"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+      start_period: 3s
+
+volumes:
+  dlsps-shared:

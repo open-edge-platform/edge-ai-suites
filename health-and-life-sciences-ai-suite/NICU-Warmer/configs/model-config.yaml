@@ -1,0 +1,78 @@
+# NICU Warmer — Model & Asset Configuration
+# Config-driven model downloader reads this file to fetch all required assets.
+# Pattern follows multi_modal_patient_monitoring/configs/model-config.yaml.
+
+# --- Backend preparation section (used by backend_mvp/asset_preparation.py) ---
+preparation:
+  model_paths:
+    - ./person-detect-fp32.xml
+    - ./patient-detect-fp32.xml
+    - ./latch-detect-fp32.xml
+  rppg_model_path: /models/rppg/mtts_can.xml
+  video_path: ./Warmer_Testbed_YTHD.mp4
+  pipeline_template: ./pipelines/nicu_shared_pipeline.template.json
+  resolved_pipeline: ./pipelines/nicu_shared_pipeline.resolved.json
+
+# --- Model download sections (used by scripts/download_models.py) ---
+detection-models:
+  description: "Custom detection models (person, patient, latch) — pre-converted OpenVINO IR"
+  target_dir: /models
+  models:
+    - name: person-detect-fp32
+      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/person-detect-fp32.xml
+      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/person-detect-fp32.bin
+
+    - name: patient-detect-fp32
+      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/patient-detect-fp32.xml
+      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/patient-detect-fp32.bin
+
+    - name: latch-detect-fp32
+      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/latch-detect-fp32.xml
+      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/latch-detect-fp32.bin
+
+action-recognition:
+  description: "Open Model Zoo action recognition (encoder + decoder) — FP32 IR"
+  target_dir: /models/action/FP32
+  models:
+    - name: action-recognition-0001-encoder
+      xml_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-encoder/FP32/action-recognition-0001-encoder.xml
+      bin_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-encoder/FP32/action-recognition-0001-encoder.bin
+
+    - name: action-recognition-0001-decoder
+      xml_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-decoder/FP32/action-recognition-0001-decoder.xml
+      bin_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-decoder/FP32/action-recognition-0001-decoder.bin
+
+rppg:
+  description: "MTTS-CAN rPPG model — download HDF5 and convert to OpenVINO IR"
+  target_dir: /models/rppg
+  models:
+    - name: mtts_can
+      hdf5_url: https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5
+
+video:
+  description: "Default test video for NICU Warmer pipeline"
+  target_dir: /data
+  models:
+    - name: Warmer_Testbed_YTHD
+      url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/Warmer_Testbed_YTHD.mp4
+
+metrics_collector:
+  base_url: http://nicu-metrics-collector:9000   # docker-compose service DNS
+
+dlsps:
+  base_url: http://nicu-dlsps:8080
+  timeout_seconds: 2.0
+  assume_reachable: true   # set false when DLSPS is actually running
+  pipeline_name: user_defined_pipelines
+  pipeline_version: nicu_tee
+  status_endpoint: /pipelines/status
+  status_poll_interval_seconds: 1.0
+  device: GPU
+  loop:
+    enabled: true
+    max_loops: -1
+  thresholds:
+    patient_presence: 0.5
+    caretaker_presence: 0.5
+    latch_detection: 0.5
+

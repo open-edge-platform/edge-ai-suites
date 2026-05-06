@@ -439,8 +439,8 @@ content_search:
     port: 9990
     collection_name: "content-search"
     doc_embedding_device: "CPU"
-    visual_embedding_model: "CLIP/clip-vit-b-16"
-    doc_embedding_model: "BAAI/bge-small-en-v1.5"
+    visual_embedding_model: "CLIP/clip-xlm-roberta-base-vit-b-32"
+    doc_embedding_model: "intfloat/multilingual-e5-small"
     frame_extract_interval: 30      # for video: extract a frame every N frames
     do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
     document_parser:
