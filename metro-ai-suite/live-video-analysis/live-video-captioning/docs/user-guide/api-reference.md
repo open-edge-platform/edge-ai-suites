@@ -21,12 +21,12 @@ When the stack is running, FastAPI provides OpenAPI/Swagger UI at:
 
 - `GET /api/pipelines` — List available pipeline configurations
 
-### Runs
+### Captions & Alerts
 
-- `POST /api/runs` — Start a new captioning pipeline (publishes to MQTT)
-- `GET /api/runs` — List active runs
-- `GET /api/runs/{run_id}` — Get run details (includes `mqttTopic` field)
-- `DELETE /api/runs/{run_id}` — Stop a pipeline
+- `POST /api/generate_captions_alerts` — Generate captions and alerts for a live stream
+- `GET /api/generate_captions_alerts` — List all active caption generation runs
+- `GET /api/generate_captions_alerts/{run_id}` — Get details of a specific caption generation run (includes `mqttTopic` field)
+- `DELETE /api/generate_captions_alerts/{run_id}` — Stop caption generation for a stream
 
 #### Run Response Schema
 
@@ -49,7 +49,7 @@ When the stack is running, FastAPI provides OpenAPI/Swagger UI at:
 
 ### Server-Sent Events (SSE)
 
-- `GET /api/runs/metadata-stream` — Multiplexed SSE stream for all active runs
+- `GET /api/generate_captions_alerts/metadata-stream` — Multiplexed SSE stream for all active runs
 
 The SSE stream provides real-time metadata received from the MQTT broker. Each message is an envelope containing:
 

@@ -21,7 +21,7 @@
 #   REGISTRY                    - Image registry (default: empty)
 #   LOG_LEVEL                   - Logging level (default: INFO)
 #   VLM_MODEL_NAME              - VLM model (default: microsoft/Phi-3.5-vision-instruct)
-#   VLM_DEVICE                  - Inference device (default: CPU)
+#   VLM_TARGET_DEVICE           - Inference device (default: CPU)
 #
 # ==============================================================================
 
@@ -55,8 +55,8 @@ traffic-agent_CONTEXT_DIR := ./src
 traffic-agent_DOCKERFILE := ./src/Dockerfile
 traffic-agent_LANG := python
 
-# VLM dependency (pre-built, not built by this Makefile)
-VLM_IMAGE := intel/vlm-openvino-serving:1.3.2
+# OVMS dependency (pre-built, not built by this Makefile)
+OVMS_IMAGE := openvino/model_server:2026.1
 
 # ==============================================================================
 # Deployment Configuration
@@ -70,13 +70,10 @@ LOG_LEVEL ?= INFO
 COMPOSE_FILE := docker/agent-compose.yaml
 PROJECT_NAME ?= trafficagent
 
-# VLM Configuration
+# VLM / OVMS Configuration
 VLM_MODEL_NAME ?= microsoft/Phi-3.5-vision-instruct
-VLM_DEVICE ?= CPU
-VLM_COMPRESSION_WEIGHT_FORMAT ?= int8
-VLM_SEED ?= 42
-VLM_WORKERS ?= 1
-VLM_LOG_LEVEL ?= info
+VLM_TARGET_DEVICE ?= CPU
+VLM_WEIGHT_FORMAT ?=
 VLM_MAX_COMPLETION_TOKENS ?= 1500
 
 # Traffic Agent Configuration
@@ -151,10 +148,10 @@ define DEPLOY_BANNER
 	@echo "  LOG_LEVEL:                 $${LOG_LEVEL:-$(LOG_LEVEL)}"
 	@echo "  PROJECT_NAME:              $${PROJECT_NAME:-$(PROJECT_NAME)}"
 	@echo ""
-	@echo "  VLM Configuration:"
+	@echo "  VLM / OVMS Configuration:"
 	@echo "  VLM_MODEL_NAME:            $${VLM_MODEL_NAME:-$(VLM_MODEL_NAME)}"
-	@echo "  VLM_DEVICE:                $${VLM_DEVICE:-$(VLM_DEVICE)}"
-	@echo "  VLM_COMPRESSION_FORMAT:    $${VLM_COMPRESSION_WEIGHT_FORMAT:-$(VLM_COMPRESSION_WEIGHT_FORMAT)}"
+	@echo "  VLM_TARGET_DEVICE:         $${VLM_TARGET_DEVICE:-$(VLM_TARGET_DEVICE)}"
+	@echo "  VLM_WEIGHT_FORMAT:         $${VLM_WEIGHT_FORMAT:-$(VLM_WEIGHT_FORMAT)}"
 	@echo "  VLM_MAX_COMPLETION_TOKENS: $${VLM_MAX_COMPLETION_TOKENS:-$(VLM_MAX_COMPLETION_TOKENS)}"
 	@echo ""
 	@echo "  Traffic Agent:"
@@ -171,11 +168,8 @@ define SETUP_EXPORTS
 	export REGISTRY="$${REGISTRY:-$(DEFAULT_REGISTRY)}" && \
 	export LOG_LEVEL="$${LOG_LEVEL:-$(LOG_LEVEL)}" && \
 	export VLM_MODEL_NAME="$${VLM_MODEL_NAME:-$(VLM_MODEL_NAME)}" && \
-	export VLM_DEVICE="$${VLM_DEVICE:-$(VLM_DEVICE)}" && \
-	export VLM_COMPRESSION_WEIGHT_FORMAT="$${VLM_COMPRESSION_WEIGHT_FORMAT:-$(VLM_COMPRESSION_WEIGHT_FORMAT)}" && \
-	export VLM_SEED="$${VLM_SEED:-$(VLM_SEED)}" && \
-	export VLM_WORKERS="$${VLM_WORKERS:-$(VLM_WORKERS)}" && \
-	export VLM_LOG_LEVEL="$${VLM_LOG_LEVEL:-$(VLM_LOG_LEVEL)}" && \
+	export VLM_TARGET_DEVICE="$${VLM_TARGET_DEVICE:-$(VLM_TARGET_DEVICE)}" && \
+	export VLM_WEIGHT_FORMAT="$${VLM_WEIGHT_FORMAT:-$(VLM_WEIGHT_FORMAT)}" && \
 	export VLM_MAX_COMPLETION_TOKENS="$${VLM_MAX_COMPLETION_TOKENS:-$(VLM_MAX_COMPLETION_TOKENS)}" && \
 	export REFRESH_INTERVAL="$${REFRESH_INTERVAL:-$(REFRESH_INTERVAL)}" && \
 	export HIGH_DENSITY_THRESHOLD="$${HIGH_DENSITY_THRESHOLD:-$(HIGH_DENSITY_THRESHOLD)}" && \
@@ -546,7 +540,7 @@ list:
 	@$(foreach component,$(COMPONENTS), echo "  • $(component) → $(SERVICE_NAME):$(VERSION)";)
 	@echo ""
 	@echo "Dependencies (pre-built):"
-	@echo "  • vlm-openvino-serving → $(VLM_IMAGE)"
+	@echo "  • ovms-service → $(OVMS_IMAGE)"
 	@echo ""
 	@echo "Test Components:"
 	@$(foreach component,$(TEST_COMPONENTS), echo "  • $(component)";)
@@ -617,10 +611,10 @@ help:
 	@echo "    LOG_LEVEL                    DEBUG, INFO, WARNING, ERROR (default: INFO)"
 	@echo "    PROJECT_NAME                 Docker compose project name (default: trafficagent)"
 	@echo ""
-	@echo "    VLM Configuration:"
+	@echo "    VLM / OVMS Configuration:"
 	@echo "    VLM_MODEL_NAME               VLM model (default: microsoft/Phi-3.5-vision-instruct)"
-	@echo "    VLM_DEVICE                   CPU or GPU (default: CPU)"
-	@echo "    VLM_COMPRESSION_WEIGHT_FORMAT int4 or int8 (default: int8)"
+	@echo "    VLM_TARGET_DEVICE            CPU or GPU (default: CPU)"
+	@echo "    VLM_WEIGHT_FORMAT            int4, int8, or empty for auto (default: auto)"
 	@echo "    VLM_MAX_COMPLETION_TOKENS    Max tokens (default: 1500)"
 	@echo "    HUGGINGFACE_TOKEN            HuggingFace API token (required)"
 	@echo ""
@@ -657,7 +651,7 @@ help:
 	@echo "  HUGGINGFACE_TOKEN=hf_xxx make deploy-build"
 	@echo ""
 	@echo "  # Deploy with GPU acceleration"
-	@echo "  VLM_DEVICE=GPU HUGGINGFACE_TOKEN=hf_xxx make deploy-build"
+	@echo "  VLM_TARGET_DEVICE=GPU HUGGINGFACE_TOKEN=hf_xxx make deploy-build"
 	@echo ""
 	@echo "  # Deploy with custom VLM model"
 	@echo "  VLM_MODEL_NAME=Qwen/Qwen2.5-VL-3B-Instruct make deploy"

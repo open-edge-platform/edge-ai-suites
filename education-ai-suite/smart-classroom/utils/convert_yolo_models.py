@@ -30,13 +30,6 @@ _MODEL_TYPE_MAP = {
     "26": "yolo_v26_pose",  # DLStreamer model type has an extra 'v'
 }
 
-_MODEL_INPUT_SHAPE = {
-    "v8": [1, 3, 384, 640],
-    "11": [1, 3, 384, 640],
-    "26": [1, 3, 640, 640],
-}
-
-
 def _detect_model_family(model_name: str) -> str:
     for family in _SUPPORTED_FAMILIES:
         if family in model_name:
@@ -116,13 +109,14 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
 
     pose_model_dir = output_path / f"{model_name}_openvino_model"
     pose_model_path = pose_model_dir / f"{model_name}.xml"
-    if not pose_model_path.exists():
-        # Export to a temporary location then move to output_dir
-        temp_export_dir = Path(f"{model_name}_openvino_model")
-        pose_model.export(format="openvino", dynamic=True, half=True)
-        # Move the exported model to output_dir
-        if temp_export_dir.exists():
-            shutil.move(str(temp_export_dir), str(pose_model_dir))
+    if pose_model_dir.exists():
+        shutil.rmtree(pose_model_dir)
+    # Export to a temporary location then move to output_dir
+    temp_export_dir = Path(f"{model_name}_openvino_model")
+    pose_model.export(format="openvino", dynamic=True, half=True, end2end=True)
+    # Move the exported model to output_dir
+    if temp_export_dir.exists():
+        shutil.move(str(temp_export_dir), str(pose_model_dir))
 
     if pt_file.exists():
         pt_file.unlink()
@@ -157,13 +151,12 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
                 subgraphs=[
                     nncf.Subgraph(
                         inputs=[
-                            f"__module.model.{module_idx}/aten::cat/Concat",
                             f"__module.model.{module_idx}/aten::cat/Concat_1",
-                            f"__module.model.{module_idx}/aten::cat/Concat_2",
-                            f"__module.model.{module_idx}/aten::cat/Concat_7",
+                            f"__module.model.{module_idx}/aten::cat/Concat_4",
+                            f"__module.model.{module_idx}/aten::cat/Concat_5",
                         ],
                         outputs=[
-                            f"__module.model.{module_idx}/aten::cat/Concat_9"
+                            f"__module.model.{module_idx}/aten::cat/Concat_7"
                         ],
                     )
                 ]
@@ -174,15 +167,19 @@ def convert_yolo_to_openvino(model_name: str, output_dir: str):
     quantized_pose_model = nncf.quantize(
         pose_ov_model,
         quantization_dataset,
-        preset=nncf.QuantizationPreset.PERFORMANCE,
+        preset=nncf.QuantizationPreset.MIXED,
         ignored_scope=get_ignored_scope(),
     )
-    quantized_pose_model.reshape(_MODEL_INPUT_SHAPE[family])
+    quantized_pose_model.reshape([1, 3, 384, 640])
     quantized_pose_model.set_rt_info(_MODEL_TYPE_MAP[family], ['model_info', 'model_type'])
     quantized_pose_model.set_rt_info("sit stand sit_raise_up stand_raise_up", ['model_info', 'labels'])
 
     print(f"Quantized model will be saved to {int8_model_pose_path}")
     ov.save_model(quantized_pose_model, str(int8_model_pose_path))
+
+    del quantized_pose_model, pose_ov_model, core, pose_model
+    import gc; gc.collect()
+    shutil.rmtree(pose_model_dir)
 
 
 def convert_yolo_models(output_dir: str = "models/va", models: Optional[List[str]] = None):

@@ -111,7 +111,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
-## Verify the Weld Defect Detection Results
+## Verify the Multimodal Weld Defect Detection Results
 
 1. Get into the InfluxDB* container.
 

@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kpi_level2_v1",
+  "title": "ROS 2 Level 2 Pipeline KPI",
+  "description": "End-to-end pipeline KPI derived from Level 1 per-node pairs. Covers full-pipeline latency (sensor-to-control), throughput, message drop rate, per-stage latency breakdown, and system utilization. Produced by analyze_pipeline_latency.py --json-out.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "pipeline",
+    "e2e_latency_ms",
+    "throughput_hz",
+    "drop_rate_pct",
+    "bottleneck_stage",
+    "stage_latency_ms",
+    "cpu_mean_pct",
+    "cpu_max_pct",
+    "level1_source",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "level2_v1",
+      "description": "Schema identifier and version — must be 'level2_v1'."
+    },
+    "pipeline": {
+      "type": "object",
+      "description": "Identification of the pipeline's entry and exit points and stage sequence.",
+      "required": ["input_topic", "output_topic", "stage_sequence"],
+      "additionalProperties": false,
+      "properties": {
+        "input_topic": {
+          "type": "string",
+          "description": "Primary sensor input topic that enters the pipeline (e.g. '/scan')."
+        },
+        "output_topic": {
+          "type": "string",
+          "description": "Final control output topic produced by the pipeline (e.g. '/cmd_vel_smoothed')."
+        },
+        "stage_sequence": {
+          "type": "array",
+          "description": "Ordered list of pipeline stages present in this session.",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": ["Sensor", "Perception", "Planning", "Control", "Other"]
+          }
+        }
+      }
+    },
+    "e2e_latency_ms": {
+      "type": "object",
+      "description": "End-to-end latency statistics from pipeline input to pipeline output. Computed by summing the representative per-stage mean/p90/p99 latencies (method='chained'). This is a conservative lower-bound estimate; message-traced end-to-end would require header correlation across all stages.",
+      "required": ["mean", "p50", "p90", "p99", "max", "n", "method"],
+      "additionalProperties": false,
+      "properties": {
+        "mean": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Mean end-to-end latency in milliseconds."
+        },
+        "p50": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "50th percentile (median) end-to-end latency in milliseconds."
+        },
+        "p90": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "90th percentile end-to-end latency in milliseconds."
+        },
+        "p99": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "99th percentile end-to-end latency in milliseconds."
+        },
+        "max": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Maximum end-to-end latency in milliseconds."
+        },
+        "n": {
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "description": "Minimum sample count across all stage representatives (conservative)."
+        },
+        "method": {
+          "type": "string",
+          "enum": ["chained", "traced"],
+          "description": "'chained': sum of per-stage representative pair latencies from Level 1. 'traced': direct message-level correlation from bag (more accurate, requires header stamps on all topics)."
+        }
+      }
+    },
+    "throughput_hz": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Effective pipeline throughput in Hz — the minimum throughput across all stage representatives (the bottleneck rate)."
+    },
+    "drop_rate_pct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Estimated message drop rate: percentage of sensor-stage input messages that did not produce a corresponding control-stage output. Computed as max(0, 1 - n_control / n_sensor) * 100."
+    },
+    "bottleneck_stage": {
+      "type": ["string", "null"],
+      "enum": ["Sensor", "Perception", "Planning", "Control", "Other", null],
+      "description": "Pipeline stage with the highest mean latency contribution."
+    },
+    "stage_latency_ms": {
+      "type": "object",
+      "description": "Per-stage latency breakdown. Keys are pipeline stage names. Each entry uses the representative (highest trigger-count) pair for that stage.",
+      "additionalProperties": false,
+      "properties": {
+        "Sensor": { "$ref": "#/$defs/stage_entry" },
+        "Perception": { "$ref": "#/$defs/stage_entry" },
+        "Planning": { "$ref": "#/$defs/stage_entry" },
+        "Control": { "$ref": "#/$defs/stage_entry" },
+        "Other": { "$ref": "#/$defs/stage_entry" }
+      }
+    },
+    "cpu_mean_pct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Mean CPU utilization percentage across the session. Null when not collected."
+    },
+    "cpu_max_pct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Peak CPU utilization percentage across the session. Null when not collected."
+    },
+    "level1_source": {
+      "type": "string",
+      "description": "Absolute path to the Level 1 kpi.json file used as input."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Session provenance — same structure as Level 1 metadata.",
+      "required": ["name", "datetime", "hostname", "arch", "os", "data_path",
+                   "framework_version", "ros_distro", "hardware"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "Session directory name." },
+        "datetime": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "description": "UTC timestamp of KPI generation in ISO 8601 format."
+        },
+        "hostname": { "type": "string" },
+        "arch": { "type": "string" },
+        "os": { "type": "string" },
+        "data_path": { "type": "string" },
+        "framework_version": { "type": "string" },
+        "ros_distro": { "type": "string" },
+        "hardware": {
+          "type": "object",
+          "required": ["cpu_model"],
+          "additionalProperties": false,
+          "properties": {
+            "cpu_model": { "type": "string" },
+            "cpu_cores": { "type": ["integer", "null"], "minimum": 1 },
+            "gpu_model": { "type": ["string", "null"] },
+            "total_ram_gb": { "type": ["number", "null"], "minimum": 0 }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage_entry": {
+      "type": "object",
+      "description": "Latency statistics for one pipeline stage, derived from its highest-trigger-count (node, input, output) pair.",
+      "required": ["mean_ms", "p90_ms", "n", "representative_node", "representative_input", "representative_output"],
+      "additionalProperties": false,
+      "properties": {
+        "mean_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Mean latency for this stage's representative pair in milliseconds."
+        },
+        "p50_ms": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Median latency in milliseconds."
+        },
+        "p90_ms": {
+          "type": "number",
+          "minimum": 0,
+          "description": "90th percentile latency in milliseconds."
+        },
+        "p99_ms": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "99th percentile latency in milliseconds."
+        },
+        "max_ms": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Maximum observed latency in milliseconds."
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Sample count for the representative pair."
+        },
+        "throughput_hz": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Observed throughput for this stage's representative output topic."
+        },
+        "nodes": {
+          "type": "array",
+          "description": "All nodes in this pipeline stage observed in the session.",
+          "items": { "type": "string" }
+        },
+        "representative_node": {
+          "type": "string",
+          "description": "Node name of the highest-trigger-count pair for this stage."
+        },
+        "representative_input": {
+          "type": "string",
+          "description": "Input topic of the representative pair."
+        },
+        "representative_output": {
+          "type": "string",
+          "description": "Output topic of the representative pair."
+        }
+      }
+    }
+  }
+}

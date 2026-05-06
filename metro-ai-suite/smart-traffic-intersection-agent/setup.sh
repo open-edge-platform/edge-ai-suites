@@ -37,6 +37,13 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CO
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
 [ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT
 
+# Path variables needed by all commands (including --stop/--clean)
+export SAMPLE_APP="smart-intersection"
+SUBMODULE="deps/metro-vision"
+SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
+export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
+export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
+export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
@@ -86,8 +93,12 @@ elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" !
 elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
     
-    # Use project name only for teardown to avoid needing env vars to parse compose files
-    docker compose -p ${PROJECT_NAME} down 2> /dev/null
+    # check if ri-compose.yaml exists and run docker compose down accordingly
+    if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
+        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down
+    else
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p ${PROJECT_NAME} down 2> /dev/null
+    fi
 
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to stop Smart-Traffic-Intersection-Agent services. ${NC}"
@@ -98,10 +109,14 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     if [ "$1" = "--clean" ]; then
         echo -e "${YELLOW}Removing volumes for Smart-Traffic-Intersection-Agent ... ${NC}"
         if [ "$2" = "--keep-models" ]; then
-            echo -e "${CYAN}Keeping VLM model cache volume (ov-models)...${NC}"
-            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | grep -v "ov-models" | xargs -r docker volume rm 2>/dev/null || true
+            echo -e "${CYAN}Keeping OVMS model cache (${OVMS_CONFIG_DIR}/models)...${NC}"
+            docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
         else
             docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
+            if [ -d "${OVMS_CONFIG_DIR}" ]; then
+                echo -e "${YELLOW}Removing OVMS model cache (${OVMS_CONFIG_DIR})...${NC}"
+                rm -rf "${OVMS_CONFIG_DIR}"
+            fi
         fi
         echo -e "${YELLOW}Removing networks for Smart-Traffic-Intersection-Agent ... ${NC}"
         docker network ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker network rm 2>/dev/null || true
@@ -128,12 +143,6 @@ if [ -z "$VLM_MODEL_NAME" ]; then
     echo -e "${RED}Error: VLM_MODEL_NAME environment variable is not set. Please check docs for some possible VLM model names.${NC}"
     return 1
 fi
-
-export SAMPLE_APP="smart-intersection"
-SUBMODULE="deps/metro-vision"
-SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
-export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
-export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 
 # Verify if dependencies are setup; if not setup the required submodules and run install script
 check_and_setup_dependencies() {
@@ -213,28 +222,224 @@ export USER_GROUP_ID=$(id -g)
 export VIDEO_GROUP_ID=$(getent group video | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "44")
 export RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}' 2>/dev/null || echo "109")
 
-# VLM Service Configuration
+# VLM / OVMS Configuration
 export VLM_MODEL_NAME=${VLM_MODEL_NAME}
+export VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
+export VLM_WEIGHT_FORMAT=${VLM_WEIGHT_FORMAT:-}
 
-# VLM OpenVINO Configuration
-export VLM_DEVICE=${VLM_DEVICE:-CPU}
-export VLM_COMPRESSION_WEIGHT_FORMAT=${VLM_COMPRESSION_WEIGHT_FORMAT:-int8}
-export VLM_SEED=${VLM_SEED:-42}
-export VLM_WORKERS=${VLM_WORKERS:-1}
-export VLM_LOG_LEVEL=${VLM_LOG_LEVEL:-info}
-export VLM_ACCESS_LOG_FILE=${VLM_ACCESS_LOG_FILE:-/dev/null}
-
-# Automatically adjust VLM settings for GPU
-if [[ "$VLM_DEVICE" == "GPU" ]]; then
-    export VLM_COMPRESSION_WEIGHT_FORMAT=int4
-    export VLM_WORKERS=1  # GPU works best with single worker
-fi
-
+# OVMS model repository directory (host-side, mounted into OVMS container)
 # Health Check Configuration
 export HEALTH_CHECK_INTERVAL=${HEALTH_CHECK_INTERVAL:-30s}
 export HEALTH_CHECK_TIMEOUT=${HEALTH_CHECK_TIMEOUT:-10s}
 export HEALTH_CHECK_RETRIES=${HEALTH_CHECK_RETRIES:-3}
 export HEALTH_CHECK_START_PERIOD=${HEALTH_CHECK_START_PERIOD:-10s}
+
+# ============================================================================
+# OVMS Model Export Functions (host-side, following PR #2109 pattern)
+# ============================================================================
+
+sanitize_ovms_metadata_name() {
+    printf '%s' "$1" | sed 's#[^A-Za-z0-9_.-]#_#g'
+}
+
+is_openvino_namespace_model() {
+    [[ "$1" == OpenVINO/* ]]
+}
+
+# Get weight format based on target device (GPU/NPU → int4, CPU → int8)
+get_ovms_weight_format() {
+    local target_device="$1"
+    case "$target_device" in
+        *NPU*|*GPU*) echo "int4" ;;
+        *) echo "int8" ;;
+    esac
+}
+
+get_ovms_cache_size() {
+    local target_device="$1"
+    case "$target_device" in
+        *GPU*|*NPU*) echo "2" ;;
+        *) echo "10" ;;
+    esac
+}
+
+# Generate storage-aware model name: {model}_{device}_{format}
+get_ovms_storage_model_name() {
+    local source_model="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local sanitized
+    sanitized=$(sanitize_ovms_metadata_name "$source_model")
+
+    if is_openvino_namespace_model "$source_model"; then
+        printf '%s_%s' "$sanitized" "$target_device"
+    else
+        printf '%s_%s_%s' "$sanitized" "$target_device" "$weight_format"
+    fi
+}
+
+ovms_config_has_model() {
+    local config_path="$1"
+    local model_name="$2"
+    grep -q "\"name\": \"${model_name}\"" "$config_path" 2>/dev/null
+}
+
+# Export and convert a HuggingFace model for OVMS on the host
+export_model_for_ovms() {
+    local source_model="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local pipeline_type="$4"
+    local cache_size="$5"
+    local extra_args=()
+    local export_status
+    local storage_model_name
+
+    if [ -z "$source_model" ]; then
+        echo -e "${RED}ERROR: Missing source model for OVMS export.${NC}"
+        return 1
+    fi
+
+    storage_model_name=$(get_ovms_storage_model_name "$source_model" "$target_device" "$weight_format")
+    echo -e "[ovms-service] ${BLUE}Storage model name: ${YELLOW}${storage_model_name}${NC}"
+
+    if [ -n "$pipeline_type" ]; then
+        extra_args+=(--pipeline_type "$pipeline_type")
+    fi
+
+    export storage_model_name
+
+    (
+        mkdir -p "${OVMS_CONFIG_DIR}"
+        cd "${OVMS_CONFIG_DIR}" || exit 1
+
+        echo -e "Downloading latest export_model.py from OVMS repository..."
+        curl -fsSL https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/export_model.py -o export_model.py || exit 1
+
+        echo -e "Creating Python virtual environment for model export..."
+        if ! dpkg-query -W -f='${Status}' python3-venv 2>/dev/null | grep -q "ok installed"; then
+            echo -e "Installing python3-venv package..."
+            sudo apt install -y python3-venv || exit 1
+        else
+            echo -e "python3-venv is already installed, skipping installation"
+        fi
+
+        python3 -m venv ovms_venv || exit 1
+        # shellcheck disable=SC1091
+        source ovms_venv/bin/activate || exit 1
+
+        if is_openvino_namespace_model "$source_model"; then
+            echo -e "${GREEN}Model '${source_model}' is from OpenVINO namespace (pre-converted).${NC}"
+            echo -e "${YELLOW}Skipping full requirements — only need huggingface_hub for download.${NC}"
+            if ! pip install --no-cache-dir 'huggingface_hub<0.27' jinja2; then
+                echo -e "${RED}ERROR: Failed to install minimal dependencies for OpenVINO model.${NC}"
+                deactivate
+                rm -rf ovms_venv
+                exit 1
+            fi
+        else
+            local ovms_requirements_url="https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/requirements.txt"
+            local tmp_requirements
+            tmp_requirements=$(mktemp)
+
+            if ! curl -fsSL "$ovms_requirements_url" -o "$tmp_requirements"; then
+                echo -e "${RED}ERROR: Failed to download OVMS requirements.${NC}"
+                rm -f "$tmp_requirements"
+                deactivate
+                rm -rf ovms_venv
+                exit 1
+            fi
+
+            if grep -q '^transformers' "$tmp_requirements"; then
+                sed -i 's/^transformers.*/transformers==4.53.3/' "$tmp_requirements"
+            else
+                echo 'transformers==4.53.3' >> "$tmp_requirements"
+            fi
+
+            if ! pip install --no-cache-dir -r "$tmp_requirements"; then
+                echo -e "${RED}ERROR: Failed to install OVMS requirements.${NC}"
+                rm -f "$tmp_requirements"
+                deactivate
+                rm -rf ovms_venv
+                exit 1
+            fi
+            rm -f "$tmp_requirements"
+        fi
+
+        if [ -n "${HUGGINGFACE_TOKEN:-}" ]; then
+            pip install --no-cache-dir -U 'huggingface_hub[hf_xet]==0.36.0' || exit 1
+            echo -e "${BLUE}Logging in to Hugging Face to access gated models...${NC}"
+            hf auth login --token "$HUGGINGFACE_TOKEN" || exit 1
+        fi
+
+        mkdir -p models
+
+        if ! python3 export_model.py text_generation \
+            --source_model "$source_model" \
+            --model_name "$storage_model_name" \
+            --weight-format "$weight_format" \
+            --config_file_path models/config.json \
+            --model_repository_path models \
+            --target_device "$target_device" \
+            --cache_size "$cache_size" \
+            "${extra_args[@]}"; then
+            echo -e "${RED}ERROR: Failed to export the model '${source_model}' for OVMS.${NC}"
+            deactivate
+            rm -rf ovms_venv
+            exit 1
+        fi
+
+        echo -e "Cleaning up virtual environment..."
+        deactivate
+        rm -rf ovms_venv
+    )
+    export_status=$?
+    if [ $export_status -ne 0 ]; then
+        return $export_status
+    fi
+
+    echo "$storage_model_name"
+}
+
+ensure_ovms_model() {
+    local model_name="$1"
+    local target_device="$2"
+    local weight_format="$3"
+    local pipeline_type="$4"
+    local ovms_model_config="${OVMS_CONFIG_DIR}/models/config.json"
+    local storage_model_name
+    local model_path
+
+    storage_model_name=$(get_ovms_storage_model_name "$model_name" "$target_device" "$weight_format")
+    model_path="${OVMS_CONFIG_DIR}/models/${storage_model_name}"
+
+    echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}"
+
+    if [ -d "$model_path" ] && [ -f "${model_path}/graph.pbtxt" ]; then
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already exists. Skipping export.${NC}"
+
+        if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
+            echo -e "[ovms-service] ${GREEN}Model is registered in OVMS config.${NC}"
+        else
+            echo -e "[ovms-service] ${YELLOW}Model exists but not in config. Will re-register.${NC}"
+        fi
+
+        echo "$storage_model_name"
+    else
+        echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}"
+
+        export_model_for_ovms \
+            "$model_name" \
+            "$target_device" \
+            "$weight_format" \
+            "$pipeline_type" \
+            "$(get_ovms_cache_size "$target_device")" || return 1
+    fi
+}
+
+# ============================================================================
+# END OVMS Model Export Functions
+# ============================================================================
 
 # Get and print the ports of all running services
 print_all_service_host_endpoints() {
@@ -267,15 +472,40 @@ print_all_service_host_endpoints() {
                 PORT=$(docker port "$CONTAINER_NAME" 7860 2>/dev/null | cut -d: -f2)
                 echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
-            *vlm*)
-                SERVICE_NAME="VLM OpenVINO Serving API"
-                PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | cut -d: -f2)
-                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
+            *vlm*|*ovms*)
+                SERVICE_NAME="OVMS API"
+                PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
+                echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
         esac
     done
     echo -e "${MAGENTA}=======================================================${NC}"
     echo -e
+}
+
+# Prepare OVMS model on the host (export if not already present)
+prepare_ovms_model() {
+    # Determine weight format (auto-detect based on device if not user-specified)
+    local weight_format="${VLM_WEIGHT_FORMAT:-$(get_ovms_weight_format "$VLM_TARGET_DEVICE")}"
+    export VLM_WEIGHT_FORMAT="$weight_format"
+
+    echo -e "${BLUE}==> Preparing OVMS model on host...${NC}"
+    echo -e "[ovms-service] ${BLUE}VLM Model:          ${YELLOW}${VLM_MODEL_NAME}${NC}"
+    echo -e "[ovms-service] ${BLUE}Target Device:      ${YELLOW}${VLM_TARGET_DEVICE}${NC}"
+    echo -e "[ovms-service] ${BLUE}Weight Format:      ${YELLOW}${weight_format}${NC}"
+    echo -e "[ovms-service] ${BLUE}OVMS Config Dir:    ${YELLOW}${OVMS_CONFIG_DIR}${NC}"
+
+    mkdir -p "${OVMS_CONFIG_DIR}/models"
+
+    local storage_name
+    storage_name=$(ensure_ovms_model \
+        "$VLM_MODEL_NAME" \
+        "$VLM_TARGET_DEVICE" \
+        "$weight_format" \
+        "VLM_CB") || return 1
+
+    export VLM_STORAGE_MODEL_NAME="$storage_name"
+    echo -e "[ovms-service] ${GREEN}VLM Storage Model: ${YELLOW}${VLM_STORAGE_MODEL_NAME}${NC}"
 }
 
 # Build service images without starting containers
@@ -301,6 +531,9 @@ build_service() {
 build_and_start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
 
+    # Ensure OVMS model is exported on the host before starting containers
+    prepare_ovms_model || return 1
+
     # Build and start the services
     docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d --build
     
@@ -317,6 +550,9 @@ build_and_start_service() {
 start_service() {
     echo -e "${BLUE}==> Starting Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${BLUE}...${NC}"
     
+    # Ensure OVMS model is exported on the host before starting containers
+    prepare_ovms_model || return 1
+
     # Start the services
     docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME up -d
     

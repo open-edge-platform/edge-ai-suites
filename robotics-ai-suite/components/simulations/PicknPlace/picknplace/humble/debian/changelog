@@ -1,3 +1,10 @@
+ros-humble-picknplace (2.3-4) jammy; urgency=medium
+
+  * Add functional test suite: launch file structure tests and UR5 robot
+    configuration unit tests (no hardware required).
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 22 Apr 2026 00:00:00 +0000
+
 ros-humble-picknplace (2.3-3) jammy; urgency=medium
 
   * Remove deprecated ROS2 Foxy launch files and parameters for PicknPlace

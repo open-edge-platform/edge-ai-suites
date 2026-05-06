@@ -273,7 +273,10 @@
     "time": "Time:",
     "relevance": "Relevance:",
     "labels": "Labels",
-    "score": "Score"
+    "score": "Score",
+    "summarization": "Summarization",
+    "showMore": "Show more",
+    "showLess": "Show less"
   }
 }
  

@@ -225,7 +225,9 @@ class VideoAnalyticsPipelineService:
         try:
             with open(log_file, "r") as f:
                 content = f.read()
-                idx = content.find("ERROR: from element")
+                idx = content.find("WARNING: erroneous pipeline")
+                if idx < 0:
+                    idx = content.find("ERROR: from element")
                 if idx >= 0:
                     return content[idx:].strip()
                 return None

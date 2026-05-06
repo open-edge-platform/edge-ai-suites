@@ -85,21 +85,22 @@ $$score = \sigma\bigl(k \cdot (cosine\\_sim - center)\bigr) \times 100$$
 
 where `cosine_sim = 1 - distance` (ChromaDB cosine distance is in [0, 2]).
 
-CLIP text-to-image and image-to-image similarities occupy very different ranges, so each query type uses its own sigmoid center:
+Text-to-image and image-to-image CLIP similarities occupy very different ranges, so each query type uses its own sigmoid steepness (`k`) and center. Parameters were calibrated on `xlm-roberta-base-ViT-B-32 / laion5b_s13b_b90k` (multilingual CLIP) using real test data with both English and Chinese queries.
 
-| Constant                       | Value  | Purpose                                             |
-| ------------------------------ | ------ | --------------------------------------------------- |
-| `VISUAL_SIGMOID_K`             | `15.0` | Steepness (shared)                                  |
-| `VISUAL_SIGMOID_CENTER_TEXT`   | `0.15` | Center for text-to-image queries (sim ~0.05-0.35)   |
-| `VISUAL_SIGMOID_CENTER_IMAGE`  | `0.70` | Center for image-to-image queries (sim ~0.5-0.95)   |
+| Constant                      | Value  | Purpose                                                         |
+| ----------------------------- | ------ | --------------------------------------------------------------- |
+| `VISUAL_SIGMOID_K_TEXT`       | `18.7` | Steepness for text-to-image (narrower sim range needs higher k) |
+| `VISUAL_SIGMOID_CENTER_TEXT`  | `0.14` | Center for text-to-image queries (sim ~0.10-0.24)               |
+| `VISUAL_SIGMOID_K_IMAGE`      | `8.1`  | Steepness for image-to-image (wider sim range needs lower k)    |
+| `VISUAL_SIGMOID_CENTER_IMAGE` | `0.52` | Center for image-to-image queries (sim ~0.33-1.0)               |
 
 Typical score ranges for relevant results:
 
 | Type                   | Relevant | Moderate | Irrelevant |
 | ---------------------- | -------- | -------- | ---------- |
 | Document               | 85-99    | 50-85    | 0-30       |
-| Visual text-to-image   | 80-95    | 30-80    | 0-20       |
-| Visual image-to-image  | 80-97    | 30-80    | 0-20       |
+| Visual text-to-image   | 75-90    | 40-75    | 5-30       |
+| Visual image-to-image  | 75-98    | 30-75    | 15-30      |
 
 ### 5. Drop attached summaries
 
@@ -149,7 +150,7 @@ Converts the flat result list back to ChromaDB nested format. Preserves the RRF 
 
 The system retrieves results from two fundamentally different modalities:
 
-- **Visual** (video frames, images) — scored by CLIP cosine distance, where good text-to-image matches typically have similarity 0.15-0.35.
+- **Visual** (video frames, images) — scored by multilingual CLIP (`xlm-roberta-base-ViT-B-32`) cosine distance, where good text-to-image matches typically have similarity 0.10-0.24.
 - **Documents** (text chunks) — scored by a cross-encoder reranker, producing logits that map to sigmoid scores of 85-99 for relevant results.
 
 These raw scores are **not comparable**. Sorting by raw score would push all documents above all visual results (or vice versa), regardless of actual relevance. A user searching for "Newton's first law" should see a relevant video clip alongside a relevant textbook passage, not ten text results followed by ten videos.

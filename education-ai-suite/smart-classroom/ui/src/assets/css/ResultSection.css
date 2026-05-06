@@ -263,6 +263,66 @@
   box-sizing: border-box;
 }
 
+/* ───────── Result Item Summary (video) ───────── */
+
+.cs-result-item-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.cs-result-item-summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.cs-result-item-summary-label {
+  font-family: 'IntelOne Text', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #494B51;
+  flex-shrink: 0;
+}
+
+.cs-result-item-summary-text {
+  font-family: 'IntelOne Text', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+  color: #494B51;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cs-result-item-summary-text--expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.cs-result-item-summary-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: 'IntelOne Text', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1976d2;
+  cursor: pointer;
+  align-self: flex-start;
+  text-decoration: underline;
+}
+
+.cs-result-item-summary-toggle:hover {
+  color: #0054AE;
+}
+
 /* ─── Media Queries ──────────────────────────────────────── */
 
 @media (max-width: 300px) {

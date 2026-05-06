@@ -18,12 +18,13 @@ from .images_capture import VideoCapture
 from . import perf_visualizer as pv
 
 class InferenceManager(Thread):
-	def __init__(self, model_adapter, input, data_type, async_mode=False, camera_resolution=(1280, 720)):
+	def __init__(self, model_adapter, input, data_type, async_mode=False, camera_resolution=(1280, 720), fourcc=None, no_draw=False):
 		super().__init__()
 		self.adapter = model_adapter
 		self.input = input
 		self.data_type = data_type
-		self.cap = VideoCapture(input, True, camera_resolution) if input is not None else None
+		self.no_draw = no_draw
+		self.cap = VideoCapture(input, True, camera_resolution, fourcc=fourcc) if input is not None else None
 		self.async_mode = async_mode
 		self.frames_number = 0
 		self.frames_missed = 0
@@ -83,6 +84,14 @@ class InferenceManager(Thread):
 			self._cam_reader_thread.join(timeout=2)
 			self.proc.join()
 			Thread.join(self)
+			# Drain any in-flight async inferences before tearing down so the
+			# OV runtime doesn't fire callbacks during interpreter shutdown.
+			q = getattr(self.adapter, 'infer_queue', None)
+			if q is not None:
+				try:
+					q.wait_all()
+				except Exception:
+					pass
 			self.cv.acquire()
 
 		self.cv.release()
@@ -149,6 +158,16 @@ class InferenceManager(Thread):
 			self.adapter.infer(image)
 
 			self.cv.acquire()
+
+			if self.no_draw:
+				# Headless: skip postprocess+draw entirely; throughput comes from
+				# the adapter's async callback (_infer_count). This avoids serializing
+				# the loop on CPU NMS/mask-resize/cv2 draws.
+				if self.start_time is None:
+					self.start_time = perf_counter()
+				self.frames_number = getattr(self.adapter, '_infer_count', 0)
+				self.frames_missed = max(0, self._cam_frames_total - self.frames_number)
+				continue
 
 			image = self.adapter.result()
 			if image is not None:

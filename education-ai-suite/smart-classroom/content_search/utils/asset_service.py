@@ -3,14 +3,32 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
-import hashlib
 import json
+from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, BackgroundTasks
 
 from utils.core_models import FileAsset
 from utils.storage_service import storage_service
 from utils.task_service import task_service
+
+# Per-file upload size limits. Documents are the default; videos get a
+# larger cap because classroom recordings are routinely hundreds of MB.
+DOCUMENT_MAX_BYTES = 100 * 1024 * 1024       # 100 MiB
+VIDEO_MAX_BYTES = 1024 * 1024 * 1024          # 1 GiB
+VIDEO_CONTENT_PREFIX = "video/"
+VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv"}
+
+
+def _max_bytes_for(file: UploadFile) -> int:
+    ctype = (file.content_type or "").lower()
+    if ctype.startswith(VIDEO_CONTENT_PREFIX):
+        return VIDEO_MAX_BYTES
+    name = (file.filename or "").lower()
+    if any(name.endswith(ext) for ext in VIDEO_EXTENSIONS):
+        return VIDEO_MAX_BYTES
+    return DOCUMENT_MAX_BYTES
+
 
 class AssetService:
     @staticmethod
@@ -26,13 +44,8 @@ class AssetService:
             return {"info": meta_str}
 
     @staticmethod
-    async def _get_file_hash_and_asset(db: Session, file: UploadFile):
-        content = await file.read()
-        file_hash = hashlib.sha256(content).hexdigest()
-        await file.seek(0)
-
-        existing_asset = db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
-        return file_hash, existing_asset
+    def _find_existing_asset(db: Session, file_hash: str) -> Optional[FileAsset]:
+        return db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
 
     @staticmethod
     def _handle_deduplication_policy(db: Session, existing_asset: FileAsset, file_hash: str):
@@ -63,20 +76,28 @@ class AssetService:
 
     @staticmethod
     async def _prepare_and_upload_asset(db: Session, file: UploadFile, **kwargs) -> dict:
-        file_hash, existing_asset = await AssetService._get_file_hash_and_asset(db, file)
+        max_bytes = _max_bytes_for(file)
+        payload = await storage_service.upload_and_prepare_payload(
+            file, max_size_bytes=max_bytes
+        )
+        file_hash = payload["file_hash"]
 
+        existing_asset = AssetService._find_existing_asset(db, file_hash)
         if existing_asset:
             print(f"[ASSET] File existed! filename: {file.filename}, Hash: {file_hash}")
+            # The file we just wrote is a duplicate; drop it so we don't
+            # accumulate orphaned copies in the object store.
+            try:
+                storage_service.delete_file(payload["file_key"], missing_ok=True)
+            except Exception:
+                pass
             return AssetService._handle_deduplication_policy(db, existing_asset, file_hash)
 
         print(f"[ASSET] New upload: {file.filename}", flush=True)
-        payload = await storage_service.upload_and_prepare_payload(file)
         payload.update({
             "is_biz_error": False,
-            "file_hash": file_hash,
             "file_name": file.filename,
             "content_type": file.content_type,
-            "size_bytes": file.size,
             "bucket_name": payload.get("bucket_name") or "content-search",
             **kwargs
         })

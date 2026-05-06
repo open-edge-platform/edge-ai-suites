@@ -23,7 +23,7 @@ following modifications have been applied to the robot:
 
 - Intel® board mounted on the bottom layer,
 
-- Intel® RealSense™ camera mounted on the front of the top layer and
+- RealSense™ camera mounted on the front of the top layer and
   connected to a USB port on the Intel® board,
 
 - Slamtec RPLIDAR 2D ([Slamtec RPLIDAR A3 laser range scanner](https://www.slamtec.com/en/Lidar/A3) or [Slamtec RPLIDAR A2 laser range scanner (A2M8)](https://www.slamtec.com/en/Lidar/A2)) sensor on a mount in the center of the

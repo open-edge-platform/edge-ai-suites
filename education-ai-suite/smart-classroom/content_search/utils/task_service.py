@@ -177,7 +177,7 @@ class TaskService:
                         raw_meta = _json.loads(raw_meta)
                     except Exception:
                         raw_meta = {}
-                user_vs_enabled = raw_meta.get("vs_enabled", True) if isinstance(raw_meta, dict) else True
+                user_vs_enabled = raw_meta.get("vs_enabled", False) if isinstance(raw_meta, dict) else False
                 do_summarize = is_video and VIDEO_SUMMARIZATION_ENABLED and bool(user_vs_enabled)
 
                 if ai_result and "error" not in ai_result:

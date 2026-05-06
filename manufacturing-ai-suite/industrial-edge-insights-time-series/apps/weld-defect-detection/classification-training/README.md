@@ -10,7 +10,7 @@ Multi-class machine learning pipeline that classifies weld defects from sensor r
 - [Defect Categories](#defect-categories)
 - [Input Features](#input-features)
 - [Project Files](#project-files)
-- [Required Model Artifacts](#required-model-Artifacts)
+- [Required Model Artifacts](#required-model-artifacts)
 - [Setup](#setup)
 - [Training the Model](#training-the-model)
 - [Data Loading Rules](#data-loading-rules)

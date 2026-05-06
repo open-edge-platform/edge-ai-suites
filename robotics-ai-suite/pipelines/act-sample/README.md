@@ -23,7 +23,7 @@ The following patches are provided to enhance the ACT source:
 
 ## Prerequisites
 
-Please make sure you have finished setup steps in [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
+Please make sure you have finished setup steps in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) and followed refer to [oneAPI doc](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/developer_tools_tutorials/oneapi.html#oneapi-install-label) to setup Intel® oneAPI packages.
 
 ## Installation
 
@@ -44,7 +44,7 @@ Follow the [stationary ALOHA guide](https://docs.trossenrobotics.com/aloha_docs/
 ### Install Intel® Extension for PyTorch
 
 > [!IMPORTANT]
-> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/troubleshooting.html).
+> Intel® Extension for PyTorch workloads are incompatible with the NPU driver. For more details, please refer to the [Troubleshooting page](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/troubleshooting.html).
 
 Install the Intel® Extension for PyTorch with the following command:
 

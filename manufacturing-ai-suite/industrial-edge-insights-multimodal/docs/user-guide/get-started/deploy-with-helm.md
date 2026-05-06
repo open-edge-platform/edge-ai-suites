@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This guide provides step-by-step instructions for deploying the MultiModal - Weld Defect Detection sample application using Helm.
+This guide provides step-by-step instructions for deploying the Multimodal Weld Defect Detection sample application using Helm.
 
 ## Prerequisites
 
@@ -194,7 +194,7 @@ curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/
 
 ## Step 6: Verify the Results
 
-Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-weld-defect-detection-results)
+Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-multimodal-weld-defect-detection-results)
 
 ## Uninstall Helm Charts
 

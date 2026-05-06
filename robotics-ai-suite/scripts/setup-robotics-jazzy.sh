@@ -1,6 +1,20 @@
 #!/bin/bash
 
-set -e
+set -o errexit  # Exit immediately if a command fails (-e)
+set -o errtrace # Ensure ERR traps are inherited by functions (-E)
+set -o pipefail # Catch errors in the middle of pipelines
+
+# Define the error handler
+failure_handler() {
+  local rc="${2}"
+  echo "!!! Express setup failed !!!"
+  echo "Please attempt the setup manually:"
+  echo "https://docs.openedgeplatform.intel.com/canonical/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#step-by-step-setup"
+  exit "${rc}"
+}
+
+trap 'failure_handler ${LINENO} $?' ERR
+
 export DEBIAN_FRONTEND=noninteractive
 
 DEBUG=${DEBUG:-0}
@@ -97,6 +111,8 @@ step "Adding Intel oneAPI apt repository..."
 wget $WGET_QUIET -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor 2>/dev/null | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list > /dev/null
 echo -e "Package: intel-oneapi-runtime-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee /etc/apt/preferences.d/oneapi > /dev/null
+echo -e "Package: intel-oneapi-compiler-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/oneapi > /dev/null
+echo -e "Package: intel-oneapi-mkl-*\nPin: version 2025.3.*\nPin-Priority: 1001" | sudo tee -a /etc/apt/preferences.d/oneapi > /dev/null
 
 step "Adding Intel OpenVINO apt repository..."
 wget $WGET_QUIET -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | gpg --dearmor 2>/dev/null | sudo tee /usr/share/keyrings/openvino-archive-keyring.gpg > /dev/null

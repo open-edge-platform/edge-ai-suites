@@ -3,6 +3,13 @@ Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- $targetDevice := ternary "GPU" .Values.vlmServing.env.targetDevice .Values.vlmServing.gpu.enabled -}}
+{{- $needsGpu := contains "GPU" $targetDevice -}}
+{{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}
+{{- $sanitized := .Values.vlmServing.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
+{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.vlmServing.env.modelName -}}
+{{- $storageName := ternary (printf "%s_%s" $sanitized $targetDevice) (printf "%s_%s_%s" $sanitized $targetDevice $weightFormat) $isOpenvino -}}
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,7 +29,7 @@ spec:
         {{- include "stia.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: vlm-serving
     spec:
-      {{- if .Values.vlmServing.gpu.enabled }}
+      {{- if $needsGpu }}
       securityContext:
         supplementalGroups:
           {{- toYaml .Values.vlmServing.gpu.renderGroupIds | nindent 10 }}
@@ -31,10 +38,78 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: ovms-model-init
+          image: "{{ .Values.vlmServing.initImage.repository }}:{{ .Values.vlmServing.initImage.tag }}"
+          imagePullPolicy: {{ .Values.vlmServing.initImage.pullPolicy }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Storage-aware model detection
+              vlm_storage_name="{{ $storageName }}"
+              vlm_model_path="/models/${vlm_storage_name}"
+
+              config_has_model() {
+                grep -q "\"name\": \"$1\"" /models/config.json 2>/dev/null
+              }
+
+              needs_init=false
+
+              if [ -f /models/config.json ]; then
+                echo "Config file found, checking for OVMS model."
+                if [ ! -d "${vlm_model_path}" ] || [ ! -f "${vlm_model_path}/graph.pbtxt" ]; then
+                  echo "Model folder ${vlm_storage_name} not found. Will export."
+                  needs_init=true
+                elif ! config_has_model "${vlm_storage_name}"; then
+                  echo "Model ${vlm_storage_name} not in config. Will export."
+                  needs_init=true
+                fi
+                if [ "$needs_init" = false ]; then
+                  echo "Model ${vlm_storage_name} already exists with correct config."
+                fi
+              else
+                echo "No config.json found, building OVMS model repository."
+                needs_init=true
+              fi
+
+              if [ "$needs_init" = true ]; then
+                . /config/ovms-init.sh
+              fi
+          args:
+            - {{ .Values.vlmServing.env.modelName | quote }}
+            - {{ $weightFormat | quote }}
+            - {{ .Values.vlmServing.huggingfaceToken | quote }}
+            - {{ $targetDevice | quote }}
+          env:
+            - name: http_proxy
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: https_proxy
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: no_proxy
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
+            - name: PIP_TRUSTED_HOST
+              value: "storage.openvinotoolkit.org download.pytorch.org"
+          volumeMounts:
+            - name: ov-models
+              mountPath: /models
+            - name: init-script
+              mountPath: /config
+              readOnly: true
       containers:
         - name: {{ .Values.vlmServing.name }}
-          image: "{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}"
+          image: "{{- if $needsGpu -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.gpuTag }}{{- else -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}{{- end -}}"
           imagePullPolicy: {{ .Values.vlmServing.image.pullPolicy }}
+          args:
+            - "--port"
+            - "9000"
+            - "--rest_port"
+            - "8000"
+            - "--config_path"
+            - "/models/config.json"
+            - "--log_level"
+            - {{ .Values.vlmServing.env.logLevel | quote }}
+            - "--metrics_enable"
           ports:
             - name: http
               containerPort: 8000
@@ -46,52 +121,18 @@ spec:
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.httpsProxy | quote }}
-            - name: VLM_MODEL_NAME
-              value: {{ .Values.vlmServing.env.modelName | quote }}
-            - name: VLM_COMPRESSION_WEIGHT_FORMAT
-              value: {{ .Values.vlmServing.env.compressionWeightFormat | quote }}
-            # Auto-derive device from gpu.enabled; override with vlmServing.env.device when GPU is off
-            - name: VLM_DEVICE
-              value: {{ if .Values.vlmServing.gpu.enabled }}"GPU"{{ else }}{{ .Values.vlmServing.env.device | quote }}{{ end }}
-            - name: VLM_SEED
-              value: {{ .Values.vlmServing.env.seed | quote }}
-            # Force single worker when GPU is enabled (GPU inference is not multi-process safe)
-            - name: WORKERS
-              value: {{ if .Values.vlmServing.gpu.enabled }}"1"{{ else }}{{ .Values.vlmServing.env.workers | quote }}{{ end }}
-            - name: VLM_MAX_COMPLETION_TOKENS
-              value: {{ .Values.vlmServing.env.maxCompletionTokens | quote }}
-            - name: VLM_LOG_LEVEL
-              value: {{ .Values.vlmServing.env.logLevel | quote }}
-            - name: OPENVINO_LOG_LEVEL
-              value: {{ .Values.vlmServing.env.openvinoLogLevel | quote }}
-            - name: VLM_ACCESS_LOG_FILE
-              value: {{ .Values.vlmServing.env.accessLogFile | quote }}
-            {{- if .Values.vlmServing.gpu.enabled }}
-            {{- if .Values.vlmServing.env.ovConfigGpu }}
-            - name: OV_CONFIG
-              value: {{ .Values.vlmServing.env.ovConfigGpu | quote }}
-            {{- end }}
-            {{- else }}
-            {{- if .Values.vlmServing.env.ovConfigCpu }}
-            - name: OV_CONFIG
-              value: {{ .Values.vlmServing.env.ovConfigCpu | quote }}
-            {{- end }}
-            {{- end }}
-            {{- if .Values.vlmServing.huggingfaceToken }}
-            - name: HUGGINGFACE_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "stia.fullname" . }}-hf-token
-                  key: token
-            {{- end }}
           volumeMounts:
             - name: ov-models
-              mountPath: /root/.cache/huggingface
-            - name: ov-models
-              mountPath: /app/ov-model
+              mountPath: /models
+              readOnly: true
+            {{- if $needsGpu }}
+            - name: dri-device
+              mountPath: /dev/dri
+              readOnly: true
+            {{- end }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /v2/health/live
               port: http
             initialDelaySeconds: {{ .Values.vlmServing.healthcheck.initialDelaySeconds }}
             periodSeconds: {{ .Values.vlmServing.healthcheck.periodSeconds }}
@@ -99,14 +140,14 @@ spec:
             failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /health
+              path: /v2/health/ready
               port: http
             initialDelaySeconds: {{ .Values.vlmServing.healthcheck.initialDelaySeconds }}
             periodSeconds: {{ .Values.vlmServing.healthcheck.periodSeconds }}
             timeoutSeconds: {{ .Values.vlmServing.healthcheck.timeoutSeconds }}
             failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
           resources:
-            {{- if .Values.vlmServing.gpu.enabled }}
+            {{- if $needsGpu }}
             {{- $res := deepCopy .Values.vlmServing.resources }}
             {{- $gpuLimits := dict .Values.vlmServing.gpu.resourceName (.Values.vlmServing.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
@@ -124,3 +165,13 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: init-script
+          configMap:
+            name: {{ include "stia.vlmServing.fullname" . }}-init-script
+            defaultMode: 0755
+        {{- if $needsGpu }}
+        - name: dri-device
+          hostPath:
+            path: /dev/dri
+            type: Directory
+        {{- end }}
