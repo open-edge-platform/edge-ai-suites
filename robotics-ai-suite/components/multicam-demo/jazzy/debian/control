@@ -20,9 +20,9 @@ Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}, 
     ${python3:Depends}, 
     ros-jazzy-librealsense2 (>= 2.55.0), 
-    intel-oneapi-runtime-compilers-2024, 
-    intel-oneapi-runtime-dpcpp-cpp-2024, 
-    intel-oneapi-runtime-mkl-2024, 
+    intel-oneapi-runtime-compilers, 
+    intel-oneapi-runtime-dpcpp-cpp, 
+    intel-oneapi-runtime-mkl, 
     libze1 | level-zero, 
     intel-opencl-icd (>=23.43.27642.40), 
     libze-intel-gpu1 (>=23.43.27642.40)
