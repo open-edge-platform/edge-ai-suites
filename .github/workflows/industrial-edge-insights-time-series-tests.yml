@@ -177,6 +177,7 @@ jobs:
         run: |
           # Timeseries-specific test files
           TIMESERIES_TESTS="test_docker_deployment_stability test_docker_deployment_weld_anomaly \
+            test_docker_deployment_wind_turbine \
             test_docker_deployment_wind_turbine_mqtt test_docker_deployment_wind_turbine_opcua \
             test_docker_deployment_wind_turbine_kpi test_docker_helm_deployment_security \
             test_docker_influxdb_retention test_helm_deployment_weld_anomaly \
