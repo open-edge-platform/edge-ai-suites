@@ -418,6 +418,104 @@ def wait_until_service_ready(url=None,
     return False
 
 
+def wait_until_dlstreamer_pipeline_ready(timeout=constants.MULTIMODAL_DLSTREAMER_READY_TIMEOUT,
+                                         poll_interval=constants.MULTIMODAL_POLL_INTERVAL):
+    """Poll until the dlstreamer-pipeline-server inner application is actually ready.
+
+    Docker reports the container as ``Started`` almost immediately, but the inner
+    Python application (REST server + GStreamer pipeline) can take several minutes
+    to come up while OpenVINO/GStreamer plugin caches are warmed up. Container-level
+    checks are therefore not a reliable readiness signal for this service.
+
+    This helper considers the pipeline-server ready as soon as **either** of the
+    following signals is observed (whichever fires first):
+
+    * HTTP probe: ``GET https://localhost:<NGINX_HTTPS_PORT>/dsps-api/pipelines``
+      returns HTTP 200 (the REST API is only reachable once the Python app is up).
+    * Log marker: ``docker logs --tail 200 dlstreamer-pipeline-server`` contains
+      ``Pipeline instance started`` or ``Pipeline Server Manager started`` — useful
+      when the REST endpoint is mis-configured/blocked but the pipeline is provably
+      running.
+
+    Args:
+        timeout (int): Maximum seconds to wait. Default mirrors the empirically
+            observed worst-case (~9 min) plus headroom.
+        poll_interval (int): Seconds between poll attempts.
+
+    Returns:
+        bool: True if either readiness signal is observed within timeout, else False.
+    """
+    container_name = constants.CONTAINERS["dlstreamer"]["name"]
+    url = (
+        f"https://localhost:{constants.NGINX_HTTPS_PORT}"
+        f"{constants.MULTIMODAL_DLSTREAMER_REST_PATH}"
+    )
+    # SSRF guard mirrored from wait_until_service_ready: only allow in-stack probes.
+    if not re.match(r"^https?://(localhost|127\.0\.0\.1)(:\d+)?(/|$)", url):
+        logger.error(f"✗ wait_until_dlstreamer_pipeline_ready: refusing non-local URL: {url}")
+        return False
+    log_pattern = re.compile(r"Pipeline instance started|Pipeline Server Manager started")
+    logger.info(
+        f"Polling until dlstreamer inner application is ready "
+        f"(timeout={timeout}s, interval={poll_interval}s, url={url}, container={container_name})..."
+    )
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        # HTTP probe — only meaningful once the container is up at all.
+        if container_is_running(container_name):
+            try:
+                result = subprocess.run(
+                    ["curl", "-s", "-k", "-o", "/dev/null", "-w", "%{http_code}", url],
+                    capture_output=True, text=True,
+                    timeout=constants.MULTIMODAL_POLL_CURL_TIMEOUT,
+                )
+                http_code = result.stdout.strip() if result.returncode == 0 else "000"
+                if http_code == "200":
+                    elapsed = timeout - (deadline - time.time())
+                    logger.info(
+                        f"✓ dlstreamer inner app ready (HTTP {http_code} from {url}) "
+                        f"after ~{elapsed:.0f}s"
+                    )
+                    return True
+            except subprocess.TimeoutExpired:
+                http_code = "timeout"
+            except OSError as exc:
+                logger.error(f"✗ dlstreamer HTTP probe OS error (is curl installed?): {exc}")
+                return False
+
+            # Log marker fallback — covers REST endpoint blocked / mis-routed cases.
+            try:
+                log_proc = subprocess.run(
+                    ["docker", "logs", "--tail", "200", container_name],
+                    capture_output=True, text=True,
+                    timeout=constants.MULTIMODAL_POLL_CURL_TIMEOUT,
+                )
+                combined_logs = (log_proc.stdout or "") + (log_proc.stderr or "")
+                if log_pattern.search(combined_logs):
+                    elapsed = timeout - (deadline - time.time())
+                    logger.info(
+                        f"✓ dlstreamer inner app ready (log marker matched) "
+                        f"after ~{elapsed:.0f}s"
+                    )
+                    return True
+            except subprocess.TimeoutExpired:
+                logger.info("  dlstreamer log probe timed out — retrying...")
+            except OSError as exc:
+                logger.error(f"✗ dlstreamer log probe OS error: {exc}")
+                # Fall through to retry — HTTP probe alone may still succeed.
+
+            logger.info(
+                f"  dlstreamer not ready yet (HTTP={http_code}, no log marker) — retrying..."
+            )
+        else:
+            logger.info(f"  Container {container_name} not yet running — waiting...")
+        time.sleep(poll_interval)
+    logger.error(
+        f"✗ dlstreamer inner application did not become ready within {timeout}s"
+    )
+    return False
+
+
 def wait_for_influxdb_measurement(measurement,
                                   credentials,
                                   database=None,

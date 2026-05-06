@@ -312,6 +312,14 @@ MULTIMODAL_SERVICE_READY_TIMEOUT = 180    # max seconds to wait for an HTTP endp
 MULTIMODAL_INFLUX_DATA_TIMEOUT = 180      # max seconds to wait for an InfluxDB measurement
 MULTIMODAL_POLL_INTERVAL = 5              # seconds between poll attempts
 MULTIMODAL_POLL_CURL_TIMEOUT = 10         # per-poll curl timeout
+# dlstreamer-pipeline-server inner-application readiness. The container is
+# reported "Started" by Docker almost immediately, but the inner Python app
+# (REST server / GStreamer pipeline) can take ~9 minutes to come up on slow
+# CI runners while it warms up OpenVINO/GStreamer plugins. Pin readiness to
+# the inner app via wait_until_dlstreamer_pipeline_ready() rather than the
+# container state.
+MULTIMODAL_DLSTREAMER_READY_TIMEOUT = 900  # max seconds to wait for the dlstreamer inner app
+MULTIMODAL_DLSTREAMER_REST_PATH = "/dsps-api/pipelines"
 
 # MediaMTX streaming constants - access via nginx proxy
 MEDIAMTX_STREAM_URL = f"https://localhost:{CONTAINERS['nginx_proxy']['https_port']}/samplestream"

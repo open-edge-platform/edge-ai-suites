@@ -673,6 +673,15 @@ def test_s3_stored_images_access(setup_multimodal_environment):
     # The seaweedfs bucket query helper itself polls/retries for image arrival,
     # so no extra blind sleep is needed here.
 
+    # Container-level readiness is not enough for dlstreamer-pipeline-server: Docker
+    # reports the container as Started immediately, but its inner Python application
+    # (REST + GStreamer pipeline) can take several minutes to come up while OpenVINO
+    # plugin caches warm. The SeaweedFS bucket folder is only created once the
+    # pipeline writes its first frame, so gate on the inner app before querying S3.
+    assert docker_utils.wait_until_dlstreamer_pipeline_ready(), (  # nosec B101
+        "dlstreamer-pipeline-server inner application did not become ready"
+    )
+
     # Wait for the vision measurement to appear in InfluxDB before querying S3.
     # CI evidence shows the dlstreamer inner pipeline can take up to ~6 minutes
     # to produce its first frame, so allow up to 360 s here. Don't assert on the
@@ -835,6 +844,15 @@ def test_vision_metadata_sender_timestamp(setup_multimodal_environment):
     context["deploy_multimodal"]()
     # [debug] Snapshot multimodal stack right after deploy.
     docker_utils.log_multimodal_stack_snapshot(label="tc019-after-deploy")
+
+    # Pin readiness to the dlstreamer inner application before polling InfluxDB:
+    # the container reports Started immediately, but the Python pipeline can take
+    # several minutes to actually start producing vision metadata. Without this
+    # gate the InfluxDB / MQTT wait windows expire before the first frame is even
+    # inferred. See wait_until_dlstreamer_pipeline_ready() for the readiness signals.
+    assert docker_utils.wait_until_dlstreamer_pipeline_ready(), (  # nosec B101
+        "dlstreamer-pipeline-server inner application did not become ready"
+    )
 
     is_running = docker_utils.container_is_running(constants.CONTAINERS["influxdb"]["name"])
     logger.info(f"InfluxDB container running status: {is_running}")
