@@ -111,11 +111,11 @@ spec:
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
         resources:
           requests:
-            memory: "16Gi"
+            memory: "12Gi"
             cpu: "4"
         limits:
             memory: "16Gi"
-            cpu: "4"
+            cpu: "6"
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
         securityContext:

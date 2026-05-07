@@ -86,11 +86,7 @@ vlmServing:
   trustedCompute:
     enabled: false
   service:
-    {{- if .Values.vlmServing.trustedCompute.enabled }}
-    type: ClusterIP
-    {{- else }}
     type: NodePort
-    {{- end }}
     port: 8000
   env:
     # Validated default VLM model for traffic scene analysis. Users can override
@@ -135,8 +131,8 @@ vlmServing:
       cpu: "8"
       memory: "16Gi"
     requests:
-      cpu: "8"
-      memory: "16Gi"
+      cpu: "4"
+      memory: "12Gi"
   # Volume for model cache
   persistence:
     enabled: true

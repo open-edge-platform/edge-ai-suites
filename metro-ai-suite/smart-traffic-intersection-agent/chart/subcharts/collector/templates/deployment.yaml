@@ -63,7 +63,7 @@ spec:
               mountPath: /sys
               readOnly: true
             - name: host-dev
-              mountPath: /dev
+              mountPath: /host/dev
               readOnly: true
             - name: host-run
               mountPath: /run

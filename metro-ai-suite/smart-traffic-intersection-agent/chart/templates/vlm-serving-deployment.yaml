@@ -93,6 +93,13 @@ spec:
               value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"
+          resources:
+            limits:
+              cpu: "6"
+              memory: "20Gi"
+            requests:
+              cpu: "4"
+              memory: "12Gi"
           volumeMounts:
             - name: ov-models
               mountPath: /models
