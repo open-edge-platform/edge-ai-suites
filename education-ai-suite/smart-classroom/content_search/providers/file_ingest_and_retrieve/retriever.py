@@ -51,15 +51,15 @@ class ChromaRetriever:
         self.video_summary_id_map = video_summary_id_map if video_summary_id_map is not None else {}
         self._embed_lock = doc_embed_lock or threading.Lock()
 
-    def get_text_embedding(self, query):
+    def get_visual_query_embedding(self, query):
         embedding_tensor = self.visual_embedding_model.handler.encode_text(query)
         return embedding_tensor.cpu().numpy().tolist()
 
-    def get_document_embedding(self, text):
+    def get_document_query_embedding(self, query):
         if not self.document_embedding_model:
             raise RuntimeError("Document embedding model not available.")
         with self._embed_lock:
-            return self.document_embedding_model.get_text_embedding(text)
+            return self.document_embedding_model.get_query_embedding(query)
 
     def get_image_embedding(self, image_base64):
         img_data = base64.b64decode(image_base64)
@@ -120,13 +120,13 @@ class ChromaRetriever:
             raise ValueError("Provide only one of 'query' or 'image_base64', not both.")
 
         if query:
-            embedding = self.get_text_embedding(query)
-            document_embedding = self.get_document_embedding(query)
+            visual_embedding = self.get_visual_query_embedding(query)
+            document_embedding = self.get_document_query_embedding(query)
         else:
-            embedding = self.get_image_embedding(image_base64)
+            visual_embedding = self.get_image_embedding(image_base64)
 
-        if embedding is None:
-            raise Exception("Failed to get embedding for the input.")
+        if visual_embedding is None:
+            raise Exception("Failed to get visual embedding for the input.")
 
         where = self._build_where_clause(filters, list_filter_mode) if filters else None
 
@@ -136,7 +136,7 @@ class ChromaRetriever:
         # Search visual collection
         results = self.client.query(
             collection_name=self.visual_collection_name,
-            query_embeddings=embedding,
+            query_embeddings=visual_embedding,
             where=where,
             n_results=fetch_k,
         )

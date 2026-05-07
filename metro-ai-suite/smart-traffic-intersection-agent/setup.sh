@@ -59,7 +59,7 @@ if [ "$ENABLE_TC" = "true" ]; then
             echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
             return 1
         fi
-        
+
         #Configure TC network settings and create resolv.conf for DNS relay
         export TC_SUBNET="${TC_SUBNET:-172.20.0.0/16}"
         if ! [[ "$TC_SUBNET" =~ ^172\.([0-9]+)\.0\.0/16$ ]] || [ "${BASH_REMATCH[1]}" -lt 18 ] || [ "${BASH_REMATCH[1]}" -gt 31 ]; then
@@ -85,9 +85,9 @@ fi
 
 # Path variables needed by all commands (including --stop/--clean)
 export SAMPLE_APP="smart-intersection"
-SUBMODULE="deps/metro-vision"
-SUBMODULE_PATH="$APP_DIR/$SUBMODULE"
-export DEPS_DIR="$SUBMODULE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
+CLONE_DIR="deps/metro-vision"
+CLONE_PATH="$APP_DIR/$CLONE_DIR"
+export DEPS_DIR="$CLONE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
 export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 
@@ -144,7 +144,7 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     
     # check if ri-compose.yaml exists and run docker compose down accordingly
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p ${PROJECT_NAME} down
+        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p ${PROJECT_NAME} down
     else
         docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p ${PROJECT_NAME} down 2> /dev/null
     fi
@@ -177,8 +177,10 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
         if [ -d "$RI_DIR" ]; then
             rm -rf "$RI_DIR/src/secrets/browser.auth" "$RI_DIR/chart/files/secrets" 2>/dev/null || true
         fi
+
         rm -f "${APP_DIR}/docker/tc-resolv.conf" 2>/dev/null || true
         rm -f "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf" 2>/dev/null || true
+
         echo -e "${GREEN}Cleanup completed successfully. ${NC}"
     fi
 
@@ -195,20 +197,22 @@ if [ -z "$VLM_MODEL_NAME" ]; then
     return 1
 fi
 
-# Verify if dependencies are setup; if not setup the required submodules and run install script
+# Verify if dependencies are setup; if not, clone the required dependency and run install script
 check_and_setup_dependencies() {
-    echo -e "${BLUE}==> Setting up required submodules ...${NC}"
+    echo -e "${BLUE}==> Setting up required dependencies ...${NC}"
 
     if [ ! -d "$DEPS_DIR" ]; then
-        # Run git submodule init and update to fetch the dependencies
-        echo -e "${YELLOW}Dependencies not found. Initializing and updating git submodules...${NC}"
-        git -C $APP_DIR submodule update --init --depth 1 $SUBMODULE
-        git -C $SUBMODULE_PATH sparse-checkout init --cone
-        git -C $SUBMODULE_PATH sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe
+        # Run git clone to fetch the dependencies (sparse, shallow)
+        echo -e "${YELLOW}Dependencies not found. Cloning repository...${NC}"
+        git clone --filter=blob:none --sparse --depth 1 \
+            --branch release-2026.0.0 \
+            https://github.com/open-edge-platform/edge-ai-suites.git \
+            "$CLONE_PATH"
+        git -C "$CLONE_PATH" sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe
 
         # Verify if the git commands were successful
         if [ $? -ne 0 ]; then
-            echo -e "${RED}Failed to initialize and update dependencies${NC}"
+            echo -e "${RED}Failed to clone and set up dependencies${NC}"
             return 1
         fi
     fi
@@ -227,7 +231,8 @@ check_and_setup_dependencies() {
 
     # Run the installation script
     echo -e "${BLUE}==> Running installation script for smart-intersection...${NC}"
-    cd $RI_DIR && ./install.sh && cd - > /dev/null
+    #cd $RI_DIR && ./install.sh && cd - > /dev/null
+    cd $RI_DIR && ./install.sh && cd -
     if [ $? -ne 0 ]; then
         echo -e "${RED}Failed to run install.sh for smart-intersection${NC}"
         cd - > /dev/null
@@ -506,7 +511,7 @@ print_all_service_host_endpoints() {
         case "$CONTAINER_NAME" in
             *nginx-reverse-proxy*)
                 SERVICE_NAME="Nginx Reverse Proxy"
-                HTTPS_PORT=$(docker port "$CONTAINER_NAME" 443 2>/dev/null | cut -d: -f2)
+                HTTPS_PORT=$(docker port "$CONTAINER_NAME" 443 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 if [ -n "$HTTPS_PORT" ]; then
                     echo -e "${BLUE}Access Grafana Dashboard -> https://$HOST_IP:$HTTPS_PORT/grafana/${NC}"
                     echo -e "${BLUE}Access Node-RED -> https://$HOST_IP:$HTTPS_PORT/nodered/${NC}"
@@ -516,16 +521,16 @@ print_all_service_host_endpoints() {
                 ;;
             *traffic-agent*)
                 BACKEND_SERVICE_NAME="Traffic Intersection Agent API Docs"
-                PORT=$(docker port "$CONTAINER_NAME" 8081 2>/dev/null | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 8081 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${CYAN}Access $BACKEND_SERVICE_NAME -> http://$HOST_IP:$PORT/docs${NC}"
 
                 UI_SERVICE_NAME="Traffic Intersection Agent UI"
-                PORT=$(docker port "$CONTAINER_NAME" 7860 2>/dev/null | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 7860 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${CYAN}Access $UI_SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
             *vlm*|*ovms*)
                 SERVICE_NAME="OVMS API"
-                PORT=$(docker port "$CONTAINER_NAME" 8000 | cut -d: -f2)
+                PORT=$(docker port "$CONTAINER_NAME" 8000 2>/dev/null | grep -v '^\[' | head -1 | cut -d: -f2)
                 echo -e "${BLUE}Access $SERVICE_NAME -> http://$HOST_IP:$PORT${NC}"
                 ;;
         esac
@@ -565,9 +570,9 @@ build_service() {
 
     # Build the service images
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME build
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME build
     else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME build
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME build
     fi
 
     if [ $? -eq 0 ]; then
@@ -586,7 +591,7 @@ build_and_start_service() {
     prepare_ovms_model || return 1
 
     # Build and start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --build
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -605,7 +610,7 @@ start_service() {
     prepare_ovms_model || return 1
 
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
@@ -625,18 +630,18 @@ restart_service() {
             echo -e "${BLUE}==> Restarting Traffic Intersection Agent Backend/UI ...${NC}"
             
             # Restart only the agent-specific services (exclude nginx override which requires RI compose)
-            local AGENT_SERVICES="traffic-agent vlm-openvino-serving live-metrics-service collector"
+            local AGENT_SERVICES="traffic-agent ovms-service live-metrics-service collector"
             
             # Stop the Traffic Intersection Agent Backend/UI Service
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME stop $AGENT_SERVICES
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" -p $PROJECT_NAME rm -f $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME stop $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME rm -f $AGENT_SERVICES
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop Traffic Intersection Agent Backend/UI service!${NC}"
                 return 1
             fi
             
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --force-recreate $AGENT_SERVICES
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --force-recreate $AGENT_SERVICES
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Traffic Intersection Agent Backend/UI restarted successfully!${NC}"
@@ -651,14 +656,14 @@ restart_service() {
             echo -e "${BLUE}==> Restarting Dependencies for Traffic Intersection Agent (Smart Intersection RI) ...${NC}"
             
             if [ ! -d "$DEPS_DIR" ] || [ ! -f "${APP_DIR}/docker/ri-compose.yaml" ]; then
-                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
-                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
+                echo -e "${RED}Required dependencies for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up dependencies${NC}"
                 return 1
             fi
             
             # Stop the dependency - Smart Intersection RI services
             echo -e "${BLUE}==> Stopping dependencies ...${NC}"
-            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" $TC_OVERLAY_DEPS -p $PROJECT_NAME down
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop dependencies!${NC}"
@@ -667,7 +672,7 @@ restart_service() {
             
             # Start with force-recreate to ensure env vars are picked up
             echo -e "${BLUE}==> Restarting dependencies (Smart Intersection RI) ...${NC}"
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" $TC_OVERLAY_DEPS -p $PROJECT_NAME up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" $TC_OVERLAY_DEPS -p $PROJECT_NAME up -d --force-recreate
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Dependencies restarted successfully!${NC}"
@@ -682,20 +687,20 @@ restart_service() {
             echo -e "${BLUE}==> Restarting all component services for Smart Traffic Intersection Agent ${RED}${PROJECT_NAME} ${BLUE} ...${NC}"
             
             if [ ! -d "$DEPS_DIR" ] || [ ! -f "$APP_DIR/docker/ri-compose.yaml" ]; then
-                echo -e "${RED}Required Submodules for setting up Smart Intersection RI not found${NC}"
-                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up submodules${NC}"
+                echo -e "${RED}Required dependencies for setting up Smart Intersection RI not found${NC}"
+                echo -e "${YELLOW}Please run 'source setup.sh --setup' first to set up dependencies${NC}"
                 return 1
             fi
             
             # Stop all services
-            docker compose -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p $PROJECT_NAME down
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop services for Traffic Intersection Agent!${NC}"
                 return 1
             fi
 
             # Restart all services
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --force-recreate  
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"

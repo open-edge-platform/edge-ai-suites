@@ -18,12 +18,11 @@ logger = logging.getLogger(__name__)
 
 RRF_K = 60  # RRF constant — higher means scores drop off more slowly with rank, increasing diversity
 
-# Sigmoid parameters for visual score rescaling: sigmoid(k * (sim - center)) * 100.
-# Text→image and image→image have very different similarity distributions, so each
-# query type needs its own center.
-VISUAL_SIGMOID_K = 15.0               # steepness (shared)
-VISUAL_SIGMOID_CENTER_TEXT = 0.15     # text→image: CLIP sim clusters ~0.05–0.35
-VISUAL_SIGMOID_CENTER_IMAGE = 0.70   # image→image: CLIP sim clusters ~0.5–0.95
+# Sigmoid params for visual score rescaling, calibrated on xlm-roberta-base-ViT-B-32.
+VISUAL_SIGMOID_K_TEXT = 18.7          # text→image
+VISUAL_SIGMOID_CENTER_TEXT = 0.14
+VISUAL_SIGMOID_K_IMAGE = 8.1          # image→image
+VISUAL_SIGMOID_CENTER_IMAGE = 0.52
 
 
 def _flatten_chroma_results(chroma_results: dict) -> list[dict]:
@@ -115,7 +114,7 @@ class PostProcessor:
         # Assign RRF scores by rank so distances field is consistent with text query path (higher = better)
         for rank, item in enumerate(trimmed):
             item["rrf_score"] = 1.0 / (RRF_K + rank)
-        self._compute_percentage_scores(trimmed, visual_sigmoid_center=VISUAL_SIGMOID_CENTER_IMAGE)
+        self._compute_percentage_scores(trimmed, visual_sigmoid_k=VISUAL_SIGMOID_K_IMAGE, visual_sigmoid_center=VISUAL_SIGMOID_CENTER_IMAGE)
         return self._to_chroma_format(trimmed)
 
 
@@ -427,19 +426,18 @@ class PostProcessor:
 
 
     @staticmethod
-    def _compute_percentage_scores(results: list[dict], visual_sigmoid_center: float = VISUAL_SIGMOID_CENTER_TEXT) -> None:
-        """Compute a 0-100% absolute relevance score for each result in-place.
-
-        - Documents (reranker_score present): sigmoid(reranker_score) * 100
-        - Visual (no reranker_score): sigmoid(k * (cosine_sim - center)) * 100
-          where cosine_sim = 1 - distance (ChromaDB cosine distance in [0, 2])
-        """
+    def _compute_percentage_scores(
+        results: list[dict],
+        visual_sigmoid_k: float = VISUAL_SIGMOID_K_TEXT,
+        visual_sigmoid_center: float = VISUAL_SIGMOID_CENTER_TEXT,
+    ) -> None:
+        """Assign 0-100 relevance score: sigmoid(reranker logit) for docs, sigmoid(k*(sim-center)) for visual."""
         for r in results:
             if r.get("reranker_score") is not None:
                 r["score"] = round(1.0 / (1.0 + math.exp(-r["reranker_score"])) * 100, 2)
             else:
                 similarity = 1.0 - r["distance"]
-                r["score"] = round(1.0 / (1.0 + math.exp(-VISUAL_SIGMOID_K * (similarity - visual_sigmoid_center))) * 100, 2)
+                r["score"] = round(1.0 / (1.0 + math.exp(-visual_sigmoid_k * (similarity - visual_sigmoid_center))) * 100, 2)
 
     @staticmethod
     def _to_chroma_format(results: list[dict]) -> dict:

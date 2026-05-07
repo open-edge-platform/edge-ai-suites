@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import logging
+import tempfile
 from pathlib import Path
 
 import torch
@@ -81,12 +82,28 @@ def main() -> int:
     logger.info("Converting HuBERT-ECG to OpenVINO IR at %s", ov_model_path)
     with torch.no_grad():
         example_input = torch.zeros([1, 5000], dtype=torch.float32)
-        ov_model = ov.convert_model(
+
+        # Export via ONNX to avoid torch.jit.trace incompatibility with
+        # transformers>=4.45 attention masking (q_length/q_offset).
+        with tempfile.NamedTemporaryFile(suffix=".onnx", delete=False) as tmp:
+            onnx_path = Path(tmp.name)
+
+        torch.onnx.export(
             hubert,
-            example_input=example_input,
-            input=[1, 5000],
+            (example_input,),
+            str(onnx_path),
+            input_names=["input_values"],
+            output_names=["last_hidden_state"],
+            dynamic_axes={
+                "input_values": {0: "batch", 1: "seq_len"},
+                "last_hidden_state": {0: "batch"},
+            },
+            opset_version=17,
         )
+
+        ov_model = ov.convert_model(str(onnx_path))
         ov.save_model(ov_model, ov_model_path)
+        onnx_path.unlink(missing_ok=True)
 
     logger.info("HuBERT-ECG OpenVINO IR saved: %s", ov_model_path)
     return 0

@@ -63,8 +63,8 @@ Embodied Intelligence SDK v25.15 provides necessary software framework, librarie
 
   | Pipeline Name                                                               |   Description                                                                                                                                                     |
   |-----------------------------------------------------------------------------|  -----------------------------------------------------------------------------------------------------------------------------------------------------------------|
-  | [Imitation Learning - ACT](../sample_pipelines/imitation_learning_act.rst)  | Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel optimization                    |
-  | [VSLAM: ORB-SLAM3](../sample_pipelines/ORB_VSLAM.rst)                       | One of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models |
+  | [Imitation Learning - ACT](../sample_pipelines/imitation_learning_act.md)  | Imitation learning pipeline using Action Chunking with Transformers(ACT) algorithm to train and evaluate in simulator or real robot environment with Intel optimization                    |
+  | [VSLAM: ORB-SLAM3](../sample_pipelines/ORB_VSLAM.md)                       | One of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models |
 
 
 **Improved**

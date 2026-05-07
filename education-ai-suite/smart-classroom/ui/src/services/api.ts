@@ -1070,3 +1070,54 @@ export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]
     return [];
   }
 }
+
+// ── Q&A types ──────────────────────────────────────────────────────────────
+
+export interface QASource {
+  file_name: string | null;
+  file_path: string | null;
+  type: string | null;
+  video_pin_second: number | null;
+  video_start_second: number | null;
+  video_end_second: number | null;
+  score: number | null;
+}
+
+export interface QAChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface QAAskParams {
+  question: string;
+  history?: QAChatMessage[];
+  filter?: Record<string, string[]>;
+}
+
+export interface QAAskResult {
+  answer: string;
+  sources: QASource[];
+}
+
+// Content Search API - Q&A (RAG chatbot over uploaded content)
+export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
+  const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/qa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Q&A request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (data.code !== 20000) {
+    throw new Error(data.message || 'Q&A generation failed');
+  }
+  return {
+    answer: data.data?.answer ?? '',
+    sources: Array.isArray(data.data?.sources) ? data.data.sources : [],
+  };
+}

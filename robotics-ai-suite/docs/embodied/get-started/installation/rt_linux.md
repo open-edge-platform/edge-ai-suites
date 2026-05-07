@@ -83,7 +83,7 @@ The following three sections are always skipped because they require manual, pla
      Installed: 20220329.git681281e4-0ubuntu3.36-intel-iotg.eci8
    ```
 
-3. Install the real-time Linux kernel. For details, see [LinuxBSP](../../packages/linuxbsp.rst).
+3. Install the real-time Linux kernel. For details, see [LinuxBSP](../../packages/linuxbsp.md).
 
    ```bash
    sudo apt install -y linux-intel-rt-experimental
