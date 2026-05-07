@@ -2,7 +2,7 @@ app:
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: True # True or False, applicable for provider: openvino
-  language: zh # en or zh
+  language: en # en or zh
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -10,7 +10,7 @@ monitoring:
   socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
   npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
   execution_logs: monitoring/executionlogs
-  
+
 models:
   asr:
     provider: openai # openvino, funasr and openai supported
