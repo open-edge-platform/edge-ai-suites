@@ -263,6 +263,20 @@
     "filesStillUploading": "文件仍在上传中...",
     "uploadFilesToEnable": "上传文件以启用搜索。"
   },
+  "qaSection": {
+    "title": "问答",
+    "notAvailable": "问答不可用",
+    "uploadHint": "上传文件以开始对话",
+    "processingHint": "文件仍在上传中...",
+    "filterByLabel": "按标签筛选：",
+    "allContent": "全部内容",
+    "clearChat": "清除对话",
+    "emptyHint": "可以就已上传的内容提出任何问题。",
+    "sources": "来源：",
+    "inputPlaceholder": "就您的内容提问…",
+    "send": "发送（Enter）",
+    "enterHint": "按 Enter 发送 · 按 Shift+Enter 换行"
+  },
   "resultSection": {
     "title": "结果",
     "subtitle": "按相似度排序（最高排名优先）",
