@@ -74,9 +74,7 @@ int main(int argc, char ** argv)
 ```
 
 This application will create an instance of a `StateMachine` class, inheriting from `rclcpp::Node` from
-ROS2 framework, and passing the smart pointers of the grasp and motion controller Interface instances.
-
-For Example
+ROS2 framework, and passing the smart pointers of the grasp and motion controller Interface instances, for example:
 
 ```cpp
 #include "rclcpp/rclcpp.hpp"
