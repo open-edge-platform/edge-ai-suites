@@ -1382,22 +1382,36 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
             return False
         pattern_display = f"{pattern_type.upper()} pattern"
 
-    # Stream logs in a single docker-logs subprocess for the full timeout window.
-    # Using ``--since`` skips historical backlog so we don't repeatedly replay old
-    # lines (which previously caused early-exit to never reach the new entries
-    # produced after a config change).  ``collect_live_logs`` early-exits the
-    # moment ``search_pattern`` is observed.
-    since_seconds = max(int(timeout) + int(interval), 60)
-    found = collect_live_logs(
-        container_name,
-        monitor_duration=timeout,
-        search_pattern=search_pattern,
-        since=f"{since_seconds}s",
-    )
+    # Snapshot-poll the container logs every ``interval`` seconds instead of
+    # streaming with ``docker logs -f`` (which floods test output with every
+    # Kapacitor/UDF log line). Each poll inspects logs produced since the
+    # function started, so a match arriving on any poll is captured exactly
+    # once and the matching line is the only thing logged.
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        elapsed = time.time() - start_time
+        remaining = timeout - elapsed
+        logger.info(f"Monitoring... (elapsed: {elapsed:.1f}s, remaining: {remaining:.1f}s)")
 
-    if found is True:
-        logger.info(f"✓ {pattern_display} found in logs for container {container_name}")
-        return True
+        since_seconds = max(1, int(elapsed) + 1)
+        try:
+            result = subprocess.run(
+                ["docker", "logs", "--since", f"{since_seconds}s", container_name],
+                capture_output=True, text=True,
+            )
+        except Exception as e:
+            logger.error(f"Error reading logs for {container_name}: {e}")
+            return False
+
+        combined = (result.stdout or "") + (result.stderr or "")
+        if search_pattern in combined:
+            for line in combined.splitlines():
+                if search_pattern in line:
+                    logger.info(f"[MATCH] {line.strip()}")
+            logger.info(f"✓ {pattern_display} found in logs for container {container_name}")
+            return True
+
+        time.sleep(min(interval, max(0, remaining)))
 
     logger.info(f"Timeout reached ({timeout}s). No {pattern_display} found in logs for container {container_name}.")
     return False
