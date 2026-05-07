@@ -11,8 +11,11 @@ reference.
 
 In the following image, the results published on the topic `<namespace>/inference_detection_image`
 
-![Yolo inference with annotations](../../../images/html/YoloDetection.png)
-*Yolo inference with annotations*
+```{figure} ../../../images/html/YoloDetection.png
+:alt: Yolo inference with annotations
+
+Yolo inference with annotations
+```
 
 The object detection framework will deliver the (oriented) bounding box and the class identifier to
 the next stage of the vision pipeline, the pose detector via the custom message `RotateBBList` as

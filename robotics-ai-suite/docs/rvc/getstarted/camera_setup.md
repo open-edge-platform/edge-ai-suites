@@ -61,17 +61,26 @@ With the RealSense Viewer now launched, your attached camera configuration is di
 attention to the camera title, it is imperative that you are using a cable which supports USB 3.2. This can be verified by ensuring "3.2" appears after
 your camera name (e.g. D415 USB 3.2) as is seen in the below image.
 
-![RealSense with firmware out of date message](images/firmware_update_request.png)
-*RealSense Viewer launched*
+```{figure} images/firmware_update_request.png
+:alt: RealSense with firmware out of date message
+
+RealSense Viewer launched
+```
 
 Notice in the above image there is also a firmware notification informing the user the camera needs an update. Click **install** and expand the update window
 to reveal the progress. You will be greeted with a pop-up window scrolling detailed information regarding the installation as seen below.
 
-![Firmware update progress display](images/firmware_updating.png)
-*Firmware update progress display*
+```{figure} images/firmware_updating.png
+:alt: Firmware update progress display
+
+Firmware update progress display
+```
 
 Once the process has completed, select **2D** from the navigation bar in the upper right, then turn on each stream (e.g. stereo, RGB, motion) to reveal
 the output tiled within the window. See example output from updating a D455f below:
 
-![Stereo, RGB, and Motion all working](images/firmware_success.png)
-*Stereo, RGB, and Motion sensors functioning as designed*
+```{figure} images/firmware_success.png
+:alt: Stereo, RGB, and Motion all working
+
+Stereo, RGB, and Motion sensors functioning as designed
+```
