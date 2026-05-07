@@ -135,11 +135,11 @@ ros2 launch ur_calibration  calibration_correction.launch.py robot_ip:=<robot_ip
 
 Make sure to overwrite the result file at:
 
-`` `<urdriverinstallpath>/Universal_Robots_ROS2_Description/config/ur5e/thisur5e_kinematics.yaml` ``
+`<urdriverinstallpath>/Universal_Robots_ROS2_Description/config/ur5e/thisur5e_kinematics.yaml`
 
 For example, in this demonstration, the result file is in:
 
-`` `<urdescriptioninstallpath>/ur_description/config/ur5e/default_kinematics.yaml` ``
+`<urdescriptioninstallpath>/ur_description/config/ur5e/default_kinematics.yaml`
 
 If everything is correct, you will see an informational message instead of the error message.
 

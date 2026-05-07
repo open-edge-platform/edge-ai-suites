@@ -15,7 +15,7 @@ This section explains the modifications required if you use different cameras:
 
 To use a camera of the same model, such as Intel® RealSense™ D415, but a
 different location, make the following change in the
-`` `<usecaseinstallationpath>/urdf/d415camera<namespace>.xacro` `` file to reflect the real position:
+`<usecaseinstallationpath>/urdf/d415camera<namespace>.xacro` file to reflect the real position:
 
 ```xml
 <origin xyz="0.330 0.7210 0.755" rpy="-3.141592654 1.570796327 -1.570796327"/>
@@ -143,7 +143,7 @@ connecting the two was created.
 
 The following figure shows the current global URDF representation as seen by ROS2 RQt `tf_tree` tool.
 
-![TFTree](../images/html/tftree.svg)
+![TFTree](../images/html/tftree.svg)\
 *Figure: TFTree*
 
 In the graph, blue indicates the URDF coming from Robotiq gripper, green

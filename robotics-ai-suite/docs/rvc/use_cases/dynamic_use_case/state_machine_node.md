@@ -136,7 +136,7 @@ the two, here is the conversion:
 1. Assure that the drop down `Feature` is set to `base`.
 2. Assure that the TCP offset takes in account how far the gripper picking position is (in this case our gripper closed fingertips is at 17.5 cm from End effector of UR5e).
 
-![UR External Control](../../images/html/TCPOffset.png)
+   ![UR External Control](../../images/html/TCPOffset.png)
 
 3. Convert X Y Z read in top rightmost box `Tool Position`
 by multiplying x and y by -1.

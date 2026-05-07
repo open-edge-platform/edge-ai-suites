@@ -41,15 +41,15 @@ Here the step by step procedure:
 - Create the stl file to 3D print the object via [FreeCAD](https://www.freecad.org/) or similar.
 - Import the stl file via [Blender](https://www.blender.org/).
 
-![Import STL Blender menu](../../images/html/importSTL.png)
+  ![Import STL Blender menu](../../images/html/importSTL.png)
 
 - Edit so the metrics matches the RealSense Camera metrics: Units are in meters AND the center of the object is in the origin of blender and parallel to the axes where applicable. In short, perform scaling, rotating and translating operations so that dimension matches the realsense camera and the rototranslation from blender origin matches the desired outcome. For example, looking at the following image, the imported STL has been scaled down so the side of the cube is 5CM (0.05 meters), and translated down the Z axis of 0.025 centimeters, so the center of the cube is at 0,0,0. No rotation was needed as the cube was already parallel to the absolute reference system.
 
-![Transform object by scaling, rotating and translating with Blender](../../images/html/editObject.png)
+  ![Transform object by scaling, rotating and translating with Blender](../../images/html/editObject.png)
 
 - Export the object in WaveFront format (.obj) as shown in picture.
 
-![Blender menu to export selected object to WaveFront format](../../images/html/exportToObj.png)
+  ![Blender menu to export selected object to WaveFront format](../../images/html/exportToObj.png)
 
 - Convert the .obj file to pcd file with `pcl_obj2pcd`.
 
