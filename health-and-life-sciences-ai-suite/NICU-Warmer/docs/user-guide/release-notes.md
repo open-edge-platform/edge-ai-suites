@@ -1,6 +1,6 @@
 # Release Notes: NICU Warmer
 
-## Version 1.0.0 - 2025
+## Version 1.0.0 - 2026
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
