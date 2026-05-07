@@ -1382,11 +1382,7 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
             return False
         pattern_display = f"{pattern_type.upper()} pattern"
 
-    # Snapshot-poll the container logs every ``interval`` seconds instead of
-    # streaming with ``docker logs -f`` (which floods test output with every
-    # Kapacitor/UDF log line). Each poll inspects logs produced since the
-    # function started, so a match arriving on any poll is captured exactly
-    # once and the matching line is the only thing logged.
+    # Snapshot-poll docker logs since function start (no `-f` streaming).
     start_time = time.time()
     while time.time() - start_time < timeout:
         elapsed = time.time() - start_time
@@ -1571,7 +1567,7 @@ def update_config_file(ingestion_type="opcua"):
         logger.info(f"✓ Container {container_name} is running")
 
         # Wait for services to stabilize before proceeding
-        wait_for_stability(60)
+        wait_for_stability(constants.WIND_TURBINE_CONFIG_PRE_POST_STABILIZE)
 
         # Step 2: Wait for service to be ready
         logger.info("Waiting for time-series analytics service to be ready...")
@@ -1589,10 +1585,10 @@ def update_config_file(ingestion_type="opcua"):
                     break
                 else:
                     logger.info(f"Service not ready yet (attempt {attempt + 1}/{max_retries}), waiting 5 seconds...")
-                    wait_for_stability(5)
+                    wait_for_stability(constants.WIND_TURBINE_POLL_INTERVAL)
             except Exception as e:
                 logger.error(f"Service check failed (attempt {attempt + 1}/{max_retries}): {e}")
-                wait_for_stability(5)
+                wait_for_stability(constants.WIND_TURBINE_POLL_INTERVAL)
         else:
             logger.error("✗ Service did not become ready within timeout period")
             os.chdir(original_dir)  # Return to original directory before returning
@@ -1684,7 +1680,7 @@ def update_config_file(ingestion_type="opcua"):
                     
                     # Wait for services to fully initialize after configuration change
                     logger.info("Waiting for services to fully process the configuration change...")
-                    wait_for_stability(45)
+                    wait_for_stability(constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE)
 
                     # Return to original directory before returning result
                     os.chdir(original_dir)
@@ -1694,17 +1690,17 @@ def update_config_file(ingestion_type="opcua"):
                     logger.error(result.stderr)
                     if retry < max_curl_retries - 1:
                         logger.info("Waiting 10 seconds before retry...")
-                        wait_for_stability(10)
+                        wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
             except subprocess.TimeoutExpired:
                 logger.error(f"Curl command timed out (attempt {retry + 1})")
                 if retry < max_curl_retries - 1:
                     logger.info("Waiting 10 seconds before retry...")
-                    wait_for_stability(10)
+                    wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
             except Exception as e:
                 logger.error(f"Failed to execute curl command (attempt {retry + 1}): {e}")
                 if retry < max_curl_retries - 1:
                     logger.info("Waiting 10 seconds before retry...")
-                    wait_for_stability(10)
+                    wait_for_stability(constants.WIND_TURBINE_CYCLE_GAP_TIME)
 
         logger.error(f"✗ All curl command attempts failed for {ingestion_type.upper()}")
         # Return to original directory before returning False
@@ -1847,7 +1843,7 @@ def validate_opcua_alert_system():
                 logger.info(f"✓ Successfully restarted {opcua_container_name}")
                 # Wait for container to stabilize after restart
                 logger.info("Waiting for OPC UA server to restart and stabilize...")
-                wait_for_stability(30)
+                wait_for_stability(constants.CONTAINER_STABILIZATION_TIME)
             else:
                 logger.error(f"✗ Failed to restart {opcua_container_name} (exit code: {restart_result})")
                 return False
@@ -1860,11 +1856,11 @@ def validate_opcua_alert_system():
 
     # Wait for OPC UA system to stabilize and process data before checking logs
     logger.info("\nWaiting for OPC UA alert system to stabilize and generate alerts...")
-    wait_for_stability(60)  # Extended wait time to allow OPC UA alerts to be generated and logged
+    wait_for_stability(constants.WIND_TURBINE_OPCUA_ALERT_SETTLE)
 
     # Step 5: Check container logs for OPC UA alert pattern
     logger.info("\nStep 5: Checking container logs for OPC UA alert pattern...")
-    logs_validation = check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], "opcua", timeout=120, interval=10)
+    logs_validation = check_logs_for_alerts(constants.CONTAINERS["time_series_analytics"]["name"], "opcua", timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, interval=constants.WIND_TURBINE_CYCLE_GAP_TIME)
     if not logs_validation:
         logger.error("✗ Step 5 FAILED: OPC UA alert pattern not found in container logs")
         return False

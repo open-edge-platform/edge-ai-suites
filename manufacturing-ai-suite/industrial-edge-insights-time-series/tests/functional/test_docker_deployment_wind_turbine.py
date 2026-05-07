@@ -7,7 +7,6 @@
 import os
 import sys
 import pytest
-import time
 import subprocess
 import logging
 # Add parent directory to path for utils imports
@@ -358,7 +357,6 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     subsystem (deployment / TSAM / MQTT broker / MQTT publisher / Telegraf /
     log pattern) caused the failure without needing to re-run locally.
     """
-    import subprocess as _subprocess
 
     logger.info("TC_013: Testing MQTT alerts functionality")
     context = setup_wind_turbine_environment
@@ -406,7 +404,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # Snapshot of running containers + their status — useful when triaging
     # failures that show up later as "container X not running".
     try:
-        ps_out = _subprocess.run(
+        ps_out = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -430,7 +428,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = _subprocess.run(
+            ps_out = subprocess.run(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -442,7 +440,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, mqtt_broker_name, mqtt_publisher_name, telegraf_name):
             try:
-                logs_out = _subprocess.run(
+                logs_out = subprocess.run(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -476,7 +474,6 @@ def test_opcua_alerts(setup_wind_turbine_environment):
     pinpoints which subsystem (deployment / TSAM / OPC-UA server / log
     pattern) caused the failure without needing to re-run locally.
     """
-    import subprocess as _subprocess
 
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
@@ -517,7 +514,7 @@ def test_opcua_alerts(setup_wind_turbine_environment):
     # Snapshot of running containers + their status — useful when triaging
     # failures that show up later as "container X not running".
     try:
-        ps_out = _subprocess.run(
+        ps_out = subprocess.run(
             ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
             capture_output=True, text=True, timeout=15,
         ).stdout.strip()
@@ -541,7 +538,7 @@ def test_opcua_alerts(setup_wind_turbine_environment):
 
         # Re-snapshot container state (something may have crashed / restarted)
         try:
-            ps_out = _subprocess.run(
+            ps_out = subprocess.run(
                 ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
@@ -553,7 +550,7 @@ def test_opcua_alerts(setup_wind_turbine_environment):
         # alert pipeline.  We use --tail to bound output size in CI logs.
         for cname in (tsam_name, opcua_name, constants.CONTAINERS["telegraf"]["name"]):
             try:
-                logs_out = _subprocess.run(
+                logs_out = subprocess.run(
                     ["docker", "logs", "--tail", "120", cname],
                     capture_output=True, text=True, timeout=15,
                 )
@@ -990,57 +987,5 @@ def test_nginx_proxy_integration_wind_turbine(setup_wind_turbine_environment):
     else:
         logger.info("✓ Direct service access validated successfully")
 
-# GPU test — COMMENTED OUT for now
-# ----------------------------------------------------------------------
-# @pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
-# @pytest.mark.parametrize("protocol,test_case,deploy_func", [
-#     pytest.param("opcua", "TC_031", "deploy_opcua", marks=pytest.mark.opcua),
-#     pytest.param("mqtt", "TC_032", "deploy_mqtt", marks=pytest.mark.mqtt),
-# ])
-# def test_gpu(setup_wind_turbine_environment, protocol, test_case, deploy_func):
-#     """Testing GPU device configuration in time-series analytics config with different ingestion protocols"""
-#     logger.info(f"{test_case}: Testing GPU device configuration with {protocol.upper()} ingestion in time-series analytics config")
-#
-#     # Deploy the specified protocol
-#     context = setup_wind_turbine_environment
-#     context[deploy_func](app=constants.WIND_SAMPLE_APP)
-#     logger.info(f"{protocol} deployment succeeded")
-#
-#     # Poll until service is ready instead of sleeping blindly
-#     logger.info("Polling until service is ready...")
-#     docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
-#
-#     # Mirror the manual procedure: wait a short settle period after `make up` so
-#     # TSAM/kapacitor finishes the initial CPU UDF startup before we send the GPU
-#     # POST.  Without this the OPC-UA path is observed to ack the POST but never
-#     # actually restart the UDF subprocess (kapacitor is mid-init), and the test
-#     # then sees only CPU offload messages for the entire log tail window.
-#     logger.info(f"Settle period {constants.WIND_TURBINE_POST_DEPLOY_SETTLE}s before GPU POST...")
-#     time.sleep(constants.WIND_TURBINE_POST_DEPLOY_SETTLE)
-#
-#     # Execute curl command to post GPU configuration to the API using REST API approach
-#     curl_result = docker_utils.execute_gpu_config_curl(device="gpu")
-#
-#     # Verify the curl command was successful
-#     logger.info(f"GPU configuration curl result: {curl_result}")
-#     assert curl_result, "GPU configuration test via REST API failed"
-#
-#     # Wait for TSAM to restart and apply the GPU config before checking logs.
-#     # Pass accept_503=False so we wait until kapacitor has fully restarted with the
-#     # new DEVICE=gpu env (HTTP 503 means up-but-not-ready; a POST acknowledged then
-#     # would not yet have produced GPU UDF logs).
-#     logger.info("Waiting for service to restart and apply GPU configuration...")
-#     docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, accept_503=False)
-#     # Even after HTTP 200, kapacitor's child UDF process may take a few extra seconds
-#     # to actually initialize sklearnex with target_offload="gpu". Without this grace
-#     # period the log tail can miss the first GPU offload messages.
-#     logger.info(f"Grace period {constants.WIND_TURBINE_GPU_RESTART_GRACE}s for kapacitor UDF to bind GPU...")
-#     time.sleep(constants.WIND_TURBINE_GPU_RESTART_GRACE)
-#
-#     logger.info(f"Verifying if logs contain GPU keywords...")
-#     container_name = constants.CONTAINERS["time_series_analytics"]["name"]
-#     gpu_result = docker_utils.check_log_gpu(container_name, timeout=constants.WIND_TURBINE_GPU_LOG_TIMEOUT, interval=10)
-#
-#     logger.info(f"GPU log check result: {gpu_result}")
-#     assert gpu_result == True, f"GPU keywords not found in logs"
+# GPU tests live in test_GPU_docker.py
 

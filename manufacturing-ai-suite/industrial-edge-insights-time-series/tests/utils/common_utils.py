@@ -310,8 +310,6 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
         return False
     
     start_time = time.time()
-    # Anchor docker-logs --since to test start so we don't re-scan history.
-    since_anchor = start_time
 
     while time.time() - start_time < timeout:
         elapsed_time = time.time() - start_time
@@ -320,25 +318,20 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
         logger.info(f"Monitoring... (elapsed: {elapsed_time:.1f}s, remaining: {remaining_time:.1f}s)")
 
         try:
-            # Get logs based on resource type
+            # Snapshot-poll docker logs since test start (no `-f` streaming).
             if resource_type == "container":
-                # Snapshot logs since the test started (avoids `docker logs -f`
-                # streaming, which floods output with Kapacitor/UDF chatter).
-                since_seconds = max(1, int(time.time() - since_anchor) + 1)
+                since_seconds = max(1, int(elapsed_time) + 1)
                 result = subprocess.run(
                     ["docker", "logs", "--since", f"{since_seconds}s", resource_name],
                     capture_output=True, text=True
                 )
                 combined = (result.stdout or "") + (result.stderr or "")
                 if search_pattern.lower() in combined.lower():
-                    # Log only the matching lines for debugging context.
                     for line in combined.splitlines():
                         if search_pattern.lower() in line.lower():
                             logger.info(f"[MATCH] {line.strip()}")
                     logger.info(f"✓ {input_type.upper()} Alert found in {resource_type} '{resource_name}' logs")
                     return True
-
-                # Sleep before the next snapshot poll.
                 time.sleep(min(interval, remaining_time))
 
             elif resource_type == "pod":
