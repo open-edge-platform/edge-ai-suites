@@ -1,7 +1,8 @@
 {
     "udfs": {
         "name": "weld_anomaly_detector",
-        "models": "weld_anomaly_detector.cb"
+        "models": "weld_anomaly_detector.pkl",
+	    "device": "cpu"
     },
     "alerts": {
         "mqtt": {
