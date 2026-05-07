@@ -156,17 +156,119 @@ def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
 
 
 def test_mqtt_alerts(setup_wind_turbine_environment):
-    """TC_013: Testing MQTT alerts functionality"""
+    """TC_013: Testing MQTT alerts functionality.
+
+    The underlying ``validate_mqtt_alert_system`` helper performs 2 sequential
+    steps (config POST → log pattern search).  When the helper returns False
+    the only signal is the assertion message, which makes triage hard.
+
+    This test mirrors the structure of ``test_opcua_alerts``: explicit
+    pre-checks and on-failure log dumps so CI output pinpoints which
+    subsystem (deployment / TSAM / MQTT broker / MQTT publisher / Telegraf /
+    log pattern) caused the failure without needing to re-run locally.
+    """
+    import subprocess as _subprocess
+
     logger.info("TC_013: Testing MQTT alerts functionality")
     context = setup_wind_turbine_environment
-    context["deploy_mqtt"]()
 
-    # Test MQTT alerts system with wind turbine app parameter
+    # ------------------------------------------------------------------
+    # Phase 1: Deploy MQTT stack
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 1/4: Deploying MQTT stack...")
+    deploy_ok = context["deploy_mqtt"]()
+    logger.info(f"[DEBUG] deploy_mqtt returned: {deploy_ok}")
+    assert deploy_ok, "MQTT deployment failed before alert validation could start"
+
+    # ------------------------------------------------------------------
+    # Phase 2: Pre-validation health checks — confirm prerequisites the
+    # validate_mqtt_alert_system helper assumes are already in place.
+    # ------------------------------------------------------------------
+    tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    mqtt_broker_name = constants.CONTAINERS["mqtt_broker"]["name"]
+    mqtt_publisher_name = constants.CONTAINERS["mqtt_publisher"]["name"]
+    telegraf_name = constants.CONTAINERS["telegraf"]["name"]
+
+    logger.info("[DEBUG] Phase 2/4: Pre-validation health checks")
+    logger.info(f"[DEBUG] Checking TSAM container '{tsam_name}' is running...")
+    tsam_running = docker_utils.container_is_running(tsam_name)
+    logger.info(f"[DEBUG]   tsam_running={tsam_running}")
+    assert tsam_running, f"TSAM container '{tsam_name}' is not running before MQTT alert validation"
+
+    logger.info(f"[DEBUG] Checking MQTT broker container '{mqtt_broker_name}' is running...")
+    mqtt_broker_running = docker_utils.container_is_running(mqtt_broker_name)
+    logger.info(f"[DEBUG]   mqtt_broker_running={mqtt_broker_running}")
+    assert mqtt_broker_running, f"MQTT broker container '{mqtt_broker_name}' is not running before alert validation"
+
+    logger.info(f"[DEBUG] Checking MQTT publisher container '{mqtt_publisher_name}' is running...")
+    mqtt_publisher_running = docker_utils.container_is_running(mqtt_publisher_name)
+    logger.info(f"[DEBUG]   mqtt_publisher_running={mqtt_publisher_running}")
+    assert mqtt_publisher_running, f"MQTT publisher container '{mqtt_publisher_name}' is not running before alert validation"
+
+    logger.info("[DEBUG] Polling ts-api health endpoint until ready...")
+    svc_ready = docker_utils.wait_until_service_ready(
+        timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT
+    )
+    logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
+    assert svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation"
+
+    # Snapshot of running containers + their status — useful when triaging
+    # failures that show up later as "container X not running".
+    try:
+        ps_out = _subprocess.run(
+            ["docker", "ps", "--format", "{{.Names}}\t{{.Status}}"],
+            capture_output=True, text=True, timeout=15,
+        ).stdout.strip()
+        logger.info(f"[DEBUG] docker ps snapshot:\n{ps_out}")
+    except Exception as exc:
+        logger.warning(f"[DEBUG] Failed to capture docker ps snapshot: {exc}")
+
+    # ------------------------------------------------------------------
+    # Phase 3: Run the actual validation helper
+    # ------------------------------------------------------------------
+    logger.info("[DEBUG] Phase 3/4: Invoking validate_mqtt_alert_system()...")
     validation_result = docker_utils.validate_mqtt_alert_system(constants.WIND_SAMPLE_APP)
+    logger.info(f"[DEBUG] validate_mqtt_alert_system returned: {validation_result}")
 
-    # Validation should pass
+    # ------------------------------------------------------------------
+    # Phase 4: On failure, dump container state + key logs so the CI
+    # output is self-sufficient for diagnosis.
+    # ------------------------------------------------------------------
+    if not validation_result:
+        logger.error("[DEBUG] Phase 4/4: Validation FAILED — collecting diagnostics")
+
+        # Re-snapshot container state (something may have crashed / restarted)
+        try:
+            ps_out = _subprocess.run(
+                ["docker", "ps", "-a", "--format", "{{.Names}}\t{{.Status}}"],
+                capture_output=True, text=True, timeout=15,
+            ).stdout.strip()
+            logger.error(f"[DEBUG] docker ps -a (post-failure):\n{ps_out}")
+        except Exception as exc:
+            logger.warning(f"[DEBUG] Failed to capture docker ps -a: {exc}")
+
+        # Tail logs from the containers that participate in the MQTT
+        # alert pipeline.  We use --tail to bound output size in CI logs.
+        for cname in (tsam_name, mqtt_broker_name, mqtt_publisher_name, telegraf_name):
+            try:
+                logs_out = _subprocess.run(
+                    ["docker", "logs", "--tail", "120", cname],
+                    capture_output=True, text=True, timeout=15,
+                )
+                stdout = (logs_out.stdout or "").strip()
+                stderr = (logs_out.stderr or "").strip()
+                logger.error(f"[DEBUG] ----- {cname} stdout (last 120) -----\n{stdout}")
+                if stderr:
+                    logger.error(f"[DEBUG] ----- {cname} stderr (last 120) -----\n{stderr}")
+            except Exception as exc:
+                logger.warning(f"[DEBUG] Failed to capture logs for {cname}: {exc}")
+
     logger.info(f"MQTT alert validation result: {validation_result}")
-    assert validation_result == True, "MQTT alert system validation failed"
+    assert validation_result == True, (
+        "MQTT alert system validation failed — see [DEBUG] log lines above for "
+        "container state and TSAM/MQTT-broker/MQTT-publisher/Telegraf log tails "
+        "captured at failure time."
+    )
 
     # Cleanup handled by fixture
 
