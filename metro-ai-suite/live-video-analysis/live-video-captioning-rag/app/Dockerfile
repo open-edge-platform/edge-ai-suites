@@ -1,7 +1,7 @@
 # Copyright (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.13-slim AS base
+FROM python:3.12-slim AS base
 
 ARG INSTALL_DRIVER_VERSION="25.48.36300"
 
@@ -12,18 +12,19 @@ RUN chmod +x /tmp/drivers/install_gpu_drivers.sh
 RUN echo "Installing GPU drivers version $INSTALL_DRIVER_VERSION" && \
     apt-get update && apt-get install -y --no-install-recommends ca-certificates libxml2 && \
     /tmp/drivers/install_gpu_drivers.sh && \
+    python -m pip install --upgrade --no-cache-dir pip && \
     apt-get clean && rm -rf /tmp/drivers /var/lib/apt/lists/* /tmp/*
 
 # Build stage
 FROM base AS builder
 
 # Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
-RUN pip install --no-cache-dir uv==0.4.23
+RUN pip install --no-cache-dir uv==0.11.10
 
 # Set working directory
 WORKDIR /app
@@ -44,7 +45,7 @@ RUN mkdir -p ui/js/vendor && \
 # Production stage
 FROM base AS production
 
-RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+RUN apt-get update && apt-get upgrade -y && \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
