@@ -356,6 +356,7 @@ services:
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
+    - ${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -381,6 +382,7 @@ services:
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
+    - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
     image: bluenviron/mediamtx:1.16.3
