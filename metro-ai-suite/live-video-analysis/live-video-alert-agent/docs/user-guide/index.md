@@ -1,3 +1,5 @@
+# Live Video Alert Agent
+
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-alert-agent">
@@ -8,8 +10,6 @@
   </a>
 </div>
 hide_directive-->
-
-# Live Video Alert Agent
 
 Deploy AI-powered video alerting using OpenVINO Vision Language Models to process RTSP streams,
 generate real-time alerts from natural language prompts, and respond automatically through

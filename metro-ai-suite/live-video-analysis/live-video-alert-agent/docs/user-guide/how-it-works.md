@@ -5,6 +5,7 @@ video streams, applies VLM-based scene understanding, and dispatches configurabl
 actions through an agentic tool-calling pipeline.
 
 ## Architecture Overview
+
 ![System Architecture](./_assets/Architecture.png)
 
 ## Data Flow
@@ -202,6 +203,7 @@ The `MCPClient` module manages lifecycle for one or more MCP servers configured 
 | `stdio` | Local subprocess MCP server |
 
 At startup, if `MCP_ENABLED=true`, the agent:
+
 1. Reads `resources/mcp_servers.json`
 2. Connects to each enabled server and performs the MCP `initialize` handshake
 3. Calls `tools/list` to discover available tools
