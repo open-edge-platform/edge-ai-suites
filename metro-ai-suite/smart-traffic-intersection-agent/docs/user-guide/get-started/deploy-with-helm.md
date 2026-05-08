@@ -141,7 +141,7 @@ helm install stia . -n <your-namespace> --create-namespace \
 | --- | --- | --- |
 | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
 | `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
-| `microsoft/Phi-3.5-vision-instruct` | Good | Source Hugging Face model. Requires conversion during OVMS init/export. |
+
 
 > **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 

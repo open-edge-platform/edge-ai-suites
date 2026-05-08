@@ -48,6 +48,7 @@ pip3 install -r https://raw.githubusercontent.com/openvinotoolkit/model_server/r
 # Pin transformers to avoid DynamicCache.get_usable_length removal in newer versions
 # (Phi-3.5-vision custom code depends on this API)
 pip3 install 'transformers==4.53.3'
+pip3 install -U 'huggingface_hub[hf_xet]==0.36.0'
 
 # Log in to Hugging Face
 if [ -n "${hf_token}" ]; then
