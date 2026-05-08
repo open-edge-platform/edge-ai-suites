@@ -14,11 +14,11 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '8'
-          memory: 4G
+          cpus: '6'
+          memory: 8G
         reservations:
           cpus: '4'
-          memory: 2G
+          memory: 4G
 
   tc-dns-relay:
     image: coredns/coredns:1.14.3

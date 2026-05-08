@@ -265,19 +265,19 @@ URLs for accessing the relevant services:
 
 ## Deploy with Trusted Compute
 
-Intel Trusted Compute uses [Kata Containers](https://katacontainers.io/) to run workloads
-inside a hardware-isolated virtual machine, providing an additional layer of security for
-sensitive AI workloads.
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
 
 > **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
 
 
 ### 1. Install Trusted Compute
 
-Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Kata Containers runtime on your host system. Complete the following sections:
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
 1. Prerequisites
 2. Download the Trusted Compute Package
 3. Docker Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
 
 ### 2. Deploy the Smart Traffic Intersection Agent with Trusted Compute
 
