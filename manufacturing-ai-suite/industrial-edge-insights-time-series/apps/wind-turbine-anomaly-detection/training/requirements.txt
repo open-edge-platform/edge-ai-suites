@@ -3,4 +3,4 @@ pandas==2.2.3
 scikit-learn==1.6.1
 scikit-learn-intelex==2025.2.0
 dpctl==0.21.1
-setuptools==75.0.0
+setuptools==82.0.1
