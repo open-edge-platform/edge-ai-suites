@@ -1,12 +1,7 @@
 import logging
-import warnings
 from pathlib import Path
 from os import PathLike
 from typing import Optional
-
-# Suppress PyTorch warnings when loading Paddle models (.pdmodel files)
-warnings.filterwarnings("ignore", message="Unable to load package.*\\.pdmodel")
-logging.getLogger("torch.export.pt2_archive._package").setLevel(logging.ERROR)
 
 import openvino as ov
 from openvino import save_model
@@ -19,9 +14,9 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 PADDLEOCR_DICT_URLS = {
-    "en": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/en_dict.txt",
-    "ch": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt",
-    "chinese_cht": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/main/ppocr/utils/ppocr_keys_v1.txt",
+    "en": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/v2.7.0/ppocr/utils/en_dict.txt",
+    "ch": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/v2.7.0/ppocr/utils/ppocr_keys_v1.txt",
+    "chinese_cht": "https://raw.githubusercontent.com/PaddlePaddle/PaddleOCR/v2.7.0/ppocr/utils/ppocr_keys_v1.txt",
 }
 
 def download_file(
