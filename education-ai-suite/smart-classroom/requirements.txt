@@ -15,7 +15,7 @@ uvicorn==0.35.0
 WMI==1.5.1
 fsspec>=2023.1.0,<=2025.3.0
 openai-whisper==20250625
-numpy==2.2.6
+numpy==1.26.4  # imgaug requires numpy<2.0
 optimum==1.27.0
 optimum-intel==1.25.2
 nncf==2.17.0
@@ -27,3 +27,18 @@ pyannote.audio==3.3.2
 faiss-cpu
 sentence-transformers
 hf_xet==1.4.3
+
+# OCR dependencies
+PyMuPDF>=1.21.0
+paddlepaddle==2.6.2
+beautifulsoup4
+fire>=0.3.0
+rapidfuzz
+python-docx
+lmdb
+attrdict
+lxml
+scikit-image
+imgaug
+
+

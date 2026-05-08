@@ -385,7 +385,7 @@ services:
     - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.3
+    image: bluenviron/mediamtx:1.18.1
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -523,7 +523,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.9.0
+    image: coturn/coturn:4.10.0
     container_name: coturn
     read_only: true
     security_opt:
