@@ -257,8 +257,6 @@ Reload tool definitions from `resources/tools.json` without restarting the appli
 
 ---
 
----
-
 ## MCP
 
 Model Context Protocol (MCP) endpoints allow the agent to discover and invoke tools from
@@ -317,7 +315,7 @@ Manually invoke an MCP tool for testing.
   {"parameters": {"query": "up"}}
   ```
 - **Response**:
-  ```json
+  ```console
   {
     "tool": "mcp_prometheus_execute_query",
     "status": "success",
