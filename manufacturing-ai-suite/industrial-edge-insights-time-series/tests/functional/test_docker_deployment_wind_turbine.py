@@ -220,7 +220,8 @@ def test_stability_with_mqtt_ingestion(setup_wind_turbine_environment):
     context["deploy_mqtt"]()
     
     # Poll until service is ready instead of sleeping blindly
-    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
+        "ts-api health endpoint did not become ready before MQTT stability check"
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="mqtt")
@@ -243,7 +244,8 @@ def test_stability_with_opcua_ingestion(setup_wind_turbine_environment):
     context["deploy_opcua"]()
     
     # Poll until service is ready instead of sleeping blindly
-    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
+        "ts-api health endpoint did not become ready before OPC-UA stability check"
 
     # Check container status
     container_status = docker_utils.restart_containers_and_check_status(ingestion_type="opcua")
@@ -303,7 +305,8 @@ def test_loglevel_configuration(setup_wind_turbine_environment):
 
         # Poll until service is ready after restart instead of sleeping blindly
         logger.info("Waiting for container to stabilize after restart...")
-        docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+        assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
+            f"ts-api health endpoint did not become ready after restarting '{container_name}'"
 
         # Trigger some activity to generate DEBUG logs by checking container status
         logger.info("Triggering activity to generate DEBUG logs...")
@@ -580,7 +583,8 @@ def test_influxdb_data_with_mqtt(setup_wind_turbine_environment):
 
     # Poll until service is ready before querying InfluxDB
     logger.info("Polling until service is ready and data is flowing...")
-    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
+        "ts-api health endpoint did not become ready before querying InfluxDB (MQTT)"
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
@@ -602,7 +606,8 @@ def test_influxdb_data_with_opcua(setup_wind_turbine_environment):
 
     # Poll until service is ready before querying InfluxDB
     logger.info("Polling until service is ready and data is flowing...")
-    docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT)
+    assert docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT), \
+        "ts-api health endpoint did not become ready before querying InfluxDB (OPC-UA)"
 
     # Test InfluxDB data retrieval
     influxdb_data = docker_utils.execute_influxdb_commands(container_name=constants.CONTAINERS["influxdb"]["name"])
@@ -671,6 +676,10 @@ def test_opcua_multi_stream_ingestion(setup_wind_turbine_environment):
         # Verify we have the expected OPC-UA server containers (should be multiple for multi-stream)
         opcua_containers = [c for c in containers if 'opcua-server' in c]
         logger.info(f"Found {len(opcua_containers)} OPC-UA server containers: {opcua_containers}")
+        assert len(opcua_containers) == num_streams, (
+            f"Expected {num_streams} OPC-UA server containers for multi-stream deployment, "
+            f"found {len(opcua_containers)}: {opcua_containers}"
+        )
         
         # Run make status check before declaring success
         logger.info("Running make status check to verify deployment health...")
@@ -715,6 +724,10 @@ def test_mqtt_multi_stream_ingestion(setup_wind_turbine_environment):
         # Verify we have the expected MQTT publisher containers (should be multiple for multi-stream)
         mqtt_containers = [c for c in containers if 'mqtt-publisher' in c]
         logger.info(f"Found {len(mqtt_containers)} MQTT publisher containers: {mqtt_containers}")
+        assert len(mqtt_containers) == num_streams, (
+            f"Expected {num_streams} MQTT publisher containers for multi-stream deployment, "
+            f"found {len(mqtt_containers)}: {mqtt_containers}"
+        )
         
         # Run make status check before declaring success
         logger.info("Running make status check to verify deployment health...")

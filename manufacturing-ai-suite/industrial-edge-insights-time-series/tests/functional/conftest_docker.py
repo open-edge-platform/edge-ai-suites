@@ -254,9 +254,21 @@ def setup_wind_turbine_environment(request):
 
     original_dir = os.getcwd()
 
+    # Back up the existing .env (if any) so we can restore it on teardown and
+    # avoid cross-test contamination with other suites that mutate the same file.
+    env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
+    original_env_contents = None
+    if os.path.exists(env_file_path):
+        try:
+            with open(env_file_path, "r") as _f:
+                original_env_contents = _f.read()
+            logger.info("[WT fixture] Backed up existing .env (%d bytes) for restore on teardown",
+                        len(original_env_contents))
+        except OSError as e:
+            logger.warning("[WT fixture] Could not back up .env (%s); teardown will delete it", e)
+
     # Write valid credentials into the shared .env file once for the whole module
     case = docker_utils.generate_test_credentials(case_type="valid")
-    env_file_path = os.path.join(constants.EDGE_AI_SUITES_DIR, ".env")
     if not docker_utils.update_env_file(env_file_path, case):
         pytest.fail("Wind Turbine fixture: failed to update .env file")
 
@@ -264,20 +276,35 @@ def setup_wind_turbine_environment(request):
     # Helper: deploy MQTT and wait until stack is actually ready
     # ------------------------------------------------------------------
     def deploy_mqtt(app=constants.WIND_SAMPLE_APP, num_of_streams=None):
-        """Deploy with MQTT ingestion and poll until containers + service are ready."""
+        """Deploy with MQTT ingestion and poll until containers + service are ready.
+
+        For multi-stream deployments (``num_of_streams`` set) the publisher is
+        a docker-compose scaled service (``mqtt_publisher_1``, ``_2``, ...) and
+        is verified separately via prefix-based counting so multi-stream
+        readiness is not silently skipped.
+        """
         logger.info(f"[WT fixture] Deploying MQTT (app={app}, streams={num_of_streams})")
         result = docker_utils.invoke_make_up_mqtt_ingestion(app=app, num_of_streams=num_of_streams)
         if not result:
             pytest.fail("Wind Turbine MQTT deployment failed")
             return False
-        expected = (
-            _WIND_MQTT_CONTAINERS if num_of_streams is None
-            else [c for c in _WIND_MQTT_CONTAINERS
-                  if c != constants.CONTAINERS["mqtt_publisher"]["name"]]
-        )
-        if not docker_utils.wait_until_containers_up(expected, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
+        publisher_name = constants.CONTAINERS["mqtt_publisher"]["name"]
+        # Base set: every container that keeps its plain name regardless of scale
+        base = [c for c in _WIND_MQTT_CONTAINERS if c != publisher_name]
+        # Single-stream: publisher keeps its plain name
+        if num_of_streams is None:
+            base.append(publisher_name)
+        if not docker_utils.wait_until_containers_up(base, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine MQTT: containers did not come up in time")
             return False
+        # Multi-stream: verify the scaled publisher replicas explicitly
+        if num_of_streams is not None and int(num_of_streams) >= 1:
+            if not docker_utils.wait_until_scaled_containers_up(
+                publisher_name, int(num_of_streams),
+                timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
+            ):
+                pytest.fail(f"Wind Turbine MQTT: only some '{publisher_name}*' replicas came up")
+                return False
         if not docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine MQTT: ts-api health endpoint did not respond in time")
             return False
@@ -288,20 +315,32 @@ def setup_wind_turbine_environment(request):
     # Helper: deploy OPC-UA and wait until stack is actually ready
     # ------------------------------------------------------------------
     def deploy_opcua(app=constants.WIND_SAMPLE_APP, num_of_streams=None):
-        """Deploy with OPC-UA ingestion and poll until containers + service are ready."""
+        """Deploy with OPC-UA ingestion and poll until containers + service are ready.
+
+        For multi-stream deployments (``num_of_streams`` set) the OPC-UA server
+        is a docker-compose scaled service (``opcua_server_1``, ``_2``, ...) and
+        is verified separately via prefix-based counting so multi-stream
+        readiness is not silently skipped.
+        """
         logger.info(f"[WT fixture] Deploying OPC-UA (app={app}, streams={num_of_streams})")
         result = docker_utils.invoke_make_up_opcua_ingestion(app=app, num_of_streams=num_of_streams)
         if not result:
             pytest.fail("Wind Turbine OPC-UA deployment failed")
             return False
-        expected = (
-            _WIND_OPCUA_CONTAINERS if num_of_streams is None
-            else [c for c in _WIND_OPCUA_CONTAINERS
-                  if c != constants.CONTAINERS["opcua_server"]["name"]]
-        )
-        if not docker_utils.wait_until_containers_up(expected, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
+        opcua_name = constants.CONTAINERS["opcua_server"]["name"]
+        base = [c for c in _WIND_OPCUA_CONTAINERS if c != opcua_name]
+        if num_of_streams is None:
+            base.append(opcua_name)
+        if not docker_utils.wait_until_containers_up(base, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine OPC-UA: containers did not come up in time")
             return False
+        if num_of_streams is not None and int(num_of_streams) >= 1:
+            if not docker_utils.wait_until_scaled_containers_up(
+                opcua_name, int(num_of_streams),
+                timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
+            ):
+                pytest.fail(f"Wind Turbine OPC-UA: only some '{opcua_name}*' replicas came up")
+                return False
         if not docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine OPC-UA: ts-api health endpoint did not respond in time")
             return False
@@ -330,4 +369,18 @@ def setup_wind_turbine_environment(request):
         logger.error("Wind Turbine fixture: make down failed during module teardown")
     else:
         logger.info("Wind Turbine fixture: make down completed ✓")
+
+    # Restore the original .env contents (or remove the file if none existed)
+    # so subsequent test modules in the same run start from a clean baseline.
+    try:
+        if original_env_contents is not None:
+            with open(env_file_path, "w") as _f:
+                _f.write(original_env_contents)
+            logger.info("[WT fixture] Restored original .env contents")
+        elif os.path.exists(env_file_path):
+            os.remove(env_file_path)
+            logger.info("[WT fixture] Removed .env created by this fixture")
+    except OSError as e:
+        logger.error("[WT fixture] Failed to restore .env: %s", e)
+
     os.chdir(original_dir)

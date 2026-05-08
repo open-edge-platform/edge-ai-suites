@@ -365,6 +365,27 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
             return False
     
     logger.info(f"Timeout reached ({timeout}s). No {input_type} alerts found in {resource_type} '{resource_name}' logs.")
+    try:
+        if resource_type == "container":
+            tail = subprocess.run(
+                ["docker", "logs", "--tail", "100", resource_name],
+                capture_output=True, text=True,
+            )
+            tail_output = (tail.stdout or "") + (tail.stderr or "")
+        elif resource_type == "pod":
+            tail = subprocess.run(
+                ["kubectl", "logs", resource_name, "-n", namespace, "--tail=100"],
+                capture_output=True, text=True,
+            )
+            tail_output = (tail.stdout or "") + (tail.stderr or "")
+        else:
+            tail_output = ""
+        logger.info(f"---- Last 100 log lines for {resource_type} '{resource_name}' ----")
+        for line in tail_output.splitlines():
+            logger.info(f"[TAIL] {line}")
+        logger.info(f"---- End of log tail for {resource_type} '{resource_name}' ----")
+    except Exception as e:
+        logger.error(f"Failed to fetch tail logs for {resource_type} '{resource_name}': {e}")
     return False
 
 def update_alert_in_tick_script(file_path, setup):

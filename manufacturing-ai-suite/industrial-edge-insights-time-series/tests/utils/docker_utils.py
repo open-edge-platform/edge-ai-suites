@@ -332,9 +332,10 @@ def wait_for_stability(seconds=30):
 def wait_until_containers_up(expected_containers, timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT, poll_interval=constants.WIND_TURBINE_POLL_INTERVAL):
     """Poll docker ps until all expected containers are running, instead of sleeping blindly.
 
-    This is the Docker equivalent of helm's verify_pods — it returns as soon as every
-    container in ``expected_containers`` is confirmed running, or raises after ``timeout``
-    seconds.
+    This is the Docker equivalent of helm's verify_pods — it returns ``True`` as soon
+    as every container in ``expected_containers`` is confirmed running, or ``False``
+    if the deadline is exceeded (the function does not raise; callers should assert
+    the return value if a missed deadline must abort the test).
 
     Args:
         expected_containers (list): List of container name strings to wait for.
@@ -357,6 +358,64 @@ def wait_until_containers_up(expected_containers, timeout=constants.WIND_TURBINE
         time.sleep(poll_interval)
     not_up = [c for c in expected_containers if not container_is_running(c)]
     logger.error(f"✗ Containers still not up after {timeout}s: {not_up}")
+    return False
+
+
+def count_running_containers_with_prefix(prefix):
+    """Return the number of running containers whose name starts with ``prefix``.
+
+    Used for docker-compose scaled services (e.g. ``mqtt_publisher_1``,
+    ``mqtt_publisher_2``, ...) where exact-name matching does not work.
+
+    Args:
+        prefix (str): Container name prefix to match (e.g. ``"mqtt_publisher"``).
+
+    Returns:
+        int: Count of running containers whose name begins with the prefix.
+    """
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "--filter", f"name=^{prefix}", "--format", "{{.Names}}"],
+            capture_output=True, text=True, check=False,
+        )
+        names = [n for n in result.stdout.splitlines() if n.startswith(prefix)]
+        return len(names)
+    except (OSError, subprocess.SubprocessError) as e:
+        logger.warning(f"count_running_containers_with_prefix({prefix}) failed: {e}")
+        return 0
+
+
+def wait_until_scaled_containers_up(prefix, expected_count,
+                                    timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
+                                    poll_interval=constants.WIND_TURBINE_POLL_INTERVAL):
+    """Poll until at least ``expected_count`` containers with ``prefix`` are running.
+
+    Companion to ``wait_until_containers_up`` for docker-compose scaled services
+    where instances are named ``<prefix>_1``, ``<prefix>_2``, ...
+
+    Args:
+        prefix (str): Container name prefix (e.g. ``"mqtt_publisher"``).
+        expected_count (int): Minimum number of running replicas required.
+        timeout (int): Maximum seconds to wait.
+        poll_interval (int): Seconds between polls.
+
+    Returns:
+        bool: True if at least ``expected_count`` replicas are running within
+        the timeout, False otherwise.
+    """
+    logger.info(f"Polling until ≥{expected_count} container(s) matching prefix "
+                f"'{prefix}' are up (timeout={timeout}s, interval={poll_interval}s)")
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        running = count_running_containers_with_prefix(prefix)
+        if running >= expected_count:
+            elapsed = timeout - (deadline - time.time())
+            logger.info(f"✓ {running}/{expected_count} '{prefix}*' replicas up after ~{elapsed:.0f}s")
+            return True
+        logger.info(f"  Waiting — '{prefix}*' replicas: {running}/{expected_count}")
+        time.sleep(poll_interval)
+    running = count_running_containers_with_prefix(prefix)
+    logger.error(f"✗ Only {running}/{expected_count} '{prefix}*' replicas up after {timeout}s")
     return False
 
 
@@ -1135,73 +1194,6 @@ def get_current_loglevel(file_path=None):
         logger.error(f"Failed to read LOG_LEVEL from .env file: {str(e)}")
         return None
 
-def collect_live_logs(container_name, monitor_duration, search_pattern=None, since=None):
-    """Collect logs from a container for a specified duration with threading and pattern search.
-
-    Args:
-        container_name: Name of the container to stream logs from.
-        monitor_duration: Maximum number of seconds to stream logs.
-        search_pattern: Optional substring; function early-exits as soon as it appears.
-        since: Optional value passed to ``docker logs --since`` (e.g. "30s", "1m" or
-            an epoch timestamp) to skip historical backlog and only stream recent
-            entries. When ``None``, the full container log history is streamed.
-    """
-
-    logs_output = []
-    pattern_found = False
-
-    try:
-        cmd = ["docker", "logs", "-f"]
-        if since is not None:
-            cmd += ["--since", str(since)]
-        cmd.append(container_name)
-        # Run docker logs -f command
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            bufsize=1,
-            universal_newlines=True
-        )
-        
-        # Collect logs for the specified duration, exiting early if pattern is found
-        start_time = time.time()
-        while time.time() - start_time < monitor_duration:
-            line = process.stdout.readline()
-            if line:
-                stripped = line.strip()
-                logs_output.append(stripped)
-                logger.info(f"[LOG] {stripped}")  # Show live logs
-                # Early-exit as soon as the search pattern appears in any line
-                if search_pattern and search_pattern in stripped:
-                    pattern_found = True
-                    break
-        
-        # Terminate the process
-        process.terminate()
-        process.wait()
-        
-    except Exception as e:
-        logger.error(f"Error collecting logs: {str(e)}")
-    
-    # If search pattern is provided, check for it in collected logs
-    if search_pattern:
-        if pattern_found:
-            logger.info(f"✓ Found '{search_pattern}' in live logs (early-exit on first match)")
-            return True
-        all_logs = "\n".join(logs_output)
-        if search_pattern in all_logs:
-            count = all_logs.count(search_pattern)
-            logger.info(f"✓ Found '{search_pattern}' in live logs ({count} occurrences)")
-            return True
-        else:
-            logger.info(f"✗ Pattern '{search_pattern}' not found in {container_name} live logs during {monitor_duration}s monitoring")
-            return False
-    
-    # Return the collected logs if no pattern search is needed
-    return logs_output
-
 def remove_old_alert_in_tick_script(file_path, setup):
     """Remove specific alert configuration and add a new one in the .tick file."""
     # Define the alert pattern to remove
@@ -1343,15 +1335,20 @@ def check_and_update_tick_script(script_path=None, setup=None):
     
 def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=10, custom_pattern=None):
     """
-    Check container logs for specific patterns with a timeout using collect_live_logs.
-    
+    Check container logs for specific patterns with a timeout.
+
+    Snapshot-polls ``docker logs --since <elapsed>s`` on each iteration (no ``-f``
+    streaming), so the call always returns within ``timeout`` even when the
+    container is silent. On timeout, the last 100 log lines are dumped to aid
+    triage.
+
     Args:
         container_name (str): Name of the container to monitor
         pattern_type (str): Type of pattern to search for ('mqtt', 'opcua', 'gpu')
         timeout (int): Maximum time to wait for pattern (default: 300 seconds)
         interval (int): Check interval in seconds (default: 10 seconds)
         custom_pattern (str): Custom pattern to search for (takes precedence over pattern_type)
-    
+
     Returns:
         bool: True if pattern found, False if timeout reached
     """
@@ -1390,14 +1387,33 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
         logger.info(f"Monitoring... (elapsed: {elapsed:.1f}s, remaining: {remaining:.1f}s)")
 
         since_seconds = max(1, int(elapsed) + 1)
+        # Cap each docker CLI call so a hung daemon can't stall the whole loop.
+        # 30s is generous for a `docker logs --since Ns` snapshot.
+        cli_timeout = min(30, max(5, int(remaining)))
         try:
             result = subprocess.run(
                 ["docker", "logs", "--since", f"{since_seconds}s", container_name],
-                capture_output=True, text=True,
+                capture_output=True, text=True, timeout=cli_timeout,
             )
+        except subprocess.TimeoutExpired:
+            logger.warning(
+                f"docker logs for {container_name} did not return in {cli_timeout}s; "
+                f"will retry on next iteration"
+            )
+            time.sleep(min(interval, max(0, remaining)))
+            continue
         except Exception as e:
             logger.error(f"Error reading logs for {container_name}: {e}")
             return False
+
+        if result.returncode != 0:
+            stderr = (result.stderr or "").strip()
+            logger.warning(
+                f"docker logs for {container_name} returned exit code "
+                f"{result.returncode}: {stderr[:200]}; will retry on next iteration"
+            )
+            time.sleep(min(interval, max(0, remaining)))
+            continue
 
         combined = (result.stdout or "") + (result.stderr or "")
         if search_pattern in combined:
@@ -1410,25 +1426,44 @@ def check_logs_for_pattern(container_name, pattern_type, timeout=300, interval=1
         time.sleep(min(interval, max(0, remaining)))
 
     logger.info(f"Timeout reached ({timeout}s). No {pattern_display} found in logs for container {container_name}.")
+    try:
+        tail = subprocess.run(
+            ["docker", "logs", "--tail", "100", container_name],
+            capture_output=True, text=True, timeout=15,
+        )
+        if tail.returncode != 0:
+            logger.warning(
+                f"docker logs --tail for {container_name} returned exit code "
+                f"{tail.returncode}: {(tail.stderr or '').strip()[:200]}"
+            )
+        tail_output = (tail.stdout or "") + (tail.stderr or "")
+        logger.info(f"---- Last 100 log lines for {container_name} ----")
+        for line in tail_output.splitlines():
+            logger.info(f"[TAIL] {line}")
+        logger.info(f"---- End of log tail for {container_name} ----")
+    except subprocess.TimeoutExpired:
+        logger.error(f"docker logs --tail for {container_name} did not return in 15s")
+    except Exception as e:
+        logger.error(f"Failed to fetch tail logs for {container_name}: {e}")
     return False
 
 
 def check_logs_for_alerts(container_name, input, timeout=300, interval=10):
     """
-    Check container logs for specific alert messages with a timeout using collect_live_logs.
-    
-    Note: This function is maintained for backward compatibility.
-    Consider using check_logs_for_pattern() for new implementations.
+    Check container logs for specific alert messages with a timeout.
+
+    Thin wrapper around ``check_logs_for_pattern`` kept for backward compatibility.
+    Consider calling ``check_logs_for_pattern`` directly in new code.
     """
     return check_logs_for_pattern(container_name, input, timeout, interval)
 
 
 def check_log_gpu(container_name, timeout=300, interval=10):
     """
-    Check container logs for GPU-related messages with a timeout using collect_live_logs.
-    
-    Note: This function is maintained for backward compatibility.
-    Consider using check_logs_for_pattern() for new implementations.
+    Check container logs for GPU-related messages with a timeout.
+
+    Thin wrapper around ``check_logs_for_pattern(..., 'gpu')`` kept for backward
+    compatibility. Consider calling ``check_logs_for_pattern`` directly in new code.
     """
     return check_logs_for_pattern(container_name, "gpu", timeout, interval)
 
