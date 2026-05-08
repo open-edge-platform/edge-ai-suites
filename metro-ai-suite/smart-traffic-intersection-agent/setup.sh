@@ -354,9 +354,15 @@ export_model_for_ovms() {
             fi
 
             if grep -q '^transformers' "$tmp_requirements"; then
-                sed -i 's/^transformers.*/transformers==4.53.3/' "$tmp_requirements"
+                sed -i 's/^transformers.*/transformers==4.45.2/' "$tmp_requirements"
             else
-                echo 'transformers==4.53.3' >> "$tmp_requirements"
+                echo 'transformers==4.45.2' >> "$tmp_requirements"
+            fi
+
+            if grep -q '^diffusers' "$tmp_requirements"; then
+                sed -i 's/^diffusers.*/diffusers==0.33.0/' "$tmp_requirements"
+            else
+                echo 'diffusers==0.33.0' >> "$tmp_requirements"
             fi
 
             if ! pip install --no-cache-dir -r "$tmp_requirements"; then

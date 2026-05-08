@@ -45,9 +45,9 @@ apt-get update -qq && apt-get install -y -qq git curl > /dev/null 2>&1
 
 # Install OVMS export dependencies
 pip3 install -r https://raw.githubusercontent.com/openvinotoolkit/model_server/refs/tags/v2026.1/demos/common/export_models/requirements.txt
-# Pin transformers to avoid DynamicCache.get_usable_length removal in newer versions
-# (Phi-3.5-vision custom code depends on this API)
-pip3 install 'transformers==4.53.3'
+# Pin transformers and diffusers to compatible versions that work with OVMS v2026.1
+# Avoids dependency conflicts that cause KeyError in optimum task mappings
+pip3 install 'transformers==4.45.2' 'diffusers==0.33.0'
 pip3 install -U 'huggingface_hub[hf_xet]==0.36.0'
 
 # Log in to Hugging Face
