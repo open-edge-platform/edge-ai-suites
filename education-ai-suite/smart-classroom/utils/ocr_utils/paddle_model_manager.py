@@ -81,7 +81,7 @@ class PaddleOCRModelManager:
                 det_model_name=config.models.ocr.det_model,
                 rec_model_name=config.models.ocr.rec_model,
                 cls_model_=(config.models.ocr.cls_model if use_angle_cls else None),
-                show_log=True,
+                show_log=False,
                 rec_image_shape='3,48,320',
                 det_db_thresh=0.25,
                 det_db_box_thresh=0.45,

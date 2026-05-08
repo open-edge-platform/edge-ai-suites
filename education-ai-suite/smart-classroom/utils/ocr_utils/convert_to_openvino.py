@@ -1,7 +1,12 @@
 import logging
+import warnings
 from pathlib import Path
 from os import PathLike
 from typing import Optional
+
+# Suppress PyTorch warnings when loading Paddle models (.pdmodel files)
+warnings.filterwarnings("ignore", message="Unable to load package.*\\.pdmodel")
+logging.getLogger("torch.export.pt2_archive._package").setLevel(logging.ERROR)
 
 import openvino as ov
 from openvino import save_model

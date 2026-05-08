@@ -6,6 +6,7 @@ from utils.config_loader import config
 from utils.cli_utils import run_cli
 from utils.convert_classification_models import convert_classification_models
 from utils.convert_yolo_models import convert_yolo_models
+
 logger = logging.getLogger(__name__)
 from huggingface_hub import snapshot_download
 
@@ -166,6 +167,9 @@ def ensure_model():
 def _initialize_ocr():
     from utils.ocr_utils.paddle_model_manager import PaddleOCRModelManager
     from utils.ocr_utils.convert_to_openvino import convert_ppocr_pipeline
+    
+    # Suppress PyTorch warning when loading PaddleOCR .pdmodel files
+    logging.getLogger("torch.export.pt2_archive._package").setLevel(logging.ERROR)
     
     lang = config.app.language
     if lang != "en":

@@ -30,7 +30,7 @@ def create_ocr_response(
         "input_file": input_file
     }  
     if ocr_status == OCRStatus.SUCCESS and output_file:
-        data["result_file"] = output_file
+        data["result_file"] = output_file.replace("\\", "/")
         message = MSG_OCR_SUCCESS
     else:
         message = MSG_OCR_FAILURE 
