@@ -184,6 +184,8 @@ jobs:
 
   industrial-edge-insights-time-series-scans:
     permissions:
+      contents: read
+      packages: read
       security-events: write
       actions: read
     uses: ./.github/workflows/industrial-edge-insights-time-series-scans.yml
