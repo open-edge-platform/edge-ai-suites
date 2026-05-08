@@ -262,6 +262,20 @@
     "filesStillUploading": "Files are still uploading...",
     "uploadFilesToEnable": "Upload files to enable search."
   },
+  "qaSection": {
+    "title": "Q&A",
+    "notAvailable": "Q&A Not Available",
+    "uploadHint": "Upload files to start chatting",
+    "processingHint": "Files are still uploading...",
+    "filterByLabel": "Filter by label:",
+    "allContent": "All content",
+    "clearChat": "Clear conversation",
+    "emptyHint": "Ask anything about your uploaded content.",
+    "sources": "Sources:",
+    "inputPlaceholder": "Ask a question about your content…",
+    "send": "Send (Enter)",
+    "enterHint": "Enter to send · Shift+Enter for new line"
+  },
   "resultSection": {
     "title": "Results",
     "subtitle": "Sorted by similarity (highest-ranked first)",

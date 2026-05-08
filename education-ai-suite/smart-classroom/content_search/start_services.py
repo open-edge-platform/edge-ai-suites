@@ -99,6 +99,10 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
         _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
 
+        # App-level language (en or zh)
+        app = data.get("app", {})
+        _set("APP_LANGUAGE", app.get("language", "en"))
+
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))
         _set("CS_PORT", cs.get("port", "9011"))
