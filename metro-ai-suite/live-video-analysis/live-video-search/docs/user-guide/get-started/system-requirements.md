@@ -4,7 +4,7 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 ## Hardware Platforms Used for validation
 
-- The primary target of the application is Intel® Core&trade; Ultra 2 and 3 with integrated GPU. 
+- The primary target of the application is Intel® Core&trade; Ultra 2 and 3 with integrated GPU.
 - Intel® Xeon® processor: Fourth generation, fifth, and sixth generation.
 - Intel® Arc™ B580 GPU with the following Intel® Xeon® processor configurations:
   - Intel® Xeon® Platinum processor 8490H
@@ -14,11 +14,10 @@ This page provides detailed hardware, software, and platform requirements to hel
   - Intel® Core™ Ultra 7 processor 265K
   - Intel® Core™ Ultra 9 processor 285K
 
-
 ## Operating Systems Used for validation
 
 - Ubuntu OS version 22.04.2 LTS for Intel® Xeon® processor-only configurations.
-- If GPU is available, refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on the required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu OS version 24.04 or Ubuntu OS version 24.10, depending on the GPU used. 
+- If GPU is available, refer to the official [documentation](https://dgpu-docs.intel.com/devices/hardware-table.html) for details on the required kernel version. For the listed hardware platforms, the kernel requirement translates to Ubuntu OS version 24.04 or Ubuntu OS version 24.10, depending on the GPU used.
 
 ## Minimum Configuration
 
@@ -38,5 +37,5 @@ The software requirements to install the sample application are provided in othe
 
 ## Related Requirements
 
-- Smart NVR requirements: [System Requirements](../../../../smart-nvr/docs/user-guide/get-started/system-requirements.md)
-- VSS requirements (public): [System Requirements](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started/system-requirements.md)
+- Smart NVR requirements: [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started/system-requirements.html)
+- VSS requirements: [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started/system-requirements.html)

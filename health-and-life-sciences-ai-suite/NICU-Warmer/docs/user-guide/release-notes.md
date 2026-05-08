@@ -2,7 +2,7 @@
 
 ## Version 1.0.0
 
-**June, 2026**
+**2026**
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
