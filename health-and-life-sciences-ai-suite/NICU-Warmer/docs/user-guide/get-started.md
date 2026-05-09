@@ -29,6 +29,7 @@ make setup
 ```
 
 This downloads:
+
 - 3 detection models (person, patient, latch) from GitHub Release assets
 - Action recognition encoder/decoder from Open Model Zoo
 - MTTS-CAN rPPG model (converted to OpenVINO IR)
@@ -50,13 +51,13 @@ make run
 
 This builds and starts 5 containers:
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| `nicu-backend` | 5001 | Flask API + SSE stream + MQTT subscriber |
-| `nicu-ui` | 3001 | React dashboard (nginx reverse proxy) |
-| `nicu-dlsps` | 8080 | DL Streamer Pipeline Server (GStreamer) |
-| `nicu-mqtt` | 1883 | Eclipse Mosquitto MQTT broker |
-| `nicu-metrics-collector` | 9100 | Hardware telemetry (CPU/GPU/NPU/Memory) |
+| Service                  | Port | Purpose                                  |
+| ------------------------ | ---- | ---------------------------------------- |
+| `nicu-backend`           | 5001 | Flask API + SSE stream + MQTT subscriber |
+| `nicu-ui`                | 3001 | React dashboard (nginx reverse proxy)    |
+| `nicu-dlsps`             | 8080 | DL Streamer Pipeline Server (GStreamer)  |
+| `nicu-mqtt`              | 1883 | Eclipse Mosquitto MQTT broker            |
+| `nicu-metrics-collector` | 9100 | Hardware telemetry (CPU/GPU/NPU/Memory)  |
 
 ### Device Profiles
 
@@ -71,9 +72,10 @@ make run-npu       # All workloads on NPU
 
 ## 4. Open the Dashboard
 
-Navigate to **http://localhost:3001** in a browser.
+Navigate to `http://localhost:3001` in a browser.
 
 Click **Prepare & Run** to start the AI pipeline. The system will:
+
 1. Start the GStreamer pipeline with all 5 models
 2. Process video at ~15 FPS
 3. Stream detections and vitals via MQTT
@@ -113,3 +115,12 @@ export https_proxy=$HTTPS_PROXY
 ```
 
 The compose file forwards these to all containers automatically.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+get-started/system-requirements.md
+
+:::
+hide_directive-->

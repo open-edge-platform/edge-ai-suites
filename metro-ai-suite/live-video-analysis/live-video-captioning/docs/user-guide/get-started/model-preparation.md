@@ -8,7 +8,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
      ```bash
      # Clone the latest on the mainline
-     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries
+     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b main
      # Alternatively, clone a specific release branch
      git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b <release-tag>
      ```
@@ -70,7 +70,8 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
          ```bash
          ./model_download_scripts/download_models.sh --model yolov8s --type vision
          ```
-         > Note: You may find the list of supported yolo models in this [list](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/download_public_models.sh#L23).
+
+         > **Note:** You may find the list of supported yolo models in this [list](https://github.com/open-edge-platform/dlstreamer/blob/main/samples/download_public_models.sh#L23).
 
      - For a LLM model (for live-video-captioning with RAG):
 
@@ -91,4 +92,4 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
 6. Stop the Model Download service:
 
-    The Model Download service handles the downloading and conversion of models needed for the Live Video Captioning and Live Video Captioniong RAG sample applications. The Model Download service functions independently and is not tied to the operations of the Live Video Captioning and Live Video Captioniong RAG sample applications. You can stop or terminate the service once the required models have been prepared.
+    The Model Download service handles the downloading and conversion of models needed for the Live Video Captioning and Live Video Captioniong RAG sample applications. The service functions independently and is not tied to the operations of the sample applications. You can stop or terminate the service once the required models have been prepared.

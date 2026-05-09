@@ -3,12 +3,14 @@
 The Live Video Alert Agent exposes REST and SSE endpoints for management,
 data consumption, and operational monitoring.
 
-
 ## Observability
 
 ### `GET /health`
+
 Liveness probe. Always returns `200` if the application process is alive.
+
 - **Response**:
+
   ```json
   {
     "status": "healthy",
@@ -21,16 +23,22 @@ Liveness probe. Always returns `200` if the application process is alive.
   ```
 
 ### `GET /ready`
+
 Readiness probe. Returns `200` only when the manager is running and at least
 one alert is enabled. Returns `503` otherwise.
+
 - **Response** (ready):
+
   ```json
-  {"status": "ready", "streams": 1, "alerts": 2}
+  { "status": "ready", "streams": 1, "alerts": 2 }
   ```
 
 ### `GET /metrics`
+
 System and per-stream inference counters.
+
 - **Response**:
+
   ```json
   {
     "cpu_percent": 18.4,
@@ -51,18 +59,21 @@ System and per-stream inference counters.
 ## Streaming
 
 ### `GET /events` (SSE)
+
 Server-Sent Events stream for real-time updates.
+
 - **Response Type**: `text/event-stream`
 - **Events**:
 
-| Event | When | Data fields |
-|---|---|---|
-| `init` | On connect | `results`, `streams` |
-| `analysis` | Each VLM cycle | `stream_id`, `results` |
+| Event          | When                        | Data fields                                                                                              |
+| -------------- | --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `init`         | On connect                  | `results`, `streams`                                                                                     |
+| `analysis`     | Each VLM cycle              | `stream_id`, `results`                                                                                   |
 | `alert_action` | Alert fired + tools invoked | `stream_id`, `alert_name`, `severity`, `answer`, `reason`, `actions_taken`, `escalated`, `snapshot_path` |
-| `keepalive` | Every 15 s | `ts` |
+| `keepalive`    | Every 15 s                  | `ts`                                                                                                     |
 
 - **`alert_action` example**:
+
   ```json
   {
     "event": "alert_action",
@@ -80,13 +91,18 @@ Server-Sent Events stream for real-time updates.
   ```
 
 ### `GET /video_feed`
+
 MJPEG stream for live frame preview.
+
 - **Query Parameters**: `stream_id` (string, default: `default`)
 - **Response Type**: `multipart/x-mixed-replace; boundary=frame`
 
 ### `GET /data`
+
 Polling endpoint returning latest VLM results enriched with runtime alert state. Prefer `/events` for new integrations.
+
 - **Response**:
+
   ```json
   {
     "cam1": {
@@ -109,8 +125,11 @@ Polling endpoint returning latest VLM results enriched with runtime alert state.
 ## Stream Management
 
 ### `GET /streams`
+
 List all active streams with health status.
+
 - **Response**:
+
   ```json
   {
     "streams": [
@@ -130,8 +149,11 @@ List all active streams with health status.
   ```
 
 ### `POST /streams`
+
 Register a new video stream.
+
 - **Request Body**:
+
   ```json
   {
     "stream_id": "cam1",
@@ -141,24 +163,33 @@ Register a new video stream.
     "alerts": []
   }
   ```
+
 - **Response**: `{"status": "added", "stream_id": "cam1"}`
 - **Status Codes**: `200` added | `409` already exists | `422` validation error
 
 ### `PATCH /streams/{stream_id}`
+
 Update per-stream settings.
+
 - **Request Body**:
+
   ```json
-  {"alerts": ["Fire Detection", "Person Detection"]}
+  { "alerts": ["Fire Detection", "Person Detection"] }
   ```
+
   - `alerts` — list of alert names to evaluate for this stream
 - **Response**:
+
   ```json
-  {"id": "cam1", "alerts": ["Fire Detection", "Person Detection"]}
+  { "id": "cam1", "alerts": ["Fire Detection", "Person Detection"] }
   ```
+
 - **Status Codes**: `200` updated | `404` not found
 
 ### `DELETE /streams/{stream_id}`
+
 Remove an active stream.
+
 - **Response**: `{"status": "removed", "stream_id": "cam1"}`
 - **Status Codes**: `200` removed | `404` not found
 
@@ -167,12 +198,17 @@ Remove an active stream.
 ## Alert Configuration
 
 ### `GET /config/alerts`
+
 Return the current alert configurations.
+
 - **Response**: array of `AlertConfig` objects (see schema below).
 
 ### `POST /config/alerts`
+
 Replace the full alert configuration.
+
 - **Request Body**: array of alert config objects:
+
   ```json
   [
     {
@@ -193,17 +229,18 @@ Replace the full alert configuration.
     }
   ]
   ```
+
 - **Alert Config Fields**:
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `name` | string | yes | Alert identifier (letters, digits, spaces, hyphens, dots, underscores) |
-| `prompt` | string | yes | Natural-language yes/no question sent to the VLM |
-| `enabled` | bool | no (default `true`) | Whether this alert is active |
-| `tools` | list of tool names | no (default `["log_alert", "capture_snapshot"]`) | Tools to invoke when alert fires |
-| `tool_arguments` | object | no | Per-tool argument overrides; supports `{{variable}}` template placeholders |
-| `escalation.threshold_consecutive` | int (≥ 2) | no | Consecutive YES count before escalation |
-| `escalation.additional_tools` | list of tool names | no | Extra tools added on escalation |
+| Field                              | Type               | Required                                         | Description                                                                |
+| ---------------------------------- | ------------------ | ------------------------------------------------ | -------------------------------------------------------------------------- |
+| `name`                             | string             | yes                                              | Alert identifier (letters, digits, spaces, hyphens, dots, underscores)     |
+| `prompt`                           | string             | yes                                              | Natural-language yes/no question sent to the VLM                           |
+| `enabled`                          | bool               | no (default `true`)                              | Whether this alert is active                                               |
+| `tools`                            | list of tool names | no (default `["log_alert", "capture_snapshot"]`) | Tools to invoke when alert fires                                           |
+| `tool_arguments`                   | object             | no                                               | Per-tool argument overrides; supports `{{variable}}` template placeholders |
+| `escalation.threshold_consecutive` | int (≥ 2)          | no                                               | Consecutive YES count before escalation                                    |
+| `escalation.additional_tools`      | list of tool names | no                                               | Extra tools added on escalation                                            |
 
 - **Valid built-in tool names**: `log_alert`, `capture_snapshot`, `trigger_webhook`, `publish_mqtt`
 - **MCP tool names** (when `MCP_ENABLED=true`): prefixed with `mcp_{server_name}_` (see [MCP section](#mcp))
@@ -215,9 +252,12 @@ Replace the full alert configuration.
 ## Action Tools
 
 ### `GET /tools`
+
 List all registered action tools and whether they are currently enabled (based
 on environment variable configuration).
+
 - **Response**:
+
   ```json
   {
     "tools": [
@@ -232,26 +272,34 @@ on environment variable configuration).
   ```
 
 ### `POST /tools/{tool_name}/invoke`
+
 Manually invoke a registered tool for testing.
+
 - **Path Parameters**: `tool_name` — one of `log_alert`,
   `trigger_webhook`, `capture_snapshot`, `publish_mqtt`
 - **Request Body**:
+
   ```json
-  {"parameters": {"stream_id": "cam1", "alert_name": "Test"}}
+  { "parameters": { "stream_id": "cam1", "alert_name": "Test" } }
   ```
+
 - **Response**:
+
   ```json
   {
     "tool": "log_alert",
     "status": "success",
-    "result": {"status": "logged"},
+    "result": { "status": "logged" },
     "duration_ms": 1.2
   }
   ```
+
 - **Status Codes**: `200` (success or error both return 200 with `status` field) | `404` tool not found
 
 ### `POST /tools/reload`
+
 Reload tool definitions from `resources/tools.json` without restarting the application.
+
 - **Response**: `{"status": "ok", "tools_loaded": 4}`
 - **Status Codes**: `200` ok
 
@@ -264,8 +312,11 @@ external MCP servers. Enabled when `MCP_ENABLED=true` (default). Server connecti
 configured an added in `resources/mcp_servers.json`.
 
 ### `GET /mcp/status`
+
 Get connection status and available tools per configured MCP server.
+
 - **Response**:
+
   ```json
   {
     "enabled": true,
@@ -281,11 +332,15 @@ Get connection status and available tools per configured MCP server.
     "total_tools": 6
   }
   ```
+
 - When `MCP_ENABLED=false`: `{"enabled": false, "servers": [], "total_tools": 0}`
 
 ### `GET /mcp/tools`
+
 List all tools available from connected MCP servers.
+
 - **Response**:
+
   ```json
   {
     "tools": [
@@ -293,29 +348,40 @@ List all tools available from connected MCP servers.
         "name": "mcp_prometheus_execute_query",
         "description": "[MCP:prometheus] Execute a PromQL query",
         "server": "prometheus",
-        "input_schema": {"type": "object", "properties": {"query": {"type": "string"}}}
+        "input_schema": {
+          "type": "object",
+          "properties": { "query": { "type": "string" } }
+        }
       }
     ],
     "count": 6
   }
   ```
+
 - Tool names are prefixed with `mcp_{server_name}_` to avoid conflicts with built-in tools.
 
 ### `POST /mcp/reload`
+
 Reload MCP server configuration from `resources/mcp_servers.json` and reconnect to all servers.
+
 - **Response**: `{"status": "ok", "tools_loaded": 6}`
 - When `MCP_ENABLED=false`: `{"status": "skipped", "reason": "MCP is disabled", "tools_loaded": 0}`
 - **Status Codes**: `200` ok | `500` reload failed
 
 ### `POST /mcp/tools/{tool_name}/invoke`
+
 Manually invoke an MCP tool for testing.
+
 - **Path Parameters**: `tool_name` — full prefixed name (e.g. `mcp_prometheus_execute_query`)
 - **Request Body**:
+
   ```json
-  {"parameters": {"query": "up"}}
+  { "parameters": { "query": "up" } }
   ```
+
 - **Response**:
-  ```console
+
+  ```
   {
     "tool": "mcp_prometheus_execute_query",
     "status": "success",
@@ -323,6 +389,7 @@ Manually invoke an MCP tool for testing.
     "duration_ms": 45.3
   }
   ```
+
 - **Status Codes**: `200` | `404` tool not found | `503` MCP disabled or server not connected
 
 ---
@@ -330,5 +397,7 @@ Manually invoke an MCP tool for testing.
 ## Dashboard UI
 
 ### `GET /`
+
 Serves the monitoring dashboard HTML.
+
 - **Response**: `text/html`

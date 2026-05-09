@@ -21,21 +21,21 @@ The solution is intended to:
 
 To see the system requirements and setup instructions, see the following guides:
 
-- [Get Started](docs/user-guide/get-started.md): Follow step-by-step instructions to set up
+- [Get Started](./docs/user-guide/get-started.md): Follow step-by-step instructions to set up
   the application.
-- [System Requirements](docs/user-guide/get-started/system-requirements.md): Check the
+- [System Requirements](./docs/user-guide/get-started/system-requirements.md): Check the
   hardware and software requirements for deploying the application.
 
 ## How It Works
 
 At a high level, the system runs 5 AI models in a single GStreamer pipeline, communicating via MQTT to a Flask backend that streams results to a React dashboard over Server-Sent Events (SSE).
 
-For details, see [How It Works](docs/user-guide/how-it-works.md).
+For details, see [How It Works](./docs/user-guide/how-it-works.md).
 
 ## Learn More
 
 For detailed information about system requirements, architecture, and how the application
 works, see the:
 
-- [Full Documentation](docs/user-guide/index.md)
-- [Release Notes](docs/user-guide/release-notes.md)
+- [Full Documentation](./docs/user-guide/index.md)
+- [Release Notes](./docs/user-guide/release-notes.md)

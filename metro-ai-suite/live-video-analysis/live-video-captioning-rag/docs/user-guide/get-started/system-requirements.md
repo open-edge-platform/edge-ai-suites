@@ -2,7 +2,7 @@
 
 This section shows the Intel-recommended environment for running the Live Video Captioning RAG sample application with Live Video Captioning sample application.
 
-See [Live Video Captioning System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/get-started/system-requirements.html) for details.
+See [Live Video Captioning System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/system-requirements.html) for details.
 
 ## Model Requirements
 
@@ -13,4 +13,4 @@ Large Language Models (LLMs) and their corresponding OpenVINO™ Intermediate Re
 
 ## Validation
 
-See [Live Video Captioning Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/get-started.html) after you have installed Docker software.
+See [Live Video Captioning Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started.html) after you have installed Docker software.

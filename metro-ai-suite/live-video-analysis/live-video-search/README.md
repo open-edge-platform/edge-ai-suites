@@ -31,7 +31,7 @@ graph TD
 
   - [Architecture](./docs/user-guide/how-it-works.md): End‑to‑end architecture.
   - [System Requirements](./docs/user-guide/get-started/system-requirements.md): Hardware and software requirements.
-  - [Build from Source](./docs/user-guide/how-to-build-from-source.md): Build images for the stack.
+  - [Build from Source](./docs/user-guide/get-started/build-from-source.md): Build images for the stack.
   - [API Reference](./docs/user-guide/api-reference.md): Key endpoints and references.
   - [Release Notes](./docs/user-guide/release-notes.md): Updates and fixes.
 
