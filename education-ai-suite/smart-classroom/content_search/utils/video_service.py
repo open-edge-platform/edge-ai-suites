@@ -8,6 +8,30 @@ import httpx
 import json
 import traceback
 
+_DEFAULT_PROMPT_EN = (
+    "Please summarize this classroom video segment. "
+    "Focus on the teaching activities, lecture topics, "
+    "key knowledge points being explained, "
+    "any content written or displayed on the blackboard/screen, "
+    "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
+    "and notable student-teacher interactions."
+)
+
+_DEFAULT_PROMPT_ZH = (
+    "请总结这段课堂视频片段。"
+    "重点关注以下内容：教学活动、授课主题、"
+    "正在讲解的关键知识点、"
+    "黑板或屏幕上书写或展示的内容、"
+    "学生行为（如举手、做笔记、讨论、走神、离开教室），"
+    "以及师生之间的互动。"
+)
+
+PROMPTS = {
+    "en": os.getenv("VS_PROMPT_EN", _DEFAULT_PROMPT_EN),
+    "zh": os.getenv("VS_PROMPT_ZH", _DEFAULT_PROMPT_ZH),
+}
+
+
 class VideoService:
     def __init__(self):
         host = os.getenv("PREPROCESS_HOST", "127.0.0.1")
@@ -16,33 +40,22 @@ class VideoService:
         self.timeout = 900.0
 
     async def trigger_summarization(
-        self, 
-        file_key: str, 
-        bucket_name: str, 
+        self,
+        file_key: str,
+        bucket_name: str,
         tags: list = None,
-        prompt: str = (
-            "Please summarize this classroom video segment. "
-            "Focus on the teaching activities, lecture topics, "
-            "key knowledge points being explained, "
-            "any content written or displayed on the blackboard/screen, "
-            "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
-            "and notable student-teacher interactions."
-        ),
-        chunk_duration: int = None
+        language: str = "en",
     ):
         url = f"{self.base_url}/preprocess"
-        
+
+        effective_prompt = PROMPTS.get(language, PROMPTS["en"])
+
         payload = {
             "file_key": file_key,
             "reuse_existing": True,
-            "tags": tags
+            "tags": tags,
+            "prompt": effective_prompt,
         }
-
-        if prompt is not None:
-            payload["prompt"] = prompt
-        
-        if chunk_duration is not None:
-            payload["chunk_duration_s"] = chunk_duration
 
         print(f"[VideoService] Calling -> {url}")
         print(f"[VideoService] Payload: {json.dumps(payload, ensure_ascii=False)}")

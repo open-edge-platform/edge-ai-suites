@@ -210,19 +210,16 @@ class TaskService:
                         if not user_tags:
                             user_tags = ["default_video"]
 
-                        vs_options = payload.get("vs_options", {})
-                        custom_prompt = vs_options.get("prompt")
-                        chunk_duration = vs_options.get("chunk_duration_s")
+                        vs_language = os.getenv("APP_LANGUAGE", "en")
 
                         print(f"[VIDEO] Triggering summarization for {file_key}...", flush=True)
-                        print(f"[VIDEO] Final tags: {user_tags}, Prompt: {custom_prompt}", flush=True)
+                        print(f"[VIDEO] Final tags: {user_tags}, Language: {vs_language}", flush=True)
 
                         summary_res = asyncio.run(video_service.trigger_summarization(
                             file_key=file_key,
                             bucket_name=bucket_name,
                             tags=user_tags,
-                            prompt=custom_prompt,
-                            chunk_duration=chunk_duration
+                            language=vs_language,
                         ))
 
                         task.result = {**ai_result, "video_summary": summary_res, "video_summary_status": "COMPLETED"}

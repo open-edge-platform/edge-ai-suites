@@ -61,10 +61,6 @@ async def ingest_existing_file(
         "file_key": file_key,
         "bucket_name": bucket_name,
         "meta": meta,
-        "vs_options": {
-            "prompt": payload.get("prompt"),
-            "chunk_duration_s": payload.get("chunk_duration")
-        }
     }
 
     result = await task_service.handle_file_ingest(db, storage_payload, background_tasks)

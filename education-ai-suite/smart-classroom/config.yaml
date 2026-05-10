@@ -444,6 +444,34 @@ content_search:
     max_num_frames: 8
     frame_width: 0
     frame_height: 0
+    prompt_en: |
+      Summarize this classroom video segment.
+
+      Describe each of the following aspects in detail:
+      - Teaching activity and lecture topic
+      - Key knowledge points being explained
+      - Content written or displayed on the blackboard/screen
+      - Student behaviors (raising hands, taking notes, discussing, distracted, leaving)
+      - Notable student-teacher interactions
+
+      Rules:
+      - Cover every aspect listed above; if not observed, state "Not observed".
+      - Be specific and descriptive, not generic.
+      - Write in paragraph form.
+    prompt_zh: |
+      总结这段课堂视频片段。
+
+      请逐一详细描述以下各方面的具体情况：
+      - 教学活动与授课主题
+      - 正在讲解的关键知识点
+      - 黑板或屏幕上书写或展示的内容
+      - 学生行为（举手、做笔记、讨论、走神、离开教室）
+      - 师生之间的互动
+
+      规则：
+      - 以上每个方面都需要描述，如未观察到则写"未观察到"。
+      - 描述要具体详细，避免笼统概括。
+      - 使用段落形式输出。
 
   file_ingest:
     host_addr: "127.0.0.1"

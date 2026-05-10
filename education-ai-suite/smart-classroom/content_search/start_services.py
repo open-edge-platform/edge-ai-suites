@@ -64,6 +64,16 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         pre = cs.get("video_preprocess", {})
         _set("PREPROCESS_HOST", pre.get("host_addr", "127.0.0.1"))
         _set("PREPROCESS_PORT", pre.get("port", "8001"))
+        _set("VLM_TIMEOUT_SECONDS", str(pre.get("vlm_timeout_seconds", 300)))
+        _set("CHUNK_DURATION_S", str(pre.get("chunk_duration_s", 30)))
+        _set("CHUNK_OVERLAP_S", str(pre.get("chunk_overlap_s", 4)))
+        _set("MAX_NUM_FRAMES", str(pre.get("max_num_frames", 8)))
+        _set("FRAME_WIDTH", str(pre.get("frame_width", 0)))
+        _set("FRAME_HEIGHT", str(pre.get("frame_height", 0)))
+        if pre.get("prompt_en"):
+            _set("VS_PROMPT_EN", pre["prompt_en"])
+        if pre.get("prompt_zh"):
+            _set("VS_PROMPT_ZH", pre["prompt_zh"])
 
         # File Ingest
         ingest = cs.get("file_ingest", {})
