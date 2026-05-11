@@ -62,16 +62,25 @@ class AssetService:
 
         task_id = str(related_task.id) if related_task else None
 
+        ocr_text_key = None
+        if related_task and related_task.result:
+            task_result = related_task.result if isinstance(related_task.result, dict) else {}
+            ocr_text_key = task_result.get("ocr_text_key")
+
+        data = {
+            "file_hash": file_hash,
+            "file_name": existing_asset.file_name,
+            "created_at": str(existing_asset.created_at),
+            "task_id": task_id
+        }
+        if ocr_text_key:
+            data["ocr_text_key"] = ocr_text_key
+
         return {
             "is_biz_error": True,
             "code": 40901,
             "message": "Upload failed: File already exists.",
-            "data": {
-                "file_hash": file_hash,
-                "file_name": existing_asset.file_name,
-                "created_at": str(existing_asset.created_at),
-                "task_id": task_id
-            }
+            "data": data
         }
 
     @staticmethod
