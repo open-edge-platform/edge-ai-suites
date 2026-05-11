@@ -1,7 +1,9 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
+import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring } from "../../services/api";
+import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing } from "../../redux/slices/uiSlice";
 
@@ -27,6 +29,7 @@ interface UploadEntry {
   selected: boolean;
   tags: string[];
   vsEnabled: boolean;
+  ocrTextKey: string | null;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -64,6 +67,14 @@ const UploadSection: React.FC = () => {
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+
+  const [ocrPreview, setOcrPreview] = useState<{
+    isOpen: boolean;
+    filename: string;
+    content: string;
+    loading: boolean;
+    ocrTextKey: string;
+  }>({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);
@@ -192,7 +203,8 @@ const UploadSection: React.FC = () => {
             (result.result?.file_info as any)?.file_key ??
             (result.result as any)?.file_key ??
             null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}) });
+          const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
             clearInterval(pollTimers.current[entryId]);
@@ -225,6 +237,7 @@ const UploadSection: React.FC = () => {
         selected: false,
         tags: [],
         vsEnabled: false,
+        ocrTextKey: null,
       }));
       setEntries((prev) => [...prev, ...newEntries]);
     },
@@ -349,6 +362,30 @@ const UploadSection: React.FC = () => {
     const files = Array.from(e.dataTransfer.files).filter((f) => isAllowed(f.name));
     if (files.length) processFiles(files);
   };
+
+  const handleOcrPreview = useCallback(async (filename: string, ocrTextKey: string) => {
+    setOcrPreview({ isOpen: true, filename, content: "", loading: true, ocrTextKey });
+    try {
+      const content = await csDownloadText(ocrTextKey);
+      setOcrPreview({ isOpen: true, filename, content, loading: false, ocrTextKey });
+    } catch (err) {
+      setOcrPreview({ isOpen: true, filename, content: "Failed to load OCR text.", loading: false, ocrTextKey });
+    }
+  }, []);
+
+  const closeOcrPreview = useCallback(() => {
+    setOcrPreview({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
+  }, []);
+
+  const downloadOcrText = useCallback(() => {
+    if (!ocrPreview.ocrTextKey) return;
+    const link = document.createElement("a");
+    link.href = getOcrDownloadUrl(ocrPreview.ocrTextKey);
+    link.download = ocrPreview.filename.replace(/\.[^.]+$/, ".txt");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [ocrPreview.ocrTextKey, ocrPreview.filename]);
 
   const confirmRemove = () => {
     const id = confirmRemoveId;
@@ -515,6 +552,18 @@ return (
                   <td>
                     <span className="cs-file-name" title={entry.filename}>
                       {entry.filename}
+                      {entry.status === "COMPLETED" && entry.ocrTextKey && (
+                        <img
+                          src={handwrittenIcon}
+                          alt="Handwritten"
+                          className="cs-ocr-icon cs-ocr-icon--clickable"
+                          title="Click to preview OCR text"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOcrPreview(entry.filename, entry.ocrTextKey!);
+                          }}
+                        />
+                      )}
                     </span>
                     {entry.fileType === "MP4" && entry.status === "STAGED" && !entry.fileKey && (
                       <label className="cs-vs-toggle" title={t("uploadSection.videoSummarizationToggle")}>
@@ -638,6 +687,15 @@ return (
         </div>
       </div>
     )}
+
+    <OcrPreviewModal
+      isOpen={ocrPreview.isOpen}
+      filename={ocrPreview.filename}
+      content={ocrPreview.content}
+      loading={ocrPreview.loading}
+      onClose={closeOcrPreview}
+      onDownload={downloadOcrText}
+    />
   </>
 );}
 
