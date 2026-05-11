@@ -94,10 +94,10 @@ asr:
   provider: funasr
   name: paraformer-zh
 ```
-Please also config the summarizer to output Chinese
+Please also set the language to Chinese at the app level:
 
 ```yaml
-summarizer:
+app:
   language: zh
 ```
 
