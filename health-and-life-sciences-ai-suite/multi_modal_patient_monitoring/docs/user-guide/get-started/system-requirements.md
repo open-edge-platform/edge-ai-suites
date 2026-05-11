@@ -27,7 +27,7 @@ This section lists the hardware, software, and network requirements for running 
     - Intel integrated GPU supported by Intel® Graphics Compute Runtime.
     - Intel NPU supported by the linux‑npu‑driver stack (see [Release Notes](../release-notes.md) for a known issue).
 
-  - The host must expose GPU and NPU devices to Docker, for example:
+  - The host must expose GPU and NPU devices to Docker:
     - `/dev/dri` (GPU)
     - `/dev/accel/accel0` (NPU)
 
@@ -99,7 +99,7 @@ The application bundles several AI workloads, each with its own model and inputs
 
 ## Browser Requirements
 
-- Modern web browser (Chrome, Edge, or Firefox) to access the UI dashboard.
+- Any modern browser (Chrome, Edge, or Firefox) to access the UI dashboard.
 - JavaScript enabled.
 
 These requirements are intended for development and evaluation environments. For any production‑like deployment, you should also consider additional factors such as security hardening, monitoring, backup, and resource isolation.

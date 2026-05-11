@@ -1,5 +1,16 @@
 # NICU Warmer — Intelligent Patient Monitoring
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/health-and-life-sciences-ai-suite/NICU-Warmer">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/health-and-life-sciences-ai-suite/NICU-Warmer/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 The NICU Warmer application is a reference workload that demonstrates how multiple AI models
 can run simultaneously in a single GStreamer pipeline on Intel® hardware, providing real-time
 neonatal patient monitoring in a hospital warmer bed scenario.
@@ -8,7 +19,7 @@ It combines several AI workloads:
 
 - **Object Detection (×3):** Custom OpenVINO FP32 models for detecting patient presence,
   caretaker presence, and warmer latch clip status — all running on Intel Arc GPU.
-- **rPPG (Remote Photoplethysmography):** Contactless heart rate and respiratory rate
+- **rPPG (Remote Photoplethysmography):** Contactless heart and respiratory rate
   estimation from facial video using MTTS-CAN, running on CPU.
 - **Action Recognition:** Kinetics-400 encoder/decoder model mapped to 11 NICU-specific
   activity categories, running on Intel NPU (AI Boost).
@@ -32,3 +43,14 @@ Intel GPU, NPU, and CPU, monitored, and visualized in a clinical-style scenario.
 
 > **Disclaimer:** This application is provided for development and evaluation purposes only and
 > is _not_ intended for clinical or diagnostic use.
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Get Started <get-started.md>
+How It Works <how-it-works.md>
+Release Notes <release-notes.md>
+
+:::
+hide_directive-->

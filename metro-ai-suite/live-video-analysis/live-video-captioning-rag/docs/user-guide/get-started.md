@@ -1,6 +1,6 @@
 # Get Started
 
-The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
+The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
 
 By following this guide, you will learn how to:
 
@@ -13,7 +13,7 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/get-started/model-preparation.html) provided to prepare the model.
+- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) provided to prepare the model.
 
 ## Run the Application
 
@@ -107,7 +107,7 @@ By following this guide, you will learn how to:
 ## Integration with Live Video Captioning
 
 This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
-For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Testing and Coverage
 

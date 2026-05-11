@@ -9,15 +9,20 @@ services:
   # Remove host port publishing — influxdb2 is an internal service only
   # accessible via the Docker network; no host binding needed.
   influxdb2:
-    ports: []
+    ports: !override
+      - ":8086"
 
   # Remove host port publishing — pgserver is an internal service only
   # accessible via the Docker network; no host binding needed.
   pgserver:
-    ports: []
+    ports: !override
+      - ":5432"
 
   # Override hardcoded container_name so each STIA instance gets a unique nginx
   # container name scoped to its INTERSECTION_NAME project.
   # No ports override — base compose already uses ephemeral ports ("80", "443").
   nginx:
     container_name: ${INTERSECTION_NAME:-trafficagent}-nginx-reverse-proxy
+    ports: !override
+      - ":80"
+      - ":443"

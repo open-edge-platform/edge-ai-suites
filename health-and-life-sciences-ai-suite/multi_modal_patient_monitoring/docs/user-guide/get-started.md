@@ -4,8 +4,9 @@ This guide walks you through building and running the multi‑modal patient moni
 application, including the rPPG (remote photoplethysmography) service running on Intel CPU,
 GPU, or NPU.
 
-Before you begin, review the [System Requirements](./get-started/system-requirements.md) to
-ensure your environment meets the recommended hardware and software prerequisites.
+## Prerequisites
+
+Ensure your environment meets the [System Requirements](./get-started/system-requirements.md) before proceeding.
 
 ## 1. Clone the Repository
 
