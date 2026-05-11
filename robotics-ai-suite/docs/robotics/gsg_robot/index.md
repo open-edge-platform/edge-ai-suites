@@ -166,7 +166,7 @@ For detailed instructions, see the [image-composer-tool installation guide](http
 3. Clone Image Composer Tool repository:
 
    ```bash
-   git clone https://github.com/open-edge-platform/image-composer-tool.git
+   git clone -b main https://github.com/open-edge-platform/image-composer-tool.git
    cd image-composer-tool
    ```
 
