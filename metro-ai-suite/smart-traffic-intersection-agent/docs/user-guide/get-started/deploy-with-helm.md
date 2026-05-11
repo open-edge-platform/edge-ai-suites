@@ -130,17 +130,18 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 ### Supported VLM Models
 
-The default model is `microsoft/Phi-3.5-vision-instruct`. To use a different model, override it at install time:
+The default model is `OpenVINO/Phi-3.5-vision-instruct-int8-ov`. To use a different model, override it at install time:
 
 ```bash
 helm install stia . -n <your-namespace> --create-namespace \
-  --set vlmServing.env.modelName=Qwen/Qwen2.5-VL-3B-Instruct
+  --set vlmServing.env.modelName=OpenVINO/InternVL2-1B-int4-ov
 ```
 
 | Model | Structured JSON | Notes |
 | --- | --- | --- |
-| `Qwen/Qwen2.5-VL-3B-Instruct` | Excellent | Recommended. Best instruction-following and structured output adherence. |
-| `microsoft/Phi-3.5-vision-instruct` | Good | Default. May occasionally produce non-JSON responses (~10-20% fallback rate). |
+| `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
+| `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
+
 
 > **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
@@ -291,7 +292,7 @@ helm uninstall stia -n <your-namespace>
 | `vlmServing.service.type` | Kubernetes service type (`NodePort` or `ClusterIP`) | `NodePort` |
 | `vlmServing.service.port` | OVMS HTTP API port | `8000` |
 | `vlmServing.service.nodePort` | NodePort for OVMS API (only used when type is `NodePort`) | `30800` |
-| `vlmServing.env.modelName` | Hugging Face model identifier | `microsoft/Phi-3.5-vision-instruct` |
+| `vlmServing.env.modelName` | Hugging Face/OpenVINO model identifier | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` |
 | `vlmServing.env.targetDevice` | Inference device when GPU is disabled (`CPU`). Ignored when `vlmServing.gpu.enabled=true` (auto-set to `GPU`). | `CPU` |
 | `vlmServing.env.weightFormat` | Model weight format (`int4`, `int8`). Empty = auto-detect based on device. | `""` |
 | `vlmServing.env.maxCompletionTokens` | Max tokens per completion | `1500` |

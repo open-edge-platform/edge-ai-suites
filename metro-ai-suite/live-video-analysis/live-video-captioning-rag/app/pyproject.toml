@@ -4,13 +4,13 @@ version = "0.1.0"
 description = "Live Video RAG with FastAPI backend and context from Live-Video-Captioning sample application"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi[standard]==0.128.0",
+    "fastapi[standard]==0.136.1",
     "langchain-core==1.2.28",
     "langchain-community==0.3.31",
     "langchain-huggingface==1.2.0",
     "langchain-vdms==0.2.0",
     "transformers==4.53.3",
-    "uvicorn==0.40.0",
+    "uvicorn==0.46.0",
     "optimum[openvino,nncf]==2.1.0",
     "torch==2.8.0",
 ]

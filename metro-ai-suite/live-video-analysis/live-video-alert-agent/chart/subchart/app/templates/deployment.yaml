@@ -33,7 +33,7 @@ spec:
             - -c
             - |
               until curl -sf http://{{ printf "%s-ovms" .Release.Name }}:{{ .Values.global.ovmsPort }}/v1/config; do
-                echo "waiting for OVMS..."; sleep 5;
+                echo "waiting for OVMS VLM..."; sleep 5;
               done
           securityContext:
             runAsNonRoot: true
@@ -42,6 +42,25 @@ spec:
             readOnlyRootFilesystem: true
             seccompProfile:
               type: RuntimeDefault
+          {{- if .Values.useAdk }}
+        - name: wait-for-ovms-llm
+          image: {{ .Values.global.utilities.curl.image }}:{{ .Values.global.utilities.curl.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until curl -sf http://{{ printf "%s-ovms-llm" .Release.Name }}:{{ .Values.global.ovmsPort }}/v1/config; do
+                echo "waiting for OVMS LLM..."; sleep 5;
+              done
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            seccompProfile:
+              type: RuntimeDefault
+          {{- end }}
       containers:
         - name: live-video-alert-agent
           image: {{ include "app.image" (dict "registry" (coalesce .Values.image.registry .Values.global.registry) "repository" .Values.image.repository "tag" .Values.image.tag) }}
@@ -52,8 +71,18 @@ spec:
               value: "http://{{ printf "%s-ovms.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
             - name: MODEL_NAME
               value: {{ .Values.global.ovmsModelName | quote }}
+            - name: USE_ADK
+              value: {{ .Values.useAdk | quote }}
+            - name: LLM_URL
+              value: "http://{{ printf "%s-ovms-llm.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
+            - name: LLM_MODEL
+              value: {{ .Values.global.ovmsLLMModelName | quote }}
+            - name: CAPTURE_FPS
+              value: {{ .Values.captureFps | quote }}
+            - name: SNAPSHOT_DIR
+              value: "/app/snapshots"
             - name: METRICS_SERVICE_URL
-              value: "ws://{{ printf "%s-metrics-service.%s.svc.cluster.local:%d" .Release.Name .Release.Namespace (.Values.global.metricsPort | int) }}"
+              value: {{ printf "ws://%s-metrics-service:%d/ws/collector" .Release.Name (.Values.global.metricsNodePort | int) | quote }}
             - name: METRICS_NODEPORT
               value: {{ .Values.global.metricsNodePort | quote }}
             - name: LOG_LEVEL
@@ -61,6 +90,36 @@ spec:
             {{- if .Values.rtspUrl }}
             - name: RTSP_URL
               value: {{ .Values.rtspUrl | quote }}
+            {{- end }}
+            {{- if .Values.webhookUrl }}
+            - name: WEBHOOK_URL
+              value: {{ .Values.webhookUrl | quote }}
+            {{- end }}
+            {{- if .Values.webhookSecret }}
+            - name: WEBHOOK_SECRET
+              value: {{ .Values.webhookSecret | quote }}
+            {{- end }}
+            {{- if .Values.mqttBroker }}
+            - name: MQTT_BROKER
+              value: {{ .Values.mqttBroker | quote }}
+            - name: MQTT_PORT
+              value: {{ .Values.mqttPort | quote }}
+            {{- end }}
+            {{- if .Values.mqttUsername }}
+            - name: MQTT_USERNAME
+              value: {{ .Values.mqttUsername | quote }}
+            {{- end }}
+            {{- if .Values.mqttPassword }}
+            - name: MQTT_PASSWORD
+              value: {{ .Values.mqttPassword | quote }}
+            {{- end }}
+            - name: MQTT_BASE_TOPIC
+              value: {{ .Values.mqttBaseTopic | quote }}
+            - name: MCP_ENABLED
+              value: {{ .Values.mcpEnabled | quote }}
+            {{- if .Values.mcpEnabled }}
+            - name: MCP_CONFIG_FILE
+              value: "/app/resources/mcp_servers.json"
             {{- end }}
           ports:
             - name: http
@@ -96,10 +155,29 @@ spec:
             readOnlyRootFilesystem: false  # Application writes session state and temp files at runtime
             seccompProfile:
               type: RuntimeDefault
+          volumeMounts:
+            - name: collector-signals
+              mountPath: /app/shared/collector-signals
+            {{- if .Values.mcpEnabled }}
+            - name: mcp-config
+              mountPath: /app/resources/mcp_servers.json
+              subPath: mcp_servers.json
+              readOnly: true
+            {{- end }}
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+      volumes:
+        - name: collector-signals
+          hostPath:
+            path: {{ .Values.collectorSignalsPath }}
+            type: DirectoryOrCreate
+        {{- if .Values.mcpEnabled }}
+        - name: mcp-config
+          configMap:
+            name: {{ include "app.fullname" . }}-mcp
+        {{- end }}
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

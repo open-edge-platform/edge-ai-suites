@@ -3,6 +3,8 @@
 
 image:
   registry: ""  # Leave empty to pull from public docker.io; set to override (e.g. if mirroring openvino/model_server)
+  repository: openvino/model_server
+  tag: "2026.1-gpu"
 
 sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
 task: "text_generation"

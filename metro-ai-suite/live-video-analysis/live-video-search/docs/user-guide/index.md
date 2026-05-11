@@ -28,12 +28,12 @@ Live Video Search combines two existing stacks:
   - Frigate NVR ingests live camera streams and emits MQTT events.
   - NVR Event Router brokers event metadata and clip references.
   - Reference UI for Smart NVR management.
-  - See Smart NVR docs: [Smart NVR Overview](../../../../smart-nvr/docs/user-guide/index.md)
+  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/index.html)
 
 - **VSS Search Mode** (Edge AI Libraries sample app)
   - Search‑MS + VDMS DataPrep + VDMS VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
-  - See VSS docs: [Video Search and Summarization Docs](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/index.md)
+  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html)
 
 ## Use Cases
 
@@ -57,8 +57,8 @@ Live Video Search combines two existing stacks:
   - [Architecture](./how-it-works.md): End‑to‑end architecture and data flow.
 
 - **Deployment**
+  - [Build from Source](./get-started/build-from-source.md): Build the required images.
   - [Deploy with Helm](./get-started/deploy-with-helm.md): Deploy LVS on Kubernetes using Helm profiles.
-  - [Build from Source](./how-to-build-from-source.md): Build the required images.
 
 - **Usage & API**
   - [API Reference](./api-reference.md): Key endpoints and references.
@@ -72,7 +72,6 @@ Live Video Search combines two existing stacks:
 :hidden:
 
 get-started.md
-how-to-build-from-source.md
 how-it-works.md
 api-reference.md
 Release Notes <release-notes.md>

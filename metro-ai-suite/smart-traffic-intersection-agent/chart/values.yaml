@@ -87,10 +87,10 @@ vlmServing:
     type: NodePort
     port: 8000
   env:
-    # Validated default VLM model for traffic scene analysis. Users can override
-    # with any compatible HuggingFace vision-language model via:
+    # Validated default OpenVINO-converted VLM model for traffic scene analysis.
+    # Users can override with any compatible HuggingFace vision-language model via:
     #   --set vlmServing.env.modelName="<org/model-name>"
-    modelName: "microsoft/Phi-3.5-vision-instruct"
+    modelName: "OpenVINO/Phi-3.5-vision-instruct-int8-ov"
     targetDevice: "CPU"
     # Weight format: auto-detected based on device (GPU/NPU → int4, CPU → int8)
     # Override with: --set vlmServing.env.weightFormat="int4"

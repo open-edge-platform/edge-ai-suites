@@ -3,6 +3,9 @@
 
 enabled: true
 
+# Host path for the collector-signals directory (fps.txt written by the app, read by telegraf).
+# Created automatically on the node by an initContainer — no manual setup required.
+collectorSignalsPath: /opt/lva/collector-signals
 image:
   registry: "intel/"  # Collector always pulls from public docker.io
 

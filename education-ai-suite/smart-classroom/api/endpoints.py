@@ -25,6 +25,9 @@ from components.va.va_pipeline_service import VideoAnalyticsPipelineService, Pip
 from utils.session_manager import generate_session_id
 from dto.search_dto import SearchRequest
 from utils.session_state_manager import SessionState
+from dto.ocr_dto import OCRExtractRequest, OCRResponse
+from components.ocr.ocr_pipeline import ocr_detect_file, ocr_extract_text
+
 import logging
 logger = logging.getLogger(__name__)
 
@@ -851,6 +854,16 @@ def get_recorded_video(videoType: str, x_session_id: Optional[str] = Header(None
     except Exception as e:
         logger.error(f"Error serving recorded video: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+@router.post("/ocr/detect-file", response_model=OCRResponse)
+def ocr_detect_file_endpoint(file: UploadFile = File(...)):
+    return ocr_detect_file(file)
+
+
+@router.post("/ocr/extract-text", response_model=OCRResponse)
+async def ocr_extract_text_endpoint(file: UploadFile = File(...), x_session_id: Optional[str] = Header(None)):
+    return ocr_extract_text(file, x_session_id)
+
 
 def register_routes(app: FastAPI):
     app.include_router(router)

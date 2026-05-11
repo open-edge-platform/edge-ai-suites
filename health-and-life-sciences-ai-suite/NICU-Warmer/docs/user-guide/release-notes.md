@@ -1,6 +1,8 @@
 # Release Notes: NICU Warmer
 
-## Version 1.0.0 - 2026
+## Version 1.0.0
+
+**2026**
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
@@ -9,7 +11,7 @@ AI models for neonatal patient monitoring — object detection, contactless vita
 and action recognition — all within one integrated GStreamer pipeline and React dashboard.
 
 It proves that heterogeneous workloads — from multi-object detection to heart-rate extraction
-via rPPG and activity classification — can coexist efficiently on one Intel Core Ultra platform
+via rPPG and activity classification — can coexist efficiently on one Intel® Core™ Ultra platform
 without compromising performance or stability.
 
 **New**

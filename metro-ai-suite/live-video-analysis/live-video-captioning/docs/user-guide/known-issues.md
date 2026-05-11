@@ -3,62 +3,78 @@
 ## Pipeline server exits with 2 GPU streams
 
 Symptoms:
+
 - When two GPU pipeline streams are started, the pipeline server exits from the container.
 
 Hardware:
+
 - Issue observed on BMG-580 discrete GPU.
 
 ## RTSP Stream not reachable from Live Video Captioning Application
 
 Symptoms:
+
 - Stream not able to play or pipeline not able to start
 - DLSPS container shows logs as below:
-     ```
+
+     ```text
      dlstreamer-pipeline-server  | 0:01:06.194223369     8 0x7060180012c0 ERROR           default gstrtspconnection.c:1291:gst_rtsp_connection_connect_with_response_usec: failed to connect: Could not connect to 10.102.14.14: Socket I/O timed out
      ```
+
 Checks:
+
 - Include rtsp stream ip in no_proxy environment variable.
 
 ## Pipeline server core dump sometimes
 
 Symptoms:
+
 - New pipelines cannot be created after pipeline server exits.
 - Logs show the pipeline server core-dumping.
 
 Details:
+
 - This issue appears to be caused by resource pressure or instability in the pipeline server rather than in the live-video-captioning application itself.
 
 Checks:
+
 - Verify the `dlstreamer-pipeline-server` service is running.
 - Restart the pipeline server or the full application stack if the service is not running.
 
 Tip:
+
 - Size the number of streams according to the available hardware resources.
 
 ## WebRTC connectivity issues
 
 Symptoms:
+
 - Black video, no stream, or connection failures in the dashboard.
 
 Checks:
+
 - Verify `HOST_IP` in `.env` is reachable from the browser client.
 - Confirm firewall rules allow the configured ports.
 
 ## No models in dropdown
 
 Symptoms:
+
 - Model list is empty in the UI.
 
 Checks:
+
 - Ensure `ov_models/` contains at least one model directory with OpenVINO IR files.
 - If you downloaded models, re-run the stack so the service rescans.
 
 ## Pipeline server unreachable
 
 Symptoms:
+
 - Starting a run fails; backend reports it cannot reach the pipeline server.
 
 Checks:
+
 - Ensure the `dlstreamer-pipeline-server` service is running.
 - Verify `PIPELINE_SERVER_URL` (defaults to `http://dlstreamer-pipeline-server:8080`).
 
@@ -75,9 +91,11 @@ If the dashboard or APIs are not reachable, check whether the ports are already 
 ## Metrics graphs lag on GPU pipelines when running in Helm Deployments
 
 Symptoms:
+
 - Live metrics graphs in the dashboard trail behind real-time by a few seconds intermittently when the pipeline is running on a GPU node.
 
 Details:
+
 - The lag is a display artifact caused by the collector's `inputs.exec` plugin taking longer than expected to gather CPU frequency data on high-core-count GPU nodes (e.g. nodes with 192 CPUs). This can cause metric batches to queue up and be flushed slightly out of sync.
 - The pipeline inference and captioning are unaffected; only the metrics visualization is delayed.
 
@@ -99,21 +117,21 @@ Workaround — choose one of the following:
 
 - **Delete the old PVCs** before reinstalling on a different node:
 
-    ```bash
-    kubectl delete pvc <release>-live-video-captioning-models
-    kubectl delete pvc <release>-live-video-captioning-detection-models
-    ```
+  ```bash
+  kubectl delete pvc <release>-live-video-captioning-models
+  kubectl delete pvc <release>-live-video-captioning-detection-models
+  ```
 
-    The model-download hook will repopulate the PVCs on the new node.
+  The model-download hook will repopulate the PVCs on the new node.
 
 - **Set `keepPvc` to `false`** in your override values so Helm deletes and recreates the PVCs on every install:
 
-    ```yaml
-    modelsPvc:
-      keepPvc: false
-    detectionModelsPvc:
-      keepPvc: false
-    ```
+  ```yaml
+  modelsPvc:
+    keepPvc: false
+  detectionModelsPvc:
+    keepPvc: false
+  ```
 
 - **Use a network-attached `StorageClass`** (for example NFS, Ceph, or Longhorn) by setting `global.storageClassName` so that PVs are accessible from any node.
 
