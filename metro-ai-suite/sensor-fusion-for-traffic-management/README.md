@@ -1,4 +1,4 @@
-# Sensor Fusion for Traffic Management
+# Intel® Metro AI Suite Sensor Fusion for Traffic Management
 
 This directory now contains two sensor-fusion implementations:
 
