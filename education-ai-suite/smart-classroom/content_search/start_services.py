@@ -52,6 +52,8 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         storage = cs.get("storage", {})
         _set("STORAGE_DATA_DIR", storage.get("data_dir", "./data/local_storage"))
         _set("STORAGE_BUCKET", storage.get("bucket", "content-search"))
+        _set("DOCUMENT_MAX_MB", storage.get("document_max_mb", 100))
+        _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
         # VLM
         vlm = cs.get("vlm", {})
@@ -91,6 +93,17 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         # Video Summarization
         _set("VIDEO_SUMMARIZATION_ENABLED", str(cs.get("video_summarization_enabled", True)).lower())
+
+        # Q&A
+        qa = cs.get("qa", {})
+        _set("QA_MAX_CONTEXT", str(qa.get("max_context", 5)))
+        _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
+        _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
+        _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
+
+        # App-level language (en or zh)
+        app = data.get("app", {})
+        _set("APP_LANGUAGE", app.get("language", "en"))
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))

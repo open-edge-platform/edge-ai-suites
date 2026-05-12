@@ -7,13 +7,17 @@ description: A Helm chart for deploying the Live Video Alert Agent with OpenVINO
 
 type: application
 
-version: 1.0.1
-appVersion: "1.0.0"
+version: 2.0.0
+appVersion: "2.0.0"
 
 dependencies:
   - name: ovms
     version: 1.0.1
     repository: "file://subchart/ovms"
+  - name: ovms-llm
+    version: 1.0.1
+    repository: "file://subchart/ovms-llm"
+    condition: ovms-llm.enabled
   - name: app
     version: 1.0.1
     repository: "file://subchart/app"

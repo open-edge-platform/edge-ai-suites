@@ -4,7 +4,7 @@ Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for se
 
 ## Prerequisites
 
-- Verify that your system meets the [minimum requirements](./system-requirements.md).
+- Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker tool: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 
@@ -289,13 +289,14 @@ For RTSP test mode, start again with:
 ## References
 
 - [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)
-- [VSS API (public)](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization/docs/user-guide)
+- [VSS API](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/api-reference.html)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started/system-requirements.md
+get-started/build-from-source.md
 get-started/deploy-with-helm.md
 
 :::

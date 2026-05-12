@@ -1,4 +1,4 @@
-# How to Deploy with Helm Chart
+# Deploy with Helm Chart
 
 This guide shows how to deploy the Live Video Captioning application on Kubernetes with the Helm chart included in this repository.
 
@@ -12,14 +12,14 @@ Before you begin, ensure that you have the following:
 - A worker node reachable by your browser client. Prefer a GPU-capable worker node when available, because the chart pins the media and inference workloads to the selected node and DL Streamer benefits most from GPU access.
 - A writable host path for collector signal files on the target node. By default the chart uses `/tmp/lvc/collector-signals`.
 - An RTSP source reachable from the Kubernetes node that runs `dlstreamer-pipeline-server`.
-- Setup [model-download chart](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md) which responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
+- Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html) which is responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
 
 ## Prepare/Deploy model-download chart
 
-[Model-download service](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) will be used for models management in Live Video Captioning.
+[Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) will be used for models management in Live Video Captioning.
 
 1. Install the model-download chart
-   <br>Refer to this [guide section](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
+   <br>Refer to this [guide section](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
 
 2. Configure the values.yaml file
    <br> Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the chart.
@@ -36,18 +36,20 @@ Before you begin, ensure that you have the following:
    | affinity.enabled           | Set to true to deploy on dedicated node                                                                                 | true                                   |
    | affinity.value             | Your dedicated node name/value. Identify by running `kubectl get node`                                                  | <your_node_name>                       |
 
-   > **Note**: This chart can run on CPU‑only nodes; however, a GPU‑enabled node is strongly recommended to host the models and deliver optimal performance.
+   > **Note:** This chart can run on CPU‑only nodes; however, a GPU‑enabled node is strongly recommended to host the models and deliver optimal performance.
 
 3. Deploy the chart
    <br>Deploy the chart using command below:
+
       ```bash
       helm install model-download . -n <your-namespace>
       ```
 
-   > **Note**: `model-download` creates and manages a shared PVC that used by live-video-captioning. Hence, do not delete or uninstall helm chart when live-video-captioning chart is running.
+   > **Note:** `model-download` creates and manages a shared PVC that used by live-video-captioning. Hence, do not delete or uninstall helm chart when live-video-captioning chart is running.
 
 4. Verify the deployment
    <br>Check the status of the deployed resources to ensure they are running correctly.
+
       ```bash
       kubectl get pods -n <your-namespace>
       kubectl get services -n <your-namespace>
@@ -95,7 +97,7 @@ Clone the repository containing the charts files:
 
 ```bash
 # Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
 # Alternatively, clone a specific release branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 ```
@@ -130,7 +132,7 @@ Other supporting services such as `mqtt-broker`, `live-metrics-service`, `multim
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
-In the [values-override.yaml](../../charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
+In [values-override.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
 
 Example:
 
@@ -213,12 +215,13 @@ global:
   noProxy: "<your-rtsp-camera-host-or-ip>"
 ```
 
-> **Important**: the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
-
+> **Important:** the host portion of every RTSP URL must be included in `noProxy` when the deployment runs behind a proxy.
+>
 >For example:
+>
 >- If your stream URL is `rtsp://camera.example.com:8554/live`, add `camera.example.com` to `noProxy`.
 >- If your stream URL is `rtsp://192.168.1.50:554/stream1`, add `192.168.1.50` to `noProxy`.
-
+>
 >If the RTSP host is not listed in `noProxy`, the application may try to reach the stream through the proxy and fail to connect.
 
 #### Optional: Enable RAG with Live-Video-Captioning
@@ -234,12 +237,12 @@ If you want to enable this optional feature, edit the override file at `charts/v
 | global.llmModel.weightFormat | Model Quantization | `"int4"` or `"int8"` or `"fp16"` |
 | global.embeddingModel.modelId | Configure choice of embedding model for embedding creation | `"QwenText/qwen3-embedding-0.6b"` |
 
-> **Note**: To deploy the llmModel or embeddingModel on a GPU, set `global.llmModel.useGPU.enabled` or `global.embeddingModel.useGPU.enabled` to `true`.
-
+> **Note:** To deploy the llmModel or embeddingModel on a GPU, set `global.llmModel.useGPU.enabled` or `global.embeddingModel.useGPU.enabled` to `true`.
+>
 > For `global.llmModel.useGPU.key`, set the value to the GPU resource key label that set in the configured `nodeName`, as the LLM models share the same PVC on that node.
-
+>
 > For `global.embeddingModel.useGPU.key`, you may specify any available GPU resource key label if multiple GPU‑enabled nodes are present. The embedding model does not share the PVC and is managed independently by the embedding service.
-
+>
 > A GPU resource key refers to the label assigned to a GPU‑enabled node by the Kubernetes device plugin. This label is used by Kubernetes to identify and schedule workloads onto nodes with specific GPU resources. You can identify the available GPU resource keys by running `kubectl describe node <node-name>`. Example values include `gpu.intel.com/i915` or `gpu.intel.com/xe`.
 
 ### Build Chart Dependencies
@@ -279,7 +282,7 @@ Before accessing the application, confirm the following:
 - All pods are in the `Running` state.
 - All containers report `Ready`. Check via `kubectl get pods` command.
 
-> The initial deployment may take several minutes, as the chart performs multiple model downloads and conversion steps before the application pods are started.
+> **Note:** The initial deployment may take several minutes, as the chart performs multiple model downloads and conversion steps before the application pods are started.
 
 ## Access the Application
 
@@ -296,7 +299,7 @@ To start captioning after deployment:
 3. Select the model you downloaded into the models PVC.
 4. Adjust the prompt and generation parameters if needed.
 5. Start the stream.
-6. To submit query via RAG chatbot. Click on the `chat icon` button located top right of the dashboard. The button only visible when RAG is enabled.
+6. To submit a query via the RAG chatbot, click on the `chat icon` button located at the top right of the dashboard. The button is only visible when RAG is enabled.
 
 ## Upgrade the Release
 
@@ -328,6 +331,7 @@ helm uninstall lvc -n "$my_namespace"
 - If detection is enabled but the pipeline cannot start, ensure the detection models PVC contains the required OpenVINO detection model artifacts.
 - If the collector does not report metrics, confirm that the host path in `collector.collectorSignalsHostPath` exists on the selected node and that the pod is scheduled there.
 - If the `live-video-captioning` and `video-caption-service` pods stuck in `Init` or `Pending` state, check whether the models successfully download or not.
+
    ```bash
    # Get the pods
    kubectl get pods -n <your_namespace>
@@ -335,7 +339,9 @@ helm uninstall lvc -n "$my_namespace"
    # View the logs of initContainers where it process for model download and conversion
    kubectl logs -f <video-caption-service pod or live-video-captioning pod> -n <your_namespace> -c download-models
    ```
+
 - If the PVC created during a Helm chart deployment is not removed or auto-deleted due to a deployment failure or being stuck, delete it manually:
+
    ```bash
    # List the PVCs present in the given namespace
    kubectl get pvc -n <namespace>
@@ -343,7 +349,8 @@ helm uninstall lvc -n "$my_namespace"
    # Delete the required PVC from the namespace
    kubectl delete pvc <pvc-name> -n <namespace>
    ```
-> **Note**: Delete the shared PVC only after confirming no other workload or application depends on it. In such cases, uninstall the dependent application first, then clean up model-download resources, and finally delete the shared PVC if required.
+
+> **Note:** Delete the shared PVC only after confirming no other workload or application depends on it. In such cases, uninstall the dependent application first, then clean up model-download resources, and finally delete the shared PVC if required.
 
 ## Related Links
 
@@ -353,4 +360,4 @@ helm uninstall lvc -n "$my_namespace"
 - [Object Detection Pipeline](../how-to-guides/configure-object-detection-pipeline.md)
 - [Build from Source](../get-started/build-from-source.md)
 - [Embedding Creation with RAG](../how-to-guides/configure-embedding-creation-with-rag.md)
-- [Model Download Service](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md)
+- [Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)

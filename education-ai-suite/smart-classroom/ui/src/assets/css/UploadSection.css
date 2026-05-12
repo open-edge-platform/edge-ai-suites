@@ -98,6 +98,7 @@
 .cs-file-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
   margin-top: 12px;
   background: #fff;
   border: 1px solid #e0e0e0;
@@ -141,10 +142,21 @@
 
 /* Filename */
 .cs-file-name {
-  max-width: 110px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* OCR handwritten icon */
+.cs-ocr-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  vertical-align: middle;
 }
 
 /* Column widths */
@@ -204,6 +216,61 @@
   color: #ffffff;
 }
 
+/* ─── Video Summarization Toggle ────────────────────────── */
+
+.cs-vs-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  max-width: 100%;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cs-vs-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cs-vs-toggle-track {
+  position: relative;
+  width: 28px;
+  height: 15px;
+  background: #b0bec5;
+  border-radius: 8px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.cs-vs-toggle-input:checked + .cs-vs-toggle-track {
+  background: #0071c5;
+}
+
+.cs-vs-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 11px;
+  height: 11px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.cs-vs-toggle-input:checked + .cs-vs-toggle-track .cs-vs-toggle-thumb {
+  transform: translateX(13px);
+}
+
+.cs-vs-toggle-label {
+  padding:0 0 2px;
+  font-size: 10px;
+  color: #546e7a;
+  font-family: var(--font-text);
+}
+
 /* ─── Summarizing Label ──────────────────────────────────── */
 
 .cs-summarizing-label {
@@ -222,8 +289,6 @@
 }
 
 /* ─── Progress Bar ───────────────────────────────────────── */
-
-/* ─── Progress Track & Bar ───────────────────────────────── */
 
 .cs-progress-track {
   width: 100%;
@@ -377,6 +442,16 @@
 .cs-danger-btn:hover {
   background: #005fa3;
 }
+
+.cs-ocr-icon--clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.cs-ocr-icon--clickable:hover {
+  transform: scale(1.15);
+}
+
 /* ───────── Upload Card ───────── */
 
 .cs-upload-card {
@@ -598,6 +673,8 @@
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 3px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .cs-row-chip {
@@ -682,5 +759,3 @@
   .cs-file-name  { max-width: 90px; }
   .cs-status-badge { font-size: 9px; }
 }
-
-/* Normal panel (341px+) — default styles apply, nothing overridden */

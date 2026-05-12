@@ -61,6 +61,13 @@ export function getContentSearchFileUrl(filePath: string): string {
   return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
 }
 
+/**
+ * Returns the download URL for an OCR text file (triggers download, not inline display).
+ */
+export function getOcrDownloadUrl(fileKey: string): string {
+  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+}
+
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -857,6 +864,18 @@ export async function csCleanupTask(
   });
 }
 
+export async function csDownloadText(fileKey: string): Promise<string> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`
+    );
+    if (!res.ok) {
+      throw new Error(`Download failed (${res.status})`);
+    }
+    return await res.text();
+  });
+}
+
 export async function createSession(): Promise<{ sessionId: string }> {
   return safeApiCall(async () => {
     const res = await fetch(`${BASE_URL}/create-session`, {
@@ -1069,4 +1088,55 @@ export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]
     console.error('csSearch error:', error);
     return [];
   }
+}
+
+// ── Q&A types ──────────────────────────────────────────────────────────────
+
+export interface QASource {
+  file_name: string | null;
+  file_path: string | null;
+  type: string | null;
+  video_pin_second: number | null;
+  video_start_second: number | null;
+  video_end_second: number | null;
+  score: number | null;
+}
+
+export interface QAChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface QAAskParams {
+  question: string;
+  history?: QAChatMessage[];
+  filter?: Record<string, string[]>;
+}
+
+export interface QAAskResult {
+  answer: string;
+  sources: QASource[];
+}
+
+// Content Search API - Q&A (RAG chatbot over uploaded content)
+export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
+  const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/qa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Q&A request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (data.code !== 20000) {
+    throw new Error(data.message || 'Q&A generation failed');
+  }
+  return {
+    answer: data.data?.answer ?? '',
+    sources: Array.isArray(data.data?.sources) ? data.data.sources : [],
+  };
 }

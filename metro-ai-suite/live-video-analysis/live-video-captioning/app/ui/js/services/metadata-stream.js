@@ -192,7 +192,7 @@ const MetadataStreamService = (function () {
         }
 
         console.log('Initializing multiplexed metadata stream...');
-        metadataSource = new EventSource('/api/runs/metadata-stream');
+        metadataSource = new EventSource('/api/generate_captions_alerts/metadata-stream');
 
         metadataSource.onopen = () => {
             console.log('Multiplexed metadata stream connected');

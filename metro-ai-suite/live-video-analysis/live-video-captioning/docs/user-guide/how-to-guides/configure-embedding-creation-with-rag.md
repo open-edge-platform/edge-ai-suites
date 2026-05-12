@@ -30,6 +30,7 @@ When enabled:
 
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning
+     export REGISTRY_URL="intel/"
      source scripts/setup_embeddings.sh
      ```
 

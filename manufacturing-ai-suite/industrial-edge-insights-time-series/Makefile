@@ -35,6 +35,9 @@ endif
 
 export SAMPLE_APP
 
+# Use batch config only when `make batch` is invoked.
+CONFIG_JSON_FILE := $(if $(filter batch,$(MAKECMDGOALS)),config-batch.json,config.json)
+
 # Example: Run a shell if-else block before starting containers
 define multi_stream_check
 	@if [ "$(num_of_streams)" -gt 1 ]; then \
@@ -118,10 +121,18 @@ check_env_variables:
 		esac; \
 	done
 
+.PHONY: batch
+batch:
+	@if [ -z "$(filter up_mqtt_ingestion up_opcua_ingestion,$(MAKECMDGOALS))" ]; then \
+		echo "Error: 'batch' must be used with 'up_mqtt_ingestion' or 'up_opcua_ingestion'."; \
+		echo "Example: make up_mqtt_ingestion batch app=weld-defect-detection"; \
+		exit 1; \
+	fi
+
 define post_config
-config_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/config.json; \
+config_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(CONFIG_JSON_FILE); \
 if [ ! -f $$config_file ]; then \
-	echo "Error: config.json not found at $$config_file"; \
+	echo "Error: $(CONFIG_JSON_FILE) not found at $$config_file"; \
 	exit 1; \
 fi; \
 $(wait_for_tsam); \
@@ -174,6 +185,27 @@ define upload_tar_file
 echo "Creating UDF deployment tar for $(SAMPLE_APP)..."; \
 config_dir=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config; \
 tar_file=$(CURDIR)/apps/$(SAMPLE_APP)/time-series-analytics-config/$(SAMPLE_APP).tar; \
+if [ "$(CONFIG_JSON_FILE)" = "config-batch.json" ]; then \
+	model_dir=$$config_dir/models; \
+	if [ "$(SAMPLE_APP)" = "wind-turbine-anomaly-detection" ]; then \
+		src_model=windturbine_anomaly_detector.pkl; \
+		dst_model=windturbine_anomaly_detector_batch.pkl; \
+	elif [ "$(SAMPLE_APP)" = "weld-defect-detection" ]; then \
+		src_model=weld_defect_detector.pkl; \
+		dst_model=weld_defect_detector_batch.pkl; \
+	fi; \
+	if [ -z "$$src_model" ]; then \
+		echo "Error: '${src_model}' not found for sample app '$(SAMPLE_APP)'."; \
+		exit 1; \
+	fi; \
+	if [ ! -f $$model_dir/$$src_model ]; then \
+		echo "Error: source model not found at $$model_dir/$$src_model"; \
+		exit 1; \
+	fi; \
+	rm -f $$model_dir/$$dst_model; \
+	cp $$model_dir/$$src_model $$model_dir/$$dst_model; \
+	echo "Prepared batch model: $$dst_model"; \
+fi; \
 rm -f $$tar_file; \
 cd $$config_dir && \
 folders="udfs tick_scripts"; \
@@ -200,9 +232,6 @@ endef
 up_mqtt_ingestion: check_env_variables down
 	$(call multi_stream_check,mqtt)
 	@export TELEGRAF_INPUT_PLUGIN=$$(if [ $(INCLUDE) = 'validation' ]; then echo "mqtt_consumer:net:cpu:disk:docker:diskio:kernel:mem:processes:swap:system"; else echo "mqtt_consumer"; fi); \
-	if [ "$(ENABLE_BENCHMARKING)" = "true" ]; then \
-		export BENCHMARK_TOTAL_PTS=$$(($(number_of_data_points_per_stream) * $(num_of_streams))); \
-	fi; \
 	if [ $(num_of_streams) -gt 1 ]; then \
 		export TELEGRAF_CONFIG_PATH=/etc/telegraf/Telegraf_multi_stream.conf; \
     fi; \
@@ -357,6 +386,11 @@ help:
 	@echo "  make push_helm_charts              - Package and push Helm charts to docker registry"
 	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
 	@echo "      Example: make push_helm_charts app=weld-defect-detection"
+	@echo "  make <ingestion_target> batch      - Run batch processing with an ingestion target"
+	@echo "      Required: ingestion_target must be up_mqtt_ingestion or up_opcua_ingestion"
+	@echo "      Optional: app (default: wind-turbine-anomaly-detection)"
+	@echo "      Example: make up_mqtt_ingestion batch app=weld-defect-detection"
+	@echo "      Example: make up_opcua_ingestion batch app=wind-turbine-anomaly-detection"
 	@echo "  make help                         - Display this help message"
 	@echo "      No parameters required."
 

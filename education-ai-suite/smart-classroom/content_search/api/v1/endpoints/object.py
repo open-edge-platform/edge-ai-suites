@@ -19,7 +19,7 @@ from utils.asset_service import asset_service
 from utils.search_service import search_service
 from utils.core_responses import resp_200, fail_task_not_found, fail_process_failed, fail_processing
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -240,7 +240,7 @@ async def delete_specific_task(
     task_id: str,
     db: Session = Depends(get_db)
 ):
-    task_sql = text("SELECT id, payload FROM edu_ai_tasks WHERE id = :tid")
+    task_sql = text("SELECT id, payload, result FROM edu_ai_tasks WHERE id = :tid")
     task_row = db.execute(task_sql, {"tid": task_id}).fetchone()
     if not task_row:
         return resp_200(**fail_task_not_found())
@@ -258,12 +258,45 @@ async def delete_specific_task(
     f_bucket = payload.get("bucket") or payload.get("bucket_name")
     f_hash = payload.get("file_hash")
 
-    try:
-        if storage_service.file_exists(f_path):
-            storage_service.delete_file(f_path)
+    run_id = payload.get("run_id")
+    if not run_id and f_path and f_path.startswith("runs/"):
+        parts = f_path.split("/")
+        if len(parts) > 1:
+            run_id = parts[1]
 
-        if await search_service.check_file_exists(f_path, bucket_name=f_bucket):
-            await search_service.delete_file_index(f_path, bucket_name=f_bucket)
+    # Check if this task produced an OCR text file
+    task_result = record.get("result")
+    if isinstance(task_result, str):
+        try:
+            task_result = json.loads(task_result)
+        except Exception:
+            task_result = {}
+    ocr_text_key = (task_result or {}).get("ocr_text_key")
+
+    try:
+        # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
+        if run_id:
+            import shutil
+            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            if run_dir.exists():
+                shutil.rmtree(run_dir)
+                logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
+            else:
+                logger.warning(f"Run directory not found: {run_dir}")
+        else:
+            # Fallback: delete files individually if run_id cannot be determined
+            logger.warning(f"No run_id found for task {task_id}, falling back to file-by-file deletion")
+            if storage_service.file_exists(f_path):
+                storage_service.delete_file(f_path)
+
+            # Delete OCR text file if exists
+            if ocr_text_key and storage_service.file_exists(ocr_text_key):
+                storage_service.delete_file(ocr_text_key)
+
+        # If OCR was done, the index is under the .ocr.txt path
+        index_path = ocr_text_key or f_path
+        if await search_service.check_file_exists(index_path, bucket_name=f_bucket):
+            await search_service.delete_file_index(index_path, bucket_name=f_bucket)
 
         if f_hash:
             db.execute(text("DELETE FROM file_assets WHERE file_hash = :h"), {"h": f_hash.strip()})
@@ -283,6 +316,52 @@ async def delete_specific_task(
         db.rollback()
         return resp_200(**fail_process_failed(str(e)))
 
+
+# ── Q&A ──────────────────────────────────────────────────────────────────────
+
+class QAHistoryMessage(BaseModel):
+    role: str   # "user" or "assistant"
+    content: str
+
+class QARequest(BaseModel):
+    question: str
+    history: List[QAHistoryMessage] = Field(default_factory=list)
+    filter: Optional[Dict[str, Any]] = None
+
+@router.post("/qa")
+async def qa_ask(request: QARequest):
+    """
+    Q&A over uploaded content using retrieval-augmented generation (RAG).
+
+    Retrieves relevant chunks from the vector DB for the question, then calls
+    the VLM to generate a grounded answer. Accepts an optional conversation
+    history for multi-turn chat context.
+    """
+    if not request.question.strip():
+        return resp_200(code=40000, message="'question' must not be empty")
+
+    from utils.qa_service import qa_service
+
+    result = await qa_service.ask(
+        question=request.question.strip(),
+        history=[m.model_dump() for m in request.history],
+        filters=request.filter,
+    )
+
+    if result.get("answer") is None:
+        return resp_200(
+            code=50003,
+            message=result.get("error", "QA generation failed"),
+            data={"sources": result.get("sources", [])},
+        )
+
+    return resp_200(
+        data={
+            "answer": result["answer"],
+            "sources": result.get("sources", []),
+        },
+        message="Answer generated",
+    )
 @router.delete("/files/{file_hash}")
 async def delete_file_by_hash(
     file_hash: str,
@@ -320,15 +399,47 @@ async def delete_file_by_hash(
         "errors": []
     }
 
+    # Extract run_id from file_path to delete entire run directory
+    run_id = None
+    if f_path and f_path.startswith("runs/"):
+        parts = f_path.split("/")
+        if len(parts) > 1:
+            run_id = parts[1]
+
+    # Determine if there's an OCR text file to clean up
+    ocr_text_key = None
+    if f_path and f_path.lower().endswith('.pdf'):
+        candidate = f_path.rsplit('.', 1)[0] + '.ocr.txt'
+        if storage_service.file_exists(candidate):
+            ocr_text_key = candidate
+
     logger.info(f"Deleting file from LocalStorage: {f_path}")
     try:
-        if storage_service.file_exists(f_path):
-            storage_service.delete_file(f_path)
-            deletion_results["storage_deleted"] = True
-            logger.info(f"Deleted file from storage: {f_path}")
+        # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
+        if run_id:
+            import shutil
+            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            if run_dir.exists():
+                shutil.rmtree(run_dir)
+                deletion_results["storage_deleted"] = True
+                logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
+            else:
+                logger.warning(f"Run directory not found: {run_dir}")
+                deletion_results["storage_deleted"] = True
         else:
-            logger.warning(f"File not found in storage: {f_path}")
-            deletion_results["storage_deleted"] = True
+            # Fallback: delete files individually if run_id cannot be determined
+            if storage_service.file_exists(f_path):
+                storage_service.delete_file(f_path)
+                deletion_results["storage_deleted"] = True
+                logger.info(f"Deleted file from storage: {f_path}")
+            else:
+                logger.warning(f"File not found in storage: {f_path}")
+                deletion_results["storage_deleted"] = True
+
+            # Delete OCR text file if exists
+            if ocr_text_key:
+                storage_service.delete_file(ocr_text_key)
+                logger.info(f"Deleted OCR text file: {ocr_text_key}")
     except Exception as e:
         error_msg = f"Failed to delete from storage: {str(e)}"
         deletion_results["errors"].append(error_msg)
@@ -336,15 +447,17 @@ async def delete_file_by_hash(
         if not force:
             raise HTTPException(status_code=500, detail=error_msg)
 
-    logger.info(f"Deleting indices from ChromaDB: {f_path}")
+    # If OCR was done, the index is under the .ocr.txt path
+    index_path = ocr_text_key or f_path
+    logger.info(f"Deleting indices from ChromaDB: {index_path}")
     try:
-        chroma_exists = await search_service.check_file_exists(f_path, bucket_name=f_bucket)
+        chroma_exists = await search_service.check_file_exists(index_path, bucket_name=f_bucket)
         if chroma_exists:
-            await search_service.delete_file_index(f_path, bucket_name=f_bucket)
+            await search_service.delete_file_index(index_path, bucket_name=f_bucket)
             deletion_results["index_deleted"] = True
-            logger.info(f"Deleted index from ChromaDB: {f_path}")
+            logger.info(f"Deleted index from ChromaDB: {index_path}")
         else:
-            logger.warning(f"Index not found in ChromaDB: {f_path}")
+            logger.warning(f"Index not found in ChromaDB: {index_path}")
             deletion_results["index_deleted"] = True
     except Exception as e:
         error_msg = f"Failed to delete from ChromaDB: {str(e)}"

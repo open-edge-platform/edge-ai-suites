@@ -6,12 +6,15 @@ The stack ingests an RTSP stream, runs a DLStreamer pipeline that samples frames
 
 ## Data Flow
 
-```
-RTSP Source → dlstreamer-pipeline-server
-            ├─→ 1fps AI branch (GStreamer gvagenai) → MQTT Broker
-            └─→ 30fps preview → mediamtx (WebRTC) → Dashboard
-                                                 ↓
-                                  Dashboard collects metrics (CPU, GPU, RAM)
+```mermaid
+flowchart LR
+  subgraph FLOW["Data Flow"]
+    RTSP["RTSP Source"] --> DPS["DL Streamer Pipeline Server"]
+    DPS -->|"1fps AI branch\n(GStreamer gvagenai)"| MQTT["MQTT Broker"]
+    DPS -->|"30fps preview"| MTX["mediamtx (WebRTC)"]
+    MTX --> DASH["Dashboard"]
+    DASH --> METRICS["Dashboard collects metrics\n(CPU, GPU, RAM)"]
+  end
 ```
 
 ## System Components

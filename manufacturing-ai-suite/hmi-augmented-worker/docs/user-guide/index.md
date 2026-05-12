@@ -18,10 +18,10 @@ a single physical machine.
 
 In this architecture, the HMI application operates within a Windows® virtual machine managed
 by a Type-2 hypervisor such as
-[Edge Microvisor Toolkit](https://github.com/open-edge-platform/edge-microvisor-toolkit).
+[Edge Microvisor Toolkit](https://docs.openedgeplatform.intel.com/dev/edge-microvisor-toolkit/index.html).
 The Retrieval-Augmented Generation (RAG) pipeline and supporting AI services are deployed
 natively on a host system, which is the Edge Microvisor Toolkit in this implementation.
-[Chat Question & Answer Core](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/chat-question-and-answer-core)
+[Chat Question & Answer Core](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html)
 provides the RAG capability.
 This separation ensures robust isolation between the HMI and AI components, enabling
 independent scaling, maintenance, and updates. The setup leverages the strengths of both
@@ -70,7 +70,7 @@ Developed as a single, monolithic application
 with the complete RAG pipeline integrated into one microservice, it is designed for minimal memory usage.
 
 The `Chat Q&A Core` application should be setup on the host system. For further details,
-visit [Question & Answer Core sample application overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
+visit the [Chat Question & Answer Core sample application overview](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer-core/index.html).
 The application is used as is, without any changes.
 The configurable parameters like the LLM model, Embedding model, Reranker model, or
 Retriever model are setup based on the HMI application requirement.
