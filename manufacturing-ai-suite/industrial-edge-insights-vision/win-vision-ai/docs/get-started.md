@@ -39,8 +39,8 @@ This installs gstreamer folder inside Program Files folder.
 ## Clone the Repository
 
 ```powershell
-git clone https://github.com/intel-sandbox/dls-app.git
-cd dls-app
+git clone https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
 ## Install Python Dependencies
