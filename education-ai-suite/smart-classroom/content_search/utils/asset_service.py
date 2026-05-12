@@ -4,6 +4,7 @@
 #
 
 import json
+import os
 from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import UploadFile, BackgroundTasks
@@ -12,22 +13,21 @@ from utils.core_models import FileAsset
 from utils.storage_service import storage_service
 from utils.task_service import task_service
 
-# Per-file upload size limits. Documents are the default; videos get a
-# larger cap because classroom recordings are routinely hundreds of MB.
-DOCUMENT_MAX_BYTES = 100 * 1024 * 1024       # 100 MiB
-VIDEO_MAX_BYTES = 1024 * 1024 * 1024          # 1 GiB
 VIDEO_CONTENT_PREFIX = "video/"
 VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv"}
 
 
-def _max_bytes_for(file: UploadFile) -> int:
+def _max_bytes_for(file: UploadFile) -> Optional[int]:
+    document_max_mb = int(os.environ.get("DOCUMENT_MAX_MB", "100"))
+    video_max_mb = int(os.environ.get("VIDEO_MAX_MB", "1024"))
+
     ctype = (file.content_type or "").lower()
     if ctype.startswith(VIDEO_CONTENT_PREFIX):
-        return VIDEO_MAX_BYTES
+        return video_max_mb * 1024 * 1024
     name = (file.filename or "").lower()
     if any(name.endswith(ext) for ext in VIDEO_EXTENSIONS):
-        return VIDEO_MAX_BYTES
-    return DOCUMENT_MAX_BYTES
+        return video_max_mb * 1024 * 1024
+    return document_max_mb * 1024 * 1024
 
 
 class AssetService:
@@ -62,23 +62,32 @@ class AssetService:
 
         task_id = str(related_task.id) if related_task else None
 
+        ocr_text_key = None
+        if related_task and related_task.result:
+            task_result = related_task.result if isinstance(related_task.result, dict) else {}
+            ocr_text_key = task_result.get("ocr_text_key")
+
+        data = {
+            "file_hash": file_hash,
+            "file_name": existing_asset.file_name,
+            "created_at": str(existing_asset.created_at),
+            "task_id": task_id
+        }
+        if ocr_text_key:
+            data["ocr_text_key"] = ocr_text_key
+
         return {
             "is_biz_error": True,
             "code": 40901,
             "message": "Upload failed: File already exists.",
-            "data": {
-                "file_hash": file_hash,
-                "file_name": existing_asset.file_name,
-                "created_at": str(existing_asset.created_at),
-                "task_id": task_id
-            }
+            "data": data
         }
 
     @staticmethod
     async def _prepare_and_upload_asset(db: Session, file: UploadFile, **kwargs) -> dict:
-        max_bytes = _max_bytes_for(file)
+        max_size_bytes = _max_bytes_for(file)
         payload = await storage_service.upload_and_prepare_payload(
-            file, max_size_bytes=max_bytes
+            file, max_size_bytes=max_size_bytes
         )
         file_hash = payload["file_hash"]
 
