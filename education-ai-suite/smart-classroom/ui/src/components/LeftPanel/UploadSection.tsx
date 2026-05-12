@@ -105,7 +105,10 @@ const UploadSection: React.FC = () => {
   }, [entries, dispatch]);
 
   useEffect(() => {
-    const allTags = entries.flatMap((e) => e.tags);
+    const uploadedEntries = entries.filter(
+      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+    );
+    const allTags = uploadedEntries.flatMap((e) => e.tags);
     const uniqueTags = [...new Set(allTags)];
     dispatch(setCsTags(uniqueTags));
   }, [entries, dispatch]);
