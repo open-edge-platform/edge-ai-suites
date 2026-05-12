@@ -3,6 +3,7 @@ import type { ActionData } from '../../types/nicu';
 
 interface ActionCardProps {
   action: ActionData;
+  patientDetected?: boolean;
 }
 
 const MOTION_COLORS: Record<string, string> = {
@@ -16,7 +17,7 @@ const MOTION_COLORS: Record<string, string> = {
 // Hold movement state for this many ms so the user can read it
 const STICKY_HOLD_MS = 2000;
 
-const ActionCard: React.FC<ActionCardProps> = ({ action }) => {
+const ActionCard: React.FC<ActionCardProps> = ({ action, patientDetected = true }) => {
   const isValid = action.status === 'valid';
   const isError = action.status === 'error';
   const motionLevel = action.motion_level || 'unknown';
@@ -56,14 +57,14 @@ const ActionCard: React.FC<ActionCardProps> = ({ action }) => {
     cardMod = 'nicu-det-card--off';
     pillMod = 'nicu-det-pill--off';
     pillText = '✗ ERR';
-    subText = 'Error';
+    subText = patientDetected ? 'Action detection unavailable' : 'No patient detected';
     confColor = '#999';
     confValue = 0;
   } else if (!isValid || isStill) {
     cardMod = 'nicu-det-card--on';
     pillMod = 'nicu-det-pill--on';
     pillText = 'STILL';
-    subText = 'Patient still · No activity';
+    subText = patientDetected ? 'Patient still · No activity' : 'No patient detected';
     confColor = MOTION_COLORS.still;
     confValue = action.top_confidence;
   } else if (withinHold && sticky) {
