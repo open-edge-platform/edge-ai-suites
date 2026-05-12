@@ -81,8 +81,7 @@ on:
 permissions: {}
 
 env:
-  DEFAULT_TESTS: >-
-    'all-tests'
+  DEFAULT_TESTS: all-tests
 
 jobs:
   functional-tests:
