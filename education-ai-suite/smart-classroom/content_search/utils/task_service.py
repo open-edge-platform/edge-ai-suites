@@ -231,15 +231,23 @@ class TaskService:
                         custom_prompt = vs_options.get("prompt")
                         chunk_duration = vs_options.get("chunk_duration_s")
 
+                        # Extract run_id from payload or file_key to ensure derived files use the same run_id
+                        run_id = payload.get("run_id")
+                        if not run_id and file_key.startswith("runs/"):
+                            parts = file_key.split("/")
+                            if len(parts) > 1:
+                                run_id = parts[1]
+
                         print(f"[VIDEO] Triggering summarization for {file_key}...", flush=True)
-                        print(f"[VIDEO] Final tags: {user_tags}, Prompt: {custom_prompt}", flush=True)
+                        print(f"[VIDEO] Using run_id: {run_id}, Final tags: {user_tags}, Prompt: {custom_prompt}", flush=True)
 
                         summary_res = asyncio.run(video_service.trigger_summarization(
                             file_key=file_key,
                             bucket_name=bucket_name,
                             tags=user_tags,
                             prompt=custom_prompt,
-                            chunk_duration=chunk_duration
+                            chunk_duration=chunk_duration,
+                            run_id=run_id
                         ))
 
                         task.result = {**ai_result, "video_summary": summary_res, "video_summary_status": "COMPLETED"}
