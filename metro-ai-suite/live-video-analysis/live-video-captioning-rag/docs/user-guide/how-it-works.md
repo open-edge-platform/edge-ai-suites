@@ -17,7 +17,7 @@ User Query → Live Video Captioning RAG → Embedding Service → Vector Store 
 
 ### 1. Collection of Live Video Captioning application
 
-[Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning/how-it-works.html) is the upstream producer in the full deployment flow. It analyzes the video stream, generates captions for frames, and sends frame data plus metadata to the RAG application so the RAG system can build searchable context.
+[Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/how-it-works.html) is the upstream producer in the full deployment flow. It analyzes the video stream, generates captions for frames, and sends frame data plus metadata to the RAG application so the RAG system can build searchable context.
 
 The collection includes:
 

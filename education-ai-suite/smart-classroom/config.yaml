@@ -237,6 +237,16 @@ models:
     name: "BAAI/bge-large-en-v1.5"
     min_score: 0.65
 
+  ocr:
+    enabled: false # Set to false to disable OCR features
+    provider: openvino # native or openvino
+    device: CPU # CPU or GPU
+    model_dir: models/ocr/paddle # Base directory for OCR models
+    ocr_version: PP-OCRv4
+    det_model: en_PP-OCRv3_det_infer
+    rec_model: en_PP-OCRv4_rec_infer
+    cls_model: ch_ppocr_mobile_v2.0_cls_infer
+
 
 mindmap:
   system_prompt:

@@ -4,10 +4,13 @@
 #
 
 import os
+import uuid
 import traceback
 import asyncio
+from pathlib import Path
 from sqlalchemy.orm import Session
 from fastapi import BackgroundTasks
+import httpx
 from utils.database import SessionLocal
 from utils.crud_task import task_crud
 from utils.schemas_task import TaskStatus
@@ -15,6 +18,9 @@ from utils.search_service import search_service
 from utils.storage_service import storage_service
 from utils.video_service import video_service
 from utils.core_models import FileAsset, AITask
+
+OCR_BASE_URL = os.getenv("OCR_SERVICE_URL", "http://127.0.0.1:8000")
+OCR_TIMEOUT = 120.0
 
 VIDEO_SUMMARIZATION_ENABLED = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
 
@@ -147,6 +153,8 @@ class TaskService:
                 bucket_name = task.payload.get('bucket_name')
                 is_video = any(file_key.lower().endswith(ext) for ext in ['.mp4', '.avi', '.mov', '.mkv'])
 
+                ocr_file_key = None
+
                 if task.task_type == "text_ingest":
                     text_content = task.payload.get("text")
 
@@ -163,8 +171,15 @@ class TaskService:
                     ))
 
                 else:
+                    # OCR: detect handwritten PDF and extract text before ingestion
+                    ocr_file_key = None
+                    if file_key.lower().endswith('.pdf'):
+                        ocr_file_key = TaskService._process_ocr(file_key)
+
+                    # If OCR produced a .txt file, ingest that instead of the original PDF
+                    ingest_key = ocr_file_key or file_key
                     ai_result = asyncio.run(search_service.trigger_ingest(
-                        file_path=file_key,
+                        file_path=ingest_key,
                         bucket_name=bucket_name,
                         meta=task.payload.get("meta")
                     ))
@@ -184,6 +199,8 @@ class TaskService:
                     task.status = TaskStatus.COMPLETED
                     if do_summarize:
                         ai_result["video_summary_status"] = "PROCESSING"
+                    if ocr_file_key:
+                        ai_result["ocr_text_key"] = ocr_file_key
                     task.result = ai_result
                     db.commit()
                     print(f"[OK] Task {task_id} ingest completed", flush=True)
@@ -244,5 +261,71 @@ class TaskService:
                 task.result = {"error": str(e)}
                 db.commit()
                 print(f"[FAILED] Task {task_id} failed: {e}", flush=True)
+
+    @staticmethod
+    def _process_ocr(file_key: str):
+        """Detect if PDF is handwritten and extract text via OCR API. Returns .ocr.txt object key or None."""
+        try:
+            file_disk_path = str(storage_service.get_file_disk_path(file_key))
+            session_id = str(uuid.uuid4())
+
+            with httpx.Client(timeout=OCR_TIMEOUT) as client:
+                # Step 1: detect if PDF is handwritten/scanned
+                with open(file_disk_path, 'rb') as f:
+                    detect_resp = client.post(
+                        f"{OCR_BASE_URL}/ocr/detect-file",
+                        files={'file': (Path(file_disk_path).name, f, 'application/pdf')}
+                    )
+
+                if detect_resp.status_code != 200:
+                    return None
+
+                is_digital = detect_resp.json().get("data", {}).get("is_digital", True)
+                if is_digital:
+                    return None
+
+                # Step 2: extract text from handwritten PDF
+                print(f"[OCR] Handwritten PDF detected, extracting text...", flush=True)
+                with open(file_disk_path, 'rb') as f:
+                    extract_resp = client.post(
+                        f"{OCR_BASE_URL}/ocr/extract-text",
+                        files={'file': (Path(file_disk_path).name, f, 'application/pdf')},
+                        headers={'X-Session-ID': session_id}
+                    )
+
+                if extract_resp.status_code != 200:
+                    print(f"[OCR] Text extraction failed: {extract_resp.status_code}", flush=True)
+                    return None
+
+                ocr_result_file = extract_resp.json().get("data", {}).get("result_file")
+                if not ocr_result_file:
+                    print(f"[OCR] No result_file in response", flush=True)
+                    return None
+
+                # OCR service returns path relative to smart-classroom/ (one level up)
+                if not os.path.isabs(ocr_result_file) and not os.path.exists(ocr_result_file):
+                    ocr_result_file = os.path.join("..", ocr_result_file)
+
+                if not os.path.exists(ocr_result_file):
+                    print(f"[OCR] Result file not found: {ocr_result_file}", flush=True)
+                    return None
+
+                # Step 3: read OCR text and save a copy to content_search local storage
+                with open(ocr_result_file, 'r', encoding='utf-8') as tf:
+                    ocr_text = tf.read()
+
+                ocr_object_key = file_key.rsplit('.', 1)[0] + '.ocr.txt'
+                storage_service._store.put_bytes(
+                    ocr_object_key,
+                    ocr_text.encode('utf-8'),
+                    content_type="text/plain"
+                )
+                print(f"[OCR] Text saved to storage: {ocr_object_key}", flush=True)
+                return ocr_object_key
+
+        except Exception as e:
+            print(f"[OCR] Processing skipped due to error: {e}", flush=True)
+            return None
+
 
 task_service = TaskService()

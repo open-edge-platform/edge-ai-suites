@@ -310,24 +310,30 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
         return False
     
     start_time = time.time()
-    
+
     while time.time() - start_time < timeout:
         elapsed_time = time.time() - start_time
         remaining_time = timeout - elapsed_time
-        
-        logger.info(f"Monitoring... (elapsed: {elapsed_time:.1f}s, remaining: {remaining_time:.1f}s)")
-        
-        try:
-            # Get logs based on resource type
-            if resource_type == "container":
-                # For containers, use existing collect_live_logs function
-                monitor_duration = min(interval, remaining_time)
-                result = _collect_live_logs(resource_name, monitor_duration, search_pattern)
 
-                if result is True:
+        logger.info(f"Monitoring... (elapsed: {elapsed_time:.1f}s, remaining: {remaining_time:.1f}s)")
+
+        try:
+            # Snapshot-poll docker logs since test start (no `-f` streaming).
+            if resource_type == "container":
+                since_seconds = max(1, int(elapsed_time) + 1)
+                result = subprocess.run(
+                    ["docker", "logs", "--since", f"{since_seconds}s", resource_name],
+                    capture_output=True, text=True
+                )
+                combined = (result.stdout or "") + (result.stderr or "")
+                if search_pattern.lower() in combined.lower():
+                    for line in combined.splitlines():
+                        if search_pattern.lower() in line.lower():
+                            logger.info(f"[MATCH] {line.strip()}")
                     logger.info(f"✓ {input_type.upper()} Alert found in {resource_type} '{resource_name}' logs")
                     return True
-                    
+                time.sleep(min(interval, remaining_time))
+
             elif resource_type == "pod":
                 # For pods, use kubectl to get logs
                 result = subprocess.run(
@@ -359,6 +365,27 @@ def check_logs_for_alerts(resource_name, input_type, resource_type="container", 
             return False
     
     logger.info(f"Timeout reached ({timeout}s). No {input_type} alerts found in {resource_type} '{resource_name}' logs.")
+    try:
+        if resource_type == "container":
+            tail = subprocess.run(
+                ["docker", "logs", "--tail", "100", resource_name],
+                capture_output=True, text=True,
+            )
+            tail_output = (tail.stdout or "") + (tail.stderr or "")
+        elif resource_type == "pod":
+            tail = subprocess.run(
+                ["kubectl", "logs", resource_name, "-n", namespace, "--tail=100"],
+                capture_output=True, text=True,
+            )
+            tail_output = (tail.stdout or "") + (tail.stderr or "")
+        else:
+            tail_output = ""
+        logger.info(f"---- Last 100 log lines for {resource_type} '{resource_name}' ----")
+        for line in tail_output.splitlines():
+            logger.info(f"[TAIL] {line}")
+        logger.info(f"---- End of log tail for {resource_type} '{resource_name}' ----")
+    except Exception as e:
+        logger.error(f"Failed to fetch tail logs for {resource_type} '{resource_name}': {e}")
     return False
 
 def update_alert_in_tick_script(file_path, setup):

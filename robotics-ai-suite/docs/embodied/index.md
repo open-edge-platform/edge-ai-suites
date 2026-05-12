@@ -1,3 +1,17 @@
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/embodied/release-notes.md">
+     Release Notes
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 # Humanoid - Imitation Learning
 
 Humanoid - Imitation Learning is a suite of intuitive, easy-to-use software stack designed to streamline the development process of Embodied Intelligence product and applications on Intel platform. The SDK provides developers with a comprehensive environment for developing, testing, and optimizing Embodied Intelligence software and algorithms efficiently. It also provides necessary software framework, libraries, tools, Best known configuration(BKC), tutorials and example codes to facilitate AI solution development.
@@ -30,11 +44,11 @@ Overall, the Humanoid - Imitation Learning provides a highly optimized, AI-drive
 ## Humanoid - Imitation Learning Resources
 
 - [Get Started](get_started.md)
-- [Heterogeneous Computing](heterogeneous_computing.md)
 - [Model Tutorials](model_tutorials.md)
 - [Developer Tools](developer_tools_tutorials.md)
 - [Packages List](packages_list.md)
 - [Sample Pipelines](sample_pipelines.md)
+- [Heterogeneous Computing](heterogeneous_computing.md)
 - [OpenVINO Model Optimization](openvino_optimization.md)
 - [Troubleshooting](../troubleshooting.md)
 - [Release Notes](release-notes.md)
@@ -45,12 +59,12 @@ Overall, the Humanoid - Imitation Learning provides a highly optimized, AI-drive
 :hidden:
 
 get_started
-heterogeneous_computing
 model_tutorials
 developer_tools_tutorials
 packages_list
 sample_pipelines
-openvino_optimization
+heterogeneous_computing
+OpenVINO Model Optimization <openvino_optimization>
 Release Notes <release-notes>
 
 :::

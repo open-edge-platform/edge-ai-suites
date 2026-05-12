@@ -7,7 +7,7 @@
 - Update Smart Intersection RI to release-2026.0.0 version
 - Migrate VLM serving from custom container to [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html) for improved inference performance and maintainability
 - Add `response_format` (JSON schema) support for structured VLM output via OVMS structured generation
-- Support configurable VLM model selection — `Qwen/Qwen2.5-VL-3B-Instruct` (recommended) and `microsoft/Phi-3.5-vision-instruct` (default) validated
+- Support configurable VLM model selection — `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` validated
 - Automatic model export and conversion in Helm init container using OVMS export tooling
 - Add alert deduplication and short-analysis fallback for improved VLM response handling
 

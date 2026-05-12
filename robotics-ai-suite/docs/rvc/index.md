@@ -1,14 +1,28 @@
 (rvc_index)=
 
-# Stationary Robot Vision & Control
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/robot-vision-control">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/docs/rvc/releasenotes.md">
+     Release Notes
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/robotics-ai-suite/robot-vision-control/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
 
-![Robotic Arm](images/html/robotic-arm-graphic.png)
+# Stationary Robot Vision & Control
 
 ## Robotics Pick and Place in Industrial Fields
 
-### Problem description
-
 Robotics pick and place is a critical task in industrial automation where robots are employed to manipulate objects from one location to another within a manufacturing environment. This process involves the accurate identification, grasping, and relocation of items, contributing significantly to the efficiency and productivity of various industrial operations.
+
+Robot Vision and Control offers a flexible and versatile framework to solve the majority of use cases in Industrial fields.
+
+![Robotic Arm](images/html/robotic-arm-graphic.png)
 
 ### Challenges
 
@@ -37,15 +51,6 @@ To address the challenges associated with robotics pick and place in industrial 
 4. **Machine Learning and AI**: Leveraging machine learning and artificial intelligence techniques for intelligent perception, grasp planning, and adaptive control, enabling robots to learn from experience and improve performance over time.
 
 5. **Interoperability and Connectivity**: Establishing standardized communication protocols and interfaces to facilitate seamless integration between robotic systems and existing manufacturing infrastructure, promoting interoperability and data exchange.
-
-### Conclusion
-
-Robotics pick and place plays a pivotal role in modern industrial automation, offering significant potential for enhancing efficiency, productivity, and flexibility in manufacturing processes. By addressing the challenges and leveraging innovative solutions, businesses can harness the full capabilities of robotic technologies to optimize operations and drive sustainable growth.
-
-Robot Vision and Control aims at tackling the problematics and offers a flexible and versatile framework to solve the majority of use cases in Industrial fields
-
-Robot Vision and Control is a robotic software framework aimed at tackling Pick and place, Track
-and place industrial problems.
 
 ![Robot Background](images/html/RobotBackground.png)
 

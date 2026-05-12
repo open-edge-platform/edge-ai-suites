@@ -13,6 +13,30 @@ service:
 rtspUrl: ""
 logLevel: "INFO"
 
+# Agentic dispatch — mirrors USE_ADK env var
+useAdk: true
+
+# Video capture
+captureFps: 10
+
+# Action tools — webhook
+webhookUrl: ""
+webhookSecret: ""
+
+# Action tools — MQTT
+mqttBroker: ""
+mqttPort: 1883
+mqttUsername: ""
+mqttPassword: ""
+mqttBaseTopic: "alerts/live-video"
+
+# MCP integration
+mcpEnabled: true
+
+# Host path for collector-signals — must match collector.collectorSignalsPath.
+# The app writes fps.txt here; the collector reads it via telegraf.
+collectorSignalsPath: /opt/lva/collector-signals
+
 resources:
   requests:
     cpu: "200m"
@@ -22,7 +46,7 @@ resources:
     memory: "2Gi"
 
 healthcheck:
-  path: /streams
+  path: /health
   startupInitialDelaySeconds: 5
   startupPeriodSeconds: 5
   startupFailureThreshold: 30
