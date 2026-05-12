@@ -59,16 +59,16 @@ Symptoms:
 Checks:
 
 - Check browser console (F12) for connection errors.
+- Refresh the browser window.
 - Verify that OVMS is running: `docker logs ovms-vlm | grep "Started REST"`.
 - Test endpoint: `curl -N http://localhost:9000/events`.
 - Ensure port 9000 isn't blocked by firewall.
 
 ## Port conflicts
 
-If the dashboard or APIs are not reachable, check whether port 9000 is already in use and update the environment variable:
+If the dashboard or APIs are not reachable, check whether port 9000 is already in use. Update the port in the docker compose yaml.
 
 ```bash
-export PORT=9001
 docker compose down && docker compose up -d
 ```
 
