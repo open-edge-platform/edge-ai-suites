@@ -41,7 +41,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const ALLOWED_EXTENSIONS = new Set([".mp4", ".ppt", ".pptx", ".docx", ".pdf", ".jpg", ".jpeg", ".csv", ".txt"]);
+const ALLOWED_EXTENSIONS = new Set([".mp4", ".jpg", ".png", ".jpeg", ".txt", ".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".html", ".htm", ".xml", ".md"]);
 function isAllowed(filename: string): boolean {
   const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
   return ALLOWED_EXTENSIONS.has(ext);
@@ -122,16 +122,11 @@ const UploadSection: React.FC = () => {
     const tag = tagInput.trim().replace(/,$/, "");
     if (!tag) return;
 
-    // Update tags locally; re-stage any completed files so Upload button picks them up
+    // Only add tags to files that have not yet been uploaded (still STAGED)
     setEntries((prev) =>
       prev.map((e) => {
-        if (!e.selected || e.tags.includes(tag)) return e;
-        const updated = { ...e, tags: [...e.tags, tag] };
-        // If already uploaded, move back to STAGED so user confirms re-ingest via Upload button
-        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
-          updated.status = "STAGED";
-        }
-        return updated;
+        if (!e.selected || e.status !== "STAGED" || e.tags.includes(tag)) return e;
+        return { ...e, tags: [...e.tags, tag] };
       })
     );
     setTagInput("");
@@ -140,13 +135,9 @@ const UploadSection: React.FC = () => {
   const removeTag = (entryId: string, tag: string) => {
     setEntries((prev) =>
       prev.map((e) => {
-        if (e.id !== entryId) return e;
-        const updated = { ...e, tags: e.tags.filter((t) => t !== tag) };
-        // Re-stage if already uploaded so the Upload button triggers re-ingest
-        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
-          updated.status = "STAGED";
-        }
-        return updated;
+        // Tags are locked once a file has been submitted for upload
+        if (e.id !== entryId || e.status !== "STAGED") return e;
+        return { ...e, tags: e.tags.filter((t) => t !== tag) };
       })
     );
   };
@@ -393,8 +384,6 @@ const UploadSection: React.FC = () => {
     }
   };
 
-  // Tags can be added to any selected file, even before upload
-  const canAddTags = selectedEntries.length > 0;
 
 return (
   <>
@@ -421,7 +410,7 @@ return (
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".mp4,.ppt,.pptx,.docx,.pdf,.jpg,.jpeg,.csv,.txt"
+        accept=".mp4,.jpg,.png,.jpeg,.txt,.pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.html,.htm,.xml,.md"
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
@@ -431,6 +420,8 @@ return (
         <div className="cs-meta-panel">
           {selectedEntries.length === 0 ? (
             <p className="cs-meta-hint">{t("uploadSection.selectFileToAddTags")}</p>
+          ) : selectedEntries.every((e) => e.status !== "STAGED") ? (
+            <p className="cs-meta-hint">{t("uploadSection.tagsLockedAfterUpload")}</p>
           ) : (
             <>
               <p className="cs-meta-title">
@@ -439,7 +430,7 @@ return (
                   : `Tags for ${selectedEntries.length} selected files`}
               </p>
 
-              {/* Chips per selected entry */}
+              {/* Chips per selected entry — remove button only available before upload */}
               {selectedEntries.map((se) =>
                 se.tags.length > 0 ? (
                   <div key={se.id} className="cs-chip-row">
@@ -449,12 +440,14 @@ return (
                     {se.tags.map((tag) => (
                       <span key={tag} className="cs-chip">
                         {tag}
-                        <button
-                          className="cs-chip-remove"
-                          onClick={() => removeTag(se.id, tag)}
-                        >
-                          ×
-                        </button>
+                        {se.status === "STAGED" && (
+                          <button
+                            className="cs-chip-remove"
+                            onClick={() => removeTag(se.id, tag)}
+                          >
+                            ×
+                          </button>
+                        )}
                       </span>
                     ))}
                   </div>
@@ -606,6 +599,14 @@ return (
               onClick={() => {
                 Object.values(pollTimers.current).forEach(clearInterval);
                 pollTimers.current = {};
+                // Call backend cleanup for every entry that was uploaded
+                entries.forEach((e) => {
+                  if (e.taskId) {
+                    csCleanupTask(e.taskId).catch((err) =>
+                      console.warn(`Cleanup failed for task ${e.taskId}:`, err)
+                    );
+                  }
+                });
                 setEntries([]);
                 dispatch(setCsHasUploads(false));
                 dispatch(setCsUploadsComplete(false));
