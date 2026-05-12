@@ -61,24 +61,24 @@ for hand gesture recognition.
 
 For ROS 2 **Jazzy** (gesture only):
 ```bash
-pip3 install numpy==1.26.4 mediapipe==0.10.31 opencv-python==4.8.0.76 pyyaml
+pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_jazzy.txt
 ```
 
 For ROS 2 **Jazzy** (gesture + audio):
 ```bash
-pip3 install numpy==1.26.4 mediapipe==0.10.31 opencv-python==4.8.0.76 pyyaml \
-    librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
+pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_jazzy.txt
+pip3 install librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
 ```
 
 For ROS 2 **Humble** (gesture only):
 ```bash
-pip3 install numpy==1.24.3 mediapipe==0.10.9 opencv-python==4.8.0.76 pyyaml tensorflow
+pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
 ```
 
 For ROS 2 **Humble** (gesture + audio):
 ```bash
-pip3 install numpy==1.24.3 mediapipe==0.10.9 opencv-python==4.8.0.76 pyyaml tensorflow \
-    librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
+pip3 install -r src/turtlebot3_simulations/followme_turtlebot3_gazebo/scripts/requirements_humble.txt
+pip3 install librosa openvino==2025.3.0 simpleaudio sounddevice tqdm inflect
 ```
 
 ---
