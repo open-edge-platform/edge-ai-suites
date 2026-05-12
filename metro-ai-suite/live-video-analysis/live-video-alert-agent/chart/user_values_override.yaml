@@ -14,6 +14,11 @@ global:
     httpsProxy: ""
     noProxy: "localhost,127.0.0.1,.svc.cluster.local"
 
+  appNodePort:
+  #Model configuration with provider as OpenVINO.
+  ovmsModelName: "Phi-3.5-vision-instruct-int4-ov" 
+  ovmsLLMModelName: "Phi-4-mini-instruct-int4-ov"
+
   # GPU controls
   gpu:
     enabled: false
@@ -70,3 +75,7 @@ app:
 # false → skips ovms-llm entirely (rule-based dispatch)
 ovms-llm:
   enabled: true
+  sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+#VLM model configuration
+ovms:
+  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"

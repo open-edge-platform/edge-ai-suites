@@ -1,0 +1,124 @@
+.cs-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.cs-ocr-preview-modal {
+  width: 560px;
+  max-height: 80vh;
+  background: #FFFFFF;
+  border-radius: 4px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.cs-ocr-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 32px;
+  gap: 8px;
+}
+
+.cs-ocr-preview-title {
+  font-family: var(--font-body, sans-serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: #2B2C30;
+  line-height: 20px;
+}
+
+.cs-ocr-preview-close {
+  width: 24px;
+  height: 32px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.cs-ocr-preview-close:hover {
+  opacity: 1;
+}
+
+.cs-ocr-preview-close img {
+  width: 16px;
+  height: 16px;
+}
+
+.cs-ocr-preview-divider {
+  height: 1px;
+  background: #E6E7E8;
+  margin: -12px 0;
+}
+
+.cs-ocr-preview-content {
+  width: 100%;
+  max-height: 338px;
+  overflow-y: auto;
+  padding: 4px;
+  gap: 8px;
+}
+
+.cs-ocr-preview-text {
+  font-family: var(--font-body, sans-serif);
+  font-size: 14px;
+  font-weight: 400;
+  color: #2B2C30;
+  line-height: 20px;
+  letter-spacing: 0.32px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.cs-ocr-preview-loading {
+  font-size: 13px;
+  color: #607d8b;
+  font-style: italic;
+}
+
+.cs-ocr-preview-footer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.cs-ocr-download-btn {
+  background: #FFFFFF;
+  border: 1px solid #8D8D93;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-family: 'IntelOne Text', var(--font-body, sans-serif);
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 16px;
+  letter-spacing: 0px;
+  color: #2B2C30;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.cs-ocr-download-btn:hover {
+  background: #0071c5;
+  border-color: #0071c5;
+  color: #FFFFFF;
+}
+
+.cs-ocr-download-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

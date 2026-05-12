@@ -29,6 +29,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export HF_TOKEN=<your-huggingface-token>
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -41,12 +42,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    # Pre-configure a video stream
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
-   # VLM model selection (default: Phi-3.5-vision-instruct-int4-ov)
+   # VLM model selection (default: Openvino/Phi-3.5-vision-instruct-int4-ov)
    export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-   export MODEL_NAME=InternVL2-2B
-
-   # Application port (default: 9000)
-   export PORT=9001
 
    # Log verbosity
    export LOG_LEVEL=DEBUG
@@ -59,7 +56,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export USE_ADK=true
    export COMPOSE_PROFILES=adk-llm
-   export LLM_MODEL=Phi-4-mini-instruct-int4-ov
+   export LLM_MODEL=Openvino/Phi-4-mini-instruct-int4-ov
    ```
 
    *Option B — Rule-based (no LLM needed):*
