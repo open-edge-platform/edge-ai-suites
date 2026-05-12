@@ -31,6 +31,7 @@ hf_xet==1.4.3
 # OCR dependencies
 PyMuPDF>=1.21.0
 paddlepaddle==2.6.2
+pyclipper
 beautifulsoup4
 fire>=0.3.0
 rapidfuzz

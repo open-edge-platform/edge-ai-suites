@@ -61,6 +61,13 @@ export function getContentSearchFileUrl(filePath: string): string {
   return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
 }
 
+/**
+ * Returns the download URL for an OCR text file (triggers download, not inline display).
+ */
+export function getOcrDownloadUrl(fileKey: string): string {
+  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+}
+
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -854,6 +861,18 @@ export async function csCleanupTask(
       status: data.data?.status ?? 'COMPLETED',
       message: data.message ?? '',
     };
+  });
+}
+
+export async function csDownloadText(fileKey: string): Promise<string> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`
+    );
+    if (!res.ok) {
+      throw new Error(`Download failed (${res.status})`);
+    }
+    return await res.text();
   });
 }
 

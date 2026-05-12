@@ -426,6 +426,8 @@ content_search:
   storage:
     data_dir: './data/local_storage'
     bucket: "content-search"
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"

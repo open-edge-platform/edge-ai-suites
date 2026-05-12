@@ -52,6 +52,8 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         storage = cs.get("storage", {})
         _set("STORAGE_DATA_DIR", storage.get("data_dir", "./data/local_storage"))
         _set("STORAGE_BUCKET", storage.get("bucket", "content-search"))
+        _set("DOCUMENT_MAX_MB", storage.get("document_max_mb", 100))
+        _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
         # VLM
         vlm = cs.get("vlm", {})

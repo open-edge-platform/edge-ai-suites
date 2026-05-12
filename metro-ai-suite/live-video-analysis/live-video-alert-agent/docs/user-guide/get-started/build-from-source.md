@@ -48,4 +48,4 @@ To build the Docker image for `Live Video Alert Agent` application, follow these
 
 Notes:
 
-- The default port is `9000`, but can be changed using the `PORT` environment variable.
+- The default port is `9000`, but can be changed in the compose yaml.
