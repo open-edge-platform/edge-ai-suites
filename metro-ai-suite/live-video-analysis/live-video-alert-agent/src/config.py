@@ -32,7 +32,8 @@ class Settings:
 
     RTSP_URL: str = os.getenv("RTSP_URL", "")
     VLM_URL: str = os.getenv("VLM_URL", "http://ovms-vlm:8000/v3")
-    MODEL_NAME: str = os.getenv("MODEL_NAME", "Phi-3.5-vision")
+    OVMS_SOURCE_MODEL: str = os.getenv("OVMS_SOURCE_MODEL", "OpenVINO/Phi-3.5-vision-instruct-int4-ov")
+    MODEL_NAME: str =OVMS_SOURCE_MODEL.split("/")[-1]  # e.g. "Phi-3.5-vision-instruct-int4-ov"
     VLM_IMAGE_MAX_DIM: int = _int("VLM_IMAGE_MAX_DIM", 224)
     VLM_JPEG_QUALITY: int = _int("VLM_JPEG_QUALITY", 60)
     VLM_TIMEOUT: float = _float("VLM_TIMEOUT", 45.0)
@@ -52,7 +53,8 @@ class Settings:
     USE_ADK: bool = _bool("USE_ADK", True)
 
     LLM_URL: str = os.getenv("LLM_URL", "http://ovms-llm:8000/v3")
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "Phi-4-mini-instruct")
+    LLM_REPO: str = os.getenv("LLM_MODEL", "Openvino/Phi-4-mini-instruct-int4-ov")
+    LLM_MODEL: str = LLM_REPO.split("/")[-1]  # e.g. "Phi-4-mini-instruct"
     LLM_TIMEOUT: float = _float("LLM_TIMEOUT", 10.0)
 
     WEBHOOK_URL: str = os.getenv("WEBHOOK_URL", "")

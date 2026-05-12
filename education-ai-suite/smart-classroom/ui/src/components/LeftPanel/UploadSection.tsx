@@ -1,7 +1,9 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, createSession, startMonitoring } from "../../services/api";
+import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring } from "../../services/api";
+import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing } from "../../redux/slices/uiSlice";
 
@@ -27,6 +29,7 @@ interface UploadEntry {
   selected: boolean;
   tags: string[];
   vsEnabled: boolean;
+  ocrTextKey: string | null;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -41,7 +44,7 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-const ALLOWED_EXTENSIONS = new Set([".mp4", ".ppt", ".pptx", ".docx", ".pdf", ".jpg", ".jpeg", ".csv", ".txt"]);
+const ALLOWED_EXTENSIONS = new Set([".mp4", ".jpg", ".png", ".jpeg", ".txt", ".pdf", ".docx", ".doc", ".pptx", ".ppt", ".xlsx", ".xls", ".html", ".htm", ".xml", ".md"]);
 function isAllowed(filename: string): boolean {
   const ext = filename.slice(filename.lastIndexOf(".")).toLowerCase();
   return ALLOWED_EXTENSIONS.has(ext);
@@ -64,6 +67,14 @@ const UploadSection: React.FC = () => {
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+
+  const [ocrPreview, setOcrPreview] = useState<{
+    isOpen: boolean;
+    filename: string;
+    content: string;
+    loading: boolean;
+    ocrTextKey: string;
+  }>({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);
@@ -94,7 +105,10 @@ const UploadSection: React.FC = () => {
   }, [entries, dispatch]);
 
   useEffect(() => {
-    const allTags = entries.flatMap((e) => e.tags);
+    const uploadedEntries = entries.filter(
+      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+    );
+    const allTags = uploadedEntries.flatMap((e) => e.tags);
     const uniqueTags = [...new Set(allTags)];
     dispatch(setCsTags(uniqueTags));
   }, [entries, dispatch]);
@@ -122,16 +136,11 @@ const UploadSection: React.FC = () => {
     const tag = tagInput.trim().replace(/,$/, "");
     if (!tag) return;
 
-    // Update tags locally; re-stage any completed files so Upload button picks them up
+    // Only add tags to files that have not yet been uploaded (still STAGED)
     setEntries((prev) =>
       prev.map((e) => {
-        if (!e.selected || e.tags.includes(tag)) return e;
-        const updated = { ...e, tags: [...e.tags, tag] };
-        // If already uploaded, move back to STAGED so user confirms re-ingest via Upload button
-        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
-          updated.status = "STAGED";
-        }
-        return updated;
+        if (!e.selected || e.status !== "STAGED" || e.tags.includes(tag)) return e;
+        return { ...e, tags: [...e.tags, tag] };
       })
     );
     setTagInput("");
@@ -140,13 +149,9 @@ const UploadSection: React.FC = () => {
   const removeTag = (entryId: string, tag: string) => {
     setEntries((prev) =>
       prev.map((e) => {
-        if (e.id !== entryId) return e;
-        const updated = { ...e, tags: e.tags.filter((t) => t !== tag) };
-        // Re-stage if already uploaded so the Upload button triggers re-ingest
-        if (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") {
-          updated.status = "STAGED";
-        }
-        return updated;
+        // Tags are locked once a file has been submitted for upload
+        if (e.id !== entryId || e.status !== "STAGED") return e;
+        return { ...e, tags: e.tags.filter((t) => t !== tag) };
       })
     );
   };
@@ -192,7 +197,8 @@ const UploadSection: React.FC = () => {
             (result.result?.file_info as any)?.file_key ??
             (result.result as any)?.file_key ??
             null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}) });
+          const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
             clearInterval(pollTimers.current[entryId]);
@@ -225,6 +231,7 @@ const UploadSection: React.FC = () => {
         selected: false,
         tags: [],
         vsEnabled: false,
+        ocrTextKey: null,
       }));
       setEntries((prev) => [...prev, ...newEntries]);
     },
@@ -350,6 +357,30 @@ const UploadSection: React.FC = () => {
     if (files.length) processFiles(files);
   };
 
+  const handleOcrPreview = useCallback(async (filename: string, ocrTextKey: string) => {
+    setOcrPreview({ isOpen: true, filename, content: "", loading: true, ocrTextKey });
+    try {
+      const content = await csDownloadText(ocrTextKey);
+      setOcrPreview({ isOpen: true, filename, content, loading: false, ocrTextKey });
+    } catch (err) {
+      setOcrPreview({ isOpen: true, filename, content: "Failed to load OCR text.", loading: false, ocrTextKey });
+    }
+  }, []);
+
+  const closeOcrPreview = useCallback(() => {
+    setOcrPreview({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
+  }, []);
+
+  const downloadOcrText = useCallback(() => {
+    if (!ocrPreview.ocrTextKey) return;
+    const link = document.createElement("a");
+    link.href = getOcrDownloadUrl(ocrPreview.ocrTextKey);
+    link.download = ocrPreview.filename.replace(/\.[^.]+$/, ".txt");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }, [ocrPreview.ocrTextKey, ocrPreview.filename]);
+
   const confirmRemove = () => {
     const id = confirmRemoveId;
     if (!id) return;
@@ -393,8 +424,6 @@ const UploadSection: React.FC = () => {
     }
   };
 
-  // Tags can be added to any selected file, even before upload
-  const canAddTags = selectedEntries.length > 0;
 
 return (
   <>
@@ -421,7 +450,7 @@ return (
         ref={fileInputRef}
         type="file"
         multiple
-        accept=".mp4,.ppt,.pptx,.docx,.pdf,.jpg,.jpeg,.csv,.txt"
+        accept=".mp4,.jpg,.png,.jpeg,.txt,.pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.html,.htm,.xml,.md"
         style={{ display: "none" }}
         onChange={handleFileChange}
       />
@@ -431,6 +460,8 @@ return (
         <div className="cs-meta-panel">
           {selectedEntries.length === 0 ? (
             <p className="cs-meta-hint">{t("uploadSection.selectFileToAddTags")}</p>
+          ) : selectedEntries.every((e) => e.status !== "STAGED") ? (
+            <p className="cs-meta-hint">{t("uploadSection.tagsLockedAfterUpload")}</p>
           ) : (
             <>
               <p className="cs-meta-title">
@@ -439,7 +470,7 @@ return (
                   : `Tags for ${selectedEntries.length} selected files`}
               </p>
 
-              {/* Chips per selected entry */}
+              {/* Chips per selected entry — remove button only available before upload */}
               {selectedEntries.map((se) =>
                 se.tags.length > 0 ? (
                   <div key={se.id} className="cs-chip-row">
@@ -449,12 +480,14 @@ return (
                     {se.tags.map((tag) => (
                       <span key={tag} className="cs-chip">
                         {tag}
-                        <button
-                          className="cs-chip-remove"
-                          onClick={() => removeTag(se.id, tag)}
-                        >
-                          ×
-                        </button>
+                        {se.status === "STAGED" && (
+                          <button
+                            className="cs-chip-remove"
+                            onClick={() => removeTag(se.id, tag)}
+                          >
+                            ×
+                          </button>
+                        )}
                       </span>
                     ))}
                   </div>
@@ -515,6 +548,18 @@ return (
                   <td>
                     <span className="cs-file-name" title={entry.filename}>
                       {entry.filename}
+                      {entry.status === "COMPLETED" && entry.ocrTextKey && (
+                        <img
+                          src={handwrittenIcon}
+                          alt="Handwritten"
+                          className="cs-ocr-icon cs-ocr-icon--clickable"
+                          title="Click to preview OCR text"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOcrPreview(entry.filename, entry.ocrTextKey!);
+                          }}
+                        />
+                      )}
                     </span>
                     {entry.fileType === "MP4" && entry.status === "STAGED" && !entry.fileKey && (
                       <label className="cs-vs-toggle" title={t("uploadSection.videoSummarizationToggle")}>
@@ -606,6 +651,14 @@ return (
               onClick={() => {
                 Object.values(pollTimers.current).forEach(clearInterval);
                 pollTimers.current = {};
+                // Call backend cleanup for every entry that was uploaded
+                entries.forEach((e) => {
+                  if (e.taskId) {
+                    csCleanupTask(e.taskId).catch((err) =>
+                      console.warn(`Cleanup failed for task ${e.taskId}:`, err)
+                    );
+                  }
+                });
                 setEntries([]);
                 dispatch(setCsHasUploads(false));
                 dispatch(setCsUploadsComplete(false));
@@ -638,6 +691,15 @@ return (
         </div>
       </div>
     )}
+
+    <OcrPreviewModal
+      isOpen={ocrPreview.isOpen}
+      filename={ocrPreview.filename}
+      content={ocrPreview.content}
+      loading={ocrPreview.loading}
+      onClose={closeOcrPreview}
+      onDownload={downloadOcrText}
+    />
   </>
 );}
 
