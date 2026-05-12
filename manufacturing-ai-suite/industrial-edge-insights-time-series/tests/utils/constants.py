@@ -118,6 +118,26 @@ CONTAINER_IMAGE_SIZE_THRESHOLD = 2200  # 2.2 GB maximum size for any container/i
 CONTAINER_STABILIZATION_TIME = 30    # Default stabilization time for container tests
 EXTENDED_STABILITY_TIME = 180        # Extended time for stability tests (3 minutes)
 
+# Wind Turbine Docker Test Timing (in seconds)
+WIND_TURBINE_CYCLE_GAP_TIME = 10            # Short gap between make down/up cycles in loops
+WIND_TURBINE_CONTAINER_READY_TIMEOUT = 120  # Polling timeout for containers/service readiness
+WIND_TURBINE_POLL_INTERVAL = 5              # Interval between readiness poll attempts
+WIND_TURBINE_CURL_TIMEOUT = 10              # Timeout for individual curl health-check call
+WIND_TURBINE_ALERT_LOG_TIMEOUT = 180        # Timeout for finding alert patterns in container logs after config POST
+WIND_TURBINE_GPU_LOG_TIMEOUT = 300          # Timeout for finding GPU log entry after GPU config POST
+WIND_TURBINE_GPU_RESTART_GRACE = 30         # Extra grace period after GPU config POST so kapacitor fully restarts
+                                           # with the new DEVICE env before we begin tailing logs
+WIND_TURBINE_POST_DEPLOY_SETTLE = 25        # Settle time after `make up` before sending the GPU config POST.
+                                           # Mirrors the manual procedure (see docs) where a 25s pause after
+                                           # `make up_*_ingestion` is required for TSAM/kapacitor to finish the
+                                           # initial CPU UDF startup; without it the subsequent GPU POST can be
+                                           # acknowledged but never trigger a kapacitor UDF restart.
+WIND_TURBINE_CONFIG_PRE_POST_STABILIZE = 60   # Settle time before POSTing /ts-api/config (TSAM/kapacitor warmup)
+WIND_TURBINE_CONFIG_POST_POST_STABILIZE = 45  # Settle time after POSTing /ts-api/config so kapacitor reloads task
+WIND_TURBINE_OPCUA_ALERT_SETTLE = 60          # Time for OPC UA pipeline to start emitting alerts post-restart
+# Required for OPC-UA multi-stream so each scaled OPC-UA server container binds to a unique host port
+WIND_TURBINE_OPCUA_PORT_MAPPING = "30003-30100"
+
 # Multimodal wait durations (in seconds) to avoid hard-coded sleeps in tests
 MULTIMODAL_WAIT_AFTER_CHART_GEN = 10
 MULTIMODAL_WAIT_AFTER_VALUES_UPDATE = 15

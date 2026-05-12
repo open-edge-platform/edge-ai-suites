@@ -161,6 +161,7 @@ curl --location 'http://127.0.0.1:9011/api/v1/task/query/6b9a6a55-d327-42fe-b05e
 
 Response (200 OK):
 ```json
+// Example 1: Normal file (upload only)
 {
     "code": 20000,
     "data": {
@@ -181,7 +182,24 @@ Response (200 OK):
     "message": "Query successful",
     "timestamp": 1774931711
 }
+
+// Example 2: Handwritten PDF (OCR processed)
+{
+    "code": 20000,
+    "data": {
+        "task_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "status": "COMPLETED",
+        "progress": 100,
+        "result": {
+            "message": "File successfully processed. db returns {}",
+            "ocr_text_key": "runs/a1b2c3d4-xxxx/raw/application/default/handwritten_notes.ocr.txt"
+        }
+    },
+    "message": "Query successful",
+    "timestamp": 1774931800
+}
 ```
+
 ### File Process
 #### File Support Matrix
 
