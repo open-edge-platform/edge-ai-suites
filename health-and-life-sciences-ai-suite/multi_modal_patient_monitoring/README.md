@@ -36,6 +36,7 @@ For details, see [How it Works](./docs/user-guide/how-it-works.md).
 
 ## Learn More
 
-For detailed information about system requirements, architecture, and how the application works, see the
+For detailed information about system requirements, architecture, and how the application works, see the:
 
 - [Full Documentation](./docs/user-guide/index.md)
+- [Release Notes](./docs/user-guide/release-notes.md)

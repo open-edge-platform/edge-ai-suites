@@ -35,3 +35,38 @@ app:
   # nodeSelector:
   #   kubernetes.io/hostname: <your-node-name>
 
+  # Agentic dispatch
+  useAdk: true
+  # Video capture
+  captureFps: 10
+  # Action tools — webhook
+  webhookUrl: ""
+  webhookSecret: ""
+  # Action tools — MQTT
+  mqttBroker: ""
+  mqttPort: 1883
+  mqttUsername: ""
+  mqttPassword: ""
+  mqttBaseTopic: "alerts/live-video"
+  # MCP integration
+  mcpEnabled: true
+  # MCP server configuration update the below as needed 
+  mcpServersConfig: |
+    {
+      "servers": [
+        {
+          "name": "prometheus",
+          "enabled": false,
+          "transport": "http",
+          "url": "<mcp_server_url>/mcp",
+          "description": "Prometheus MCP Server - query metrics, get alerts, analyze system performance",
+          "timeout": 30.0
+        }
+      ]
+    }
+
+# Keep ovms-llm.enabled in sync with app.useAdk above.
+# true  → deploys ovms-llm service (ADK agentic dispatch)
+# false → skips ovms-llm entirely (rule-based dispatch)
+ovms-llm:
+  enabled: true

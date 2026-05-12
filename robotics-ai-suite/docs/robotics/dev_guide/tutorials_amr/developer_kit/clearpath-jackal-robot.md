@@ -23,7 +23,7 @@ Clearpath Robotics Jackal robot.
 
 - [Follow-me with ADBSCAN on Clearpath Robotics Jackal Robot](../navigation/follow_me/Tutorials/followme-on-clearpathjackal.md) - This
   tutorial provides instructions for running the ADBSCAN-based Follow-me
-  algorithm using an input stream from an Intel® RealSense™ camera on a Jackal robot.
+  algorithm using an input stream from a RealSense™ camera on a Jackal robot.
 
 - [Follow-me with ADBSCAN and Gesture-based Control on Clearpath Robotics Jackal Robot](../navigation/follow_me/Tutorials/followme-with-gesture-on-clearpathjackal.md) - This
   tutorial demonstrates the Follow-me algorithm along with a gesture

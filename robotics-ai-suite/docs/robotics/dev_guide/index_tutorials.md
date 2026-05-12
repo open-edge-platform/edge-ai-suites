@@ -1,6 +1,6 @@
 # Tutorials
 
-Prerequisite: Follow the instructions in [Getting Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prerequisite: Follow the instructions in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 With step-by-step instructions covering real world usage scenarios,
 these tutorials provide a learning path for developers to use and configure the Autonomous Mobile Robot.
@@ -8,7 +8,6 @@ these tutorials provide a learning path for developers to use and configure the 
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
-:hidden:
 
 tutorials_amr/developer_kit/index
 tutorials_amr/perception/index

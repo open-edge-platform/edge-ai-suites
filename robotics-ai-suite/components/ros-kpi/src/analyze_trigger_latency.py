@@ -5,8 +5,8 @@
 # These contents may have been developed with support from one or more
 # Intel-operated generative artificial intelligence solutions.
 """
-analyze_trigger_latency.py  —  Trigger-based node latency analysis  (v2)
-=========================================================================
+analyze_trigger_latency.py — Trigger-based node latency analysis (v2).
+
 For each node in the ROS2 graph this script identifies the *trigger*: the
 last input message received on any subscribed topic before each output
 message was emitted.  It then computes the time delta from that trigger to
@@ -39,6 +39,9 @@ Usage
   # save per-event CSV + optional plot
   uv run python src/analyze_trigger_latency.py --export-csv --plot
 
+  # write flat KPI CSV (one row per input→output pair)
+  uv run python src/analyze_trigger_latency.py --csv-out kpi_pairs.csv
+
   # suppress internal/bookkeeping topics
   uv run python src/analyze_trigger_latency.py --no-filter
 """
@@ -50,6 +53,7 @@ import bisect
 import csv
 import datetime
 import json
+import os
 import platform
 import re
 import socket
@@ -134,6 +138,13 @@ def load_topic_timestamps_from_bag(bag_dir: Path) -> Dict[str, List[float]]:
         storage_opts   = rosbag2_py.StorageOptions(uri=str(bag_dir), storage_id=storage_id)
         converter_opts = rosbag2_py.ConverterOptions('', '')
         reader.open(storage_opts, converter_opts)
+        # Avoid MCAP warning "attempted to read in receive timestamp order with
+        # no message index". Recorded timestamps are correct for latency analysis
+        # and do not require a per-message index in the bag.
+        if hasattr(rosbag2_py, 'ReadOrder') and hasattr(rosbag2_py, 'ReadOrderSortBy'):
+            _order = rosbag2_py.ReadOrder()
+            _order.sort_by = rosbag2_py.ReadOrderSortBy.PublishedTimestamp
+            reader.set_read_order(_order)
         topic_times: Dict[str, List[float]] = defaultdict(list)
         while reader.has_next():
             topic_name, _data, ts_ns = reader.read_next()
@@ -194,6 +205,7 @@ def _compute_topic_fps(topic_times: Dict[str, List[float]]) -> Dict[str, float]:
 def find_trigger(out_ts: float, in_times: List[float]) -> Optional[float]:
     """
     Return the most-recent input timestamp that is <= out_ts, or None.
+
     Binary search via bisect for O(log n).
     """
     idx = bisect.bisect_right(in_times, out_ts) - 1
@@ -209,8 +221,7 @@ def analyze_node(
     max_latency_ms: float = 10_000.0,
 ) -> List[dict]:
     """
-    Compute trigger-based latency for every (input_topic, output_topic) pair
-    for this node.
+    Compute trigger-based latency for every (input_topic, output_topic) pair.
 
     Returns a list of result dicts, one per (in_topic, out_topic) pair that
     has at least 5 valid samples.
@@ -318,6 +329,7 @@ def _health(mean_ms: float) -> str:
 
 
 def print_results(all_results: List[dict], node_filter: Optional[str] = None) -> None:
+    """Print detailed per-node trigger latency results."""
     if not all_results:
         print('No trigger-based latency data found (need ≥5 samples per pair).')
         return
@@ -356,7 +368,7 @@ def print_results(all_results: List[dict], node_filter: Optional[str] = None) ->
                 name_trunc = p['input'][-47:] if len(p['input']) > 47 else p['input']
                 # body: 1+47+1+5 + 1+9×5 + 6 = 106 chars (no emoji — avoids wide-char padding skew)
                 # Full row display: ║  (3) + emoji(2) + body(106) + ║(1) = 112 = box width ✓
-                body = (f" {name_trunc:<47} "
+                body = (f' {name_trunc:<47} '
                         f"{p['n']:>5} "
                         f"{p['mean_ms']:>6.1f}ms "
                         f"{p['p50_ms']:>6.1f}ms "
@@ -376,8 +388,9 @@ def print_results(all_results: List[dict], node_filter: Optional[str] = None) ->
 
 def export_events_csv(all_results: List[dict], out_path: Path) -> None:
     """
-    Write a flat CSV with one row per output-message event, showing the
-    winning (closest) trigger input and all competing input latencies.
+    Write a flat CSV with one row per output-message event.
+
+    Shows the winning (closest) trigger input and all competing input latencies.
     """
     # Collect all unique input topics to make dynamic columns
     all_in_topics: set = set()
@@ -445,7 +458,7 @@ def print_summary_table(all_results: List[dict]) -> None:
         nd = r['node'].split('/')[-1][:28]
         inp = r['input'][-31:] if len(r['input']) > 31 else r['input']
         out = r['output'][-27:] if len(r['output']) > 27 else r['output']
-        print(f"  {i:>3}  {h} {nd:<28} {inp:<32} {out:<28} "
+        print(f'  {i:>3}  {h} {nd:<28} {inp:<32} {out:<28} '
               f"{r['mean_ms']:>6.1f}ms {r['p90_ms']:>6.1f}ms {r['trigger_count']:>6}")
     print('━' * 110)
     if len(ranked) > 30:
@@ -463,10 +476,11 @@ def plot_trigger_timeline(
     show: bool = True,
 ) -> None:
     """
-    For each selected node, draw a gantt-style timeline:
-      - Each output topic = one swimlane
-      - For each output event, a horizontal bar from trigger_ts to out_ts
-        coloured by which input topic triggered it.
+    For each selected node, draw a gantt-style timeline.
+
+    - Each output topic = one swimlane.
+    - For each output event, a horizontal bar from trigger_ts to out_ts
+      coloured by which input topic triggered it.
     """
     try:
         import matplotlib.pyplot as plt
@@ -575,8 +589,111 @@ def find_latest_session(sessions_root: Path) -> Optional[Path]:
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-#  Structured KPI output (standard benchmark format)
+#  Hardware / provenance helpers
 # ──────────────────────────────────────────────────────────────────────────────
+
+def _framework_version() -> str:
+    """Read the framework version from pyproject.toml, fall back to 'unknown'."""
+    try:
+        import importlib.metadata
+        return importlib.metadata.version('ros2-kpi')
+    except Exception:
+        pass
+    try:
+        import re as _re
+        _pyproject = Path(__file__).resolve().parent.parent / 'pyproject.toml'
+        text = _pyproject.read_text()
+        m = _re.search(r'^version\s*=\s*"([^"]+)"', text, _re.MULTILINE)
+        return m.group(1) if m else 'unknown'
+    except Exception:
+        return 'unknown'
+
+
+def _cpu_model() -> str:
+    """Return the CPU model string from /proc/cpuinfo, or platform fallback."""
+    try:
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    return line.split(':', 1)[1].strip()
+    except Exception:
+        pass
+    return platform.processor() or 'unknown'
+
+
+def _gpu_model() -> Optional[str]:
+    """Detect GPU model via lspci (best-effort, returns None if unavailable)."""
+    try:
+        import subprocess as _sp
+        out = _sp.run(
+            ['lspci', '-mm'],
+            capture_output=True, text=True, timeout=5,
+        ).stdout
+        for line in out.splitlines():
+            low = line.lower()
+            if 'vga' in low or '3d controller' in low or 'display' in low:
+                # lspci -mm: fields are tab/quote separated; extract the device field
+                parts = [p.strip().strip('"') for p in line.split('"') if p.strip().strip('"')]
+                if len(parts) >= 3:
+                    return parts[2]
+                return line.strip()
+    except Exception:
+        pass
+    return None
+
+
+def _total_ram_gb() -> Optional[float]:
+    """Return total system RAM in GiB via psutil, or None."""
+    try:
+        import psutil
+        return round(psutil.virtual_memory().total / (1024 ** 3), 2)
+    except Exception:
+        return None
+
+
+def _hardware_info() -> dict:
+    """Collect hardware provenance fields for the metadata block."""
+    return {
+        'cpu_model':   _cpu_model(),
+        'cpu_cores':   os.cpu_count(),
+        'gpu_model':   _gpu_model(),
+        'total_ram_gb': _total_ram_gb(),
+    }
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+#  JSON schema validation
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _schema_path() -> Path:
+    """Return the path to the Level 1 KPI JSON schema bundled with the repo."""
+    return Path(__file__).resolve().parent.parent / 'schemas' / 'kpi_level1_v1.json'
+
+
+def validate_kpi_json(payload: dict) -> list[str]:
+    """
+    Validate *payload* against the Level 1 KPI JSON schema.
+
+    Returns a list of human-readable error strings (empty means valid).
+    Falls back gracefully when jsonschema is not installed.
+    """
+    schema_file = _schema_path()
+    if not schema_file.exists():
+        return [f'Schema file not found: {schema_file}']
+    try:
+        import jsonschema  # type: ignore
+    except ImportError:
+        return ['jsonschema not installed — skipping validation (pip install jsonschema)']
+
+    with open(schema_file) as _sf:
+        schema = json.load(_sf)
+
+    ValidatorCls = getattr(jsonschema, 'Draft202012Validator', None) or \
+        getattr(jsonschema, 'Draft7Validator', None) or \
+        jsonschema.Draft4Validator
+    validator = ValidatorCls(schema)
+    return [str(err.message) for err in sorted(validator.iter_errors(payload), key=str)]
+
 
 _PIPELINE_ORDER_ATL = ['Sensor', 'Perception', 'Planning', 'Control', 'Other']
 
@@ -656,6 +773,7 @@ def build_performance_kpi(
         }
 
     return {
+        'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
         'mean_latency_ms':  sys_lat,
         'max_jitter_ms':    sys_jit_max,
@@ -667,12 +785,15 @@ def build_performance_kpi(
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
         'metadata': {
-            'name':      session_dir.name,
-            'datetime':  datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'hostname':  socket.gethostname(),
-            'arch':      platform.machine(),
-            'os':        f'{platform.system()} {platform.release()}',
-            'data_path': str(session_dir),
+            'name':              session_dir.name,
+            'datetime':          datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            'hostname':          socket.gethostname(),
+            'arch':              platform.machine(),
+            'os':                f'{platform.system()} {platform.release()}',
+            'data_path':         str(session_dir),
+            'framework_version': _framework_version(),
+            'ros_distro':        os.environ.get('ROS_DISTRO', 'unknown'),
+            'hardware':          _hardware_info(),
         },
     }
 
@@ -723,6 +844,7 @@ def print_performance_summary(all_results: List[dict]) -> None:
 # ──────────────────────────────────────────────────────────────────────────────
 
 def main() -> None:
+    """Entry point for trigger-based node latency analysis."""
     parser = argparse.ArgumentParser(
         description='Trigger-based node latency analysis (v2)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -802,6 +924,22 @@ def main() -> None:
         default=None,
         metavar='FILE',
         help='Save per-pair stats as JSON (for benchmark aggregation with aggregate_kpi.py).',
+    )
+    parser.add_argument(
+        '--csv-out',
+        default=None,
+        metavar='FILE',
+        help='Write per-pair KPI results as a flat CSV (one row per node/input/output pair). '
+             'Columns: session, node, pipeline_stage, input, output, n, '
+             'mean_ms, stdev_ms, min_ms, p50_ms, p90_ms, p99_ms, max_ms, '
+             'trigger_count, fps, jitter_mean_ms, jitter_max_ms.',
+    )
+    parser.add_argument(
+        '--xlsx-out',
+        default=None,
+        metavar='FILE',
+        help='Write per-pair KPI results as an Excel workbook (.xlsx). '
+             'Same columns as --csv-out. Requires openpyxl (pip install openpyxl).',
     )
     args = parser.parse_args()
 
@@ -931,6 +1069,76 @@ def main() -> None:
         with open(json_path, 'w') as _jf:
             json.dump(payload, _jf, indent=2)
         print(f'  KPI JSON written → {json_path}')
+        errors = validate_kpi_json(payload)
+        if errors:
+            print(f'  WARNING: KPI JSON failed schema validation ({len(errors)} error(s)):')
+            for err in errors:
+                print(f'    • {err}')
+        else:
+            print('  KPI JSON schema validation passed ✓')
+
+    # ── Tabular KPI export (CSV / Excel) ─────────────────────────────────────
+    if args.csv_out or args.xlsx_out:
+        _L1_FIELDS = [
+            'session', 'node', 'pipeline_stage', 'input', 'output',
+            'n', 'mean_ms', 'stdev_ms', 'min_ms', 'p50_ms', 'p90_ms', 'p99_ms', 'max_ms',
+            'trigger_count', 'fps', 'jitter_mean_ms', 'jitter_max_ms',
+        ]
+        _l1_rows = [
+            {
+                'session':        session_dir.name,
+                'node':           r.get('node', ''),
+                'pipeline_stage': r.get('pipeline_stage', ''),
+                'input':          r.get('input', ''),
+                'output':         r.get('output', ''),
+                'n':              r.get('n', ''),
+                'mean_ms':        r.get('mean_ms', ''),
+                'stdev_ms':       r.get('stdev_ms', ''),
+                'min_ms':         r.get('min_ms', ''),
+                'p50_ms':         r.get('p50_ms', ''),
+                'p90_ms':         r.get('p90_ms', ''),
+                'p99_ms':         r.get('p99_ms', ''),
+                'max_ms':         r.get('max_ms', ''),
+                'trigger_count':  r.get('trigger_count', ''),
+                'fps':            r.get('fps', ''),
+                'jitter_mean_ms': r.get('jitter_mean_ms', ''),
+                'jitter_max_ms':  r.get('jitter_max_ms', ''),
+            }
+            for r in all_results
+        ]
+
+        if args.csv_out:
+            csv_out_path = Path(args.csv_out)
+            csv_out_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(csv_out_path, 'w', newline='') as _cf:
+                writer = csv.DictWriter(_cf, fieldnames=_L1_FIELDS, extrasaction='ignore')
+                writer.writeheader()
+                writer.writerows(_l1_rows)
+            print(f'  Level 1 KPI CSV written → {csv_out_path}  ({len(_l1_rows)} rows)')
+
+        if args.xlsx_out:
+            xlsx_out_path = Path(args.xlsx_out)
+            xlsx_out_path.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                import openpyxl  # type: ignore
+                from openpyxl.styles import Font as _Font  # type: ignore
+                _wb = openpyxl.Workbook()
+                _ws = _wb.active
+                _ws.title = 'Level1 KPI'
+                _ws.append(_L1_FIELDS)
+                for _cell in _ws[1]:
+                    _cell.font = _Font(bold=True)
+                for _row in _l1_rows:
+                    _ws.append([_row.get(f, '') for f in _L1_FIELDS])
+                for _col in _ws.columns:
+                    _ws.column_dimensions[_col[0].column_letter].width = (
+                        max((len(str(c.value or '')) for c in _col), default=8) + 2
+                    )
+                _wb.save(xlsx_out_path)
+                print(f'  Level 1 KPI Excel written → {xlsx_out_path}  ({len(_l1_rows)} rows)')
+            except ImportError:
+                print('  WARNING: openpyxl not installed — Excel export skipped. '
+                      'Install with: pip install openpyxl', file=sys.stderr)
 
     # ── Plot ─────────────────────────────────────────────────────────────────
     if args.plot:

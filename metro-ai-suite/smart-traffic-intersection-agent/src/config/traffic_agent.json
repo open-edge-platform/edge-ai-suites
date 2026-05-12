@@ -26,8 +26,10 @@
     "cache_duration_minutes": 11
   },
   "vlm": {
-    "base_url": "http://vlm-openvino-serving:8000",
+    "base_url": "http://ovms-service:8000",
     "model": "",
+    "target_device": "CPU",
+    "weight_format": "",
     "timeout_seconds": 300,
     "max_completion_tokens": 1500,
     "temperature": 0.1,

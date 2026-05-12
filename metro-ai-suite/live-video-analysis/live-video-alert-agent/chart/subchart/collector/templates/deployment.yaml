@@ -43,6 +43,22 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      initContainers:
+        - name: init-collector-signals
+          image: {{ .Values.global.utilities.busybox.image }}:{{ .Values.global.utilities.busybox.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - mkdir -p {{ .Values.collectorSignalsPath }} && chmod 777 {{ .Values.collectorSignalsPath }}
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: collector-signals
+              mountPath: {{ .Values.collectorSignalsPath }}
       containers:
         - name: collector
           image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag }}"
@@ -70,6 +86,8 @@ spec:
             - name: host-run
               mountPath: /host/run
               readOnly: true
+            - name: collector-signals
+              mountPath: /app/.collector-signals
           {{- with .Values.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
@@ -90,6 +108,10 @@ spec:
         - name: host-run
           hostPath:
             path: /run
+        - name: collector-signals
+          hostPath:
+            path: {{ .Values.collectorSignalsPath }}
+            type: DirectoryOrCreate
       {{- with .Values.global.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

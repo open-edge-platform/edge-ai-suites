@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Architecture diagram (simple, top-to-bottom flow). Open / edit in draw.io -->
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+     width="820" height="760" viewBox="0 0 820 760"
+     style="background:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:13px;">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
+    </marker>
+    <style><![CDATA[
+      .b   { stroke-width:1.5; rx:8; ry:8; }
+      .in  { fill:#e6f4ff; stroke:#1f77b4; }
+      .app { fill:#d6e9ff; stroke:#1f4e9c; }
+      .pip { fill:#dff5e1; stroke:#2e8b57; }
+      .gst { fill:#fde2e2; stroke:#a8322f; }
+      .raw { fill:#f0e6ff; stroke:#7030a0; }
+      .svc { fill:#ffe0b3; stroke:#a35a00; }
+      .out { fill:#fff4d6; stroke:#b58900; }
+      .store { fill:#f0f0f0; stroke:#666; }
+      .tb  { text-anchor:middle; fill:#111; font-weight:bold; }
+      .ts  { text-anchor:middle; fill:#333; font-size:11px; }
+      .e   { stroke:#444; stroke-width:1.5; fill:none; }
+      .ed  { stroke:#666; stroke-width:1.4; fill:none; stroke-dasharray:5 4; }
+      .el  { fill:#333; font-size:11px; text-anchor:middle; }
+    ]]></style>
+  </defs>
+
+  <text x="410" y="30" class="tb" font-size="18">Architecture</text>
+
+  <!-- ===== Row 1: Inputs ===== -->
+  <rect class="in b" x="60"  y="60" width="200" height="60"/>
+  <text class="tb" x="160" y="85">Video file</text>
+  <text class="ts" x="160" y="103">filesrc</text>
+
+  <rect class="in b" x="310" y="60" width="200" height="60"/>
+  <text class="tb" x="410" y="85">RTSP camera</text>
+  <text class="ts" x="410" y="103">rtspsrc</text>
+
+  <rect class="in b" x="560" y="60" width="200" height="60"/>
+  <text class="tb" x="660" y="85">USB / GenICam</text>
+  <text class="ts" x="660" y="103">gencamsrc</text>
+
+  <!-- ===== Row 2: App ===== -->
+  <rect class="app b" x="60"  y="188" width="140" height="72"/>
+  <text class="tb" x="130" y="208">Config</text>
+  <text class="ts" x="130" y="222">config.yaml</text>
+  <text class="ts" x="130" y="236">models + pipelines</text>
+  <text class="ts" x="130" y="250">OR raw_pipelines:</text>
+
+  <rect class="app b" x="260" y="180" width="300" height="70"/>
+  <text class="tb" x="410" y="207">App (app.py)</text>
+  <text class="ts" x="410" y="226">loads config · starts services</text>
+  <text class="ts" x="410" y="242">builds pipelines · runs main loop</text>
+
+  <rect class="app b" x="620" y="190" width="140" height="50"/>
+  <text class="tb" x="690" y="212">MediaService</text>
+  <text class="ts" x="690" y="229">starts MediaMTX</text>
+
+  <!-- ===== Row 3: PipelineManager ===== -->
+  <rect class="pip b" x="260" y="310" width="300" height="80"/>
+  <text class="tb" x="410" y="335">PipelineManager</text>
+  <text class="ts" x="410" y="354">runs N GStreamer pipelines</text>
+  <text class="ts" x="410" y="370">tracks state · FPS · latency</text>
+
+  <rect class="app b" x="620" y="320" width="140" height="60"/>
+  <text class="tb" x="690" y="343">Metrics</text>
+  <text class="ts" x="690" y="361">log /</text>
+  <text class="ts" x="690" y="376">Prometheus</text>
+
+  <!-- ===== Row 4: Two pipeline modes side by side ===== -->
+
+  <!-- Raw pipeline mode (left) -->
+  <rect class="raw b" x="30" y="450" width="215" height="75"/>
+  <text class="tb" x="137" y="471">Raw Pipeline Mode</text>
+  <text class="ts" x="137" y="487">user-supplied GStreamer string</text>
+  <text class="ts" x="137" y="501">any elements · any sinks</text>
+  <text class="ts" x="137" y="515">FPS/latency probes disabled</text>
+
+  <!-- DL Streamer / structured mode (centre) -->
+  <rect class="gst b" x="260" y="440" width="300" height="80"/>
+  <text class="tb" x="410" y="465">DL Streamer (GStreamer)</text>
+  <text class="ts" x="410" y="484">gvadetect · gvaclassify · gvametapublish</text>
+  <text class="ts" x="410" y="500">OpenVINO · CPU / GPU / NPU</text>
+
+  <!-- ===== Row 5: External outputs ===== -->
+  <rect class="svc b" x="40"  y="600" width="220" height="60"/>
+  <text class="tb" x="150" y="625">MediaMTX</text>
+  <text class="ts" x="150" y="643">RTSP :8554 · WebRTC :8889</text>
+
+  <rect class="svc b" x="300" y="600" width="220" height="60"/>
+  <text class="tb" x="410" y="625">MQTT broker</text>
+  <text class="ts" x="410" y="643">tcp :1883</text>
+
+  <rect class="store b" x="560" y="600" width="220" height="60"/>
+  <text class="tb" x="670" y="625">JSON file</text>
+  <text class="ts" x="670" y="643">gvametapublish method=file</text>
+
+  <!-- ===== Row 6: Viewers ===== -->
+  <rect class="out b" x="40"  y="690" width="220" height="50"/>
+  <text class="tb" x="150" y="712">Browser / VLC</text>
+  <text class="ts" x="150" y="729">WebRTC · RTSP</text>
+
+  <rect class="out b" x="300" y="690" width="220" height="50"/>
+  <text class="tb" x="410" y="712">MQTT subscriber</text>
+  <text class="ts" x="410" y="729">mosquitto_sub</text>
+
+  <!-- ===== Arrows ===== -->
+
+  <!-- Inputs → App: meet at horizontal bus y=160 -->
+  <path class="e" d="M160,120 L160,160 L410,160" />
+  <path class="e" d="M410,120 L410,160" />
+  <path class="e" d="M660,120 L660,160 L410,160" />
+  <path class="e" d="M410,160 L410,180" marker-end="url(#a)"/>
+
+  <!-- Config → App -->
+  <path class="e" d="M200,224 L260,224" marker-end="url(#a)"/>
+  <!-- App → MediaService -->
+  <path class="e" d="M560,215 L620,215" marker-end="url(#a)"/>
+
+  <!-- App → PipelineManager -->
+  <path class="e" d="M410,250 L410,310" marker-end="url(#a)"/>
+
+  <!-- PipelineManager → Metrics -->
+  <path class="e" d="M560,350 L620,350" marker-end="url(#a)"/>
+
+  <!-- PipelineManager → DL Streamer (structured mode, solid) -->
+  <path class="e" d="M410,390 L410,440" marker-end="url(#a)"/>
+  <text class="el" x="416" y="420" text-anchor="start">structured mode</text>
+
+  <!-- PipelineManager → Raw pipeline box (raw mode, dashed) -->
+  <path class="ed" d="M260,350 L137,350 L137,450" marker-end="url(#a)"/>
+  <text class="el" x="190" y="344" text-anchor="middle">raw mode</text>
+
+  <!-- Raw box → user-defined sinks note -->
+  <text class="ts" x="137" y="542" fill="#7030a0" font-style="italic">↓ any GStreamer sinks</text>
+
+  <!-- DL Streamer → 3 outputs (split via horizontal bus at y=575) -->
+  <path class="e" d="M410,520 L410,575 L150,575" />
+  <path class="e" d="M410,520 L410,575" />
+  <path class="e" d="M410,520 L410,575 L670,575" />
+  <path class="e" d="M150,575 L150,600" marker-end="url(#a)"/>
+  <path class="e" d="M410,575 L410,600" marker-end="url(#a)"/>
+  <path class="e" d="M670,575 L670,600" marker-end="url(#a)"/>
+  <text class="el" x="270" y="570">video</text>
+  <text class="el" x="455" y="570">metadata (mqtt)</text>
+  <text class="el" x="610" y="570">metadata (file)</text>
+
+  <!-- MediaService → MediaMTX (start)
+       Routed along the far-right edge then across the bottom margin to avoid
+       crossing the Metrics box and the central column. -->
+  <path class="ed" d="M760,215 L795,215 L795,670 L25,670 L25,630 L40,630" marker-end="url(#a)"/>
+  <text class="el" x="780" y="440" transform="rotate(-90 780 440)">start mediamtx.exe</text>
+
+  <!-- MediaMTX → Browser/VLC -->
+  <path class="e" d="M150,660 L150,690" marker-end="url(#a)"/>
+  <!-- MQTT → MQTT subscriber -->
+  <path class="e" d="M410,660 L410,690" marker-end="url(#a)"/>
+</svg>

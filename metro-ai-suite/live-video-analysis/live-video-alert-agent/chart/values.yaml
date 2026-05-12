@@ -43,20 +43,16 @@ global:
   ovmsPort: 8000
   metricsPort: 9090
   ovmsModelName: "Phi-3.5-Vision"
+  ovmsLLMModelName: "Phi-4-mini-instruct-int4-ov"
   appNodePort: 30900
   metricsNodePort: 30090
 
-ovms:
+_ovmsDefaults: &ovmsDefaults
   image:
     repository: openvino/model_server
-    tag: "2026.0-gpu"
-  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+    tag: "2026.1-gpu"
   task: "text_generation"
-  pipelineType: "VLM"
   runAsUser: 5000
-  modelStorage:
-    storageClassName: ""
-    size: "10Gi"
   healthcheck:
     startupFailureThreshold: 60
     startupPeriodSeconds: 10
@@ -71,6 +67,22 @@ ovms:
   nodeSelector: {}
   affinity: {}
   tolerations: []
+
+ovms:
+  <<: *ovmsDefaults
+  sourceModel: "OpenVINO/Phi-3.5-vision-instruct-int4-ov"
+  pipelineType: "VLM"
+  modelStorage:
+    storageClassName: ""
+    size: "10Gi"
+
+ovms-llm:
+  <<: *ovmsDefaults
+  enabled: true  # Set to false (with app.useAdk=false) to disable LLM service
+  sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+  modelStorage:
+    storageClassName: ""
+    size: "6Gi"
 
 app:
   image:
@@ -91,7 +103,7 @@ app:
       cpu: "2"
       memory: "2Gi"
   healthcheck:
-    path: /streams
+    path: /health
     startupInitialDelaySeconds: 5
     startupPeriodSeconds: 5
     startupFailureThreshold: 30
@@ -102,6 +114,37 @@ app:
   nodeSelector: {}
   affinity: {}
   tolerations: []
+  # Agentic dispatch
+  useAdk: true
+  # Video capture
+  captureFps: 10
+  # Action tools — webhook
+  webhookUrl: ""
+  webhookSecret: ""
+  # Action tools — MQTT
+  mqttBroker: ""
+  mqttPort: 1883
+  mqttUsername: ""
+  mqttPassword: ""
+  mqttBaseTopic: "alerts/live-video"
+  # MCP integration
+  mcpEnabled: true
+  # MCP server configuration (JSON content mounted as /app/resources/mcp_servers.json)
+  mcpServersConfig: |
+    {
+      "servers": [
+        {
+          "name": "prometheus",
+          "enabled": false,
+          "transport": "http",
+          "url": "<mcp_server_url>/mcp",
+          "description": "Prometheus MCP Server - query metrics, get alerts, analyze system performance",
+          "timeout": 30.0
+        }
+      ]
+    }
+  # Host path for collector-signals — must match collector.collectorSignalsPath
+  collectorSignalsPath: /opt/lva/collector-signals
 
 metrics-service:
   enabled: true
@@ -133,6 +176,8 @@ metrics-service:
 
 collector:
   enabled: true
+  # Must match app.collectorSignalsPath — both sides mount the same host directory.
+  collectorSignalsPath: /opt/lva/collector-signals
   image:
     registry: "intel/"
     repository: vippet-collector

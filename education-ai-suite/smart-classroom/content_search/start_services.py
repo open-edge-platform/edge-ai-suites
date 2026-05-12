@@ -71,6 +71,16 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_PORT", ingest.get("port", "9990"))
         _set("FRAME_EXTRACT_INTERVAL", str(ingest.get("frame_extract_interval", 15)))
         _set("DO_DETECT_AND_CROP", str(ingest.get("do_detect_and_crop", False)).lower())
+        _set("INGEST_DEVICE", ingest.get("doc_embedding_device", "CPU"))
+
+        # Document Parser
+        doc_parser = ingest.get("document_parser", {})
+        _set("DOC_CHUNK_METHOD", doc_parser.get("chunk_method", "fixed"))
+        _set("DOC_CHUNK_SIZE", doc_parser.get("chunk_size", 250))
+        _set("DOC_CHUNK_OVERLAP", doc_parser.get("chunk_overlap", 50))
+        _set("DOC_SEMANTIC_BREAKPOINT_PERCENTILE", doc_parser.get("semantic_breakpoint_percentile", 85))
+        _set("DOC_SEMANTIC_BUFFER_SIZE", doc_parser.get("semantic_buffer_size", 2))
+        _set("DOC_SEMANTIC_MIN_CHUNK_SIZE", doc_parser.get("semantic_min_chunk_size", 250))
 
         # Reranker
         reranker = ingest.get("reranker", {})
@@ -81,6 +91,17 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         # Video Summarization
         _set("VIDEO_SUMMARIZATION_ENABLED", str(cs.get("video_summarization_enabled", True)).lower())
+
+        # Q&A
+        qa = cs.get("qa", {})
+        _set("QA_MAX_CONTEXT", str(qa.get("max_context", 5)))
+        _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
+        _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
+        _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
+
+        # App-level language (en or zh)
+        app = data.get("app", {})
+        _set("APP_LANGUAGE", app.get("language", "en"))
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))

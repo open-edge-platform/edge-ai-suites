@@ -1,0 +1,17 @@
+{
+  "source": {
+    "type": "video",
+    "path": "Warmer_Testbed_YTHD.mp4",
+    "loop": true,
+    "max_loops": -1
+  },
+  "analytics": {
+    "person_model": "person-detect-fp32.xml",
+    "patient_model": "patient-detect-fp32.xml",
+    "latch_model": "latch-detect-fp32.xml"
+  },
+  "rppg": {
+    "mode": "custom_script",
+    "model": "./models_rppg/mtts_can.xml"
+  }
+}

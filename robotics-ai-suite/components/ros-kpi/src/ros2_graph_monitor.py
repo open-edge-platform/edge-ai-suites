@@ -111,8 +111,12 @@ class ROS2GraphMonitor(Node):
 
     def __init__(self, target_node: Optional[str] = None, show_realtime_delays: bool = True,
                  log_file: Optional[str] = None, topology_file: Optional[str] = None,
-                 remote_ip: Optional[str] = None, remote_user: str = 'ubuntu'):
+                 remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
+                 use_sim_time: bool = False):
         super().__init__('ros2_graph_monitor')
+        if use_sim_time:
+            from rclpy.parameter import Parameter
+            self.set_parameters([Parameter('use_sim_time', Parameter.Type.BOOL, True)])
 
         # Target node to monitor (None = monitor all)
         self.target_node = target_node
@@ -509,25 +513,31 @@ class ROS2GraphMonitor(Node):
 
             # Create callback for this topic
             def callback(msg):
-                current_time = time.time()
-
-                # Try to extract message ID from header (if available)
+                # Use the publisher's own header stamp when available — set at publish
+                # time on the publisher's clock, immune to DDS transport delay and
+                # Python GIL jitter in this monitor process.  For headered messages
+                # this is the ground-truth publish timestamp regardless of sim or real.
+                # For headerless messages fall back to the ROS clock, which respects
+                # use_sim_time so all timestamps stay on the same time base.
                 try:
-                    if hasattr(msg, 'header') and hasattr(msg.header, 'stamp'):
-                        pass  # header present; timestamp available if needed
-                except Exception:
-                    pass  # No header or stamp field available
+                    s = msg.header.stamp
+                    msg_ts = s.sec + s.nanosec * 1e-9
+                except AttributeError:
+                    ros_ts = self.get_clock().now().nanoseconds / 1e9
+                    msg_ts = ros_ts if ros_ts > 0.0 else time.time()
 
                 with self.lock:
                     stats = self.topic_stats[topic_name]
 
-                    # Calculate delta time
+                    # Calculate inter-message interval.
+                    # Guard against non-monotonic stamps (sim clock jumps, restarts).
                     delta = None
                     if stats['last_timestamp'] is not None:
-                        delta = current_time - stats['last_timestamp']
-                        stats['delta_samples'].append(delta)
+                        delta = msg_ts - stats['last_timestamp']
+                        if delta > 0:
+                            stats['delta_samples'].append(delta)
 
-                    stats['last_timestamp'] = current_time
+                    stats['last_timestamp'] = msg_ts
                     stats['message_count'] += 1
 
                     # Log to CSV if enabled
@@ -538,7 +548,7 @@ class ROS2GraphMonitor(Node):
                     #         recording new input timestamps (avoids self-loop skew).
                     for pub_node in stats['publishers']:
                         if self.node_input_times[pub_node]:
-                            delay = current_time - max(self.node_input_times[pub_node])
+                            delay = msg_ts - max(self.node_input_times[pub_node])
                             if 0.0 < delay < 10.0:   # sanity: ignore gaps > 10 s
                                 delay_ms = delay * 1000
                                 self.node_processing_delays[pub_node].append(delay_ms)
@@ -551,12 +561,12 @@ class ROS2GraphMonitor(Node):
                                           f"proc delay = {delay_ms:.3f} ms "
                                           f"(mean={lat.get('mean_ms', 0):.3f} ms)")
 
-                    # Step 2: record this message as an input event for all subscriber nodes.
+                    # Step 2: record this message timestamp as an input event for all subscriber nodes.
                     for sub_node in stats['subscribers']:
-                        self.node_input_times[sub_node].append(current_time)
+                        self.node_input_times[sub_node].append(msg_ts)
 
                     # Log message to CSV
-                    self._log_message(topic_name, current_time, delta, processing_delay)
+                    self._log_message(topic_name, msg_ts, delta, processing_delay)
 
             # Create subscription
             subscription = self.create_subscription(
@@ -1164,6 +1174,15 @@ Examples:
         help='Skip the 5-second startup countdown (used when launched '
              'programmatically by monitor_stack.py).'
     )
+    parser.add_argument(
+        '--use-sim-time',
+        action='store_true',
+        default=False,
+        help='Use simulation time (from /clock) for all timestamps. '
+             'Required for accurate latency measurements in Gazebo/sim. '
+             'Auto-detected when /clock is published; only needed to force '
+             'it when auto-detection is too slow to fire.'
+    )
 
     args = parser.parse_args()
 
@@ -1242,9 +1261,22 @@ Examples:
     rclpy.init()
 
     try:
+        # Auto-detect simulation mode from /clock topic presence.
+        # Header-stamp timestamps require knowing the clock domain up front so the
+        # node's get_clock() returns the right time base for headerless messages.
+        use_sim_time = args.use_sim_time
+        if not use_sim_time:
+            _probe = rclpy.create_node('_ust_probe')
+            rclpy.spin_once(_probe, timeout_sec=0.5)
+            if '/clock' in dict(_probe.get_topic_names_and_types()):
+                use_sim_time = True
+                print('  ℹ  /clock detected — enabling sim-time timestamps for accurate latency measurement.')
+            _probe.destroy_node()
+
         monitor = ROS2GraphMonitor(target_node=args.node, show_realtime_delays=args.realtime_delays,
                                     log_file=args.log, topology_file=args.topology,
-                                    remote_ip=args.remote_ip, remote_user=args.remote_user)
+                                    remote_ip=args.remote_ip, remote_user=args.remote_user,
+                                    use_sim_time=use_sim_time)
 
         # Initial discovery with retry for target node
         node_info = None

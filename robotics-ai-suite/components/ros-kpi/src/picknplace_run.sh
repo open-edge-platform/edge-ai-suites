@@ -58,12 +58,9 @@ _cleanup() {
 
   sleep 1
   # Sweep any survivors.
-  # ⚠  "ros2 " (with trailing space) — avoids matching the repo path "ros2-kpi".
-  #    "picknplace" is safe here because the parent Make shell runs "bash
-  #    picknplace_run.sh" which DOES contain "picknplace" — so we use the
-  #    launch package name "warehouse.launch" instead.
-  #    "/opt/ros/[a-z]*/lib/" matches installed ROS2 node executables without
-  #    matching scripts installed under /opt/ros/<distro>/benchmarking/.
+  # "ros2 " (trailing space) avoids matching repo paths containing "ros2-kpi".
+  # "/opt/ros/[a-z]*/lib/" matches installed node executables but not scripts
+  # under /opt/ros/<distro>/benchmarking/.
   _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
   pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
   sleep 2
@@ -111,6 +108,7 @@ echo ""
 
 # ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
 echo "Killing any leftover simulation processes before starting..."
+# Same pattern rationale as _cleanup above.
 _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|warehouse.launch|rviz2"
 pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
 sleep 2
@@ -165,6 +163,7 @@ python3 "$SCRIPT_DIR/monitor_stack.py" \
   --graph-only \
   --interval 0.5 \
   --output-dir "$SESSION_DIR" \
+  --use-sim-time \
   > "$SESSION_DIR/monitor_stack.log" 2>&1 &
 MONITOR_PID=$!
 echo "  Monitor PID : $MONITOR_PID"

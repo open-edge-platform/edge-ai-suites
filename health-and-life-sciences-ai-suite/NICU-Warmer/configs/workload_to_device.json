@@ -1,0 +1,48 @@
+{
+  "description": "NICU Warmer workload-to-device mapping. Each workload specifies its model, inference device, and precision. Inspired by intel-retail/loss-prevention workload_to_pipeline.json pattern.",
+  "workload_pipeline_map": {
+    "person_detection": {
+      "type": "gvadetect",
+      "model": "person-detect-fp32",
+      "model_path": "/models/person-detect-fp32.xml",
+      "device": "${DETECTION_DEVICE:-GPU}",
+      "precision": "FP32",
+      "description": "Caretaker/person presence and count"
+    },
+    "patient_detection": {
+      "type": "gvadetect",
+      "model": "patient-detect-fp32",
+      "model_path": "/models/patient-detect-fp32.xml",
+      "device": "${DETECTION_DEVICE:-GPU}",
+      "precision": "FP32",
+      "description": "Infant presence in warmer"
+    },
+    "latch_detection": {
+      "type": "gvadetect",
+      "model": "latch-detect-fp32",
+      "model_path": "/models/latch-detect-fp32.xml",
+      "device": "${DETECTION_DEVICE:-GPU}",
+      "precision": "FP32",
+      "description": "Warmer door latch state (open/closed)"
+    },
+    "rppg": {
+      "type": "gvapython",
+      "model": "mtts_can",
+      "model_path": "/models/rppg/mtts_can.xml",
+      "device": "${RPPG_DEVICE:-CPU}",
+      "precision": "FP32",
+      "callback": "rppg_gva.py",
+      "description": "Non-contact heart rate and respiration via remote photoplethysmography"
+    },
+    "action_recognition": {
+      "type": "gvapython",
+      "model": "action-recognition-0001",
+      "encoder_path": "/models/action/action-recognition-0001-encoder.xml",
+      "decoder_path": "/models/action/action-recognition-0001-decoder.xml",
+      "device": "${ACTION_DEVICE:-NPU}",
+      "precision": "FP32",
+      "callback": "action_gva.py",
+      "description": "Patient activity and motion classification"
+    }
+  }
+}

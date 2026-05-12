@@ -12,7 +12,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 
 ### B. Install DL Streamer
 
-Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/edge-ai-libraries/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
+Download the archive from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases). Extract to a new folder, for example `C:\\dlstreamer_dlls`.
 
 For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
@@ -47,6 +47,23 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### E. Enable OCR Features (Optional)
+
+If you need OCR functionality for document text extraction, install PaddleOCR separately:
+
+```bash
+pip install paddleocr==2.7.0.3 --no-deps
+```
+
+> **Note:** The `--no-deps` flag is required because PaddleOCR declares an outdated `PyMuPDF` dependency that has no pre-built wheel for Python 3.12 on Windows. 
+
+Then enable OCR in `config.yaml`:
+
+```yaml
+ocr:
+  enabled: true
+```
+
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -77,10 +94,10 @@ asr:
   provider: funasr
   name: paraformer-zh
 ```
-Please also config the summarizer to output Chinese
+Please also set the language to Chinese at the app level:
 
 ```yaml
-summarizer:
+app:
   language: zh
 ```
 

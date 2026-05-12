@@ -48,6 +48,19 @@ const BASE_URL: string = env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const CONTENT_SEARCH_API_URL: string = env.VITE_CONTENT_SEARCH_API_URL || '';
 const HEALTH_TIMEOUT_MS = 5000;
 
+/**
+ * Convert a local:// storage path from search results into a browser-loadable URL
+ * using the backend /download?inline=true endpoint.
+ * e.g. "local://content-search/runs/.../image.jpg" → "/api/v1/object/download?file_key=runs%2F...%2Fimage.jpg&inline=true"
+ */
+export function getContentSearchFileUrl(filePath: string): string {
+  const LOCAL_PREFIX = 'local://content-search/';
+  const fileKey = filePath.startsWith(LOCAL_PREFIX)
+    ? filePath.slice(LOCAL_PREFIX.length)
+    : filePath;
+  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
+}
+
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -1056,4 +1069,55 @@ export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]
     console.error('csSearch error:', error);
     return [];
   }
+}
+
+// ── Q&A types ──────────────────────────────────────────────────────────────
+
+export interface QASource {
+  file_name: string | null;
+  file_path: string | null;
+  type: string | null;
+  video_pin_second: number | null;
+  video_start_second: number | null;
+  video_end_second: number | null;
+  score: number | null;
+}
+
+export interface QAChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface QAAskParams {
+  question: string;
+  history?: QAChatMessage[];
+  filter?: Record<string, string[]>;
+}
+
+export interface QAAskResult {
+  answer: string;
+  sources: QASource[];
+}
+
+// Content Search API - Q&A (RAG chatbot over uploaded content)
+export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
+  const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/qa`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Q&A request failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  if (data.code !== 20000) {
+    throw new Error(data.message || 'Q&A generation failed');
+  }
+  return {
+    answer: data.data?.answer ?? '',
+    sources: Array.isArray(data.data?.sources) ? data.data.sources : [],
+  };
 }

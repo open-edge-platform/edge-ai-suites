@@ -1,6 +1,6 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-tqdm
+tqdm==4.67.1
 
 # TensorFlow (needed to load Keras HDF5 rPPG model for conversion)
 tensorflow-cpu==2.16.1
@@ -9,15 +9,16 @@ tensorflow-cpu==2.16.1
 torch==2.8.0
 
 # Hugging Face Transformers for HuBERT-ECG backbone
-transformers>=4.45.0
+# Pinned: unpinned transformers>=4.45 caused RuntimeError during
+# ov.convert_model (torch.jit.trace) due to new attention masking.
+transformers==4.51.3
 
 # Conversion deps
-onnx>=1.14.0
-onnxscript
-PyYAML
+onnx==1.17.0
+onnxscript==0.2.5
+PyYAML==6.0.2
 
 # OpenVINO (model conversion)
-# Use the runtime package; dev tools are not needed for these scripts
-openvino>=2024.6.0,<2025.0
+openvino==2024.6.0
 
 

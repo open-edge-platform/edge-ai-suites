@@ -42,6 +42,8 @@ spec:
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
           value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: TZ
+          value: {{ $.Values.timezone | default "UTC" }}
         volumeMounts:
         - name: node-red-data
           mountPath: /tmp/data
@@ -63,6 +65,8 @@ spec:
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
           value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+        - name: TZ
+          value: {{ $.Values.timezone | default "UTC" }}
         securityContext:
           runAsUser: 0  # root user
         volumeMounts:
