@@ -26,6 +26,9 @@ for _noisy in [
     logging.getLogger(_noisy).setLevel(logging.WARNING)
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
+import langdetect
+langdetect.detector_factory.init_factory()
+
 import base64
 
 from fastapi import FastAPI, File, Form, HTTPException, Body, UploadFile
@@ -37,6 +40,7 @@ from typing import Optional, Dict, Union
 
 import asyncio
 import tempfile
+import threading
 
 from providers.local_storage.store import LocalStore
 from providers.file_ingest_and_retrieve.indexer import Indexer
@@ -118,8 +122,10 @@ def _recover_video_summary_id_map():
 
 _recover_video_summary_id_map()
 
-indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
-retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map)
+_doc_embed_lock = threading.Lock()
+
+indexer = Indexer(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map, doc_embed_lock=_doc_embed_lock)
+retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_model=_visual_model, document_embedding_model=_document_model, video_summary_id_map=video_summary_id_map, doc_embed_lock=_doc_embed_lock)
 
 local_store = LocalStore.from_config()
 

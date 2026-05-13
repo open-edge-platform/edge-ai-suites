@@ -67,7 +67,557 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 -------------------------------------------------------------
 
-3)fastapi, numpy, pydantic, sse-starlette, uvicorn
-License information not found.
+3)fastapi, pydantic, aiosqlite, alembic, anyio, attrs, cffi, charset-normalizer, docstring_parser,
+fastuuid, graphviz, greenlet, grpc-interceptor, h11, httplib2, httpx-sse, jiter, jsonschema,
+jsonschema-specifications, litellm, mako, markdown-it-py, mcp, mdurl, pyparsing, pydantic_core,
+pydantic-settings, pyjwt, pyyaml, referencing, rich, rpds-py, six, sqlalchemy, typer,
+typing-inspection, tzlocal, urllib3, zipp
+MIT License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------
+
+4)numpy, sse-starlette, uvicorn, authlib, click, cloudpickle, fsspec, httpcore, httpx, markupsafe,
+protobuf, psutil, pycparser, python-dotenv, sqlparse, starlette, websockets
+BSD 3-Clause License
+
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions
+   and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of
+   conditions and the following disclaimer in the documentation and/or other materials provided
+   with the distribution.
+3. Neither the name of the copyright holder nor the names of its contributors may be used to
+   endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-------------------------------------------------------------
+
+5)aiohttp, aiosignal, annotated-doc, annotated-types, cryptography, distro, fastmcp, frozenlist,
+google-adk, google-api-core, google-api-python-client, google-auth, google-auth-httplib2,
+google-cloud-aiplatform, google-cloud-appengine-logging, google-cloud-audit-log,
+google-cloud-bigquery, google-cloud-bigquery-storage, google-cloud-bigtable, google-cloud-core,
+google-cloud-dataplex, google-cloud-discoveryengine, google-cloud-iam, google-cloud-logging,
+google-cloud-monitoring, google-cloud-pubsub, google-cloud-resource-manager,
+google-cloud-secret-manager, google-cloud-spanner, google-cloud-speech, google-cloud-storage,
+google-cloud-trace, google-crc32c, google-genai, google-resumable-media, googleapis-common-protos,
+grpc-google-iam-v1, grpcio, grpcio-status, hf-xet, huggingface_hub, importlib_metadata,
+multidict, opentelemetry-api, opentelemetry-exporter-gcp-logging,
+opentelemetry-exporter-gcp-monitoring, opentelemetry-exporter-gcp-trace,
+opentelemetry-exporter-otlp-proto-common, opentelemetry-exporter-otlp-proto-http,
+opentelemetry-proto, opentelemetry-resourcedetector-gcp, opentelemetry-sdk,
+opentelemetry-semantic-conventions, propcache, pyarrow, pyopenssl, python-multipart, regex,
+requests, sqlalchemy-spanner, tenacity, tokenizers, watchdog, yarl
+Apache License
+
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+(See entry 1 for full Apache License Version 2.0 terms and conditions.)
+
+-------------------------------------------------------------
+
+6)mmh3
+MIT License
+
+Copyright (c) 2011-2026 Hajime Senuma
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------
+
+7)tiktoken
+MIT License
+
+Copyright (c) 2022 OpenAI, Shantanu Jain
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------
+
+8)paho-mqtt
+Eclipse Public License v2.0 OR BSD 3-Clause License
+
+Eclipse Public License v2.0:
+https://www.eclipse.org/legal/epl-2.0/
+
+BSD 3-Clause License: see entry 4 for full text.
+
+-------------------------------------------------------------
+
+9)aiohappyeyeballs, typing_extensions
+Python Software Foundation License Version 2 (PSF-2.0)
+
+https://docs.python.org/3/license.html
+
+PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
+
+1. This LICENSE AGREEMENT is between the Python Software Foundation ("PSF"), and the Individual
+   or Organization ("Licensee") accessing and otherwise using this software ("Python") in source
+   or binary form and its associated documentation.
+
+2. Subject to the terms and conditions of this License Agreement, PSF hereby grants Licensee a
+   nonexclusive, royalty-free, world-wide license to reproduce, analyze, test, perform and/or
+   display publicly, prepare derivative works, distribute, and otherwise use Python alone or in
+   any derivative version, provided, however, that PSF's License Agreement and PSF's notice of
+   copyright, i.e., "Copyright (c) 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
+   2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024 Python
+   Software Foundation; All Rights Reserved" are retained in Python alone or in any derivative
+   version prepared by Licensee.
+
+3. In the event Licensee prepares a derivative work that is based on or incorporates Python or any
+   part thereof, and wants to make the derivative work available to others as provided herein, then
+   Licensee hereby agrees to include in any such work a brief summary of the changes made to
+   Python.
+
+4. PSF is making Python available to Licensee on an "AS IS" basis. PSF MAKES NO REPRESENTATIONS
+   OR WARRANTIES, EXPRESS OR IMPLIED. BY WAY OF EXAMPLE, BUT NOT LIMITATION, PSF MAKES NO AND
+   DISCLAIMS ANY REPRESENTATION OR WARRANTY OF MERCHANTABILITY OR FITNESS FOR ANY PARTICULAR
+   PURPOSE OR THAT THE USE OF PYTHON WILL NOT INFRINGE ANY THIRD PARTY RIGHTS.
+
+5. PSF SHALL NOT BE LIABLE TO LICENSEE OR ANY OTHER USERS OF PYTHON FOR ANY INCIDENTAL, SPECIAL,
+   OR CONSEQUENTIAL DAMAGES OR LOSS AS A RESULT OF MODIFYING, DISTRIBUTING, OR OTHERWISE USING
+   PYTHON, OR ANY DERIVATIVE THEREOF, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
+
+6. This License Agreement will automatically terminate upon a material breach of its terms and
+   conditions.
+
+-------------------------------------------------------------
+
+10)certifi
+Mozilla Public License, Version 2.0 (MPL-2.0)
+
+https://www.mozilla.org/en-US/MPL/2.0/
+
+-------------------------------------------------------------
+
+11)tqdm
+MPL-2.0 AND MIT License
+
+Mozilla Public License Version 2.0: https://www.mozilla.org/en-US/MPL/2.0/
+MIT License: see entry 3 for full MIT License text.
+
+-------------------------------------------------------------
+
+12)shellingham
+ISC License
+
+Permission to use, copy, modify, and/or distribute this software for any purpose with or without
+fee is hereby granted, provided that the above copyright notice and this permission notice appear
+in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+OF THIS SOFTWARE.
+
+-------------------------------------------------------------
+
+13)filelock
+The Unlicense
+
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or distribute this software, either
+in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and
+by any means.
+
+In jurisdictions that recognize copyright laws, the author or authors of this software dedicate
+any and all copyright interest in the software to the public domain. We make this dedication for
+the benefit of the public at large and to the detriment of our heirs and successors. We intend
+this dedication to be an overt act of relinquishment in perpetuity of all present and future
+rights to this software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------
+
+14)tzdata
+Public Domain
+
+This package contains data from the IANA Time Zone Database, which is in the public domain.
+Refer to: https://www.iana.org/time-zones
+
+-------------------------------------------------------------
+
+15)python-dateutil
+Dual License: Apache License Version 2.0 AND BSD 3-Clause License
+
+Apache License, Version 2.0: see entry 1 for full text.
+BSD 3-Clause License: see entry 4 for full text.
+
+-------------------------------------------------------------
+
+16)sniffio
+MIT OR Apache-2.0
+
+MIT License: see entry 3 for full text.
+Apache License Version 2.0: see entry 1 for full text.
+
+-------------------------------------------------------------
+
+17)idna
+BSD-like License
+
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of
+   conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of
+   conditions and the following disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED.
+
+-------------------------------------------------------------
+
+18)packaging, uritemplate
+Apache-2.0 / BSD-2-Clause / BSD-3-Clause
+
+Apache License Version 2.0: see entry 1 for full text.
+BSD 3-Clause License: see entry 4 for full text.
+
+BSD 2-Clause License:
+
+Redistribution and use in source and binary forms, with or without modification, are permitted
+provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions
+   and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright notice, this list of
+   conditions and the following disclaimer in the documentation and/or other materials provided
+   with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
+FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY
+WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+-------------------------------------------------------------
+
+19)curl, libcurl4t64
+Multi-license: BSD-3-Clause | BSD-4-Clause-UC | FSFULLR | GPL-2 | GPL-2+ | GPL-3+ | ISC |
+OLDAP-2.8 | X11 | curl
+
+These packages are distributed under multiple licenses. Refer to the Debian package copyright
+file for full license texts: https://packages.debian.org/bookworm/curl
+BSD 3-Clause License: see entry 4 for full text.
+
+-------------------------------------------------------------
+
+20)libgl1, libglvnd0, libglx0
+Multi-license: Apache-2.0 | BSD-1-Clause | GPL | GPL-3 | GPL-3+ | MIT
+
+Apache License Version 2.0: see entry 1 for full text.
+MIT License: see entry 3 for full text.
+BSD 3-Clause License: see entry 4 for full text.
+
+-------------------------------------------------------------
+
+21)libglib2.0-0t64
+Multi-license: AFL-2.0 | Apache-2.0 | CC-BY-SA-3.0 | CC0-1.0 | Expat | FSFULLR | GPL-2 |
+GPL-2+ | LGPL-2 | LGPL-2+ | LGPL-2.1 | LGPL-2.1+ | LGPL-3 | LGPL-3+ | MPL-1.1 |
+Unicode-DFS-2016
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libglib2.0-0
+
+-------------------------------------------------------------
+
+22)libatomic1
+Multi-license: Artistic | GFDL-1.2 | GPL | GPL-3 | LGPL
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libatomic1
+
+-------------------------------------------------------------
+
+23)libbrotli1, libdrm2, libdrm-amdgpu1, libdrm-common, libdrm-intel1, libexpat1, libxcb1,
+libxcb-dri3-0, libxcb-glx0, libxcb-present0, libxcb-randr0, libxcb-shm0, libxcb-sync1,
+libxcb-xfixes0, libxshmfence1, libwayland-server0
+MIT License
+
+See entry 3 for full MIT License text.
+
+-------------------------------------------------------------
+
+24)libcom-err2
+Multi-license: 0BSD | Apache-2.0 | BSD-3-Clause | Expat | GPL | GPL-2 | GPL-2+ | ISC |
+Kazlib | LGPL-2 | Latex2e
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libcom-err2
+
+-------------------------------------------------------------
+
+25)libedit2
+BSD 3-Clause License
+
+See entry 4 for full BSD 3-Clause License text.
+
+-------------------------------------------------------------
+
+26)libelf1t64
+Multi-license: BSD-2-Clause | GFDL-1.3 | GPL-2 | GPL-3 | GPL-3+ | LGPL-2.1 | LGPL-2.1+ |
+LGPL-3 | LGPL-3+
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libelf1
+
+-------------------------------------------------------------
+
+27)libgbm1, libgl1-mesa-dri, libglx-mesa0, mesa-libgallium
+Multi-license: Apache-2.0 | BSD-2-Clause | GPL | GPL-1 | GPL-1+ | GPL-2 | Khronos | MIT |
+MLAA | SGI
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libgbm1
+
+-------------------------------------------------------------
+
+28)libgnutls30t64
+Multi-license: Apache-2.0 | BSD-3-Clause | CC0 | Expat | GFDL-1.3 | GPL | GPL-3 | GPLv3+ |
+LGPL | LGPL-3 | LGPLv2.1+ | LGPLv3+_or_GPLv2+
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libgnutls30
+
+-------------------------------------------------------------
+
+29)libgssapi-krb5-2, libk5crypto3, libkrb5-3, libkrb5support0
+GPL-2
+
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
+-------------------------------------------------------------
+
+30)libidn2-0
+Multi-license: Expat | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ | LGPL-3 | LGPL-3+ | Unicode
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libidn2-0
+
+-------------------------------------------------------------
+
+31)libkeyutils1
+Multi-license: GPL-2 | GPL-2+ | LGPL-2 | LGPL-2+
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libkeyutils1
+
+-------------------------------------------------------------
+
+32)libldap2
+Multi-license: BSD-3-Clause | Expat | FSF-unlimited | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ |
+OpenLDAP-2.8 | public-domain
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libldap-2.5-0
+
+-------------------------------------------------------------
+
+33)libllvm19
+Multi-license: APACHE-2-LLVM-EXCEPTIONS | Apache-2.0 | BSD-3-Clause | MIT | Python |
+solar-public-domain
+
+Refer to: https://llvm.org/docs/DeveloperPolicy.html#license
+
+-------------------------------------------------------------
+
+34)libnghttp2-14
+Multi-license: BSD-2-Clause | Expat | GPL-3 | GPL-3+ | MIT | all-permissive
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libnghttp2-14
+
+-------------------------------------------------------------
+
+35)libnghttp3-9
+Multi-license: FSFAP | FSFUL | FSFULLR | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ | MIT
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libnghttp3-9
+
+-------------------------------------------------------------
+
+36)libp11-kit0
+Multi-license: Apache-2.0 | BSD-3-Clause | FSFAP | FSFULLR | GPL-2+ | GPL-3+ | ISC |
+LGPL-2.1 | LGPL-2.1+ | X11
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libp11-kit0
+
+-------------------------------------------------------------
+
+37)libpciaccess0
+GPL
+
+https://www.gnu.org/licenses/gpl.html
+
+-------------------------------------------------------------
+
+38)libpsl5t64
+Multi-license: Chromium | MIT | gnulib
+
+MIT License: see entry 3 for full text.
+
+-------------------------------------------------------------
+
+39)librtmp1
+Multi-license: GPL-2 | LGPL-2.1
+
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+-------------------------------------------------------------
+
+40)libsasl2-2, libsasl2-modules-db
+Multi-license: BSD-2-Clause | BSD-3-Clause | FSFULLR | GPL-3 | GPL-3+ | IBM-as-is |
+MIT-CMU | MIT-Export | MIT-OpenVision | OpenLDAP | RSA-MD
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libsasl2-2
+
+-------------------------------------------------------------
+
+41)libsensors5, libsensors-config
+Multi-license: GPL-2 | GPL-2+ | LGPL-2.1 | LGPL-2.1+ | Linux-man-pages-copyleft
+
+https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
+
+-------------------------------------------------------------
+
+42)libssh2-1t64
+Multi-license: BSD-3-Clause | ISC
+
+BSD 3-Clause License: see entry 4 for full text.
+ISC License: see entry 12 for full text.
+
+-------------------------------------------------------------
+
+43)libtasn1-6
+Multi-license: GFDL-1.3 | GPL-3 | LGPL | LGPL-2.1
+
+https://www.gnu.org/licenses/lgpl-2.1.html
+
+-------------------------------------------------------------
+
+44)libunistring5
+Multi-license: BSD-3-Clause | GFDL-1.2+ | GFDL-1.3+ | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ |
+ISC | LGPL-2 | LGPL-2+ | LGPL-2.1 | LGPL-2.1+ | LGPL-3 | LGPL-3+ | Unicode-DFS-2016 |
+X11 | public-domain
+
+Refer to the Debian package copyright file for full license texts:
+https://packages.debian.org/bookworm/libunistring5
+
+-------------------------------------------------------------
+
+45)libvulkan1
+Multi-license: Apache-2.0 | MIT
+
+Apache License Version 2.0: see entry 1 for full text.
+MIT License: see entry 3 for full text.
+
+-------------------------------------------------------------
+
+46)libx11-6, libx11-data, libx11-xcb1, libxau6, libxdmcp6, libxext6, libxxf86vm1
+MIT/X11 License
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------
+
+47)libxml2
+Multi-license: ISC | MIT
+
+Permission to use, copy, modify, and distribute this software for any purpose with or without
+fee is hereby granted, provided that the above copyright notice and this permission notice appear
+in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND ISC DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
+
+-------------------------------------------------------------
+
+48)libz3-4
+Multi-license: Expat | GPL-2 | GPL-2+
+
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 
 -------------------------------------------------------------

@@ -16,9 +16,9 @@ class VideoService:
         self.timeout = 900.0
 
     async def trigger_summarization(
-        self, 
-        file_key: str, 
-        bucket_name: str, 
+        self,
+        file_key: str,
+        bucket_name: str,
         tags: list = None,
         prompt: str = (
             "Please summarize this classroom video segment. "
@@ -28,10 +28,11 @@ class VideoService:
             "student behaviors (e.g. raising hands, taking notes, discussing, distracted, leaving the classroom), "
             "and notable student-teacher interactions."
         ),
-        chunk_duration: int = None
+        chunk_duration: int = None,
+        run_id: str = None
     ):
         url = f"{self.base_url}/preprocess"
-        
+
         payload = {
             "file_key": file_key,
             "reuse_existing": True,
@@ -40,9 +41,12 @@ class VideoService:
 
         if prompt is not None:
             payload["prompt"] = prompt
-        
+
         if chunk_duration is not None:
             payload["chunk_duration_s"] = chunk_duration
+
+        if run_id is not None:
+            payload["run_id"] = run_id
 
         print(f"[VideoService] Calling -> {url}")
         print(f"[VideoService] Payload: {json.dumps(payload, ensure_ascii=False)}")

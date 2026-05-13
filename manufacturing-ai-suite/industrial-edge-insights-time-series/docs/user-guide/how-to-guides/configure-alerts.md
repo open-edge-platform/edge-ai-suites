@@ -9,7 +9,7 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 #### Configure MQTT Alerts
 
 The following MQTT alerts are configured for both `Wind Turbine Anomaly Detection`
-and `Weld Defect Detection` sample apps
+and `Weld Defect Detection` sample apps.
 
 <!--hide_directive::::{tab-set}
 :::{tab-item}hide_directive--> **Wind Turbine Anomaly Detection**
@@ -138,8 +138,8 @@ docker exec -ti ia-mqtt-broker mosquitto_sub -h localhost -v -t '#' -p 1883
 ### Docker - Publish OPC-UA Alerts
 
 > **Note:**
-> This section is applicable to Wind Turbine Anomaly Dectection sample app only.
-> In other words, OPC UA alerts are not supported for Weld Defect Detection sample app.
+> This section is applicable to `Wind Turbine Anomaly Detection` sample app only.
+> In other words, OPC UA alerts are not supported for the `Weld Defect Detection` sample app.
 
 #### Prerequisite
 

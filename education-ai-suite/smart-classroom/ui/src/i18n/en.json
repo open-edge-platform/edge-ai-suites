@@ -101,12 +101,12 @@
       "noSessionActive": "No active session. Upload file or Start Recording to begin monitoring.",
       "lastUpdated": "Last updated",
       "resourceUtilization": "Resource Utilization",
-      "configuration": "Configuration & Metrics",
+      "configuration": "Configurations",
       "resource": "Resource Utilization",
       "models": "Pre-validated Models",
       "subtitle_configuration": "Platform and software configuration details",
       "subtitle_resource": "CPU, GPU, NPU, Memory, and Power usage over time",
-      "subtitle_models": "Select models for transcripts and summary",
+      "subtitle_models": "Models configured for this pipeline",
       "platformConfiguration": "Platform Configuration",
       "processor": "Processor",
       "npu": "NPU",
@@ -116,6 +116,14 @@
       "softwareConfiguration": "Software Configuration",
       "llm": "LLM",
       "asr": "ASR",
+      "vlmModel": "VLM Model",
+      "visualEmbeddingModel": "Visual Embedding Model",
+      "docEmbeddingModel": "Document Embedding Model",
+      "rerankerModel": "Reranker Model",
+      "vectorDb": "Vector DB",
+      "videoSummarizationEnabled": "Video Summarization",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
       "performanceMetrics": "Performance Metrics",
       "ttft": "TTFT",
       "tpot": "TPOT",
@@ -215,8 +223,9 @@
     "upload":"Upload",
     "dragDrop":"Drag & drop your files here",
     "orClick":"or click to browse",
-    "supportedTypes":"Supported: MP4, PPT, DOCX, PDF, JPG, CSV, TXT",
-    "selectFileToAddTags":"Select an uploaded file to add tags.",
+    "supportedTypes":"Supported: MP4 | JPG, PNG, JPEG | TXT, PDF, DOCX, DOC, PPTX, PPT, XLSX, XLS, HTML, HTM, XML, MD",
+    "selectFileToAddTags":"Select a file to add tags.",
+    "tagsLockedAfterUpload":"Tags cannot be modified after upload.",
     "addTags":"Add Tags",
     "enterTags":"Enter tags separated by commas",
     "fileName":"File Name",
@@ -236,6 +245,8 @@
     "uploaded":"Uploaded ✔",
     "alreadyExists":"Already Exists",
     "summarizing":"Summarizing...",
+    "summarize":"Summarize",
+    "videoSummarizationToggle":"Enable video summarization for this file",
     "summarizationFailed":"Video summarization failed. Please try again"
   },
   "searchSection": {
@@ -260,6 +271,20 @@
     "filesStillUploading": "Files are still uploading...",
     "uploadFilesToEnable": "Upload files to enable search."
   },
+  "qaSection": {
+    "title": "Q&A",
+    "notAvailable": "Q&A Not Available",
+    "uploadHint": "Upload files to start chatting",
+    "processingHint": "Files are still uploading...",
+    "filterByLabel": "Filter by label:",
+    "allContent": "All content",
+    "clearChat": "Clear conversation",
+    "emptyHint": "Ask anything about your uploaded content.",
+    "sources": "Sources:",
+    "inputPlaceholder": "Ask a question about your content…",
+    "send": "Send (Enter)",
+    "enterHint": "Enter to send · Shift+Enter for new line"
+  },
   "resultSection": {
     "title": "Results",
     "subtitle": "Sorted by similarity (highest-ranked first)",
@@ -273,7 +298,10 @@
     "time": "Time:",
     "relevance": "Relevance:",
     "labels": "Labels",
-    "score": "Score"
+    "score": "Score",
+    "summarization": "Summarization",
+    "showMore": "Show more",
+    "showLess": "Show less"
   }
 }
  

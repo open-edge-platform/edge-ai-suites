@@ -1,3 +1,106 @@
+ros-jazzy-benchmark-framework (0.1.7) UNRELEASED; urgency=low
+
+  * Add --csv-out flag to analyze_trigger_latency.py: writes a flat CSV with
+    one row per node/input→output pair. Columns: session, node, pipeline_stage,
+    input, output, n, mean_ms, stdev_ms, min_ms, p50_ms, p90_ms, p99_ms,
+    max_ms, trigger_count, fps, jitter_mean_ms, jitter_max_ms.
+  * Add --csv-out flag to analyze_pipeline_latency.py: writes a flat CSV with
+    one e2e summary row and one row per pipeline stage. Columns: type, session,
+    stage, representative_node, representative_input, representative_output,
+    mean_ms, p50_ms, p90_ms, p99_ms, max_ms, n, throughput_hz, drop_rate_pct,
+    bottleneck_stage, cpu_mean_pct, cpu_max_pct.
+  * Add --xlsx-out flag to both scripts: writes the same columns as --csv-out
+    to an Excel workbook with bold headers and auto-width columns.
+    Requires openpyxl (pip install openpyxl); gracefully skips if not installed.
+  * Add CSV/Excel export usage examples to CHEATSHEET.txt.
+  * Add tests/test_csv_export.py: smoke tests for --csv-out flag presence
+    and end-to-end Level 2 CSV generation using a synthetic kpi.json fixture;
+    no ROS install required.
+  * Add unit-tests job to .github/workflows/build-test-scan.yml running
+    tests/test_csv_export.py on every push/PR to main.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 28 Apr 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.6) UNRELEASED; urgency=low
+
+  * Add Level 2 end-to-end pipeline KPI schema and analysis
+    script to satisfy (pipeline-level KPIs).
+  * Add schemas/kpi_level2_v1.json (JSON Schema Draft 2020-12) covering:
+    - pipeline entry/exit topics and stage sequence
+    - e2e_latency_ms: mean/p50/p90/p99/max/n (method='chained', summed from
+      per-stage Level 1 representative pairs)
+    - throughput_hz: bottleneck stage rate (min across stages)
+    - drop_rate_pct: estimated message drop from sensor to control stage
+    - bottleneck_stage: stage with highest mean latency contribution
+    - stage_latency_ms: per-stage breakdown (Sensor/Perception/Planning/Control)
+      with representative node, input/output topics, and sample count
+    - cpu_mean_pct / cpu_max_pct (null when not collected)
+    - level1_source: provenance path to source kpi.json
+    - metadata: same structure as Level 1 (includes hardware fields)
+  * Add src/analyze_pipeline_latency.py: reads Level 1 kpi.json and writes
+    kpi_level2.json, validated against schemas/kpi_level2_v1.json via
+    jsonschema Draft202012Validator; auto-discovers most-recent session
+    when --kpi is not specified.
+  * Add quickstart option 4→6 'Level 2 pipeline KPI' to run the above
+    analysis on the most recent wandering session's kpi.json.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 24 Apr 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.5) UNRELEASED; urgency=low
+
+  * Fix timestamp accuracy in ros2_graph_monitor.py: replace time.time()
+    (monitor wall-clock, adds DDS transport + Python GIL jitter) with
+    msg.header.stamp (publisher's own clock at publish time) for all
+    messages that carry a std_msgs/Header. For headerless messages
+    (e.g. geometry_msgs/Twist cmd_vel) fall back to self.get_clock().now()
+    which respects use_sim_time and keeps all timestamps on the same
+    time base. Add monotonicity guard to reject negative inter-message
+    intervals caused by non-monotonic sim-clock jumps.
+  * Add --use-sim-time flag to ros2_graph_monitor.py and monitor_stack.py.
+    Auto-detect simulation mode at startup from /clock topic presence;
+    flag only needed to force early enablement before auto-detection fires.
+  * Pass --use-sim-time explicitly from wandering_run.sh and
+    picknplace_run.sh (Gazebo sim always runs with /clock).
+  * Add framework_version, ros_distro, and hardware (cpu_model, cpu_cores,
+    gpu_model, total_ram_gb) to kpi.json metadata block; schema updated to require these fields and validate their structure.
+    framework_version read from pyproject.toml via importlib.metadata;
+    ros_distro from ROS_DISTRO env; hardware collected via /proc/cpuinfo,
+    os.cpu_count(), lspci, and psutil.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 24 Apr 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.4) UNRELEASED; urgency=low
+
+  * Fix missing schemas/ directory in debian/rules install step; schemas/
+    was not copied to the install destination, causing schema validation
+    to fail with 'Schema file not found' at runtime
+  * Fix quickstart 'Analyze last wandering/pick-n-place session bag' options:
+    bag discovery pattern changed from 'rosbag2_*' to 'bag' to match the
+    output name used by wandering_run.sh and picknplace_run.sh; switch from
+    analyze_rosbag.py (file-based) to analyze_trigger_latency.py --bag
+    (directory-based, produces KPI output)
+  * Fix MCAP bag read warning 'attempted to read in receive timestamp order
+    with no message index': explicitly set SequentialReader read order to
+    RecordedTimeStamp, which requires no per-message index and is correct
+    for latency analysis
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Thu, 24 Apr 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.3) UNRELEASED; urgency=low
+
+  * Add Level 1 KPI JSON schema (schemas/kpi_level1_v1.json, Draft 2020-12)
+  * Add schema_version field to per-session KPI JSON output
+  * Add validate_kpi_json() to analyze_trigger_latency.py; validates output
+    against schema after every --json-out write
+  * Add jsonschema>=4.0.0 to project dependencies
+  * Fix grafana-status make target missing its target header
+  * Fix shell command substitution in grafana-status ($(ls) -> $$(ls))
+  * Replace broken src/Makefile delegation with direct implementations for
+    all simulation/benchmark make targets (wandering, picknplace, analyze-benchmark)
+  * Simplify process-sweep comments in wandering_run.sh and picknplace_run.sh
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 21 Apr 2026 00:00:00 +0000
+
 ros-jazzy-benchmark-framework (0.1.2) UNRELEASED; urgency=low
 
   * Add structured per-session JSON output with throughput, latency, jitter,

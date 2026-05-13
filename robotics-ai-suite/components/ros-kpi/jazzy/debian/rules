@@ -28,7 +28,7 @@ override_dh_auto_install:
 	install -m 755 quickstart $(DESTDIR)/
 	install -m 644 Makefile docker-compose.yml pyproject.toml README.md $(DESTDIR)/
 	install -m 755 *.sh $(DESTDIR)/
-	cp -r prometheus grafana $(DESTDIR)/
+	cp -r prometheus grafana schemas $(DESTDIR)/
 
 override_dh_shlibdeps:
 	:

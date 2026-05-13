@@ -91,7 +91,7 @@ visualization in the Grafana.
 1. Deploy Helm chart
 
     ```sh
-    helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace
+    helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace --set timezone=$(cat /etc/timezone)
     ```
 
 2. Wait for all pods to be ready:

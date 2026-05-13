@@ -1,7 +1,7 @@
-# 3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR
+# 3D Pointcloud Groundfloor Segmentation for RealSense™ Camera and 3D LiDAR
 
 This demo showcases an Intel® algorithm designed for the segmentation of depth sensor data,
-compatible with 3D LiDAR or a Intel® RealSense™ camera inputs. The application processes either a 3D pointcloud
+compatible with 3D LiDAR or RealSense™ camera inputs. The application processes either a 3D pointcloud
 or a depth image, producing a refined 3D pointcloud as output. Each endpoint within this pointcloud
 is classified, distinguishing between ground floor, elevated surfaces, obstacles and structures above ground level.
 
@@ -9,7 +9,7 @@ The algorithm addresses situations like non-flat floors, ramps, inclines, declin
 and other challenging conditions. Its capabilities extend beyond standard segmentation approaches,
 making it suited for diverse scenarios.
 
-This tutorial guides users on running the algorithm from Autonomous Mobile Robot using either a 3D LiDAR or a Intel® RealSense™
+This tutorial guides users on running the algorithm from Autonomous Mobile Robot using either a 3D LiDAR or a RealSense™
 camera input, generating ``segmentation/labeled_points`` and ``segmentation/obstacle_points`` topic of type
 ``sensor_msgs/PointCloud2``. The first output topic assigns labels (ground, elevated, obstacle or above the roof)
 to points within the sensor's 3D pointcloud.
@@ -58,9 +58,9 @@ sudo apt install ros-humble-pointcloud-groundfloor-segmentation
 <!--hide_directive:::hide_directive-->
 <!--hide_directive::::hide_directive-->
 
-## Run the Segmentation with Intel® RealSense™ Camera Input
+## Run the Segmentation with RealSense™ Camera Input
 
-Execute the following command to run the demo using a Intel® RealSense™ camera input, after starting the Intel® RealSense™ ROS 2 node.
+Execute the following command to run the demo using a RealSense™ camera input, after starting the RealSense™ ROS 2 node.
 
 <!--hide_directive::::{tab-set}hide_directive-->
 <!--hide_directive:::{tab-item}hide_directive--> **Jazzy**
@@ -223,7 +223,7 @@ source /opt/ros/jazzy/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 /map /odom
 ```
 
-Terminal 3: Run the segmentation application with Intel® RealSense™ camera input:
+Terminal 3: Run the segmentation application with RealSense™ camera input:
 
 ```bash
 source /opt/ros/jazzy/setup.bash
@@ -248,7 +248,7 @@ source /opt/ros/humble/setup.bash
 ros2 run tf2_ros static_transform_publisher 0 0 0 0 0 0 1 /map /odom
 ```
 
-Terminal 3: Run the segmentation application with Intel® RealSense™ camera input:
+Terminal 3: Run the segmentation application with RealSense™ camera input:
 
 ```bash
 source /opt/ros/humble/setup.bash

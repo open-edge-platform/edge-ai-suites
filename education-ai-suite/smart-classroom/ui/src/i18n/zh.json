@@ -101,12 +101,12 @@
     "noSessionActive": "无活动会话。请上传文件或开始录音以开始监控。",
     "lastUpdated": "最后更新",
     "resourceUtilization": "资源利用率",
-    "configuration": "配置与指标",
+    "configuration": "配置",
     "resource": "资源利用率",
     "models": "已验证的模型",
     "subtitle_configuration": "平台和软件配置详情",
     "subtitle_resource": "CPU、GPU、NPU、内存与功耗随时间变化",
-    "subtitle_models": "选择用于转录和摘要的模型",
+    "subtitle_models": "此管道配置的模型",
     "platformConfiguration": "平台配置",
     "processor": "处理器",
     "npu": "NPU",
@@ -116,6 +116,14 @@
     "softwareConfiguration": "软件配置",
     "llm": "大语言模型",
     "asr": "自动语音识别",
+    "vlmModel": "VLM 模型",
+    "visualEmbeddingModel": "视觉嵌入模型",
+    "docEmbeddingModel": "文档嵌入模型",
+    "rerankerModel": "重排序模型",
+    "vectorDb": "向量数据库",
+    "videoSummarizationEnabled": "视频摘要",
+    "enabled": "已启用",
+    "disabled": "已禁用",
     "performanceMetrics": "性能指标",
     "ttft": "首个 Token 延迟 (TTFT)",
     "tpot": "每个 Token 延迟 (TPOT)",
@@ -216,8 +224,9 @@
     "upload": "上传",
     "dragDrop": "将文件拖放到此处",
     "orClick": "或点击选择文件",
-    "supportedTypes": "支持的格式：MP4, PPT, DOCX, PDF, JPG, CSV, TXT",
-    "selectFileToAddTags": "选择一个已上传的文件以添加标签。",
+    "supportedTypes": "支持的格式：MP4 | JPG, PNG, JPEG | TXT, PDF, DOCX, DOC, PPTX, PPT, XLSX, XLS, HTML, HTM, XML, MD",
+    "selectFileToAddTags": "选择一个文件以添加标签。",
+    "tagsLockedAfterUpload": "文件上传后标签不可修改。",
     "addTags": "添加标签",
     "enterTags": "输入以逗号分隔的标签",
     "fileName": "文件名",
@@ -237,6 +246,8 @@
     "uploaded": "已上传 ✓",
     "alreadyExists": "已存在",
     "summarizing": "正在摘要...",
+    "summarize": "摘要",
+    "videoSummarizationToggle": "为此文件启用视频摘要",
     "summarizationFailed": "视频摘要失败，请重试"
   },
   "searchSection": {
@@ -261,6 +272,20 @@
     "filesStillUploading": "文件仍在上传中...",
     "uploadFilesToEnable": "上传文件以启用搜索。"
   },
+  "qaSection": {
+    "title": "问答",
+    "notAvailable": "问答不可用",
+    "uploadHint": "上传文件以开始对话",
+    "processingHint": "文件仍在上传中...",
+    "filterByLabel": "按标签筛选：",
+    "allContent": "全部内容",
+    "clearChat": "清除对话",
+    "emptyHint": "可以就已上传的内容提出任何问题。",
+    "sources": "来源：",
+    "inputPlaceholder": "就您的内容提问…",
+    "send": "发送（Enter）",
+    "enterHint": "按 Enter 发送 · 按 Shift+Enter 换行"
+  },
   "resultSection": {
     "title": "结果",
     "subtitle": "按相似度排序（最高排名优先）",
@@ -274,6 +299,9 @@
     "time": "时间：",
     "relevance": "相关性：",
     "labels": "标签",
-    "score": "分数"
+    "score": "分数",
+    "summarization": "总结",
+    "showMore": "显示更多",
+    "showLess": "收起"
   }
 }

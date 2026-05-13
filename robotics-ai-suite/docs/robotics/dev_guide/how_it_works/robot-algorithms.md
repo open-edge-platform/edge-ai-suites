@@ -10,15 +10,15 @@ For details, see [Model Zoo](https://github.com/openvinotoolkit/open_model_zoo).
 
 ## ADBSCAN
 
-**Tutorial**: [ADBSCAN Algorithm](../tutorials_amr/navigation/adbscan/index.rst)
+**Tutorial**: [ADBSCAN Algorithm](../tutorials_amr/navigation/adbscan/index.md)
 
 DBSCAN (Density-Based Spatial Clustering of Applications with Noise) is an unsupervised clustering algorithm that clusters high-dimensional points based on their distribution density. Adaptive DBSCAN (ADBSCAN) has clustering parameters that are adaptive based on range and are especially suitable for processing LiDAR data. It improves the object detection range by 20-30% on average.
 
 ## 3D Pointcloud Groundfloor Segmentation
 
-**Tutorial**: [3D Pointcloud Groundfloor Segmentation for Intel® RealSense™ Camera and 3D LiDAR](../tutorials_amr/perception/pointcloud-groundfloor-segmentation.md)
+**Tutorial**: [3D Pointcloud Groundfloor Segmentation for RealSense™ Camera and 3D LiDAR](../tutorials_amr/perception/pointcloud-groundfloor-segmentation.md)
 
-An algorithm, along with a demo application, transforms Intel® RealSense™ Depth Camera images to 3D pointclouds. This algorithm further assigns classification labels such as ground floor or obstacle to each point, delivering both the resulting and filtered pointclouds as output.
+An algorithm, along with a demo application, transforms RealSense™ Depth Camera images to 3D pointclouds. This algorithm further assigns classification labels such as ground floor or obstacle to each point, delivering both the resulting and filtered pointclouds as output.
 
 ## ROS 2 Depth Image to Laser Scan
 
@@ -36,7 +36,7 @@ IMU Tools, filters and visualizers, from [IMU Tools for ROS](https://github.com/
 
 **Tutorial**: [FastMapping Algorithm](../tutorials_amr/navigation/run-fastmapping-algorithm.md)
 
-FastMapping is an algorithm to create a 3D voxel map of a robot's surroundings based on Intel® RealSense™ Depth Camera sensor data.
+FastMapping is an algorithm to create a 3D voxel map of a robot's surroundings based on RealSense™ Depth Camera sensor data.
 
 ## Collaborative Visual SLAM
 
@@ -85,6 +85,6 @@ robot_localization (from <https://github.com/cra-ros-pkg/robot_localization>) is
 
 ## Navigation 2
 
-**Tutorials**: [Navigation](../tutorials_amr/navigation/index.rst)
+**Tutorials**: [Navigation](../tutorials_amr/navigation/index.md)
 
 ROS 2 Navigation stack seeks a safe way to have a mobile robot move from point A to point B. This completes dynamic path planning, computes velocities for motors, detects and avoids obstacles, and structures recovery behaviors. Navigation 2 uses behavior trees to call modular servers to complete an action. An action can be computing a path, controlling effort, recovery, or any other navigation-related action. These are separate nodes that communicate with the behavior tree over a ROS 2 action server.

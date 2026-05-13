@@ -54,7 +54,7 @@ def test_valid_values():
     assert result == True
 
 def test_make_up_mqtt_weld_verification(setup_docker_environment):
-    """TC_004: Testing make up MQTT verification with weld anomaly detection app"""
+    """TC_004: Testing make up MQTT verification with Weld Defect Detection app"""
     logger.info(f"TC_004: Testing make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\" verification")
     context = setup_docker_environment
     
@@ -64,7 +64,7 @@ def test_make_up_mqtt_weld_verification(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         logger.info(f"Executing: make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         
@@ -98,14 +98,14 @@ def test_make_up_mqtt_weld_verification(setup_docker_environment):
         os.chdir(original_dir)
     
     logger.info(f"MQTT deployment verification test result: {test_result}")
-    assert test_result == True, "MQTT deployment verification with weld anomaly detection failed"
+    assert test_result == True, "MQTT deployment verification with Weld Defect Detection failed"
     # No manual cleanup needed - handled by fixture    
 
 def test_multiple_runs_mqtt_weld(setup_docker_environment):
     """
-    TC_005: Testing multiple runs of make up MQTT for weld anomaly detection
+    TC_005: Testing multiple runs of make up MQTT for Weld Defect Detection
     """
-    logger.info("TC_005: Testing multiple runs of make up MQTT for weld anomaly detection")
+    logger.info("TC_005: Testing multiple runs of make up MQTT for Weld Defect Detection")
 
     context = setup_docker_environment
     
@@ -118,7 +118,7 @@ def test_multiple_runs_mqtt_weld(setup_docker_environment):
         for i in range(3):
             logger.info(f"Cycle {i+1}:")
             
-            # Execute the weld anomaly detection MQTT command
+            # Execute the Weld Defect Detection MQTT command
             result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
             logger.info(f"MQTT deployment result for cycle {i+1}: exit_code={result}")
             assert result == 0, f"MQTT deployment failed in cycle {i+1}"
@@ -138,8 +138,8 @@ def test_multiple_runs_mqtt_weld(setup_docker_environment):
         os.chdir(original_dir)
 
 def test_stability_with_mqtt_ingestion_weld(setup_docker_environment):
-    """TC_006: Testing stability of MQTT ingestion for weld anomaly detection"""
-    logger.info("TC_006: Testing stability of MQTT ingestion for weld anomaly detection")
+    """TC_006: Testing stability of MQTT ingestion for Weld Defect Detection"""
+    logger.info("TC_006: Testing stability of MQTT ingestion for Weld Defect Detection")
     context = setup_docker_environment
     
     # Set the working directory
@@ -148,7 +148,7 @@ def test_stability_with_mqtt_ingestion_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"
@@ -173,8 +173,8 @@ def test_stability_with_mqtt_ingestion_weld(setup_docker_environment):
     # Cleanup handled by fixture    
 
 def test_loglevel_configuration_mqtt_weld(setup_docker_environment):
-    """TC_007: Testing log level configuration in .env file for weld anomaly detection MQTT"""
-    logger.info("TC_007: Testing log level configuration in .env file for weld anomaly detection MQTT")
+    """TC_007: Testing log level configuration in .env file for Weld Defect Detection MQTT"""
+    logger.info("TC_007: Testing log level configuration in .env file for Weld Defect Detection MQTT")
     context = setup_docker_environment
     
     # Set the working directory
@@ -183,7 +183,7 @@ def test_loglevel_configuration_mqtt_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"
@@ -244,8 +244,8 @@ def test_loglevel_configuration_mqtt_weld(setup_docker_environment):
     # Cleanup handled by fixture
 
 def test_mqtt_alerts_weld(setup_docker_environment):
-    """TC_008: Testing MQTT alerts functionality for weld anomaly detection"""
-    logger.info("TC_008: Testing MQTT alerts functionality for weld anomaly detection")
+    """TC_008: Testing MQTT alerts functionality for Weld Defect Detection"""
+    logger.info("TC_008: Testing MQTT alerts functionality for Weld Defect Detection")
     context = setup_docker_environment
     
     # Set the working directory
@@ -254,7 +254,7 @@ def test_mqtt_alerts_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"
@@ -273,8 +273,8 @@ def test_mqtt_alerts_weld(setup_docker_environment):
     # Cleanup handled by fixture
 
 def test_influxdb_data_with_mqtt_weld(setup_docker_environment):
-    """TC_009: Testing InfluxDB data with MQTT ingestion for weld anomaly detection"""
-    logger.info("TC_009: Testing InfluxDB data with MQTT ingestion for weld anomaly detection")
+    """TC_009: Testing InfluxDB data with MQTT ingestion for Weld Defect Detection"""
+    logger.info("TC_009: Testing InfluxDB data with MQTT ingestion for Weld Defect Detection")
     context = setup_docker_environment
     
     # Set the working directory
@@ -283,7 +283,7 @@ def test_influxdb_data_with_mqtt_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"
@@ -292,7 +292,7 @@ def test_influxdb_data_with_mqtt_weld(setup_docker_environment):
         logger.info("Waiting for containers to stabilize and data to be generated...")
         docker_utils.wait_for_stability(60)
 
-        # Get app-specific configuration for weld anomaly detection
+        # Get app-specific configuration for Weld Defect Detection
         app_config = constants.get_app_config(constants.WELD_SAMPLE_APP)
         measurement_name = constants.get_app_influxdb_measurement(constants.WELD_SAMPLE_APP)
         
@@ -318,8 +318,8 @@ def test_influxdb_data_with_mqtt_weld(setup_docker_environment):
     # Cleanup handled by fixture    
 
 def test_stability_mqtt_for_3_minutes_weld(setup_docker_environment):
-    """TC_010: Testing make up MQTT and make down for longer duration for 3 Minutes for weld anomaly detection."""
-    logger.info("TC_010: Testing make up MQTT and make down for longer duration for 3 Minutes for weld anomaly detection")
+    """TC_010: Testing make up MQTT and make down for longer duration for 3 Minutes for Weld Defect Detection."""
+    logger.info("TC_010: Testing make up MQTT and make down for longer duration for 3 Minutes for Weld Defect Detection")
     context = setup_docker_environment
     
     # Set the working directory
@@ -328,7 +328,7 @@ def test_stability_mqtt_for_3_minutes_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Execute the weld anomaly detection MQTT command
+        # Execute the Weld Defect Detection MQTT command
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"
@@ -347,14 +347,14 @@ def test_stability_mqtt_for_3_minutes_weld(setup_docker_environment):
 @pytest.mark.kpi
 def test_mqtt_deployment_time_kpi_weld(setup_docker_environment):
     """
-    TC_011: Test Docker deployment time KPI for MQTT ingestion with weld anomaly detection
+    TC_011: Test Docker deployment time KPI for MQTT ingestion with Weld Defect Detection
     
     Verify that:
     1. MQTT deployment completes successfully with 100% success rate
     2. Average deployment time is within acceptable threshold
     3. All deployment attempts are successful
     """
-    logger.info("TC_011: Testing Docker deployment time KPI for MQTT ingestion with weld anomaly detection")
+    logger.info("TC_011: Testing Docker deployment time KPI for MQTT ingestion with Weld Defect Detection")
     context = setup_docker_environment
     
     success_rate, avg_time, min_time, max_time, times = docker_utils.measure_deployment_time(
@@ -372,14 +372,14 @@ def test_mqtt_deployment_time_kpi_weld(setup_docker_environment):
 @pytest.mark.kpi
 def test_build_time_kpi_weld(setup_docker_environment):
     """
-    TC_012: Test Docker build time KPI for weld anomaly detection
+    TC_012: Test Docker build time KPI for Weld Defect Detection
     
     Verify that:
     1. Docker image build completes successfully with 100% success rate
     2. Average build time is within acceptable threshold
     3. All build attempts are successful
     """
-    logger.info("TC_012: Testing Docker build time KPI for weld anomaly detection")
+    logger.info("TC_012: Testing Docker build time KPI for Weld Defect Detection")
     context = setup_docker_environment
     
     # Get app-specific configuration
@@ -400,8 +400,8 @@ def test_build_time_kpi_weld(setup_docker_environment):
 
 
 def test_nginx_proxy_integration_weld(setup_docker_environment):
-    """TC_014: Testing nginx proxy integration for weld anomaly detection"""
-    logger.info("TC_014: Testing nginx proxy integration for weld anomaly detection")
+    """TC_014: Testing nginx proxy integration for Weld Defect Detection"""
+    logger.info("TC_014: Testing nginx proxy integration for Weld Defect Detection")
     context = setup_docker_environment
     
     # Set working directory
@@ -410,7 +410,7 @@ def test_nginx_proxy_integration_weld(setup_docker_environment):
     assert success, "Failed to set working directory"
     
     try:
-        # Deploy weld anomaly detection
+        # Deploy Weld Defect Detection
         result = docker_utils.run_command(f"make up_mqtt_ingestion app=\"{constants.WELD_SAMPLE_APP}\"")
         logger.info(f"MQTT deployment exit code: {result}")
         assert result == 0, "MQTT deployment failed"

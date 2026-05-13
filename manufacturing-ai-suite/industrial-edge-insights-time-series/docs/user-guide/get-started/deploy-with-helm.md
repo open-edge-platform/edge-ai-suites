@@ -224,7 +224,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
            - weld_defect_detector.py
    ```
 
-2. Upload your new UDF package (using the weld anomaly detection UDF package as an example) to the `time-series-analytics-microservice` pod:
+2. Upload your new UDF package (using the `Weld Defect Detection` UDF package as an example) to the `time-series-analytics-microservice` pod:
 
    ```sh
    export SAMPLE_APP="weld-defect-detection"

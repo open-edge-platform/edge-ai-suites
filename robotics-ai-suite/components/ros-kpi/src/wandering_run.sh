@@ -57,13 +57,9 @@ _cleanup() {
 
   sleep 1
   # Sweep any survivors.
-  # ⚠  PATTERN WARNING: the repo is at .../ros2-kpi/, so the bare string "ros2"
-  #    appears in the cmdline of the Make benchmark-loop shell (it contains the
-  #    full path "bash .../ros2-kpi/src/wandering_run.sh").  Using "ros2 " (ros2
-  #    followed by a space) matches only actual ros2 CLI invocations like
-  #    "ros2 launch" and "ros2 bag" without matching the path substring "ros2-kpi".
-  #    Similarly, "/opt/ros/[a-z]*/lib/" catches installed ROS2 node executables
-  #    without matching scripts installed under /opt/ros/<distro>/benchmarking/.
+  # "ros2 " (trailing space) avoids matching repo paths containing "ros2-kpi".
+  # "/opt/ros/[a-z]*/lib/" matches installed node executables but not scripts
+  # under /opt/ros/<distro>/benchmarking/.
   _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
   pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
   sleep 2
@@ -121,6 +117,7 @@ echo ""
 
 # ── Pre-run cleanup: kill any leftover processes from a previous run ──────────
 echo "Killing any leftover simulation processes before starting..."
+# Same pattern rationale as _cleanup above.
 _SWEEP="ros2 |gz sim|gz_server|gz server|/opt/ros/[a-z]*/lib/|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
 pkill -SIGINT  -f "$_SWEEP" 2>/dev/null || true
 sleep 2
@@ -166,6 +163,7 @@ python3 "$SCRIPT_DIR/monitor_stack.py" \
   --graph-only \
   --interval 0.5 \
   --output-dir "$SESSION_DIR" \
+  --use-sim-time \
   > "$SESSION_DIR/monitor_stack.log" 2>&1 &
 MONITOR_PID=$!
 echo "  Monitor PID : $MONITOR_PID"

@@ -1,6 +1,8 @@
 # Release Notes: Multi-Modal Patient Monitoring
 
-## Version 1.0.0 - March 25, 2026
+## Version 1.0.0
+
+**March 25, 2026**
 
 This is the initial release of the application, therefore, it is considered a preview version.
 
@@ -31,7 +33,7 @@ The initial feature set of the application is now available:
   To work around the issue, in `docker-compose.yaml`, remove the device by commenting out
   the following lines, like so:
 
-  ```
+  ```yaml
   # devices:
   #   - /dev/dri
   #   - /dev/accel
