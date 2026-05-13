@@ -1,5 +1,12 @@
 # Release Notes: Smart Route Planning Agent
 
+## Version 2026.1.0-rc1
+
+**Features**
+
+- New websocket connection to smart traffic agent
+- Added support for helmchart deployment
+
 ## Version 1.0.0
 
 **April 01, 2026**
