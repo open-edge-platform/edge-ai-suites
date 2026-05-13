@@ -13,7 +13,7 @@ This guide explains how to create a custom Docker image based on the Intel DL St
 Download the edge-ai-libraries source and go to `dlstreamer-pipeline-server` folder
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git-b main
 cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 ```
 
@@ -81,7 +81,7 @@ It covers environment setup, configuration updates, and validation steps to ensu
 ### Step 1: Set Up the Environment
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision
 cp .env_pallet-defect-detection .env
 ```
