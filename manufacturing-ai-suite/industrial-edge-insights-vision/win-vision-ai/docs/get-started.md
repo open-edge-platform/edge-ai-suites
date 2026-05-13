@@ -80,19 +80,40 @@ gst-inspect-1.0 gvadetect
 
 ### Camera Input (Optional)
 
-To use a GenICam-compatible camera (e.g., Basler, Balluff, Hikcamera), set these additional environment variables:
+To use a GenICam-compatible camera (e.g., Basler, Balluff, HikRobot), download the GenICam runtime DLLs and set the required environment variables.
 
-> **Windows gencamsrc setup reference:** [src-gst-gencamsrc README (Windows)](https://github.com/ajagadi1/edge-ai-libraries/blob/ashish/gencamsrc-windows/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows)
+The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+
+#### Download GenICam Runtime DLLs
+
+Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
 
 ```powershell
-# GenICam transport layer — required for camera discovery
+.\src\setup_genicam_runtime.ps1
+```
+
+#### Set Camera Environment Variables
+
+```powershell
+# Path to your win-vision-ai clone root
+$repoRoot = "<path-to-win-vision-ai-clone>"
+
+# GenICam runtime DLLs (downloaded by setup_genicam_runtime.ps1 into bin\Win64_x64\)
+$genicamRuntime = "$repoRoot\bin\Win64_x64"
+
+# Add gstgencamsrc.dll plugin directory to GStreamer plugin search path
+$env:GST_PLUGIN_PATH = "C:\dlstreamer_dlls;$repoRoot\bin"
+
+# GenICam transport layer — set to your camera vendor's GenTL producer path, for example:
+#   Basler pylon:           C:\Program Files\Basler\pylon\Runtime\x64
+#   Balluff Impact Acquire: C:\Program Files\Balluff\ImpactAcquire\bin\x64
+#   HikRobot MVS:           C:\Program Files (x86)\Common Files\MVS\Runtime\Win64_x64
 $env:GENICAM_GENTL64_PATH = "C:\Program Files\Basler\pylon\Runtime\x64"
 
-# GenICam runtime DLLs — required for the GStreamer plugin to load
-$vc120 = "C:\Users\<username>\edge-ai-libraries\microservices\dlstreamer-pipeline-server\plugins\camera\src-gst-gencamsrc\plugins\genicam-core\genicam_win\Runtime\bin\Win64_x64"
+# Extend PATH with GenICam runtime DLLs (do NOT overwrite existing PATH)
+$env:PATH = "$genicamRuntime;$env:PATH"
 
-# Extend PATH (do NOT overwrite existing PATH)
-$env:PATH = "$vc120;$env:PATH"
+# Always clear the GStreamer plugin registry cache before testing with a new plugin
 Remove-Item "C:\Temp\gst-registry-clean.bin" -ErrorAction SilentlyContinue
 $env:GST_REGISTRY_1_0 = "C:\Temp\gst-registry-clean.bin"
 ```

@@ -91,12 +91,18 @@ bash install_driver_related_libs.sh
 
 > **Note that the default username is `tfcc` and password is `intel` in the docker image.**
 
-When the published image is available, pull the `tfcc:bevfusion` image and run it directly.
+When the published image is available, pull the `intel/tfcc:bevfusion` image and run it directly.
 
 For example:
 
 ```bash
-docker pull tfcc:bevfusion
+docker pull intel/tfcc:bevfusion
+```
+
+The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+
+```bash
+docker tag intel/tfcc:bevfusion tfcc:bevfusion
 ```
 
 If you already pulled or built the image locally, you do not need to rebuild it. You can run it directly.
@@ -104,7 +110,7 @@ If you already pulled or built the image locally, you do not need to rebuild it.
 ### Run the published image
 
 ```bash
-bash docker/run_docker.sh tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:bevfusion
 # After the run completes, the container ID is printed. You can also find it with docker ps.
 ```
 
@@ -135,7 +141,7 @@ docker cp /path/to/dataset <container id>:/path/to/dataset
 Use the published image for the quickest validation:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
 ```
 
 This uses the dataset path already visible inside the container. The default is `/home/tfcc/bevfusion/data/v2xfusion/dataset`, and you can override it with `--container-dataset-path`.
@@ -143,10 +149,10 @@ This uses the dataset path already visible inside the container. The default is 
 To copy a dataset from the host into the container for the test run:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
 ```
 
-If you already pulled or built the default image tag `tfcc:bevfusion`, you can omit `--image`:
+If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`:
 
 ```bash
 bash autotest_docker.sh
@@ -163,7 +169,7 @@ bash autotest_docker.sh \
 Additional arguments after `--` are forwarded to `autotest.sh` inside the container. For example, to restore live per-binary output:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion -- --verbose
+bash autotest_docker.sh --image intel/tfcc:bevfusion -- --verbose
 ```
 
 If `--dataset-path` is provided, the script copies that host dataset into the container and uses it for the inner autotest run. If `--dataset-path` is omitted, the script uses `--container-dataset-path` directly.
@@ -240,7 +246,9 @@ bash docker/run_docker.sh tfcc:bevfusion
 
 ## 6. Optional: Docker Compose workflow for local images
 
-The Compose file supports both the published `tfcc:bevfusion` image and local rebuilds. Use `docker compose pull` or `docker compose up` when the published image is available. Use `docker compose up --build` when you want to rebuild from local sources.
+The Compose file supports both the published `intel/tfcc:bevfusion` image and local rebuilds. Use `docker compose pull` or `docker compose up` when the published image is available. Use `docker compose up --build` when you want to rebuild from local sources.
+
+Set `DOCKER_IMAGE=intel/tfcc:bevfusion` when using the published image. Use `tfcc:bevfusion` only if you retagged it locally or rebuilt the image under that name.
 
 Modify `proxy`, `VIDEO_GROUP_ID`, and `RENDER_GROUP_ID` in `.env`.
 
@@ -249,7 +257,7 @@ Modify `proxy`, `VIDEO_GROUP_ID`, and `RENDER_GROUP_ID` in `.env`.
 https_proxy=
 http_proxy=
 # docker image name
-DOCKER_IMAGE=tfcc:bevfusion
+DOCKER_IMAGE=intel/tfcc:bevfusion
 # base image settings
 BASE=ubuntu
 BASE_VERSION=24.04
@@ -319,7 +327,7 @@ Sample output:
 
 ```bash
 NAME                 IMAGE            COMMAND       SERVICE     CREATED              STATUS                        PORTS
-docker-bevfusion-1   tfcc:bevfusion   "/bin/bash"   bevfusion   About a minute ago   Up About a minute (healthy)
+docker-bevfusion-1   intel/tfcc:bevfusion   "/bin/bash"   bevfusion   About a minute ago   Up About a minute (healthy)
 ```
 
 Copy dataset:

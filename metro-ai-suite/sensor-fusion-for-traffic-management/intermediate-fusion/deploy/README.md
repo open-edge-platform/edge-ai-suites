@@ -1,6 +1,4 @@
-# Intel® Metro AI Suite Sensor Fusion for Traffic Management Intermediate-Fusion Deployment Documentation
-
-This directory contains the BEVFusion-based intermediate-fusion implementation under Sensor Fusion for Traffic Management.
+# Deployment Documentation
 
 This deploy tree contains the Intel GPU inference assets for the BEVFusion project. It packages the native C++/SYCL executables, Docker workflow, custom OpenVINO integration, smoke-test automation, sample assets, and dataset conversion or evaluation tools needed to validate the deployment stack end to end.
 
@@ -54,14 +52,20 @@ Choose the workflow that matches your goal:
 Pull the published image and run the container smoke test:
 
 ```bash
-docker pull tfcc:bevfusion
-bash autotest_docker.sh --image tfcc:bevfusion
+docker pull intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
+```
+
+The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+
+```bash
+docker tag intel/tfcc:bevfusion tfcc:bevfusion
 ```
 
 To work interactively inside the published image instead:
 
 ```bash
-bash docker/run_docker.sh tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:bevfusion
 ```
 
 If this container workflow is enough for your use case, you can skip the native build steps in `docs/Prerequisites.md` and `docs/GSG.md`.
@@ -88,15 +92,15 @@ source /opt/intel/openvino/setupvars.sh
 For a containerized smoke test of a published or prebuilt image, use:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
 ```
 
-If you already pulled or built the default image tag `tfcc:bevfusion`, you can omit `--image`.
+If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
 
 To copy a host dataset into the container for the run, pass:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
 ```
 
 To run the native host binaries in one shot and get pass/fail counts plus the final performance lines for `bevfusion` and `bevfusion_unified`, use:

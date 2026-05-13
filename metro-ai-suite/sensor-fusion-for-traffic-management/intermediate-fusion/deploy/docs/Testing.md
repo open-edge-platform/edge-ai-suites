@@ -7,8 +7,14 @@ For KITTI-format evaluation after inference, see `../tools/README_eval.md`.
 For the quickest end-to-end run, prefer the published Docker image:
 
 ```bash
-docker pull tfcc:bevfusion
-bash autotest_docker.sh --image tfcc:bevfusion
+docker pull intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
+```
+
+The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+
+```bash
+docker tag intel/tfcc:bevfusion tfcc:bevfusion
 ```
 
 ## Common Runtime Setup
@@ -78,16 +84,16 @@ Use the Docker helper when you want to run the deploy workflow inside the contai
 If you already pulled the published image:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
 ```
 
 To run the container autotest on a dataset stored on the host:
 
 ```bash
-bash autotest_docker.sh --image tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
 ```
 
-If you already pulled or built the default image tag `tfcc:bevfusion`, you can omit `--image`.
+If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
 
 If the image must be built first:
 
