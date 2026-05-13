@@ -1,6 +1,6 @@
 # 🎓 Smart Classroom
 
-The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation and future capabilities like video understanding and real-time analysis.
+The **Smart Classroom** project is a modular, extensible framework designed to process and summarize educational content using advanced AI models. It supports transcription, summarization, mindmap generation, future capabilities like video understanding, multimodal content search, and real-time video analytics.
 
 The main features are as follows:
 
@@ -18,6 +18,14 @@ The main features are as follows:
 - Person detection and pose estimation using YOLO models with keypoint skeleton tracking
 - Person re-identification for tracking individual students across frames
 - Classroom statistics including student count, stand-up events, and hand-raise events
+
+#### Content Search
+
+- Multimodal semantic search across videos, images, and documents
+- AI-driven video summarization using Vision Language Models (VLM)
+- Document text extraction with OCR support (Tesseract, PaddleOCR)
+- RAG-based Question & Answer over uploaded educational materials
+- Vector-based retrieval using ChromaDB with CLIP and BGE embeddings
 
 #### Architecture
 
@@ -40,11 +48,16 @@ The **audio pipeline** begins with audio preprocessing, where FFmpeg chunks inpu
 
 The **video analytics pipeline** processes up to three concurrent camera streams (front, back, content) through DL Streamer-based processing graphs. Each stream passes through **YOLO-based person detection and pose estimation**, followed by **posture classification** (sit/stand, hand-raise) and **multi-model classification** (ResNet-18, MobileNet-V2, Person-ReID). All models run on OpenVINO with NPU by default. Processed video is streamed via a **MediaMTX RTSP server**, and per-frame metadata is aggregated into classroom engagement statistics.
 
+The **content search pipeline** handles multimodal content ingestion and retrieval. Uploaded files (videos, documents, images) are processed through format-specific extractors: videos are split into time-based chunks and summarized by a **VLM** (Qwen2.5-VL); documents undergo text extraction with optional OCR (Tesseract) and semantic chunking; images are embedded directly via **CLIP**. All content is indexed into **ChromaDB** with dual embeddings (CLIP for visual, BGE for text). At query time, a **cross-encoder reranker** (BGE-reranker) scores document results, and **Reciprocal Rank Fusion (RRF)** merges results across modalities for balanced retrieval. A RAG-based Q&A layer generates grounded answers from the retrieved context.
+
 <p align="center">
   <img src="./docs/user-guide/_assets/architecture.svg" alt="High-Level Audio Pipeline Diagram" width="80%">
 </p>
 <p align="center">
   <img src="./docs/user-guide/_assets/video-pipeline.svg" alt="High-Level Video Pipeline Diagram" width="80%">
+</p>
+<p align="center">
+  <img src="./docs/user-guide/_assets/Content_Search_Arch.svg" alt="Content Search Architecture" width="80%">
 </p>
 
 For more information see [How it works](./docs/user-guide/how-it-works.md)

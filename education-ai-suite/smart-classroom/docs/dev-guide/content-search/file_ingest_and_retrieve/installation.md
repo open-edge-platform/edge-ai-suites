@@ -1,7 +1,7 @@
 # Content Search Feature
 
 This file shows steps to set up and run content search feature.
-For full develop guide and API Reference, please see the [Dev Guide](docs/dev_guide/).
+For full develop guide and API Reference, please see the [API Reference](../Content_search_API.md).
 
 ## Setup
 

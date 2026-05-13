@@ -64,3 +64,22 @@ For pipeline architecture and processing stages, see [How It Works](../how-it-wo
 - All models run in OpenVINO Intermediate Representation (IR) format
 - Inference supported on **CPU**, **GPU**, and **NPU** (configurable per pipeline)
 - Default inference device: **NPU** (recommended for best performance on Intel® Core Ultra)
+
+## Content Search Pipeline
+
+### Content Search Supported Models
+
+| Model | Purpose | Device |
+| ----- | ------- | ------ |
+| **Qwen2.5-VL-3B-Instruct** | Vision Language Model for video summarization | GPU |
+| **xlm-roberta-base-ViT-B-32** (CLIP) | Visual embedding for images and video frames | CPU |
+| **BAAI/bge-small-en-v1.5** | Text embedding for document chunks | CPU |
+| **BAAI/bge-reranker-large** | Cross-encoder reranking for search results | GPU |
+
+### Supported File Formats
+
+| Category | Extensions |
+| -------- | ---------- |
+| **Video** | `.mp4` |
+| **Document** | `.txt`, `.pdf`, `.docx`, `.doc`, `.pptx`, `.ppt`, `.xlsx`, `.xls`, `.html`, `.htm`, `.xml`, `.md` |
+| **Image** | `.jpg`, `.jpeg`, `.png` |
