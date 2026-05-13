@@ -49,7 +49,7 @@
   max-height: 200px;
 }
 
-/* Video frame display styles for 3D Pose */
+/* Video frame display styles for Pose Estimation */
 .video-frame {
   margin-top: 12px;
   padding: 8px;

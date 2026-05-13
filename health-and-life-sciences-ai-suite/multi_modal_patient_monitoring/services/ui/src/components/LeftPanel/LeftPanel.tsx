@@ -45,7 +45,7 @@ const LeftPanel = () => {
                 lastEventTime={getWorkloadState(expandedCard.id).lastEventTime}
                 waveform={getWorkloadState(expandedCard.id).waveform}
                 frameData={getWorkloadState(expandedCard.id).frameData}
-                people={getWorkloadState(expandedCard.id).people} // ✅ Pass people array instead of joints
+                people={getWorkloadState(expandedCard.id).people}
                 isExpanded={true}
                 onExpand={() => handleExpand(expandedCard.id)}
               />
@@ -65,7 +65,7 @@ const LeftPanel = () => {
                     lastEventTime={state.lastEventTime}
                     waveform={state.waveform}
                     frameData={state.frameData}
-                    people={state.people} // ✅ Pass people array instead of joints
+                    people={state.people}
                     isExpanded={false}
                     onExpand={() => handleExpand(workload.id)}
                   />
@@ -78,8 +78,6 @@ const LeftPanel = () => {
           WORKLOADS.map((workload) => {
             const state = getWorkloadState(workload.id);
             return (
-              // Around line 60-80, verify the WorkloadCard props:
-
               <WorkloadCard
                 key={workload.id}
                 config={WORKLOAD_CONFIG[workload.id]}
@@ -89,7 +87,7 @@ const LeftPanel = () => {
                 lastEventTime={state.lastEventTime}
                 waveform={state.waveform}
                 frameData={state.frameData}
-                people={state.people} // ✅ Pass people array instead of joints
+                people={state.people}
                 isExpanded={false}
                 onExpand={() => handleExpand(workload.id)}
               />

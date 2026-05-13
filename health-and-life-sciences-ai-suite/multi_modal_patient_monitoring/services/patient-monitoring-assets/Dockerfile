@@ -56,9 +56,11 @@ ARG NO_PROXY
 
 WORKDIR /app
 
-# Minimal system deps (no heavy ML frameworks here)
+# Minimal system deps (libgl1 + libglib2.0 needed by opencv/ultralytics at runtime)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    libgl1 \
+    libglib2.0-0 \
  && rm -rf /var/lib/apt/lists/*
 
 # Reuse Python deps and scripts installed in builder
@@ -76,7 +78,7 @@ CMD ["sh", "-c", "\
     echo '[INFO] Running patient monitoring asset preparation scripts at startup...' && \
     mkdir -p /models /videos /app/configs && \
     python /app/scripts/rppg_download_assets.py && \
-    python /app/scripts/3d_pose_model_convert.py && \
+    python /app/scripts/yolo_pose_model_convert.py && \
     python /app/scripts/ecg_model_convert.py && \
     echo '[INFO] Patient monitoring asset preparation complete. Exiting container.'\
 "]

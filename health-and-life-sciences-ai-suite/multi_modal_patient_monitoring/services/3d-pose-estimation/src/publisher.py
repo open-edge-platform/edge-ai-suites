@@ -44,13 +44,12 @@ class GrpcPosePublisher:
                     ('grpc.keepalive_time_ms', 10000),
                     ('grpc.keepalive_timeout_ms', 5000),
                     ('grpc.keepalive_permit_without_calls', True),
-                    # ✅ Smaller message limits since no frame data
                     ('grpc.max_send_message_length', 1 * 1024 * 1024),  # 1MB
                     ('grpc.max_receive_message_length', 1 * 1024 * 1024), # 1MB
                 ]
             )
             self.stub = pose_pb2_grpc.PoseServiceStub(self.channel)
-            print("[INFO] ✅ gRPC connection established (pose data only - frames via MJPEG)")
+            print("[INFO] gRPC connection established")
         except Exception as e:
             print(f"[ERROR] Failed to connect: {e}")
             self.channel = None
@@ -109,12 +108,10 @@ class GrpcPosePublisher:
         poses_3d = data_packet.get("poses_3d", [])
         poses_2d = data_packet.get("poses_2d", [])
 
-        # ✅ Create PoseFrame WITHOUT frame_data (using MJPEG streaming instead)
         pose_frame = pose_pb2.PoseFrame(
             timestamp_ms=timestamp_ms,
             source_id=source_id,
             frame_number=frame_number,
-            # ✅ NO frame_data field - frames available via MJPEG at localhost:8085
         )
 
         # Add people data (same as before)

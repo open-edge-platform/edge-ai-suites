@@ -14,7 +14,7 @@ import threading
 import os
 
 # Import our modules
-from inference import PoseInference
+from yolo_pose_inference import YoloPoseInference
 from pose_encoder import PoseEncoder
 from publisher import GrpcPosePublisher
 from controller_start_stop import start_control_server, is_processing_enabled
@@ -46,9 +46,12 @@ class PoseEstimationService:
         print(f"[INFO] Target output FPS: {self.target_fps} (frame interval: {self.frame_interval:.3f}s)")
         print(f"[INFO] MJPEG streaming on port: {mjpeg_port}")
         
-        # Initialize components
-        self.inference = PoseInference(model_path)
-        self.encoder = PoseEncoder(source_id)  # No frame encoding needed
+        # YOLO-Pose inference engine (COCO-17 keypoints)
+        print(f"[INFO] Using YOLO-Pose inference engine")
+        self.inference = YoloPoseInference(model_path)
+        num_joints = 17
+
+        self.encoder = PoseEncoder(source_id, num_joints=num_joints)
         self.publisher = GrpcPosePublisher(aggregator_address, source_id)
         
         # Initialize MJPEG streamer
@@ -66,6 +69,9 @@ class PoseEstimationService:
         """Filter poses to keep only high-quality detections"""
         filtered_2d = []
         filtered_3d = []
+
+        min_keypoints = 5
+        min_score = 0.25
         
         for i, pose_2d in enumerate(poses_2d):
             if len(pose_2d) == 0:
@@ -85,9 +91,9 @@ class PoseEstimationService:
             overall_score = pose_2d[-1] if len(pose_2d) > 0 else 0
             
             # Accept pose if:
-            # 1. Has at least 8 valid keypoints (out of 19)
-            # 2. Overall score > 0.4
-            if valid_keypoints >= 8 and overall_score > 0.4:
+            # 1. Has enough valid keypoints
+            # 2. Overall score above threshold
+            if valid_keypoints >= min_keypoints and overall_score > min_score:
                 filtered_2d.append(pose_2d)
                 if i < len(poses_3d):
                     filtered_3d.append(poses_3d[i])
@@ -185,25 +191,16 @@ class PoseEstimationService:
                         # Filter poses
                         filtered_poses_2d, filtered_poses_3d = self.filter_valid_poses(poses_2d, poses_3d)
     
-                        # ✅ KEEP: Stream annotated frame via MJPEG only
+                        # Stream annotated frame via MJPEG
                         self.mjpeg_streamer.update_frame(annotated_frame)
 
-                        # ✅ REMOVE: All frame encoding for gRPC - we only use MJPEG streaming
-                        # try:
-                        #     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 80]
-                        #     ok, buf = cv2.imencode('.jpg', annotated_frame, encode_param)
-                        #     frame_bytes = buf.tobytes() if ok else None
-                        # except Exception:
-                        #     frame_bytes = None
-
-                        # ✅ Encode pose data only (no frame bytes)
+                        # Encode and publish pose data to aggregator
                         data_packet = self.encoder.encode_data(
                             filtered_poses_3d,
                             filtered_poses_2d,
                             frame_number=self.frame_count
                         )
 
-                        # ✅ Publish pose data only to aggregator
                         success = self.publisher.publish(data_packet)
     
                         # Calculate actual output FPS based on frame timing
