@@ -56,10 +56,10 @@ spec:
         - -c
         - |
           mkdir -p /tmp/videos
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000101.mp4 -o /tmp/videos/VIRAT_S_000101.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000102.mp4 -o /tmp/videos/VIRAT_S_000102.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000103.mp4 -o /tmp/videos/VIRAT_S_000103.mp4
-          curl -L https://github.com/intel/metro-ai-suite/raw/refs/heads/videos/videos/VIRAT_S_000104.mp4 -o /tmp/videos/VIRAT_S_000104.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000101.mp4 -o /tmp/videos/VIRAT_S_000101.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000102.mp4 -o /tmp/videos/VIRAT_S_000102.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000103.mp4 -o /tmp/videos/VIRAT_S_000103.mp4
+          curl -L https://github.com/open-edge-platform/edge-ai-resources/raw/0e0a8e62c1f397412528fb63391632c6b903650b/videos/VIRAT_S_000104.mp4 -o /tmp/videos/VIRAT_S_000104.mp4
         env:
         - name: http_proxy
           value: {{ $.Values.env.http_proxy }}
