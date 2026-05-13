@@ -864,6 +864,21 @@ export async function csCleanupTask(
   });
 }
 
+export async function getCsSystemConfig(): Promise<{
+  vlm_model: string;
+  visual_embedding_model: string;
+  doc_embedding_model: string;
+  reranker_model: string;
+  vector_db: string;
+  video_summarization_enabled: boolean;
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/config`);
+    if (!res.ok) throw new Error(`System config failed (${res.status})`);
+    return res.json();
+  });
+}
+
 export async function csDownloadText(fileKey: string): Promise<string> {
   return safeApiCall(async () => {
     const res = await fetch(
