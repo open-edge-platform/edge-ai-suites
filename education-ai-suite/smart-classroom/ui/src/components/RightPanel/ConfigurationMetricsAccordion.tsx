@@ -3,9 +3,13 @@ import Accordion from "../common/Accordion";
 import "../../assets/css/RightPanel.css";
 import { useTranslation } from "react-i18next";
 import { useAppSelector } from "../../redux/hooks";
-import { getConfigurationMetrics, getPlatformInfo } from "../../services/api";
+import { getConfigurationMetrics, getPlatformInfo, getCsSystemConfig } from "../../services/api";
 
-const ConfigurationMetricsAccordion: React.FC = () => {
+interface Props {
+  activeScreen: 'main' | 'content-search';
+}
+
+const ConfigurationMetricsAccordion: React.FC<Props> = ({ activeScreen }) => {
   const { t } = useTranslation();
   const sessionId = useAppSelector((state) => state.ui.sessionId);
   const summaryDone = useAppSelector(
@@ -14,6 +18,7 @@ const ConfigurationMetricsAccordion: React.FC = () => {
 
   const [platformData, setPlatformData] = useState<any>(null);
   const [performanceData, setPerformanceData] = useState<any>(null);
+  const [csConfig, setCsConfig] = useState<any>(null);
 
   useEffect(() => {
     if (!platformData) {
@@ -28,6 +33,18 @@ const ConfigurationMetricsAccordion: React.FC = () => {
     }
   }, [platformData]);
 
+  useEffect(() => {
+    if (activeScreen === 'content-search' && !csConfig) {
+      (async () => {
+        try {
+          const config = await getCsSystemConfig();
+          setCsConfig(config);
+        } catch (err) {
+          console.error("Failed to fetch CS system config:", err);
+        }
+      })();
+    }
+  }, [activeScreen, csConfig]);
 
   useEffect(() => {
     setPerformanceData(null);
@@ -63,15 +80,29 @@ const ConfigurationMetricsAccordion: React.FC = () => {
         {/* Software configuration */}
         <div className="software-performance">
           <h3>{t("accordion.softwareConfiguration") || "Software Configuration"}</h3>
-          <p><strong>{t("accordion.llm") || "LLM"}:</strong> {platformData?.summarizer_model || "-"}</p>
-          <p><strong>{t("accordion.asr") || "ASR"}:</strong> {platformData?.asr_model || "-"}</p>
 
-          {/* Performance metrics */}
-          <h3>{t("accordion.performanceMetrics") || "Performance Metrics"}</h3>
-          <p><strong>{t("accordion.ttft") || "TTFT"}:</strong> {performanceData?.ttft || "-"}</p>
-          <p><strong>{t("accordion.tps") || "Tokens Per Second"}:</strong> {performanceData?.tps || "-"}</p>
-          <p><strong>{t("accordion.totalTokensProcessed") || "Total tokens processed"}:</strong> {performanceData?.total_tokens || "-"}</p>
-          <p><strong>{t("accordion.totalTimeTaken") || "Total Time Taken"}:</strong> {performanceData?.end_to_end_time || "-"}</p>
+          {activeScreen === 'content-search' ? (
+            <>
+              <p><strong>{t("accordion.vlmModel") || "VLM Model"}:</strong> {csConfig?.vlm_model || "-"}</p>
+              <p><strong>{t("accordion.visualEmbeddingModel") || "Visual Embedding Model"}:</strong> {csConfig?.visual_embedding_model || "-"}</p>
+              <p><strong>{t("accordion.docEmbeddingModel") || "Document Embedding Model"}:</strong> {csConfig?.doc_embedding_model || "-"}</p>
+              <p><strong>{t("accordion.rerankerModel") || "Reranker Model"}:</strong> {csConfig?.reranker_model || "-"}</p>
+              <p><strong>{t("accordion.vectorDb") || "Vector DB"}:</strong> {csConfig?.vector_db || "-"}</p>
+              <p><strong>{t("accordion.videoSummarizationEnabled") || "Video Summarization"}:</strong> {csConfig ? (csConfig.video_summarization_enabled ? t("accordion.enabled") || "Enabled" : t("accordion.disabled") || "Disabled") : "-"}</p>
+            </>
+          ) : (
+            <>
+              <p><strong>{t("accordion.llm") || "LLM"}:</strong> {platformData?.summarizer_model || "-"}</p>
+              <p><strong>{t("accordion.asr") || "ASR"}:</strong> {platformData?.asr_model || "-"}</p>
+
+              {/* Performance metrics — main screen only */}
+              <h3>{t("accordion.performanceMetrics") || "Performance Metrics"}</h3>
+              <p><strong>{t("accordion.ttft") || "TTFT"}:</strong> {performanceData?.ttft || "-"}</p>
+              <p><strong>{t("accordion.tps") || "Tokens Per Second"}:</strong> {performanceData?.tps || "-"}</p>
+              <p><strong>{t("accordion.totalTokensProcessed") || "Total tokens processed"}:</strong> {performanceData?.total_tokens || "-"}</p>
+              <p><strong>{t("accordion.totalTimeTaken") || "Total Time Taken"}:</strong> {performanceData?.end_to_end_time || "-"}</p>
+            </>
+          )}
         </div>
       </div>
     </Accordion>

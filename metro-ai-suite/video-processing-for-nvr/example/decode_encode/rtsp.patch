@@ -1,0 +1,306 @@
+diff --git a/vppsdk/example/decode_encode/rtsp/include/bitstream_rtsp_reader.h b/vppsdk/example/decode_encode/rtsp/include/bitstream_rtsp_reader.h
+index 46ed2463..23b29834 100644
+--- a/vppsdk/example/decode_encode/rtsp/include/bitstream_rtsp_reader.h
++++ b/vppsdk/example/decode_encode/rtsp/include/bitstream_rtsp_reader.h
+@@ -29,6 +29,8 @@
+ 
+ #include "bitstream_reader.h"
+ #include <thread>
++#include <atomic>
++#include <mutex>
+ 
+ class RTSPClientExt;
+ class BufferSink;
+@@ -42,12 +44,15 @@ public :
+     virtual int       Read(char *buffer, size_t bytesNum);
+     virtual void      Reset();
+     virtual void      Close();
++    static  void      StopEventLoop();
+ public:
+     static bool mLive555Initialized;
+     static std::thread *mLive555ThreadId;
+ private:
+     RTSPClientExt *mClient;
+     BufferSink *mSink;
++    static std::atomic<int> sReaderCount;
++    static std::mutex sLive555Mutex;
+ };
+ 
+ #endif //_BIT_STREAM_RTSP_READER__
+diff --git a/vppsdk/example/decode_encode/rtsp/src/bitstream_rtsp_reader.cpp b/vppsdk/example/decode_encode/rtsp/src/bitstream_rtsp_reader.cpp
+index abe1933e..2bebc486 100644
+--- a/vppsdk/example/decode_encode/rtsp/src/bitstream_rtsp_reader.cpp
++++ b/vppsdk/example/decode_encode/rtsp/src/bitstream_rtsp_reader.cpp
+@@ -38,18 +38,67 @@ using spdlog::info;
+ bool BitstreamRTSPReader::mLive555Initialized = false;
+ std::thread *BitstreamRTSPReader::mLive555ThreadId = nullptr;
+ 
++std::atomic<int> BitstreamRTSPReader::sReaderCount{0};
++std::mutex BitstreamRTSPReader::sLive555Mutex;
++extern void reset_rtsp_daemon_loop();
++extern void stop_rtsp_daemon_loop();
++extern int requestCloseOnRtspThread(RTSPClient* client);
++
+ BitstreamRTSPReader::BitstreamRTSPReader()
+     : mClient(nullptr), mSink(nullptr) {
++        ++sReaderCount;
+ }
+ 
+ BitstreamRTSPReader::~BitstreamRTSPReader() {
+     Close();
++
++    int left = --sReaderCount;
++    fprintf(stderr, "[RTSPDBG] reader dtor, left=%d\n", left);
++    fflush(stderr);
++
++    if (left == 0) {
++        std::lock_guard<std::mutex> lock(sLive555Mutex);
++
++        fprintf(stderr, "[RTSPDBG] last reader destroyed, stop live555 loop\n");
++        fflush(stderr);
++
++        stop_rtsp_daemon_loop();   // Let doEventLoop return
++
++        if (mLive555ThreadId && mLive555ThreadId->joinable()) {
++            // Avoid joining itself in extreme cases
++            if (std::this_thread::get_id() != mLive555ThreadId->get_id()) {
++                mLive555ThreadId->join();
++            }
++            delete mLive555ThreadId;
++            mLive555ThreadId = nullptr;
++        }
++
++        mLive555Initialized = false;
++
++        fprintf(stderr, "[RTSPDBG] live555 loop thread joined\n");
++        fflush(stderr);
++    }
+ }
+ 
++// void BitstreamRTSPReader::Close() {
++//     if(mClient)
++//         closeStream(mClient, 1);
++//     printf("SET mClient as nullptr @@@\n");
++//     fflush(stdout);
++//     mClient = nullptr;
++//     mSink = nullptr;
++//     mInitialized = false;
++// }
++
+ void BitstreamRTSPReader::Close() {
+-    if(mClient)
+-        closeStream(mClient, 1);
++    RTSPClientExt* oldClient = mClient;
++
++    if (oldClient) {
++        requestCloseOnRtspThread(oldClient);  // No longer closeStream() directly
++    }
+ 
++    mClient = nullptr;
++    mSink = nullptr;
+     mInitialized = false;
+ }
+ 
+@@ -59,9 +108,13 @@ void BitstreamRTSPReader::Reset() {
+ }
+ 
+ int BitstreamRTSPReader::Open(const char *uri) {
+-    if(!mLive555Initialized) {
+-        BitstreamRTSPReader::mLive555ThreadId = new std::thread(start_rtsp_client); //it just have only one live555 scheduler run here 
+-	mLive555Initialized = true;
++    {
++        std::lock_guard<std::mutex> lock(sLive555Mutex);
++        if(!mLive555Initialized) {
++            reset_rtsp_daemon_loop();
++            BitstreamRTSPReader::mLive555ThreadId = new std::thread(start_rtsp_client); //it just have only one live555 scheduler run here 
++	        mLive555Initialized = true;
++        }
+     }
+     std::this_thread::sleep_for (std::chrono::milliseconds(100));
+     mClient = openURL(uri);
+@@ -107,3 +160,24 @@ int BitstreamRTSPReader::Read(char *buffer, size_t bytesNum) {
+     return ret;
+ }
+ 
++void BitstreamRTSPReader::StopEventLoop() {
++    std::lock_guard<std::mutex> lock(sLive555Mutex);
++
++    fprintf(stderr, "[RTSPDBG] StopEventLoop begin\n");
++    fflush(stderr);
++
++    stop_rtsp_daemon_loop();
++
++    if (mLive555ThreadId && mLive555ThreadId->joinable()) {
++        if (std::this_thread::get_id() != mLive555ThreadId->get_id()) {
++            mLive555ThreadId->join();
++        }
++        delete mLive555ThreadId;
++        mLive555ThreadId = nullptr;
++    }
++
++    mLive555Initialized = false;
++
++    fprintf(stderr, "[RTSPDBG] StopEventLoop done\n");
++    fflush(stderr);
++}
+\ No newline at end of file
+diff --git a/vppsdk/example/decode_encode/rtsp/src/rtsp_client_deamon.cpp b/vppsdk/example/decode_encode/rtsp/src/rtsp_client_deamon.cpp
+index 73ecc97e..31f8c263 100644
+--- a/vppsdk/example/decode_encode/rtsp/src/rtsp_client_deamon.cpp
++++ b/vppsdk/example/decode_encode/rtsp/src/rtsp_client_deamon.cpp
+@@ -53,6 +53,23 @@ using namespace std::chrono;
+ std::mutex start_mutex;
+ char watchVariable = 0;
+ 
++#include <vector>
++#include <condition_variable>
++
++struct CloseRequest {
++    RTSPClient* client;
++    std::mutex mtx;
++    std::condition_variable cv;
++    bool done = false;
++};
++
++static EventTriggerId gCloseClientTrigger = 0;
++static std::mutex gCloseQueueMutex;
++static std::vector<CloseRequest*> gCloseQueue;
++
++void processPendingCloseRequests(void* data);
++int requestCloseOnRtspThread(RTSPClient* client);
++
+ 
+ /************* Function Declaration ************/
+ void configNextSubsession(RTSPClient* client);
+@@ -83,12 +100,56 @@ UsageEnvironment& operator<<(UsageEnvironment& usageEnv, const MediaSubsession&
+     return usageEnv << session.mediumName() << "/" << session.codecName();
+ }
+ 
++void processPendingCloseRequests(void* /*data*/)
++{
++    std::vector<CloseRequest*> localQueue;
++    {
++        std::lock_guard<std::mutex> lk(gCloseQueueMutex);
++        localQueue.swap(gCloseQueue);
++    }
++
++    for (auto* req : localQueue) {
++        if (req && req->client) {
++            closeStream(req->client, 1);  // Execute in live555 thread
++        }
++
++        if (req) {
++            std::lock_guard<std::mutex> lk(req->mtx);
++            req->done = true;
++            req->cv.notify_one();
++        }
++    }
++}
++
++int requestCloseOnRtspThread(RTSPClient* client)
++{
++    if (client == NULL || env == NULL) return -1;
++    if (gCloseClientTrigger == 0) return -1;
++
++    CloseRequest req;
++    req.client = client;
++
++    {
++        std::lock_guard<std::mutex> lk(gCloseQueueMutex);
++        gCloseQueue.push_back(&req);
++    }
++
++    env->taskScheduler().triggerEvent(gCloseClientTrigger, NULL);
++
++    // Wait for the event loop thread to finish executing closeStream(client)
++    std::unique_lock<std::mutex> lk(req.mtx);
++    req.cv.wait(lk, [&req] { return req.done; });
++
++    return 0;
++}
++
+ void streamEventTrigger(void* data) 
+ {
+     RTSPClientExt* client = (RTSPClientExt*)data;
+ 
+     StreamClientState& clientState = client->scs;
+     BufferSink *sink = (BufferSink *)(clientState.sink);
++    if(!sink) return;
+     sink->continuePlaying();
+ }
+ 
+@@ -139,15 +200,34 @@ void streamTimerHandler(void* data)
+ 
+ void closeStream(RTSPClient* client, int exitCode) 
+ {
++    if (client == NULL) return;
++
+     UsageEnvironment& env = client->envir();
+     StreamClientState& clientState = ((RTSPClientExt*)client)->scs;
+ 
++    // 1) unschedule task
++    if (clientState.streamTimerTask != NULL) {
++        env.taskScheduler().unscheduleDelayedTask(clientState.streamTimerTask);
++        clientState.streamTimerTask = NULL;
++    }
++
++    // 2) delete event trigger
++    if (clientState.continuePlayTrigger != 0) {
++        env.taskScheduler().deleteEventTrigger(clientState.continuePlayTrigger);
++        clientState.continuePlayTrigger = 0;
++    }
++
++    // 3) clear sink
++    clientState.sink = NULL;
++
+     if (clientState.session != NULL) { 
+         Boolean sessionStillActive = False;
+         MediaSubsessionIterator iter(*clientState.session);
+         MediaSubsession* session;
+ 
+         while ((session = iter.next()) != NULL) {
++            session->miscPtr = NULL;
++
+             if (session->sink != NULL) {
+ 	        Medium::close(session->sink);
+ 	        session->sink = NULL;
+@@ -317,6 +397,8 @@ exit:
+ 
+ int start_rtsp_client(void) 
+ {
++    fprintf(stderr, "[RTSPDBG] [start_rtsp_client] ENTER\n");
++    fflush(stderr);
+     {
+ 	std::unique_lock<std::mutex> lock(start_mutex);
+ 	if (taskScheduler)
+@@ -325,6 +407,7 @@ int start_rtsp_client(void)
+         std::cout << "create rtsp client env & task scheduler\n";
+         taskScheduler = EpollTaskScheduler::createNew();
+         env = BasicUsageEnvironment::createNew(*taskScheduler);
++        gCloseClientTrigger = env->taskScheduler().createEventTrigger((TaskFunc*)processPendingCloseRequests);
+     }
+ 
+     std::cout << "start rtsp event loop\n";
+@@ -336,6 +419,9 @@ int start_rtsp_client(void)
+     delete taskScheduler; 
+     taskScheduler = nullptr;  
+ 
++    
++    fprintf(stderr, "[RTSPDBG] [start_rtsp_client] EXIT\n");
++    fflush(stderr);
+     return 0;
+ }
+ 
+@@ -356,3 +442,11 @@ RTSPClientExt* openURL(char const* url)
+ 
+     return client;
+ }
++
++void reset_rtsp_daemon_loop() {
++    watchVariable = 0;
++}
++
++void stop_rtsp_daemon_loop() {
++    watchVariable = 1;
++}
+\ No newline at end of file

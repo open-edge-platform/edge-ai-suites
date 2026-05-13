@@ -81,10 +81,7 @@ on:
 permissions: {}
 
 env:
-  DEFAULT_TESTS: >-
-    test_docker_deployment_weld_anomaly,test_docker_helm_deployment_security,
-    test_helm_deployment_weld_anomaly,test_helm_deployment_wind_turbine,
-    test_docker_deployment_multimodal,test_helm_deployment_multimodal
+  DEFAULT_TESTS: all-tests
 
 jobs:
   functional-tests:

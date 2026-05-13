@@ -1,0 +1,79 @@
+# Copyright (c) 2026 Intel Corporation.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: metrics-manager-qmmd
+  namespace: {{ $.Values.namespace }}
+data:
+  qmmd.conf: |
+    {{- .Files.Get "config/supervisord/qmmd.conf" | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metrics-manager
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: metrics
+      protocol: TCP
+      port: {{ $.Values.config.metrics_service.int.metrics_endpoint_port }}
+      targetPort: {{ $.Values.config.metrics_service.int.metrics_endpoint_port }}
+    - name: qmmd
+      protocol: TCP
+      port: {{ $.Values.config.metrics_service.int.qmmd_endpoint_port }}
+      targetPort: {{ $.Values.config.metrics_service.int.qmmd_endpoint_port }}
+  selector:
+    app: metrics-manager
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: metrics-manager
+  name: deployment-metrics-manager
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-manager
+  template:
+    metadata:
+      labels:
+        app: metrics-manager
+    spec:
+      {{- if and .Values.DOCKER_USERNAME .Values.DOCKER_PASSWORD }}
+      imagePullSecrets:
+      - name: registryauth
+      {{- end }}
+      containers:
+        - name: metrics-manager
+          image: {{ $.Values.metrics_service.image }}:{{ $.Values.metrics_service.imageTag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $.Values.config.metrics_service.int.metrics_endpoint_port }}
+            - containerPort: {{ $.Values.config.metrics_service.int.qmmd_endpoint_port }}
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+              readOnly: true
+            - name: dev
+              mountPath: /dev
+            - name: supervisord-conf
+              mountPath: /etc/supervisor/conf.d/qmmd.conf
+              subPath: qmmd.conf
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: supervisord-conf
+          configMap:
+            name: metrics-manager-qmmd
+      restartPolicy: Always

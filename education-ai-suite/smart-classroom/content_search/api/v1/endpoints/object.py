@@ -258,6 +258,12 @@ async def delete_specific_task(
     f_bucket = payload.get("bucket") or payload.get("bucket_name")
     f_hash = payload.get("file_hash")
 
+    run_id = payload.get("run_id")
+    if not run_id and f_path and f_path.startswith("runs/"):
+        parts = f_path.split("/")
+        if len(parts) > 1:
+            run_id = parts[1]
+
     # Check if this task produced an OCR text file
     task_result = record.get("result")
     if isinstance(task_result, str):
@@ -268,12 +274,24 @@ async def delete_specific_task(
     ocr_text_key = (task_result or {}).get("ocr_text_key")
 
     try:
-        if storage_service.file_exists(f_path):
-            storage_service.delete_file(f_path)
+        # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
+        if run_id:
+            import shutil
+            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            if run_dir.exists():
+                shutil.rmtree(run_dir)
+                logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
+            else:
+                logger.warning(f"Run directory not found: {run_dir}")
+        else:
+            # Fallback: delete files individually if run_id cannot be determined
+            logger.warning(f"No run_id found for task {task_id}, falling back to file-by-file deletion")
+            if storage_service.file_exists(f_path):
+                storage_service.delete_file(f_path)
 
-        # Delete OCR text file if exists
-        if ocr_text_key and storage_service.file_exists(ocr_text_key):
-            storage_service.delete_file(ocr_text_key)
+            # Delete OCR text file if exists
+            if ocr_text_key and storage_service.file_exists(ocr_text_key):
+                storage_service.delete_file(ocr_text_key)
 
         # If OCR was done, the index is under the .ocr.txt path
         index_path = ocr_text_key or f_path
@@ -381,6 +399,13 @@ async def delete_file_by_hash(
         "errors": []
     }
 
+    # Extract run_id from file_path to delete entire run directory
+    run_id = None
+    if f_path and f_path.startswith("runs/"):
+        parts = f_path.split("/")
+        if len(parts) > 1:
+            run_id = parts[1]
+
     # Determine if there's an OCR text file to clean up
     ocr_text_key = None
     if f_path and f_path.lower().endswith('.pdf'):
@@ -390,18 +415,31 @@ async def delete_file_by_hash(
 
     logger.info(f"Deleting file from LocalStorage: {f_path}")
     try:
-        if storage_service.file_exists(f_path):
-            storage_service.delete_file(f_path)
-            deletion_results["storage_deleted"] = True
-            logger.info(f"Deleted file from storage: {f_path}")
+        # Strategy: Delete entire run_id directory (includes raw + derived + OCR)
+        if run_id:
+            import shutil
+            run_dir = storage_service._store._bucket_path(f_bucket) / "runs" / run_id
+            if run_dir.exists():
+                shutil.rmtree(run_dir)
+                deletion_results["storage_deleted"] = True
+                logger.info(f"Deleted entire run directory: {run_dir} (raw + derived + OCR)")
+            else:
+                logger.warning(f"Run directory not found: {run_dir}")
+                deletion_results["storage_deleted"] = True
         else:
-            logger.warning(f"File not found in storage: {f_path}")
-            deletion_results["storage_deleted"] = True
+            # Fallback: delete files individually if run_id cannot be determined
+            if storage_service.file_exists(f_path):
+                storage_service.delete_file(f_path)
+                deletion_results["storage_deleted"] = True
+                logger.info(f"Deleted file from storage: {f_path}")
+            else:
+                logger.warning(f"File not found in storage: {f_path}")
+                deletion_results["storage_deleted"] = True
 
-        # Delete OCR text file if exists
-        if ocr_text_key:
-            storage_service.delete_file(ocr_text_key)
-            logger.info(f"Deleted OCR text file: {ocr_text_key}")
+            # Delete OCR text file if exists
+            if ocr_text_key:
+                storage_service.delete_file(ocr_text_key)
+                logger.info(f"Deleted OCR text file: {ocr_text_key}")
     except Exception as e:
         error_msg = f"Failed to delete from storage: {str(e)}"
         deletion_results["errors"].append(error_msg)
