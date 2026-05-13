@@ -2,6 +2,7 @@ app:
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: True # True or False, applicable for provider: openvino
+  language: en # en or zh
 
 monitoring:
   logs_dir: ./monitoring/logs
@@ -9,6 +10,7 @@ monitoring:
   socwatch_path: monitoring/tools/socwatch_windows_v2026.0/64/socwatch.exe
   npu_exe_path: tools/level-zero/build/bin/Release/npu_utilization.exe
   execution_logs: monitoring/executionlogs
+
 models:
   asr:
     provider: openai # openvino, funasr and openai supported
@@ -38,7 +40,6 @@ models:
     temperature: 0.3 # 0.5 default
     use_cache: True
     models_base_path: "models"
-    language: en # en or zh
     mode: dialog   # dialog | teacher | hybrid
     system_prompt: 
       en:
@@ -236,6 +237,16 @@ models:
     name: "BAAI/bge-large-en-v1.5"
     min_score: 0.65
 
+  ocr:
+    enabled: false # Set to false to disable OCR features
+    provider: openvino # native or openvino
+    device: CPU # CPU or GPU
+    model_dir: models/ocr/paddle # Base directory for OCR models
+    ocr_version: PP-OCRv4
+    det_model: en_PP-OCRv3_det_infer
+    rec_model: en_PP-OCRv4_rec_infer
+    cls_model: ch_ppocr_mobile_v2.0_cls_infer
+
 
 mindmap:
   system_prompt:
@@ -415,6 +426,8 @@ content_search:
   storage:
     data_dir: './data/local_storage'
     bucket: "content-search"
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"

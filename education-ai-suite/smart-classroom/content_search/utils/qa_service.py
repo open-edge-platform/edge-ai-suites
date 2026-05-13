@@ -12,17 +12,31 @@ from utils.search_service import search_service
 
 logger = logging.getLogger(__name__)
 
-# System prompt injected at the start of every conversation.
-_SYSTEM_PROMPT = (
-    "You are a helpful AI assistant for an educational smart classroom. "
-    "Your job is to answer questions based on the content of uploaded educational materials "
-    "(videos, documents, slides, and images). "
-    "When answering, be thorough and accurate — provide as much detail as the question requires. "
-    "Use bullet points, numbered lists, or structured sections when they improve clarity. "
-    "Cite the source file name when relevant. "
-    "If the provided context does not contain enough information to answer the question, "
-    "say so clearly instead of guessing."
-)
+# System prompts injected at the start of every conversation.
+_SYSTEM_PROMPTS = {
+    "en": (
+        "You are a helpful AI assistant for an educational smart classroom. "
+        "Your job is to answer questions based on the content of uploaded educational materials "
+        "(videos, documents, slides, and images). "
+        "When answering, be thorough and accurate — provide as much detail as the question requires. "
+        "Use bullet points, numbered lists, or structured sections when they improve clarity. "
+        "Cite the source file name when relevant. "
+        "If the provided context does not contain enough information to answer the question, "
+        "say so clearly instead of guessing."
+    ),
+    "zh": (
+        "你是一个智能课堂教育助手。"
+        "你的任务是根据已上传的教学材料（视频、文档、幻灯片和图片）的内容来回答问题。"
+        "回答时请做到全面准确，根据问题的需要提供足够的细节。"
+        "在有助于清晰表达时，使用项目符号、编号列表或结构化段落。"
+        "在相关时请注明来源文件名。"
+        "如果提供的上下文中没有足够的信息来回答问题，请明确告知用户，而不是凭空猜测。"
+        "重要：无论用户用何种语言提问，你必须始终使用普通话（中文）回答。"
+    ),
+}
+
+_LANGUAGE = os.getenv("APP_LANGUAGE", "en")
+_SYSTEM_PROMPT = _SYSTEM_PROMPTS.get(_LANGUAGE, _SYSTEM_PROMPTS["en"])
 
 # Maximum number of history turns (user + assistant pairs) to include.
 _MAX_HISTORY_TURNS = int(os.getenv("QA_MAX_HISTORY_TURNS", "3"))
@@ -150,18 +164,31 @@ class QAService:
 
         # Construct the current user turn with injected context.
         if context:
-            text_content = (
-                "Use the following context retrieved from the uploaded educational materials "
-                "to answer the question. Do not answer from general knowledge alone.\n\n"
-                f"--- Context ---\n{context}\n--- End of Context ---\n\n"
-                f"Question: {question}"
-            )
+            if _LANGUAGE == "zh":
+                text_content = (
+                    "请根据以下从已上传教学材料中检索到的上下文内容回答问题。请勿仅凭通用知识作答。\n\n"
+                    f"--- 上下文 ---\n{context}\n--- 上下文结束 ---\n\n"
+                    f"问题：{question}"
+                )
+            else:
+                text_content = (
+                    "Use the following context retrieved from the uploaded educational materials "
+                    "to answer the question. Do not answer from general knowledge alone.\n\n"
+                    f"--- Context ---\n{context}\n--- End of Context ---\n\n"
+                    f"Question: {question}"
+                )
         else:
-            text_content = (
-                f"Question: {question}\n\n"
-                "(No relevant content was found in the uploaded materials for this question. "
-                "Please let the user know and suggest they upload relevant files.)"
-            )
+            if _LANGUAGE == "zh":
+                text_content = (
+                    f"问题：{question}\n\n"
+                    "（在已上传的材料中未找到与此问题相关的内容。请告知用户并建议上传相关文件。）"
+                )
+            else:
+                text_content = (
+                    f"Question: {question}\n\n"
+                    "(No relevant content was found in the uploaded materials for this question. "
+                    "Please let the user know and suggest they upload relevant files.)"
+                )
 
         messages.append({"role": "user", "content": text_content})
 

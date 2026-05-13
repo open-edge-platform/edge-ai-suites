@@ -4,16 +4,18 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Docker and Docker Compose v2.20.2 or later
 - Internet connection (for initial VLM model download)
 
 ## Initial Setup
 
 1. Clone the suite:
 
-   Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+2. **Navigate to the Directory**:
+
+     ```bash
+     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
+     ```
 
    ```bash
    git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -27,6 +29,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export HF_TOKEN=<your-huggingface-token>
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -36,25 +39,56 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    Optional environment variables:
 
    ```bash
-   # Optional: Pre-configure a video stream (can also add streams via UI)
+   # Pre-configure a video stream
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
-   # Use a different VLM model (default: Phi-3.5-vision-instruct-int4-ov)
-   export OVMS_SOURCE_MODEL=<supported_model_name> (eg OpenVINO/InternVL2-2B-int4-ov)
-   export MODEL_NAME=<model_name> (eg InternVL2-2B)
+   # VLM model selection 
+   export OVMS_SOURCE_MODEL=<vlm-model-name>   #Example: Openvino/Phi-3.5-vision-instruct-int4-ov
 
-   # Switch to GPU inference (default: CPU)
-   export TARGET_DEVICE=GPU
-
-
-   # Change application port (default: 9000)
-   export PORT=9001
-
-   # Enable debug logging
+   # Log verbosity
    export LOG_LEVEL=DEBUG
    ```
 
-   > **Note:** All environment variables are optional. Streams can be added dynamically through the web UI after startup.
+   **Agentic dispatch — choose one mode:**
+
+   *Option A — Google ADK with local OVMS (default, fully offline):*
+
+   ```bash
+   export USE_ADK=true
+   export COMPOSE_PROFILES=adk-llm
+   export LLM_MODEL=<llm-model-name>   #Example: Openvino/Phi-4-mini-instruct-int4-ov
+   ```
+
+   *Option B — Rule-based (no LLM needed):*
+
+   ```bash
+   export USE_ADK=false
+   export COMPOSE_PROFILES=[]
+   ```
+
+   **Action tools** (configure the ones you want active):
+
+   ```bash
+   # Webhook (receives HMAC-signed POST)
+   export WEBHOOK_URL=https://hooks.example.com/alert
+   export WEBHOOK_SECRET=<hmac-secret>          # optional
+
+   # MQTT
+   export MQTT_BROKER=192.168.1.20
+   export MQTT_PORT=1883
+   export MQTT_USERNAME=<username>              # optional
+   export MQTT_PASSWORD=<password>              # optional
+   export MQTT_BASE_TOPIC=alerts/live-video
+   ```
+
+   **MCP (Model Context Protocol) — optional external tool servers:**
+
+   ```bash
+   export MCP_ENABLED=true                      # default: true
+   export MCP_CONFIG_FILE=resources/mcp_servers.json  # path to MCP server config
+   ```
+
+   Configure MCP servers in `resources/mcp_servers.json`. See [API Reference](./api-reference.md#mcp) for details.
 
 4. Start the Application:
    Run the following command from the project root:
@@ -97,16 +131,54 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 ### Configuring Alerts
 
 1. Under **AI Agent Alerts** section:
-   - Click **Create New Alert** (up to 4 alerts supported)
-   - Enter an **Alert Name** (e.g., "Person Detection")
-   - Write a **Prompt** describing the condition (e.g., "Is there a person?")
+   - Click **Create New Alert**
+   - Enter an **Alert Name** (e.g., "Fire Detection")
+   - Write a **Prompt** describing the condition (e.g., "Is there fire or smoke?")
+   - Set the **Tools** to invoke on detection
 2. Click **Save** to activate
+
+   Alternatively, configure alerts via the REST API:
+
+   ```bash
+   curl -X POST http://localhost:9000/config/alerts \
+     -H "Content-Type: application/json" \
+     -d '[
+       {
+         "name": "Fire Detection",
+         "prompt": "Is there fire or smoke visible?",
+         "enabled": true,
+         "severity": "critical",
+         "tools": ["log_alert", "capture_snapshot"],
+         "escalation": {
+           "threshold_consecutive": 3,
+           "additional_tools": ["trigger_webhook", "publish_mqtt"]
+         }
+       }
+     ]'
+   ```
 
 ### Viewing Results
 
 - The dashboard shows the live stream with analysis results below
 - Use the dropdown to filter alerts: "All Alerts" or individual alert types
 - Results update automatically via Server-Sent Events (SSE)
+- The `alert_action` event surface shows which tools were invoked and whether escalation occurred
+
+### Checking Health and Metrics
+
+```bash
+# Liveness
+curl http://localhost:9000/health
+
+# Readiness (non-200 = not ready)
+curl http://localhost:9000/ready
+
+# System + per-stream metrics
+curl http://localhost:9000/metrics
+
+# List configured action tools
+curl http://localhost:9000/tools
+```
 
 ## Managing the Application
 
@@ -185,6 +257,7 @@ docker compose up -d
 ```
 
 ## Learn More
+
 - [Build from Source](./get-started/build-from-source.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
 
@@ -195,7 +268,6 @@ docker compose up -d
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
-
 
 :::
 hide_directive-->

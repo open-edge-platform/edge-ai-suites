@@ -65,8 +65,6 @@ spec:
             - name: host-dev
               mountPath: /dev
               readOnly: true
-            - name: host-run
-              mountPath: /run
             - name: host-proc
               mountPath: /proc
               readOnly: true
@@ -86,9 +84,6 @@ spec:
         - name: host-dev
           hostPath:
             path: /dev
-        - name: host-run
-          hostPath:
-            path: /run
         - name: host-proc
           hostPath:
             path: /proc
