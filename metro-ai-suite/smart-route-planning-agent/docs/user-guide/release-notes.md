@@ -4,7 +4,8 @@
 
 **Features**
 
-- New websocket connection to smart traffic agent
+- Introduced a websockets client based connection to multiple Smart Traffic Intersection agents
+- Replace the previous gradio based polling logic to asyncio based non-blocking calls at regular intervals
 - Added support for helmchart deployment
 
 ## Version 1.0.0
