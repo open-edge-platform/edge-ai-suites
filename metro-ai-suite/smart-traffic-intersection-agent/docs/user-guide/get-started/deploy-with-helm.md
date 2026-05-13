@@ -35,15 +35,17 @@ The following steps walk through deploying the Smart Traffic Intersection Agent 
 Use the following command to pull the Helm chart:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version 1.1.0-helm
+helm pull oci://registry-1.docker.io/intel/smart-traffic-intersection-agent --version <version-no>
 ```
+
+Refer to release notes for details on the latest version to use.
 
 #### Step 2: Extract the `.tgz` File
 
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-traffic-intersection-agent-1.1.0-helm.tgz
+tar -xvf smart-traffic-intersection-agent-<version-no>.tgz
 ```
 
 Navigate to the extracted directory:
