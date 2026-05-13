@@ -16,9 +16,6 @@ on:
 permissions:
   contents: read
   packages: read
-  pull-requests: read
-  security-events: write
-  actions: read
 
 jobs:
   industrial-edge-insights-time-series-pre-merge-build:
@@ -186,6 +183,11 @@ jobs:
         make down
 
   industrial-edge-insights-time-series-scans:
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+      actions: read
     uses: ./.github/workflows/industrial-edge-insights-time-series-scans.yml
     with:
       target: all-scans

@@ -171,13 +171,13 @@ class TestComputeOVMSModelName:
 
     def test_gpu_auto_weight_format(self):
         assert VLMService._compute_ovms_model_name(
-            "Qwen/Qwen2.5-VL-3B-Instruct", "GPU", ""
-        ) == "Qwen_Qwen2.5-VL-3B-Instruct_GPU_int4"
+            "OpenVINO/InternVL2-1B-int4-ov", "GPU", ""
+        ) == "OpenVINO_InternVL2-1B-int4-ov_GPU"
 
     def test_explicit_weight_format(self):
         assert VLMService._compute_ovms_model_name(
-            "Qwen/Qwen2.5-VL-3B-Instruct", "CPU", "int4"
-        ) == "Qwen_Qwen2.5-VL-3B-Instruct_CPU_int4"
+            "OpenVINO/InternVL2-1B-int4-ov", "CPU", "int4"
+        ) == "OpenVINO_InternVL2-1B-int4-ov_CPU"
 
     def test_openvino_namespace_model(self):
         assert VLMService._compute_ovms_model_name(

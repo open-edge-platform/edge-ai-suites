@@ -9,7 +9,6 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils')))
 import helm_utils
-import docker_utils
 import constants
 #import subprocess
 import time
@@ -539,69 +538,6 @@ def test_opcua_time_kpi():
         f"Build success rate {success_rate}% below required {constants.KPI_REQUIRED_SUCCESS_RATE}%"
     assert avg_time <= constants.KPI_BUILD_TIME_THRESHOLD, \
         f"Average build time {avg_time:.2f}s exceeds threshold of {constants.KPI_BUILD_TIME_THRESHOLD}s"
-    
-@pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
-@pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
-def test_gpu_opcua_helm(setup_helm_environment, request, telegraf_input_plugin):
-    """TC_019: Testing GPU device configuration in time-series analytics helm config with OPC-UA"""
-    logger.info("TC_019: Testing GPU device configuration in time-series analytics helm config with OPC-UA")
-    
-    # Verify pods are running
-    result = helm_utils.verify_pods(namespace)
-    logger.info(f"verify_pods result: {result}")
-    assert result is True, "Failed to verify pods for OPC UA input plugin."
-    logger.info("All pods are running for opcua input plugin")
 
-    # Get the corrected chart path from the setup fixture
-    actual_chart_path = getattr(request.node, 'actual_chart_path', chart_path)
-    
-    # Set up UDF deployment package
-    result = helm_utils.setup_sample_app_udf_deployment_package(actual_chart_path, sample_app=constants.WIND_SAMPLE_APP)
-    logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
-    assert result == True, "Failed to activate UDF deployment package."
-    logger.info("UDF deployment package is activated")
+# GPU tests live in test_GPU_helm.py
 
-    # Wait for containers to stabilize and data to be generated
-    logger.info("Waiting for containers to stabilize and data to be generated...")
-    time.sleep(wait_time)
-    
-    # Execute curl command to post GPU configuration to the API using REST API approach
-    curl_result = helm_utils.execute_gpu_config_curl_helm(device="gpu", namespace=namespace)
-    
-    # Verify the curl command was successful
-    logger.info("Verifying GPU configuration test completed successfully")
-    logger.info(f"curl_result: {curl_result}")
-    assert curl_result, "GPU configuration test via REST API failed"
-
-@pytest.mark.skipif(not docker_utils.check_system_gpu_devices(), reason="No GPU devices detected on this system")
-@pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_MQTT_PLUGIN])
-def test_gpu_mqtt_helm(setup_helm_environment, request, telegraf_input_plugin):
-    """TC_020: Testing GPU device configuration in time-series analytics helm config with MQTT"""
-    logger.info("TC_020: Testing GPU device configuration in time-series analytics helm config with MQTT")
-    
-    # Verify pods are running
-    result = helm_utils.verify_pods(namespace)
-    logger.info(f"verify_pods result: {result}")
-    assert result is True, "Failed to verify pods for MQTT input plugin."
-    logger.info("All pods are running for mqtt input plugin")
-
-    # Get the corrected chart path from the setup fixture
-    actual_chart_path = getattr(request.node, 'actual_chart_path', chart_path)
-    
-    # Set up UDF deployment package
-    result = helm_utils.setup_sample_app_udf_deployment_package(actual_chart_path, sample_app=constants.WIND_SAMPLE_APP)
-    logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
-    assert result == True, "Failed to activate UDF deployment package."
-    logger.info("UDF deployment package is activated")
-
-    # Wait for containers to stabilize and data to be generated
-    logger.info("Waiting for containers to stabilize and data to be generated...")
-    time.sleep(wait_time)
-    
-    # Execute curl command to post GPU configuration to the API using REST API approach
-    curl_result = helm_utils.execute_gpu_config_curl_helm(device="gpu", namespace=namespace)
-    
-    # Verify the curl command was successful
-    logger.info("Verifying GPU configuration test completed successfully")
-    logger.info(f"curl_result: {curl_result}")
-    assert curl_result, "GPU configuration test via REST API failed"

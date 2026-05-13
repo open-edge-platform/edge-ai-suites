@@ -79,9 +79,14 @@ spec:
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
+        {{- if .Values.privileged_access_required }}
         - name: dev-dri
           mountPath: /dev/dri
-          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        - name: dev-accel
+          mountPath: /dev/accel
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        {{- end }}
         - name: dev-shm
           mountPath: /dev/shm
         - name: tmp
@@ -163,9 +168,14 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
+      {{ if .Values.privileged_access_required }}
       - name: dev-dri
         hostPath:
           path: /dev/dri
+      - name: dev-accel
+        hostPath:
+          path: /dev/accel
+      {{- end }}
       - name: dev-shm
         hostPath:
           path: /dev/shm

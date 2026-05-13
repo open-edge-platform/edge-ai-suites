@@ -73,20 +73,23 @@ class EventManager:
             return
 
         payload = {"event": event_type, "data": data}
-        
+
+        # Snapshot subscribers under lock, then release before pushing.
         async with self._lock:
-            dead_queues = []
-            for queue in self._subscribers:
-                try:
-                    # put_nowait raises QueueFull if subscriber is too slow
-                    queue.put_nowait(payload)
-                except asyncio.QueueFull:
-                    dead_queues.append(queue)
-                    logger.warning("Removing slow SSE subscriber (queue full)")
-            
-            # Clean up slow subscribers
-            for q in dead_queues:
-                self._subscribers.discard(q)
+            subscribers = list(self._subscribers)
+
+        dead_queues = []
+        for queue in subscribers:
+            try:
+                queue.put_nowait(payload)
+            except asyncio.QueueFull:
+                dead_queues.append(queue)
+                logger.warning("Removing slow SSE subscriber (queue full)")
+
+        if dead_queues:
+            async with self._lock:
+                for q in dead_queues:
+                    self._subscribers.discard(q)
 
     @property
     def subscriber_count(self) -> int:

@@ -30,7 +30,7 @@ def get_speaker_labels(lang_code: str):
     lang = lang_code.lower().split("-")[0]
     return SPEAKER_LABEL_MAP.get(lang, SPEAKER_LABEL_MAP["en"])
 
-SUMMARIZER_LANG = getattr(config.models.summarizer, "language", "en")
+SUMMARIZER_LANG = getattr(config.app, "language", "en")
 LABELS = get_speaker_labels(SUMMARIZER_LANG)
 
 LABEL_TEACHER = LABELS["teacher"]

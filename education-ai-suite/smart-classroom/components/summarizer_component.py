@@ -49,7 +49,7 @@ class SummarizerComponent(PipelineComponent):
     # ---------------- SYSTEM PROMPT SELECTOR ----------------
 
     def _get_system_prompt(self):
-        lang = config.models.summarizer.language
+        lang = config.app.language
         prompts = vars(config.models.summarizer.system_prompt)[lang]
 
         if self.mode == "teacher":

@@ -5,14 +5,8 @@
 
 export HOST_IP=$(ip route get 1 | awk '{print $7}')
 
-# Registry handling - ensure consistent formatting with trailing slashes
-# If REGISTRY_URL is set, ensure it ends with a trailing slash
-[[ -n "$REGISTRY_URL" ]] && REGISTRY_URL="${REGISTRY_URL%/}/"
-
 # If PROJECT_NAME is set, ensure it ends with a trailing slash
 [[ -n "$PROJECT_NAME" ]] && PROJECT_NAME="${PROJECT_NAME%/}/"
-
-export REGISTRY="${REGISTRY_URL}${PROJECT_NAME}"
 
 # Set default tag if not already set
 export TAG=${TAG:-latest}

@@ -7,7 +7,7 @@ service:
   type: NodePort
 
 # Override CORS origins explicitly. When empty, derived from global.externalIP + global.appNodePort.
-corsOrigins: ""
+corsOrigins: "*"
 
 logLevel: "INFO"
 

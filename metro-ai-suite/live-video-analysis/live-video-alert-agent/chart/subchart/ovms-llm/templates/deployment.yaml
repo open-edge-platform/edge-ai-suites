@@ -1,0 +1,133 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ovms-llm.fullname" . }}
+  labels:
+    {{- include "ovms-llm.labels" . | nindent 4 }}
+    app.kubernetes.io/component: inference
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "ovms-llm.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "ovms-llm.fullname" . }}
+        app.kubernetes.io/component: inference
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ include "ovms-llm.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- if .Values.global.gpu.enabled }}
+      securityContext:
+        supplementalGroups: {{ toJson .Values.global.gpu.supplementalGroups }}
+      {{- end }}
+      initContainers:
+        - name: init-chown-models
+          image: {{ .Values.global.utilities.busybox.image }}:{{ .Values.global.utilities.busybox.tag }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - chown -R {{ required "ovms-llm.runAsUser is required" .Values.runAsUser }}:{{ .Values.runAsUser }} /models
+          securityContext:
+            runAsUser: 0  # Required: chown needs root to change ownership of mounted PVC
+            allowPrivilegeEscalation: false
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: ovms-llm-models
+              mountPath: /models
+      containers:
+        - name: ovms-llm
+          image: {{ include "ovms-llm.image" (dict "registry" .Values.image.registry "repository" .Values.image.repository "tag" .Values.image.tag) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          env:
+            {{- include "ovms-llm.proxyEnv" . | nindent 12 }}
+            {{- if .Values.global.huggingfaceToken }}
+            - name: HF_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-hf-token
+                  key: hf-token
+            {{- end }}
+          args:
+            - --rest_port
+            - "{{ .Values.global.ovmsPort }}"
+            - --source_model
+            - {{ required "ovms-llm.sourceModel is required" .Values.sourceModel | quote }}
+            - --model_repository_path
+            - /models
+            - --model_name
+            - {{ required "global.ovmsLLMModelName is required" .Values.global.ovmsLLMModelName | quote }}
+            - --task
+            - {{ .Values.task | quote }}
+            - --target_device
+            - {{ if .Values.global.gpu.enabled }}{{ required "global.gpu.device must be set when global.gpu.enabled=true" .Values.global.gpu.device | upper | quote }}{{ else }}"CPU"{{ end }}
+          resources:
+            requests:
+              {{- toYaml .Values.resources.requests | nindent 14 }}
+            {{- if .Values.global.gpu.enabled }}
+            limits:
+              {{ required "global.gpu.key must be set when global.gpu.enabled=true (e.g. gpu.intel.com/xe or gpu.intel.com/i915)" .Values.global.gpu.key }}: {{ .Values.global.gpu.count | default 1 }}
+            {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.global.ovmsPort }}
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /v1/config
+              port: http
+            failureThreshold: {{ .Values.healthcheck.startupFailureThreshold }}
+            periodSeconds: {{ .Values.healthcheck.startupPeriodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.startupTimeoutSeconds }}
+          livenessProbe:
+            httpGet:
+              path: /v1/config
+              port: http
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /v1/config
+              port: http
+            periodSeconds: {{ .Values.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.healthcheck.failureThreshold }}
+          volumeMounts:
+            - name: ovms-llm-models
+              mountPath: /models
+          {{- if .Values.global.gpu.enabled }}
+            - name: dev-dri
+              mountPath: /dev/dri
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: ovms-llm-models
+          persistentVolumeClaim:
+            claimName: {{ include "ovms-llm.fullname" . }}-models
+        {{- if .Values.global.gpu.enabled }}
+        - name: dev-dri
+          hostPath:
+            path: /dev/dri
+        {{- end }}
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

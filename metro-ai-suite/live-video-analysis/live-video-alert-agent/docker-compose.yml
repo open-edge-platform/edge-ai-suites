@@ -3,33 +3,39 @@
 
 name: ${PROJECT_NAME:-live-video-alert-agent}
 services:
-  ovms-init:
-    image: busybox:latest
-    container_name: ovms-init
+  ovms-download:
+    image: openvino/model_server:2026.1-gpu
+    container_name: ovms-download
     user: "0:0"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - USE_ADK=${USE_ADK:-true}
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - no_proxy=${no_proxy}
+      - NO_PROXY=${no_proxy}
+      - VLM_REPO=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
+      - LLM_REPO=${LLM_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
+      - VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
+      - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
     volumes:
       - ovms-models:/models
-    command: sh -c "chown -R 5000:5000 /models && chmod -R 755 /models"
+      - ./scripts/init_ovms.sh:/init_ovms.sh:ro
+    entrypoint: ["/bin/bash", "/init_ovms.sh"]
+    networks:
+      - app_network
 
-  ovms:
-    image: openvino/model_server:2026.0-gpu
+  ovms-vlm:
+    image: openvino/model_server:2026.1-gpu
     container_name: ovms-vlm
     restart: unless-stopped
     depends_on:
-      ovms-init:
+      ovms-download:
         condition: service_completed_successfully
     ports:
-      - "8000:8000"
-    devices:
-      - /dev/dri:/dev/dri
-    group_add:  # render group for Ubuntu 20.04/22.04/24.04
-      - "109"
-      - "110"
-      - "992"
-    device_cgroup_rules:
-      - 'c 189:* rmw'
-      - 'c 209:* rmw'
-      - 'a 189:* rwm'
+      - "${VLM_PORT:-8000}:8000"
     environment:
       - no_proxy=${no_proxy},localhost
       - NO_PROXY=${no_proxy},localhost
@@ -37,27 +43,65 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - HF_TOKEN=${HF_TOKEN}
-      - OVMS_SOURCE_MODEL=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
-      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
-      - TARGET_DEVICE=${TARGET_DEVICE:-CPU}
+      - TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
     volumes:
       - ovms-models:/models
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 65536
     command:
       - --rest_port
       - "8000"
-      - --source_model
-      - "${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}"
-      - --model_repository_path
-      - "/models"
-      - --model_name
-      - "${MODEL_NAME:-Phi-3.5-Vision}"
-      - --task
-      - "text_generation"
-      - --pipeline_type
-      - "VLM"
-      - --target_device
-      - "${TARGET_DEVICE:-CPU}"
+      - --config_path
+      - "/models/config_vlm.json"
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - ${RENDER_DEVICE_GID:-992}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 300s
+    networks:
+      - app_network
+
+  ovms-llm:
+    image: openvino/model_server:2026.1-gpu
+    container_name: ovms-llm
+    profiles:
+      - adk-llm
+    restart: unless-stopped
+    depends_on:
+      ovms-download:
+        condition: service_completed_successfully
+    ports:
+      - "${LLM_PORT:-8001}:8000"
+    environment:
+      - no_proxy=${no_proxy},localhost
+      - NO_PROXY=${no_proxy},localhost
+      - http_proxy=${http_proxy}
+      - HTTP_PROXY=${http_proxy}
+      - https_proxy=${https_proxy}
+      - HTTPS_PROXY=${https_proxy}
+      - TARGET_DEVICE=${LLM_TARGET_DEVICE:-CPU}
+    volumes:
+      - ovms-models:/models
+    ulimits:
+      nofile:
+        soft: 16384
+        hard: 65536
+    command:
+      - --rest_port
+      - "8000"
+      - --config_path
+      - "/models/config_llm.json"
+    devices:
+      - "/dev/dri:/dev/dri"
+    group_add:
+      - ${RENDER_DEVICE_GID:-992}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/v1/config"]
       interval: 10s
@@ -69,40 +113,65 @@ services:
 
   live-video-alert-agent:
     image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
-    build:
-      context: .
-      args:
-        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
+    build: .
     container_name: live-video-alert-agent
     restart: unless-stopped
     ports:
       - "${PORT:-9000}:${PORT:-9000}"
     environment:
-      - no_proxy=${no_proxy},ovms
-      - NO_PROXY=${no_proxy}
+      # ---- proxy ----
+      - no_proxy=${no_proxy},ovms-vlm,ovms-llm
       - http_proxy=${http_proxy}
-      - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
-      - HTTPS_PROXY=${https_proxy}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
       - RTSP_URL=${RTSP_URL}
-      - VLM_URL=${VLM_URL:-http://ovms:8000/v3}
-      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
-      - PORT=${PORT:-9000}
+      # ---- VLM / OVMS ----
+      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-vision}
+      # ---- stream capture ----
+      - CAPTURE_FPS=${CAPTURE_FPS:-10}
+      # ---- ADK mode ----
+      - USE_ADK=${USE_ADK:-true}
+      # ---- LLM endpoint ----
+      - LLM_REPO=${LLM_REPO:-OpenVINO/Phi-4-mini-instruct-int4-ov}
+      # ---- snapshot tool ----
+      - SNAPSHOT_DIR=/app/snapshots
+      # ---- webhook action tool (optional) ----
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - WEBHOOK_SECRET=${WEBHOOK_SECRET:-}
+      # ---- MQTT action tool (optional) ----
+      - MQTT_BROKER=${MQTT_BROKER:-}
+      - MQTT_PORT=${MQTT_PORT:-1883}
+      - MQTT_USERNAME=${MQTT_USERNAME:-}
+      - MQTT_PASSWORD=${MQTT_PASSWORD:-}
+      - MQTT_BASE_TOPIC=${MQTT_BASE_TOPIC:-alerts/live-video}
+      # ---- MCP (Model Context Protocol) servers ----
+      - MCP_ENABLED=${MCP_ENABLED:-true}
+      
     volumes:
-      - ./resources:/temp/resources
+      - ./resources:/app/resources
+      - ./src/config.py:/app/src/config.py:ro
+      - snapshots:/app/snapshots
+
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:${PORT:-9000}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Allow container to access MCP servers running on the host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
-      ovms:
+      ovms-vlm:
         condition: service_healthy
+      ovms-llm:
+        condition: service_healthy
+        required: ${USE_ADK:-true}
     networks:
       - app_network
 
   live-metrics-service:
-    image: ${REGISTRY:-}live-metrics-service:1.0.0
-    build:
-      context: ../live-metrics-service
-      dockerfile: Dockerfile
-      args:
-        COPYLEFT_SOURCES: ${COPYLEFT_SOURCES:-false}
+    image: intel/live-metrics-service:1.0.0
     container_name: live-metrics-service
     ports:
       - "${METRICS_PORT:-9090}:9090"
@@ -159,3 +228,5 @@ networks:
 
 volumes:
   ovms-models:
+  # Named volume for alert snapshot images
+  snapshots:

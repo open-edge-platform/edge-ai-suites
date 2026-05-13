@@ -47,6 +47,23 @@ python.exe -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
 ```
 
+### E. Enable OCR Features (Optional)
+
+If you need OCR functionality for document text extraction, install PaddleOCR separately:
+
+```bash
+pip install paddleocr==2.7.0.3 --no-deps
+```
+
+> **Note:** The `--no-deps` flag is required because PaddleOCR declares an outdated `PyMuPDF` dependency that has no pre-built wheel for Python 3.12 on Windows. 
+
+Then enable OCR in `config.yaml`:
+
+```yaml
+ocr:
+  enabled: true
+```
+
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -77,10 +94,10 @@ asr:
   provider: funasr
   name: paraformer-zh
 ```
-Please also config the summarizer to output Chinese
+Please also set the language to Chinese at the app level:
 
 ```yaml
-summarizer:
+app:
   language: zh
 ```
 
@@ -216,7 +233,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Crash during application bring-up on Intel® Core™ Ultra Series 3 processors without any error:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+ - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 

@@ -20,7 +20,7 @@
 #   TAG                         - Image tag (default: latest)
 #   REGISTRY                    - Image registry (default: empty)
 #   LOG_LEVEL                   - Logging level (default: INFO)
-#   VLM_MODEL_NAME              - VLM model (default: microsoft/Phi-3.5-vision-instruct)
+#   VLM_MODEL_NAME              - VLM model (default: OpenVINO/Phi-3.5-vision-instruct-int8-ov)
 #   VLM_TARGET_DEVICE           - Inference device (default: CPU)
 #
 # ==============================================================================
@@ -71,7 +71,7 @@ COMPOSE_FILE := docker/agent-compose.yaml
 PROJECT_NAME ?= trafficagent
 
 # VLM / OVMS Configuration
-VLM_MODEL_NAME ?= microsoft/Phi-3.5-vision-instruct
+VLM_MODEL_NAME ?= OpenVINO/Phi-3.5-vision-instruct-int8-ov
 VLM_TARGET_DEVICE ?= CPU
 VLM_WEIGHT_FORMAT ?=
 VLM_MAX_COMPLETION_TOKENS ?= 1500
@@ -612,7 +612,7 @@ help:
 	@echo "    PROJECT_NAME                 Docker compose project name (default: trafficagent)"
 	@echo ""
 	@echo "    VLM / OVMS Configuration:"
-	@echo "    VLM_MODEL_NAME               VLM model (default: microsoft/Phi-3.5-vision-instruct)"
+	@echo "    VLM_MODEL_NAME               VLM model (default: OpenVINO/Phi-3.5-vision-instruct-int8-ov)"
 	@echo "    VLM_TARGET_DEVICE            CPU or GPU (default: CPU)"
 	@echo "    VLM_WEIGHT_FORMAT            int4, int8, or empty for auto (default: auto)"
 	@echo "    VLM_MAX_COMPLETION_TOKENS    Max tokens (default: 1500)"
@@ -654,7 +654,7 @@ help:
 	@echo "  VLM_TARGET_DEVICE=GPU HUGGINGFACE_TOKEN=hf_xxx make deploy-build"
 	@echo ""
 	@echo "  # Deploy with custom VLM model"
-	@echo "  VLM_MODEL_NAME=Qwen/Qwen2.5-VL-3B-Instruct make deploy"
+	@echo "  VLM_MODEL_NAME=OpenVINO/InternVL2-1B-int4-ov make deploy"
 	@echo ""
 	@echo "  # Run all security scans"
 	@echo "  make trivy-scan bandit-scan gitleaks-scan codeql-scan"

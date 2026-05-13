@@ -1,0 +1,39 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+[project]
+name = "live-video-alert-agent"
+version = "0.1.0"
+description = "Live Video Alert Agent — AI-powered video stream monitoring with agentic dispatch"
+requires-python = ">=3.12"
+dependencies = [
+    # Core framework
+    "fastapi==0.128.0",
+    "uvicorn==0.40.0",
+    "sse-starlette==2.3.6",
+
+    # AI / VLM
+    "opencv-python==4.12.0.88",
+    "openai==2.15.0",
+    "numpy==2.2.6",
+
+    # Schemas & validation
+    "pydantic==2.12.5",
+
+    # Agentic framework
+    "google-adk>=0.3.0",
+    "litellm>=1.50.0",        # LiteLlm bridge for ADK → local OVMS inference
+
+    # Action tools
+    "aiohttp>=3.9.0",       # webhook tool
+    "paho-mqtt>=2.0.0",     # MQTT tool
+
+    # System metrics
+    "psutil>=5.9.0",
+
+    #MCP
+    "fastmcp==3.2.4"
+]
+
+[tool.uv]
+package = false
