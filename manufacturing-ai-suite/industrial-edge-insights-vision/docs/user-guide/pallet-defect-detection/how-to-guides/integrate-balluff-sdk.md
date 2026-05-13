@@ -28,18 +28,11 @@ FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
 
 USER root
 
-RUN apt-get update && apt-get install -y wget gnupg gstreamer1.0-plugins-base libxcb-cursor0 make autoconf vim libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev g++-11 g++ && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
-
-COPY ./thirdparty/install_gencamsrc_gstreamer_plugin.sh /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
+RUN apt-get update && apt-get install -y wget gnupg cmake gstreamer1.0-plugins-base libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev g++ libxcb-cursor0 vim && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc
 
-RUN chmod +x /home/pipeline-server/src-gst-gencamsrc/setup.sh
-RUN chmod +x /home/pipeline-server/src-gst-gencamsrc/autogen.sh
-RUN chmod +x /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
-RUN /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
+RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc) && cmake --install build && ldconfig
 
 # For Ubuntu24 intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24 base image
 RUN apt-get update && apt-get install -y libwxgtk-webview3.2-dev
@@ -74,7 +67,7 @@ This command builds your Docker image using the steps defined above.
 
 ### Step 4: Verify the Image
 
-After the build completes, update .env and start the container:
+After the build completes, inside `dlstreamer-pipeline-server/docker` directory, update .env and start the container:
 
 > update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-balluff
 
@@ -166,7 +159,6 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       minio
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
-127.0.0.1       model_registry
 ```
 
 ### Step 6: Launch the Containers

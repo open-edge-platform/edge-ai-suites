@@ -1,0 +1,12 @@
+# Python virtual environment
+venv/
+
+# GenICam runtime DLLs - downloaded by src/setup_genicam_runtime.ps1
+bin/Win64_x64/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Output files
+output/
