@@ -1,0 +1,199 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+name: "[FedAero] Package"
+run-name: "[FedAero] package (by @${{ github.actor }} via ${{ github.event_name }})"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  workflow_dispatch:
+    inputs:
+      component:
+        description: "Component to build (handheld-multi-modal | deterministic-threat-detection | agentic | infra | federal-aerospace | all)"
+        required: false
+        default: "all"
+      vippet_ref:
+        description: "Optional override for the vippet ref (defaults to VIPPET_REF file)"
+        required: false
+        default: ""
+
+jobs:
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      handheld-multi-modal: ${{ steps.filter.outputs.handheld-multi-modal || steps.manual.outputs.handheld-multi-modal }}
+      deterministic-threat-detection: ${{ steps.filter.outputs.deterministic-threat-detection || steps.manual.outputs.deterministic-threat-detection }}
+      agentic: ${{ steps.filter.outputs.agentic || steps.manual.outputs.agentic }}
+      infra: ${{ steps.filter.outputs.infra || steps.manual.outputs.infra }}
+      solution: ${{ steps.filter.outputs.solution || steps.manual.outputs.solution }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      # On manual dispatch, set outputs based on the requested component.
+      - id: manual
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          component="${{ github.event.inputs.component }}"
+          all="false"; hm="false"; dtd="false"; ag="false"; inf="false"; sol="false"
+          if [[ "$component" == "all" || "$component" == "federal-aerospace" ]]; then
+            all="true"; hm="true"; dtd="true"; ag="true"; inf="true"; sol="true"
+          fi
+          [[ "$component" == "handheld-multi-modal"            ]] && hm="true"
+          [[ "$component" == "deterministic-threat-detection"  ]] && dtd="true"
+          [[ "$component" == "agentic"                         ]] && ag="true"
+          [[ "$component" == "infra"                           ]] && inf="true"
+          echo "handheld-multi-modal=$hm"                         >> "$GITHUB_OUTPUT"
+          echo "deterministic-threat-detection=$dtd"              >> "$GITHUB_OUTPUT"
+          echo "agentic=$ag"                                       >> "$GITHUB_OUTPUT"
+          echo "infra=$inf"                                        >> "$GITHUB_OUTPUT"
+          echo "solution=$sol"                                     >> "$GITHUB_OUTPUT"
+
+      - id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        with:
+          filters: |
+            handheld-multi-modal:
+              - 'federal-aerospace/apps/handheld-multi-modal/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            deterministic-threat-detection:
+              - 'federal-aerospace/apps/deterministic-threat-detection/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            agentic:
+              - 'federal-aerospace/agentic/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            infra:
+              - 'federal-aerospace/infra/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            solution:
+              - 'federal-aerospace/**'
+              - '.github/workflows/fedaero.yaml'
+
+  handheld-multi-modal:
+    name: Build handheld-multi-modal
+    needs: changes
+    if: needs.changes.outputs.handheld-multi-modal == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Build
+        run: |
+          if [[ -n "${{ github.event.inputs.vippet_ref }}" ]]; then
+            make -C federal-aerospace handheld-multi-modal VIPPET_REF="${{ github.event.inputs.vippet_ref }}"
+          else
+            make -C federal-aerospace handheld-multi-modal
+          fi
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: handheld-multi-modal
+          path: federal-aerospace/dist/handheld-multi-modal.zip
+          if-no-files-found: error
+
+  deterministic-threat-detection:
+    name: Build deterministic-threat-detection
+    needs: changes
+    if: needs.changes.outputs.deterministic-threat-detection == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - run: make -C federal-aerospace deterministic-threat-detection
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: deterministic-threat-detection
+          path: federal-aerospace/dist/deterministic-threat-detection.zip
+          if-no-files-found: error
+
+  agentic:
+    name: Build agentic
+    needs: changes
+    if: needs.changes.outputs.agentic == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - run: make -C federal-aerospace agentic
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: agentic
+          path: federal-aerospace/dist/agentic.zip
+          if-no-files-found: error
+
+  infra:
+    name: Build infra
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - run: make -C federal-aerospace infra
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: infra
+          path: federal-aerospace/dist/infra.zip
+          if-no-files-found: error
+
+  federal-aerospace:
+    name: Build federal-aerospace (full solution)
+    needs: changes
+    if: needs.changes.outputs.solution == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Build
+        run: |
+          if [[ -n "${{ github.event.inputs.vippet_ref }}" ]]; then
+            make -C federal-aerospace federal-aerospace VIPPET_REF="${{ github.event.inputs.vippet_ref }}"
+          else
+            make -C federal-aerospace federal-aerospace
+          fi
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: federal-aerospace
+          path: federal-aerospace/dist/federal-aerospace.zip
+          if-no-files-found: error
