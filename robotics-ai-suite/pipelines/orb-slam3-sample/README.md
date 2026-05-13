@@ -133,7 +133,7 @@ sudo apt update
 5. Clone the Robotics AI Suite source:
 
 ```bash
-git clone -b main https://github.com/open-edge-platform/edge-ai-suites.git --recurse-submodules
+git clone https://github.com/open-edge-platform/edge-ai-suites.git --recurse-submodules
 ```
 
 6. Copy the Robotics AI Suite ORB-SLAM3 patches:
