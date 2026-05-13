@@ -1,6 +1,7 @@
 # WinVisionAI — Developer Instructions
 
 This file is the authoritative context document for the `WinVisionAI` application.
+It lives at `.github/copilot-instructions.md` and is auto-loaded by VS Code Copilot.
 Read it before extending or debugging the module.
 
 ---
@@ -30,9 +31,13 @@ built-in `App` to do so from a YAML config). The module handles:
 
 ```
 WinVisionAI/
+├── .github/
+│   └── copilot-instructions.md — This file (Copilot context; auto-loaded by VS Code)
 ├── app.py                      — App: wires config / logging / pipelines / metrics
 ├── config.yaml                 — Sample configuration file
-├── INSTRUCTIONS.md             — This file
+├── bin/
+│   ├── gstgencamsrc.dll        — Pre-built GStreamer GenICam source plugin
+│   └── Win64_x64/              — GenICam VC120 runtime DLLs (populated by setup_genicam_runtime.ps1)
 ├── src/
 │   ├── app_runner.py           — AppRunner mixin: run loop, signal handlers, callbacks
 │   ├── config_loader.py        — YAML loader → validated typed dataclasses (source of truth)
@@ -43,7 +48,8 @@ WinVisionAI/
 │   ├── metrics_collector.py    — MetricsCollector background thread
 │   ├── metrics_exporters.py    — MetricsExporter base + LogExporter + PrometheusExporter
 │   ├── pipeline.py             — Pipeline class + PipelineState enum
-│   └── pipeline_manager.py     — PipelineManager (pool + shared GLib loop)
+│   ├── pipeline_manager.py     — PipelineManager (pool + shared GLib loop)
+│   └── setup_genicam_runtime.ps1 — Downloads EMVA GenICam v3.1 VC120 runtime DLLs into bin\Win64_x64\
 ├── tests/
 │   └── example.py              — Example: two parallel pipelines with callbacks
 └── docs/
@@ -285,6 +291,8 @@ RTSP auto-negotiates transport (UDP → TCP fallback). The decode chain uses D3D
 
 Camera input (`gencamsrc`) is for GenICam-compatible industrial cameras. Requires `serial` to be set in the config.
 
+> **Camera setup:** `bin\gstgencamsrc.dll` ships with the repo. Run `src\setup_genicam_runtime.ps1` once to populate `bin\Win64_x64\` with the required GenICam v3.1 VC120 runtime DLLs. See [docs/get-started.md — Camera Input](docs/get-started.md#camera-input-optional) for the full environment variable setup.
+
 ---
 
 ## Inference Devices
@@ -352,6 +360,7 @@ Viewer URLs are logged after each pipeline launches:
 | `src/config_loader.py` | All dataclasses + YAML parsing. **Source of truth.** Validates input types, metadata output types, and cross-references between pipelines and models. |
 | `src/app_runner.py` | `AppRunner` mixin inherited by `App`: `_wait_for_completion` (uses `threading.Event` for instant Ctrl-C wake), `_install_signal_handlers` (two-phase: 1st Ctrl-C = graceful, 2nd Ctrl-C = force-abort), `_on_state_change`, `_on_completed`, `_on_error` |
 | `src/download_models.py` | CLI helper: download an Ultralytics YOLO model and export it to OpenVINO format. Adapted from [dlstreamer](https://github.com/open-edge-platform/dlstreamer/blob/master/scripts/download_models/download_ultralytics_models.py). |
+| `src/setup_genicam_runtime.ps1` | PowerShell script: downloads EMVA GenICam Package 2018.06 and extracts the Win64 VC120 runtime DLLs into `bin\Win64_x64\`. Run once before using camera input. |
 | `src/log.py` | `setup_logging(LogConfig)` — console + optional rotating file handler |
 | `src/media_service.py` | `MediaService` — downloads, configures, starts/stops `mediamtx.exe` |
 
