@@ -131,13 +131,7 @@
   background: #fafafa;
   border: 1px solid #e0e0e0;
   border-radius: 6px;
-  transition: all 0.2s ease;
   align-items: stretch;
-}
-
-.cs-result-item:hover {
-  background: #f5f9ff;
-  border-color: #1976d2;
 }
 
 /* ───────── Result Item Preview (25%) ───────── */
