@@ -80,7 +80,7 @@ cd smart-nvr
 Clone the repository containing the Helm chart:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 ```
 
 ##### Step 2: Change to the Chart Directory
