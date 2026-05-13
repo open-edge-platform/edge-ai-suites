@@ -10,14 +10,20 @@ This guide covers two workflows:
 Follow `../docker/README_Docker.md` to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
 
 ```bash
-docker pull tfcc:bevfusion
-bash autotest_docker.sh --image tfcc:bevfusion
+docker pull intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:bevfusion
+```
+
+The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+
+```bash
+docker tag intel/tfcc:bevfusion tfcc:bevfusion
 ```
 
 To inspect the image or run the binaries interactively:
 
 ```bash
-bash docker/run_docker.sh tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:bevfusion
 docker exec -it <container id> /bin/bash
 
 cd build
