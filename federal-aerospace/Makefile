@@ -19,14 +19,10 @@ ROOT      := $(abspath .)
 # Source directories for each packaged component.
 HANDHELD_SRC := apps/handheld-multi-modal
 DTD_SRC      := apps/deterministic-threat-detection
-AGENTIC_SRC  := agentic
-INFRA_SRC    := infra
 
 # Output archives.
 HANDHELD_ZIP := $(DIST_DIR)/handheld-multi-modal.zip
 DTD_ZIP      := $(DIST_DIR)/deterministic-threat-detection.zip
-AGENTIC_ZIP  := $(DIST_DIR)/agentic.zip
-INFRA_ZIP    := $(DIST_DIR)/infra.zip
 SOLUTION_ZIP := $(DIST_DIR)/federal-aerospace.zip
 
 # Forwarded to sub-Makefiles when overridden on the command line.
@@ -36,19 +32,13 @@ override_vars := $(foreach v,VIPPET_REPO VIPPET_REF VIPPET_PATH,\
 # --- Public targets ----------------------------------------------------------
 
 .PHONY: all
-all: handheld-multi-modal deterministic-threat-detection agentic infra federal-aerospace ## Build every component ZIP and the full-solution ZIP
+all: handheld-multi-modal deterministic-threat-detection federal-aerospace ## Build every component ZIP and the full-solution ZIP
 
 .PHONY: handheld-multi-modal
 handheld-multi-modal: $(HANDHELD_ZIP) ## Build handheld-multi-modal.zip (includes vippet)
 
 .PHONY: deterministic-threat-detection
 deterministic-threat-detection: $(DTD_ZIP) ## Build deterministic-threat-detection.zip
-
-.PHONY: agentic
-agentic: $(AGENTIC_ZIP) ## Build agentic.zip
-
-.PHONY: infra
-infra: $(INFRA_ZIP) ## Build infra.zip
 
 .PHONY: federal-aerospace
 federal-aerospace: $(SOLUTION_ZIP) ## Build federal-aerospace.zip with the entire solution
@@ -87,18 +77,6 @@ $(DTD_ZIP): $(shell find $(DTD_SRC) -type f 2>/dev/null)
 	zip -rq "$@" "$(DTD_SRC)"
 	@echo "Archive ready: $@"
 
-$(AGENTIC_ZIP): $(shell find $(AGENTIC_SRC) -type f 2>/dev/null)
-	@mkdir -p "$(DIST_DIR)"
-	@rm -f "$@"
-	zip -rq "$@" "$(AGENTIC_SRC)"
-	@echo "Archive ready: $@"
-
-$(INFRA_ZIP): $(shell find $(INFRA_SRC) -type f 2>/dev/null)
-	@mkdir -p "$(DIST_DIR)"
-	@rm -f "$@"
-	zip -rq "$@" "$(INFRA_SRC)"
-	@echo "Archive ready: $@"
-
 # --- Full solution ZIP -------------------------------------------------------
 #
 # Bundles the entire federal-aerospace tree, with handheld-multi-modal already
@@ -107,7 +85,7 @@ $(INFRA_ZIP): $(shell find $(INFRA_SRC) -type f 2>/dev/null)
 SOLUTION_STAGE := $(BUILD_DIR)/federal-aerospace
 
 $(SOLUTION_ZIP): $(HANDHELD_STAMP) \
-		$(shell find $(DTD_SRC) $(AGENTIC_SRC) $(INFRA_SRC) docs -type f 2>/dev/null) \
+		$(shell find $(DTD_SRC) docs -type f 2>/dev/null) \
 		README.md
 	@echo ">> Staging federal-aerospace (full solution)"
 	@rm -rf "$(SOLUTION_STAGE)"

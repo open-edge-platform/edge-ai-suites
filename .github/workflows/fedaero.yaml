@@ -25,7 +25,7 @@ on:
   workflow_dispatch:
     inputs:
       component:
-        description: "Component to build (handheld-multi-modal | deterministic-threat-detection | agentic | infra | federal-aerospace | all)"
+        description: "Component to build (handheld-multi-modal | deterministic-threat-detection | federal-aerospace | all)"
         required: false
         default: "all"
       vippet_ref:
@@ -43,8 +43,6 @@ jobs:
     outputs:
       handheld-multi-modal: ${{ steps.filter.outputs.handheld-multi-modal || steps.manual.outputs.handheld-multi-modal }}
       deterministic-threat-detection: ${{ steps.filter.outputs.deterministic-threat-detection || steps.manual.outputs.deterministic-threat-detection }}
-      agentic: ${{ steps.filter.outputs.agentic || steps.manual.outputs.agentic }}
-      infra: ${{ steps.filter.outputs.infra || steps.manual.outputs.infra }}
       solution: ${{ steps.filter.outputs.solution || steps.manual.outputs.solution }}
     steps:
       - name: Checkout
@@ -55,20 +53,18 @@ jobs:
       # On manual dispatch, set outputs based on the requested component.
       - id: manual
         if: github.event_name == 'workflow_dispatch'
+        env:
+          COMPONENT: ${{ github.event.inputs.component }}
         run: |
-          component="${{ github.event.inputs.component }}"
-          all="false"; hm="false"; dtd="false"; ag="false"; inf="false"; sol="false"
+          component="$COMPONENT"
+          all="false"; hm="false"; dtd="false"; sol="false"
           if [[ "$component" == "all" || "$component" == "federal-aerospace" ]]; then
-            all="true"; hm="true"; dtd="true"; ag="true"; inf="true"; sol="true"
+            all="true"; hm="true"; dtd="true"; sol="true"
           fi
           [[ "$component" == "handheld-multi-modal"            ]] && hm="true"
           [[ "$component" == "deterministic-threat-detection"  ]] && dtd="true"
-          [[ "$component" == "agentic"                         ]] && ag="true"
-          [[ "$component" == "infra"                           ]] && inf="true"
           echo "handheld-multi-modal=$hm"                         >> "$GITHUB_OUTPUT"
           echo "deterministic-threat-detection=$dtd"              >> "$GITHUB_OUTPUT"
-          echo "agentic=$ag"                                       >> "$GITHUB_OUTPUT"
-          echo "infra=$inf"                                        >> "$GITHUB_OUTPUT"
           echo "solution=$sol"                                     >> "$GITHUB_OUTPUT"
 
       - id: filter
@@ -82,14 +78,6 @@ jobs:
               - '.github/workflows/fedaero.yaml'
             deterministic-threat-detection:
               - 'federal-aerospace/apps/deterministic-threat-detection/**'
-              - 'federal-aerospace/Makefile'
-              - '.github/workflows/fedaero.yaml'
-            agentic:
-              - 'federal-aerospace/agentic/**'
-              - 'federal-aerospace/Makefile'
-              - '.github/workflows/fedaero.yaml'
-            infra:
-              - 'federal-aerospace/infra/**'
               - 'federal-aerospace/Makefile'
               - '.github/workflows/fedaero.yaml'
             solution:
@@ -108,9 +96,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Build
+        env:
+          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
         run: |
-          if [[ -n "${{ github.event.inputs.vippet_ref }}" ]]; then
-            make -C federal-aerospace handheld-multi-modal VIPPET_REF="${{ github.event.inputs.vippet_ref }}"
+          if [[ -n "$VIPPET_REF" ]]; then
+            make -C federal-aerospace handheld-multi-modal VIPPET_REF="$VIPPET_REF"
           else
             make -C federal-aerospace handheld-multi-modal
           fi
@@ -138,42 +128,6 @@ jobs:
           path: federal-aerospace/dist/deterministic-threat-detection.zip
           if-no-files-found: error
 
-  agentic:
-    name: Build agentic
-    needs: changes
-    if: needs.changes.outputs.agentic == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-        with:
-          persist-credentials: false
-      - run: make -C federal-aerospace agentic
-      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: agentic
-          path: federal-aerospace/dist/agentic.zip
-          if-no-files-found: error
-
-  infra:
-    name: Build infra
-    needs: changes
-    if: needs.changes.outputs.infra == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-        with:
-          persist-credentials: false
-      - run: make -C federal-aerospace infra
-      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: infra
-          path: federal-aerospace/dist/infra.zip
-          if-no-files-found: error
-
   federal-aerospace:
     name: Build federal-aerospace (full solution)
     needs: changes
@@ -186,9 +140,11 @@ jobs:
         with:
           persist-credentials: false
       - name: Build
+        env:
+          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
         run: |
-          if [[ -n "${{ github.event.inputs.vippet_ref }}" ]]; then
-            make -C federal-aerospace federal-aerospace VIPPET_REF="${{ github.event.inputs.vippet_ref }}"
+          if [[ -n "$VIPPET_REF" ]]; then
+            make -C federal-aerospace federal-aerospace VIPPET_REF="$VIPPET_REF"
           else
             make -C federal-aerospace federal-aerospace
           fi
