@@ -92,8 +92,12 @@ try {
 
         $srcBin = Get-ChildItem $zDir -Recurse -Directory -Filter "bin" | Select-Object -First 1
         if ($srcBin) {
+            # Runtime zips place DLLs in bin\Win64_x64\; unwrap one level so
+            # DLLs land directly in $OutDir rather than $OutDir\Win64_x64\.
+            $srcWin64 = Get-ChildItem $srcBin.FullName -Directory -Filter "Win64_x64" -ErrorAction SilentlyContinue | Select-Object -First 1
+            $copyFrom = if ($srcWin64) { $srcWin64.FullName } else { $srcBin.FullName }
             Write-Host "  Copying Runtime\bin from $($z.BaseName)..."
-            $null = robocopy $srcBin.FullName $OutDir /E /256 /NFL /NDL /NJH /NJS
+            $null = robocopy $copyFrom $OutDir /E /256 /NFL /NDL /NJH /NJS
             if ($LASTEXITCODE -gt 7) {
                 throw "robocopy failed copying Runtime\bin from $($z.Name) (exit $LASTEXITCODE)"
             }
