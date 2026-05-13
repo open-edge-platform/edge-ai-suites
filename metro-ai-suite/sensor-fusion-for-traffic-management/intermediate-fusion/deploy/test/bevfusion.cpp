@@ -262,6 +262,21 @@ void print_filter(const std::vector<int>& labels)
     std::cout << std::endl;
 }
 
+std::string csv_quote(const std::string& value)
+{
+    std::string quoted;
+    quoted.reserve(value.size() + 2);
+    quoted.push_back('"');
+    for (char ch : value) {
+        if (ch == '"') {
+            quoted.push_back('"');
+        }
+        quoted.push_back(ch);
+    }
+    quoted.push_back('"');
+    return quoted;
+}
+
 }  // namespace
 
 int main(int argc, char** argv)
@@ -464,6 +479,87 @@ int main(int argc, char** argv)
                       << "% (samples=" << gpu_samples << ")" << std::endl;
         } else {
             std::cout << "[perf] avg_gpu_util=n/a" << std::endl;
+        }
+    }
+
+    {
+        const std::string csv_path = "split_perf_summary.csv";
+        const bool file_exists = std::filesystem::exists(csv_path);
+        const bool need_header = !file_exists || std::filesystem::file_size(csv_path) == 0;
+
+        std::ofstream csv(csv_path, std::ios::app);
+        if (!csv) {
+            std::cerr << "[perf] failed to open CSV for writing: " << csv_path << std::endl;
+        } else {
+            if (need_header) {
+                csv << "run_id,dataset_path,model_dir,preset,device_request,gpu_name,visualization,dump_pred,requested_num_samples,repeat_count,samples,use_int8_camera,use_int8_pfe,use_int8_fuser,use_int8_head,avg_e2e_ms,avg_lidar_ms,avg_cam_bev_ms,avg_fusion_ms,avg_pre_ms,avg_pfe_ms,avg_scatter_ms,avg_geom_ms,avg_cam_ms,avg_bev_pool_ms,avg_fuser_ms,avg_head_ms,avg_post_ms,avg_cpu_util_pct,avg_gpu_util_pct"
+                    << std::endl;
+            }
+
+            const auto now = std::chrono::system_clock::now();
+            const auto now_time = std::chrono::system_clock::to_time_t(now);
+            std::tm tm_buf{};
+#if defined(_WIN32)
+            localtime_s(&tm_buf, &now_time);
+#else
+            localtime_r(&now_time, &tm_buf);
+#endif
+            std::ostringstream run_id;
+            run_id << std::put_time(&tm_buf, "%Y%m%d_%H%M%S");
+
+            const auto perf = pipeline.perf_stats();
+            const auto& lidar_stats = pipeline.lidar().latency_stats();
+            const auto& cam_bev_stats = pipeline.camera_bev().latency_stats();
+            const auto& fusion_stats = pipeline.fusion().latency_stats();
+            const double n = perf.frames > 0 ? static_cast<double>(perf.frames) : 1.0;
+
+            const double avg_e2e_ms = perf.sum_total_ms / n;
+            const double avg_lidar_ms = perf.sum_lidar_ms / n;
+            const double avg_cam_bev_ms = perf.sum_camera_bev_ms / n;
+            const double avg_fusion_ms = perf.sum_fusion_ms / n;
+            const double avg_pre_ms = lidar_stats.preprocess.avg();
+            const double avg_pfe_ms = lidar_stats.pfe.avg();
+            const double avg_scatter_ms = lidar_stats.scatter.avg();
+            const double avg_geom_ms = cam_bev_stats.geom.avg();
+            const double avg_cam_ms = cam_bev_stats.cam.avg();
+            const double avg_bev_pool_ms = cam_bev_stats.bevpool.avg();
+            const double avg_fuser_ms = fusion_stats.fuser.avg();
+            const double avg_head_ms = fusion_stats.head.avg();
+            const double avg_post_ms = fusion_stats.post.avg();
+            const double avg_cpu_util = args.enable_util ? util_monitor.avgCpuUtil() : -1.0;
+            const double avg_gpu_util = args.enable_util ? util_monitor.avgGpuUtil() : -1.0;
+
+            csv << run_id.str() << ','
+                << csv_quote(args.dataset_path) << ','
+                << csv_quote(args.model_dir.string()) << ','
+                << csv_quote(D.name) << ','
+                << csv_quote(args.device) << ','
+                << csv_quote(cfg_options.gpu_name) << ','
+                << (args.enable_vis ? "1" : "0") << ','
+                << (args.dump_pred ? "1" : "0") << ','
+                << args.num_samples << ','
+                << args.repeat_count << ','
+                << perf.frames << ','
+                << (args.use_int8_camera ? "1" : "0") << ','
+                << (args.use_int8_pfe ? "1" : "0") << ','
+                << (args.use_int8_fuser ? "1" : "0") << ','
+                << (args.use_int8_head ? "1" : "0") << ','
+                << std::fixed << std::setprecision(3)
+                << avg_e2e_ms << ','
+                << avg_lidar_ms << ','
+                << avg_cam_bev_ms << ','
+                << avg_fusion_ms << ','
+                << avg_pre_ms << ','
+                << avg_pfe_ms << ','
+                << avg_scatter_ms << ','
+                << avg_geom_ms << ','
+                << avg_cam_ms << ','
+                << avg_bev_pool_ms << ','
+                << avg_fuser_ms << ','
+                << avg_head_ms << ','
+                << avg_post_ms << ','
+                << avg_cpu_util << ','
+                << avg_gpu_util << std::endl;
         }
     }
 

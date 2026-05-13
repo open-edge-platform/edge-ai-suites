@@ -1,4 +1,4 @@
-# Sensor Fusion for Traffic Management Intermediate-Fusion Deployment Documentation
+# Intel® Metro AI Suite Sensor Fusion for Traffic Management Intermediate-Fusion Deployment Documentation
 
 This directory contains the BEVFusion-based intermediate-fusion implementation under Sensor Fusion for Traffic Management.
 

@@ -107,6 +107,18 @@ void write_kitti_predictions(const std::string& path, const std::vector<BBox3D>&
     }
 }
 
+std::string csv_quote(const std::string& value) {
+    std::string quoted;
+    quoted.reserve(value.size() + 2);
+    quoted.push_back('"');
+    for (char ch : value) {
+        if (ch == '"') quoted.push_back('"');
+        quoted.push_back(ch);
+    }
+    quoted.push_back('"');
+    return quoted;
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -319,16 +331,23 @@ int main(int argc, char* argv[]) {
 
     {
         const std::string csv_path = "unified_perf_summary.csv";
-        const bool file_exists = std::filesystem::exists(csv_path);
-        const bool need_header = !file_exists || std::filesystem::file_size(csv_path) == 0;
+        const std::string csv_header =
+            "run_id,dataset_path,model_path,preset,device_request,gpu_name,visualization,dump_pred,requested_num_samples,repeat_count,samples,use_fp16,recompute_camera_metas,avg_e2e_ms,avg_voxelize_ms,avg_preprocess_ms,avg_geometry_ms,avg_infer_ms,avg_postprocess_ms,avg_cpu_util_pct,avg_gpu_util_pct";
+        bool need_header = true;
+        if (std::filesystem::exists(csv_path) && std::filesystem::file_size(csv_path) > 0) {
+            std::ifstream existing(csv_path);
+            std::string first_line;
+            if (existing && std::getline(existing, first_line) && first_line == csv_header) {
+                need_header = false;
+            }
+        }
 
         std::ofstream csv(csv_path, std::ios::app);
         if (!csv) {
             std::cerr << "[perf] failed to open CSV for writing: " << csv_path << std::endl;
         } else {
             if (need_header) {
-                csv << "run_id,dataset_path,model_path,visualization,samples,avg_total_ms,avg_voxelize_ms,avg_preprocess_ms,avg_geometry_ms,avg_infer_ms,avg_postprocess_ms,avg_cpu_util_pct,avg_gpu_util_pct"
-                    << std::endl;
+                csv << csv_header << std::endl;
             }
 
             const auto now = std::chrono::system_clock::now();
@@ -344,8 +363,9 @@ int main(int argc, char* argv[]) {
 
             const auto perf = pipeline.perf_stats();
             const double n = perf.frames > 0 ? static_cast<double>(perf.frames) : 1.0;
+            const std::string gpu_name = queue.get_device().get_info<sycl::info::device::name>();
 
-            const double avg_total_ms = perf.sum_total_ms / n;
+            const double avg_e2e_ms = perf.sum_total_ms / n;
             const double avg_voxelize_ms = perf.sum_voxelize_ms / n;
             const double avg_preprocess_ms = perf.sum_preprocess_ms / n;
             const double avg_geometry_ms = perf.sum_geometry_ms / n;
@@ -355,9 +375,28 @@ int main(int argc, char* argv[]) {
             const double avg_cpu_util = enable_util ? util_monitor.avgCpuUtil() : -1.0;
             const double avg_gpu_util = enable_util ? util_monitor.avgGpuUtil() : -1.0;
 
-            csv << run_id.str() << ',' << '"' << dataset_path << '"' << ',' << '"' << model_path << '"' << ',' << (enable_vis ? "1" : "0") << ',' << perf.frames
-                << ',' << std::fixed << std::setprecision(3) << avg_total_ms << ',' << avg_voxelize_ms << ',' << avg_preprocess_ms << ',' << avg_geometry_ms << ','
-                << avg_infer_ms << ',' << avg_postprocess_ms << ',' << avg_cpu_util << ',' << avg_gpu_util << std::endl;
+            csv << run_id.str() << ','
+                << csv_quote(dataset_path) << ','
+                << csv_quote(model_path) << ','
+                << csv_quote(bevfusion_unified::unified_dataset_preset_name(preset)) << ','
+                << csv_quote(GPUContextManager::gpuDeviceName()) << ','
+                << csv_quote(gpu_name) << ','
+                << (enable_vis ? "1" : "0") << ','
+                << (dump_pred ? "1" : "0") << ','
+                << num_samples << ','
+                << repeat_count << ','
+                << perf.frames << ','
+                << (use_fp16 ? "1" : "0") << ','
+                << (recompute_camera_metas_every_frame ? "1" : "0") << ','
+                << std::fixed << std::setprecision(3)
+                << avg_e2e_ms << ','
+                << avg_voxelize_ms << ','
+                << avg_preprocess_ms << ','
+                << avg_geometry_ms << ','
+                << avg_infer_ms << ','
+                << avg_postprocess_ms << ','
+                << avg_cpu_util << ','
+                << avg_gpu_util << std::endl;
         }
     }
 
