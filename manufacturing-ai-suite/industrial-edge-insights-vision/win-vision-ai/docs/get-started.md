@@ -89,7 +89,7 @@ The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder —
 Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File src\setup_genicam_runtime.ps1
+.\src\setup_genicam_runtime.ps1
 ```
 
 #### Set Camera Environment Variables

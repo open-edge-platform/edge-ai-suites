@@ -8,9 +8,9 @@
 # plugin (bin\gstgencamsrc.dll) to load on Windows.
 #
 # Usage
-#   powershell -ExecutionPolicy Bypass -File src\setup_genicam_runtime.ps1
-#   powershell -ExecutionPolicy Bypass -File src\setup_genicam_runtime.ps1 -OutDir "D:\my\folder"
-#   powershell -ExecutionPolicy Bypass -File src\setup_genicam_runtime.ps1 -TempDir "D:\tmp"
+#   .\src\setup_genicam_runtime.ps1
+#   .\src\setup_genicam_runtime.ps1 -OutDir "D:\my\folder"
+#   .\src\setup_genicam_runtime.ps1 -TempDir "D:\tmp"
 #
 # Parameters
 #   -OutDir   Destination folder for the runtime DLLs.
@@ -39,35 +39,41 @@ Write-Host "Output : $OutDir"
 Write-Host "URL    : $GENICAM_DOWNLOAD_URL"
 Write-Host ""
 
-# ── Download ────────────────────────────────────────────────────────────────
+# ============================================================================
+# Download
+# ============================================================================
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 Write-Host "Downloading GenICam Package 2018.06..."
 Invoke-WebRequest -Uri $GENICAM_DOWNLOAD_URL -OutFile $GENICAM_ZIP -UseBasicParsing
 Write-Host "Download complete."
 
-# ── Extract to short temp path (avoids MAX_PATH issues) ─────────────────────
+# ============================================================================
+# Extract to short temp path (avoids MAX_PATH issues)
+# ============================================================================
 if (-Not (Test-Path $TempDir)) { New-Item -ItemType Directory -Path $TempDir | Out-Null }
-$ExtractDir = "$TempDir\_gc_$PID"
+$GENICAM_EXTRACT_DIR = "$TempDir\_gc_$PID"
 
 try {
-    Write-Host "Extracting outer zip..."
-    if (Test-Path $ExtractDir) { Remove-Item -Recurse -Force $ExtractDir }
-    Expand-Archive -Path $GENICAM_ZIP -DestinationPath $ExtractDir -Force
+    Write-Host "Extracting..."
+    if (Test-Path $GENICAM_EXTRACT_DIR) { Remove-Item -Recurse -Force $GENICAM_EXTRACT_DIR }
+    Expand-Archive -Path $GENICAM_ZIP -DestinationPath $GENICAM_EXTRACT_DIR -Force
 
-    # The outer zip contains a top-level folder with a "Reference Implementation" subfolder
-    # that holds the per-platform inner zips.
-    $refDir = Get-ChildItem $ExtractDir -Recurse -Directory -Filter "Reference Implementation" |
+    # The GenICam_Package_2018.06.zip is a package-of-packages.
+    # The actual Win64 VC120 runtime DLLs live in inner zip files under
+    # "Reference Implementation":
+    #   *Win64_x64_VS120*Runtime*          -> bin\ (Runtime DLLs)
+    #   *Win64_x64_VS120*CommonRuntime*    -> bin\ (shared DLLs)
+    #   *Win64_x64_VS120*Development*      -> skipped (headers + import libs not needed)
+    $refDir = Get-ChildItem $GENICAM_EXTRACT_DIR -Recurse -Directory -Filter "Reference Implementation" |
         Select-Object -First 1 -ExpandProperty FullName
 
     if (-Not $refDir) {
         Write-Host "Extracted top-level contents:"
-        Get-ChildItem $ExtractDir -Recurse -Depth 2 | ForEach-Object { Write-Host "  $($_.FullName)" }
+        Get-ChildItem $GENICAM_EXTRACT_DIR -Recurse -Depth 2 | ForEach-Object { Write-Host "  $($_.FullName)" }
         throw "Cannot locate 'Reference Implementation' folder inside the GenICam zip. Unexpected layout."
     }
 
-    # Find all Win64_x64_VS120 zips — skip Development, extract Runtime DLLs only.
-    # Relevant zips: Runtime, CommonRuntime, FirmwareUpdateRuntime (all contain a bin\ folder).
     $win64Zips = Get-ChildItem $refDir -Filter "*Win64_x64_VS120*.zip"
     if (-Not $win64Zips) {
         throw "No Win64_x64_VS120 zip files found in '$refDir'."
@@ -81,19 +87,19 @@ try {
         }
 
         Write-Host "Extracting: $($z.Name)"
-        $zDir = "$ExtractDir\_$($z.BaseName)"
+        $zDir = "$GENICAM_EXTRACT_DIR\_$($z.BaseName)"
         Expand-Archive -Path $z.FullName -DestinationPath $zDir -Force
 
         $srcBin = Get-ChildItem $zDir -Recurse -Directory -Filter "bin" | Select-Object -First 1
         if ($srcBin) {
-            Write-Host "  Copying DLLs from $($z.BaseName)..."
+            Write-Host "  Copying Runtime\bin from $($z.BaseName)..."
             $null = robocopy $srcBin.FullName $OutDir /E /256 /NFL /NDL /NJH /NJS
             if ($LASTEXITCODE -gt 7) {
-                throw "robocopy failed copying from $($z.Name) (exit $LASTEXITCODE)"
+                throw "robocopy failed copying Runtime\bin from $($z.Name) (exit $LASTEXITCODE)"
             }
             $copied++
         } else {
-            Write-Warning "No bin\ folder found inside $($z.Name) — skipping."
+            Write-Warning "No bin\ folder found inside $($z.Name) - skipping."
         }
     }
 
@@ -103,17 +109,16 @@ try {
 
     $dllCount = (Get-ChildItem $OutDir -Filter "*.dll" -ErrorAction SilentlyContinue).Count
     Write-Host ""
-    Write-Host "Done. $dllCount DLL(s) in: $OutDir"
+    Write-Host "GenICam runtime DLLs extracted to: $OutDir ($dllCount file(s))"
     Write-Host ""
-    Write-Host "Next steps — set these environment variables before running gst-inspect-1.0 gencamsrc:"
+    Write-Host "Next steps - set these environment variables before running gst-inspect-1.0 gencamsrc:"
     Write-Host "  `$genicamRuntime = `"$OutDir`""
     Write-Host "  `$env:PATH = `"`$genicamRuntime;`$env:PATH`""
 
+} catch {
+    Write-Error "GenICam runtime setup failed: $_"
+    exit 1
 } finally {
-    if (Test-Path $ExtractDir) {
-        Remove-Item -Recurse -Force $ExtractDir -ErrorAction SilentlyContinue
-    }
-    if (Test-Path $GENICAM_ZIP) {
-        Remove-Item -Force $GENICAM_ZIP -ErrorAction SilentlyContinue
-    }
+    if (Test-Path $GENICAM_EXTRACT_DIR) { Remove-Item -Recurse -Force $GENICAM_EXTRACT_DIR -ErrorAction SilentlyContinue }
+    if (Test-Path $GENICAM_ZIP) { Remove-Item -Force $GENICAM_ZIP -ErrorAction SilentlyContinue }
 }
