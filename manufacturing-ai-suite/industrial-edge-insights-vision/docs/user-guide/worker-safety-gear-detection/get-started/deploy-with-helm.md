@@ -135,7 +135,7 @@
    ./sample_start.sh helm -p worker_safety_gear_detection
    ```
 
-   This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different options available.
+   This command looks for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launches a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about the different options available.
 
    Output:
 
@@ -156,7 +156,7 @@
    Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "74bebe7a5d1211f08ab0da88aa49c01e"
    ```
 
-   > **Note:** This would start the pipeline. You can view the inference stream on WebRTC by
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by
    > opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/worker_safety/` for Worker Safety gear detection.
    > If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
