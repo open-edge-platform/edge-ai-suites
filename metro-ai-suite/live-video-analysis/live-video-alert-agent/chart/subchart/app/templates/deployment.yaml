@@ -75,7 +75,7 @@ spec:
               value: {{ .Values.useAdk | quote }}
             - name: LLM_URL
               value: "http://{{ printf "%s-ovms-llm.%s.svc.cluster.local:%d/v3" .Release.Name .Release.Namespace (.Values.global.ovmsPort | int) }}"
-            - name: LLM_MODEL
+            - name: LLM_REPO
               value: {{ .Values.global.ovmsLLMModelName | quote }}
             - name: CAPTURE_FPS
               value: {{ .Values.captureFps | quote }}

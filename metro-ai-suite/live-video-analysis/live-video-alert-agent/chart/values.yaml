@@ -42,7 +42,7 @@ global:
 
   ovmsPort: 8000
   metricsPort: 9090
-  ovmsModelName: "Phi-3.5-Vision"
+  ovmsModelName: "Phi-3.5-vision-instruct-int4-ov"
   ovmsLLMModelName: "Phi-4-mini-instruct-int4-ov"
   appNodePort: 30900
   metricsNodePort: 30090

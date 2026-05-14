@@ -1,7 +1,7 @@
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-FROM python:3.13-slim@sha256:49b618b8afc2742b94fa8419d8f4d3b337f111a0527d417a1db97d4683cb71a6 AS base
+FROM python:3.12-slim AS base
 
 # Build stage
 FROM base AS builder
@@ -25,6 +25,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 FROM base AS production
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \
+    python -m pip install --upgrade --no-cache-dir pip && \
     rm -rf /var/lib/apt/lists/*
 
 # Create non-root user

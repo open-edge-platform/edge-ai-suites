@@ -28,8 +28,7 @@ AgentManager                   one asyncio.Task per stream (concurrent)
   │   └─ escalation trigger    promotes alert tier after N consecutives
   │
   ├─ AlertActionAgent          decides WHICH tools to call
-  │   ├─ ADK mode              Google ADK LlmAgent + FunctionTool (default)
-  │   ├─ LLM mode        OVMS-hosted text model endpoint
+  │   ├─ ADK mode              Google ADK LlmAgent + FunctionTool (default) with OVMS-hosted text model endpoint
   │   └─ Rule-based mode       direct tool execution — no LLM needed
   │
   ├─ MCP Client (optional)     Model Context Protocol integration
@@ -115,18 +114,7 @@ Best for dynamic, LLM-reasoned escalation logic that can be adjusted without cod
 changes. The LLM is served locally via OVMS (`ovms-llm` service) using an
 OpenAI-compatible API endpoint.
 
-#### Mode 2 — Local LLM (`USE_LOCAL_LLM=true`)
-
-Connects to an OVMS-hosted OpenAI-compatible text endpoint. Two-tier execution:
-
-1. **Tool-calling API** — sends `tools=` schemas; models that support
-   function-calling (llama3.1+, Mistral, Phi-3, etc.) return `tool_calls` directly.
-2. **JSON text fallback** — re-prompts asking for a JSON array of tool names;
-   a regex+JSON parser extracts valid names from free-form text.
-
-Requires: `LLM_URL` and `LLM_MODEL`.
-
-#### Mode 3 — Rule-based (default)
+#### Mode 2 — Rule-based (`USE_ADK=false`)
 
 Directly executes the tool list from `AlertConfig.tools` in order. No external LLM
 required — works fully offline and air-gapped. Escalation tools from

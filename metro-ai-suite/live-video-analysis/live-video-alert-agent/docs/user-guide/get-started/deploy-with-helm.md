@@ -20,7 +20,7 @@ Before you begin, ensure that you have the following:
 
 ```bash
 helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version <version-no>
-tar -xvf live-video-alert-agent-chart<version-no>.tgz
+tar -xvf live-video-alert-agent-chart-<version-no>.tgz
 cd live-video-alert-agent-chart
 ```
 

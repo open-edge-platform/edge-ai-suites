@@ -4,7 +4,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Docker and Docker Compose v2.20.2 or later
 - Internet connection (for initial VLM model download)
 
 ## Initial Setup
@@ -29,6 +29,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export HF_TOKEN=<your-huggingface-token>
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -41,12 +42,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    # Pre-configure a video stream
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
-   # VLM model selection (default: Phi-3.5-vision-instruct-int4-ov)
-   export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-   export MODEL_NAME=InternVL2-2B
-
-   # Application port (default: 9000)
-   export PORT=9001
+   # VLM model selection 
+   export OVMS_SOURCE_MODEL=<vlm-model-name>   #Example: Openvino/Phi-3.5-vision-instruct-int4-ov
 
    # Log verbosity
    export LOG_LEVEL=DEBUG
@@ -59,7 +56,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export USE_ADK=true
    export COMPOSE_PROFILES=adk-llm
-   export LLM_MODEL=Phi-4-mini-instruct-int4-ov
+   export LLM_MODEL=<llm-model-name>   #Example: Openvino/Phi-4-mini-instruct-int4-ov
    ```
 
    *Option B — Rule-based (no LLM needed):*

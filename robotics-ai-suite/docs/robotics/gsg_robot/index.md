@@ -148,6 +148,18 @@ For detailed instructions, see the [image-composer-tool installation guide](http
 
    ```bash
    export PATH=$PATH:/usr/lib/go-1.24/bin
+   ```
+
+   Verify that Go 1.24 is now active:
+
+   ```bash
+   go version
+   ```
+
+   To make this change permanent for future shell sessions, add the export command to your ``~/.bashrc`` file:
+
+   ```bash
+   echo 'export PATH=$PATH:/usr/lib/go-1.24/bin' >> ~/.bashrc
    source ~/.bashrc
    ```
 

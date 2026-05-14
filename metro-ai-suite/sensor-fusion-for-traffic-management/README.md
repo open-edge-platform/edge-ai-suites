@@ -1,22 +1,29 @@
 # Intel® Metro AI Suite Sensor Fusion for Traffic Management
 
-Unlock the future of traffic management with the Intel® software reference implementation of the Metro AI Suite Sensor Fusion for Traffic Management. This implementation integrates AI inferencing with sensor fusion technology, utilizing multi-modal sensors such as cameras and radars to deliver unparalleled performance. A traffic management system leveraging the fusion of camera and radar/lidar sensors offers superior accuracy and reliability over camera-only solutions. Cameras capture high-resolution visual data, while radar/lidar sensors precisely measure speed and distance, even under challenging conditions like fog, rain, or darkness. This integration ensures a more robust and comprehensive approach to traffic monitoring and decision-making, enhancing overall system performance and safety.
+This directory now contains two sensor-fusion implementations:
 
-## Learn More
-- [Overview](./docs/user-guide/index.md)
-- [Get started guide](./docs/user-guide/get-started-guide.md)
-- [Advanced user guide](./docs/user-guide/advanced-user-guide.md)
+- `post-fusion/`: the original Sensor Fusion for Traffic Management codebase, now scoped to the post-fusion pipelines for camera + radar (C+R) and camera + lidar (C+L).
+- `intermediate-fusion/`: the BEVFusion-based intermediate-fusion implementation.
 
+## Choose an implementation
 
+### Post-Fusion
 
-> **Notice for FFmpeg:**
->
-> FFmpeg is an open source project licensed under LGPL and GPL. See [https://www.ffmpeg.org/legal.html](https://www.ffmpeg.org/legal.html).
->
-> You are solely responsible for determining if your use of FFmpeg requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of FFmpeg.
+Use this implementation for the original post-fusion traffic pipelines, including C+R and C+L variants.
 
-> **Notice for GStreamer:**
->
-> GStreamer is an open source framework licensed under LGPL. See [https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html](https://gstreamer.freedesktop.org/documentation/frequently-asked-questions/licensing.html).
->
-> You are solely responsible for determining if your use of GStreamer requires any additional licenses. Intel is not responsible for obtaining any such licenses, nor liable for any licensing fees due, in connection with your use of GStreamer.
+- [Post-fusion README](./post-fusion/README.md)
+- [Post-fusion user guide](./post-fusion/docs/user-guide/index.md)
+- [Post-fusion get started guide](./post-fusion/docs/user-guide/get-started-guide.md)
+
+### Intermediate-Fusion
+
+Use this implementation for the BEVFusion-based intermediate-fusion deployment.
+
+- [Intermediate-fusion README](./intermediate-fusion/README.md)
+- [Intermediate-fusion Docker guide](./intermediate-fusion/docker/README_Docker.md)
+- [Intermediate-fusion host guide](./intermediate-fusion/docs/GSG.md)
+
+## Directory Layout
+
+- `post-fusion/`: build scripts, runtime scripts, deployment assets, and user documentation for the post-fusion implementation.
+- `intermediate-fusion/`: BEVFusion deployment assets, Docker workflow, smoke tests, and evaluation tools.
