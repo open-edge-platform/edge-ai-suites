@@ -14,18 +14,18 @@ dependencies = [
 
     # AI / VLM
     "opencv-python==4.12.0.88",
-    "openai==2.15.0",
+    "openai==2.24.0",
     "numpy==2.2.6",
 
     # Schemas & validation
     "pydantic==2.12.5",
 
     # Agentic framework
-    "google-adk>=0.3.0",
-    "litellm>=1.50.0",        # LiteLlm bridge for ADK → local OVMS inference
+    "google-adk>=1.28.1",
+    "litellm>=1.83.14",        # LiteLlm bridge for ADK → local OVMS inference
 
     # Action tools
-    "aiohttp>=3.9.0",       # webhook tool
+    "aiohttp>=3.13.4",       # webhook tool
     "paho-mqtt>=2.0.0",     # MQTT tool
 
     # System metrics
