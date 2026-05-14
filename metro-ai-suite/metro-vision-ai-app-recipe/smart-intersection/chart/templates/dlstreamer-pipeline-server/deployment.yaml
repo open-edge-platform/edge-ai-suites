@@ -147,6 +147,11 @@ spec:
         ports:
           - containerPort: 8080
           - containerPort: 8555
+      {{- if .Values.dlstreamerPipelineServer.npuWorkload }}
+        resources:
+          limits:
+            npu.intel.com/accel: 1
+      {{- end }}
       restartPolicy: Always
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
