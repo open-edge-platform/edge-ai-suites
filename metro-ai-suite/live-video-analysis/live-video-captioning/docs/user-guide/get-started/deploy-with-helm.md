@@ -31,6 +31,7 @@ Before you begin, ensure that you have the following:
    | proxy                      | Set the proxy value based on your system environment                                                                    | <your_system_proxy>                    |
    | HUGGINGFACEHUB_API_TOKEN   | HuggingFace token to download gated model                                                                               | <your_huggingface_token>               |
    | ENABLE_PLUGINS             | Comma-separated list of plugins to enable                                                                               | "openvino,ultralytics"                 |
+   | OVMS_RELEASE_TAG           | OVMS release tag used by the script to enable support for newer models during OpenVINO conversion                           | default: `v2025.4.1`                   |
    | gpu.enabled                | For model-download service pod to be deployed on GPU                                                                    | true                                   |
    | gpu.key                    | Label assigned to the GPU node on kubernetes cluster by the device plugin. Identify by running `kubectl describe node` | gpu.intel.com/i915 or gpu.intel.com/xe |
    | affinity.enabled           | Set to true to deploy on dedicated node                                                                                 | true                                   |
