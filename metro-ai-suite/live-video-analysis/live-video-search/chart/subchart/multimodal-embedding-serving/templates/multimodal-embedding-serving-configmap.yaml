@@ -15,6 +15,13 @@ data:
   DEFAULT_START_OFFSET_SEC: {{ .Values.global.env.defaultStartOffsetSec | quote }}
   DEFAULT_CLIP_DURATION: {{ .Values.global.env.defaultClipDuration | quote }}
   DEFAULT_NUM_FRAMES: {{ .Values.global.env.defaultNumFrames | quote }}
+  INFER_BATCH_SIZE: {{ .Values.global.env.inferBatchSize | default 32 | quote }}
+  PREPROCESS_WORKERS: {{ .Values.global.env.preprocessWorkers | default 8 | quote }}
+  VIDEO_FRAME_BATCH_SIZE: {{ .Values.global.env.videoFrameBatchSize | default 64 | quote }}
+  VIDEO_FRAME_QUEUE_SIZE: {{ .Values.global.env.videoFrameQueueSize | default 32 | quote }}
+  VIDEO_FRAME_SHM_POOL_BLOCK_SIZE: {{ .Values.global.env.videoFrameShmPoolBlockSize | default 6220800 | int | quote }}
+  VIDEO_FRAME_SHM_POOL_BLOCKS_MULTIPLIER: {{ .Values.global.env.videoFrameShmPoolBlocksMultiplier | default 2 | quote }}
+  VIDEO_FRAME_LOG_LEVEL: {{ .Values.global.env.videoFrameLogLevel | default "INFO" | quote }}
   OV_PERFORMANCE_MODE: {{ ternary "LATENCY" .Values.global.env.ovPerformanceMode $embedGpuEnabled | quote }}
   HF_HOME: "/home/appuser/.cache/huggingface"
   HF_TOKEN_PATH: "/tmp/hf_token"
