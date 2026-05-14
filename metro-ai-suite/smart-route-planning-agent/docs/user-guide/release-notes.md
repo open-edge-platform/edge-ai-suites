@@ -2,7 +2,7 @@
 
 ## Version 2026.1.0-rc1
 
-**Features**
+**May 14, 2026**
 
 - Introduced a websockets client based connection to multiple Smart Traffic Intersection agents
 - Replace the previous gradio based polling logic to asyncio based non-blocking calls at regular intervals
