@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
