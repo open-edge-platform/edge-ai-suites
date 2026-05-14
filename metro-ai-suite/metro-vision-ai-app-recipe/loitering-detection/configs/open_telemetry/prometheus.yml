@@ -4,5 +4,10 @@ global:
 scrape_configs:
   - job_name: 'otel-log-collector'
     static_configs:
-      - targets: ['otel-collector:9464']
+      - targets: ['otel-collector:9464', 'metrics-manager:9273']
+
+  - job_name: 'qmmd-logs'
+    scrape_interval: 300ms  # Scrape metrics every 300 milliseconds
+    static_configs:
+      - targets: ['metrics-manager:9274']
 

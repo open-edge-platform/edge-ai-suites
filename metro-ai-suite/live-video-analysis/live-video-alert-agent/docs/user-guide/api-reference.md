@@ -381,7 +381,7 @@ Manually invoke an MCP tool for testing.
 
 - **Response**:
 
-  ```
+  ```text
   {
     "tool": "mcp_prometheus_execute_query",
     "status": "success",
@@ -389,6 +389,8 @@ Manually invoke an MCP tool for testing.
     "duration_ms": 45.3
   }
   ```
+  
+  > **Note**: The `result` field contains the raw response returned by the MCP tool; its structure varies per tool.
 
 - **Status Codes**: `200` | `404` tool not found | `503` MCP disabled or server not connected
 

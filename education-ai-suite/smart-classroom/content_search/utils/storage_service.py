@@ -45,6 +45,11 @@ class StorageService:
     ) -> dict:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
+
+        if max_size_bytes is not None and file.size and file.size > max_size_bytes:
+            logger.warning(f"Upload rejected: file '{file.filename}' size {file.size} bytes exceeds maximum allowed {max_size_bytes} bytes")
+            raise HTTPException(status_code=413, detail="File size exceeds maximum allowed limit")
+
         run_id = str(uuid.uuid4())
         main_type = file.content_type.split('/')[0]
         object_key = self._store.build_raw_object_key(
@@ -69,10 +74,8 @@ class StorageService:
                         break
                     total_bytes += len(chunk)
                     if max_size_bytes is not None and total_bytes > max_size_bytes:
-                        raise HTTPException(
-                            status_code=413,
-                            detail=f"File exceeds maximum size of {max_size_bytes} bytes",
-                        )
+                        logger.warning(f"Upload rejected during streaming: file '{file.filename}' reached {total_bytes} bytes, exceeds maximum allowed {max_size_bytes} bytes")
+                        raise HTTPException(status_code=413, detail="File size exceeds maximum allowed limit")
                     hasher.update(chunk)
                     out.write(chunk)
         except HTTPException:

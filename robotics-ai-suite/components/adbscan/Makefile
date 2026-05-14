@@ -34,7 +34,7 @@ PACKAGES = ROS2_node \
 
 license-check:
 	@# Help: Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
-	docker run --rm --volume ${ROOT_DIR}:/data amr-registry.caas.intel.com/cache/fsfe/reuse:5.0.2 lint
+	docker run --rm --volume ${ROOT_DIR}:/data fsfe/reuse:5.0.2 lint
 
 package:
 	@# Help: Build Debian packages
