@@ -74,6 +74,7 @@ data:
         local MODEL_BASENAME="${MODEL_NAME##*/}"
         local MODEL_PROVIDER="${MODEL_NAME%%/*}"
         local TARGET_SUBPATH=""
+        local MODEL_DOWNLOAD_STAGING_DIR=""
 
         # Keep model families isolated on the shared PVC.
         if [ "$MODEL_TYPE" = "vision" ]; then
@@ -118,9 +119,26 @@ data:
             MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL%/}/models/download"
         fi
 
-        if [ -z "${DOWNLOAD_MODEL_DIR:-}" ]; then
-            DOWNLOAD_MODEL_DIR="downloaded_models/"
+        case "$MODEL_TYPE" in
+            llm) MODEL_DOWNLOAD_STAGING_DIR="downloaded_llm_models" ;;
+            vlm) MODEL_DOWNLOAD_STAGING_DIR="downloaded_vlm_models" ;;
+            vision) MODEL_DOWNLOAD_STAGING_DIR="downloaded_vision_models" ;;
+            *)
+                echo "ERROR: Unknown model type: ${MODEL_TYPE}. Please specify a valid type (vlm, vision, or llm)."
+                exit 1
+                ;;
+        esac
+
+        # Normalize path for API usage and local cleanup.
+        MODEL_DOWNLOAD_STAGING_DIR="${MODEL_DOWNLOAD_STAGING_DIR#/}"
+        MODEL_DOWNLOAD_STAGING_DIR="${MODEL_DOWNLOAD_STAGING_DIR%/}"
+
+        if [ -z "$MODEL_DOWNLOAD_STAGING_DIR" ]; then
+            echo "ERROR: Effective model download directory is empty."
+            exit 1
         fi
+
+        echo "Using model-download staging directory: /opt/models/${MODEL_DOWNLOAD_STAGING_DIR}"
 
         resolve_content_dir() {
             local root="$1"
@@ -206,7 +224,7 @@ data:
 
                 # Submit download request
                 set +e
-                POST_RESPONSE=$(curl -sS -X POST "${MODEL_DOWNLOAD_API_URL}?download_path=${DOWNLOAD_MODEL_DIR}" \
+                POST_RESPONSE=$(curl -sS -X POST "${MODEL_DOWNLOAD_API_URL}?download_path=${MODEL_DOWNLOAD_STAGING_DIR}/" \
                         -H "Content-Type: application/json" \
                         -d "${PAYLOAD}")
                 CURL_RC=$?
@@ -285,8 +303,7 @@ data:
                 exit 1
             fi
 
-            # Translate path: model-download uses /opt/models, but we mount models-pvc at /opt/data
-            # So /opt/models/downloaded_models/... becomes /opt/data/downloaded_models/...
+            # Translate path: model-download uses /opt/models, but we mount models-pvc at /opt/data.
             source_path=$(echo "$conversion_path" | sed 's|/opt/models|/opt/data|')
 
             if [ ! -d "$source_path" ]; then
@@ -323,12 +340,15 @@ data:
                 echo "Copied VLM/LLM model files from $content_dir"
             fi
 
-            # Keep PVC root clean: remove wrapper folders created by model-download service.
-            rm -rf "/opt/data/downloaded_models"
-            rm -rf "/opt/data/models"
-
             echo "Successfully copied model files for job $job_id"
         done
+
+        # Keep PVC clean: remove only this request's staging directories.
+        staging_dir="/opt/data/${MODEL_DOWNLOAD_STAGING_DIR}"
+        legacy_staging_dir="/opt/data/models/${MODEL_DOWNLOAD_STAGING_DIR}"
+
+        rm -rf "$staging_dir"
+        rm -rf "$legacy_staging_dir"
 
         echo "Successfully prepared ${MODEL_TYPE} model: ${MODEL_NAME} at ${TARGET_DIR}"
     }
