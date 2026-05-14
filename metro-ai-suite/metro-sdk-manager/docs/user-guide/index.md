@@ -1,4 +1,4 @@
-# OEP SDK Manager
+# Open Edge Platform (OEP) SDK Manager
 
 The SDK Manager is a comprehensive development tool that streamlines the process of discovering, installing, and managing multiple software development kits for edge AI applications.
 
