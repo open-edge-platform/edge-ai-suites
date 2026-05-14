@@ -26,21 +26,15 @@ FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
 
 USER root
 
-RUN apt-get update && apt-get install -y wget gnupg gstreamer1.0-plugins-base libxcb-cursor0 make autoconf vim libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev g++-11 g++ && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100
+RUN apt-get update && apt-get install -y wget gnupg cmake gstreamer1.0-plugins-base libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev g++ libxcb-cursor0 vim && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 RUN cd /tmp && wget https://downloads-ctf.baslerweb.com/dg51pdwahxgw/16EbjATpV78LtOFUQ1VpJM/ab3db40227afb59df3eb1cccf0c5addc/pylon-7.5.0.15658-linux-x86_64_debs.tar.gz &&     tar -xvzf pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && rm pylon-7.5.0.15658-linux-x86_64_debs.tar.gz && dpkg -i pylon_7.5.0.15658-deb0_amd64.deb || apt-get install -fy && rm pylon_7.5.0.15658-deb0_amd64.deb
 
 RUN cd /tmp && wget https://github.com/basler/gst-plugin-pylon/releases/download/v1.0.0/gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && dpkg -i gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb && rm gst-plugin-pylon_1.0.0-1.ubuntu-24.04_amd64.deb
 
-COPY ./thirdparty/install_gencamsrc_gstreamer_plugin.sh /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
 COPY ./plugins/camera/src-gst-gencamsrc /home/pipeline-server/src-gst-gencamsrc
 
-RUN chmod +x /home/pipeline-server/src-gst-gencamsrc/setup.sh
-RUN chmod +x /home/pipeline-server/src-gst-gencamsrc/autogen.sh
-RUN chmod +x /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
-RUN /home/pipeline-server/install_gencamsrc_gstreamer_plugin.sh
+RUN cd /home/pipeline-server/src-gst-gencamsrc && cmake -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j$(nproc) && cmake --install build && ldconfig
 
 ENV GENICAM_GENTL64_PATH=/opt/pylon/lib/gentlproducer/gtl \
     GST_PLUGIN_PATH=/opt/intel/dlstreamer/lib:/opt/intel/dlstreamer/gstreamer/lib/gstreamer-1.0:/opt/intel/dlstreamer/gstreamer/lib/:/usr/lib/x86_64-linux-gnu/gstreamer-1.0:/usr/local/lib/gstreamer-1.0
@@ -60,7 +54,7 @@ This command builds your Docker image using the steps defined above.
 
 ### Step 4: Verify the Image
 
-After the build completes, update .env and start the container:
+After the build completes, inside `dlstreamer-pipeline-server/docker` directory, update .env and start the container:
 
 > update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-basler
 
@@ -151,7 +145,6 @@ Additionally, add the following entries to the `/etc/hosts` file on the host mac
 127.0.0.1       minio
 127.0.0.1       otel-collector
 127.0.0.1       mqtt-broker
-127.0.0.1       model_registry
 ```
 
 ### Step 6: Launch the Containers
