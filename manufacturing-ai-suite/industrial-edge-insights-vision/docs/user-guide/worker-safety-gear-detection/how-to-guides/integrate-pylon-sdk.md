@@ -27,7 +27,7 @@ cd edge-ai-libraries/microservices/dlstreamer-pipeline-server
 Create a Docker file named `BaslerDockerfile` inside your `dlstreamer-pipeline-server` directory with the following content.
 
 ```dockerfile
-FROM intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
+FROM intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1
 
 USER root
 
@@ -54,7 +54,7 @@ USER intelmicroserviceuser
 Run the following command to build the image:
 
 ```bash
-docker build -t intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-basler -f BaslerDockerfile .
+docker build -t intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1-gencamsrc-basler -f BaslerDockerfile .
 ```
 
 This command builds your Docker image using the steps defined above.
@@ -65,7 +65,7 @@ This command builds your Docker image using the steps defined above.
 
 After the build completes, inside `dlstreamer-pipeline-server/docker` directory, update .env and start the container:
 
-> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-basler
+> update .env DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1-gencamsrc-basler
 
 ```bash
 docker compose up -d
@@ -107,7 +107,7 @@ cp .env_worker-safety-gear-detection .env
 Update the `.env` file with the newly created image as below and modify any other required variables.
 
 ```bash
-DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24-gencamsrc-basler
+DLSTREAMER_PIPELINE_SERVER_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1-gencamsrc-basler
 ```
 
 ---
