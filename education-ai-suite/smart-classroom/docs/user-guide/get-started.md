@@ -64,6 +64,24 @@ ocr:
   enabled: true
 ```
 
+### F. Install Content Search Dependencies
+
+Run the installation script in PowerShell with Administrator privileges:
+
+```PowerShell
+cd smart-classroom\content_search
+.\install.ps1
+```
+
+> **Note:** Restart your PowerShell terminal after installation to apply new environment variables.
+
+Verify the installation:
+
+```PowerShell
+tesseract --version
+pdftoppm -v
+```
+
 ## Step 2: Configuration
 
 ### A. Default Configuration
@@ -101,6 +119,17 @@ app:
   language: zh
 ```
 
+### C. Content Search Configuration
+
+**Upload Size Limits** can be adjusted under the `content_search` section:
+
+```yaml
+content_search:
+  storage:
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
+```
+
 **Important: After updating the configuration, reload the application for changes to take effect.**
 
 ## Step 3: Run the Application
@@ -129,10 +158,59 @@ INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 
 This means your pipeline server has started successfully and is ready to accept requests.
 
-Bring Up the Frontend:
+## Step 4: Set Up Content Search
 
-> **Note:** Open a second (new) Command Prompt/ terminal window for the frontend.
-> The backend terminal stays busy serving requests.
+Content Search provides multimodal semantic search, AI-driven video summarization, and RAG-based Q&A over uploaded educational materials.
+
+> **Prerequisite:** Complete [Step 1F](#f-install-content-search-dependencies) first.
+
+### A. Create Content Search Virtual Environment
+
+```PowerShell
+cd smart-classroom\content_search
+python -m venv venv_content_search
+.\venv_content_search\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### B. Launch Content Search Services
+
+```PowerShell
+.\venv_content_search\Scripts\Activate.ps1
+python .\start_services.py
+```
+
+> **Note:** First-time execution may take several minutes as AI models (CLIP, BGE, Qwen VLM) are downloaded.
+
+When all services are ready:
+
+```
+[launcher] All 5 services are ready. (startup took XXs)
+[launcher] You can use Ctrl+C to stop all services.
+```
+
+Verify the service status:
+
+```PowerShell
+Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"
+```
+
+### C. Network Requirements for Content Search
+
+- **Proxy**: If behind a proxy, ensure `HTTP_PROXY` and `HTTPS_PROXY` environment variables are configured.
+- **Model Downloads**: Stable access to `huggingface.co` is required for downloading pre-trained models.
+- **Windows Long Paths**: Move the project to a shallow directory (e.g., `C:\User\CS`) or enable long paths:
+
+  ```PowerShell
+  New-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\FileSystem" `
+  -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+  ```
+
+## Step 5: Bring Up the Frontend
+
+> **Note:** Open a new Command Prompt / terminal window for the frontend.
+> The backend and Content Search terminals stay busy serving requests.
 
 ```bash
 cd <path-to>\edge-ai-suites\education-ai-suite\smart-classroom\ui
@@ -140,7 +218,7 @@ npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
 
-## Step 4: Access the UI
+## Step 6: Access the UI
 
 After starting the frontend you can open the Smart Classroom UI in a browser:
 
@@ -163,7 +241,7 @@ Use the IPv4 Address from your active network adapter.
 
 If you changed the port, adjust the URL accordingly.
 
-## Step 5: Speaker Diarization Setup (Pyannote)
+## Step 7: Speaker Diarization Setup (Pyannote)
 
 Speaker diarization is supported using Pyannote Audio models.
 To enable diarization, you must request access to the Pyannote pretrained models and provide a Hugging Face access token.
@@ -233,7 +311,7 @@ models:
 
   2. Rerun only Step 1’s option **c** (OpenVINO) or **d** (IPEX), whichever applies.
 
- - **Crash during application bring-up on Intel® Core™ Ultra Series 3 processors without any error:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
+ - **Application crash during bring-up on Intel® Core™ Ultra Series 3 and Intel® Core™ Series 3 (WCL) processors without any error indication:** Sometimes OpenVINO GenAI models may crash on newer hardware. Try setting `use_ov_genai: False` in `config.yaml`.
 
 - **Tokenizer load issue:**
 

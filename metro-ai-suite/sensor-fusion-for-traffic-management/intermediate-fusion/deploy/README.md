@@ -39,9 +39,9 @@ Choose the workflow that matches your goal:
 
    Run KITTI-format evaluation and interpret the generated metrics.
 
-6. `tools/how_to_generate_kitti_format_dataset/v2x_pandaset_guide.md`
+6. `tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md`
 
-   Convert PandaSet or DAIR-V2X-I into KITTI format with the bundled helper scripts.
+   Convert DAIR-V2X-I into KITTI format and verify the converted calibration outputs.
 
 7. `tools/how_to_generate_kitti_format_dataset/kitti360_guide.md`
 
@@ -141,5 +141,5 @@ For split-model PFE selection, both DAIR-V2X and KITTI-360 prefer the v7000 PFE 
 
 - `tools/kitti_3d_eval.py`: KITTI-format evaluation helper.
 - `tools/README_eval.md`: evaluation workflow and result interpretation.
-- `tools/how_to_generate_kitti_format_dataset/v2x_pandaset_guide.md`: PandaSet and DAIR-V2X-I conversion guide plus verification helpers.
+- `tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md`: DAIR-V2X-I conversion guide plus verification helpers.
 - `tools/how_to_generate_kitti_format_dataset/kitti360_guide.md`: KITTI-360 conversion guide.
