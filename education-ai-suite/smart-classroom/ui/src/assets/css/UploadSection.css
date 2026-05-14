@@ -523,22 +523,20 @@
 /* ───────── View Files Button ───────── */
 
 .cs-view-files-btn {
-  background: none;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
   font-weight: 500;
-  color: #344054;
+  color: white;
   cursor: pointer;
   transition: all 0.2s;
   font-family: var(--font-display);
 }
 
 .cs-view-files-btn:hover {
-  background: #f2f4f7;
-  border-color: #98a2b3;
-  color: #1d2939;
+  background: #1565c0;
 }
 
 

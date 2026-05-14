@@ -2,11 +2,12 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring } from "../../services/api";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
+import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
 import FileManager from "./FileManager";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing, setCsServerFilesExist } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "STAGED"
@@ -59,6 +60,7 @@ const UploadSection: React.FC = () => {
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
+  const csServerFilesExist = useAppSelector((s) => s.ui.csServerFilesExist);
   const sessionIdRef = useRef<string | null>(sessionId);
   const monitoringActiveRef = useRef<boolean>(monitoringActive);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
@@ -85,6 +87,24 @@ const UploadSection: React.FC = () => {
   }>({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
 
   const [showFileManager, setShowFileManager] = useState(false);
+
+  // Check if files exist on the server on initial mount
+  useEffect(() => {
+    const checkServerFiles = async () => {
+      try {
+        const response = await csGetFilesList();
+        const hasFiles = (response.data?.files?.length ?? 0) > 0;
+        dispatch(setCsServerFilesExist(hasFiles));
+        if (hasFiles) {
+          dispatch(setCsHasUploads(true));
+          dispatch(setCsUploadsComplete(true));
+        }
+      } catch (err) {
+        console.warn("Could not check server files:", err);
+      }
+    };
+    checkServerFiles();
+  }, [dispatch]);
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);
@@ -458,12 +478,14 @@ return (
         <>
           <div className="cs-upload-header">
             <span className="cs-upload-title">{t("uploadSection.upload")}</span>
-            <button
-              className="cs-view-files-btn"
-              onClick={() => setShowFileManager(true)}
-            >
-              {t("uploadSection.viewFiles") || "View Files"}
-            </button>
+            {(entries.length > 0 || csServerFilesExist) && (
+              <button
+                className="cs-view-files-btn"
+                onClick={() => setShowFileManager(true)}
+              >
+                View Files
+              </button>
+            )}
           </div>
 
           <div
@@ -719,19 +741,12 @@ return (
       )}
     </div>
 
-    {confirmRemoveId && (
-      <div className="cs-modal-overlay">
-        <div className="cs-modal">
-          <p>{t("uploadSection.removeFileConfirmation")}</p>
-          <div className="cs-modal-actions">
-            <button onClick={() => setConfirmRemoveId(null)}>{t("uploadSection.cancel")}</button>
-            <button className="cs-danger-btn" onClick={confirmRemove}>
-              {t("uploadSection.remove")}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <RemoveConfirmationModal
+      isOpen={!!confirmRemoveId}
+      fileName={entries.find((e) => e.id === confirmRemoveId)?.filename ?? ""}
+      onCancel={() => setConfirmRemoveId(null)}
+      onConfirm={confirmRemove}
+    />
 
     <OcrPreviewModal
       isOpen={ocrPreview.isOpen}

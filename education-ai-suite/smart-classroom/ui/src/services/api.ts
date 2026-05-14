@@ -1157,37 +1157,25 @@ export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
 }
 
 // Content Search API - Get list of uploaded files
-export async function csGetFilesList(page = 1, pageSize = 50): Promise<{
+export async function csGetFilesList(): Promise<{
   code: number;
   data: {
     total: number;
-    page: number;
-    page_size: number;
-    total_pages: number;
     files: Array<{
       file_hash: string;
       file_name: string;
-      file_path: string;
-      bucket_name: string;
       content_type: string;
       size_bytes: number;
       meta: Record<string, unknown>;
       created_at: string;
-      storage: { exists: boolean };
-      index: {
-        indexed: boolean;
-        vector_count: number;
-        collections: string[];
-        has_summary: boolean;
-      };
-      status: string;
+      task_id?: string;
     }>;
   };
   message: string;
 }> {
   return safeApiCall(async () => {
     const res = await fetch(
-      `${CONTENT_SEARCH_API_URL}/api/v1/object/files/list?page=${page}&page_size=${pageSize}`,
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/files/list`,
       { method: 'GET' }
     );
     if (!res.ok) {

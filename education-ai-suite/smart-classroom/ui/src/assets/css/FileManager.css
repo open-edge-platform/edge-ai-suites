@@ -10,58 +10,55 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
-  border-bottom: 1px solid #e6e7e8;
-  background: #fafbfc;
+  margin-bottom: 14px;
 }
 
 .fm-back-btn {
-  background: none;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
   font-weight: 500;
-  color: #344054;
+  color: white;
   cursor: pointer;
   transition: all 0.2s;
   font-family: var(--font-display);
+  margin-right: auto;
 }
 
 .fm-back-btn:hover {
-  background: #f2f4f7;
-  border-color: #98a2b3;
+  background: #1565c0;
 }
 
 .fm-title {
-  flex: 1;
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 600;
-  color: #1a1a2e;
-  font-family: var(--font-display);
+  color: #2b2b2b;
 }
 
 .fm-refresh-btn {
-  background: none;
-  border: 1px solid #d0d5dd;
-  border-radius: 6px;
-  width: 32px;
-  height: 32px;
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
   font-size: 14px;
+  font-weight: 500;
+  color: white;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-display);
 }
 
 .fm-refresh-btn:hover:not(:disabled) {
-  background: #f2f4f7;
-  border-color: #98a2b3;
+  background: #1565c0;
 }
 
 .fm-refresh-btn:disabled {
-  opacity: 0.5;
+  background: #b0bec5;
   cursor: not-allowed;
 }
 
@@ -143,31 +140,158 @@
 .fm-file-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12px;
-  font-family: var(--font-text);
+  table-layout: fixed;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .fm-file-table thead {
-  position: sticky;
-  top: 0;
-  background: #f9fafb;
-  z-index: 1;
+  background: #f1f3f5;
 }
 
 .fm-file-table th {
-  text-align: left;
-  padding: 10px 12px;
+  font-size: 12px;
   font-weight: 600;
-  color: #475467;
-  border-bottom: 1px solid #e4e7ec;
+  color: #37474f;
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
   font-family: var(--font-display);
 }
 
-.fm-file-table td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f2f4f7;
+/* ─── Filter & Sort Headers ──────────────────────────────── */
+
+.fm-th-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+}
+
+.fm-filter-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: #667085;
+  border-radius: 4px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.fm-filter-icon-btn:hover {
+  background: #e4e7ec;
   color: #344054;
-  vertical-align: top;
+}
+
+.fm-filter-icon-btn.active {
+  color: #1976d2;
+}
+
+.fm-filter-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #1976d2;
+  color: white;
+  font-size: 9px;
+  font-weight: 600;
+  min-width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.fm-filter-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e4e7ec;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 150px;
+  z-index: 100;
+  padding: 8px 0;
+}
+
+.fm-filter-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px 8px;
+  border-bottom: 1px solid #f2f4f7;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #475467;
+}
+
+.fm-filter-clear {
+  background: none;
+  border: none;
+  color: #1976d2;
+  font-size: 11px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.fm-filter-clear:hover {
+  background: #e3f2fd;
+}
+
+.fm-filter-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #344054;
+  transition: background 0.15s;
+}
+
+.fm-filter-checkbox-label:hover {
+  background: #f9fafb;
+}
+
+.fm-filter-checkbox-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  accent-color: #1976d2;
+  cursor: pointer;
+}
+
+.fm-th-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s;
+}
+
+.fm-th-sortable:hover {
+  background: #f2f4f7;
+}
+
+.fm-file-table td {
+  font-size: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #eeeeee;
+  font-family: var(--font-text);
+  vertical-align: middle;
+}
+
+.fm-file-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .fm-file-table tbody tr:hover {
@@ -266,4 +390,102 @@
   font-size: 11px;
   color: #667085;
   white-space: nowrap;
+}
+
+/* ─── Remove Button Column ───────────────────────────────── */
+
+.fm-col-remove {
+  width: 40px;
+  text-align: center;
+}
+
+.fm-remove-btn {
+  background: none;
+  border: none;
+  color: #e51111;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  transition: color 0.15s;
+}
+
+.fm-remove-btn:hover:not(:disabled) {
+  color: #c62828;
+}
+
+.fm-remove-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ─── Confirmation Modal ─────────────────────────────────── */
+
+.fm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.fm-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.fm-modal p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #1d2939;
+}
+
+.fm-modal-warning {
+  font-size: 12px !important;
+  color: #667085 !important;
+  margin-bottom: 16px !important;
+}
+
+.fm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.fm-modal-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fm-modal-actions button:first-child {
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  color: #344054;
+}
+
+.fm-modal-actions button:first-child:hover {
+  background: #f9fafb;
+}
+
+.fm-danger-btn {
+  background: #d92d20 !important;
+  border: 1px solid #d92d20 !important;
+  color: #fff !important;
+}
+
+.fm-danger-btn:hover {
+  background: #b42318 !important;
+  border-color: #b42318 !important;
 }
