@@ -39,7 +39,7 @@ This installs gstreamer folder inside Program Files folder.
 ## Clone the Repository
 
 ```powershell
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
@@ -366,7 +366,7 @@ pipelines:
 ```
 
 For detection models use model_id as inst0 and for classifcation models, you model_id as inst1
- 
+
 ---
 
 ## Run the App
