@@ -97,7 +97,7 @@ Query Parameters:
 
 Request:
 ```
-curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=2'
+curl --location 'http://127.0.0.1:9011/api/v1/task/list?status=COMPLETED&limit=1'
 ```
 Response (200 OK)
 ```json
@@ -105,44 +105,36 @@ Response (200 OK)
     "code": 20000,
     "data": [
         {
+            "task_id": "f1cdfb26-db7f-4c4a-8d95-c4a1fefd9347",
+            "task_type": "file_search",
             "status": "COMPLETED",
+            "progress": 0,
             "payload": {
                 "source": "local",
-                "file_key": "runs/f52c2905-fb78-4ddd-a89e-9fb673546740/raw/application/default/apple_loop100.h265",
+                "file_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.pdf",
                 "bucket": "content-search",
-                "filename": "apple_loop100.h265",
-                "run_id": "f52c2905-fb78-4ddd-a89e-9fb673546740"
+                "filename": "handwritten-notebook.pdf",
+                "run_id": "25c5a670-a29a-4b59-8b7d-47293048cd0b",
+                "file_hash": "a08082baa261503715c24c168d24622f12fad325dab88baf19ef819e111e7de8",
+                "size_bytes": 149703,
+                "is_biz_error": false,
+                "file_name": "handwritten-notebook.pdf",
+                "content_type": "application/pdf",
+                "bucket_name": "content-search",
+                "meta": {},
+                "prompt": null,
+                "chunk_duration": null
             },
             "result": {
-                "message": "File successfully processed. db returns {}"
+                "message": "File successfully processed. db returns {'document': {'insert_count': 1}}",
+                "ocr_text_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.ocr.txt"
             },
-            "progress": 0,
-            "task_type": "file_search",
-            "id": "56cc417c-9524-41a9-a500-9f0c44a05eac",
             "user_id": "admin",
-            "created_at": "2026-03-24T12:50:34.281421"
-        },
-        {
-            "status": "COMPLETED",
-            "payload": {
-                "source": "local",
-                "file_key": "runs/2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c/raw/application/default/apple_loop100.h265",
-                "bucket": "content-search",
-                "filename": "apple_loop100.h265",
-                "run_id": "2949cc0e-a1aa-4001-aa0f-8f42a36c3e7c"
-            },
-            "result": {
-                "message": "File successfully processed. db returns {}"
-            },
-            "progress": 0,
-            "task_type": "file_search",
-            "id": "8032db45-129b-4474-8d58-122f33661f19",
-            "user_id": "admin",
-            "created_at": "2026-03-24T12:48:13.301178"
+            "created_at": "2026-05-15T12:36:16.795600"
         }
     ],
     "message": "Success",
-    "timestamp": 1774330753
+    "timestamp": 1778820484
 }
 ```
 #### Task Status Polling
@@ -731,14 +723,16 @@ Response (200 OK):
         "total_pages": 1,
         "files": [
             {
-                "file_hash": "ec2c2b5d7088dd212acd4fca2ecfd0abe4fca2379f3f02035d028d7423963666",
-                "file_name": "SW-Physics-Sample.pdf",
-                "file_path": "runs/95351707-a723-4af5-92df-579f18707871/raw/application/default/SW-Physics-Sample.pdf",
+                "file_hash": "a08082baa261503715c24c168d24622f12fad325dab88baf19ef819e111e7de8",
+                "file_name": "handwritten-notebook.pdf",
+                "file_path": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.pdf",
                 "bucket_name": "content-search",
                 "content_type": "application/pdf",
-                "size_bytes": 6847573,
+                "size_bytes": 149703,
                 "meta": {},
-                "created_at": "2026-04-24T09:32:18.779690",
+                "created_at": "2026-05-15T12:36:16.789942",
+                "task_id": "f1cdfb26-db7f-4c4a-8d95-c4a1fefd9347",
+                "ocr_text_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.ocr.txt",
                 "storage": {
                     "exists": true
                 },

@@ -17,6 +17,24 @@ Before You Begin, ensure the following:
 
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
+- **Intel NPU Device Plugin** (required for NPU workloads): Install the [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/npu_plugin/README.md#install-with-nfd) to enable NPU device detection and scheduling. This ensures pods requesting NPU resources are only deployed on nodes with available NPU hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
+
+  ```bash
+  # Install NFD (if your cluster doesn't have NFD installed yet)
+  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.35.0'
+
+  # Create NodeFeatureRules for detecting NPUs on nodes
+  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=v0.35.0'
+
+  # Create NPU plugin daemonset
+  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=v0.35.0'
+  ```
+
+  Verify the NPU resource is advertised on nodes with NPU hardware:
+  ```bash
+  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, npu: .status.allocatable["npu.intel.com/accel"]}'
+  ```
+
 - **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
 - **Tools Installed**: Install the required tools:
   - Kubernetes CLI (kubectl)
@@ -33,7 +51,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/

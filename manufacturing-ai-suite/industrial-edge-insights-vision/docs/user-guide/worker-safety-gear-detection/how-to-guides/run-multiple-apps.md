@@ -22,7 +22,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 1. Clone the **edge-ai-suites** repository and navigate to the `industrial-edge-insights-vision` directory:
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -53,7 +53,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in config.yml. 
+3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in config.yml.
 
    For the example above, modify the envs for worker-safety-gear-detection and pallet-defect-detection i.e. env_worker-safety-gear-detection and .env_pallet-defect-detection
 

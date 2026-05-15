@@ -13,7 +13,7 @@ This section shows how to build the Smart Traffic Intersection Agent from source
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/
 ```
 
@@ -22,7 +22,7 @@ cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent/
 ```bash
 export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
 ```
-> **IMPORTANT:** See this [disclaimer](../get-started.md#disclaimer-for-using-third-party-ai-models) before using any AI Model. 
+> **IMPORTANT:** See this [disclaimer](../get-started.md#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Build the Docker Image
 

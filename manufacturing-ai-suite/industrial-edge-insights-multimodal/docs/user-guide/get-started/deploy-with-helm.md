@@ -171,7 +171,8 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
         },
         "frame": [{
                             "type": "webrtc",
-                            "peer-id": "samplestream"
+                            "peer-id": "samplestream",
+                            "overlay": false
                         },
                         {
                             "type": "s3_write",

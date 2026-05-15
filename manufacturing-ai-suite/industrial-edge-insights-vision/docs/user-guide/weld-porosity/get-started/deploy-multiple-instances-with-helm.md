@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -774,7 +774,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
     kubectl cp resources/weld-porosity/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline. 
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline.
 
    ```json
     [
@@ -798,7 +798,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
     ]
    ```
 
-5. Start the pipeline with the above payload. 
+5. Start the pipeline with the above payload.
 
    ```sh
    ./sample_start.sh helm -i <INSTANCE_NAME> -p weld_porosity_classification_mlops
@@ -832,7 +832,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
-   
+
    Below is an example for weld-porosity-classification. Please modify the payload for other sample applications.
 
    ```json
