@@ -12,7 +12,6 @@ import { setCsServerFilesExist, setCsHasUploads, setCsUploadsComplete } from "..
 interface FileMeta {
   tags?: string[];
   vs_enabled?: boolean;
-  ocr_text_key?: string;
 }
 
 interface FileEntry {
@@ -23,6 +22,7 @@ interface FileEntry {
   meta: FileMeta;
   created_at: string;
   task_id?: string;
+  ocr_text_key?: string;
 }
 
 interface FileListResponse {
@@ -350,7 +350,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                         <div className="fm-file-info">
                           <span className="fm-file-name" title={file.file_name}>
                             {file.file_name}
-                            {file.meta?.ocr_text_key && (
+                            {file.ocr_text_key && (
                               <img
                                 src={handwrittenIcon}
                                 alt="OCR"
@@ -358,7 +358,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                                 title="Click to preview OCR text"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  handleOcrPreview(file.file_name, file.meta.ocr_text_key!);
+                                  handleOcrPreview(file.file_name, file.ocr_text_key!);
                                 }}
                               />
                             )}
