@@ -1,158 +1,162 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Architecture diagram (simple, top-to-bottom flow). Open / edit in draw.io -->
+<!-- Architecture diagram. Open / edit in draw.io -->
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
-     width="820" height="760" viewBox="0 0 820 760"
+     width="820" height="720" viewBox="0 0 820 720"
      style="background:#ffffff;font-family:Helvetica,Arial,sans-serif;font-size:13px;">
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#444"/>
     </marker>
     <style><![CDATA[
-      .b   { stroke-width:1.5; rx:8; ry:8; }
-      .in  { fill:#e6f4ff; stroke:#1f77b4; }
-      .app { fill:#d6e9ff; stroke:#1f4e9c; }
-      .pip { fill:#dff5e1; stroke:#2e8b57; }
-      .gst { fill:#fde2e2; stroke:#a8322f; }
-      .raw { fill:#f0e6ff; stroke:#7030a0; }
-      .svc { fill:#ffe0b3; stroke:#a35a00; }
-      .out { fill:#fff4d6; stroke:#b58900; }
-      .store { fill:#f0f0f0; stroke:#666; }
-      .tb  { text-anchor:middle; fill:#111; font-weight:bold; }
-      .ts  { text-anchor:middle; fill:#333; font-size:11px; }
-      .e   { stroke:#444; stroke-width:1.5; fill:none; }
-      .ed  { stroke:#666; stroke-width:1.4; fill:none; stroke-dasharray:5 4; }
-      .el  { fill:#333; font-size:11px; text-anchor:middle; }
+      .intel { fill:#dff0fb; stroke:#0071c5; stroke-width:1.5; rx:8; ry:8; }
+      .third { fill:#f0f0f0; stroke:#888888; stroke-width:1.5; rx:8; ry:8; }
+      .tbi   { text-anchor:middle; fill:#003d80; font-weight:bold; }
+      .tbt   { text-anchor:middle; fill:#444444; font-weight:bold; }
+      .tsi   { text-anchor:middle; fill:#0058a3; font-size:11px; }
+      .tst   { text-anchor:middle; fill:#666666; font-size:11px; }
+      .e     { stroke:#444444; stroke-width:1.5; fill:none; }
+      .ed    { stroke:#666666; stroke-width:1.4; fill:none; stroke-dasharray:5 4; }
+      .el    { fill:#333333; font-size:11px; text-anchor:middle; }
     ]]></style>
   </defs>
 
-  <text x="410" y="30" class="tb" font-size="18">Architecture</text>
+  <text x="410" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#111">Architecture</text>
 
-  <!-- ===== Row 1: Inputs ===== -->
-  <rect class="in b" x="60"  y="60" width="200" height="60"/>
-  <text class="tb" x="160" y="85">Video file</text>
-  <text class="ts" x="160" y="103">filesrc</text>
+  <!-- ===== Row 1: Inputs (third-party GStreamer sources) ===== -->
+  <rect class="third" x="60"  y="50" width="200" height="58"/>
+  <text class="tbt" x="160" y="74">Video file</text>
+  <text class="tst" x="160" y="91">filesrc</text>
 
-  <rect class="in b" x="310" y="60" width="200" height="60"/>
-  <text class="tb" x="410" y="85">RTSP camera</text>
-  <text class="ts" x="410" y="103">rtspsrc</text>
+  <rect class="third" x="310" y="50" width="200" height="58"/>
+  <text class="tbt" x="410" y="74">RTSP camera</text>
+  <text class="tst" x="410" y="91">rtspsrc</text>
 
-  <rect class="in b" x="560" y="60" width="200" height="60"/>
-  <text class="tb" x="660" y="85">USB / GenICam</text>
-  <text class="ts" x="660" y="103">gencamsrc</text>
+  <rect class="third" x="560" y="50" width="200" height="58"/>
+  <text class="tbt" x="660" y="74">USB / GenICam</text>
+  <text class="tst" x="660" y="91">gencamsrc</text>
 
-  <!-- ===== Row 2: App ===== -->
-  <rect class="app b" x="60"  y="188" width="140" height="72"/>
-  <text class="tb" x="130" y="208">Config</text>
-  <text class="ts" x="130" y="222">config.yaml</text>
-  <text class="ts" x="130" y="236">models + pipelines</text>
-  <text class="ts" x="130" y="250">OR raw_pipelines:</text>
+  <!-- ===== Config (Intel) ===== -->
+  <rect class="intel" x="10" y="177" width="133" height="92"/>
+  <text class="tbi" x="76" y="197">Config</text>
+  <text class="tsi" x="76" y="213">config.yaml</text>
+  <text class="tsi" x="76" y="227">models + pipelines</text>
+  <text class="tsi" x="76" y="241">OR raw_pipelines</text>
+  <text class="tsi" x="76" y="255">raises ConfigError</text>
 
-  <rect class="app b" x="260" y="180" width="300" height="70"/>
-  <text class="tb" x="410" y="207">App (app.py)</text>
-  <text class="ts" x="410" y="226">loads config · starts services</text>
-  <text class="ts" x="410" y="242">builds pipelines · runs main loop</text>
+  <!-- ===== Combined: WinVisionAI App + PipelineManager + Raw Pipeline Mode (Intel) ===== -->
+  <rect class="intel" x="153" y="170" width="437" height="228"/>
+  <text class="tbi" x="371" y="191" font-size="13">WinVisionAI Application  (Intel)</text>
 
-  <rect class="app b" x="620" y="190" width="140" height="50"/>
-  <text class="tb" x="690" y="212">MediaService</text>
-  <text class="ts" x="690" y="229">starts MediaMTX</text>
+  <!-- App · AppRunner sub-box -->
+  <rect style="fill:#ffffff;stroke:#0071c5;stroke-width:1;rx:5;ry:5;" x="163" y="200" width="202" height="90" rx="5" ry="5"/>
+  <text class="tbi" x="264" y="218" font-size="11">App · AppRunner</text>
+  <text class="tsi" x="264" y="233">app.py · app_runner.py</text>
+  <text class="tsi" x="264" y="247">builds pipeline strings</text>
+  <text class="tsi" x="264" y="261">starts services</text>
+  <text class="tsi" x="264" y="275">run loop · SIGINT</text>
 
-  <!-- ===== Row 3: PipelineManager ===== -->
-  <rect class="pip b" x="260" y="310" width="300" height="80"/>
-  <text class="tb" x="410" y="335">PipelineManager</text>
-  <text class="ts" x="410" y="354">runs N GStreamer pipelines</text>
-  <text class="ts" x="410" y="370">tracks state · FPS · latency</text>
+  <!-- Pipeline Management sub-box -->
+  <rect style="fill:#ffffff;stroke:#0071c5;stroke-width:1;rx:5;ry:5;" x="375" y="200" width="205" height="90" rx="5" ry="5"/>
+  <text class="tbi" x="477" y="218" font-size="11">Pipeline Management</text>
+  <text class="tsi" x="477" y="233">pipeline_manager.py</text>
+  <text class="tsi" x="477" y="247">pipeline.py</text>
+  <text class="tsi" x="477" y="261">state machine · GLib loop</text>
+  <text class="tsi" x="477" y="275">FPS + latency probes</text>
 
-  <rect class="app b" x="620" y="320" width="140" height="60"/>
-  <text class="tb" x="690" y="343">Metrics</text>
-  <text class="ts" x="690" y="361">log /</text>
-  <text class="ts" x="690" y="376">Prometheus</text>
+  <!-- Raw Pipeline Mode sub-box -->
+  <rect style="fill:#ffffff;stroke:#0071c5;stroke-width:1;rx:5;ry:5;" x="163" y="302" width="417" height="60" rx="5" ry="5"/>
+  <text class="tbi" x="371" y="320" font-size="11">Raw Pipeline Mode</text>
+  <text class="tsi" x="371" y="336">user-supplied GStreamer launch string · any elements · any sinks</text>
+  <text class="tsi" x="371" y="351">bypasses config inference · FPS/latency probes disabled</text>
 
-  <!-- ===== Row 4: Two pipeline modes side by side ===== -->
+  <!-- ===== MediaService (Intel) ===== -->
+  <rect class="intel" x="608" y="177" width="150" height="58"/>
+  <text class="tbi" x="683" y="198">Media Manager</text>
+  <text class="tsi" x="683" y="214">media_service.py</text>
+  <text class="tsi" x="683" y="228">starts MediaMTX</text>
 
-  <!-- Raw pipeline mode (left) -->
-  <rect class="raw b" x="30" y="450" width="215" height="75"/>
-  <text class="tb" x="137" y="471">Raw Pipeline Mode</text>
-  <text class="ts" x="137" y="487">user-supplied GStreamer string</text>
-  <text class="ts" x="137" y="501">any elements · any sinks</text>
-  <text class="ts" x="137" y="515">FPS/latency probes disabled</text>
+  <!-- ===== Metrics (Intel) ===== -->
+  <rect class="intel" x="608" y="250" width="150" height="68"/>
+  <text class="tbi" x="683" y="270">Metrics</text>
+  <text class="tsi" x="683" y="286">metrics_collector.py</text>
+  <text class="tsi" x="683" y="300">log / Prometheus</text>
+  <text class="tsi" x="683" y="314">export</text>
 
-  <!-- DL Streamer / structured mode (centre) -->
-  <rect class="gst b" x="260" y="440" width="300" height="80"/>
-  <text class="tb" x="410" y="465">DL Streamer (GStreamer)</text>
-  <text class="ts" x="410" y="484">gvadetect · gvaclassify · gvametapublish</text>
-  <text class="ts" x="410" y="500">OpenVINO · CPU / GPU / NPU</text>
+  <!-- ===== DL Streamer (Intel) ===== -->
+  <rect class="intel" x="153" y="418" width="437" height="78"/>
+  <text class="tbi" x="371" y="441" font-size="13">Intel DL Streamer  (GStreamer)</text>
+  <text class="tsi" x="371" y="460">gvadetect · gvaclassify · gvawatermark · gvafpscounter · gvametapublish</text>
+  <text class="tsi" x="371" y="476">OpenVINO inference · CPU / GPU / NPU</text>
 
-  <!-- ===== Row 5: External outputs ===== -->
-  <rect class="svc b" x="40"  y="600" width="220" height="60"/>
-  <text class="tb" x="150" y="625">MediaMTX</text>
-  <text class="ts" x="150" y="643">RTSP :8554 · WebRTC :8889</text>
+  <!-- ===== Legend (right of DL Streamer) ===== -->
+  <rect style="fill:#fafafa;stroke:#cccccc;stroke-width:1;" x="608" y="418" width="192" height="78" rx="6" ry="6"/>
+  <text style="font-size:11px;font-weight:bold;fill:#333;" x="619" y="436">Legend</text>
+  <rect class="intel" x="619" y="444" width="14" height="14" rx="3" ry="3"/>
+  <text style="font-size:10px;fill:#333;" x="639" y="455">Intel  (app + DL Streamer)</text>
+  <rect class="third" x="619" y="466" width="14" height="14" rx="3" ry="3"/>
+  <text style="font-size:10px;fill:#333;" x="639" y="477">Third-party  (GStreamer, MediaMTX…)</text>
 
-  <rect class="svc b" x="300" y="600" width="220" height="60"/>
-  <text class="tb" x="410" y="625">MQTT broker</text>
-  <text class="ts" x="410" y="643">tcp :1883</text>
+  <!-- ===== Row 5: External outputs (third-party) ===== -->
+  <rect class="third" x="40"  y="530" width="220" height="58"/>
+  <text class="tbt" x="150" y="555">MediaMTX</text>
+  <text class="tst" x="150" y="572">RTSP :8554 · WebRTC :8889</text>
 
-  <rect class="store b" x="560" y="600" width="220" height="60"/>
-  <text class="tb" x="670" y="625">JSON file</text>
-  <text class="ts" x="670" y="643">gvametapublish method=file</text>
+  <rect class="third" x="300" y="530" width="220" height="58"/>
+  <text class="tbt" x="410" y="555">MQTT broker</text>
+  <text class="tst" x="410" y="572">tcp :1883</text>
 
-  <!-- ===== Row 6: Viewers ===== -->
-  <rect class="out b" x="40"  y="690" width="220" height="50"/>
-  <text class="tb" x="150" y="712">Browser / VLC</text>
-  <text class="ts" x="150" y="729">WebRTC · RTSP</text>
+  <rect class="third" x="560" y="530" width="220" height="58"/>
+  <text class="tbt" x="670" y="555">JSON file</text>
+  <text class="tst" x="670" y="572">gvametapublish method=file</text>
 
-  <rect class="out b" x="300" y="690" width="220" height="50"/>
-  <text class="tb" x="410" y="712">MQTT subscriber</text>
-  <text class="ts" x="410" y="729">mosquitto_sub</text>
+  <!-- ===== Row 6: Viewers (third-party) ===== -->
+  <rect class="third" x="40"  y="615" width="220" height="46"/>
+  <text class="tbt" x="150" y="638">Browser / VLC</text>
+  <text class="tst" x="150" y="654">WebRTC · RTSP</text>
+
+  <rect class="third" x="300" y="615" width="220" height="46"/>
+  <text class="tbt" x="410" y="638">MQTT subscriber</text>
+  <text class="tst" x="410" y="654">mosquitto_sub</text>
 
   <!-- ===== Arrows ===== -->
 
-  <!-- Inputs → App: meet at horizontal bus y=160 -->
-  <path class="e" d="M160,120 L160,160 L410,160" />
-  <path class="e" d="M410,120 L410,160" />
-  <path class="e" d="M660,120 L660,160 L410,160" />
-  <path class="e" d="M410,160 L410,180" marker-end="url(#a)"/>
+  <!-- Inputs → combined App box (horizontal bus at y=135) -->
+  <path class="e" d="M160,108 L160,135 L371,135" />
+  <path class="e" d="M410,108 L410,135" />
+  <path class="e" d="M660,108 L660,135 L371,135" />
+  <path class="e" d="M371,135 L371,170" marker-end="url(#a)"/>
 
-  <!-- Config → App -->
-  <path class="e" d="M200,224 L260,224" marker-end="url(#a)"/>
-  <!-- App → MediaService -->
-  <path class="e" d="M560,215 L620,215" marker-end="url(#a)"/>
+  <!-- Config → combined App box -->
+  <path class="e" d="M143,223 L153,223" marker-end="url(#a)"/>
 
-  <!-- App → PipelineManager -->
-  <path class="e" d="M410,250 L410,310" marker-end="url(#a)"/>
+  <!-- combined App box → MediaService -->
+  <path class="e" d="M590,206 L608,206" marker-end="url(#a)"/>
 
-  <!-- PipelineManager → Metrics -->
-  <path class="e" d="M560,350 L620,350" marker-end="url(#a)"/>
+  <!-- combined App box → Metrics -->
+  <path class="e" d="M590,284 L608,284" marker-end="url(#a)"/>
 
-  <!-- PipelineManager → DL Streamer (structured mode, solid) -->
-  <path class="e" d="M410,390 L410,440" marker-end="url(#a)"/>
-  <text class="el" x="416" y="420" text-anchor="start">structured mode</text>
+  <!-- combined App box → DL Streamer (structured mode) -->
+  <path class="e" d="M371,398 L371,418" marker-end="url(#a)"/>
+  <text class="el" x="377" y="412" text-anchor="start">structured mode</text>
 
-  <!-- PipelineManager → Raw pipeline box (raw mode, dashed) -->
-  <path class="ed" d="M260,350 L137,350 L137,450" marker-end="url(#a)"/>
-  <text class="el" x="190" y="344" text-anchor="middle">raw mode</text>
-
-  <!-- Raw box → user-defined sinks note -->
-  <text class="ts" x="137" y="542" fill="#7030a0" font-style="italic">↓ any GStreamer sinks</text>
-
-  <!-- DL Streamer → 3 outputs (split via horizontal bus at y=575) -->
-  <path class="e" d="M410,520 L410,575 L150,575" />
-  <path class="e" d="M410,520 L410,575" />
-  <path class="e" d="M410,520 L410,575 L670,575" />
-  <path class="e" d="M150,575 L150,600" marker-end="url(#a)"/>
-  <path class="e" d="M410,575 L410,600" marker-end="url(#a)"/>
-  <path class="e" d="M670,575 L670,600" marker-end="url(#a)"/>
-  <text class="el" x="270" y="570">video</text>
-  <text class="el" x="455" y="570">metadata (mqtt)</text>
-  <text class="el" x="610" y="570">metadata (file)</text>
-
-  <!-- MediaService → MediaMTX (start)
-       Routed along the far-right edge then across the bottom margin to avoid
-       crossing the Metrics box and the central column. -->
-  <path class="ed" d="M760,215 L795,215 L795,670 L25,670 L25,630 L40,630" marker-end="url(#a)"/>
-  <text class="el" x="780" y="440" transform="rotate(-90 780 440)">start mediamtx.exe</text>
+  <!-- DL Streamer → 3 outputs (bus at y=508) -->
+  <path class="e" d="M371,496 L371,508 L150,508" />
+  <path class="e" d="M371,496 L371,508" />
+  <path class="e" d="M371,496 L371,508 L670,508" />
+  <path class="e" d="M150,508 L150,530" marker-end="url(#a)"/>
+  <path class="e" d="M371,508 L371,530" marker-end="url(#a)"/>
+  <path class="e" d="M670,508 L670,530" marker-end="url(#a)"/>
+  <text class="el" x="242" y="504">video</text>
+  <text class="el" x="418" y="504">metadata (mqtt)</text>
+  <text class="el" x="578" y="504">metadata (file)</text>
 
   <!-- MediaMTX → Browser/VLC -->
-  <path class="e" d="M150,660 L150,690" marker-end="url(#a)"/>
+  <path class="e" d="M150,588 L150,615" marker-end="url(#a)"/>
   <!-- MQTT → MQTT subscriber -->
-  <path class="e" d="M410,660 L410,690" marker-end="url(#a)"/>
+  <path class="e" d="M410,588 L410,615" marker-end="url(#a)"/>
+
+  <!-- MediaService → MediaMTX (start, dashed, routed right edge) -->
+  <path class="ed" d="M758,206 L793,206 L793,680 L25,680 L25,559 L40,559" marker-end="url(#a)"/>
+  <text class="el" x="780" y="430" transform="rotate(-90 780 430)">start mediamtx.exe</text>
+
 </svg>
