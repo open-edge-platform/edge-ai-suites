@@ -23,7 +23,22 @@ def list_tasks(
     if status:
         query = query.filter(AITask.status == status.upper())
     tasks = query.order_by(AITask.created_at.desc()).limit(limit).all()
-    return resp_200(data=tasks, message="Success")
+
+    tasks_data = []
+    for task in tasks:
+        task_dict = {
+            "task_id": str(task.id),
+            "task_type": task.task_type,
+            "status": task.status,
+            "progress": task.progress,
+            "payload": task.payload,
+            "result": task.result,
+            "user_id": task.user_id,
+            "created_at": task.created_at.isoformat() if task.created_at else None
+        }
+        tasks_data.append(task_dict)
+
+    return resp_200(data=tasks_data, message="Success")
 
 @router.get("/query/{task_id}")
 def get_task(task_id: UUID, db: Session = Depends(get_db)):

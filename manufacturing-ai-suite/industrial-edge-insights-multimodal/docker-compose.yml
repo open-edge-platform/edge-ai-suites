@@ -319,10 +319,8 @@ services:
       ENABLE_WEBRTC: true
       WEBRTC_SIGNALING_SERVER: http://mediamtx:8889
       ENABLE_RTSP: true
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${S3_STORAGE_HOST}
@@ -582,7 +580,6 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-      o: size=${SEAWEEDFS_VOLUME_TMPFS_SIZE:-2g}
   seaweed_filer_data:
     driver: local
     driver_opts:
@@ -600,4 +597,3 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-      o: size=${SEAWEEDFS_S3_TMPFS_SIZE:-128m}

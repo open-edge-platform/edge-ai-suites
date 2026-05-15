@@ -93,6 +93,49 @@
   pointer-events: none;
 }
 
+/* ─── Unsupported File Warning ───────────────────────────── */
+
+.cs-unsupported-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 6px 6px 0;
+  padding: 8px 10px;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 5px;
+  animation: cs-warning-fadein 0.2s ease;
+}
+
+@keyframes cs-warning-fadein {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cs-unsupported-warning__text {
+  flex: 1;
+  font-size: 11px;
+  color: #7d4e00;
+  font-family: var(--font-text);
+  word-break: break-word;
+}
+
+.cs-unsupported-warning__dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: #7d4e00;
+  padding: 0 2px;
+  opacity: 0.7;
+}
+
+.cs-unsupported-warning__dismiss:hover {
+  opacity: 1;
+}
+
 /* ─── File Table ─────────────────────────────────────────── */
 
 .cs-file-table {
