@@ -24,7 +24,7 @@ an introduction.
 
   ```bash
   export REGISTRY="intel"
-  export TAG="latest"
+  export TAG="2026.1.0-rc1"
   ```
 
 ## Quick Start with Setup Script

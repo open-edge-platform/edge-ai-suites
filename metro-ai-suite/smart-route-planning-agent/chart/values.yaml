@@ -10,7 +10,7 @@ replicaCount: 1
 image:
   registry: "docker.io"
   repository: "intel/smart-route-planning-agent"
-  tag: "latest"
+  tag: "2026.1.0-rc1"
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
