@@ -67,6 +67,13 @@ const UploadSection: React.FC = () => {
   const [entries, setEntries] = useState<UploadEntry[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [unsupportedWarning, setUnsupportedWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!unsupportedWarning) return;
+    const timer = setTimeout(() => setUnsupportedWarning(null), 5000);
+    return () => clearTimeout(timer);
+  }, [unsupportedWarning]);
 
   const [ocrPreview, setOcrPreview] = useState<{
     isOpen: boolean;
@@ -338,8 +345,15 @@ const UploadSection: React.FC = () => {
   const handleBrowse = () => fileInputRef.current?.click();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? []).filter((f) => isAllowed(f.name));
-    if (files.length) processFiles(files);
+    const allFiles = Array.from(e.target.files ?? []);
+    const validFiles = allFiles.filter((f) => isAllowed(f.name));
+    const rejectedFiles = allFiles.filter((f) => !isAllowed(f.name));
+    if (rejectedFiles.length) {
+      setUnsupportedWarning(
+        t("uploadSection.unsupportedFilesWarning", { files: rejectedFiles.map((f) => f.name).join(", ") })
+      );
+    }
+    if (validFiles.length) processFiles(validFiles);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -353,8 +367,15 @@ const UploadSection: React.FC = () => {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter((f) => isAllowed(f.name));
-    if (files.length) processFiles(files);
+    const allFiles = Array.from(e.dataTransfer.files);
+    const validFiles = allFiles.filter((f) => isAllowed(f.name));
+    const rejectedFiles = allFiles.filter((f) => !isAllowed(f.name));
+    if (rejectedFiles.length) {
+      setUnsupportedWarning(
+        t("uploadSection.unsupportedFilesWarning", { files: rejectedFiles.map((f) => f.name).join(", ") })
+      );
+    }
+    if (validFiles.length) processFiles(validFiles);
   };
 
   const handleOcrPreview = useCallback(async (filename: string, ocrTextKey: string) => {
@@ -445,6 +466,19 @@ return (
       </div>
 
       <p className="cs-supported-types">{t("uploadSection.supportedTypes")}</p>
+
+      {unsupportedWarning && (
+        <div className="cs-unsupported-warning">
+          <span className="cs-unsupported-warning__text">{unsupportedWarning}</span>
+          <button
+            className="cs-unsupported-warning__dismiss"
+            onClick={() => setUnsupportedWarning(null)}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       <input
         ref={fileInputRef}
