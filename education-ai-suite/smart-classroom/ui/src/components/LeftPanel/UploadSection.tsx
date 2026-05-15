@@ -720,9 +720,17 @@ return (
                   onClick={() => {
                     Object.values(pollTimers.current).forEach(clearInterval);
                     pollTimers.current = {};
+                    // Check before clearing entries whether any were uploaded to the backend.
+                    const anyUploadedToBackend = entries.some(
+                      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+                    );
                     setEntries([]);
-                    dispatch(setCsHasUploads(false));
-                    dispatch(setCsUploadsComplete(false));
+                    // Only reset upload-availability flags when no files exist on the backend.
+                    // Uploaded files remain on the server; search/Q&A should stay enabled.
+                    if (!anyUploadedToBackend && !csServerFilesExist) {
+                      dispatch(setCsHasUploads(false));
+                      dispatch(setCsUploadsComplete(false));
+                    }
                   }}
                 >
                   {t("uploadSection.clearAll")}
