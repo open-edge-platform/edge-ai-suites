@@ -723,14 +723,16 @@ Response (200 OK):
         "total_pages": 1,
         "files": [
             {
-                "file_hash": "ec2c2b5d7088dd212acd4fca2ecfd0abe4fca2379f3f02035d028d7423963666",
-                "file_name": "SW-Physics-Sample.pdf",
-                "file_path": "runs/95351707-a723-4af5-92df-579f18707871/raw/application/default/SW-Physics-Sample.pdf",
+                "file_hash": "a08082baa261503715c24c168d24622f12fad325dab88baf19ef819e111e7de8",
+                "file_name": "handwritten-notebook.pdf",
+                "file_path": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.pdf",
                 "bucket_name": "content-search",
                 "content_type": "application/pdf",
-                "size_bytes": 6847573,
+                "size_bytes": 149703,
                 "meta": {},
-                "created_at": "2026-04-24T09:32:18.779690",
+                "created_at": "2026-05-15T12:36:16.789942",
+                "task_id": "f1cdfb26-db7f-4c4a-8d95-c4a1fefd9347",
+                "ocr_text_key": "runs/25c5a670-a29a-4b59-8b7d-47293048cd0b/raw/application/default/handwritten-notebook.ocr.txt",
                 "storage": {
                     "exists": true
                 },
