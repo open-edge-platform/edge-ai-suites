@@ -368,6 +368,7 @@ services:
     - "110"
       # render group ID for ubuntu 24.04 host OS
     - "992"
+    - "993"
     device_cgroup_rules:
       # Default run - device-cgroup-rule='c 189:* rmw'
       # Selective rules can be applied for deployment
