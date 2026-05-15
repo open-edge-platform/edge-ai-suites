@@ -614,6 +614,22 @@ async def list_all_files(
                 except:
                     meta = {}
 
+            # Query related task to get task_id and ocr_text_key
+            from utils.core_models import AITask
+            related_task = db.query(AITask).filter(
+                AITask.payload.contains(file_asset.file_hash)
+            ).order_by(AITask.created_at.desc()).first()
+
+            task_id = None
+            ocr_text_key = None
+
+            if related_task:
+                task_id = str(related_task.id)
+                # Extract ocr_text_key from task result if exists
+                if related_task.result:
+                    result = related_task.result if isinstance(related_task.result, dict) else {}
+                    ocr_text_key = result.get("ocr_text_key")
+
             file_info = {
                 "file_hash": file_asset.file_hash,
                 "file_name": file_asset.file_name,
@@ -623,6 +639,8 @@ async def list_all_files(
                 "size_bytes": file_asset.size_bytes,
                 "meta": meta,
                 "created_at": file_asset.created_at.isoformat() if file_asset.created_at else None,
+                "task_id": task_id,
+                "ocr_text_key": ocr_text_key,
                 "storage": {
                     "exists": storage_exists
                 },
