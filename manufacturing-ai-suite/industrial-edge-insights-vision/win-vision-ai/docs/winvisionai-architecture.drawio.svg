@@ -60,7 +60,8 @@
 
   <!-- ===== DL Streamer band ===== -->
   <rect x="10" y="247" width="800" height="54" rx="10" ry="10" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
-  <text x="410" y="278" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="13">Intel DL Streamer</text>
+  <text x="410" y="269" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="13">Intel DL Streamer</text>
+  <text x="410" y="285" text-anchor="middle" fill="#0058a3" font-size="10">OpenVINO &#xb7; CPU / GPU / NPU</text>
 
   <!-- DL Streamer &#x2192; outputs -->
   <path d="M410,302 L410,320 L150,320" stroke="#0071c5" stroke-width="1.5" fill="none"/>
@@ -94,8 +95,9 @@
   <path d="M410,400 L410,416" stroke="#0071c5" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 
   <!-- ===== Row 4: Viewers ===== -->
-  <rect x="40"  y="418" width="220" height="40" rx="8" ry="8" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
-  <text x="150" y="443" text-anchor="middle" fill="#003d80" font-weight="bold">WebRTC / RTSP</text>
+  <rect x="40"  y="418" width="220" height="52" rx="8" ry="8" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
+  <text x="150" y="438" text-anchor="middle" fill="#003d80" font-weight="bold">Browser / VLC</text>
+  <text x="150" y="454" text-anchor="middle" fill="#0058a3" font-size="10">WebRTC / RTSP</text>
 
   <rect x="300" y="418" width="220" height="40" rx="8" ry="8" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
   <text x="410" y="443" text-anchor="middle" fill="#003d80" font-weight="bold">MQTT subscriber</text>
