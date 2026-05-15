@@ -1,8 +1,9 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version latest
+## Version 2026.1.0-rc1
 
-**Features**
+**May 14, 2026**
+
 - Integrate Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm)
 - Update Smart Intersection RI to release-2026.0.0 version
 - Migrate VLM serving from custom container to [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html) for improved inference performance and maintainability

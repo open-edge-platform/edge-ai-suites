@@ -1,5 +1,13 @@
 # Release Notes: Smart Route Planning Agent
 
+## Version 2026.1.0-rc1
+
+**May 14, 2026**
+
+- Introduced a websockets client based connection to multiple Smart Traffic Intersection agents
+- Replace the previous gradio based polling logic to asyncio based non-blocking calls at regular intervals
+- Added support for helmchart deployment
+
 ## Version 1.0.0
 
 **April 01, 2026**

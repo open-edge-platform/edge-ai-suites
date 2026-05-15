@@ -1,8 +1,8 @@
 # Release Notes: Live Video Captioning RAG
 
-## Version 1.0.0
+## Version 2026.1.0-rc1
 
-**April 1, 2026**
+**May 14, 2026**
 
 The Live Video Captioning RAG sample application combines caption ingestion, vector search, and LLM-based response generation into a Retrieval-Augmented Generation workflow. The sample application processes text captioning generated from RTSP video streams through the Live Video Captioning application to deliver AI-powered chatbot responses based on text captioning context from video frames.
 
