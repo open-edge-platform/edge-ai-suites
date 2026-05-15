@@ -640,7 +640,6 @@ async def list_all_files(
                 "meta": meta,
                 "created_at": file_asset.created_at.isoformat() if file_asset.created_at else None,
                 "task_id": task_id,
-                "ocr_text_key": ocr_text_key,
                 "storage": {
                     "exists": storage_exists
                 },
@@ -652,6 +651,9 @@ async def list_all_files(
                 },
                 "status": status
             }
+
+            if ocr_text_key:
+                file_info["ocr_text_key"] = ocr_text_key
 
             files_info.append(file_info)
 
