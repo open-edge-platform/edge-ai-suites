@@ -35,39 +35,32 @@
 
   <!-- Config Loader -->
   <rect x="18"  y="140" width="190" height="78" rx="6" ry="6" fill="#ffffff" stroke="#0071c5" stroke-width="1"/>
-  <text x="113" y="160" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Config Loader</text>
-  <text x="113" y="176" text-anchor="middle" fill="#0058a3" font-size="10">YAML &#x2192; dataclasses</text>
-  <text x="113" y="190" text-anchor="middle" fill="#0058a3" font-size="10">models &#xb7; pipelines</text>
-  <text x="113" y="204" text-anchor="middle" fill="#0058a3" font-size="10">raises ConfigError</text>
+  <text x="113" y="166" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Config Loader</text>
+  <text x="113" y="184" text-anchor="middle" fill="#0058a3" font-size="10">models &#xb7; pipelines</text>
 
   <!-- Pipeline Manager -->
   <rect x="214" y="140" width="190" height="78" rx="6" ry="6" fill="#ffffff" stroke="#0071c5" stroke-width="1"/>
   <text x="309" y="160" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Pipeline Manager</text>
   <text x="309" y="176" text-anchor="middle" fill="#0058a3" font-size="10">N parallel pipelines</text>
-  <text x="309" y="190" text-anchor="middle" fill="#0058a3" font-size="10">state machine &#xb7; GLib loop</text>
-  <text x="309" y="204" text-anchor="middle" fill="#0058a3" font-size="10">FPS &#xb7; latency probes</text>
+  <text x="309" y="190" text-anchor="middle" fill="#0058a3" font-size="10">FPS &#xb7; latency probes</text>
 
   <!-- Media Manager -->
   <rect x="410" y="140" width="190" height="78" rx="6" ry="6" fill="#ffffff" stroke="#0071c5" stroke-width="1"/>
   <text x="505" y="160" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Media Manager</text>
   <text x="505" y="176" text-anchor="middle" fill="#0058a3" font-size="10">manages MediaMTX</text>
-  <text x="505" y="190" text-anchor="middle" fill="#0058a3" font-size="10">start &#xb7; stop &#xb7; health</text>
-  <text x="505" y="204" text-anchor="middle" fill="#0058a3" font-size="10">RTSP / WebRTC</text>
+  <text x="505" y="190" text-anchor="middle" fill="#0058a3" font-size="10">RTSP / WebRTC</text>
 
   <!-- Metrics Collector -->
   <rect x="606" y="140" width="196" height="78" rx="6" ry="6" fill="#ffffff" stroke="#0071c5" stroke-width="1"/>
-  <text x="704" y="160" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Metrics Collector</text>
-  <text x="704" y="176" text-anchor="middle" fill="#0058a3" font-size="10">daemon thread</text>
-  <text x="704" y="190" text-anchor="middle" fill="#0058a3" font-size="10">FPS &#xb7; latency</text>
-  <text x="704" y="204" text-anchor="middle" fill="#0058a3" font-size="10">log / Prometheus</text>
+  <text x="704" y="166" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="12">Metrics Collector</text>
+  <text x="704" y="184" text-anchor="middle" fill="#0058a3" font-size="10">log / Prometheus</text>
 
   <!-- Application &#x2192; DL Streamer -->
   <path d="M410,229 L410,245" stroke="#0071c5" stroke-width="1.5" fill="none" marker-end="url(#a)"/>
 
   <!-- ===== DL Streamer band ===== -->
   <rect x="10" y="247" width="800" height="54" rx="10" ry="10" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
-  <text x="410" y="268" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="13">Intel DL Streamer</text>
-  <text x="410" y="284" text-anchor="middle" fill="#0058a3" font-size="10">gvadetect &#xb7; gvaclassify &#xb7; gvawatermark &#xb7; OpenVINO &#xb7; CPU / GPU / NPU</text>
+  <text x="410" y="278" text-anchor="middle" fill="#003d80" font-weight="bold" font-size="13">Intel DL Streamer</text>
 
   <!-- DL Streamer &#x2192; outputs -->
   <path d="M410,302 L410,320 L150,320" stroke="#0071c5" stroke-width="1.5" fill="none"/>
@@ -102,7 +95,7 @@
 
   <!-- ===== Row 4: Viewers ===== -->
   <rect x="40"  y="418" width="220" height="40" rx="8" ry="8" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
-  <text x="150" y="443" text-anchor="middle" fill="#003d80" font-weight="bold">Browser / VLC</text>
+  <text x="150" y="443" text-anchor="middle" fill="#003d80" font-weight="bold">WebRTC / RTSP</text>
 
   <rect x="300" y="418" width="220" height="40" rx="8" ry="8" fill="#dff0fb" stroke="#0071c5" stroke-width="1.5"/>
   <text x="410" y="443" text-anchor="middle" fill="#003d80" font-weight="bold">MQTT subscriber</text>
