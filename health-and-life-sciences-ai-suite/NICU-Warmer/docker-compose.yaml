@@ -91,7 +91,7 @@ services:
     privileged: true
 
   nicu-dlsps:
-    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24}
+    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1}
     container_name: nicu-dlsps
     user: "0:0"
     profiles: ["dlsps"]
