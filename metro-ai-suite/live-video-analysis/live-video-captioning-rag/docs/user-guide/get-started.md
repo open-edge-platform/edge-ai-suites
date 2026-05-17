@@ -79,7 +79,7 @@ By following this guide, you will learn how to:
 
      > **Note:** You will get a generic response at this point because no context has been created in the vector store yet.
 
-     c. To demonstrate the full functionality, run the following commands to create the context using a sample image and caption:
+     c. Because this sample application does not include the video pipeline for processing frames and generating captions, run the following commands to create context using a sample image and caption:
 
      ```bash
      # Navigate to the directory
@@ -106,7 +106,8 @@ By following this guide, you will learn how to:
 
 ## Integration with Live Video Captioning
 
-This sample application can run together with the Live Video Captioning sample applicaion to enable embedding creation and RAG-based contextual chat.
+This sample application is designed to work together with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application, which uses its video analytics pipeline to process video frames, generate captions, and send both frame and caption data so this application can create text embeddings and enable RAG-based contextual chat.
+
 For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Testing and Coverage

@@ -286,6 +286,9 @@ For RTSP test mode, start again with:
 
 - `source setup.sh --start-rtsp-test`
 
+### Accuracy of search results
+The accuracy of search results vary based on multiple factors as listed in the VSS troubleshooting guide. The same considerations hold true for Live Video Search too as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised that the user not use the RTSP test mode to check accuracy of the search results. Live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search used exclusively to note the performance on given hardware platform.
+
 ## References
 
 - [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)

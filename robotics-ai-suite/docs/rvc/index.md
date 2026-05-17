@@ -52,8 +52,6 @@ To address the challenges associated with robotics pick and place in industrial 
 
 5. **Interoperability and Connectivity**: Establishing standardized communication protocols and interfaces to facilitate seamless integration between robotic systems and existing manufacturing infrastructure, promoting interoperability and data exchange.
 
-![Robot Background](images/html/RobotBackground.png)
-
 ## Stationary Robot Vision & Control Resources
 
 - [Get Started](getstarted.md)

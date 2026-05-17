@@ -37,6 +37,10 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
      # Run the script to launch the service
      source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH
+
+     # You can also specify the OVMS release tag used by the script to enable support for newer models during OpenVINO conversion (default: `v2025.4.1`).
+     # Example:
+     # `source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH --ovms-release-tag <tag>
      ```
 
 5. Download and convert the models:

@@ -17,7 +17,7 @@ data:
   DB_NAME: {{ .Values.global.env.postgresDb | quote }}
   SEARCH_ENDPOINT: "http://video-search:8000"
   SEARCH_DATAPREP_ENDPOINT: "http://vdms-dataprep:8000"
-  SEARCH_DATAPREP_TIMEOUT_MS: {{ .Values.global.env.searchDataprepTimeoutMs | default "90000" | quote }}
+  SEARCH_DATAPREP_TIMEOUT_MS: {{ .Values.global.env.searchDataprepTimeoutMs | default "600000" | quote }}
   SUMMARY_FEATURE: {{ .Values.global.env.summaryFeature | quote }}
   SEARCH_FEATURE: {{ .Values.global.env.searchFeature | quote }}
   DATAPREP_TELEMETRY_URL: {{ .Values.global.env.dataprepTelemetryUrl | quote }}
