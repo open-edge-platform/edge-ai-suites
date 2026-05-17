@@ -37,52 +37,6 @@ export AGENT_UI_PORT=$(grep -oP '"agent_ui_port"\s*:\s*"\K[^"]+' "$DEPLOYMENT_CO
 [ "$AGENT_BACKEND_PORT" = "" ] && unset AGENT_BACKEND_PORT
 [ "$AGENT_UI_PORT" = "" ] && unset AGENT_UI_PORT
 
-# Set TC overlay if ENABLE_TC env variable is set
-if [ "$ENABLE_TC" = "true" ]; then
-    TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
-    TC_OVERLAY_DEPS="-f ${APP_DIR}/docker/tc-overlay-deps.yaml"
-    TC_OVERLAY_ALL="${TC_OVERLAY_AGENT} ${TC_OVERLAY_DEPS}"
-    
-    # Only validate and configure network for operations that start containers
-    if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
-        if [ -f "${APP_DIR}/check_tc_deployment.sh" ]; then
-            if ! bash "${APP_DIR}/check_tc_deployment.sh" 2>/dev/null; then
-                echo -e "${RED}ERROR: Trusted Compute deployment verification failed${NC}"
-                echo -e "${YELLOW}Please ensure Kata Containers is properly installed and configured${NC}"
-                return 1
-            fi
-        fi
-        
-        # Validate GPU and Trusted Compute compatibility
-        if [ "$VLM_DEVICE" = "GPU" ]; then
-            echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
-            echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
-            return 1
-        fi
-
-        #Configure TC network settings and create resolv.conf for DNS relay
-        export TC_SUBNET="${TC_SUBNET:-172.20.0.0/16}"
-        if ! [[ "$TC_SUBNET" =~ ^172\.([0-9]+)\.0\.0/16$ ]] || [ "${BASH_REMATCH[1]}" -lt 18 ] || [ "${BASH_REMATCH[1]}" -gt 31 ]; then
-            echo -e "${RED}ERROR: TC_SUBNET must be exactly 172.X.0.0/16 where X is 18-31 (current: ${TC_SUBNET})${NC}"
-            return 1
-        fi
-
-        # Check if subnet is already in use by Docker networks
-        if docker network inspect $(docker network ls -q) 2>/dev/null | grep -q "\"Subnet\": \"${TC_SUBNET}\""; then
-            echo -e "${RED}ERROR: Subnet ${TC_SUBNET} is already in use by an existing Docker network${NC}"
-            return 1
-        fi
-        
-        export TC_DNS_IP="$(echo "$TC_SUBNET" | sed -E 's/\.[0-9]+\/[0-9]+$//').200"
-        echo -e "${CYAN}==> Configuring TC network settings - Subnet: ${TC_SUBNET}, DNS Relay IP: ${TC_DNS_IP}${NC}"
-        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/docker/tc-resolv.conf"
-        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/deps/metro-vision/metro-ai-suite/metro-vision-ai-app-recipe/tc-resolv.conf"
-        echo -e "${BLUE}==> Trusted Compute security enabled ${NC}"
-    fi
-else
-    TC_OVERLAY_AGENT=""; TC_OVERLAY_DEPS=""; TC_OVERLAY_ALL=""
-fi
-
 # Path variables needed by all commands (including --stop/--clean)
 export SAMPLE_APP="smart-intersection"
 CLONE_DIR="deps/metro-vision"
@@ -90,6 +44,19 @@ CLONE_PATH="$APP_DIR/$CLONE_DIR"
 export DEPS_DIR="$CLONE_PATH/metro-ai-suite/metro-vision-ai-app-recipe"
 export RI_DIR="$DEPS_DIR/$SAMPLE_APP"
 export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
+
+if [ "$ENABLE_TC" = "true" ]; then
+    TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
+    if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
+        if [ "$VLM_DEVICE" = "GPU" ]; then
+            echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
+            echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
+            return 1
+        fi
+    fi
+else
+    TC_OVERLAY_AGENT="";
+fi
 
 # Setting command usage and invalid arguments handling before the actual setup starts
 if [ "$#" -eq 0 ] || ([ "$#" -eq 1 ] && [ "$1" = "--help" ]); then
@@ -139,14 +106,11 @@ elif [ "$1" = "--restart" ] && [ "$#" -eq 2 ] && [ "$2" != "agent" ] && [ "$2" !
 elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
     echo -e "${YELLOW}Stopping Smart-Traffic-Intersection-Agent ${RED}${PROJECT_NAME} ${YELLOW}... ${NC}"
     
-    # Always include tc-overlay during cleanup to remove TC-specific containers (e.g., tc-dns-relay)
-    CLEAN_TC_OVERLAY="-f ${APP_DIR}/docker/tc-overlay-agent.yaml -f ${APP_DIR}/docker/tc-overlay-deps.yaml"
-    
     # check if ri-compose.yaml exists and run docker compose down accordingly
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p ${PROJECT_NAME} down
+        docker compose --project-directory "$DEPS_DIR" -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down
     else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p ${PROJECT_NAME} down 2> /dev/null
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p ${PROJECT_NAME} down 2> /dev/null
     fi
 
     if [ $? -ne 0 ]; then
@@ -244,6 +208,24 @@ check_and_setup_dependencies() {
     rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
     ln -sf "$DEPS_DIR/compose-scenescape.yml" "$APP_DIR/docker/ri-compose.yaml"
 
+    if [ "$ENABLE_TC" = "true" ]; then
+        export TC_SUBNET=$(grep -oP 'TC_SUBNET\s*=\s*\K[^\s]+' "$DEPS_DIR/.env" 2>/dev/null || echo "")
+        if [ -z "$TC_SUBNET" ]; then
+            echo -e "${RED}ERROR: TC_SUBNET not found in $DEPS_DIR/.env. ${NC}"
+            return 1
+        fi
+
+        export TC_DNS_IP=$(grep -oP 'TC_DNS_IP\s*=\s*\K[^\s]+' "$DEPS_DIR/.env" 2>/dev/null || echo "")
+        if [ -z "$TC_DNS_IP" ]; then
+            echo -e "${RED}ERROR: TC_DNS_IP not found in $DEPS_DIR/.env. ${NC}"
+            return 1
+        fi
+        echo "nameserver ${TC_DNS_IP}" > "${APP_DIR}/docker/tc-resolv.conf"
+
+        #Create symbolic link to docker-compose.yml in docker dir of agent application
+        rm "$APP_DIR/docker/ri-compose.yaml" 2> /dev/null 
+        ln -sf "$DEPS_DIR/docker-compose.yml" "$APP_DIR/docker/ri-compose.yaml"
+    fi
     return 0
 }
 
@@ -570,9 +552,9 @@ build_service() {
 
     # Build the service images
     if [ -L "${APP_DIR}/docker/ri-compose.yaml" ]; then
-        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME build
+        docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
     else
-        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME build
+        docker compose -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME build
     fi
 
     if [ $? -eq 0 ]; then
@@ -591,7 +573,7 @@ build_and_start_service() {
     prepare_ovms_model || return 1
 
     # Build and start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --build
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --build
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services built and started successfully!${NC}"
@@ -610,7 +592,7 @@ start_service() {
     prepare_ovms_model || return 1
 
     # Start the services
-    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d
+    docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d
     
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Smart-Traffic-Intersection-Agent Services started successfully!${NC}"
@@ -663,7 +645,7 @@ restart_service() {
             
             # Stop the dependency - Smart Intersection RI services
             echo -e "${BLUE}==> Stopping dependencies ...${NC}"
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" $TC_OVERLAY_DEPS -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml"  -p $PROJECT_NAME down
             
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop dependencies!${NC}"
@@ -672,7 +654,7 @@ restart_service() {
             
             # Start with force-recreate to ensure env vars are picked up
             echo -e "${BLUE}==> Restarting dependencies (Smart Intersection RI) ...${NC}"
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" $TC_OVERLAY_DEPS -p $PROJECT_NAME up -d --force-recreate
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -p $PROJECT_NAME up -d --force-recreate
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}Dependencies restarted successfully!${NC}"
@@ -693,14 +675,14 @@ restart_service() {
             fi
             
             # Stop all services
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $CLEAN_TC_OVERLAY -p $PROJECT_NAME down
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME down
             if [ $? -ne 0 ]; then
                 echo -e "${RED}Failed to stop services for Traffic Intersection Agent!${NC}"
                 return 1
             fi
 
             # Restart all services
-            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_ALL -p $PROJECT_NAME up -d --force-recreate  
+            docker compose --project-directory $DEPS_DIR -f "${APP_DIR}/docker/ri-compose.yaml" -f "${APP_DIR}/docker/ri-override.yaml" -f "${APP_DIR}/docker/agent-compose.yaml" $TC_OVERLAY_AGENT -p $PROJECT_NAME up -d --force-recreate  
             
             if [ $? -eq 0 ]; then
                 echo -e "${GREEN}All dependencies and Backend/UI services for Traffic Intersection Agent restarted successfully!${NC}"
