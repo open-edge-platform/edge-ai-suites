@@ -149,7 +149,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ###### `models/`
 
-The `weld_anomaly_detector.cb` is a model built using the RandomForestClassifier Algo, part of scikit-learn library.
+The `weld_anomaly_detector.pkl` is a model built using the RandomForestClassifier Algo, part of scikit-learn library.
 
 ##### 2.3 Fusion Analytics
 

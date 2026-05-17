@@ -245,7 +245,7 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 > 'https://localhost:30001/ts-api/config' \
 > -H 'accept: application/json' \
 > -H 'Content-Type: application/json' \
-> -d "$(sed 's/"device": "cpu"/"device": "gpu"/' config.json)"
+> -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 > ```
 >
 > GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
