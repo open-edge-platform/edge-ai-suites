@@ -13,7 +13,7 @@ application.
 
 **New**
 
-- Qualified on the Intel® Core™ Series 3 latest processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
 
 **Improved**
 
