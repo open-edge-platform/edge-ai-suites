@@ -148,7 +148,7 @@ to file new tickets there (after learning about the guidelines for [Contributing
 
 ### 4. DL Streamer Pipeline Server Pod Stuck in Pending State:
 
-   - **Issue**: When `gpu.enabled` is set to `true` or `npuWorkload` is set to `true` in `values.yaml`, the DL Streamer Pipeline Server pod remains in `Pending` state and does not get scheduled.
+   - **Issue**: When `gpu.enabled` is set to `true` or `npu.enabled` is set to `true` in `values.yaml`, the DL Streamer Pipeline Server pod remains in `Pending` state and does not get scheduled.
    - **Cause**: The deployment requests `gpu.intel.com/i915` (or the configured `gpu.type`) or `npu.intel.com/accel` as a resource limit. If the node does not have the corresponding hardware or the Intel Device Plugin is not installed, Kubernetes cannot satisfy the resource request and the pod will not be scheduled.
    - **Diagnosis**: Check the pod events for the scheduling failure:
 
