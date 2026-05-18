@@ -31,7 +31,7 @@ DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 
 ## Clone the Repository
 
-Open PowerShell and run the following commands:
+Open PowerShell and run all terminal commands:
 
 ```powershell
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
