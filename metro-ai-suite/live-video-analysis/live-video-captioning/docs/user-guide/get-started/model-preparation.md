@@ -23,7 +23,7 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
 
      ```bash
      export REGISTRY="intel/"
-     export TAG=latest
+     export TAG=2026.1.0-rc1
      export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
      ```
 

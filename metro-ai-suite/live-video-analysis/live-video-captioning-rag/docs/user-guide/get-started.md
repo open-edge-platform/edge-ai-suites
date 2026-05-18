@@ -36,7 +36,7 @@ By following this guide, you will learn how to:
 
      ```bash
      export REGISTRY="intel/"
-     export TAG="latest"
+     export TAG="2026.1.0-rc1"
      ```
 
      If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
