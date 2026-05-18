@@ -68,7 +68,7 @@ Clone the repository containing the Helm chart:
 
 ```bash
 # Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
 # Alternatively, clone a specific release branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b <release-tag>
 ```

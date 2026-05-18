@@ -98,7 +98,7 @@ Clone the repository containing the charts files:
 
 ```bash
 # Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.1.0
 # Alternatively, clone a specific release branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 ```
