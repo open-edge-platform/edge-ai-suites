@@ -229,7 +229,7 @@ def _parse_pipeline_entry(name: str, raw: dict, models: Dict[str, ModelConfig], 
     When no per-pipeline output section is present, RTSP path and WebRTC peer_id are
     auto-derived from the pipeline name (e.g. pipeline 'front' → path='/front').
     """
-    for req in ("input", "inference"):
+    for req in ("input",):
         if req not in raw:
             raise ConfigError(f"Pipeline '{name}' missing required section: {req!r}")
 
@@ -247,7 +247,7 @@ def _parse_pipeline_entry(name: str, raw: dict, models: Dict[str, ModelConfig], 
     return PipelineEntry(
         name=name,
         input=_parse_input(name, raw["input"]),
-        inference=_parse_inference(name, raw["inference"], models),
+        inference=_parse_inference(name, raw.get("inference") or {}, models),
         output=output_cfg,
         auto_start=bool(raw.get("auto_start", True)),
     )
@@ -282,9 +282,9 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
 
 def _parse_inference(pipeline_name: str, raw: dict, models: Dict[str, ModelConfig]) -> InferenceConfig:
     """Parse a pipeline's 'inference' section and validate model_id against the models dict."""
-    model_id = raw.get("model_id")
+    model_id = (raw.get("model_id") or "").strip()
     if not model_id:
-        raise ConfigError(f"Pipeline '{pipeline_name}': inference missing required field 'model_id'")
+        return None
     if model_id not in models:
         raise ConfigError(f"Pipeline '{pipeline_name}': inference.model_id '{model_id}' not found in models section")
     model_path = models[model_id].model

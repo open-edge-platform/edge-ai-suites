@@ -31,8 +31,6 @@ DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 
 ## Clone the Repository
 
-Open PowerShell and run all terminal commands:
-
 ```powershell
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
@@ -269,6 +267,19 @@ output:
     path: /front
 ```
 
+### Frame Output — WebRTC + RTSP (both on the same pipeline)
+
+Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
+
+```yaml
+output:
+  frame:
+    type: webrtc
+    peer_id: front
+    type: rtsp
+    path: /front
+```
+
 ### Metadata Output — MQTT
 
 Download the Windows installer from https://mosquitto.org/download/ and install it.
@@ -291,6 +302,7 @@ cd "C:\Program Files\mosquitto"
 .\mosquitto.exe -v
 
 # Terminal 2 — subscribe to verify
+# The topic passed to -t must match the topic value set in config.yaml (e.g. inference/front)
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
@@ -358,6 +370,51 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 ---
 
+### Supported Pipeline Combinations
+
+The following combinations are supported in structured configuration mode.
+
+> **`input` is mandatory** for all pipeline combinations below.
+
+#### With Inference (`model_id` set)
+
+| Frame Output | Metadata Output |
+|---|---|
+| RTSP | MQTT |
+| WebRTC | MQTT |
+| RTSP + WebRTC | MQTT |
+| RTSP | File |
+| WebRTC | File |
+| RTSP + WebRTC | File |
+| RTSP | MQTT + File |
+| WebRTC | MQTT + File |
+| RTSP + WebRTC | MQTT + File |
+| RTSP | None |
+| WebRTC | None |
+| RTSP + WebRTC | None |
+| None | MQTT |
+| None | File |
+| None | MQTT + File |
+| None | None |
+
+#### Without Inference (no `model_id`)
+
+| Frame Output | Metadata Output |
+|---|---|
+| RTSP | None |
+| WebRTC | None |
+| None | None |
+
+> **Notes:**
+> - With inference, a single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
+> - Without inference, only one frame output type (`RTSP` or `WebRTC`) is supported per pipeline.
+> - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
+> - Metadata output requires inference to be enabled.
+
+For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
+
+---
+
 ## Run the App
 
 ```powershell
@@ -393,6 +450,25 @@ MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears 
 ---
 
 ## Troubleshooting
+
+### Camera: `msvcr120.dll` / `msvcp120.dll` not found
+
+The GenICam VC120 DLLs depend on the Visual C++ 2013 Redistributable. Verify whether the required DLLs are present:
+
+```powershell
+"msvcr120: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
+"msvcp120: $(Test-Path 'C:\Windows\System32\msvcp120.dll')"
+```
+
+If either value is `False`, install the Visual C++ 2013 Redistributable:
+
+```powershell
+$url = "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
+$out = "$env:TEMP\vcredist_x64_2013.exe"
+Invoke-WebRequest -Uri $url -OutFile $out
+Start-Process $out -ArgumentList "/install /quiet /norestart" -Wait
+Write-Host "Done. msvcr120.dll now present: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
+```
 
 ### Inference on NPU fails with `Failed to construct OpenVINOImageInference` error
 
