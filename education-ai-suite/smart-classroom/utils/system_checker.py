@@ -12,6 +12,7 @@ REQUIRED_OS = "Windows 11"
 REQUIRED_PYTHON_MAJOR = 3
 REQUIRED_PYTHON_MINOR = 12
 REQUIRED_NODE_MAJOR = 18  # Minimum required Node.js version
+MIN_DLSTREAMER_VERSION = (2026, 0, 0)
 
 
 def check_meteor_lake(processor_name: str) -> bool:
@@ -97,6 +98,11 @@ def check_dlstreamer_installation() -> bool:
             version_match = re.search(r"Version\s+(\S+)", result.stdout)
             if version_match:
                 version = version_match.group(1)
+                parts = tuple(int(x) for x in re.findall(r"\d+", version))[:3]
+                if parts < MIN_DLSTREAMER_VERSION:
+                    min_ver_str = ".".join(str(v) for v in MIN_DLSTREAMER_VERSION)
+                    logger.error(f"❌ DL Streamer version {version} is too old. Minimum required: {min_ver_str}.")
+                    return False
                 logger.info(f"✅ DL Streamer found and working (version {version}).")
                 return True
         else:
@@ -151,7 +157,7 @@ def show_warning_and_prompt_user_to_continue():
 - \033[1mGPU/Accelerator:\033[0m Intel® iGPU (Intel® Core Ultra Series 1, Arc GPU, or higher) for summarization acceleration
 - \033[1mPython:\033[0m 3.12
 - \033[1mNode.js:\033[0m v18+ (for frontend)
-- \033[1mDL Streamer:\033[0m 2025.2.0 (for video analytics pipelines)
+- \033[1mDL Streamer:\033[0m 2026.0.0+ (for video analytics pipelines)
 
 \033[90m------------------------------------------------------------\033[0m
 """)

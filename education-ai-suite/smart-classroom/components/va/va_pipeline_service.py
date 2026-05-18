@@ -19,6 +19,7 @@ from utils.rtsp_recorder import (
     is_rtsp_recording_running,
 )
 from utils.runtime_config_loader import RuntimeConfig
+from utils.system_checker import check_dlstreamer_installation
 
 class PipelineName(Enum):
     """Enumeration of pipeline names"""
@@ -93,13 +94,38 @@ class VideoAnalyticsPipelineService:
         self.unidentified_max = getattr(ps, "unidentified_max", 50) if ps else 50
         self.stale_unidentified_threshold = getattr(ps, "stale_unidentified_threshold", 30) if ps else 30
 
+        # Verify DL Streamer installation
+        if not check_dlstreamer_installation():
+            raise RuntimeError("DL Streamer is not installed or does not meet the minimum version requirement")
+
         # Register cleanup handler
         atexit.register(self._cleanup)
+
+    def _get_gstreamer_version(self) -> Optional[str]:
+        """Read GStreamer version from Windows registry"""
+        try:
+            import winreg
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\GStreamer1.0\x86_64") as key:
+                version, _ = winreg.QueryValueEx(key, "Version")
+                return version
+        except Exception as e:
+            self.logger.warning(f"Failed to read GStreamer version from registry: {e}")
+            return None
 
     def _setup_environment(self):
         """Setup GStreamer environment variables"""
         current_path = os.environ.get("GST_PLUGIN_PATH", "")
-        os.environ["GST_PLUGIN_PATH"] = f"{self.plugin_path};{current_path}"
+
+        # Select plugin folder based on GStreamer version
+        gst_version = self._get_gstreamer_version()
+        if gst_version and gst_version.startswith("1.26."):
+            plugin_dir = self.plugin_path / "dlstreamer-2025"
+            self.logger.info(f"GStreamer {gst_version} detected, using old plugin")
+        else:
+            plugin_dir = self.plugin_path
+            self.logger.info(f"GStreamer {gst_version or 'unknown'} detected, using default plugin")
+
+        os.environ["GST_PLUGIN_PATH"] = f"{plugin_dir};{current_path}"
         os.environ["GST_DEBUG"] = (
             "GVA_common:2,gvaposturedetect:4,gvareid:4,gvaroifilter:4"
         )
