@@ -134,7 +134,7 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.1.0-ubuntu24-rc1
+  tag: 2026.1.0-ubuntu24-rc1.1
   # Overrides the storage class name
   storageClassName: "standard"
   gpuWorkload: false
