@@ -5388,3 +5388,204 @@ def get_seaweedfs_bucket_files(bucket_url):
             "total_files": 0
         }
 
+
+def execute_dlstreamer_pipeline_activation(device="GPU", pipeline_name="weld_defect_classification",
+                                           model_path="/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
+                                           mqtt_topic="vision_weld_defect_classification",
+                                           s3_bucket="dlstreamer-pipeline-results",
+                                           s3_folder_prefix="weld-defect-classification",
+                                           webrtc_peer_id="samplestream"):
+    """
+    Activate the DL Streamer Pipeline Server pipeline on a Docker-based multimodal deployment
+    with the model inference targeted at the specified device (CPU/GPU/NPU).
+
+    Sends a POST request to the dlstreamer-pipeline-server REST API
+    (http://localhost:8080/pipelines/user_defined_pipelines/<pipeline_name>) via
+    `docker exec` against the dlstreamer-pipeline-server container, which is the
+    Docker-deployment equivalent of:
+
+        curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+             -X POST -H 'Content-Type: application/json' -d '{ ... "device": "GPU" ... }'
+
+    Args:
+        device (str): Device for model inference ('CPU', 'GPU', or 'NPU'). Case-insensitive; uppercased before send.
+        pipeline_name (str): Name of the user-defined pipeline to activate.
+        model_path (str): Path to the model.xml inside the dlstreamer-pipeline-server container.
+        mqtt_topic (str): MQTT topic where vision metadata is published.
+        s3_bucket (str): S3 bucket name for storing frames.
+        s3_folder_prefix (str): Folder prefix within the S3 bucket.
+        webrtc_peer_id (str): WebRTC peer-id for the frame destination.
+
+    Returns:
+        bool: True if the pipeline was activated successfully, False otherwise.
+    """
+    try:
+        device_value = device.upper()
+        logger.info(f"Activating DL Streamer pipeline '{pipeline_name}' on device {device_value} (Docker)")
+
+        dlstreamer_payload = {
+            "destination": {
+                "metadata": {
+                    "type": "mqtt",
+                    "topic": mqtt_topic
+                },
+                "frame": [
+                    {
+                        "type": "webrtc",
+                        "peer-id": webrtc_peer_id,
+                        "overlay": False
+                    },
+                    {
+                        "type": "s3_write",
+                        "bucket": s3_bucket,
+                        "folder_prefix": s3_folder_prefix,
+                        "block": False
+                    }
+                ]
+            },
+            "parameters": {
+                "classification-properties": {
+                    "model": model_path,
+                    "device": device_value
+                }
+            }
+        }
+
+        payload_json = json.dumps(dlstreamer_payload)
+
+        curl_command = [
+            "docker", "exec", "dlstreamer-pipeline-server",
+            "curl", "-X", "POST",
+            f"http://localhost:8080/pipelines/user_defined_pipelines/{pipeline_name}",
+            "-H", "Content-Type: application/json",
+            "-d", payload_json
+        ]
+
+        logger.info(f"Executing DL Streamer activation: {' '.join(curl_command)}")
+        result = subprocess.run(curl_command, capture_output=True, text=True, timeout=30)
+
+        if result.returncode == 0:
+            logger.info(f"✓ DL Streamer pipeline '{pipeline_name}' activated successfully on {device_value}")
+            logger.debug(f"Response: {result.stdout}")
+            return True
+        else:
+            logger.error(f"✗ Failed to activate DL Streamer pipeline '{pipeline_name}' on {device_value}")
+            logger.error(f"Error: {result.stderr}")
+            return False
+
+    except subprocess.TimeoutExpired:
+        logger.error("DL Streamer pipeline activation curl command timed out")
+        return False
+    except Exception as e:
+        logger.error(f"Error executing DL Streamer pipeline activation: {e}")
+        return False
+
+
+def execute_influxdb_commands_multimodal(container_name="ia-influxdb", database="datain", limit=5):
+    """
+    Execute InfluxDB commands inside the InfluxDB container for the multimodal
+    weld-defect-detection deployment and return query output.
+
+    Equivalent to running, inside the container:
+        influx -username <user> -password <pass>
+        use datain
+        show measurements
+        select * from "weld-sensor-anomaly-data"           # Time Series Analytics
+        select * from "vision-weld-classification-results" # DL Streamer Pipeline Server
+
+    Args:
+        container_name (str): InfluxDB container name (default: "ia-influxdb").
+        database (str): InfluxDB database to query (default: "datain").
+        limit (int): Row limit for SELECT queries.
+
+    Returns:
+        str | None: Combined query results from the container on success,
+        otherwise None.
+    """
+    logger.info(f"Executing multimodal InfluxDB commands in container '{container_name}'...")
+    try:
+        if not container_exists(container_name):
+            logger.info(f"{container_name} container does not exist")
+            return None
+
+        # Multimodal credentials live in the multimodal app's .env, not the
+        # time-series .env that get_influxdb_credentials() reads from.
+        influxdb_username, influxdb_password = None, None
+        multimodal_env_path = os.path.join(constants.MULTIMODAL_APPLICATION_DIRECTORY, ".env")
+        try:
+            with open(os.path.expandvars(multimodal_env_path), "r") as env_file:
+                for line in env_file:
+                    line = line.strip()
+                    if line.startswith("INFLUXDB_USERNAME="):
+                        influxdb_username = line.split("=", 1)[1]
+                    elif line.startswith("INFLUXDB_PASSWORD="):
+                        influxdb_password = line.split("=", 1)[1]
+            logger.info(f"Loaded InfluxDB credentials from multimodal .env: {multimodal_env_path}")
+        except FileNotFoundError:
+            logger.warning(f"Multimodal .env not found at {multimodal_env_path}; "
+                           f"falling back to time-series .env")
+
+        if not influxdb_username or not influxdb_password:
+            influxdb_username, influxdb_password = get_influxdb_credentials()
+
+        if not influxdb_username or not influxdb_password:
+            logger.info("Failed to get InfluxDB credentials")
+            return None
+
+        multimodal_config = constants.get_app_config(constants.MULTIMODAL_SAMPLE_APP) \
+            if hasattr(constants, "MULTIMODAL_SAMPLE_APP") and hasattr(constants, "get_app_config") \
+            else None
+
+        analytics_measurement = (
+            multimodal_config.get("analytics_topic") if multimodal_config else None
+        ) or getattr(constants, "WELD_ANALYTICS_TOPIC", "weld-sensor-anomaly-data")
+        vision_measurement = (
+            multimodal_config.get("vision_measurement") if multimodal_config else None
+        ) or "vision-weld-classification-results"
+
+        verify_tables = [analytics_measurement, vision_measurement]
+
+        influx_execute = (
+            f'SHOW MEASUREMENTS; '
+            f'SELECT * FROM "{analytics_measurement}" LIMIT {limit}; '
+            f'SELECT * FROM "{vision_measurement}" LIMIT {limit}'
+        )
+
+        exec_command = [
+            "docker", "exec", container_name,
+            "influx", "-username", influxdb_username, "-password", influxdb_password,
+            "-database", database, "-execute", influx_execute
+        ]
+        logger.info(
+            f"Executing multimodal InfluxDB query inside {container_name} "
+            f"(measurements: {analytics_measurement}, {vision_measurement}) with redacted credentials."
+        )
+
+        result = subprocess.run(exec_command, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            logger.info(f"Multimodal InfluxDB command failed with return code {result.returncode}")
+            logger.info(f"Error: {result.stderr}")
+            return None
+
+        response = result.stdout.strip()
+        logger.info("Multimodal InfluxDB query results:")
+        logger.info(response)
+
+        if response and any(table in response for table in verify_tables):
+            logger.info("✓ Successfully retrieved multimodal InfluxDB data "
+                        "(time-series analytics and vision measurements present).")
+            return response
+        else:
+            logger.info("No data found or required multimodal measurements are not present.")
+            return response if response else "Connected but no data found"
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"An error occurred while executing a command: {e}")
+        if hasattr(e, 'stderr') and e.stderr:
+            logger.error(f"Error details: {e.stderr}")
+        return None
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}")
+        return None
+

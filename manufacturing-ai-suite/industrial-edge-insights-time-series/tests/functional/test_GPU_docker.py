@@ -81,3 +81,29 @@ def test_gpu_opcua(setup_wind_turbine_environment):
     """TC_GPU_02: GPU device configuration with OPC-UA ingestion (Docker)."""
     logger.info("TC_GPU_02: GPU device configuration with OPC-UA ingestion (Docker)")
     _run_gpu_config_test(setup_wind_turbine_environment, "opcua")
+
+
+@pytest.mark.gpu
+@pytest.mark.mqtt
+@pytest.mark.skipif(
+    not docker_utils.check_system_gpu_devices(),
+    reason="No GPU devices detected on this system",
+)
+def test_gpu_mqtt_weld(setup_docker_environment):
+    """TC_GPU_03: GPU device configuration with MQTT ingestion for Weld Defect Detection (Docker)."""
+    logger.info("TC_GPU_03: Testing GPU device configuration with MQTT ingestion in time-series analytics config for Weld Defect Detection")
+
+    context = setup_docker_environment
+    context["deploy_mqtt"](app=constants.WELD_SAMPLE_APP)
+    logger.info("MQTT deployment succeeded")
+
+    # Wait for containers to stabilize and data to be generated
+    logger.info("Waiting for containers to stabilize and data to be generated...")
+    docker_utils.wait_for_stability(60)
+
+    # Execute curl command to post GPU configuration to the API using REST API approach
+    curl_result = docker_utils.execute_gpu_config_curl(device="gpu")
+
+    # Verify the curl command was successful
+    logger.info(f"GPU configuration curl result: {curl_result}")
+    assert curl_result, "GPU configuration test via REST API failed"
