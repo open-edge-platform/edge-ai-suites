@@ -73,7 +73,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2026.0.0-ubuntu24 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.1.0-ubuntu24-rc1 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 
@@ -356,7 +356,6 @@ By following this guide, you will learn how to:
 
 get-started/system-requirements.md
 get-started/deploy-with-helm.md
-get-started/deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->

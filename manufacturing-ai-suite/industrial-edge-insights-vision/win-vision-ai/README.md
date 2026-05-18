@@ -10,23 +10,40 @@ Configuration is YAML-driven: define your models, input sources, and outputs, th
 run. Advanced users can supply raw GStreamer pipeline strings directly for full
 control.
 
-> **Platform:** Windows only.
+> **Platform:** Windows 11
 
 ## Description
 
 ### Architecture
 
-It consists of the following components:
-
-- App (`app.py`) — config loader, service bootstrap, pipeline builder
-- PipelineManager — runs N GStreamer pipelines on a shared GLib main loop
-- DL Streamer — `gvadetect` / `gvaclassify` / `gvametapublish` on OpenVINO
-- MediaService — auto-downloads and starts the embedded MediaMTX server
-- MediaMTX server — re-streams encoded video over RTSP and WebRTC / WHIP
-- MQTT broker — receives inference metadata via `gvametapublish method=mqtt`
-- JSON file output — `gvametapublish method=file` writes metadata to disk
-- Metrics — log / Prometheus exporter for FPS, latency, and pipeline state
-
 <div style="text-align: center;">
     <img src=docs/winvisionai-architecture.drawio.svg width=800>
 </div>
+
+#### Inputs
+
+- **Video file** — local video file playback
+- **RTSP camera** — network camera stream
+- **GenICam camera** — industrial camera via GenICam SDK
+
+#### Application
+
+- **Config Loader** — loads and validates YAML configuration; defines models and pipelines
+- **Pipeline Manager** — manages N parallel GStreamer pipelines with FPS and latency probes
+- **Media Manager** — manages the embedded MediaMTX server for RTSP and WebRTC output
+- **Metrics Collector** — exports pipeline metrics to log or Prometheus
+
+#### Inference
+
+- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO on CPU, GPU, or NPU
+
+#### Outputs
+
+- **MediaMTX** — re-streams encoded video over RTSP (port 8554) and WebRTC (port 8889)
+- **MQTT broker** — receives structured inference metadata over TCP (port 1883)
+- **JSON file** — writes inference metadata to disk
+
+#### Viewers
+
+- **Browser / VLC** — consume the live stream over WebRTC or RTSP
+- **MQTT subscriber** — consumes inference metadata published to the MQTT broker

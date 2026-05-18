@@ -7,7 +7,7 @@
 
 Usage::
 
-    python utils/setup_mediamtx.py [--dir mediamtx] [--version v1.15.3]
+    python utils/setup_mediamtx.py [--dir mediamtx] [--version v1.18.1]
 
 Run this once before starting the application. The script downloads the
 MediaMTX release archive, extracts the binary to *--dir*, and patches the
@@ -24,7 +24,7 @@ from pathlib import Path
 
 import requests
 
-MEDIAMTX_DEFAULT_VERSION = "v1.15.3"
+MEDIAMTX_DEFAULT_VERSION = "v1.18.1"
 _PLATFORM_ZIP = {
     "win32":  "windows_amd64",
     "darwin": "darwin_amd64",

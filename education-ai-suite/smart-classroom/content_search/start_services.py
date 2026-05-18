@@ -74,6 +74,8 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("FRAME_EXTRACT_INTERVAL", str(ingest.get("frame_extract_interval", 15)))
         _set("DO_DETECT_AND_CROP", str(ingest.get("do_detect_and_crop", False)).lower())
         _set("INGEST_DEVICE", ingest.get("doc_embedding_device", "CPU"))
+        _set("VISUAL_EMBEDDING_MODEL", ingest.get("visual_embedding_model", "CLIP/clip-xlm-roberta-base-vit-b-32"))
+        _set("DOC_EMBEDDING_MODEL", ingest.get("doc_embedding_model", "intfloat/multilingual-e5-small"))
 
         # Document Parser
         doc_parser = ingest.get("document_parser", {})
@@ -100,6 +102,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
         _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
         _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
+        _set("QA_RETRIEVAL_SCORE_THRESHOLD", str(qa.get("retrieval_score_threshold", 85)))
 
         # App-level language (en or zh)
         app = data.get("app", {})

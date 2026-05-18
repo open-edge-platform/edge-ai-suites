@@ -1,5 +1,15 @@
 # Release Notes: Live Video Search
 
+## Version 2026.1.0-rc1
+
+**Features**
+
+- Added support for helmchart deployment
+
+**Known Issues/Limitations**
+- First‑time model downloads may take several minutes.
+- Time‑range queries require the clock and timezone on the host to be accurate.
+
 ## Version 1.0.0
 
 **April 01, 2026**

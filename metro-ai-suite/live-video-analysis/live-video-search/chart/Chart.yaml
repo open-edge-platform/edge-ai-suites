@@ -2,7 +2,7 @@ apiVersion: v2
 name: live-video-search
 description: Umbrella Helm chart for Live Video Search (VSS Search + Smart NVR)
 type: application
-version: 1.0.0
+version: 2026.1.0-rc1-helm
 appVersion: "1.0.0"
 dependencies:
   - name: shared
