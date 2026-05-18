@@ -161,13 +161,18 @@ spec:
             timeoutSeconds: {{ .Values.vlmServing.healthcheck.timeoutSeconds }}
             failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
           resources:
+            {{- $res := deepCopy .Values.vlmServing.resources }}
+            {{- if .Values.vlmServing.trustedCompute.enabled }}
+            {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
+            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6")) }}
+            {{- end }}
             {{- if $needsGpu }}
             {{- $res := deepCopy .Values.vlmServing.resources }}
             {{- $gpuLimits := dict .Values.vlmServing.gpu.resourceName (.Values.vlmServing.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
             {{- toYaml $res | nindent 12 }}
             {{- else }}
-            {{- toYaml .Values.vlmServing.resources | nindent 12 }}
+            {{- toYaml $res | nindent 12 }}
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
