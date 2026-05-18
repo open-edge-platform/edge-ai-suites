@@ -96,7 +96,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    >   This may result in a delay before Fusion Analytics becomes fully operational.
 
    ```bash
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make up
    ```
 
@@ -107,7 +107,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
    ```sh
-   cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
 
@@ -118,49 +118,35 @@ By default, UDF for Time Series Analytics Microservice is configured to run on `
 To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 ### Running DL Streamer Pipeline Server model inference on GPU or NPU
 
 By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
-To trigger the model inference on `GPU` or `NPU` in DL Streamer Pipeline Server, run the following command:
-
-> **Note:**
-> Replace `GPU` with `NPU` to run inference on `NPU`.
+To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the following command:
 
 ```sh
-curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "vision_weld_defect_classification"
-        },
-        "frame": [{
-                            "type": "webrtc",
-                            "peer-id": "samplestream",
-                            "overlay": false
-                        },
-                        {
-                            "type": "s3_write",
-                            "bucket": "dlstreamer-pipeline-results",
-                            "folder_prefix": "weld-defect-classification",
-                            "block": false
-                        }]
-    },
-    "parameters": {
-        "classification-properties": {
-            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
-            "device": "GPU"
-        }
-    }
-}'
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+  -X POST -H 'Content-Type: application/json' \
+  -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
 ```
+
+> **Note:**
+> To run inference on `NPU`, use:
+>
+> ```sh
+> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+> curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+>   -X POST -H 'Content-Type: application/json' \
+>   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+> ```
 
 ## Verify the Multimodal Weld Defect Detection Results
 
@@ -218,7 +204,7 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
 ## Bring down the sample app
 
 ```sh
-cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
 make down
 ```
 

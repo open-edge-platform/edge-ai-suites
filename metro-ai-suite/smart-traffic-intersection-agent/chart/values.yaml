@@ -21,7 +21,7 @@ trafficAgent:
   name: traffic-agent
   image:
     repository: intel/smart-traffic-intersection-agent
-    tag: "latest"
+    tag: "2026.1.0-rc1"
     pullPolicy: Always
   replicas: 1
   service:
