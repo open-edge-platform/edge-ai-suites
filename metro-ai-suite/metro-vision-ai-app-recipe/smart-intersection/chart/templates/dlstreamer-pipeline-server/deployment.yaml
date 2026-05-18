@@ -130,15 +130,15 @@ spec:
         ports:
           - containerPort: 8080
           - containerPort: 8555
-      {{- if or .Values.dlstreamerPipelineServer.gpu.enabled .Values.dlstreamerPipelineServer.npu.enabled }}
+      {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
         resources:
           limits:
-        {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
             {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
-        {{- end }}
-        {{- if .Values.dlstreamerPipelineServer.npu.enabled }}
+      {{- else if .Values.dlstreamerPipelineServer.npu.enabled }}
+        resources:
+          limits:
+            {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
             {{ .Values.dlstreamerPipelineServer.npu.type }}: {{ .Values.dlstreamerPipelineServer.npu.count }}
-        {{- end }}
       {{- end }}
       restartPolicy: Always
       {{- with .Values.imagePullSecrets }}
