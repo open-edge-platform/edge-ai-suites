@@ -16,6 +16,7 @@
 **New**
 
 - Qualified on the Intel® Core™ Ultra Series 3 processor.
+- Deprecated EMF deployment packages.
 
 **Improved**
 
