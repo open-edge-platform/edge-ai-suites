@@ -72,10 +72,6 @@ spec:
           runAsUser: 0
           runAsGroup: 0
           readOnlyRootFilesystem: false
-          capabilities:
-            add:
-              - SYS_ADMIN
-          privileged: true
         command: ["/bin/bash", "-e", "-c"]
         args:
         - >
