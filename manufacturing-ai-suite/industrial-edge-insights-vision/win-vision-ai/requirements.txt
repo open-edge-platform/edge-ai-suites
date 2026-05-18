@@ -1,6 +1,7 @@
 # WinVisionAI Python dependencies
 # Install with: pip install -r requirements.txt
 #
-pyyaml>=6.0
-requests>=2.28
+pyyaml>=6.0.3
+requests>=2.34.0
+gstreamer_python==1.28.2
 #prometheus_client>=0.17
