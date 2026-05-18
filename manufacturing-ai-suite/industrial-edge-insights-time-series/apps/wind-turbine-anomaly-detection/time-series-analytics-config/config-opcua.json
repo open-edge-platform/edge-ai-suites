@@ -5,10 +5,10 @@
         "device": "CPU"
     },
     "alerts": {
-        "mqtt": {
-            "mqtt_broker_host": "ia-mqtt-broker",
-            "mqtt_broker_port": 1883,
-            "name": "my_mqtt_broker"
+        "opcua": {
+            "opcua_server": "opc.tcp://ia-opcua-server:4840/freeopcua/server/",
+            "namespace": 1,
+            "node_id": 2004
         }
     }
 }

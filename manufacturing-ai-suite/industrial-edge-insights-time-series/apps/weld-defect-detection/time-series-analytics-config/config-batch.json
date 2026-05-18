@@ -2,7 +2,7 @@
     "udfs": {
         "name": "weld_defect_detector_batch",
         "models": "weld_defect_detector.pkl",
-        "device": "cpu"
+        "device": "CPU"
 
     },
     "alerts": {
