@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-search">
+	<a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/live-video-analysis/live-video-search">
 		 GitHub
 	</a>
-	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-search/README.md">
+	<a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/live-video-analysis/live-video-search/README.md">
 		 Readme
 	</a>
 </div>
@@ -28,12 +28,12 @@ Live Video Search combines two existing stacks:
   - Frigate NVR ingests live camera streams and emits MQTT events.
   - NVR Event Router brokers event metadata and clip references.
   - Reference UI for Smart NVR management.
-  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/index.html)
+  - See [Smart NVR Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-nvr/index.html)
 
 - **VSS Search Mode** (Edge AI Libraries sample app)
   - Search‑MS + VDMS DataPrep + VDMS VectorDB + Pipeline Manager.
   - VSS UI for semantic queries and clip playback.
-  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/index.html)
+  - See [Video Search and Summarization Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/video-search-and-summarization/index.html)
 
 ## Use Cases
 

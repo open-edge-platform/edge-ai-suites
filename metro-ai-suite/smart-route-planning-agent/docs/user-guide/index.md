@@ -1,9 +1,9 @@
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/smart-route-planning-agent">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/smart-route-planning-agent">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-route-planning-agent/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/smart-route-planning-agent/README.md">
      Readme
   </a>
 </div>
@@ -23,7 +23,7 @@ find the optimal path based on live traffic conditions.
 **Incident Avoidance**: Identify and avoid routes potentially affected by congestion, weather,
 roadblocks, or accidents.
 
-**Multi-Agent Traffic Analysis**: Communicates with [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/index.html)
+**Multi-Agent Traffic Analysis**: Communicates with [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-traffic-intersection-agent/index.html)
 to gather live analysis reports for informed routing decisions.
 
 ## How It Works
