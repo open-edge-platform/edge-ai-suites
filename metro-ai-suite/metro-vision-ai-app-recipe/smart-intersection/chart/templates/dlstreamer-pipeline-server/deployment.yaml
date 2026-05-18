@@ -109,13 +109,15 @@ spec:
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
         resources:
           requests:
-            memory: "12Gi"
-            cpu: "4"
-        limits:
-            memory: "16Gi"
-            cpu: "6"
+             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+          limits:
+             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
+             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+        {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
         securityContext:
