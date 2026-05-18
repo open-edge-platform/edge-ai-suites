@@ -48,7 +48,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   const [frontCameraPath, setFrontCameraPath] = useState<File | null>(null);
   const [rearCameraPath, setRearCameraPath] = useState<File | null>(null);
   const [boardCameraPath, setBoardCameraPath] = useState<File | null>(null);
-  const [baseDirectory, setBaseDirectory] = useState("C:\\Users\\Default\\Videos\\");
+  const [baseDirectory, setBaseDirectory] = useState(() => sessionStorage.getItem('baseDirectory') || "");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [notification, setNotification] = useState(constants.START_NOTIFICATION);
@@ -182,6 +182,15 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
     if (!hasAudioFile && !hasVideoFiles) {
       setError('At least one file (audio or video) is required.');
       return;
+    }
+
+    if (hasVideoFiles && !baseDirectory.trim()) {
+      setError('Base directory is required when video files are selected.');
+      return;
+    }
+
+    if (baseDirectory.trim()) {
+      sessionStorage.setItem('baseDirectory', baseDirectory);
     }
 
     setNotification('Starting processing...');
@@ -362,7 +371,7 @@ const UploadFilesModal: React.FC<UploadFilesModalProps> = ({ isOpen, onClose }) 
   };
 
    return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false}>
       <div className="upload-files-modal">
         <h2>{t('uploadFiles.title')}</h2>
         <hr className="modal-title-line" />

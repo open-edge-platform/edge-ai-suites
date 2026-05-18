@@ -24,7 +24,7 @@ an introduction.
 
   ```bash
   export REGISTRY="intel"
-  export TAG="latest"
+  export TAG="2026.1.0-rc1"
   ```
 
 ## Quick Start with Setup Script
@@ -40,7 +40,7 @@ If you want to clone a specific release branch, replace `main` with the desired 
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/smart-traffic-intersection-agent/

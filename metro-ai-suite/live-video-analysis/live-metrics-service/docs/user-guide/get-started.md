@@ -29,7 +29,7 @@ Edit `.env` to configure:
 
 ```bash
 export REGISTRY="intel/"
-export TAG="latest"
+export TAG="2026.1.0-rc1"
 docker compose up
 ```
 

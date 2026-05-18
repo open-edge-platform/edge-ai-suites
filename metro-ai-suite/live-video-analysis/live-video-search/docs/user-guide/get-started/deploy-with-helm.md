@@ -29,7 +29,7 @@ There are 2 options to get the charts in your workspace:
 Use the following command to pull the Helm chart from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-search --version <version-no>
+helm pull oci://registry-1.docker.io/intel/live-video-search --version 2026.1.0-rc1-helm
 ```
 
 Refer to release notes for details on the latest version to use.
@@ -39,7 +39,7 @@ Refer to release notes for details on the latest version to use.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf live-video-search-<version-no>.tgz
+tar -xvf live-video-search-2026.1.0-rc1-helm.tgz
 ```
 
 This creates a directory named `live-video-search` containing chart files. Navigate to the extracted directory:
@@ -82,9 +82,9 @@ Common optional values:
 | Key | Description | Example Value |
 | --- | ----------- | ------------- |
 | `global.registry` | Optional image registry override | `intel` |
-| `global.tag` | Shared image tag | `latest` |
-| `global.vssStackTag` | Override tag for VSS stack services | `1.3.2` |
-| `global.smartNvrStackTag` | Override tag for Smart NVR services | `1.2.4` |
+| `global.tag` | Shared image tag | `2026.1.0-rc1` |
+| `global.vssStackTag` | Override tag for VSS stack services | `2026.1.0-rc1` |
+| `global.smartNvrStackTag` | Override tag for Smart NVR services | `2026.1.0-rc1` |
 | `global.proxy.httpProxy` | HTTP proxy | `http://proxy-example.com:000` |
 | `global.proxy.httpsProxy` | HTTPS proxy | `http://proxy-example.com:000` |
 | `global.usePvc` | Use PVC-backed storage paths for MME/DataPrep | `true` or `false` |

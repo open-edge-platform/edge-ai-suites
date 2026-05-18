@@ -1,0 +1,27 @@
+{
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "vision_weld_defect_classification"
+        },
+        "frame": [
+            {
+                "type": "webrtc",
+                "peer-id": "samplestream",
+                "overlay": false
+            },
+            {
+                "type": "s3_write",
+                "bucket": "dlstreamer-pipeline-results",
+                "folder_prefix": "weld-defect-classification",
+                "block": false
+            }
+        ]
+    },
+    "parameters": {
+        "classification-properties": {
+            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
+            "device": "CPU"
+        }
+    }
+}

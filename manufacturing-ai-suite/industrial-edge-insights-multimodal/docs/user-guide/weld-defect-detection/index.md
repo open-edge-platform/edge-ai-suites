@@ -102,7 +102,7 @@ An array defining one or more video output destinations. Each entry requires a `
 
 ##### 2.2 Time Series Analytics Microservice
 
-**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the ML CatBoost model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the RandomForestClassifier model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
 
 The UDF deployment package used for
 weld data is available
@@ -138,10 +138,8 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ###### `udfs/`
 
 Contains the python script to process the incoming data.
-Uses CatBoostClassifier machine learning algorithm from the CatBoost library to run on CPU to
+Uses RandomForestClassifier machine learning algorithm from the scikit-learn library (Intel accelerated) to run on CPU/GPU to
 detect anomalous weld data points using sensor data.
-
-> **Note:** CatBoost models do not run on Intel GPUs.
 
 ###### `tick_scripts/`
 
@@ -151,8 +149,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 ###### `models/`
 
-The `weld_anomaly_detector.cb` is a model built using the CatBoostClassifier Algo of CatBoost ML
-library.
+The `weld_anomaly_detector.pkl` is a model built using the RandomForestClassifier Algo, part of scikit-learn library.
 
 ##### 2.3 Fusion Analytics
 

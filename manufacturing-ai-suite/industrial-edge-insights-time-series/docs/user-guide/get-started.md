@@ -187,23 +187,23 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 - **For Wind Turbine Anomaly Detection**:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 - **For Weld Defect Detection**:
 
 ```sh
- curl -k -X 'POST' \
- 'https://<HOST_IP>:3000/ts-api/config' \
+cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config
+curl -k -X 'POST' \
+ 'https://localhost:3000/ts-api/config' \
  -H 'accept: application/json' \
  -H 'Content-Type: application/json' \
- -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config/config.json with device
-     value updated to gpu from cpu>'
+ -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 ```
 
 ## Verify the Output Results
@@ -310,7 +310,7 @@ To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run
 
    - One will see the below output.
 
-     ![Anomaly prediction in weld sensor data](./_assets/anomaly_detection_weld.png)
+     ![Anomaly prediction in weld sensor data](./_assets/defect_detection_weld.png)
 
 <!--hide_directive:::
 ::::hide_directive-->

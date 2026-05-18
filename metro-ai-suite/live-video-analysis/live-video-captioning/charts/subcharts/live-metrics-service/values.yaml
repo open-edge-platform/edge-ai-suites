@@ -12,7 +12,7 @@ replicaCount: 1
 image:
   repository: intel/live-metrics-service
   # Type: string
-  tag: "latest"
+  tag: "2026.1.0-rc1"
   pullPolicy: IfNotPresent
 
 service:
