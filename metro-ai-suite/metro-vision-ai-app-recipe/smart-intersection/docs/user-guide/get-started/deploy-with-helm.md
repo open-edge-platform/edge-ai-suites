@@ -123,7 +123,7 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-> **Note:** To run the pipeline on GPU set the property `gpu.enabled` to `true` in the above `values.yaml` file. Similarly, to run the pipeline on NPU set the property `npu.enabled` to `true` in the above `values.yaml` file.
+> **Note:** To run the pipeline on GPU,  in the above `values.yaml` file, set the property `gpu.enabled` to `true` and if your node uses Intel Xe discrete GPUs (Arc) set the property `gpu.type` to `gpu.intel.com/xe`. Similarly, to run the pipeline on NPU set the property `npu.enabled` to `true` in the above `values.yaml` file.
 
 ### Step 3: Configure External IP and Proxy Settings
 
