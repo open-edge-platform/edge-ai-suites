@@ -68,7 +68,6 @@ pipelines:
         #  port: 1883
         - type: file
           path: "output/front-inference.jsonl"
-
   back:
     input:
       type: file
