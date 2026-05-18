@@ -256,34 +256,34 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
       <div className="fm-container">
         <div className="fm-header">
           <button className="fm-back-btn" onClick={onBack}>
-            Back
+            {t("fileManager.back")}
           </button>
           <span className="fm-title">
-            Total Files: {filteredAndSortedFiles.length}
+            {t("fileManager.totalFiles")} {filteredAndSortedFiles.length}
             {typeFilters.size > 0 && ` (of ${files.length})`}
           </span>
           <button className="fm-refresh-btn" onClick={fetchFiles} disabled={loading}>
-            Refresh
+            {t("fileManager.refresh")}
           </button>
         </div>
 
         {loading && (
           <div className="fm-loading">
             <span className="fm-spinner"></span>
-            Files Loading...
+            {t("fileManager.loading")}
           </div>
         )}
 
         {error && (
           <div className="fm-error">
             <span>{error}</span>
-            <button onClick={fetchFiles}>{t("fileManager.retry") || "Retry"}</button>
+            <button onClick={fetchFiles}>{t("fileManager.retry")}</button>
           </div>
         )}
 
         {!loading && !error && files.length === 0 && (
           <div className="fm-empty">
-            {t("fileManager.noFiles") || "No files uploaded yet."}
+            {t("fileManager.noFiles")}
           </div>
         )}
 
@@ -292,14 +292,14 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
             <table className="fm-file-table">
               <thead>
                 <tr>
-                  <th>File Name</th>
+                  <th>{t("fileManager.fileName")}</th>
                   <th>
                     <div className="fm-th-filter" ref={filterRef}>
-                      <span>Type</span>
+                      <span>{t("fileManager.type")}</span>
                       <button
                         className={`fm-filter-icon-btn${typeFilters.size > 0 ? " active" : ""}`}
                         onClick={() => setShowTypeFilter(!showTypeFilter)}
-                        title="Filter by type"
+                        title={t("fileManager.filterByType")}
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/>
@@ -311,10 +311,10 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                       {showTypeFilter && (
                         <div className="fm-filter-dropdown">
                           <div className="fm-filter-dropdown-header">
-                            <span>Filter by Type</span>
+                            <span>{t("fileManager.filterByType")}</span>
                             {typeFilters.size > 0 && (
                               <button className="fm-filter-clear" onClick={clearTypeFilters}>
-                                Clear
+                                {t("fileManager.clear")}
                               </button>
                             )}
                           </div>
@@ -333,10 +333,10 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                     </div>
                   </th>
                   <th className="fm-th-sortable" onClick={() => handleSort("size")}>
-                    Size {sortColumn === "size" && (sortDirection === "asc" ? "↑" : "↓")}
+                    {t("fileManager.size")} {sortColumn === "size" && (sortDirection === "asc" ? "↑" : "↓")}
                   </th>
                   <th className="fm-th-sortable" onClick={() => handleSort("created")}>
-                    Created At {sortColumn === "created" && (sortDirection === "asc" ? "↑" : "↓")}
+                    {t("fileManager.createdAt")} {sortColumn === "created" && (sortDirection === "asc" ? "↑" : "↓")}
                   </th>
                   <th></th>
                 </tr>
@@ -355,7 +355,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                                 src={handwrittenIcon}
                                 alt="OCR"
                                 className="fm-ocr-icon fm-ocr-icon--clickable"
-                                title="Click to preview OCR text"
+                                title={t("fileManager.ocrPreview")}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleOcrPreview(file.file_name, file.ocr_text_key!);
@@ -385,7 +385,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                           className="fm-remove-btn"
                           disabled={removingHash === file.file_hash || fileRemoval.isRemoving}
                           onClick={() => handleRemoveClick(file)}
-                          title="Remove file"
+                          title={t("fileManager.removeFile")}
                         >
                           {removingHash === file.file_hash ? "..." : "🗑"}
                         </button>
