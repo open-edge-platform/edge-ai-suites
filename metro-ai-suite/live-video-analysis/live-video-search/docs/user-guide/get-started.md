@@ -58,9 +58,9 @@ Before running the application, you need to set several environment variables:
 
     Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
 
-    Note: `setup.sh` includes a release mapping for `TAG=1.0.0` and automatically sets:
-    - `VSS_STACK_TAG=1.3.2`
-    - `SMART_NVR_STACK_TAG=1.2.4`
+    Note: `setup.sh` includes a release mapping for `TAG=2026.1.0-rc1` and automatically sets:
+    - `VSS_STACK_TAG=2026.1.0-rc1`
+    - `SMART_NVR_STACK_TAG=2026.1.0-rc1`
 
     You can still explicitly export `VSS_STACK_TAG` and `SMART_NVR_STACK_TAG` to override those defaults.
 

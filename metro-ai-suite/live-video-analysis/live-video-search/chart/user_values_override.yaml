@@ -3,7 +3,7 @@
 global:
   # Image registry and tags
   registry: ''
-  tag: 'latest'
+  tag: '2026.1.0-rc1'
   vssStackTag: ''
   smartNvrStackTag: ''
   usePvc: true
