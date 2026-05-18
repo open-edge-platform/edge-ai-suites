@@ -4,11 +4,11 @@ This document provides step-by-step instructions for building the `Chat Q&A Core
 
 ## Build Chat Q&A Core from Source
 
-For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
+For detailed instructions on building from source, visit the [Build from Source Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md).
 
 ### Chat Q&A Core Docker Compose Deployment
 
-For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
+For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
 ## Build File Watcher Service from Source
 
@@ -101,7 +101,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 6. Set up Environment Variables using `.bat`.
 
-   To configure the file watcher service, you need to set up the environment variables using the [`set_env_vars.bat`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/file_watcher/set_env_vars.bat) file provided. Follow the steps below to ensure proper configuration:
+   To configure the file watcher service, you need to set up the environment variables using the [`set_env_vars.bat`](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/hmi-augmented-worker/file_watcher/set_env_vars.bat) file provided. Follow the steps below to ensure proper configuration:
 
    - Open and edit the values for the variables with your corresponding setup.
 

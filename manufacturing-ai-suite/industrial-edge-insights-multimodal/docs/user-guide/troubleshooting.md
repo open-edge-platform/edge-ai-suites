@@ -2,7 +2,7 @@
 
 This article contains troubleshooting steps for known issues. If you encounter any problems
 with the application not addressed here, check the [GitHub Issues](https://github.com/open-edge-platform/edge-ai-suites/issues)
-board. Feel free to file new tickets there (after learning about the guidelines for [Contributing](https://github.com/open-edge-platform/edge-ai-suites/blob/main/CONTRIBUTING.md)).
+board. Feel free to file new tickets there (after learning about the guidelines for [Contributing](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/CONTRIBUTING.md)).
 
 ## 1. Seeing "No Data" in Grafana
 
@@ -103,19 +103,18 @@ initialize Kapacitor to start inference.
 
 ### 4.1 Issue
 
-Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error: 
+Running `docker exec` on the `ia-mqtt-broker` container on the EMT operating system (EMT OS) results in the following error:
 `OCI runtime exec failed: exec failed: unable to start container process: error writing config to pipe: write init-p: broken pipe: unknown`
 
 ### 4.2 Reason
 
-On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.  
+On EMT OS, containers built on Alpine base images can trigger an OCI exec pipe error, causing `docker exec` to fail even though the container itself continues to run correctly.
 
 ### 4.3 Solution
 
-As a workaround, run the following steps to be able to successfully exec and execute the command.  
-As the container is functioning as expected, please ignore any `unhealthy` status showing up against this  
-container in `docker ps`.  
-
+As a workaround, run the following steps to be able to successfully exec and execute the command.
+As the container is functioning as expected, please ignore any `unhealthy` status showing up against this
+container in `docker ps`.
 
 ```bash
 PID=$(docker inspect --format '.State.Pid' ia-mqtt-broker)

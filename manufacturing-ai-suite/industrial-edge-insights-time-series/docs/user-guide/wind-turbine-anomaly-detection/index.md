@@ -116,7 +116,7 @@ By default, it is configured to publish the alerts to **MQTT**.
 
 The `windturbine_anomaly_detector.pkl` is a model built using the Random Forest Regressor
 algorithm from the Scikit-learn library.
-For more details on how it is built refer to the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md).
+For more details on how it is built refer to the [README](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/training/README.md).
 
 <!--hide_directive
 :::{toctree}
