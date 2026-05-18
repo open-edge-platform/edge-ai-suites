@@ -404,6 +404,45 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
     assert svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation"
 
+    # ================================================================== #
+    # === [GH_RUNNER_FIX BEGIN] TC_013 only ============================ #
+    # Purpose: stabilize TC_013 on GitHub-hosted runners (2 vCPU / 7 GB)  #
+    # where the default budgets are too tight and lead to:               #
+    #   "MQTT alert system validation failed"                            #
+    # Scope: ONLY this test function. No other tests / helpers touched.  #
+    # Revert: delete everything between BEGIN/END markers (3 blocks).    #
+    # ================================================================== #
+    # Block 1/3 — Strict readiness: require HTTP 200 (not 503) so we do  #
+    # not POST /ts-api/config while Kapacitor is still initialising.     #
+    logger.info("[GH_RUNNER_FIX] Phase 2b: strict ts-api readiness (HTTP 200 only)...")
+    svc_ready_strict = docker_utils.wait_until_service_ready(
+        timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
+        accept_503=False,
+    )
+    logger.info(f"[GH_RUNNER_FIX]   strict wait_until_service_ready={svc_ready_strict}")
+    assert svc_ready_strict, (
+        "[GH_RUNNER_FIX] ts-api did not return HTTP 200 in time — Kapacitor "
+        "likely still loading; raise WIND_TURBINE_CONTAINER_READY_TIMEOUT."
+    )
+    # Block 2/3 — Re-confirm the publisher is still running. On slow      #
+    # runners with CONTINUOUS_SIMULATOR_INGESTION=false it can exit      #
+    # before the config POST, leaving no data for Kapacitor.            #
+    if not docker_utils.container_is_running(mqtt_publisher_name):
+        logger.error(
+            "[GH_RUNNER_FIX] mqtt-publisher exited before validation — check "
+            "CONTINUOUS_SIMULATOR_INGESTION=true in .env on the runner."
+        )
+        try:
+            pub_logs = subprocess.run(
+                ["docker", "logs", "--tail", "80", mqtt_publisher_name],
+                capture_output=True, text=True, timeout=15,
+            ).stdout.strip()
+            logger.error(f"[GH_RUNNER_FIX] mqtt-publisher tail:\n{pub_logs}")
+        except Exception as _exc:
+            logger.warning(f"[GH_RUNNER_FIX] Could not tail publisher: {_exc}")
+        pytest.fail("[GH_RUNNER_FIX] mqtt-publisher not running before validation")
+    # === [GH_RUNNER_FIX END] ========================================== #
+
     # Snapshot of running containers + their status — useful when triaging
     # failures that show up later as "container X not running".
     try:
@@ -418,9 +457,33 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # ------------------------------------------------------------------
     # Phase 3: Run the actual validation helper
     # ------------------------------------------------------------------
-    logger.info("[DEBUG] Phase 3/4: Invoking validate_mqtt_alert_system()...")
-    validation_result = docker_utils.validate_mqtt_alert_system(constants.WIND_SAMPLE_APP)
-    logger.info(f"[DEBUG] validate_mqtt_alert_system returned: {validation_result}")
+    # ================================================================== #
+    # === [GH_RUNNER_FIX BEGIN] TC_013 only — extended timeouts ======== #
+    # Block 3/3 — Temporarily extend two module-level constants so the   #
+    # validation helper (called below) gets a larger window on slow CI.  #
+    # Values are restored in the finally: block so no other test sees   #
+    # the bump. Tune the *_CI values if 600s is still insufficient.     #
+    # ================================================================== #
+    _GH_CI_CONFIG_POST_STABILIZE = 90    # was 45
+    _GH_CI_ALERT_LOG_TIMEOUT     = 360   # was 180
+    _orig_post_stabilize = constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE
+    _orig_alert_timeout  = constants.WIND_TURBINE_ALERT_LOG_TIMEOUT
+    constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE = _GH_CI_CONFIG_POST_STABILIZE
+    constants.WIND_TURBINE_ALERT_LOG_TIMEOUT          = _GH_CI_ALERT_LOG_TIMEOUT
+    logger.info(
+        f"[GH_RUNNER_FIX] Temporarily set CONFIG_POST_POST_STABILIZE="
+        f"{_GH_CI_CONFIG_POST_STABILIZE}s (was {_orig_post_stabilize}s), "
+        f"ALERT_LOG_TIMEOUT={_GH_CI_ALERT_LOG_TIMEOUT}s (was {_orig_alert_timeout}s)"
+    )
+    try:
+        logger.info("[DEBUG] Phase 3/4: Invoking validate_mqtt_alert_system()...")
+        validation_result = docker_utils.validate_mqtt_alert_system(constants.WIND_SAMPLE_APP)
+        logger.info(f"[DEBUG] validate_mqtt_alert_system returned: {validation_result}")
+    finally:
+        constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE = _orig_post_stabilize
+        constants.WIND_TURBINE_ALERT_LOG_TIMEOUT          = _orig_alert_timeout
+        logger.info("[GH_RUNNER_FIX] Restored original CONFIG_POST_POST_STABILIZE / ALERT_LOG_TIMEOUT")
+    # === [GH_RUNNER_FIX END] ========================================== #
 
     # ------------------------------------------------------------------
     # Phase 4: On failure, dump container state + key logs so the CI

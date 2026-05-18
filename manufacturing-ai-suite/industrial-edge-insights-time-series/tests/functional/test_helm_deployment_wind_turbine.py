@@ -491,15 +491,129 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
     logger.info("UDF package copied and activated successfully")
-    
-    # Wait for Kapacitor to fully start after UDF installation (includes pip install with PyPI timeouts)
-    # This is required because the MQTT publisher waits for Kapacitor port 9092 to be accessible
-    logger.info(f"Waiting {constants.UDF_DEPLOYMENT_TIMEOUT}s (3min) for Kapacitor to install UDF packages and start...")
-    time.sleep(constants.UDF_DEPLOYMENT_TIMEOUT)
-    
+
+    # ================================================================== #
+    # === [GH_RUNNER_FIX BEGIN] TC_016 only ============================ #
+    # Purpose: stabilize TC_016 on GitHub-hosted runners (2 vCPU / 7 GB) #
+    # where pip install of the wind-turbine UDF deps (numpy / scipy /    #
+    # sklearn / pandas) inside the TSAM pod after /ts-api/restart can    #
+    # take 3-6 minutes (sometimes longer) and the fixed 180s sleep is    #
+    # not enough \u2192 mqtt-publisher is still blocked on Kapacitor :9092   #
+    # \u2192 no traffic on 'wind-turbine-data' \u2192 wait_for_mqtt_sample fails. #
+    # Scope: ONLY this test function. No helpers or other tests touched. #
+    # Revert: delete everything between BEGIN/END markers (2 blocks).    #
+    # ================================================================== #
+    import subprocess as _gh_subprocess  # local import, scoped to fix
+
+    # Block 1/2 \u2014 SMART WAIT: poll Kapacitor REST /v1/tasks until the    #
+    # wind-turbine UDF task is actually loaded (not just :9092 open).     #
+    # Rationale: port :9092 is open from pod boot, so a simple port probe #
+    # returns instantly and gives a FALSE POSITIVE before the post-       #
+    # restart Kapacitor instance has imported the new UDF task. Querying  #
+    # /kapacitor/v1/tasks and requiring the windturbine task id gates on  #
+    # the real "UDF is live" signal.                                      #
+    _GH_CI_KAPACITOR_READY_TIMEOUT = 600    # ceiling (was fixed 180s sleep)
+    _GH_CI_KAPACITOR_POLL_INTERVAL = 10     # seconds between probes
+    _GH_CI_KAPACITOR_TASK_MARKER   = "windturbine"  # substring expected in /tasks JSON
+    logger.info(
+        "[GH_RUNNER_FIX] Smart-waiting for Kapacitor UDF task "
+        f"(marker={_GH_CI_KAPACITOR_TASK_MARKER!r}, ceiling={_GH_CI_KAPACITOR_READY_TIMEOUT}s, "
+        f"interval={_GH_CI_KAPACITOR_POLL_INTERVAL}s) instead of fixed sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
+    )
+    tsam_pod = helm_utils._wait_for_pod_with_substring(
+        namespace, "time-series-analytics-microservice", timeout=120
+    )
+    if not tsam_pod:
+        logger.warning(
+            "[GH_RUNNER_FIX] TSAM pod not found within 120s \u2014 falling back to "
+            f"original sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
+        )
+        time.sleep(constants.UDF_DEPLOYMENT_TIMEOUT)
+    else:
+        # Probe script (runs inside TSAM container):
+        #   1. curl /kapacitor/v1/tasks (preferred)
+        #   2. fallback to python3 urllib if curl absent
+        # Exit 0 only if response body contains the task marker substring.
+        _gh_probe_sh = (
+            "set -e; "
+            "BODY=$( (command -v curl >/dev/null && curl -sf --max-time 5 "
+            "http://localhost:9092/kapacitor/v1/tasks) "
+            "|| python3 -c 'import urllib.request,sys; "
+            "sys.stdout.write(urllib.request.urlopen(\"http://localhost:9092/kapacitor/v1/tasks\", "
+            "timeout=5).read().decode())' ); "
+            "echo \"$BODY\" | grep -q '" + _GH_CI_KAPACITOR_TASK_MARKER + "'"
+        )
+        _gh_start = time.time()
+        _gh_deadline = _gh_start + _GH_CI_KAPACITOR_READY_TIMEOUT
+        _gh_ready = False
+        _gh_last_body = ""
+        while time.time() < _gh_deadline:
+            _gh_elapsed = int(time.time() - _gh_start)
+            try:
+                _gh_probe = _gh_subprocess.run(
+                    ["kubectl", "exec", "-n", namespace, tsam_pod, "--",
+                     "sh", "-c", _gh_probe_sh],
+                    capture_output=True, text=True, timeout=20,
+                )
+                _gh_last_body = (_gh_probe.stdout or _gh_probe.stderr or "").strip()[:200]
+                if _gh_probe.returncode == 0:
+                    logger.info(
+                        f"[GH_RUNNER_FIX] Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
+                        f"live after ~{_gh_elapsed}s "
+                        f"(saved up to {max(0, constants.UDF_DEPLOYMENT_TIMEOUT - _gh_elapsed)}s vs fixed sleep)"
+                    )
+                    _gh_ready = True
+                    break
+                logger.info(
+                    f"[GH_RUNNER_FIX] Task not loaded yet at ~{_gh_elapsed}s "
+                    f"(rc={_gh_probe.returncode}); next probe in {_GH_CI_KAPACITOR_POLL_INTERVAL}s"
+                )
+            except _gh_subprocess.TimeoutExpired:
+                logger.info(f"[GH_RUNNER_FIX] kubectl exec probe timed out at ~{_gh_elapsed}s")
+            except Exception as _gh_exc:
+                logger.info(f"[GH_RUNNER_FIX] probe error at ~{_gh_elapsed}s: {_gh_exc}")
+            time.sleep(_GH_CI_KAPACITOR_POLL_INTERVAL)
+
+        if not _gh_ready:
+            logger.error(f"[GH_RUNNER_FIX] Last probe stdout/stderr: {_gh_last_body!r}")
+            # Capture last-80 lines of TSAM log to make CI triage one-shot.
+            try:
+                _gh_tsam_logs = _gh_subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, tsam_pod, "--tail", "80"],
+                    capture_output=True, text=True, timeout=15,
+                ).stdout.strip()
+                logger.error(f"[GH_RUNNER_FIX] TSAM pod tail (last 80):\n{_gh_tsam_logs}")
+            except Exception as _gh_exc:
+                logger.warning(f"[GH_RUNNER_FIX] Failed to tail TSAM logs: {_gh_exc}")
+            pytest.fail(
+                f"[GH_RUNNER_FIX] Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
+                f"not loaded within {_GH_CI_KAPACITOR_READY_TIMEOUT}s after /ts-api/restart \u2014 "
+                f"likely a slow PyPI pip install of UDF deps; bump _GH_CI_KAPACITOR_READY_TIMEOUT "
+                f"or pre-bake UDF deps into the TSAM image."
+            )
+
+    # Block 2/2 \u2014 Larger MQTT-sample timeout to absorb publisher backoff,  #
+    # AND override the MQTT topic name. The publisher publishes on the    #
+    # broker topic 'wind-simulation-data' (Telegraf renames the measure   #
+    # to 'wind-turbine-data' on the InfluxDB side via name_override).     #
+    # constants.WIND_TURBINE_INGESTED_TOPIC is the InfluxDB measurement,  #
+    # not the MQTT topic \u2014 wait_for_mqtt_sample needs the wire topic.    #
+    _GH_CI_MQTT_SAMPLE_TIMEOUT = 240   # was 120
+    _GH_CI_MQTT_BROKER_TOPIC   = "wind-simulation-data"  # actual wire topic
+    logger.info(
+        f"[GH_RUNNER_FIX] Calling wait_for_mqtt_sample(topic="
+        f"{_GH_CI_MQTT_BROKER_TOPIC!r}, timeout={_GH_CI_MQTT_SAMPLE_TIMEOUT}s) "
+        f"(was topic={constants.WIND_TURBINE_INGESTED_TOPIC!r}, timeout=120s)"
+    )
+    # === [GH_RUNNER_FIX END] ========================================== #
+
     # Verify MQTT data is being published before checking InfluxDB
     logger.info("Verifying MQTT data ingestion from publisher pod...")
-    result = helm_utils.wait_for_mqtt_sample(namespace, constants.WIND_TURBINE_INGESTED_TOPIC, timeout=120)
+    result = helm_utils.wait_for_mqtt_sample(
+        namespace,
+        _GH_CI_MQTT_BROKER_TOPIC,            # [GH_RUNNER_FIX] was constants.WIND_TURBINE_INGESTED_TOPIC
+        timeout=_GH_CI_MQTT_SAMPLE_TIMEOUT,  # [GH_RUNNER_FIX] was 120
+    )
     logger.info(f"wait_for_mqtt_sample result: {result}")
     assert result == True, "Failed to observe MQTT data before InfluxDB verification."
     logger.info(f"MQTT data confirmed. Waiting additional {wait_time}s for data to flow to InfluxDB...")
