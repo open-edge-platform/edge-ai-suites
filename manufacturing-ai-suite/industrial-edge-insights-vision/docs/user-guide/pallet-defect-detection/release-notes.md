@@ -4,7 +4,7 @@
 
 **New**
 
-- Qualified on the Intel® Core™ Series 3 latest processor (Wildcat Lake).
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
 - Deprecated EMF deployment packages.
 
 **Improved**
