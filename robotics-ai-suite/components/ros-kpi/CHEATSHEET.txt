@@ -46,6 +46,11 @@ Analyze:
   uv run python src/analyze_rosbag.py <path/to/bag.db3>
   uv run python src/aggregate_kpi.py <path/to/bench_dir>
 
+Regression Check:
+  python3 src/compare_kpi.py --baseline <baseline_kpi.json> --current <current_kpi.json>
+  python3 src/compare_kpi.py --baseline <b> --current <c> --threshold 10.0 --report report.json
+  make regression-check BASELINE=tests/fixtures/baseline/kpi.json CURRENT=<session>/kpi.json
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🌐 REMOTE MONITORING
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

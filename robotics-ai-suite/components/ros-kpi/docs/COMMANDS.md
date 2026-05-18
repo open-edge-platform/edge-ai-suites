@@ -41,6 +41,9 @@ Intel-operated generative artificial intelligence solutions.
 | Trigger latency from rosbag | `uv run python src/analyze_trigger_latency.py --bag <bag_dir>` | — |
 | Cross-run aggregate summary | `uv run python src/aggregate_kpi.py BENCH_DIR` | — |
 | Aggregate + CSV export | `uv run python src/aggregate_kpi.py BENCH_DIR --csv-out BENCH_DIR/results.csv` | — |
+| Regression check (vs baseline) | `python3 src/compare_kpi.py --baseline BASELINE.json --current CURRENT.json` | — |
+| Regression check (with report) | `python3 src/compare_kpi.py --baseline B --current C --threshold 5.0 --report report.json` | — |
+| Run unit tests | `make test` | — |
 | Clean all data | `make clean` | — |
 
 ---
@@ -61,6 +64,8 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--graph-only` | Skip resource monitoring |
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
+| `--gpu` | Enable Intel GPU monitoring (auto-detected when hardware present) |
+| `--npu` | Enable Intel NPU monitoring via sysfs |
 | `--no-visualize` | Skip auto-visualization on exit |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
@@ -121,6 +126,40 @@ uv run python src/visualize_resources.py resource.log --summary   # text table o
 ```
 
 > CPU% scale: 100% = 1 full core. Use the **Avg Cores** column in `--summary` output for a human-readable reading.
+
+### gpu_pid_analyzer.py
+
+Per-process Intel GPU utilisation with full engine-class breakdown.
+Requires `qmassa` installed via `make install-qmassa`.
+
+```bash
+uv run python src/gpu_pid_analyzer.py                     # one-shot snapshot
+uv run python src/gpu_pid_analyzer.py --watch             # refresh every 2 s
+uv run python src/gpu_pid_analyzer.py --duration 60       # run for 60 s
+uv run python src/gpu_pid_analyzer.py --interval 1 --csv gpu.csv   # 1 s interval + CSV log
+uv run python src/gpu_pid_analyzer.py --json-log gpu.jsonl         # raw JSON-lines log
+```
+
+| Option | Description |
+|--------|-------------|
+| `--interval SEC` | Sampling interval (default: 2.0) |
+| `--duration SEC` | Total run duration (0 = one snapshot) |
+| `--watch` | Keep refreshing until Ctrl-C |
+| `--csv FILE` | Append rows to a CSV file |
+| `--json-log FILE` | Append raw JSON-lines to a file |
+| `--quiet` | Suppress console output (useful with `--csv`) |
+
+### visualize_gpu.py
+
+Renders GPU utilization from `gpu_usage.log` as a multi-panel plot.
+
+```bash
+uv run python src/visualize_gpu.py <session>/gpu_usage.log
+uv run python src/visualize_gpu.py <session>/gpu_usage.log --save --output-dir ./plots
+uv run python src/visualize_gpu.py <session>/gpu_usage.log --show --top 8
+uv run python src/visualize_gpu.py --session 20260312_134253
+uv run python src/visualize_gpu.py   # auto-uses latest session
+```
 
 ### visualize_graph.py
 
@@ -200,3 +239,67 @@ monitoring_sessions/
 | CPU shows e.g. "563%" | Normal — `pidstat` reports 100% = 1 core. Check **Avg Cores** column. |
 | Prometheus exporter port in use | `fuser -k 9092/tcp && uv run python src/prometheus_exporter.py --session-dir <session>` |
 | Graph click does nothing | Use `--show` flag (not `--no-show`) to enable TkAgg interactive mode |
+
+---
+
+## Unit Tests
+
+The test suite runs without ROS 2, a live robot, or hardware. It uses
+[pytest](https://docs.pytest.org/) via `uv`.
+
+```bash
+make test                  # recommended — runs uv run pytest tests/ -v
+uv run pytest tests/ -v    # equivalent direct invocation
+```
+
+| Test file | What it covers |
+|-----------|----------------|
+| `tests/test_schema_validation.py` | JSON Schema (Draft 2020-12) validation for Level 1 and Level 2 KPI payloads — valid, missing required fields, wrong values, null-allowed fields |
+| `tests/test_regression_check.py` | `compare_kpi.py` regression detection — pass/fail against baseline, threshold override, `--report` JSON output, Level 1 and Level 2 schemas |
+| `tests/test_csv_export.py` | `--csv-out` flag on `analyze_trigger_latency.py` and `analyze_pipeline_latency.py` — flag existence and CSV content |
+| `tests/test_aggregate_kpi.py` | `_health`, `_consistency`, `_classify` boundary conditions; `aggregate()` statistics, filtering, sort order |
+| `tests/test_trigger_latency.py` | `_is_internal` topic filter regex; `find_trigger` binary-search edge cases |
+| `tests/test_wandering_metrics.py` | `_extract_goals`, `_extract_elapsed`, `_extract_rtf`, `_extract_hz`, `_verdict` regex extractors |
+
+Shared fixtures live in `tests/fixtures.py`; `sys.path` setup is centralised in `tests/conftest.py`.
+
+---
+
+## compare_kpi.py — KPI Regression Detection
+
+Compares a current benchmark result (Level 1 or Level 2 JSON) against a stored baseline.
+Exits non-zero when any KPI regresses beyond the configured threshold.
+
+```bash
+python3 src/compare_kpi.py --baseline BASELINE.json --current CURRENT.json [OPTIONS]
+```
+
+| Option | Description |
+|--------|-------------|
+| `--baseline PATH` | Path to the baseline `kpi.json` or `kpi_level2.json` |
+| `--current PATH` | Path to the current-run KPI JSON to evaluate |
+| `--threshold PCT` | Regression threshold in percent (default: `5.0`) |
+| `--report PATH` | Optional path to write a JSON summary report |
+
+**Exit codes:** `0` = all KPIs within threshold · `1` = regression(s) found · `2` = file/schema error
+
+**Examples:**
+
+```bash
+# Compare two wandering sessions (5% threshold)
+python3 src/compare_kpi.py \
+    --baseline monitoring_sessions/wandering/20260430_145256/kpi.json \
+    --current  monitoring_sessions/wandering/20260430_145545/kpi.json
+
+# Use the stored synthetic baseline with a custom threshold and JSON report
+python3 src/compare_kpi.py \
+    --baseline tests/fixtures/baseline/kpi_level2.json \
+    --current  monitoring_sessions/wandering/20260430_145545/kpi.json \
+    --threshold 10.0 \
+    --report   /tmp/regression_report.json
+
+# Via make
+make regression-check \
+    BASELINE=tests/fixtures/baseline/kpi.json \
+    CURRENT=monitoring_sessions/wandering/20260430_145545/kpi.json
+```
