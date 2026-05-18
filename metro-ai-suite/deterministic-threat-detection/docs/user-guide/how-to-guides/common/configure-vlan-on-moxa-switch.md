@@ -20,10 +20,10 @@ handle tagged VLAN traffic for the specific VLAN IDs the connected machine requi
 2. Log in with your credentials.
 3. Navigate to the "`VLAN` > `IEEE 802.1Q`" section in the menu.
 4. Create VLANs with IDs 1, 3, and 5 if they do not already exist.
-   ![MOXA VLAN Creation](../_assets/moxa-vlan-configuration.png)
+   ![MOXA VLAN Creation](../../_assets/moxa-vlan-configuration.png)
 5. Assign the appropriate ports to the VLANs as tagged ports by clicking edit (🖉) on the
    specific port.
-   ![MOXA VLAN Port Configuration](../_assets/moxa-vlan-port-configuration.png)
+   ![MOXA VLAN Port Configuration](../../_assets/moxa-vlan-port-configuration.png)
 6. Apply the configuration and reboot the switch if necessary.
 7. Verify the VLAN configuration by checking the port settings and ensuring that the correct
    VLANs are assigned.

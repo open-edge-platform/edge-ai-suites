@@ -34,7 +34,7 @@ to the official documentation for detailed instructions.
    Layer 2 Switching > Time-Aware Shaper > Click edit for
    the port to which you want to configure
 
-   ![MOXA Time Aware Shaper](../_assets/moxa-time-aware-shaper.png)
+   ![MOXA Time Aware Shaper](../../_assets/moxa-time-aware-shaper.png)
 
 3. **Enable Time-Aware Shaper.**
 
@@ -49,7 +49,7 @@ to the official documentation for detailed instructions.
    approximately 90ms will be needed to handle all the critical traffic,
    leaving 10ms available for best-effort traffic.
 
-   ![MOXA Time Aware Port Shaper](../_assets/moxa-time-aware-shaper-port-setting.png)
+   ![MOXA Time Aware Port Shaper](../../_assets/moxa-time-aware-shaper-port-setting.png)
 
    > **Important Note:**
    > The configuration of the Gate Control List is highly specific to the application's

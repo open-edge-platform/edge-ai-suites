@@ -43,9 +43,23 @@ const SearchSection: React.FC = () => {
   const csHasUploads = useAppSelector((s) => s.ui.csHasUploads);
   const csProcessing = useAppSelector((s) => s.ui.csProcessing);
   const csSummarizing = useAppSelector((s) => s.ui.csSummarizing);
+  const csServerFilesExist = useAppSelector((s) => s.ui.csServerFilesExist);
   const csTags = useAppSelector((s) => s.ui.csTags);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const filterBoxRef = useRef<HTMLDivElement>(null);
+
+  // One-time popup for server files exist message
+  const [filesExistDismissed, setFilesExistDismissed] = useState(false);
+
+  // Auto-dismiss the files exist banner after 5 seconds
+  useEffect(() => {
+    if (csServerFilesExist && !csProcessing && !csSummarizing && !filesExistDismissed) {
+      const timer = setTimeout(() => {
+        setFilesExistDismissed(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [csServerFilesExist, csProcessing, csSummarizing, filesExistDismissed]);
 
   // Top-level section tab: Search or Q&A
   const [sectionTab, setSectionTab] = useState<SectionTab>("search");
@@ -284,6 +298,23 @@ const SearchSection: React.FC = () => {
           <div className="cs-search-warning-frame">
             <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
             <span className="cs-search-warning-frame-text">{t("search.processing")}</span>
+          </div>
+        ) : null}
+
+        {/* Server files exist message - one-time popup */}
+        {csServerFilesExist && !csProcessing && !csSummarizing && !filesExistDismissed ? (
+          <div className="cs-search-warning-frame cs-search-warning-frame--dismissable">
+            <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
+            <span className="cs-search-warning-frame-text">
+              Files already exist. To view, navigate to "View Files" in "Upload" section.
+            </span>
+            <button
+              className="cs-search-warning-dismiss"
+              onClick={() => setFilesExistDismissed(true)}
+              title="Dismiss"
+            >
+              ×
+            </button>
           </div>
         ) : null}
 
