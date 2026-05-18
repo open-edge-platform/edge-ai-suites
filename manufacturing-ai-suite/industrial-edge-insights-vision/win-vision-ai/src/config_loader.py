@@ -52,8 +52,10 @@ class ModelConfig:
 class InputConfig:
     type: str
     url: str = ""
-    # camera-specific field (only used when type == "camera")
+    # camera-specific fields (only used when type == "camera")
     serial: Optional[str] = None
+    # extra camera properties passed verbatim to gencamsrc (e.g. pixel-format, width, height)
+    properties: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -267,9 +269,13 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
     if input_type == "camera":
         if "serial" not in raw:
             raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'serial'")
+        # Collect any extra keys as passthrough properties for gencamsrc
+        reserved = {"type", "serial"}
+        extra_props = {k: v for k, v in raw.items() if k not in reserved}
         return InputConfig(
             type=input_type,
             serial=str(raw["serial"]),
+            properties=extra_props,
         )
 
     if "url" not in raw:
