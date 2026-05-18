@@ -30,7 +30,7 @@ models:
   inst0:
     type: detection                    # detection | classification
     model: "C:/Users/path/to/detection/model.xml"  # add detection model path
-    device: CPU                        # CPU | GPU | NPU
+    device: GPU                        # CPU | GPU | NPU
     properties:
       batch_size: 1
       threshold: 0.4
@@ -50,7 +50,7 @@ pipelines:
       #type: rtsp                            # rtsp
       #url: "rtsp://<ip>:<port>/live.sdp"    # add video path
       #type: camera                          # camera
-      #serial: 25047087                      # add camera serial number
+      #serial: 1234567                       # add camera serial number
       #pixel-format: mono8                   # add camera pixel format (e.g. mono8, bgr8, etc.)
       #width: 1280                           # add camera width
       #height: 720                           # add camera height              
