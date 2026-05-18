@@ -306,12 +306,12 @@ const SearchSection: React.FC = () => {
           <div className="cs-search-warning-frame cs-search-warning-frame--dismissable">
             <img className="cs-search-warning-frame-icon" src={infoIcon} alt="info" width="15" height="15" />
             <span className="cs-search-warning-frame-text">
-              Files already exist. To view, navigate to "View Files" in "Upload" section.
+              {t("fileManager.filesExistMessage")}
             </span>
             <button
               className="cs-search-warning-dismiss"
               onClick={() => setFilesExistDismissed(true)}
-              title="Dismiss"
+              title={t("fileManager.dismiss")}
             >
               ×
             </button>

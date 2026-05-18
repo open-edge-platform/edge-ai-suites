@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 import closeIcon from "../../assets/images/close_frame.svg";
 import "../../assets/css/OcrPreviewModal.css";
 
@@ -19,6 +20,8 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
   onClose,
   onDownload,
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   return (
@@ -26,7 +29,7 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
       <div className="cs-ocr-preview-modal" onClick={(e) => e.stopPropagation()}>
         <div className="cs-ocr-preview-header">
           <span className="cs-ocr-preview-title">
-            "{filename}" plain-text preview
+            {t("fileManager.ocrPreviewTitle", { filename })}
           </span>
           <button className="cs-ocr-preview-close" onClick={onClose}>
             <img src={closeIcon} alt="Close" />
@@ -35,7 +38,7 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
         <div className="cs-ocr-preview-divider" />
         <div className="cs-ocr-preview-content">
           {loading ? (
-            <span className="cs-ocr-preview-loading">Loading...</span>
+            <span className="cs-ocr-preview-loading">{t("fileManager.ocrLoading")}</span>
           ) : (
             <pre className="cs-ocr-preview-text">{content}</pre>
           )}
@@ -47,7 +50,7 @@ const OcrPreviewModal: React.FC<OcrPreviewModalProps> = ({
             onClick={onDownload}
             disabled={loading}
           >
-            Download .txt
+            {t("fileManager.downloadTxt")}
           </button>
         </div>
       </div>
