@@ -1,8 +1,17 @@
 # Release Notes: Pallet Defect Detection
 
-## Version 2.6.0
+## Version 2.7.0
 
-**March 2026**
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+
+**Improved**
+
+- DL Streamer Pipeline Server version upgraded to 2026.1.0.
+
+## Version 2.6.0
 
 **New**
 

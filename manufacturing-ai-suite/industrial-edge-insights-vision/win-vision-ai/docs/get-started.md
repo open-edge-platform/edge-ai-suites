@@ -31,6 +31,8 @@ DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 
 ## Clone the Repository
 
+Open PowerShell and run all terminal commands:
+
 ```powershell
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
@@ -450,25 +452,6 @@ MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears 
 ---
 
 ## Troubleshooting
-
-### Camera: `msvcr120.dll` / `msvcp120.dll` not found
-
-The GenICam VC120 DLLs depend on the Visual C++ 2013 Redistributable. Verify whether the required DLLs are present:
-
-```powershell
-"msvcr120: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
-"msvcp120: $(Test-Path 'C:\Windows\System32\msvcp120.dll')"
-```
-
-If either value is `False`, install the Visual C++ 2013 Redistributable:
-
-```powershell
-$url = "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
-$out = "$env:TEMP\vcredist_x64_2013.exe"
-Invoke-WebRequest -Uri $url -OutFile $out
-Start-Process $out -ArgumentList "/install /quiet /norestart" -Wait
-Write-Host "Done. msvcr120.dll now present: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
-```
 
 ### Inference on NPU fails with `Failed to construct OpenVINOImageInference` error
 
