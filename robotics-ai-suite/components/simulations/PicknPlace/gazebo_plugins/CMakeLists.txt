@@ -41,8 +41,12 @@ if(ROS_DISTRO STREQUAL "jazzy")
   message(STATUS "🔧 Configuring for ROS Jazzy (Ubuntu Noble + Gazebo Harmonic)")
 
   find_package(ros_gz REQUIRED) # Find ROS-Gazebo bridge
-  find_package(gz_sim_vendor REQUIRED)  # This pulls in all other vendors
-  find_package(sdformat_vendor REQUIRED)
+  find_package(gz_sim_vendor REQUIRED)  # injects CMAKE_PREFIX_PATH for gz-sim8
+  find_package(sdformat_vendor REQUIRED)  # injects CMAKE_PREFIX_PATH for sdformat14
+  find_package(gz_msgs_vendor REQUIRED)  # injects CMAKE_PREFIX_PATH for gz-msgs10
+  find_package(gz-sim8 REQUIRED)
+  find_package(sdformat14 REQUIRED)
+  find_package(gz-msgs10 REQUIRED)
 
    # Add include paths
   set(GZ_VENDOR_BASE "/opt/ros/jazzy/opt")
@@ -60,7 +64,7 @@ if(ROS_DISTRO STREQUAL "jazzy")
     "${GZ_VENDOR_BASE}/sdformat_vendor/include/gz/sdformat14"
   )
   
-  set(GAZEBO_DEPS "ros_gz" "gz_sim_vendor" "sdformat_vendor")
+  set(GAZEBO_DEPS "ros_gz" "gz_sim_vendor" "sdformat_vendor" "gz_msgs_vendor")
   
 else()
   # Humble: Gazebo Fortress (6.x) with ignition packages
@@ -117,15 +121,14 @@ else()
     gz-sensors7
     gz-rendering7
     gz-physics6
-    gz-cmake3
     gz-fuel_tools8
-    gz-gui7
-    gz-tools2
     sdformat13
   )
   
   message(STATUS "Using ros_gz meta-package for Humble (includes: bridge, sim, image, demos)")
 endif()
+
+find_package(Protobuf REQUIRED)
 
 # Generate ROS interfaces FIRST (before using them)
 rosidl_generate_interfaces(${PROJECT_NAME}
@@ -167,10 +170,22 @@ ament_target_dependencies(ConveyorBeltPlugin
   "std_srvs"
 )
 
-# Link Ignition libraries for Humble
-if(ROS_DISTRO STREQUAL "humble")
-  target_link_libraries(VacuumToolPlugin ${IGNITION_LIBS})
-  target_link_libraries(ConveyorBeltPlugin ${IGNITION_LIBS})
+# Link Gazebo/SDF/Protobuf libraries
+if(ROS_DISTRO STREQUAL "jazzy")
+  target_link_libraries(VacuumToolPlugin
+    gz-sim8::gz-sim8
+    gz-msgs10::gz-msgs10
+    sdformat14::sdformat14
+    protobuf::libprotobuf
+  )
+  target_link_libraries(ConveyorBeltPlugin
+    gz-sim8::gz-sim8
+    sdformat14::sdformat14
+    protobuf::libprotobuf
+  )
+else()
+  target_link_libraries(VacuumToolPlugin ${GAZEBO_LIBS})
+  target_link_libraries(ConveyorBeltPlugin ${GAZEBO_LIBS})
 endif()
 
 # Link generated interfaces to ConveyorBeltPlugin

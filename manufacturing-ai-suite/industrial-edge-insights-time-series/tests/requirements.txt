@@ -1,9 +1,9 @@
-pytest==9.0.2  # Adjust to meet the requirements of pytest-env
+pytest==9.0.3  # Adjust to meet the requirements of pytest-env
 pytest-html==4.2.0
 pytest-env==1.6.0
 requests==2.33.0
 playwright==1.58.0
-aiohttp==3.13.3
+aiohttp==3.13.5
 paho-mqtt==2.1.0
 ruamel.yaml==0.19.1
 PyYAML==6.0.3

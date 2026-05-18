@@ -8,7 +8,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.0
+    image: telegraf:1.38.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -44,7 +44,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.12.2
+    image: influxdb:1.12.4
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped
@@ -129,7 +129,7 @@ services:
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
 
   ia-grafana:
-    image: grafana/grafana-oss:12.4.0-ubuntu
+    image: grafana/grafana-oss:13.0.1-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -228,7 +228,7 @@ services:
     - timeseries_network
 
   nginx:
-    image: nginx:1.29.5-trixie-perl
+    image: nginx:1.29.8-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -319,10 +319,8 @@ services:
       ENABLE_WEBRTC: true
       WEBRTC_SIGNALING_SERVER: http://mediamtx:8889
       ENABLE_RTSP: true
-      http_proxy: ${http_proxy}
-      https_proxy: ${https_proxy}
-      no_proxy: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
-      NO_PROXY: ${no_proxy},${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker
+      no_proxy: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
+      NO_PROXY: ${HOST_IP},${RTSP_CAMERA_IP},otel-collector,mediamtx,model_registry,${S3_STORAGE_HOST},ia-mqtt-broker,${no_proxy}
       GST_DEBUG: "1"
       REST_SERVER_PORT: ${REST_SERVER_PORT}
       S3_STORAGE_HOST: ${S3_STORAGE_HOST}
@@ -356,6 +354,7 @@ services:
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri:ro
+    - ${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel:ro
     - "/tmp:/tmp"
       # volume mount the udev database with read-only permission,so the USB3 Vision interfaces can be enumerated correctly in the container
     - "/run/udev:/run/udev:ro"
@@ -369,6 +368,7 @@ services:
     - "110"
       # render group ID for ubuntu 24.04 host OS
     - "992"
+    - "993"
     device_cgroup_rules:
       # Default run - device-cgroup-rule='c 189:* rmw'
       # Selective rules can be applied for deployment
@@ -381,9 +381,10 @@ services:
       # USB camera devices
       # Selective mount can be done for deployment as mounting whole /dev is not recommended
     - "${DRI_MOUNT_PATH:-/dev/null}:/dev/dri"
+    - "${ACCEL_MOUNT_PATH:-/dev/null}:/dev/accel"
 
   mediamtx:
-    image: bluenviron/mediamtx:1.16.3
+    image: bluenviron/mediamtx:1.18.1
     container_name: mediamtx
     restart: unless-stopped
     read_only: true
@@ -521,7 +522,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.9.0
+    image: coturn/coturn:4.10.0
     container_name: coturn
     read_only: true
     security_opt:
@@ -580,7 +581,6 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-      o: size=${SEAWEEDFS_VOLUME_TMPFS_SIZE:-2g}
   seaweed_filer_data:
     driver: local
     driver_opts:
@@ -598,4 +598,3 @@ volumes:
     driver_opts:
       type: tmpfs
       device: tmpfs
-      o: size=${SEAWEEDFS_S3_TMPFS_SIZE:-128m}

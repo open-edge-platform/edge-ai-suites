@@ -23,6 +23,7 @@ class SearchService:
         self.retrieval_url = f"{self.base_url}/v1/retrieval"
         self.get_url = f"{self.base_url}/v1/dataprep/get"
         self.delete_url = f"{self.base_url}/v1/dataprep/delete"
+        self.id_maps_url = f"{self.base_url}/v1/dataprep/list"
 
         self.default_bucket = getattr(settings, "STORAGE_DEFAULT_BUCKET", None) or os.getenv("STORAGE_BUCKET", "content-search")
 
@@ -108,5 +109,15 @@ class SearchService:
             except Exception as e:
                 logger.error(f"Error deleting chroma index for {target_uri}: {str(e)}")
                 return {"error": str(e)}
+
+    async def get_id_maps(self) -> dict:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.get(self.id_maps_url, timeout=10.0)
+                response.raise_for_status()
+                return response.json()
+            except Exception as e:
+                logger.error(f"Error fetching id_maps from indexer service: {str(e)}")
+                return {"visual": {}, "document": {}, "video_summary": {}}
 
 search_service = SearchService()

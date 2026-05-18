@@ -1,0 +1,10 @@
+numpy>=1.26.0
+opencv-python>=4.9.0
+requests>=2.31.0
+openvino>=2024.0.0
+flask>=3.0.0
+flask-cors>=4.0.0
+pyyaml>=6.0.0
+scipy>=1.12.0
+pytest>=8.0.0
+paho-mqtt>=1.6.1

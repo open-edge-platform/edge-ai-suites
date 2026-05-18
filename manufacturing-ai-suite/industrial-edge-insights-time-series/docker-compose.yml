@@ -9,7 +9,7 @@ services:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
     container_name: ia-telegraf
     hostname: ia-telegraf
-    image: telegraf:1.38.0
+    image: telegraf:1.38.3
     restart: unless-stopped
     depends_on:
       - ia-influxdb
@@ -45,7 +45,7 @@ services:
 
   ia-influxdb:
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
-    image: influxdb:1.12.2
+    image: influxdb:1.12.4
     container_name: ia-influxdb
     hostname: ia-influxdb
     restart: unless-stopped
@@ -133,7 +133,7 @@ services:
     - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
 
   ia-grafana:
-    image: grafana/grafana-oss:12.4.0-ubuntu
+    image: grafana/grafana-oss:13.0.1-ubuntu
     container_name: ia-grafana
     hostname: ia-grafana
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"
@@ -257,7 +257,7 @@ services:
     - ./apps/${SAMPLE_APP}/simulation-data:/simulation-data
 
   nginx:
-    image: nginx:1.29.5-trixie-perl
+    image: nginx:1.29.8-trixie-perl
     container_name: nginx_proxy
     read_only: true
     user: "${TIMESERIES_UID}:${TIMESERIES_UID}"

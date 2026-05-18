@@ -145,3 +145,29 @@ to file new tickets there (after learning about the guidelines for [Contributing
      ```bash
      kubectl get svc -n {{namespace}}
      ```
+
+### 4. DL Streamer Pipeline Server Pod Stuck in Pending State:
+
+   - **Issue**: When `npuWorkload` is set to `true` in `values.yaml`, the DL Streamer Pipeline Server pod remains in `Pending` state and does not get scheduled.
+   - **Cause**: The deployment requests `npu.intel.com/accel` as a resource limit. If the node does not have an NPU device or the Intel NPU Device Plugin is not installed, Kubernetes cannot satisfy the resource request and the pod will not be scheduled.
+   - **Diagnosis**: Check the pod events for the scheduling failure:
+
+     ```bash
+     kubectl describe pod -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server | grep -A 5 "Events:"
+     ```
+
+     You will see the following event message:
+
+     ```
+     Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 Insufficient npu.intel.com/accel.
+     ```
+
+   - **Verification**: Confirm whether the NPU resource is available on your nodes:
+
+     ```bash
+     kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, npu: .status.allocatable["npu.intel.com/accel"]}'
+     ```
+
+     If the output shows `"npu": null`, the Intel NPU Device Plugin is not installed or the node does not have NPU hardware.
+
+   - **Solution**: Ensure the [Intel NPU Device Plugin](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/npu_plugin/README.md#install-with-nfd) is installed on your cluster and that the target node has NPU hardware. See the [Prerequisites](./get-started/deploy-with-helm.md#prerequisites) section for installation steps.

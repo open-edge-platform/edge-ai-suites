@@ -1,0 +1,22 @@
+/* src/components/Footer/Footer.css */
+.footer-bar {
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  background: #0071c5;
+  color: white;
+  text-align: center;
+  padding: 0 2rem;
+  height: 48px;
+  font-size: 14px;
+  z-index: 10;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+  border-top: 1px solid #e6e7e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-text);
+  font-weight: 400;
+}

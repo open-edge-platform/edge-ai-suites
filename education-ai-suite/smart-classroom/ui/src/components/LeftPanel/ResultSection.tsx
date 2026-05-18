@@ -6,6 +6,7 @@ import folderIcon from "../../assets/images/folder.svg";
 import streamingIcon from "../../assets/images/streamingIcon.svg";
 import cameraIcon from "../../assets/images/camera-icon.svg";
 import { formatSecondsToTime } from "../../utils/timeUtils";
+import { getContentSearchFileUrl } from "../../services/api";
 
 // Content Search API types
 export interface CsSearchParams {
@@ -20,6 +21,9 @@ export interface CsSearchResultMeta {
   file_path?: string;
   type?: string;
   video_pin_second?: number;
+  video_start_second?: number;
+  video_end_second?: number;
+  summary_text?: string;
   doc_page_number?: number;
   tags?: string[];
   doc_filetype?: string;
@@ -123,6 +127,7 @@ const ResultSection: React.FC<ResultSectionProps> = ({ results }) => {
 const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const meta = result?.meta || {};
   const fileName = meta.file_name || getFileName(result);
   const tags = Array.isArray(meta.tags) ? meta.tags : [];
@@ -130,11 +135,12 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
   const filePath = meta.file_path;
 
   const renderPreview = () => {
-    // For image type with valid file path, try to show the image
+    // For image type, build the HTTP URL from the local:// path and try to display it
     if (fileType === "image" && filePath && !imageError) {
+      const imgSrc = getContentSearchFileUrl(filePath);
       return (
         <img
-          src={filePath}
+          src={imgSrc}
           alt={fileName}
           className="cs-result-item-thumbnail"
           onError={() => setImageError(true)}
@@ -177,6 +183,23 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
         {fileType === "video" && (
           <div className="cs-result-item-row">
             <span className="cs-result-item-page-label">Time: {formatSecondsToTime(meta.video_pin_second)}</span>
+          </div>
+        )}
+
+        {fileType === "video" && meta.summary_text && (
+          <div className="cs-result-item-summary">
+            <div className="cs-result-item-summary-row">
+              <span className="cs-result-item-summary-label">{t("resultSection.summarization")}:</span>
+              <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
+                {meta.summary_text}
+              </p>
+            </div>
+            <button
+              className="cs-result-item-summary-toggle"
+              onClick={() => setSummaryExpanded((prev) => !prev)}
+            >
+              {summaryExpanded ? t("resultSection.showLess") : t("resultSection.showMore")}
+            </button>
           </div>
         )}
 

@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kpi_level1_v1",
+  "title": "ROS 2 Level 1 Per-Session KPI",
+  "description": "Per-session Level 1 KPI output produced by analyze_trigger_latency.py --json-out. Measures per-node latency, jitter, and throughput without requiring code modifications.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "throughput_hz",
+    "mean_latency_ms",
+    "max_jitter_ms",
+    "min_jitter_ms",
+    "mean_jitter_ms",
+    "jitter_stdev_ms",
+    "cpu_mean_pct",
+    "cpu_max_pct",
+    "per_node",
+    "pairs",
+    "metadata"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "level1_v1",
+      "description": "Schema identifier and version — must be 'level1_v1'."
+    },
+    "throughput_hz": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "System-level throughput in Hz, derived from the dominant (highest trigger-count) node/topic pair."
+    },
+    "mean_latency_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Mean processing latency in milliseconds for the dominant pair."
+    },
+    "max_jitter_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Maximum jitter in milliseconds across all node pairs."
+    },
+    "min_jitter_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Minimum jitter in milliseconds across all node pairs."
+    },
+    "mean_jitter_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Mean jitter in milliseconds for the dominant pair."
+    },
+    "jitter_stdev_ms": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "description": "Standard deviation of per-node mean jitter values (ms)."
+    },
+    "cpu_mean_pct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Mean CPU utilization percentage. Null when not collected."
+    },
+    "cpu_max_pct": {
+      "type": ["number", "null"],
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Peak CPU utilization percentage. Null when not collected."
+    },
+    "per_node": {
+      "type": "object",
+      "description": "Per-node performance summary keyed by fully-qualified node name.",
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "mean_latency_ms",
+          "mean_jitter_ms",
+          "max_jitter_ms",
+          "num_samples",
+          "primary_input",
+          "primary_output",
+          "pipeline_stage"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "throughput_hz": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Observed publish frequency in Hz."
+          },
+          "mean_latency_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Mean callback/processing latency in milliseconds."
+          },
+          "mean_jitter_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Mean inter-message timing jitter in milliseconds."
+          },
+          "max_jitter_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum observed jitter in milliseconds."
+          },
+          "num_samples": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of latency samples collected for this node."
+          },
+          "primary_input": {
+            "type": "string",
+            "description": "The primary input topic driving this node."
+          },
+          "primary_output": {
+            "type": "string",
+            "description": "The primary output topic produced by this node."
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "enum": ["Sensor", "Perception", "Planning", "Control", "Other"],
+            "description": "ROS 2 pipeline stage this node belongs to."
+          }
+        }
+      }
+    },
+    "pairs": {
+      "type": "array",
+      "description": "Full scalar statistics for every de-duplicated (node, input, output) pair. Used by aggregate_kpi.py for cross-run aggregation.",
+      "items": {
+        "type": "object",
+        "required": [
+          "node",
+          "input",
+          "output",
+          "n",
+          "mean_ms",
+          "stdev_ms",
+          "min_ms",
+          "p50_ms",
+          "p90_ms",
+          "max_ms"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "node": {
+            "type": "string",
+            "description": "Fully-qualified ROS 2 node name."
+          },
+          "input": {
+            "type": "string",
+            "description": "Input topic name."
+          },
+          "output": {
+            "type": "string",
+            "description": "Output topic name."
+          },
+          "n": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Number of latency samples."
+          },
+          "mean_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Mean latency in milliseconds."
+          },
+          "stdev_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Standard deviation of latency in milliseconds."
+          },
+          "min_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Minimum latency in milliseconds."
+          },
+          "p50_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "50th percentile (median) latency in milliseconds."
+          },
+          "p90_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "90th percentile latency in milliseconds."
+          },
+          "p99_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "99th percentile latency in milliseconds."
+          },
+          "max_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum latency in milliseconds."
+          },
+          "trigger_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Total number of trigger events observed for this pair."
+          },
+          "fps": {
+            "type": ["number", "null"],
+            "minimum": 0,
+            "description": "Observed publish frequency in Hz."
+          },
+          "jitter_mean_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Mean inter-message jitter in milliseconds."
+          },
+          "jitter_max_ms": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Maximum inter-message jitter in milliseconds."
+          }
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Session provenance information.",
+      "required": ["name", "datetime", "hostname", "arch", "os", "data_path",
+                   "framework_version", "ros_distro", "hardware"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Session directory name."
+        },
+        "datetime": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "description": "UTC timestamp of KPI generation in ISO 8601 format."
+        },
+        "hostname": {
+          "type": "string",
+          "description": "Hostname of the machine that ran the benchmark."
+        },
+        "arch": {
+          "type": "string",
+          "description": "CPU architecture (e.g. x86_64, aarch64)."
+        },
+        "os": {
+          "type": "string",
+          "description": "Operating system name and kernel release."
+        },
+        "data_path": {
+          "type": "string",
+          "description": "Absolute path to the session directory."
+        },
+        "framework_version": {
+          "type": "string",
+          "description": "Benchmark framework version from pyproject.toml (e.g. '0.1.5')."
+        },
+        "ros_distro": {
+          "type": "string",
+          "description": "ROS 2 distribution name from ROS_DISTRO env var (e.g. 'jazzy', 'humble')."
+        },
+        "hardware": {
+          "type": "object",
+          "description": "Hardware provenance for result reproducibility.",
+          "required": ["cpu_model"],
+          "additionalProperties": false,
+          "properties": {
+            "cpu_model": {
+              "type": "string",
+              "description": "CPU model string from /proc/cpuinfo."
+            },
+            "cpu_cores": {
+              "type": ["integer", "null"],
+              "minimum": 1,
+              "description": "Logical CPU core count."
+            },
+            "gpu_model": {
+              "type": ["string", "null"],
+              "description": "GPU model string if detectable (e.g. from lspci), null otherwise."
+            },
+            "total_ram_gb": {
+              "type": ["number", "null"],
+              "minimum": 0,
+              "description": "Total system RAM in GiB, null if not detectable."
+            }
+          }
+        }
+      }
+    }
+  }
+}

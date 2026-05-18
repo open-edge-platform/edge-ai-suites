@@ -75,6 +75,7 @@ export interface UIState {
   transcriptionDone: boolean;
   csUploadsComplete: boolean;
   csHasUploads: boolean;
+  csServerFilesExist: boolean;
   csTags: string[];
 }
  
@@ -135,6 +136,7 @@ const initialState: UIState = {
   csSummarizing: false,
   csUploadsComplete: false,
   csHasUploads: false,
+  csServerFilesExist: false,
   csTags: [],
 };
 
@@ -528,6 +530,10 @@ const uiSlice = createSlice({
       state.csTags = action.payload;
     },
 
+    setCsServerFilesExist(state, action: PayloadAction<boolean>) {
+      state.csServerFilesExist = action.payload;
+    },
+
     clearSearchResults(state) {
       state.searchResults = [];
       state.showSearchResults = false;
@@ -619,6 +625,7 @@ export const {
   setCsUploadsComplete,
   setCsHasUploads,
   setCsTags,
+  setCsServerFilesExist,
 } = uiSlice.actions;
  
 export default uiSlice.reducer;

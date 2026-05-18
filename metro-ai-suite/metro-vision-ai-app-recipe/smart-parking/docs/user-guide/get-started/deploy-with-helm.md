@@ -28,7 +28,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -83,7 +83,7 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 1. Deploy Helm chart
 
     ```sh
-    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace
+    helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace --set timezone=$(cat /etc/timezone)
     ```
 
 2. Wait for all pods to be ready:

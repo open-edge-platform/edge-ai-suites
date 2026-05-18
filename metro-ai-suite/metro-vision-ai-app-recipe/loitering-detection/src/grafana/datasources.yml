@@ -13,3 +13,12 @@ datasources:
     readOnly: false
     editable: true
     jsonData: { "uri": "tcp://broker:1883" }
+
+  - name: Prometheus
+    type: prometheus
+    url: https://nginx-reverse-proxy/prometheus
+    access: proxy
+    isDefault: false
+    jsonData:
+      tlsSkipVerify: true  # This disables certificate verification
+

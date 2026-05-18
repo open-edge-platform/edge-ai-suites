@@ -1,6 +1,3 @@
-:next_page: None
-:prev_page: ../packages
-
 # Industrial Motion-Control ROS2 Gateway
 
 The Industrial Motion-Control ROS2 Gateway is the communication bridge between the DDS and RSTP wire-protocol ROS2 implementation, and Motion Control (MC) IEC-61131-3 standard Intel implementation. It subscribes velocity commands (commonly from Navigation2 stack) and joint trajectories (commonly from MoveIt2 stack), communicates real-time (RT) domain through the Shared Ring Buffer, and gathers the robot's status (Autonomous Mobile Robot's odometry or the industrial robotic arm's joint state) and publishes to the ROS domain.
@@ -31,7 +28,7 @@ This tutorial monitors and controls the RRBot, a double inverted pendulum robots
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_rrbot
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../get-started/installation/rt_linux>`).
 
    **Note**: Replace ``/opt/plcopen/plc_rt_rrbot`` with ``/opt/plcopen/plc_rt_rrbot_igh -n <path_to_ethercat_eni_file>`` to run this demo using two IEC-61158 EtherCAT servo-controlled joint.
 
@@ -117,7 +114,7 @@ This demo allows you to monitor and control the [HIWIN industrial robots](https:
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_robot_arm_rtmotion
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../installation_setup/installation/rt_linux>`).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (see :doc:`Real-Time Linux <../get-started/installation/rt_linux>`).
 
 #. Open a second terminal with elevated permissions:
 
@@ -213,7 +210,7 @@ This tutorial allows monitors and controls an AGV (Automated Guided Vehicle) usi
    sudo taskset -c ${isolcpus:-1,3} /opt/plcopen/plc_rt_amr_rtmotion
    ```
 
-   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../installation_setup/installation/rt_linux.rst)).
+   **Note**: By default, ECI isolates CPU cores 1 & 3 (13th generation processors and older) or 2 & 4 (14th generation processors and newer) (see [Real-Time Linux](../get-started/installation/rt_linux.md)).
 
    **Note**: ``/opt/plcopen/plc_rt_amr_rtmotion_symg`` is a sample application using EtherCAT to control the Mecanum Wheel Platform.
 

@@ -87,6 +87,38 @@ Results saved in: monitoring_sessions/YYYYMMDD_HHMMSS/
   └── visualizations/           (auto-generated plots)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📤 CSV / EXCEL EXPORT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Level 1 — per-pair latency CSV (one row per node/input→output pair):
+  uv run python src/analyze_trigger_latency.py \
+      --json-out <session>/kpi.json \
+      --csv-out  <session>/kpi_pairs.csv
+
+  Columns: session, node, pipeline_stage, input, output,
+           n, mean_ms, stdev_ms, min_ms, p50_ms, p90_ms, p99_ms, max_ms,
+           trigger_count, fps, jitter_mean_ms, jitter_max_ms
+
+Level 2 — pipeline e2e + per-stage CSV (e2e summary row + one row per stage):
+  uv run python src/analyze_pipeline_latency.py \
+      --kpi      <session>/kpi.json \
+      --csv-out  <session>/kpi_level2.csv
+
+  Columns: type (e2e|stage), session, stage,
+           representative_node, representative_input, representative_output,
+           mean_ms, p50_ms, p90_ms, p99_ms, max_ms, n,
+           throughput_hz, drop_rate_pct, bottleneck_stage
+
+Multi-run aggregated CSV (cross-run statistics for a bench directory):
+  uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_XXXX \
+      --csv-out results_aggregated.csv
+
+  Columns: node, input, output, category, runs_seen, total_runs,
+           mean_fps, fps_stdev, mean_ms, stdev_runs, cv_pct,
+           min_mean_ms, max_mean_ms, mean_p90_ms, worst_p90_ms, best_p90_ms,
+           mean_p50_ms, mean_stdev_ms, mean_n
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🔧 SETUP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 

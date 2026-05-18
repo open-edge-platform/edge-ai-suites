@@ -147,6 +147,14 @@ class ConfigService:
             if "vlm" not in config:
                 config["vlm"] = {}
             config["vlm"]["top_p"] = float(os.getenv("VLM_TOP_P"))
+        if os.getenv("VLM_TARGET_DEVICE"):
+            if "vlm" not in config:
+                config["vlm"] = {}
+            config["vlm"]["target_device"] = os.getenv("VLM_TARGET_DEVICE")
+        if os.getenv("VLM_WEIGHT_FORMAT"):
+            if "vlm" not in config:
+                config["vlm"] = {}
+            config["vlm"]["weight_format"] = os.getenv("VLM_WEIGHT_FORMAT")
         
         # Traffic configuration
         if os.getenv("HIGH_DENSITY_THRESHOLD"):

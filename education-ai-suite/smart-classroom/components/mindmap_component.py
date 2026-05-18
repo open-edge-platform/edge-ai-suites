@@ -16,9 +16,9 @@ class MindmapComponent(PipelineComponent):
 
     def _get_mindmap_message(self, input_text):
         lang_prompt = vars(config.mindmap.system_prompt)
-        logger.debug(f"Mindmap System Prompt: {lang_prompt.get(config.models.summarizer.language)}")
+        logger.debug(f"Mindmap System Prompt: {lang_prompt.get(config.app.language)}")
         return [
-            {"role": "system", "content": f"{lang_prompt.get(config.models.summarizer.language)}"},
+            {"role": "system", "content": f"{lang_prompt.get(config.app.language)}"},
             {"role": "user", "content": f"{input_text}"}
         ]
 

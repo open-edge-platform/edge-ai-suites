@@ -103,7 +103,7 @@ uv run python src/monitor_stack.py --node /slam_toolbox --session my_session --d
 
 All output is saved in `monitoring_sessions/` under a timestamped folder:
 
-```
+```text
 monitoring_sessions/
 └── 20260306_154140/
     ├── session_info.txt          # Test configuration
@@ -149,13 +149,13 @@ See [Grafana Dashboard](grafana.md) for the full setup guide.
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| ROS2 not found | Source your ROS2 environment — see [Set Up ROS2](../../gsg_robot/index.md) |
-| No nodes detected | Ensure your ROS2 application is running first |
-| `permission denied` on scripts | `chmod +x quickstart auto-setup.sh` |
-| `uv` not found | `curl -LsSf https://astral.sh/uv/install.sh | sh && source ~/.bashrc` |
-| Remote: no data | Verify SSH key auth and matching `ROS_DOMAIN_ID` on both machines |
+| Problem                        | Fix                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| ROS2 not found                 | Source your ROS2 environment — see [Set Up ROS2](../../../gsg_robot/index.md) |
+| No nodes detected              | Ensure your ROS2 application is running first                                 |
+| `permission denied` on scripts | `chmod +x quickstart auto-setup.sh`                                           |
+| `uv` not found                 | `curl -LsSf https://astral.sh/uv/install.sh \|sh && source ~/.bashrc`         |
+| Remote: no data                | Verify SSH key auth and matching `ROS_DOMAIN_ID` on both machines             |
 
 For auto-setup of the ROS2 environment:
 

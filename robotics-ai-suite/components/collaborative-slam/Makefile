@@ -56,6 +56,9 @@ package:
 			curl https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB | \
 				gpg --yes --dearmor --output /usr/share/keyrings/oneapi-archive-keyring.gpg && \
 			echo \"deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main\" > /etc/apt/sources.list.d/oneAPI.list && \
+			echo -e \"Package: intel-oneapi-runtime-*\nPin: version 2025.3.*\nPin-Priority: 1001\n\" > /etc/apt/preferences.d/oneapi && \
+			echo -e \"Package: intel-oneapi-compiler-*\nPin: version 2025.3.*\nPin-Priority: 1001\n\" >> /etc/apt/preferences.d/oneapi && \
+			echo -e \"Package: intel-oneapi-mkl-*\nPin: version 2025.3.*\nPin-Priority: 1001\n\" >> /etc/apt/preferences.d/oneapi && \
 			apt update && \
 			apt install -y quilt equivs devscripts && \
 			scripts/uni-build.sh $(ROS_DISTRO) && cp -r /tmp/$(ROS_DISTRO)_cslam_deb_packages/ /src/$(ROS_DISTRO)_cslam_deb_packages"

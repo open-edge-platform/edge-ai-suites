@@ -1,6 +1,6 @@
 # Deploy with Helm
 
-This guide provides step-by-step instructions for deploying the MultiModal - Weld Defect Detection sample application using Helm.
+This guide provides step-by-step instructions for deploying the Multimodal Weld Defect Detection sample application using Helm.
 
 ## Prerequisites
 
@@ -25,16 +25,13 @@ You can either generate or download the Helm charts.
   1. Download Helm chart with the following command:
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0-<date>-weekly
+     helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0-rc1
      ```
-
-     Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
-    `helm pull oci://registry-1.docker.io/intel/multimodal-weld-defect-detection-sample-app --version 2026.1.0-20260120-weekly`
 
   2. Unzip the package using the following command:
 
      ```bash
-     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.1.0-<date>-weekly.tgz
+     tar -xvzf multimodal-weld-defect-detection-sample-app-2026.1.0-rc1.tgz
      ```
 
 - Get into the Helm directory:
@@ -78,6 +75,13 @@ You can either generate or download the Helm charts.
 > 1. Uninstall Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in the `values.yaml` file.
+> 3. To deploy with GPU or NPU support for inferencing, use the following command:
+>
+>       ```bash
+>       helm install multimodal-weld-defect-detection \
+>           --set privileged_access_required=true \
+>           . -n multimodal-sample-app --create-namespace
+>       ```
 
 To install Helm charts, use one of the following options:
 
@@ -153,6 +157,11 @@ this sample application in Kubernetes environment:
 You use a Client URL (cURL) command to start the pipeline. Start this pipeline with the
 following cURL command.
 
+> **Note:**
+> - By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
+> - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
+> - To run model inference on `GPU` or `NPU` in DL Streamer Pipeline Server, set the `device` field to `GPU` or `NPU` exactly as shown and run the following command.
+
 ```bash
 curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
     "destination": {
@@ -162,7 +171,8 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
         },
         "frame": [{
                             "type": "webrtc",
-                            "peer-id": "samplestream"
+                            "peer-id": "samplestream",
+                            "overlay": false
                         },
                         {
                             "type": "s3_write",
@@ -182,9 +192,10 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
 
 **Time Series Analytics Microservice**
 
-> **NOTE:** UDF inferencing on GPU is not supported.
+By default, UDF inference runs on `CPU`.
+To activate the UDF deployment package and run UDF inference on `CPU` or `GPU`, use one of the following commands.
 
-Run the following command to activate the UDF deployment package:
+- CPU
 
 ```bash
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice
@@ -192,9 +203,28 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/con
 curl -s -X POST https://localhost:30001/ts-api/config   -H 'accept: application/json'   -H 'Content-Type: application/json'   -d @config.json   -k
 ```
 
+- GPU
+
+```bash
+curl -s -X POST https://localhost:30001/ts-api/config -H 'accept: application/json' -H 'Content-Type: application/json' -d '{
+    "udfs": {
+        "name": "weld_anomaly_detector",
+        "models": "weld_anomaly_detector.pkl",
+        "device": "gpu"
+    },
+    "alerts": {
+        "mqtt": {
+            "mqtt_broker_host": "ia-mqtt-broker",
+            "mqtt_broker_port": 1883,
+            "name": "my_mqtt_broker"
+        }
+    }
+}' -k
+```
+
 ## Step 6: Verify the Results
 
-Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-weld-defect-detection-results)
+Follow the verification steps in the [Get Started guide](../get-started.md#verify-the-multimodal-weld-defect-detection-results)
 
 ## Uninstall Helm Charts
 

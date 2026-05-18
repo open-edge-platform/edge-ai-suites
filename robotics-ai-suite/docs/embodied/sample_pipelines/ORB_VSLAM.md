@@ -1,0 +1,88 @@
+(orb_slam3)=
+
+# VSLAM: ORB-SLAM3
+
+SLAM(Simultaneous localization and mapping) is a major research problem in the robotics community, where a great deal of effort has been devoted to developing new methods to maximize their robustness and reliability.
+
+VSLAM (visual SLAM) utilizes camera(s) as the primary source of sensor input to sense the surrounding environment. This can be done either with a single camera, multiple cameras, and with or without an inertial measurement unit (IMU) that measure translational and rotational movements.
+
+Feature-based tracking algorithm is main-stream implementation for VSLAM, according to its real-time and simplified SLAM process.
+
+ORB-SLAM3 is one of popular real-time feature-based SLAM libraries able to perform Visual, Visual-Inertial and Multi-Map SLAM with monocular, stereo and RGB-D cameras, using pin-hole and fisheye lens models. In all sensor configurations, ORB-SLAM3 is as robust as the best systems available in the literature, and significantly more accurate.
+
+![ORB-SLAM3 Architecture](assets/images/ORB-SLAM3-Architecture.png)
+
+## Source Code
+
+The source code of this component can be found here: [ORB-SLAM3-Sample](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/orb-slam3-sample)
+
+## Prerequisites
+
+Please make sure you have all the prerequisites and installation in [Get Started](../get_started.md) before proceeding. And follow the guide [Install realsense SDK](../get-started/installation/realsense.md) to install realsense SDK.
+
+## Installation
+
+1. Make sure realsense SDK installed. If not, follow [Install realsense SDK](../get-started/installation/realsense.md) to install realsense packages. Here is a minimal installation:
+
+   ```bash
+   sudo apt install librealsense2
+   ```
+
+2. Install the ORB-SLAM3 packages by following the below command:
+
+   ```bash
+   sudo apt install orb-slam3
+   ```
+
+After installation, the VSLAM example programs are installed under folder `/opt/intel/orb-slam3`.
+
+> **Note:** The `orb-slam3` Debian Package is compiled without `-march=native` flag by default to ensure compatibility and prevent potential segmentation faults. For enhanced performance, consider building locally with `-march=native`, which optimizes the code based on specific CPU architecture. The `-march=native` option is a compiler flag used with GCC and other compilers to optimize code for the specific architecture of the machine where the compilation occurs. However, it can potentially lead to unexpected behavior, especially when code is intended to run on different architectures.
+
+## VSLAM Demos
+
+### Demo-1: Monocular Camera with Mono-Dataset
+
+This Demo uses EUROC dataset to test ORB-SLAM3 monocular mode.
+
+![ORB-SLAM3 mono](assets/images/orb-slam3-mono.gif)
+
+1. Download the EUROC MAV Dataset files
+
+   ```bash
+   mkdir -p ~/orb-slam3/dataset
+   cd ~/orb-slam3/dataset
+   wget http://robotics.ethz.ch/~asl-datasets/ijrr_euroc_mav_dataset/machine_hall/MH_04_difficult/MH_04_difficult.zip
+   unzip MH_04_difficult.zip -d MH04
+   ```
+
+   > **Note:** This demo uses MH_04_difficult dataset. If you want to try other dataset, you may download them from the link: https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets.
+   >
+   > Please download EUROC Machine Hall datasets from https://www.research-collection.ethz.ch/entities/researchdata/bcaf173e-5dac-484b-bc37-faf97a594f1f if there are any issues with the above links.
+
+2. Launch ORB-SLAM3 Demo pipeline
+
+   Run the below commands in a bash terminal:
+
+   ```bash
+   mkdir -p ~/orb-slam3/log
+   cd ~/orb-slam3/
+   /opt/intel/orb-slam3/Examples/Monocular/mono_euroc /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Monocular/EuRoC.yaml ~/orb-slam3/dataset/MH04/ /opt/intel/orb-slam3/Examples/Monocular/EuRoC_TimeStamps/MH04.txt  ~/orb-slam3/log/MH04_mono.txt
+   ```
+
+   > **Note:** If you use other datasets other than MH_04_difficult, you should make sure you update the command above with the correct name of dataset you use.
+
+### Demo-2: VSLAM Demo with Intel Realsense Camera
+
+This Demo uses Intel Realsense Camera as stereo inputs.
+
+![ORB-SLAM3 realsense](assets/images/orb-slam3-realsense.gif)
+
+1. Connect a Realsense D435 or D435i Camera to the test machine
+
+2. Launch ORB-SLAM3 Demo pipeline
+
+   Run the below command in a bash terminal:
+
+   ```bash
+   /opt/intel/orb-slam3/Examples/Stereo/stereo_realsense_D435i /opt/intel/orb-slam3/Vocabulary/ORBvoc.txt /opt/intel/orb-slam3/Examples/Stereo/RealSense_D435i.yaml
+   ```

@@ -27,6 +27,11 @@ CLIP_CONFIGS: Dict[str, Dict[str, Any]] = {
         "pretrained": "openai",
         "image_size": 224,
     },
+    "clip-xlm-roberta-base-vit-b-32": {
+        "model_name": "xlm-roberta-base-ViT-B-32",
+        "pretrained": "laion5b_s13b_b90k",
+        "image_size": 224,
+    },
     "clip-vit-l-14": {
         "model_name": "ViT-L-14",
         "pretrained": "datacomp_xl_s13b_b90k",

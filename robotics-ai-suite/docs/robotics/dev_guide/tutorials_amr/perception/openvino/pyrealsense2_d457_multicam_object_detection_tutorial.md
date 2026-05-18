@@ -42,16 +42,12 @@ The source code of this component can be found here:
 
 Complete the [get started guide](../../../../gsg_robot/index.md) before continuing.
 
-Complete the [GMSL setup guide](../../../gmsl-guide/index.rst) before continuing.
-
-
+Complete the [GMSL setup guide](../../../gmsl-guide/configure-gmsl-serdes-acpi.md) before continuing.
 
 > **Note:** If using D457 select the "MIPI" mode of the Intel® RealSense™ Depth Camera D457 by
 > moving the select switch on the camera to "M", as shown in the picture below.
 
 ![MIPI_USB_Switch_in_D457](../../../../images/MIPI_USB_Switch_in_D457.jpeg)
-
-
 
 ### Install ``librealsense2`` and ``realsense2`` tools
 
@@ -74,7 +70,8 @@ sudo apt install -y ros-humble-librealsense2-tools
 :::
 ::::
 
-### Install UV 
+### Install UV
+
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -84,7 +81,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 source $HOME/.local/bin/env
 ```
 
-### Load the Intel IPU Driver ###
+### Load the Intel IPU Driver
+
 ::::{tab-set}
 :::{tab-item} **IPU7**
 :sync: ipu7
@@ -135,9 +133,8 @@ sudo apt install -y ros-humble-pyrealsense2-ai-demo
 :::{tab-item} **Jazzy**
 :sync: jazzy
 
-
 ```bash
-cd /opt/ros/jazzy/share/pyrealsesne2-ai-demo
+cd /opt/ros/jazzy/share/pyrealsense2-ai-demo
 ```
 
 :::
@@ -165,7 +162,6 @@ source .venv/bin/activate
 
 This will take couple minutes
 
-
 ### Run the tutorial
 
 Run the below commands to start the tutorial.
@@ -184,11 +180,30 @@ source /opt/ros/jazzy/setup.bash
 source /opt/intel/oneapi/setvars.sh
 ```
 
-**D457:**
+**Realsense/D457:**
+
+
+> **Note**
+> The different config files can be used to select the number of cameras from
+> a minimum of one camera to a maximum of four cameras.
+>
+> - ``config_ros2_v4l2_rs-color-0.js`` config file to run the tutorial with one camera
+> - ``config_ros2_v4l2_rs-color-0_1.js`` config file to run the tutorial with two cameras
+> - ``config_ros2_v4l2_rs-color-0_2.js`` config file to run the tutorial with three cameras
+> - ``config_ros2_v4l2_rs-color-0_3.js`` config file to run the tutorial with four cameras
+
+
+RealSense cameras present various sensor streams in `/dev`. It is necessary to select which sensor stream to use with the application. In this example, we will use the single camera stream ``config_ros2_v4l2_rs-color-0.js`` configuration and update the field `source:	"/dev/video-rs-color-0"` to select the YUYV stream from the connected RealSense camera.
+
+```bash
+rgb_video_devices=($(for dev in /dev/v4l/by-id/*; do v4l2-ctl -d "${dev}" --list-formats | grep -q 'YUYV' && readlink -f "${dev}"; done))
+echo "Detected video devices: ${rgb_video_devices[@]}"
+cat ./config/config_ros2_v4l2_rs-color-0.js | tail -n +5 | jq '.[0].source = "'"${rgb_video_devices[0]}"'"' > ./config/config_camera.json
+```
 
 ```bash
 # Run the pyrealsense2-ai-demo tutorial for four camera input streams
-uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_ros2_v4l2_rs-color-0_3.js
+uv run src/pyrealsense2_ai_demo_launcher.py --config=config/config_camera.json
 ```
 
 **D3CMCXXX-115-084:**
@@ -221,14 +236,6 @@ All the four cameras are started after approximately 15-20 secs, as shown in the
 
 ![multicam_demo_SDK2.2_1](../../../../images/multicam_demo_SDK2.2_1.png)
 
-> **Note**
-> The different config files can be used to select the number of cameras from
-> a minimum of one camera to a maximum of four cameras.
->
-> - ``config_ros2_v4l2_rs-color-0.js`` config file to run the tutorial with one camera
-> - ``config_ros2_v4l2_rs-color-0_1.js`` config file to run the tutorial with two cameras
-> - ``config_ros2_v4l2_rs-color-0_2.js`` config file to run the tutorial with three cameras
-> - ``config_ros2_v4l2_rs-color-0_3.js`` config file to run the tutorial with four cameras
 
 ## Troubleshooting and workarounds
 

@@ -34,7 +34,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -91,7 +91,7 @@ visualization in the Grafana.
 1. Deploy Helm chart
 
     ```sh
-    helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace
+    helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace --set timezone=$(cat /etc/timezone)
     ```
 
 2. Wait for all pods to be ready:

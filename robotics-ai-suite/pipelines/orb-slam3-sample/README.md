@@ -27,13 +27,13 @@ The following patches are provided to enhance the ORB_SLAM3 source:
 ## Prerequisites
 
 > [!IMPORTANT]
-> Please make sure you have all the prerequisites and installation in [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup.html) before proceeding.
-> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup/installation/realsense.html) to install Realsense SDK.
+> Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) before proceeding.
+> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense SDK.
 
 ## Installation
 
 1. Make sure Realsense SDK installed. If not, follow [Install Realsense SDK](
-https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/installation_setup/installation/realsense.html) to install Realsense packages.
+https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense packages.
 
 Here is a minimal installation:
 
@@ -133,7 +133,7 @@ sudo apt update
 5. Clone the Robotics AI Suite source:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git --recurse-submodules
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main --recurse-submodules
 ```
 
 6. Copy the Robotics AI Suite ORB-SLAM3 patches:

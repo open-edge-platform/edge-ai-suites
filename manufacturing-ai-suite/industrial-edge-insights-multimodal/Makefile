@@ -16,6 +16,9 @@ SECURE_MODE='false'
 DRI_MOUNT_PATH := $(shell [ -d /dev/dri ] && [ -n "$$(ls -A /dev/dri 2>/dev/null)" ] && echo "/dev/dri" || echo "/dev/null")
 export DRI_MOUNT_PATH
 
+ACCEL_MOUNT_PATH := $(shell [ -d /dev/accel ] && [ -n "$$(ls -A /dev/accel 2>/dev/null)" ] && echo "/dev/accel" || echo "/dev/null")
+export ACCEL_MOUNT_PATH
+
 # Define the path to the .env file and scripts
 ENV_FILE = ./.env
 HELM_PACKAGE_SCRIPT = ./package_helm.sh

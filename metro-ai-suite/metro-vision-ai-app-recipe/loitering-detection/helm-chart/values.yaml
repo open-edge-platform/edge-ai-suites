@@ -26,6 +26,10 @@ node_red:
 nginx:
   image: nginx
   imageTag: 1.27-alpine
+metrics_service:
+  image: intel/metrics-manager
+  imageTag: 2026.1.0-20260508-weekly
+timezone: ""  # Leave empty; set dynamically at install time: --set timezone=$(cat /etc/timezone)
 env:
   ENABLE_WEBRTC: "true"
   ENABLE_RTSP: "true"
@@ -98,6 +102,11 @@ config:
     ext:
       http_port: "30080"
       https_port: "30443"
+  metrics_service:
+    name: metrics-manager
+    int:
+      metrics_endpoint_port: "9273"
+      qmmd_endpoint_port: "9274"
 volumes:
   pipelines:
     name: vol-pipelines
