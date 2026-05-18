@@ -71,7 +71,7 @@ There are 2 options to obtain the charts in your workspace:
 Use the following command to pull the [prebuild chart](https://hub.docker.com/r/intel/live-video-captioning/tags) from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-captioning --version <version-no>
+helm pull oci://registry-1.docker.io/intel/live-video-captioning --version 2026.1.0-rc1-helm
 ```
 
 Refer to the release notes for details on the latest version number to use for the sample application.
