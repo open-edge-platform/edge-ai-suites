@@ -2,10 +2,12 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring } from "../../services/api";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
+import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
+import FileManager from "./FileManager";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing } from "../../redux/slices/uiSlice";
+import { setCsProcessing, setSessionId, setMonitoringActive, setCsUploadsComplete, setCsHasUploads, setCsTags, setCsSummarizing, setCsServerFilesExist } from "../../redux/slices/uiSlice";
 
 type TaskStatus =
   | "STAGED"
@@ -58,6 +60,7 @@ const UploadSection: React.FC = () => {
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((s) => s.ui.sessionId);
   const monitoringActive = useAppSelector((s) => s.ui.monitoringActive);
+  const csServerFilesExist = useAppSelector((s) => s.ui.csServerFilesExist);
   const sessionIdRef = useRef<string | null>(sessionId);
   const monitoringActiveRef = useRef<boolean>(monitoringActive);
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
@@ -82,6 +85,26 @@ const UploadSection: React.FC = () => {
     loading: boolean;
     ocrTextKey: string;
   }>({ isOpen: false, filename: "", content: "", loading: false, ocrTextKey: "" });
+
+  const [showFileManager, setShowFileManager] = useState(false);
+
+  // Check if files exist on the server on initial mount
+  useEffect(() => {
+    const checkServerFiles = async () => {
+      try {
+        const response = await csGetFilesList();
+        const hasFiles = (response.data?.files?.length ?? 0) > 0;
+        dispatch(setCsServerFilesExist(hasFiles));
+        if (hasFiles) {
+          dispatch(setCsHasUploads(true));
+          dispatch(setCsUploadsComplete(true));
+        }
+      } catch (err) {
+        console.warn("Could not check server files:", err);
+      }
+    };
+    checkServerFiles();
+  }, [dispatch]);
 
   const selectAllRef = useRef<HTMLInputElement>(null);
   const allSelected = entries.length > 0 && entries.every((e) => e.selected);
@@ -449,282 +472,289 @@ const UploadSection: React.FC = () => {
 return (
   <>
     <div className="cs-upload-card">
-      <div className="cs-upload-header">
-        <span className="cs-upload-title">{t("uploadSection.upload")}</span>
-      </div>
+      {showFileManager ? (
+        <FileManager onBack={() => setShowFileManager(false)} />
+      ) : (
+        <>
+          <div className="cs-upload-header">
+            <span className="cs-upload-title">{t("uploadSection.upload")}</span>
+            {(entries.length > 0 || csServerFilesExist) && (
+              <button
+                className="cs-view-files-btn"
+                onClick={() => setShowFileManager(true)}
+              >
+                View Files
+              </button>
+            )}
+          </div>
 
-      <div
-        className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={handleBrowse}
-      >
-        <div className="cs-upload-icon">⇪</div>
-        <p className="cs-upload-main-text">{t("uploadSection.dragDrop")}</p>
-        <p className="cs-upload-link-text">{t("uploadSection.orClick")}</p>
-      </div>
-
-      <p className="cs-supported-types">{t("uploadSection.supportedTypes")}</p>
-
-      {unsupportedWarning && (
-        <div className="cs-unsupported-warning">
-          <span className="cs-unsupported-warning__text">{unsupportedWarning}</span>
-          <button
-            className="cs-unsupported-warning__dismiss"
-            onClick={() => setUnsupportedWarning(null)}
-            aria-label="Dismiss"
+          <div
+            className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleBrowse}
           >
-            ×
-          </button>
-        </div>
-      )}
+            <div className="cs-upload-icon">⇪</div>
+            <p className="cs-upload-main-text">{t("uploadSection.dragDrop")}</p>
+            <p className="cs-upload-link-text">{t("uploadSection.orClick")}</p>
+          </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept=".mp4,.jpg,.png,.jpeg,.txt,.pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.html,.htm,.xml,.md"
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
+          <p className="cs-supported-types">{t("uploadSection.supportedTypes")}</p>
 
-      {/* ── Tag Editor ── */}
-      {entries.length > 0 && (
-        <div className="cs-meta-panel">
-          {selectedEntries.length === 0 ? (
-            <p className="cs-meta-hint">{t("uploadSection.selectFileToAddTags")}</p>
-          ) : selectedEntries.every((e) => e.status !== "STAGED") ? (
-            <p className="cs-meta-hint">{t("uploadSection.tagsLockedAfterUpload")}</p>
-          ) : (
+          {unsupportedWarning && (
+            <div className="cs-unsupported-warning">
+              <span className="cs-unsupported-warning__text">{unsupportedWarning}</span>
+              <button
+                className="cs-unsupported-warning__dismiss"
+                onClick={() => setUnsupportedWarning(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".mp4,.jpg,.png,.jpeg,.txt,.pdf,.docx,.doc,.pptx,.ppt,.xlsx,.xls,.html,.htm,.xml,.md"
+            style={{ display: "none" }}
+            onChange={handleFileChange}
+          />
+
+          {/* ── Tag Editor ── */}
+          {entries.length > 0 && (
+            <div className="cs-meta-panel">
+              {selectedEntries.length === 0 ? (
+                <p className="cs-meta-hint">{t("uploadSection.selectFileToAddTags")}</p>
+              ) : selectedEntries.every((e) => e.status !== "STAGED") ? (
+                <p className="cs-meta-hint">{t("uploadSection.tagsLockedAfterUpload")}</p>
+              ) : (
+                <>
+                  <p className="cs-meta-title">
+                    {selectedEntries.length === 1
+                      ? `Tags for: ${selectedEntries[0].filename}`
+                      : `Tags for ${selectedEntries.length} selected files`}
+                  </p>
+
+                  {/* Chips per selected entry — remove button only available before upload */}
+                  {selectedEntries.map((se) =>
+                    se.tags.length > 0 ? (
+                      <div key={se.id} className="cs-chip-row">
+                        {selectedEntries.length > 1 && (
+                          <span className="cs-chip-file-label">{se.filename}:</span>
+                        )}
+                        {se.tags.map((tag) => (
+                          <span key={tag} className="cs-chip">
+                            {tag}
+                            {se.status === "STAGED" && (
+                              <button
+                                className="cs-chip-remove"
+                                onClick={() => removeTag(se.id, tag)}
+                              >
+                                ×
+                              </button>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null
+                  )}
+
+                  <div className="cs-meta-row">
+                    <input
+                      type="text"
+                      className="cs-meta-input cs-meta-input--tags"
+                      placeholder="Add tag — press Enter or comma"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={handleTagKeyDown}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── File Table ── */}
+          {entries.length > 0 && (
             <>
-              <p className="cs-meta-title">
-                {selectedEntries.length === 1
-                  ? `Tags for: ${selectedEntries[0].filename}`
-                  : `Tags for ${selectedEntries.length} selected files`}
-              </p>
-
-              {/* Chips per selected entry — remove button only available before upload */}
-              {selectedEntries.map((se) =>
-                se.tags.length > 0 ? (
-                  <div key={se.id} className="cs-chip-row">
-                    {selectedEntries.length > 1 && (
-                      <span className="cs-chip-file-label">{se.filename}:</span>
-                    )}
-                    {se.tags.map((tag) => (
-                      <span key={tag} className="cs-chip">
-                        {tag}
-                        {se.status === "STAGED" && (
+              <table className="cs-file-table">
+                <thead>
+                  <tr>
+                    <th className="cs-col-check">
+                      <input
+                        ref={selectAllRef}
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        className="cs-checkbox"
+                      />
+                    </th>
+                    <th>{t("uploadSection.fileName")}</th>
+                    <th>{t("uploadSection.type")}</th>
+                    <th>{t("uploadSection.size")}</th>
+                    <th>{t("uploadSection.status")}</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.map((entry) => (
+                    <tr
+                      key={entry.id}
+                      className={`cs-row-${entry.status.toLowerCase()}${entry.selected ? " cs-row-selected" : ""}`}
+                    >
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={entry.selected}
+                          onChange={() => toggleSelect(entry.id)}
+                          className="cs-checkbox"
+                        />
+                      </td>
+                      <td>
+                        <span className="cs-file-name" title={entry.filename}>
+                          {entry.filename}
+                          {entry.status === "COMPLETED" && entry.ocrTextKey && (
+                            <img
+                              src={handwrittenIcon}
+                              alt="Handwritten"
+                              className="cs-ocr-icon cs-ocr-icon--clickable"
+                              title="Click to preview OCR text"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOcrPreview(entry.filename, entry.ocrTextKey!);
+                              }}
+                            />
+                          )}
+                        </span>
+                        {entry.fileType === "MP4" && entry.status === "STAGED" && !entry.fileKey && (
+                          <label className="cs-vs-toggle" title={t("uploadSection.videoSummarizationToggle")}>
+                            <span className="cs-vs-toggle-label">{t("uploadSection.summarize")}</span>
+                            <input
+                              type="checkbox"
+                              checked={entry.vsEnabled}
+                              onChange={() => toggleVsEnabled(entry.id)}
+                              className="cs-vs-toggle-input"
+                            />
+                            <span className="cs-vs-toggle-track">
+                              <span className="cs-vs-toggle-thumb" />
+                            </span>
+                          </label>
+                        )}
+                        {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
+                          <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
+                        )}
+                        {entry.tags.length > 0 && (
+                          <div className="cs-row-tags">
+                            {entry.tags.map((t) => (
+                              <span key={t} className="cs-row-chip">{t}</span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                      <td>{entry.fileType}</td>
+                      <td>{formatSize(entry.fileSize)}</td>
+                      <td className="cs-col-status">
+                        {entry.status === "FAILED" ? (
+                          <div className="cs-failed-cell">
+                            <span className="cs-failed-msg" title={entry.error ?? ""}>
+                              {entry.fileType === "MP4"
+                                ? t("uploadSection.summarizationFailed")
+                                : `Upload of '${entry.filename}' failed. Please try again`}
+                            </span>
+                            <div className="cs-failed-actions">
+                              <button
+                                className="cs-retry-btn"
+                                onClick={() => handleRetry(entry)}
+                              >
+                                {t("uploadSection.retry")}
+                              </button>
+                              <button
+                                className="cs-retry-btn cs-retry-btn--remove"
+                                onClick={() => setConfirmRemoveId(entry.id)}
+                              >
+                                {t("uploadSection.remove")}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <span
+                              className={`cs-status-badge cs-status-badge--${
+                                entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                                  ? "completed"
+                                  : entry.status.toLowerCase()
+                              }`}
+                            >
+                              {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
+                                ? t("uploadSection.uploaded")
+                                : getStatusLabel(entry.status)}
+                            </span>
+                          </>
+                        )}
+                      </td>
+                      <td className="cs-col-remove">
+                        {entry.status !== "FAILED" && (
                           <button
-                            className="cs-chip-remove"
-                            onClick={() => removeTag(se.id, tag)}
+                            className="cs-remove-btn"
+                            disabled={ACTIVE.includes(entry.status)}
+                            onClick={() => setConfirmRemoveId(entry.id)}
+                            title={ACTIVE.includes(entry.status) ? "Cannot remove while uploading" : "Remove file"}
                           >
-                            ×
+                            🗑
                           </button>
                         )}
-                      </span>
-                    ))}
-                  </div>
-                ) : null
-              )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-              <div className="cs-meta-row">
-                <input
-                  type="text"
-                  className="cs-meta-input cs-meta-input--tags"
-                  placeholder="Add tag — press Enter or comma"
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                />
+              <div className="cs-table-footer">
+                <button
+                  className="cs-clear-all-btn"
+                  disabled={entries.some((e) => ACTIVE.includes(e.status))}
+                  onClick={() => {
+                    Object.values(pollTimers.current).forEach(clearInterval);
+                    pollTimers.current = {};
+                    // Check before clearing entries whether any were uploaded to the backend.
+                    const anyUploadedToBackend = entries.some(
+                      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+                    );
+                    setEntries([]);
+                    // Only reset upload-availability flags when no files exist on the backend.
+                    // Uploaded files remain on the server; search/Q&A should stay enabled.
+                    if (!anyUploadedToBackend && !csServerFilesExist) {
+                      dispatch(setCsHasUploads(false));
+                      dispatch(setCsUploadsComplete(false));
+                    }
+                  }}
+                >
+                  {t("uploadSection.clearAll")}
+                </button>
+                <button
+                  className="cs-upload-all-btn"
+                  disabled={!entries.some((e) => e.status === "STAGED")}
+                  onClick={handleUploadAll}
+                >
+                  {t("uploadSection.uploadFiles")}
+                </button>
               </div>
             </>
           )}
-        </div>
-      )}
-
-      {/* ── File Table ── */}
-      {entries.length > 0 && (
-        <>
-          <table className="cs-file-table">
-            <thead>
-              <tr>
-                <th className="cs-col-check">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleSelectAll}
-                    className="cs-checkbox"
-                  />
-                </th>
-                <th>{t("uploadSection.fileName")}</th>
-                <th>{t("uploadSection.type")}</th>
-                <th>{t("uploadSection.size")}</th>
-                <th>{t("uploadSection.status")}</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr
-                  key={entry.id}
-                  className={`cs-row-${entry.status.toLowerCase()}${entry.selected ? " cs-row-selected" : ""}`}
-                >
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={entry.selected}
-                      onChange={() => toggleSelect(entry.id)}
-                      className="cs-checkbox"
-                    />
-                  </td>
-                  <td>
-                    <span className="cs-file-name" title={entry.filename}>
-                      {entry.filename}
-                      {entry.status === "COMPLETED" && entry.ocrTextKey && (
-                        <img
-                          src={handwrittenIcon}
-                          alt="Handwritten"
-                          className="cs-ocr-icon cs-ocr-icon--clickable"
-                          title="Click to preview OCR text"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOcrPreview(entry.filename, entry.ocrTextKey!);
-                          }}
-                        />
-                      )}
-                    </span>
-                    {entry.fileType === "MP4" && entry.status === "STAGED" && !entry.fileKey && (
-                      <label className="cs-vs-toggle" title={t("uploadSection.videoSummarizationToggle")}>
-                        <span className="cs-vs-toggle-label">{t("uploadSection.summarize")}</span>
-                        <input
-                          type="checkbox"
-                          checked={entry.vsEnabled}
-                          onChange={() => toggleVsEnabled(entry.id)}
-                          className="cs-vs-toggle-input"
-                        />
-                        <span className="cs-vs-toggle-track">
-                          <span className="cs-vs-toggle-thumb" />
-                        </span>
-                      </label>
-                    )}
-                    {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
-                      <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
-                    )}
-                    {entry.tags.length > 0 && (
-                      <div className="cs-row-tags">
-                        {entry.tags.map((t) => (
-                          <span key={t} className="cs-row-chip">{t}</span>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td>{entry.fileType}</td>
-                  <td>{formatSize(entry.fileSize)}</td>
-                  <td className="cs-col-status">
-                    {entry.status === "FAILED" ? (
-                      <div className="cs-failed-cell">
-                        <span className="cs-failed-msg" title={entry.error ?? ""}>
-                          {entry.fileType === "MP4"
-                            ? t("uploadSection.summarizationFailed")
-                            : `Upload of '${entry.filename}' failed. Please try again`}
-                        </span>
-                        <div className="cs-failed-actions">
-                          <button
-                            className="cs-retry-btn"
-                            onClick={() => handleRetry(entry)}
-                          >
-                            {t("uploadSection.retry")}
-                          </button>
-                          <button
-                            className="cs-retry-btn cs-retry-btn--remove"
-                            onClick={() => setConfirmRemoveId(entry.id)}
-                          >
-                            {t("uploadSection.remove")}
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <span
-                          className={`cs-status-badge cs-status-badge--${
-                            entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                              ? "completed"
-                              : entry.status.toLowerCase()
-                          }`}
-                        >
-                          {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                            ? t("uploadSection.uploaded")
-                            : getStatusLabel(entry.status)}
-                        </span>
-                      </>
-                    )}
-                  </td>
-                  <td className="cs-col-remove">
-                    {entry.status !== "FAILED" && (
-                      <button
-                        className="cs-remove-btn"
-                        disabled={ACTIVE.includes(entry.status)}
-                        onClick={() => setConfirmRemoveId(entry.id)}
-                        title={ACTIVE.includes(entry.status) ? "Cannot remove while uploading" : "Remove file"}
-                      >
-                        🗑
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="cs-table-footer">
-            <button
-              className="cs-clear-all-btn"
-              disabled={entries.some((e) => ACTIVE.includes(e.status))}
-              onClick={() => {
-                Object.values(pollTimers.current).forEach(clearInterval);
-                pollTimers.current = {};
-                // Call backend cleanup for every entry that was uploaded
-                entries.forEach((e) => {
-                  if (e.taskId) {
-                    csCleanupTask(e.taskId).catch((err) =>
-                      console.warn(`Cleanup failed for task ${e.taskId}:`, err)
-                    );
-                  }
-                });
-                setEntries([]);
-                dispatch(setCsHasUploads(false));
-                dispatch(setCsUploadsComplete(false));
-              }}
-            >
-              {t("uploadSection.clearAll")}
-            </button>
-            <button
-              className="cs-upload-all-btn"
-              disabled={!entries.some((e) => e.status === "STAGED")}
-              onClick={handleUploadAll}
-            >
-              {t("uploadSection.uploadFiles")}
-            </button>
-          </div>
         </>
       )}
     </div>
 
-    {confirmRemoveId && (
-      <div className="cs-modal-overlay">
-        <div className="cs-modal">
-          <p>{t("uploadSection.removeFileConfirmation")}</p>
-          <div className="cs-modal-actions">
-            <button onClick={() => setConfirmRemoveId(null)}>{t("uploadSection.cancel")}</button>
-            <button className="cs-danger-btn" onClick={confirmRemove}>
-              {t("uploadSection.remove")}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
+    <RemoveConfirmationModal
+      isOpen={!!confirmRemoveId}
+      fileName={entries.find((e) => e.id === confirmRemoveId)?.filename ?? ""}
+      onCancel={() => setConfirmRemoveId(null)}
+      onConfirm={confirmRemove}
+    />
 
     <OcrPreviewModal
       isOpen={ocrPreview.isOpen}

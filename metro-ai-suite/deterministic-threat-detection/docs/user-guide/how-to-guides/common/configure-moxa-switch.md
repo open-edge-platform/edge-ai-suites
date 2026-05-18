@@ -15,7 +15,7 @@ To configure the switch, you will need to access its web-based management interf
 > Make sure your computer is in the same subnet to access the web interface.
 > The default username is `admin` and the default password is `moxa`.
 
-![MOXA Web UI](../_assets/moxa-webui.png)
+![MOXA Web UI](../../_assets/moxa-webui.png)
 
 ## Further Reading
 
