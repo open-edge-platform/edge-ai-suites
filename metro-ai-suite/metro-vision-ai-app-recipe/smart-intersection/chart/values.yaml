@@ -141,7 +141,10 @@ dlstreamerPipelineServer:
     enabled: false
     type: "gpu.intel.com/i915"
     count: 1
-  npuWorkload: false
+  npu:
+    enabled: false
+    type: "npu.intel.com/accel"
+    count: 1
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 

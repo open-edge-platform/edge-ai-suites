@@ -161,13 +161,13 @@ to file new tickets there (after learning about the guidelines for [Contributing
      ```
      Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 Insufficient gpu.intel.com/i915.
      ```
-     
+
      or:
 
      ```
      Warning  FailedScheduling  default-scheduler  0/1 nodes are available: 1 Insufficient npu.intel.com/accel.
      ```
-     > **Note:** If your node uses Intel Xe discrete GPUs (Arc), you will see `gpu.intel.com/xe` instead of `gpu.intel.com/i915`.
+
    - **Verification**: Confirm whether the GPU and/or NPU resources are available on your nodes:
 
      ```bash

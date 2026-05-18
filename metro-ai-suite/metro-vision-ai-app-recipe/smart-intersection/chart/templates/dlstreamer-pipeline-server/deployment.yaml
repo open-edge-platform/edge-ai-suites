@@ -130,14 +130,14 @@ spec:
         ports:
           - containerPort: 8080
           - containerPort: 8555
-      {{- if or .Values.dlstreamerPipelineServer.gpu.enabled .Values.dlstreamerPipelineServer.npuWorkload }}
+      {{- if or .Values.dlstreamerPipelineServer.gpu.enabled .Values.dlstreamerPipelineServer.npu.enabled }}
         resources:
           limits:
         {{- if .Values.dlstreamerPipelineServer.gpu.enabled }}
             {{ .Values.dlstreamerPipelineServer.gpu.type }}: {{ .Values.dlstreamerPipelineServer.gpu.count }}
         {{- end }}
-        {{- if .Values.dlstreamerPipelineServer.npuWorkload }}
-            npu.intel.com/accel: 1
+        {{- if .Values.dlstreamerPipelineServer.npu.enabled }}
+            {{ .Values.dlstreamerPipelineServer.npu.type }}: {{ .Values.dlstreamerPipelineServer.npu.count }}
         {{- end }}
       {{- end }}
       restartPolicy: Always
