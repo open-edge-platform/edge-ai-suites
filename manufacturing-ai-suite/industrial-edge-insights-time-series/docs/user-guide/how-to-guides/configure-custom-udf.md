@@ -75,7 +75,7 @@ and `config.json` have been volume mounted for the Time Series Analytics Microse
 
    ```sh
    curl -k -X 'POST' \
-   'https://<HOST_IP>:30001/ts-api/config' \
+   'https://localhost:30001/ts-api/config' \
    -H 'accept: application/json' \
    -H 'Content-Type: application/json' \
    -d '{

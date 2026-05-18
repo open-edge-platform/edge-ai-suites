@@ -2,7 +2,7 @@
     "udfs": {
         "name": "windturbine_anomaly_detector_batch",
         "models": "windturbine_anomaly_detector_batch.pkl",
-        "device": "cpu"
+        "device": "CPU"
     },
     "alerts": {
         "mqtt": {

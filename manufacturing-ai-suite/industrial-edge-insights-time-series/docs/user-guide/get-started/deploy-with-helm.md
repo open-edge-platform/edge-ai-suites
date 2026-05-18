@@ -240,12 +240,12 @@ To upload your own or existing model into Time Series Analytics Microservice in 
 > **NOTE**: To activate the UDF inferencing on GPU, additionally run the following command as a prerequisite before activating the UDF deployment package:
 >
 > ```sh
+> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config
 > curl -k -X 'POST' \
-> 'https://<HOST_IP>:30001/ts-api/config' \
+> 'https://localhost:30001/ts-api/config' \
 > -H 'accept: application/json' \
 > -H 'Content-Type: application/json' \
-> -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/config.json with device
->     value updated to gpu from cpu>'
+> -d "$(sed 's/"device": "CPU"/"device": "GPU"/' config.json)"
 > ```
 >
 > GPU Inferencing is supported only for `Wind Turbine Anomaly Detection` sample app
