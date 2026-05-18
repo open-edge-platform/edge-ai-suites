@@ -17,29 +17,60 @@ Before You Begin, ensure the following:
 
 - **Kubernetes Cluster**: Ensure you have a properly installed and
 configured Kubernetes cluster.
-- **Intel NPU Device Plugin** (required for NPU workloads): Install the [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/npu_plugin/README.md#install-with-nfd) to enable NPU device detection and scheduling. This ensures pods requesting NPU resources are only deployed on nodes with available NPU hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
-
-  ```bash
-  # Install NFD (if your cluster doesn't have NFD installed yet)
-  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=v0.35.0'
-
-  # Create NodeFeatureRules for detecting NPUs on nodes
-  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=v0.35.0'
-
-  # Create NPU plugin daemonset
-  kubectl apply -k 'https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=v0.35.0'
-  ```
-
-  Verify the NPU resource is advertised on nodes with NPU hardware:
-  ```bash
-  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, npu: .status.allocatable["npu.intel.com/accel"]}'
-  ```
-
 - **System Requirements**: Verify that your system meets the [minimum requirements](./system-requirements.md).
 - **Tools Installed**: Install the required tools:
   - Kubernetes CLI (kubectl)
   - Helm 3 or later
 - **Storage Provisioner**: A default storage class is required for persistent volumes
+- **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
+
+  ```bash
+  # Pick a release version compatible with your cluster
+  export RELEASE_VERSION=v0.35.0
+
+  # Step 1: Create namespace for the Intel device plugins
+  kubectl create namespace intel-device-plugins
+
+  # Step 2: Allow privileged pods in the device plugin namespace
+  # Required because the plugin needs hostPath mounts and access to host device files.
+  kubectl label namespace intel-device-plugins \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 3: Install Node Feature Discovery (NFD)
+  # NFD uses its own namespace: node-feature-discovery
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=${RELEASE_VERSION}"
+
+  # Step 4: Allow privileged pods in the NFD namespace
+  kubectl label namespace node-feature-discovery \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 5: Install Intel GPU NodeFeatureRules
+  # These rules let NFD detect and label Intel GPU nodes.
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=${RELEASE_VERSION}"
+
+  # Step 6: Verify NFD pods are running
+  kubectl get pods -n node-feature-discovery
+
+  # Step 7: Verify the node got Intel GPU and NPU labels
+  kubectl get node $(hostname) --show-labels | tr ',' '\n' | grep intel
+
+  # Step 8: Install the Intel GPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+
+  # Step 9: Install the Intel NPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  ```
+
+  Verify the GPU and NPU resources are advertised on nodes:
+  ```bash
+  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
+  ```
 
 ## Steps to Deploy
 
