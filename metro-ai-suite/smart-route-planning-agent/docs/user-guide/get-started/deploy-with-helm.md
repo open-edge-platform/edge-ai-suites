@@ -33,7 +33,7 @@ Follow these 2 simple steps:
 1. Set the version of the helm chart required. Check different versions available here: https://hub.docker.com/r/intel/smart-route-planning-agent
 
     ```bash
-    helm_version=<version>
+    helm_version=2026.1.0-rc1-helm
     ```
 
 2. Pull the helm chart and extract its content:
