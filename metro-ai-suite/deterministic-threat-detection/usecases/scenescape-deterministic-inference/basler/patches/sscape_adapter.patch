@@ -1,0 +1,55 @@
+diff --git a/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py b/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py
+index 5521427a..eb9021af 100644
+--- a/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py
++++ b/dlstreamer-pipeline-server/user_scripts/gvapython/sscape/sscape_adapter.py
+@@ -25,6 +25,7 @@ from sscape_policies import (
+   ocrPolicy,
+ )
+ from sscape_3d_detector import Object3DChainedDataProcessor
++from gi.repository import Gst
+ 
+ ROOT_CA = os.environ.get("ROOT_CA", "/run/secrets/certs/scenescape-ca.pem")
+ DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f"
+@@ -214,10 +215,13 @@ class PostInferenceDataPublish:
+     imgdatadict['image'] = jpeg
+     return
+ 
+-  def buildObjData(self, gvadata):
++  def buildObjData(self, gvadata, frame_ptp_timestamp):
+     now = time.time()
++    if frame_ptp_timestamp is None:
++      frame_ptp_timestamp = gvadata['postdecode_timestamp']
++
+     self.frame_level_data.update({
+-      'timestamp': gvadata['postdecode_timestamp'],
++      'timestamp': frame_ptp_timestamp,
+       'debug_timestamp_end': f"{datetime.fromtimestamp(now, tz=timezone(TIMEZONE)).strftime(DATETIME_FORMAT)[:-3]}Z",
+       'debug_processing_time': now - float(gvadata['timestamp_for_next_block']),
+       'rate': float(gvadata['fps'])
+@@ -296,7 +300,25 @@ class PostInferenceDataPublish:
+ 
+       if 'original_image_base64' in gvametadata:
+         original_image_base64 = gvametadata['original_image_base64']
+-      self.buildObjData(gvametadata)
++
++      ## For debugging timestamp meta from gst buffer
++      frame_ptp_timestamp = None
++      gst_buffer = frame._VideoFrame__buffer  # TODO: use public VideoFrame API when available
++      caps = Gst.Caps.from_string("timestamp/x-hardware")
++      if caps is not None:
++        try:
++          meta = gst_buffer.get_reference_timestamp_meta(caps)
++        except Exception as e:
++          self.log.warning("Failed to read PTP reference timestamp meta: %s", e)
++          meta = None
++        if meta is not None:
++          frame_ptp_timestamp = f"{datetime.fromtimestamp(meta.timestamp/1e9, tz=timezone(TIMEZONE)).strftime(DATETIME_FORMAT)[:-3]}Z"
++          self.log.debug("PTP META timestamp: %s", frame_ptp_timestamp)
++        else:
++          self.log.debug("PTP META is not available in the gst buffer")
++      ## end of debugging timestamp meta
++
++      self.buildObjData(gvametadata, frame_ptp_timestamp)
+ 
+       if self.is_publish_image:
+         self.buildImgData(annotated_img, frame, True, original_image_base64)

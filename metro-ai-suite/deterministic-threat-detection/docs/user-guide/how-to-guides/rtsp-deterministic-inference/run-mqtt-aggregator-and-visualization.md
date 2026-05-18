@@ -45,7 +45,7 @@ Once the script is running, open a web browser and navigate to the following add
 
 `http://<AGGREGATOR_IP>:8050`
 
-![MQTT Data Aggregator](../_assets/mqtt-data-aggregator.png)
+![MQTT Data Aggregator](../../_assets/mqtt-data-aggregator.png)
 
 Replace `<AGGREGATOR_IP>` with the IP address of the machine where you are running the
 `mqtt_data_aggregator.py` script. You will see a real-time plot of the end-to-end latency for
