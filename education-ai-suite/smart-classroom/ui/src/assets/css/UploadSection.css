@@ -520,6 +520,25 @@
   color: #2b2b2b;
 }
 
+/* ───────── View Files Button ───────── */
+
+.cs-view-files-btn {
+  background: #1976d2;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-display);
+}
+
+.cs-view-files-btn:hover {
+  background: #1565c0;
+}
+
 
 /* ───────── Modern Dropzone ───────── */
 

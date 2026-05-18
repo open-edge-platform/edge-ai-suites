@@ -1,0 +1,75 @@
+/* ─── Remove Confirmation Modal ─────────────────────────── */
+
+.rcm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.rcm-modal {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 24px;
+  max-width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.rcm-modal p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #1d2939;
+}
+
+.rcm-modal-warning {
+  font-size: 12px !important;
+  color: #667085 !important;
+  margin-bottom: 16px !important;
+}
+
+.rcm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.rcm-modal-actions button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.rcm-modal-actions button:first-child {
+  background: #fff;
+  border: 1px solid #d0d5dd;
+  color: #344054;
+}
+
+.rcm-modal-actions button:first-child:hover {
+  background: #f9fafb;
+}
+
+.rcm-modal-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rcm-danger-btn {
+  background: #d92d20 !important;
+  border: 1px solid #d92d20 !important;
+  color: #fff !important;
+}
+
+.rcm-danger-btn:hover:not(:disabled) {
+  background: #b42318 !important;
+  border-color: #b42318 !important;
+}

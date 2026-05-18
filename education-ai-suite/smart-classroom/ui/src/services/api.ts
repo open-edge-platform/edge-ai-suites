@@ -1155,3 +1155,33 @@ export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
     sources: Array.isArray(data.data?.sources) ? data.data.sources : [],
   };
 }
+
+// Content Search API - Get list of uploaded files
+export async function csGetFilesList(): Promise<{
+  code: number;
+  data: {
+    total: number;
+    files: Array<{
+      file_hash: string;
+      file_name: string;
+      content_type: string;
+      size_bytes: number;
+      meta: Record<string, unknown>;
+      created_at: string;
+      task_id?: string;
+    }>;
+  };
+  message: string;
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/files/list`,
+      { method: 'GET' }
+    );
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Files list failed (${res.status})`);
+    }
+    return await res.json();
+  });
+}
