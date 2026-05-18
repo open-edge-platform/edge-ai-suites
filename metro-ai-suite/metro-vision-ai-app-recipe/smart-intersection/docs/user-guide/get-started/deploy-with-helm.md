@@ -71,7 +71,7 @@ configured Kubernetes cluster.
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
-
+  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 ## Steps to Deploy
 
 To deploy the Smart Intersection Sample Application, copy and paste the entire block of following commands into your terminal and run them:
