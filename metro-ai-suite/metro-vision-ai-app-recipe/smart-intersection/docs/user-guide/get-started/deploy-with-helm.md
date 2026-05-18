@@ -123,7 +123,7 @@ supass: <YOUR_ADMIN_PASSWORD>  # Admin password for Smart Intersection
 pgpass: <YOUR_POSTGRES_PASSWORD>  # Postgres password for Smart Intersection
 ```
 
-> **Note:** To run the pipeline on GPU set the property `gpuWorkload` to `true` in the above `values.yaml` file. Similarly, to run the pipeline on NPU set the property `npuWorkload` to `true` in the above `values.yaml` file.
+> **Note:** To run the pipeline on GPU set the property `gpu.enabled` to `true` in the above `values.yaml` file. Similarly, to run the pipeline on NPU set the property `npu.enabled` to `true` in the above `values.yaml` file.
 
 ### Step 3: Configure External IP and Proxy Settings
 
@@ -276,7 +276,7 @@ kubectl delete storageclass hostpath local-storage standard
 > **Note:** This complete cleanup will remove storage provisioning from your cluster. You will
 > need to reinstall the storage provisioner for future deployments that require persistent volumes.
 
-> **Run workload on GPU**: Set `gpuWorkload: true` in `values.yaml` file before deploying the Helm chart.
+> **Run workload on GPU**: Set `gpu.enabled: true` in `values.yaml` file before deploying the Helm chart.
 
 ## Next Steps
 
