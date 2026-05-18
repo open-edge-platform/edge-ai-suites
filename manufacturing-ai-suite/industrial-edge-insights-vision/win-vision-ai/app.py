@@ -229,10 +229,8 @@ def _get_source_elements(cfg, device: str = "CPU") -> str:
     if cfg.type == "rtsp":
         return f'rtspsrc location="{cfg.url}" latency=200 name=src ! rtph264depay ! h264parse ! d3d11h264dec'
     if cfg.type == "camera":
-        src = (
-            f'gencamsrc serial={cfg.serial} pixel-format=mono8 '
-            f'width=1920 height=1080 name=src'
-        )
+        extra = " ".join(f"{k}={v}" for k, v in cfg.properties.items())
+        src = f'gencamsrc serial={cfg.serial}{" " + extra if extra else ""} name=src'
         if device == "CPU":
             return f'{src} ! videoconvert'
         else:
