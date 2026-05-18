@@ -127,11 +127,7 @@ vlmServing:
     timeoutSeconds: 10
     failureThreshold: 180
   resources:
-    limits:
-      cpu: "8"
-      memory: "16Gi"
     requests:
-      cpu: "4"
       memory: "12Gi"
   # Volume for model cache
   persistence:
