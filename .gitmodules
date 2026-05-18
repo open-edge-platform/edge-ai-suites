@@ -48,3 +48,9 @@
 	path = robotics-ai-suite/pipelines/pi05-rtc-ov/lerobot
 	url = https://github.com/huggingface/lerobot.git
 	shallow = true
+[submodule "retail-ai-suite/storewide-loss-prevention"]
+	path = retail-ai-suite/storewide-loss-prevention
+	url = https://github.com/intel-retail/storewide-loss-prevention.git
+[submodule "retail-ai-suite/voice-enabled-interactions"]
+	path = retail-ai-suite/voice-enabled-interactions
+	url = https://github.com/intel-retail/voice-enabled-interactions.git

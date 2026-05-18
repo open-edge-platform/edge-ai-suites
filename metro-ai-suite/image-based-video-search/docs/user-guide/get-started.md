@@ -356,7 +356,6 @@ By following this guide, you will learn how to:
 
 get-started/system-requirements.md
 get-started/deploy-with-helm.md
-get-started/deploy-with-edge-orchestrator.md
 
 :::
 hide_directive-->

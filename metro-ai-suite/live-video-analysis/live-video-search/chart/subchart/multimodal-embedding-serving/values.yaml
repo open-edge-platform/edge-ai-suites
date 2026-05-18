@@ -12,6 +12,13 @@ global:
     embeddingUseOv: 'true'
     ovModelsDir: /app/ov_models
     ovPerformanceMode: THROUGHPUT
+    inferBatchSize: '32'
+    preprocessWorkers: '8'
+    videoFrameBatchSize: '64'
+    videoFrameQueueSize: '32'
+    videoFrameShmPoolBlockSize: '6220800'
+    videoFrameShmPoolBlocksMultiplier: '2'
+    videoFrameLogLevel: 'INFO'
   gpu:
     multimodalEmbeddingEnabled: false
     vdmsDataprepEnabled: false

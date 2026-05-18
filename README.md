@@ -26,7 +26,7 @@ These suites accelerate the development of custom AI solutions by offering:
 
 * [The Education AI Suite](education-ai-suite) is a collection of education-focused AI applications, libraries, and benchmarking tools to help developers build solutions faster.
 
-* [The Health And Life Sciences AI Suite](health-and-life-sciences-ai-suite) is a preview solution for supporting the healthcare field with AI software tools covering a wide range of monitoring and analysis features.
+* [The Health And Life Sciences AI Suite](health-and-life-sciences-ai-suite) is a solution for supporting the healthcare field with AI software tools covering a wide range of monitoring and analysis features.
 
 
 ## Contribute

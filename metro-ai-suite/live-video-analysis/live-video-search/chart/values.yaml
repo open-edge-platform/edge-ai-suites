@@ -76,7 +76,15 @@ global:
     aggregationContextSeekOffsetSeconds: "0"
 
     dataprepTelemetryUrl: "http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1"
-    searchDataprepTimeoutMs: "90000"
+    searchDataprepTimeoutMs: "600000"
+
+    inferBatchSize: "32"
+    preprocessWorkers: "8"
+    videoFrameBatchSize: "64"
+    videoFrameQueueSize: "32"
+    videoFrameShmPoolBlockSize: "6220800"
+    videoFrameShmPoolBlocksMultiplier: "2"
+    videoFrameLogLevel: "INFO"
 
 service:
   app:

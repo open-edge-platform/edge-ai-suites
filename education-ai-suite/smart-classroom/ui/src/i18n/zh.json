@@ -248,7 +248,8 @@
     "summarizing": "正在摘要...",
     "summarize": "摘要",
     "videoSummarizationToggle": "为此文件启用视频摘要",
-    "summarizationFailed": "视频摘要失败，请重试"
+    "summarizationFailed": "视频摘要失败，请重试",
+    "unsupportedFilesWarning": "已跳过不支持的文件：{{files}}。支持的格式：MP4、JPG、PNG、JPEG、TXT、PDF、DOCX、DOC、PPTX、PPT、XLSX、XLS、HTML、HTM、XML、MD。"
   },
   "searchSection": {
     "title": "搜索",

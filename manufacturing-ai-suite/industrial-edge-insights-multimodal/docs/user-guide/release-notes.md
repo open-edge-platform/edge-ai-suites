@@ -1,5 +1,40 @@
 # Release Notes: Industrial Edge Insights Multimodal
 
+## Version 2026.1
+
+**June 2026**
+
+This release introduces **GPU/NPU hardware acceleration** support for performing inference on DL Streamer P PS, 
+**new Classifier ML model for weld time series data analysis enabling support on GPU**,various fixes and documentation improvements.
+
+**New**
+
+- **GPU and NPU Support on DL Streamer Pipeline Server**: Docker Compose and Helm deployments
+  now support GPU and NPU acceleration for weld defect classification on the DL Streamer
+  Pipeline Server, with updated configuration and user guides for running inference on
+  accelerators.
+- **GPU Support on Time Series Analytics**: Docker Compose and Helm deployments now support
+  GPU acceleration for weld defect classification on the Time Series Analytics microservice, with
+  updated configuration and user guides for running inference on GPU.
+- **RTSP Camera Configuration Guide**: A new how-to guide has been added for configuring
+  an external RTSP camera as the video source for the multimodal sample app.
+- **Functional Tests**: Comprehensive functional tests for docker compose and helm deployments
+  have been added.
+
+**Improved**
+
+- **New Classifier ML Model**: The weld defect detection pipeline on the Time Series Analytics
+  microservice now uses a scikit-learn's (Intel accelerated) RandomForestClassifier model, replacing
+  the previous CatBoost model, with optional explanation payloads and updated model artifacts.
+- **Renamed Sample App**: "Weld Anomaly Detection" has been renamed to
+  "Weld Defect Detection" across all configurations, documentation, and scripts.
+- **UDF Package Format**: UDF sample app archives now use tar format instead of zip.
+- **Security**: Upgraded to latest available third-party versions in all applicable manifests
+- **Documentation**: Time Series vs Multimodal Weld Defect Detection
+  distinction clarified and broken references fixed
+
+---
+
 ## Version 2026.0
 
 **March 24, 2026**

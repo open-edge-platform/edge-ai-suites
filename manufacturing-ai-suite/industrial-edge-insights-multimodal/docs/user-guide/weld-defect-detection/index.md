@@ -89,6 +89,7 @@ An array defining one or more video output destinations. Each entry requires a `
 |------------|---------------------------------------------------|------------------|
 | `type`     | Frame destination type.                           | `"webrtc"`       |
 | `peer-id`  | Unique identifier for the WebRTC peer connection. | `"samplestream"` |
+| `overlay`  | It's an optional field. By default, it is true. If true, it draws overlay and if false the gvawatermark DLStreamer configuration would be used as is | `false` |
 
 **S3 Storage (`type: "s3_write"`)**:
 

@@ -17,7 +17,7 @@ The Smart NVR application consists of multiple components that work together to 
 First, clone the repository and navigate to the Smart NVR directory:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 cd edge-ai-suites/metro-ai-suite/smart-nvr
 ```
 

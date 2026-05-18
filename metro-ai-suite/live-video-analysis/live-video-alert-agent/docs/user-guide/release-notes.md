@@ -1,5 +1,17 @@
 # Release Notes: Live Video Alert Agent
 
+## Version 2026.1.0-rc1
+**May 13, 2026**
+
+- **Google ADK agentic dispatch.** Alert actions are now driven by a
+  [Google ADK](https://google.github.io/adk-docs/) `LlmAgent` that reasons over
+  the available tools and selects the right ones at runtime.
+- **Model Context Protocol (MCP) integration.** The agent can now connect to
+  external MCP servers and expose their tools alongside built-in tools.
+- **Per-alert tool argument overrides.** `AlertConfig` now accepts a
+  `tool_arguments` field that supplies per-tool keyword-argument overrides.
+- **Separate LLM OVMS service.** Includes a dedicated OVMS deployment for the ADK reasoning model and separate from the VLM inference service.
+
 ## Version 1.0.0
 
 **April 01, 2026**
