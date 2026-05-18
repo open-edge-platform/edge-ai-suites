@@ -49,7 +49,7 @@ License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or
 ia-time-series-analytics-microservice:
 ======================================
 
-Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/time-series-analytics/third-party-programs.txt)
+Info available at [third-party-programs.txt](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/time-series-analytics/third-party-programs.txt)
 
 ----------------------------------------------------------------------
 

@@ -26,7 +26,7 @@ Verify that your development environment meets the following specifications:
 Execute the automated installation script to configure the complete development environment:
 
 ```bash
-curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/oep-gen-ai-sdk.sh | bash
+curl https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.1.0/metro-ai-suite/metro-sdk-manager/scripts/oep-gen-ai-sdk.sh | bash
 ```
 
 ![OEP Gen AI SDK Installation](images/oep-gen-ai-sdk-install.png)
