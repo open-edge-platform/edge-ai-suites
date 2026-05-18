@@ -54,9 +54,9 @@ pipelines:
       model_id: inst0
     output:
       frame:                          
-        type: webrtc                   # webrtc | rtsp
+        type: webrtc                   # webrtc 
         peer_id: front                 # http://localhost:8889/front 
-        # type: rtsp                   # webrtc | rtsp
+        # type: rtsp                   # rtsp
         # path: /front                 # http://localhost:8554/front 
       metadata:
         #- type: mqtt
@@ -66,15 +66,15 @@ pipelines:
           path: "output/front-inference.jsonl"
   back:
     input:
-      type: rtsp
+      type: file
       url: "C:/Users/path/to/video"
     inference:
       model_id: inst0
     output:
       frame: 
-        type: webrtc                   # webrtc | rtsp
+        type: webrtc                   # webrtc 
         peer_id: back                  # http://localhost:8889/back      
-        # type: rtsp                   # webrtc | rtsp
+        # type: rtsp                   # rtsp
         # path: /back                  # http://localhost:8554/back
       metadata:
         #- type: mqtt
