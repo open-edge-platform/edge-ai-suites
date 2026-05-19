@@ -358,21 +358,37 @@ def _gh_dump_unhealthy_pods(namespace):
     Best-effort: every kubectl invocation is wrapped so a failure here never
     masks the original test-failure assertion.
     """
+    # NOTE: a CrashLoopBackOff container still leaves its pod in phase=Running
+    # (the pod IS scheduled and at least one container restart is in flight),
+    # so filtering on .status.phase alone misses the exact pods we want to
+    # diagnose. We therefore parse the kubectl `READY` column ("0/1" vs "1/1")
+    # plus the status field, treating a pod as unhealthy if EITHER:
+    #   * its READY count is not "N/N" (any container not ready), OR
+    #   * its STATUS is not one of {Running, Completed, Succeeded}
+    # We also include 'Terminating' as a special-case skip so we don't dump
+    # leftover pods from a previous release.
+    HEALTHY_STATUSES = {"Running", "Completed", "Succeeded"}
     try:
         result = subprocess.run(
-            ["kubectl", "get", "pods", "-n", namespace,
-             "-o", "jsonpath={range .items[*]}{.metadata.name} {.status.phase}\\n{end}"],
-            capture_output=True, text=True, check=False,
+            ["kubectl", "get", "pods", "-n", namespace, "--no-headers"],
+            capture_output=True, text=True, check=False, timeout=30,
         )
         pods = []
         for line in result.stdout.strip().split("\n"):
             line = line.strip()
             if not line:
                 continue
-            parts = line.split()
-            name = parts[0]
-            phase = parts[1] if len(parts) > 1 else ""
-            if phase != "Running":
+            cols = line.split()
+            if len(cols) < 3:
+                continue
+            name, ready, status = cols[0], cols[1], cols[2]
+            if status == "Terminating":
+                continue  # leftover from previous release; not actionable
+            ready_ok = False
+            if "/" in ready:
+                num, den = ready.split("/", 1)
+                ready_ok = (num == den and num != "0")
+            if (not ready_ok) or (status not in HEALTHY_STATUSES):
                 pods.append(name)
 
         if not pods:
