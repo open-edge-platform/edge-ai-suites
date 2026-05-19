@@ -343,6 +343,97 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
+# === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
+# When pods fail to become Ready within the timeout (common on slow / shared
+# GitHub-hosted runners where InfluxDB takes longer to initialise its data dir
+# or where Telegraf/Nginx restart-loop until InfluxDB is reachable), the bare
+# "Timeout reached" log line above does not tell us *why* a pod is unhealthy.
+# This helper captures `kubectl describe pod` + current & previous container
+# logs for every non-Running pod so the CI job log surfaces the actual root
+# cause (CrashLoop reason, OOMKilled, ImagePullBackOff, init script error...).
+# Remove this whole block to revert to silent-timeout behaviour.
+def _gh_dump_unhealthy_pods(namespace):
+    """Dump describe + logs for every non-Running pod in *namespace*.
+
+    Best-effort: every kubectl invocation is wrapped so a failure here never
+    masks the original test-failure assertion.
+    """
+    try:
+        result = subprocess.run(
+            ["kubectl", "get", "pods", "-n", namespace,
+             "-o", "jsonpath={range .items[*]}{.metadata.name} {.status.phase}\\n{end}"],
+            capture_output=True, text=True, check=False,
+        )
+        pods = []
+        for line in result.stdout.strip().split("\n"):
+            line = line.strip()
+            if not line:
+                continue
+            parts = line.split()
+            name = parts[0]
+            phase = parts[1] if len(parts) > 1 else ""
+            if phase != "Running":
+                pods.append(name)
+
+        if not pods:
+            logger.error(f"[GH_RUNNER_FIX] no unhealthy pods found to dump in '{namespace}'.")
+            return
+
+        logger.error(f"[GH_RUNNER_FIX] dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
+        for pod in pods:
+            logger.error(f"\n===== [GH_RUNNER_FIX] describe pod {pod} =====")
+            try:
+                desc = subprocess.run(
+                    ["kubectl", "describe", "pod", "-n", namespace, pod],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(desc.stdout)
+                if desc.stderr:
+                    logger.error(f"[stderr] {desc.stderr}")
+            except Exception as e:
+                logger.error(f"[GH_RUNNER_FIX] describe failed: {e}")
+
+            logger.error(f"\n===== [GH_RUNNER_FIX] logs {pod} (current, --tail=200) =====")
+            try:
+                cur = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(cur.stdout or "(no current logs)")
+                if cur.stderr:
+                    logger.error(f"[stderr] {cur.stderr}")
+            except Exception as e:
+                logger.error(f"[GH_RUNNER_FIX] current logs failed: {e}")
+
+            logger.error(f"\n===== [GH_RUNNER_FIX] logs {pod} (previous, --tail=200) =====")
+            try:
+                prev = subprocess.run(
+                    ["kubectl", "logs", "-n", namespace, pod,
+                     "--all-containers=true", "--previous", "--tail=200"],
+                    capture_output=True, text=True, check=False, timeout=30,
+                )
+                logger.error(prev.stdout or "(no previous logs)")
+                if prev.stderr:
+                    logger.error(f"[stderr] {prev.stderr}")
+            except Exception as e:
+                logger.error(f"[GH_RUNNER_FIX] previous logs failed: {e}")
+
+        logger.error(f"\n===== [GH_RUNNER_FIX] recent events in '{namespace}' =====")
+        try:
+            evs = subprocess.run(
+                ["kubectl", "get", "events", "-n", namespace,
+                 "--sort-by=.lastTimestamp"],
+                capture_output=True, text=True, check=False, timeout=30,
+            )
+            logger.error(evs.stdout)
+        except Exception as e:
+            logger.error(f"[GH_RUNNER_FIX] events dump failed: {e}")
+    except Exception as e:
+        logger.error(f"[GH_RUNNER_FIX] _gh_dump_unhealthy_pods crashed: {e}")
+# === [GH_RUNNER_FIX END] ===
+
+
 def verify_pods(namespace, timeout=300, interval=5):
     """Verify pods using kubectl and wait until all are running or timeout.
 
@@ -375,6 +466,9 @@ def verify_pods(namespace, timeout=300, interval=5):
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     logger.error("Timeout reached. No pods found in namespace.")
+                    # === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
+                    _gh_dump_unhealthy_pods(namespace)
+                    # === [GH_RUNNER_FIX END] ===
                     return False
                 time.sleep(interval)
                 continue
@@ -427,6 +521,9 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
+                # === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
+                _gh_dump_unhealthy_pods(namespace)
+                # === [GH_RUNNER_FIX END] ===
                 return False
 
             # Wait before checking again
