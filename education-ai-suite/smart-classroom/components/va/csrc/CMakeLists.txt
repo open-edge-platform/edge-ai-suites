@@ -6,7 +6,7 @@ include(FetchContent)
 # Fetch DLStreamer as an archive
 cmake_policy(SET CMP0169 OLD)
 FetchContent_Declare(dlstreamer_headers
-    URL "https://github.com/open-edge-platform/dlstreamer/archive/refs/tags/v2026.0.0.zip"
+    URL "https://github.com/open-edge-platform/dlstreamer/archive/refs/tags/v2026.1.0-rc1.zip"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_GetProperties(dlstreamer_headers)
@@ -73,9 +73,13 @@ add_library(gvasmartclassroom SHARED
     gvaposturedetect.cpp
     gvaroifilter.cpp
     gvareid.cpp
-    ${DLSTREAMER_ROOT}/src/gst/metadata/gstanalyticskeypointsmtd.c
+    ${DLSTREAMER_ROOT}/src/gst/metadata/gstanalyticskeypointmtd.c
+    ${DLSTREAMER_ROOT}/src/gst/metadata/gstanalyticsgroupmtd.c
+    ${DLSTREAMER_ROOT}/src/gst/metadata/gstanalyticskeypointdescriptor.c
     ${DLSTREAMER_ROOT}/src/gst/metadata/gva_tensor_meta.c
 )
+
+target_compile_definitions(gvasmartclassroom PRIVATE BUILDING_GST_ANALYTICS)
 
 # Link libraries
 target_link_libraries(gvasmartclassroom

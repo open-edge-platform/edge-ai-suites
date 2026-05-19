@@ -32,11 +32,15 @@ To run this sample application, a Vision-Language Model (VLM) is required. If yo
      ```bash
      export MODEL_PATH=<path-to-directory-for-models-to-be-stored>
      # Example paths:
-          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning  (for live-video-captioning and with rag)
-          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag (for live-video-captioning only deployment)
+          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning (for live-video-captioning standalone or with live-video-captioning-rag deployment)
+          # - ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag (for live-video-captioning-rag standalone only deployment)
 
      # Run the script to launch the service
      source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH
+
+     # You can also specify the OVMS release tag used by the script to enable support for newer models during OpenVINO conversion (default: `v2025.4.1`).
+     # Example:
+     # `source scripts/run_service.sh --plugins openvino,ultralytics --model-path $MODEL_PATH --ovms-release-tag <tag>
      ```
 
 5. Download and convert the models:

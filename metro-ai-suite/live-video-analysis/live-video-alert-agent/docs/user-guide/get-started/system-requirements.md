@@ -33,16 +33,15 @@ Default ports (configurable via environment variables):
 
 ## Model Requirements
 
-The application automatically downloads VLM models on first run (~2GB). The models are left to user to configure. Validation has been done using the following models.
+The application automatically downloads VLM models on first run (~2GB). The models are left to user to configure. For example.
 
 - `OpenVINO/Phi-3.5-vision-instruct-int4-ov`
 - `OpenVINO/InternVL2-2B-int4-ov`
 
-Configure via environment variables:
+Configure these via environment variables:
 
 ```bash
 export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-export MODEL_NAME=InternVL2-2B
 ```
 
 The user is expected to acknowledge the licensing terms and conditions before selecting the model.

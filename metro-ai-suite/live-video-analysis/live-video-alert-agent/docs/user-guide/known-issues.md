@@ -101,7 +101,6 @@ Checks:
 
 ## Performance/throughput lower than expected
 
-- Use faster model: `export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-1B-int4-ov`.
 - Reduce active streams or increase `ANALYSIS_INTERVAL`.
 - Ensure hardware meets minimum requirements (see [system-requirements.md](./get-started/system-requirements.md)).
 

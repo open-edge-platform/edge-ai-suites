@@ -44,6 +44,8 @@ _MAX_HISTORY_TURNS = int(os.getenv("QA_MAX_HISTORY_TURNS", "3"))
 # Default retrieval and generation limits read from config.yaml via env vars.
 _DEFAULT_MAX_CONTEXT = int(os.getenv("QA_MAX_CONTEXT", "5"))
 _DEFAULT_MAX_TOKENS = int(os.getenv("QA_MAX_TOKENS", "1024"))
+# If no chunks meet this threshold the VLM is not called at all.
+_RETRIEVAL_SCORE_THRESHOLD = float(os.getenv("QA_RETRIEVAL_SCORE_THRESHOLD", "85"))
 # Token budget for context: total VLM context window minus reserved output and overhead.
 # Chars-per-token approximation (4 chars ≈ 1 token) avoids a heavy tokenizer dependency.
 # Reserved = max_output (1024) + system/history/question overhead (~512) = 1536 tokens.
@@ -96,6 +98,20 @@ class QAService:
 
         search_data = await search_service.semantic_search(search_payload)
         results: list[dict] = search_data.get("results", [])
+
+        # ── Step 1b: Apply relevance threshold ───────────────────────────
+        above_threshold = [r for r in results if (r.get("score") or 0) >= _RETRIEVAL_SCORE_THRESHOLD]
+        if not above_threshold:
+            logger.info(
+                "[QAService] No chunks met the relevance threshold (%.0f%%) — skipping VLM call.",
+                _RETRIEVAL_SCORE_THRESHOLD,
+            )
+            if _LANGUAGE == "zh":
+                answer = "未找到与该问题相关的内容。请上传包含相关信息的文件后再试。"
+            else:
+                answer = "No relevant content was found in the uploaded materials for this question. Please upload relevant files and try again."
+            return {"answer": answer, "sources": []}
+        results = above_threshold
 
         # ── Step 2: Build context string and collect source references ────
         candidate_parts: list[tuple[str, dict]] = []
