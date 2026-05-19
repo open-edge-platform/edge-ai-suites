@@ -169,7 +169,7 @@ make up_mqtt_ingestion app=weld-defect-detection num_of_streams=4 number_of_data
 ```
 
 
-#### With Batch Processing User Defined Function(UDF)
+#### With Batch Processing User Defined Function (UDF)
 
 To run benchmarking with batch processing UDF, append `batch` to the `make` command.
 
