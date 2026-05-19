@@ -1156,6 +1156,22 @@ export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
   };
 }
 
+// Content Search API - Get all unique tags from uploaded files
+export async function csGetTags(): Promise<string[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/tags`,
+      { method: 'GET' }
+    );
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Tags fetch failed (${res.status})`);
+    }
+    const data = await res.json();
+    return Array.isArray(data?.data) ? data.data : [];
+  });
+}
+
 // Content Search API - Get list of uploaded files
 export async function csGetFilesList(): Promise<{
   code: number;
