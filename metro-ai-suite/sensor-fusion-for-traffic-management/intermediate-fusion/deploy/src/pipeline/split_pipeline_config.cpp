@@ -47,7 +47,7 @@ PFEModelChoice default_int8_pfe_model(const std::filesystem::path& model_dir, Sp
 
 std::vector<PFEModelChoice> default_fp32_pfe_candidates(const std::filesystem::path& model_dir)
 {
-    return {{model_dir / "lidar_pfe_v7000.onnx", 7000}, {model_dir / "lidar_pfe_v6000.onnx", 6000}};
+    return {{model_dir / "lidar_pfe_v7000.onnx", 7000}};
 }
 
 }  // namespace
@@ -138,7 +138,7 @@ SplitPipelineConfigBuild make_split_pipeline_config(const SplitPipelineConfigOpt
         }
         if (!found_pfe) {
             throw std::runtime_error("Missing lidar PFE model under " + model_dir.string() +
-                                     ": expected quantized_lidar_pfe.xml, lidar_pfe_v7000.onnx, or lidar_pfe_v6000.onnx");
+                                     ": expected quantized_lidar_pfe.xml or lidar_pfe_v7000.onnx");
         }
     }
     cfg.lidar.pfe.pc_range[0] = dims.pc_range_min[0];
