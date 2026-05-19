@@ -241,10 +241,15 @@ input:
 
 Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
 
+`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+
 ```yaml
 input:
   type: camera
-  serial: <camera_serial_number>          # camera serial number
+  serial: <camera_serial_number>   # required — camera serial number
+  pixel-format: mono8                # optional — e.g. mono8
+  width: 1280                      # optional — frame width in pixels
+  height: 720                      # optional — frame height in pixels
 ```
 
 ### Frame Output — WebRTC
@@ -265,6 +270,19 @@ Streams to `rtsp://localhost:8554/front`. Open in VLC.
 ```yaml
 output:
   frame:
+    type: rtsp
+    path: /front
+```
+
+### Frame Output — WebRTC + RTSP (both on the same pipeline)
+
+Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
+
+```yaml
+output:
+  frame:
+    type: webrtc
+    peer_id: front
     type: rtsp
     path: /front
 ```
@@ -291,6 +309,7 @@ cd "C:\Program Files\mosquitto"
 .\mosquitto.exe -v
 
 # Terminal 2 — subscribe to verify
+# The topic passed to -t must match the topic value set in config.yaml (e.g. inference/front)
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
@@ -358,6 +377,40 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 ---
 
+### Supported Pipeline Combinations
+
+The following combinations are supported in basic configuration mode.
+
+> **`input` and `inference` are mandatory** for all pipeline combinations below.
+
+| Frame Output | Metadata Output |
+|---|---|
+| RTSP | MQTT |
+| WebRTC | MQTT |
+| RTSP + WebRTC | MQTT |
+| RTSP | File |
+| WebRTC | File |
+| RTSP + WebRTC | File |
+| RTSP | MQTT + File |
+| WebRTC | MQTT + File |
+| RTSP + WebRTC | MQTT + File |
+| RTSP | None |
+| WebRTC | None |
+| RTSP + WebRTC | None |
+| None | MQTT |
+| None | File |
+| None | MQTT + File |
+| None | None |
+
+> **Notes:**
+> - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
+> - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
+> - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
+
+For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
+
+---
+
 ## Run the App
 
 ```powershell
@@ -381,10 +434,11 @@ Pass complete GStreamer strings directly — `models` and `pipelines` sections a
 
 ```yaml
 raw_pipelines:
-  front: " filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=file file-path=output/front-inference.jsonl ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
-  back:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=NPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
-  left:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! fakesink name=sink"
-  right:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
+  front: "filesrc location=\"C:/Users/path/to/video\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! d3d11videosink name=sink"
+  back: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
+  right: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
+  left: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
+  camera: "gencamsrc serial=12345678 pixel-format=mono8 name=src ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! d3d12videosink name=sink"
 ```
 Above pipelines are example pipelines to run with webrtc/rtsp/any sink element
 

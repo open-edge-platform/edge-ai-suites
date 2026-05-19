@@ -5195,10 +5195,10 @@ index 0000000000..04a0ebc2b2
 +}
 diff --git a/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_actual_m_map.h b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_actual_m_map.h
 new file mode 100644
-index 0000000000..b2f1c87943
+index 0000000000..fe9d884bf1
 --- /dev/null
 +++ b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_actual_m_map.h
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,33 @@
 +// Copyright (C) 2018-2026 Intel Corporation
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -5210,6 +5210,7 @@ index 0000000000..b2f1c87943
 +
 +#pragma once
 +
++#include <mutex>
 +#include <unordered_map>
 +
 +namespace cldnn {
@@ -5223,14 +5224,20 @@ index 0000000000..b2f1c87943
 +    return map;
 +}
 +
++/// Mutex protecting sparse_actual_m_map() for concurrent access.
++inline std::mutex& sparse_actual_m_map_mtx() {
++    static std::mutex mtx;
++    return mtx;
++}
++
 +}  // namespace sycl
 +}  // namespace cldnn
 diff --git a/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_convolution_sycl.cpp b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_convolution_sycl.cpp
 new file mode 100644
-index 0000000000..6112f3b4bb
+index 0000000000..4f881fbce7
 --- /dev/null
 +++ b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_convolution_sycl.cpp
-@@ -0,0 +1,3204 @@
+@@ -0,0 +1,3103 @@
 +// Copyright (C) 2018-2026 Intel Corporation
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -5250,11 +5257,10 @@ index 0000000000..6112f3b4bb
 +#include "intel_gpu/runtime/memory.hpp"
 +
 +#include <algorithm>
-+#include <chrono>
 +#include <cstdint>
-+#include <cstdlib>
 +#include <cstring>
 +#include <memory>
++#include <mutex>
 +#include <numeric>
 +#include <string>
 +#include <unordered_map>
@@ -5331,10 +5337,12 @@ index 0000000000..6112f3b4bb
 +};
 +
 +static std::unordered_map<std::string, RulebookCache> s_rulebook_cache;
++static std::mutex s_rulebook_cache_mtx;
 +
 +/// Alias for the shared actual-M map (see sparse_actual_m_map.h).
 +/// SparseConv3d stores actual m_out; downstream layers (SubM, SparseToDense) read it.
 +static auto& s_actual_m_map = sparse_actual_m_map();
++static auto& s_actual_m_map_mtx = sparse_actual_m_map_mtx();
 +
 +// ===================================================================
 +// INT8 weight cache (one-time pre-quantization of the fp16 weight
@@ -5372,6 +5380,7 @@ index 0000000000..6112f3b4bb
 +};
 +
 +static std::unordered_map<const void*, Int8WeightCache> s_int8_weight_cache;
++static std::mutex s_int8_weight_cache_mtx;
 +
 +// ===================================================================
 +// Path 1 INT8 → INT8 handoff table
@@ -5399,6 +5408,7 @@ index 0000000000..6112f3b4bb
 +    int C = 0;  // channels (== producer's c_out, consumer's c_in)
 +};
 +static std::unordered_map<std::string, Int8Handoff> s_int8_handoff;
++static std::mutex s_int8_handoff_mtx;
 +
 +// ===================================================================
 +// Constants
@@ -5924,32 +5934,7 @@ index 0000000000..6112f3b4bb
 +
 +    // GPU unravel d_compact[0..n_copy] → out_coords_bxyz. No sort:
 +    // downstream SubM kmap construction and kernel_map lookup don't require
-+    // sorted output coordinates, only a stable per-frame ordering. Verified
-+    // empirically in §11.3 (recall unchanged).
-+    //
-+    // SPCONV_STAGE1_LEGACY=1 restores the old host sort + host unravel + H→D
-+    // path as an A/B bisect handle (regression diagnosis only; slow).
-+    static const bool s_stage1_legacy = []() {
-+        const char* e = std::getenv("SPCONV_STAGE1_LEGACY");
-+        return e != nullptr && e[0] != '0' && e[0] != '\0';
-+    }();
-+    if (s_stage1_legacy) {
-+        q.wait();
-+        std::vector<int64_t> host_compact(num_unique);
-+        q.memcpy(host_compact.data(), d_compact, num_unique * sizeof(int64_t)).wait();
-+        std::sort(host_compact.begin(), host_compact.end());
-+        std::vector<int32_t> host_out(n_copy * 4);
-+        for (int i = 0; i < n_copy; i++) {
-+            int64_t cur = host_compact[i];
-+            for (int d = NDIM - 1; d >= 0; d--) {
-+                host_out[i * 4 + d] = mins_copy[d] + static_cast<int>(cur % sizes_copy[d]);
-+                cur /= sizes_copy[d];
-+            }
-+        }
-+        q.memcpy(out_coords_bxyz, host_out.data(), n_copy * 4 * sizeof(int32_t));
-+        return n_copy;
-+    }
-+
++    // sorted output coordinates, only a stable per-frame ordering.
 +    const int n_copy_local = n_copy;
 +    q.parallel_for(
 +        ::sycl::range<1>(n_copy_local),
@@ -7853,10 +7838,6 @@ index 0000000000..6112f3b4bb
 +        const std::string& rulebook = desc->rulebook;
 +        const bool use_rulebook = !rulebook.empty() && is_subm;
 +
-+        // Lightweight profiling: set env SPCONV_PERF_TRACE=1 to enable
-+        static const bool perf_trace = (std::getenv("SPCONV_PERF_TRACE") != nullptr);
-+        auto t0 = std::chrono::steady_clock::now();
-+
 +        // ---------------------------------------------------------------
 +        // Stage 1: Kernel Map Building (with rulebook cache)
 +        // ---------------------------------------------------------------
@@ -7865,9 +7846,12 @@ index 0000000000..6112f3b4bb
 +
 +        // Override m_in with actual voxel count from predecessor's output
 +        // (buffer may be larger than actual data for stride>1 convolutions)
-+        auto actual_m_it = s_actual_m_map.find(coord_raw);
-+        if (actual_m_it != s_actual_m_map.end()) {
-+            m_in = actual_m_it->second;
++        {
++            std::lock_guard<std::mutex> lk(s_actual_m_map_mtx);
++            auto actual_m_it = s_actual_m_map.find(coord_raw);
++            if (actual_m_it != s_actual_m_map.end()) {
++                m_in = actual_m_it->second;
++            }
 +        }
 +
 +        // Check rulebook cache for SubMConv kernel map reuse
@@ -7876,6 +7860,7 @@ index 0000000000..6112f3b4bb
 +        int m_out = 0;
 +
 +        if (use_rulebook) {
++            std::lock_guard<std::mutex> lk(s_rulebook_cache_mtx);
 +            auto it = s_rulebook_cache.find(rulebook);
 +            if (it != s_rulebook_cache.end() &&
 +                it->second.matches(m_in, k_vol, coord_raw)) {
@@ -7959,6 +7944,7 @@ index 0000000000..6112f3b4bb
 +
 +            // Cache the results if rulebook is set
 +            if (use_rulebook) {
++                std::lock_guard<std::mutex> lk(s_rulebook_cache_mtx);
 +                auto& entry = s_rulebook_cache[rulebook];
 +                entry.clear();
 +                entry.q = q;
@@ -7996,30 +7982,8 @@ index 0000000000..6112f3b4bb
 +        // at compile time when a FakeQuantize(levels=256) sits on port 0.
 +        // Symmetric per-tensor activation quantization + symmetric per-output-
 +        // channel weight quantization. Requires fp16 input.
-+        //
-+        // Override env vars:
-+        //   SPCONV_FORCE_INT8=1    → force INT8 even without FakeQuantize
-+        //   SPCONV_DISABLE_INT8=1  → force FP16 even on quantised models
-+        static const bool s_force_int8 = [] {
-+            const char* e = std::getenv("SPCONV_FORCE_INT8");
-+            return e != nullptr && e[0] != '0' && e[0] != '\0';
-+        }();
-+        static const bool s_disable_int8 = [] {
-+            const char* e = std::getenv("SPCONV_DISABLE_INT8");
-+            return e != nullptr && e[0] != '0' && e[0] != '\0';
-+        }();
 +        const bool model_is_quantised = (desc->input_abs_max > 0.0f);
-+        const bool use_int8 = is_f16 && !s_disable_int8
-+                              && (model_is_quantised || s_force_int8);
-+
-+        if (perf_trace) {
-+            fprintf(stderr, "[SparseConv] %s: %s (input_abs_max=%.4f%s%s)\n",
-+                    desc->id.c_str(),
-+                    use_int8 ? "INT8" : (is_f16 ? "FP16" : "FP32"),
-+                    desc->input_abs_max,
-+                    s_force_int8 ? " FORCE_INT8" : "",
-+                    s_disable_int8 ? " DISABLE_INT8" : "");
-+        }
++        const bool use_int8 = is_f16 && model_is_quantised;
 +
 +        if (use_int8) {
 +            auto* out_feat_ptr = static_cast<::sycl::half*>(kern_out_feat->buffer_ptr());
@@ -8031,19 +7995,10 @@ index 0000000000..6112f3b4bb
 +            // 0..gemm_m; tail rows must be zero so downstream residual Add
 +            // doesn't accumulate garbage. For SubM layers gemm_m == out_buf_m
 +            // → skipped entirely. For stride>1 (spconv_down2) gemm_m ≪
-+            // out_buf_m → big savings. Roll back with SPCONV_MEMSET_FULL=1.
-+            static const bool s_memset_full = []() {
-+                const char* e = std::getenv("SPCONV_MEMSET_FULL");
-+                return e != nullptr && e[0] != '0' && e[0] != '\0';
-+            }();
-+            if (out_buf_m > 0) {
-+                if (s_memset_full) {
-+                    q->memset(out_feat_ptr, 0,
-+                              static_cast<int64_t>(out_buf_m) * c_out * sizeof(::sycl::half));
-+                } else if (gemm_m < out_buf_m) {
-+                    q->memset(out_feat_ptr + static_cast<int64_t>(gemm_m) * c_out, 0,
-+                              static_cast<int64_t>(out_buf_m - gemm_m) * c_out * sizeof(::sycl::half));
-+                }
++            // out_buf_m → big savings.
++            if (gemm_m < out_buf_m) {
++                q->memset(out_feat_ptr + static_cast<int64_t>(gemm_m) * c_out, 0,
++                          static_cast<int64_t>(out_buf_m - gemm_m) * c_out * sizeof(::sycl::half));
 +            }
 +
 +            if (gemm_m > 0) {
@@ -8109,30 +8064,15 @@ index 0000000000..6112f3b4bb
 +                // produced an int8 copy of this layer's input (via its
 +                // fused i8-output store), reuse that buffer and skip our
 +                // own quantize kernel.
-+                static const bool s_disable_path1 = []() {
-+                    const char* e = std::getenv("SPCONV_DISABLE_PATH1");
-+                    return e != nullptr && e[0] != '0' && e[0] != '\0';
-+                }();
 +                const int8_t* handoff_i8 = nullptr;
-+                if (!s_disable_path1 && ptq_abs_max > 0.0f
++                if (ptq_abs_max > 0.0f
 +                    && !desc->input_handoff_producer.empty()) {
++                    std::lock_guard<std::mutex> lk(s_int8_handoff_mtx);
 +                    auto it = s_int8_handoff.find(desc->input_handoff_producer);
 +                    if (it != s_int8_handoff.end() &&
 +                        it->second.C == c_in &&
 +                        it->second.M >= m_in) {
 +                        handoff_i8 = it->second.data_i8;
-+                    }
-+                    static const bool s_path1_trace = std::getenv("SPCONV_PATH1_TRACE") != nullptr;
-+                    if (s_path1_trace) {
-+                        fprintf(stderr,
-+                            "[Path1-consumer] desc=%s <- producer=%s  handoff=%s  "
-+                            "cin=%d m_in=%d (map M=%d C=%d)\n",
-+                            desc->id.c_str(),
-+                            desc->input_handoff_producer.c_str(),
-+                            handoff_i8 ? "USE" : "MISS",
-+                            c_in, m_in,
-+                            it != s_int8_handoff.end() ? it->second.M : -1,
-+                            it != s_int8_handoff.end() ? it->second.C : -1);
 +                    }
 +                }
 +
@@ -8145,35 +8085,37 @@ index 0000000000..6112f3b4bb
 +                }
 +
 +                // Step 3: get/build the int8 weight cache for this weight Constant.
-+                auto weight_it = s_int8_weight_cache.find(weight_raw);
-+                if (weight_it == s_int8_weight_cache.end()) {
-+                    Int8WeightCache cache;
-+                    cache.q = q;
-+                    cache.c_out = c_out;
-+                    cache.total = static_cast<int64_t>(k_vol) * c_in * c_out;
-+                    cache.weights_i8 = ::sycl::malloc_device<int8_t>(cache.total, *q);
-+                    cache.per_channel_scale_inv = ::sycl::malloc_device<float>(c_out, *q);
-+                    cache.per_channel_abs_max   = ::sycl::malloc_device<float>(c_out, *q);
-+                    cache.per_channel_scale     = ::sycl::malloc_device<float>(c_out, *q);
-+                    quantize_fp16_weights_to_int8(*q,
-+                        static_cast<const ::sycl::half*>(weight_raw),
-+                        cache.weights_i8,
-+                        cache.per_channel_scale_inv,
-+                        cache.per_channel_abs_max,
-+                        k_vol, c_in, c_out);
-+                    // Pre-compute per_channel_scale = abs_max / 127 so the
-+                    // dequant kernel reads a ready-to-use scale. This runs
-+                    // once per layer, chained async after the weight quantize.
-+                    float* w_abs_max_src = cache.per_channel_abs_max;
-+                    float* w_scale_dst   = cache.per_channel_scale;
-+                    int    c_out_cap     = c_out;
-+                    q->parallel_for(::sycl::range<1>(c_out_cap), [=](::sycl::id<1> i) {
-+                        w_scale_dst[i] = w_abs_max_src[i] / 127.0f;
-+                    });
-+                    weight_it = s_int8_weight_cache.emplace(weight_raw, std::move(cache)).first;
++                const int8_t* weights_i8_ptr = nullptr;
++                const float*  w_scale_dev_ptr = nullptr;
++                {
++                    std::lock_guard<std::mutex> lk(s_int8_weight_cache_mtx);
++                    auto weight_it = s_int8_weight_cache.find(weight_raw);
++                    if (weight_it == s_int8_weight_cache.end()) {
++                        Int8WeightCache cache;
++                        cache.q = q;
++                        cache.c_out = c_out;
++                        cache.total = static_cast<int64_t>(k_vol) * c_in * c_out;
++                        cache.weights_i8 = ::sycl::malloc_device<int8_t>(cache.total, *q);
++                        cache.per_channel_scale_inv = ::sycl::malloc_device<float>(c_out, *q);
++                        cache.per_channel_abs_max   = ::sycl::malloc_device<float>(c_out, *q);
++                        cache.per_channel_scale     = ::sycl::malloc_device<float>(c_out, *q);
++                        quantize_fp16_weights_to_int8(*q,
++                            static_cast<const ::sycl::half*>(weight_raw),
++                            cache.weights_i8,
++                            cache.per_channel_scale_inv,
++                            cache.per_channel_abs_max,
++                            k_vol, c_in, c_out);
++                        float* w_abs_max_src = cache.per_channel_abs_max;
++                        float* w_scale_dst   = cache.per_channel_scale;
++                        int    c_out_cap     = c_out;
++                        q->parallel_for(::sycl::range<1>(c_out_cap), [=](::sycl::id<1> i) {
++                            w_scale_dst[i] = w_abs_max_src[i] / 127.0f;
++                        });
++                        weight_it = s_int8_weight_cache.emplace(weight_raw, std::move(cache)).first;
++                    }
++                    weights_i8_ptr  = weight_it->second.weights_i8;
++                    w_scale_dev_ptr = weight_it->second.per_channel_scale;
 +                }
-+                const int8_t* weights_i8_ptr   = weight_it->second.weights_i8;
-+                const float*  w_scale_dev_ptr  = weight_it->second.per_channel_scale;
 +
 +                // Step 4: INT8 XMX implicit GEMM with fused dequant + bias +
 +                // ReLU. Writes fp16 directly to `out_feat_ptr`. Pick the wide
@@ -8196,7 +8138,7 @@ index 0000000000..6112f3b4bb
 +                const float out_abs_max = desc->output_abs_max;
 +                int8_t* out_i8_scratch = nullptr;
 +                float   out_scale_inv_127 = 0.0f;
-+                if (!s_disable_path1 && out_abs_max > 0.0f) {
++                if (out_abs_max > 0.0f) {
 +                    const int64_t out_buf_count =
 +                        static_cast<int64_t>(out_buf_m) * c_out;
 +                    if (i8_scratch.out_feats_cap < out_buf_count) {
@@ -8239,13 +8181,8 @@ index 0000000000..6112f3b4bb
 +
 +                // Publish the int8 handoff for the downstream SparseConv.
 +                // Keyed by producer friendly-name (not buffer pointer — LPT's
-+                // dequant Multiply rewrites the edge pointer, see §8.7.4).
++                // dequant Multiply rewrites the edge pointer).
 +                if (out_i8_scratch) {
-+                    // Publish under this impl's own producer ID. The consumer
-+                    // matcher pass stored this name on its input_handoff_producer
-+                    // attribute — friendly name, stripped of the "sparseconvolution:"
-+                    // prefix that the plugin adds when it builds the primitive ID.
-+                    // Strip only if present.
 +                    const std::string& id = desc->id;
 +                    const std::string prefix = "sparseconvolution:";
 +                    std::string handoff_key = (id.rfind(prefix, 0) == 0)
@@ -8254,13 +8191,9 @@ index 0000000000..6112f3b4bb
 +                    h.data_i8 = out_i8_scratch;
 +                    h.M = gemm_m;
 +                    h.C = c_out;
-+                    s_int8_handoff[handoff_key] = h;
-+                    static const bool s_path1_trace = std::getenv("SPCONV_PATH1_TRACE") != nullptr;
-+                    if (s_path1_trace) {
-+                        fprintf(stderr,
-+                            "[Path1-producer] desc=%s key='%s' M=%d C=%d\n",
-+                            desc->id.c_str(), handoff_key.c_str(),
-+                            gemm_m, c_out);
++                    {
++                        std::lock_guard<std::mutex> lk(s_int8_handoff_mtx);
++                        s_int8_handoff[handoff_key] = h;
 +                    }
 +                }
 +            }
@@ -8271,20 +8204,12 @@ index 0000000000..6112f3b4bb
 +            int out_buf_m = static_cast<int>(out_layout.get_shape()[0]);
 +            int gemm_m = std::min(m_out, out_buf_m);
 +
-+            // Zero only tail rows [gemm_m, out_buf_m). See INT8 path above
-+            // for the rationale + env flag.
-+            static const bool s_memset_full_fp16 = []() {
-+                const char* e = std::getenv("SPCONV_MEMSET_FULL");
-+                return e != nullptr && e[0] != '0' && e[0] != '\0';
-+            }();
-+            if (out_buf_m > 0) {
-+                if (s_memset_full_fp16) {
-+                    q->memset(out_feat_ptr, 0,
-+                              static_cast<int64_t>(out_buf_m) * c_out * sizeof(::sycl::half));
-+                } else if (gemm_m < out_buf_m) {
-+                    q->memset(out_feat_ptr + static_cast<int64_t>(gemm_m) * c_out, 0,
-+                              static_cast<int64_t>(out_buf_m - gemm_m) * c_out * sizeof(::sycl::half));
-+                }
++            // Zero only tail rows [gemm_m, out_buf_m). GEMM writes rows
++            // 0..gemm_m; tail rows must be zero so downstream residual Add
++            // doesn't accumulate garbage.
++            if (gemm_m < out_buf_m) {
++                q->memset(out_feat_ptr + static_cast<int64_t>(gemm_m) * c_out, 0,
++                          static_cast<int64_t>(out_buf_m - gemm_m) * c_out * sizeof(::sycl::half));
 +            }
 +
 +            const auto* bias_f16 = bias_raw
@@ -8341,18 +8266,9 @@ index 0000000000..6112f3b4bb
 +            const auto& out_layout = kern_out_feat->get_layout();
 +            int out_buf_m = static_cast<int>(out_layout.get_shape()[0]);
 +            int copy_m = std::min(m_out, out_buf_m);
-+            static const bool s_memset_full_fp32 = []() {
-+                const char* e = std::getenv("SPCONV_MEMSET_FULL");
-+                return e != nullptr && e[0] != '0' && e[0] != '\0';
-+            }();
-+            if (out_buf_m > 0) {
-+                if (s_memset_full_fp32) {
-+                    q->memset(out_feat_ptr, 0,
-+                              static_cast<int64_t>(out_buf_m) * c_out * sizeof(float));
-+                } else if (copy_m < out_buf_m) {
-+                    q->memset(out_feat_ptr + static_cast<int64_t>(copy_m) * c_out, 0,
-+                              static_cast<int64_t>(out_buf_m - copy_m) * c_out * sizeof(float));
-+                }
++            if (copy_m < out_buf_m) {
++                q->memset(out_feat_ptr + static_cast<int64_t>(copy_m) * c_out, 0,
++                          static_cast<int64_t>(out_buf_m - copy_m) * c_out * sizeof(float));
 +            }
 +            if (copy_m > 0) {
 +                q->memcpy(out_feat_ptr, f32_out.get(),
@@ -8383,33 +8299,23 @@ index 0000000000..6112f3b4bb
 +        }
 +
 +        // Store actual M_out so downstream layers know real voxel count
-+        s_actual_m_map[out_coord_ptr] = m_out;
++        {
++            std::lock_guard<std::mutex> lk(s_actual_m_map_mtx);
++            s_actual_m_map[out_coord_ptr] = m_out;
++        }
 +
 +        // ---------------------------------------------------------------
 +        // Synchronize: single wait for all async GPU work before
 +        // DeviceBufs go out of scope and staging copy-back
 +        // ---------------------------------------------------------------
-+        auto t1 = std::chrono::steady_clock::now();
 +        q->wait();
-+        auto t2 = std::chrono::steady_clock::now();
-+
-+        if (perf_trace) {
-+            double submit_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
-+            double wait_ms = std::chrono::duration<double, std::milli>(t2 - t1).count();
-+            fprintf(stderr, "[SPCONV] %s M=%d C_in=%d C_out=%d k=%d %s%s %s  submit=%.2fms wait=%.2fms total=%.2fms\n",
-+                    desc->rulebook.empty() ? "nobook" : desc->rulebook.c_str(),
-+                    m_out, c_in, c_out, k_vol,
-+                    is_subm ? "SubM" : "Sparse",
-+                    cache_hit ? " (cached)" : "",
-+                    use_int8 ? "INT8" : (is_f16 ? "FP16" : "FP32"),
-+                    submit_ms, wait_ms, submit_ms + wait_ms);
-+        }
 +
 +        if (kern_out_feat.get() != out_feat_mem.get())
 +            out_feat_mem->copy_from(stream, *kern_out_feat, blocking);
 +        if (kern_out_coord.get() != out_coord_mem.get()) {
 +            out_coord_mem->copy_from(stream, *kern_out_coord, blocking);
 +            // Also store actual M for the final output coord buffer
++            std::lock_guard<std::mutex> lk(s_actual_m_map_mtx);
 +            s_actual_m_map[out_coord_mem->buffer_ptr()] = m_out;
 +        }
 +
@@ -8510,10 +8416,10 @@ index 0000000000..1df85bae0a
 +}  // namespace cldnn
 diff --git a/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_to_dense_sycl.cpp b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_to_dense_sycl.cpp
 new file mode 100644
-index 0000000000..45dbf9542d
+index 0000000000..880849915b
 --- /dev/null
 +++ b/src/plugins/intel_gpu/src/graph/impls/sycl/sparse_to_dense_sycl.cpp
-@@ -0,0 +1,348 @@
+@@ -0,0 +1,349 @@
 +// Copyright (C) 2018-2026 Intel Corporation
 +// SPDX-License-Identifier: Apache-2.0
 +//
@@ -8771,6 +8677,7 @@ index 0000000000..45dbf9542d
 +        // over garbage coordinates beyond m_out, corrupting the dense output.
 +        {
 +            auto* idx_raw = idx_mem->buffer_ptr();
++            std::lock_guard<std::mutex> lk(sparse_actual_m_map_mtx());
 +            auto it = sparse_actual_m_map().find(idx_raw);
 +            if (it != sparse_actual_m_map().end() && it->second > 0) {
 +                M = static_cast<uint32_t>(it->second);

@@ -483,7 +483,7 @@ return (
                 className="cs-view-files-btn"
                 onClick={() => setShowFileManager(true)}
               >
-                View Files
+                {t("fileManager.viewFiles")}
               </button>
             )}
           </div>
