@@ -13,7 +13,7 @@ Download from [https://ffmpeg.org/download.html](https://ffmpeg.org/download.htm
 ### B. Install DL Streamer
 
 Download the installer from [DL Streamer assets on GitHub](https://github.com/open-edge-platform/dlstreamer/releases).
-For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
+For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/get_started/install/install_guide_windows.html).
 
 > Note: DL Streamer 2026.0.0 is lastest verified version, please also update your [NPU driver](/education-ai-suite/smart-classroom/docs/user-guide/get-started/system-requirements.md#software-and-hardware-requirements) to latest for compatability.
 
@@ -22,11 +22,11 @@ For details, refer to the [Install Guide](https://docs.openedgeplatform.intel.co
 ### C. Clone Repository
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+<!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-  git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+  git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
   cd edge-ai-suites
   git sparse-checkout set education-ai-suite
   cd education-ai-suite
@@ -54,7 +54,7 @@ If you need OCR functionality for document text extraction, install PaddleOCR se
 pip install paddleocr==2.7.0.3 --no-deps
 ```
 
-> **Note:** The `--no-deps` flag is required because PaddleOCR declares an outdated `PyMuPDF` dependency that has no pre-built wheel for Python 3.12 on Windows. 
+> **Note:** The `--no-deps` flag is required because PaddleOCR declares an outdated `PyMuPDF` dependency that has no pre-built wheel for Python 3.12 on Windows.
 
 Then enable OCR in `config.yaml`:
 
@@ -289,7 +289,7 @@ models:
 - **URL fails from another device:**
   Confirm you used `--host 0.0.0.0` and replaced `<HOST_IP>` correctly.
 
-- **Nothing at http://localhost:5173:**
+- **Nothing at `http://localhost:5173`:**
   Check that the frontend terminal shows the Vite server running and no port conflict.
 
 - **Firewall blocks access:**

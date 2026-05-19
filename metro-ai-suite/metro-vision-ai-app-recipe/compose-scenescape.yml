@@ -243,11 +243,11 @@ services:
       - HTTPS_PROXY=${https_proxy}
       - SUPASS=${SUPASS}
       - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - DBHOST=pgserver
+      - DBPORT=5432
     command: >
       webserver
-      --dbhost pgserver
       --dbtype postgres
-      --dbport 5432
       --broker broker.scenescape.intel.com
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem

@@ -35,15 +35,18 @@ class SearchService:
             path_key: file_path,
             "meta": meta or {}
         }
-        async with httpx.AsyncClient() as client:
+        # Use explicit timeout config for all phases
+        timeout_config = httpx.Timeout(timeout=1800.0, connect=60.0, read=1800.0, write=60.0)
+        async with httpx.AsyncClient(timeout=timeout_config) as client:
             try:
-                response = await client.post(self.ingest_url, json=payload, timeout=300.0)
+                response = await client.post(self.ingest_url, json=payload)
                 response.raise_for_status()
                 logger.info(f"Successfully triggered ingest for {file_path}")
                 return response.json()
             except Exception as e:
-                logger.error(f"Search service ingest error: {str(e)}")
-                return {"error": str(e)}
+                error_msg = str(e) or f"{type(e).__name__}: {repr(e)}"
+                logger.error(f"Search service ingest error: {error_msg}")
+                return {"error": error_msg}
 
     async def ingest_text(self, text: str, file_path: str = None, bucket_name: str = None, meta: dict = None):
         payload = {

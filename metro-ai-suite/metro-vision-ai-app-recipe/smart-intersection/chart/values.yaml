@@ -18,7 +18,7 @@ imagePullPolicy: IfNotPresent
 
 # Global version configuration for external dependencies and assets
 version:
-  release: "v2026.1.0-rc1"
+  release: "v2026.0.0-rc1"
   modelsRelease: "main"
   modelsReleaseType: branch  # Options: 'tag' or 'branch'
 
@@ -134,11 +134,17 @@ web:
 
 dlstreamerPipelineServer:
   repository: docker.io/intel/dlstreamer-pipeline-server
-  tag: 2026.1.0-ubuntu24-rc1
+  tag: 2026.1.0-ubuntu24-rc1.1
   # Overrides the storage class name
   storageClassName: "standard"
-  gpuWorkload: false
-  npuWorkload: false
+  gpu:
+    enabled: false
+    type: "gpu.intel.com/i915"
+    count: 1
+  npu:
+    enabled: false
+    type: "npu.intel.com/accel"
+    count: 1
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
 
