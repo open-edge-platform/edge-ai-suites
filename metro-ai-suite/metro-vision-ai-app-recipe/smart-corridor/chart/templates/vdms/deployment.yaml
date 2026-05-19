@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-vdms
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-vdms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-vdms
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-vdms
+    spec:
+      shareProcessNamespace: true
+      securityContext:
+        runAsUser: 0
+        runAsGroup: 0
+      containers:
+        - image: {{ .Values.vdms.repository }}:{{ .Values.vdms.tag }}
+          imagePullPolicy: {{ .Values.imagePullPolicy }}
+          name: {{ .Release.Name }}-vdms
+          env:
+          - name: OVERRIDE_ca_file
+            value: /run/secrets/certs/scenescape-ca.pem
+          - name: OVERRIDE_cert_file
+            value: /run/secrets/certs/scenescape-vdms-s.crt
+          - name: OVERRIDE_key_file
+            value: /run/secrets/certs/scenescape-vdms-s.key
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: {{ .Values.no_proxy | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources: {}
+          volumeMounts:
+          - mountPath: /run/secrets/certs/scenescape-ca.pem
+            subPath: scenescape-ca.pem
+            name: certs
+            readOnly: true
+          - mountPath: /run/secrets/certs/scenescape-vdms-s.crt
+            subPath: scenescape-vdms-s.crt
+            name: certs
+            readOnly: true
+          - mountPath: /run/secrets/certs/scenescape-vdms-s.key
+            subPath: scenescape-vdms-s.key
+            name: certs
+            readOnly: true
+      restartPolicy: Always
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: certs
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: scenescape-ca.pem
+          - secret:
+              name: {{ .Release.Name }}-vdms-tls
+              items:
+              - key: vdms-server-cert
+                path: scenescape-vdms-s.crt
+              - key: vdms-server-key
+                path: scenescape-vdms-s.key

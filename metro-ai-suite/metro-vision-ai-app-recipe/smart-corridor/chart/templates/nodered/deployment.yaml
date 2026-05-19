@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-nodered
+  labels:
+    app: {{ .Release.Name }}-nodered
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-nodered
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-nodered
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
+    spec:
+      volumes:
+      - name: nodered-config
+        configMap:
+          name: {{ .Release.Name }}-nodered # Reference the ConfigMap created above
+      - name: secrets-volume
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: root-cert
+          - secret:
+              name: {{ .Release.Name }}-broker-tls
+              items:
+              - key: tls.crt
+                path: broker-cert
+              - key: tls.key
+                path: broker-key
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-nodered-env
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+          - name: HTTP_PROXY
+            value: {{ .Values.http_proxy | quote }}
+          - name: HTTPS_PROXY
+            value: {{ .Values.https_proxy | quote }}
+          - name: NO_PROXY
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+          - name: INFLUX_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Release.Name }}-influxdb-secrets
+                key: influxdb2-admin-token
+        image: {{ .Values.nodered.repository }}:{{ .Values.nodered.tag }}
+        name: {{ .Release.Name }}-nodered
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        volumeMounts:
+          - name: secrets-volume
+            mountPath: /mosquitto/secrets
+          - name: nodered-config
+            mountPath: /config
+        livenessProbe:
+          failureThreshold: 3
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - curl -s http://localhost:1880/ | grep -q 'Node-RED'
+        command:
+          - /bin/bash
+          - -c
+          - |
+            {{- tpl (include "nodered.startup-script" .) . | nindent 12 }}
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        ports:
+          - containerPort: 1880
+      restartPolicy: Always
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

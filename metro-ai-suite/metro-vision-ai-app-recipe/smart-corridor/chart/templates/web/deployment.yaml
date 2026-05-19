@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-web
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-web
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-web
+      annotations:
+        checksum/secrets: {{ include (print $.Template.BasePath "/app-secrets.yaml") . | sha256sum }}
+    spec:
+      {{- if and .Values.externalUrls.githubRepo (default true .Values.web.enableExampleDb) }}
+      initContainers:
+      - name: download-example-db
+        image: {{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh" ,"-c"]
+        args:
+        - |
+          {{ tpl (.Files.Get "files/webserver/download_database.sh") . | nindent 10 }}
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+        volumeMounts:
+        - name: {{ .Release.Name }}-example-db
+          mountPath: /data
+      {{- end }}
+      containers:
+      - name: web
+        image: {{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+        - name: DBROOT
+          value: /workspace
+        - name: MODEL_CONFIGS_FOLDER
+          value: /home/scenescape/SceneScape/models/models/model_configs
+        - name: SUPASS
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Name }}-supass-secret
+              key: supass
+        {{- if default true .Values.web.enableExampleDb }}
+        - name: EXAMPLEDB
+          value: {{ default "/home/scenescape/SceneScape/example_db/smart-corridor-ri.tar.bz2" .Values.web.exampleDbPath | quote }}
+        {{- end }}
+        volumeMounts:
+        - name: pgserver-media
+          mountPath: /workspace/media
+        - name: secrets
+          mountPath: /tmp/secrets
+        - name: smart-corridor-ri-web-data
+          mountPath: /data
+        - name: {{ .Release.Name }}-example-db
+          mountPath: /home/scenescape/SceneScape/example_db
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          readOnlyRootFilesystem: false
+          capabilities:
+            add:
+              - SYS_ADMIN
+          privileged: true
+        command: ["/bin/bash", "-e", "-c"]
+        args:
+        - >
+          {{- tpl (include "web.startup-script" .) . | nindent 10 }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: pgserver-media
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-pgserver-media
+      - name: secrets
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-mqtt-auth-secrets
+          - secret:
+              name: {{ .Release.Name }}-django-secrets
+          - secret:
+              name: {{ .Release.Name }}-web-tls
+              items:
+              - key: tls.crt
+                path: scenescape-web.crt
+              - key: tls.key
+                path: scenescape-web.key
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: scenescape-ca.pem
+      - name: {{ .Release.Name }}-ri-web-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-ri-pvc
+      - name: {{ .Release.Name }}-example-db
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-example-db

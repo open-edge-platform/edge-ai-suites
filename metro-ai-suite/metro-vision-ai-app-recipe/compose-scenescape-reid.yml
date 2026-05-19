@@ -227,7 +227,7 @@ services:
       - "5432:5432"
 
   web:
-    image: intel/scenescape-manager:v2026.1.0-rc1
+    image: intel/scenescape-manager:v2026.0.0
     init: true
     networks:
       scenescape:
@@ -305,7 +305,7 @@ services:
     restart: always
 
   scene:
-    image: intel/scenescape-controller:v2026.1.0-rc1
+    image: intel/scenescape-controller:v2026.0.0
     init: true
     environment:
       - http_proxy=${http_proxy}
@@ -341,9 +341,15 @@ services:
       --ntp ntpserv
     volumes:
       - pgserver-media-smart-corridor:/home/scenescape/SceneScape/media
+      - ./${SAMPLE_APP}/src/controller/vdms_adapter_patched.py:/usr/local/lib/python3.11/site-packages/controller/vdms_adapter.py:ro
+      - ./${SAMPLE_APP}/src/controller/moving_object_patched.py:/usr/local/lib/python3.11/site-packages/controller/moving_object.py:ro
     secrets:
       - source: root-cert
         target: certs/scenescape-ca.pem
+      - source: vdms-client-cert
+        target: certs/scenescape-vdms-c.crt
+      - source: vdms-client-key
+        target: certs/scenescape-vdms-c.key
       - django
       - controller.auth
     restart: on-failure:5
@@ -402,7 +408,10 @@ secrets:
     file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.crt
   vdms-server-key:
     file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-s.key
-
+  vdms-client-cert:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-c.crt
+  vdms-client-key:
+    file: ./${SAMPLE_APP}/src/secrets/certs/scenescape-vdms-c.key
 configs:
   mosquitto-secure:
     file: ./${SAMPLE_APP}/src/mosquitto/mosquitto-secure.conf

@@ -1,0 +1,219 @@
+namespace:
+replicaCount: 1
+http_proxy:
+https_proxy:
+no_proxy:
+supass:
+pgpass:
+
+kubernetesAPIEndpoint: https://kubernetes.default.svc.cluster.local
+
+# Global configuration
+global:
+  # External IP address for certificate generation
+  externalIP:
+
+# Global image pull policy for all containers
+imagePullPolicy: IfNotPresent
+
+# Global version configuration for external dependencies and assets
+version:
+  release: "v2026.0.0-rc1"
+  modelsRelease: "main"
+  modelsReleaseType: branch  # Options: 'tag' or 'branch'
+
+# External URLs and repositories
+externalUrls:
+  githubRepo: "https://github.com/open-edge-platform/edge-ai-suites"
+  videosRepo: "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
+
+# Container images for utilities and init containers
+images:
+  alpine:
+    repository: alpine
+    tag: latest
+  curl:
+    repository: curlimages/curl
+    tag: latest
+  busybox:
+    repository: busybox
+    tag: latest
+
+ntpserver:
+  repository: docker.io/dockurr/chrony
+  tag: "4.6.1"
+
+nodered:
+  repository: docker.io/nodered/node-red
+  tag: "latest"
+  # Overrides the storage class name
+  storageClassName: "standard"
+  storageSize: "1Gi"
+broker:
+  repository: eclipse-mosquitto
+  tag: 2.0.21
+
+  # UID:GID to run container as (defaulting to 1000:1000 unless overridden)
+  uid: 1000
+  gid: 1000
+
+  # Enable websocket listener
+  enableWebsockets: true
+
+influxdb:
+  repository: influxdb
+  tag: 2.7.11
+
+  # Initialization parameters
+  org: ITM
+  bucket: SS-Anthem
+  retention: 1w
+
+  service:
+    type: NodePort
+    port: 8086
+    nodePort: 30086
+
+  # Optional: storage class (used if you add PVCs later)
+  storageClassName: "standard"
+  storageSize: "1Gi"
+
+grafana:
+  repository: grafana/grafana
+  tag: 11.6.0
+
+  service:
+    type: ClusterIP
+    port: 3000
+
+  admin:
+    tokenSecretName: influxdb2-admin-token
+  dashboards:
+    anthemIntersection: anthem-intersection.json
+  provisioning:
+    dashboards: dashboards.yml
+    datasources: datasources.yml
+  volumes:
+    dashboards: /var/lib/grafana/dashboards
+    provisioning: /etc/grafana/provisioning
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    size: 1Gi
+
+scene:
+  repository: intel/scenescape-controller
+  tag: v2026.0.0
+
+  service:
+    type: ClusterIP
+    port: 80
+
+pgserver:
+  repository: postgres
+  tag: 17.6
+
+  storageClassName: "hostpath"
+  storage:
+    db: 2Gi
+    migrations: 1Gi
+    media: 1Gi
+
+web:
+  replicas: 1
+  image:
+    repository: intel/scenescape-manager
+    tag: v2026.0.0
+  dbhost: pgserver
+  broker: broker.scenescape.intel.com
+  enableExampleDb: true
+  exampleDbPath: /home/scenescape/SceneScape/example_db/smart-corridor-ri.tar.bz2
+  service:
+    type: NodePort
+
+dlstreamerPipelineServer:
+  repository: docker.io/intel/dlstreamer-pipeline-server
+  tag: 2026.0.0-ubuntu24
+  # Overrides the storage class name
+  storageClassName: "standard"
+  gpuWorkload: false
+  npuWorkload: false
+
+vdms:
+  repository: intellabs/vdms
+  tag: v2.12.0
+# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# This is for setting Kubernetes Annotations to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+
+# This is for setting Kubernetes Labels to a Pod.
+# For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# This section is for setting up autoscaling more information can be found here: https://kubernetes.io/docs/concepts/workloads/autoscaling/
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

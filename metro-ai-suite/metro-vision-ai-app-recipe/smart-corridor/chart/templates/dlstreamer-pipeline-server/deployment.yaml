@@ -1,0 +1,154 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-dlstreamer-pipeline-server
+  labels:
+    app: {{ .Release.Name }}-dlstreamer-pipeline-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-dlstreamer-pipeline-server
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-dlstreamer-pipeline-server
+    spec:
+      securityContext:
+        supplementalGroups: [109,110,992]
+      volumes:
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: dev-shm
+        hostPath:
+          path: /dev/shm
+      - name: run-udev
+        hostPath:
+          path: /run/udev
+      - name: dlstreamer-pipeline-server-videos-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-videos-pvc
+      - name: dlstreamer-pipeline-server-models-data
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-dlstreamer-pipeline-server-models-pvc
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-pipeline-root
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-tmp
+        emptyDir:
+          sizeLimit: 1Gi
+          medium: Memory
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+        configMap:
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+        configMap:
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+      - name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
+        projected:
+          sources:
+          - secret:
+              name: {{ .Release.Name }}-ca-secret
+              items:
+              - key: tls.crt
+                path: root-cert
+      initContainers:
+      - name: init-dlstreamer-pipeline-server-videos
+        image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          {{- tpl (include "dlstreamer-pipeline-server.init-videos-script" .) . | nindent 10 }}
+        volumeMounts:
+        - mountPath: /data/videos
+          name: dlstreamer-pipeline-server-videos-data
+      - name: init-dlstreamer-pipeline-server-models
+        image: "{{ .Values.images.alpine.repository }}:{{ .Values.images.alpine.tag }}"
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        env:
+          - name: http_proxy
+            value: {{ .Values.http_proxy | quote }}
+          - name: https_proxy
+            value: {{ .Values.https_proxy | quote }}
+          - name: no_proxy
+            value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+        command:
+        - /bin/sh
+        - -c
+        - |
+          {{- tpl (include "dlstreamer-pipeline-server.init-models-script" .) . | nindent 10 }}
+        volumeMounts:
+        - mountPath: /data/models
+          name: dlstreamer-pipeline-server-models-data
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        env:
+        - name: http_proxy
+          value: {{ .Values.http_proxy | quote }}
+        - name: https_proxy
+          value: {{ .Values.https_proxy | quote }}
+        - name: no_proxy
+          value: "{{ .Values.no_proxy }},influxdb2, ntpserv,smart-corridor-broker,smart-corridor-dlstreamer-pipeline-server,smart-corridor-grafana,smart-corridor-nodered,smart-corridor-pgserver,smart-corridor-scene,smart-corridor-web"
+        - name: ZE_ENABLE_ALT_DRIVERS
+          value: "libze_intel_npu.so"
+        image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
+        name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        imagePullPolicy: {{ .Values.imagePullPolicy }}
+        {{- if or .Values.dlstreamerPipelineServer.gpuWorkload .Values.dlstreamerPipelineServer.npuWorkload }}
+        securityContext:
+          privileged: true
+          runAsUser: 0
+          runAsGroup: 0
+        {{- else }}
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        {{- end }}
+        terminationMessagePath: /tmp/termination-log
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            {{- tpl (include "dlstreamer-pipeline-server.startup-script" .) . | nindent 12 }}
+        volumeMounts:
+        - name: dev
+          mountPath: /dev
+        - name: dev-shm
+          mountPath: /dev/shm
+        - name: run-udev
+          mountPath: /run/udev
+        - mountPath: /home/pipeline-server/videos
+          name: dlstreamer-pipeline-server-videos-data
+        - mountPath: /home/pipeline-server/models/object_detection
+          name: dlstreamer-pipeline-server-models-data
+        - mountPath: /var/cache/pipeline_root
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-pipeline-root
+        - mountPath: /tmp
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-tmp
+        - mountPath: /tmp/pipeline
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-config
+        - mountPath: /tmp/udf
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-udf
+        - mountPath: /home/pipeline-server/certs
+          name: {{ .Release.Name }}-dlstreamer-pipeline-server-rootcert
+          readOnly: true
+        ports:
+          - containerPort: 8080
+          - containerPort: 8555
+      restartPolicy: Always
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
