@@ -1,4 +1,4 @@
-#
+﻿#
 # Apache v2 license
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
@@ -164,7 +164,9 @@ class App(AppRunner):
     def _build_launch_string(self, pipeline_name: str, entry: PipelineEntry, model: ModelConfig,
                               host_ip: str = "localhost", rtsp_port: int = 8554,
                               webrtc_port: int = 8889) -> str:
-        """Build a GStreamer launch string (rtsp or webrtc output, never both)."""
+        """Build a GStreamer launch string (rtsp or webrtc output)."""
+        frame = entry.output.frame
+
         element = {"detection": "gvadetect", "classification": "gvaclassify"}.get(model.type)
         if not element:
             raise NotImplementedError(f"_build_launch_string: model type {model.type!r} not implemented")
@@ -192,13 +194,15 @@ class App(AppRunner):
         metadata_chain = f"queue ! gvametaconvert add-empty-results=true ! {meta_sinks} ! " if meta_sinks else ""
 
         parts = [_get_source_elements(entry.input, device), inference, f"{metadata_chain}queue ! gvawatermark ! {tail}"]
-        frame = entry.output.frame
         if frame is not None:
             encode = "identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse"
             if frame.has_active_rtsp():
                 parts.append(f"{encode} ! rtspclientsink location=rtsp://{host_ip}:{rtsp_port}{frame.path}")
             elif frame.has_active_webrtc():
                 parts.append(f"{encode} ! whipclientsink signaller::whip-endpoint=http://{host_ip}:{webrtc_port}/{frame.peer_id}/whip")
+        else:
+            logger.warning("[%s] No frame output configured — using d3d11videosink", pipeline_name)
+            parts.append("d3d11videosink name=sink")
         return " ! ".join(parts)
 
 
@@ -215,10 +219,8 @@ def _get_source_elements(cfg, device: str = "CPU") -> str:
     if cfg.type == "rtsp":
         return f'rtspsrc location="{cfg.url}" latency=200 name=src ! rtph264depay ! h264parse ! d3d11h264dec'
     if cfg.type == "camera":
-        src = (
-            f'gencamsrc serial={cfg.serial} pixel-format=mono8 '
-            f'width=1920 height=1080 name=src'
-        )
+        extra = " ".join(f"{k}={v}" for k, v in cfg.properties.items())
+        src = f'gencamsrc serial={cfg.serial}{" " + extra if extra else ""} name=src'
         if device == "CPU":
             return f'{src} ! videoconvert'
         else:
