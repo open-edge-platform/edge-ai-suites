@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -30,10 +30,10 @@
 
     - Download helm chart with the following command
 
-        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.4.0`
+        `helm pull oci://registry-1.docker.io/intel/weld-porosity-sample-application --version 1.5.0-rc1`
     - unzip the package using the following command
 
-        `tar -xvf weld-porosity-sample-application-1.4.0.tgz`
+        `tar -xvf weld-porosity-sample-application-1.5.0-rc1.tgz`
     - Replace the helm directory
 
         `rm -rf helm && mv weld-porosity-sample-application helm`

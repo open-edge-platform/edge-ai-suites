@@ -51,7 +51,7 @@ Before you can deploy with Helm, you must clone the repository:
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -65,10 +65,10 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 cd smart-intersection
 
 # Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.18.0
+helm pull oci://registry-1.docker.io/intel/smart-intersection --version 1.19.0-rc1
 
 # unzip the package using the following command
-tar -xvf smart-intersection-1.18.0.tgz
+tar -xvf smart-intersection-1.19.0-rc1.tgz
 
 # Replace the helm directory
 rm -rf chart && mv smart-intersection chart

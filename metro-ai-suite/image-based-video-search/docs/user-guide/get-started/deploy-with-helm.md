@@ -27,11 +27,11 @@ Before You Begin, ensure the following:
 
 - Download helm chart with the following command
     ```bash
-    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.2.0
+    helm pull oci://registry-1.docker.io/intel/image-based-video-search --version 1.3.0-rc1
     ```
 - unzip the package using the following command
     ```bash
-    tar -xvf image-based-video-search-1.2.0.tgz
+    tar -xvf image-based-video-search-1.3.0-rc1.tgz
     ```
 - Get into the helm directory
     ```bash
@@ -43,7 +43,7 @@ Before You Begin, ensure the following:
 1. **Clone the repo**:
   - Clone the repo and go to helm directory
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
     cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
     ```
 

@@ -19,8 +19,8 @@ Before you begin, ensure that you have the following:
 #### Option 1: Get the chart from Docker Hub
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version <version-no>
-tar -xvf live-video-alert-agent-chart-<version-no>.tgz
+helm pull oci://registry-1.docker.io/intel/live-video-alert-agent-chart --version 2026.1.0-rc1-helm
+tar -xvf live-video-alert-agent-chart-2026.1.0-rc1-helm.tgz
 cd live-video-alert-agent-chart
 ```
 
@@ -29,7 +29,7 @@ Refer to the [Release Notes](../release-notes.md) for the latest version.
 #### Option 2: Install from Source
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.1.0
 cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent/chart
 ```
 
@@ -53,6 +53,7 @@ Edit `user_values_override.yaml` with values for your environment:
 | `app.mcpEnabled` | Enable MCP (Model Context Protocol) tool integration | `true` / `false` |
 | `app.mcpServersConfig` | MCP server configuration JSON (see `resources/mcp_servers.json` for format) | See `values.yaml` |
 | `app.nodeSelector` | Schedule app pod on a specific node | `kubernetes.io/hostname: worker1` |
+| `app.image.tag`    | Latest image tag                     | `2026.1.0-rc1` | 
 
 > **Note:** `user_values_override.yaml` may contain credentials. Do not commit it to version control.
 

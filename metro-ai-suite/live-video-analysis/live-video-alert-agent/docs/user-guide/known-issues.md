@@ -18,9 +18,6 @@ Not all OVMS-served text models implement robust OpenAI-style function-calling.
 The agent automatically falls back to JSON text parsing in that case, but very
 small models (< 3B parameters) may produce unpredictable output.
 
-Recommended models for reliable tool-calling: `Phi-4-mini-instruct-int4-ov`,
-`Phi-3.5-mini-instruct`, `Mistral-7B-Instruct` (OV-converted variants).
-
 If neither strategy returns valid tool names, rule-based dispatch is used as a
 final fallback — alerts continue to function.
 

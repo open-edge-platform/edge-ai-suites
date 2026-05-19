@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -33,13 +33,13 @@
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.6.0
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc1
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.6.0.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc1.tgz
      ```
 
    - Replace the helm directory

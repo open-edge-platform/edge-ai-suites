@@ -34,8 +34,7 @@ app:
   # Use this when the app image is in a different registry than other components.
   image:
     registry: ""
-    # repository: ""
-    # tag: ""
+    #tag: ""
   # rtspUrl: "rtsp://<host>:<port>/<stream>"
   # nodeSelector:
   #   kubernetes.io/hostname: <your-node-name>

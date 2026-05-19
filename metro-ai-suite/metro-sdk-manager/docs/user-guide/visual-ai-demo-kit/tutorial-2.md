@@ -47,6 +47,7 @@ hostname -I | awk '{print $1}'
 ```
 
 Open your web browser and navigate to the Node-RED interface:
+
 ```
 https://<HOST_IP>/nodered
 ```
@@ -239,7 +240,6 @@ Test your custom Node-RED flow:
 
 If you are unable to visualize any data, try restarting the inference pipeline.
 
-
 After completing this tutorial, you should have:
 
 1. **Custom Node-RED Flow**: A working flow that processes AI inference data with custom enhancements
@@ -287,5 +287,5 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
 
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite)

@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -30,10 +30,10 @@
 
    - Download helm chart with the following command
 
-       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.2.0`
+       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.3.0-rc1`
    - unzip the package using the following command
 
-       `tar -xvf pcb-anomaly-detection-1.2.0.tgz`
+       `tar -xvf pcb-anomaly-detection-1.3.0-rc1.tgz`
    - Replace the helm directory
 
        `rm -rf helm && mv pcb-anomaly-detection helm`
