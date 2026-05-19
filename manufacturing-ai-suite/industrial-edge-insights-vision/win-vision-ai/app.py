@@ -169,12 +169,13 @@ class App(AppRunner):
 
         if model is None:
             src = _get_source_elements(entry.input, "CPU")
-            if frame is None:
+            if frame is not None:
                 encode = "identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse"
                 if frame.has_active_rtsp():
                     return f"{src} ! videoconvert ! {encode} ! rtspclientsink location=rtsp://{host_ip}:{rtsp_port}{frame.path}"
                 if frame.has_active_webrtc():
                     return f"{src} ! videoconvert ! {encode} ! whipclientsink signaller::whip-endpoint=http://{host_ip}:{webrtc_port}/{frame.peer_id}/whip"
+            logger.warning("[%s] No frame output configured — using d3d11videosink", pipeline_name)
             return f"{src} ! d3d11videosink name=sink"
 
         element = {"detection": "gvadetect", "classification": "gvaclassify"}.get(model.type)
