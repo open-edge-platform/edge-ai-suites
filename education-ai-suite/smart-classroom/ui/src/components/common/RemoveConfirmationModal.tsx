@@ -8,6 +8,7 @@ interface RemoveConfirmationModalProps {
   onCancel: () => void;
   onConfirm: () => void;
   isRemoving?: boolean;
+  isStaged?: boolean;
 }
 
 const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
@@ -16,6 +17,7 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
   onCancel,
   onConfirm,
   isRemoving = false,
+  isStaged = false,
 }) => {
   const { t } = useTranslation();
 
@@ -24,20 +26,22 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
   return (
     <div className="rcm-modal-overlay">
       <div className="rcm-modal">
-        <p>Remove "{fileName}"?</p>
+        <p>{t("fileManager.removeConfirm", { fileName })}</p>
         <p className="rcm-modal-warning">
-          This will permanently delete the file and its index data.
+          {isStaged
+            ? t("fileManager.removeWarningStagedFile")
+            : t("fileManager.removeWarning")}
         </p>
         <div className="rcm-modal-actions">
           <button onClick={onCancel} disabled={isRemoving}>
-            {t("uploadSection.cancel") || "Cancel"}
+            {t("uploadSection.cancel")}
           </button>
           <button
             className="rcm-danger-btn"
             onClick={onConfirm}
             disabled={isRemoving}
           >
-            {isRemoving ? "Removing..." : t("uploadSection.remove") || "Remove"}
+            {isRemoving ? t("fileManager.removing") : t("uploadSection.remove")}
           </button>
         </div>
       </div>

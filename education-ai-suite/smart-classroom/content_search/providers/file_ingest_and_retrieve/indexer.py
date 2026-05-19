@@ -460,6 +460,7 @@ class Indexer:
                     entities.extend(self.process_document(file, meta))
                 except Exception as e:
                     logger.error(f"Error processing document {file}: {e}")
+                    raise
             else:
                 logger.warning(f"Unsupported file type: {file}")
 
