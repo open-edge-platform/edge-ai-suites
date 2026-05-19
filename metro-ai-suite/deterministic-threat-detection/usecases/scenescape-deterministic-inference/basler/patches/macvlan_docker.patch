@@ -18,7 +18,7 @@ index 1d94a6e5..c0a5168a 100644
  secrets:
    root-cert:
 @@ -364,6 +372,8 @@ services:
-     image: docker.io/intel/dlstreamer-pipeline-server:2026.1.0-20260428-weekly-ubuntu24
+     image: docker.io/intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1.1
      networks:
        scenescape:
 +      gige_net:
