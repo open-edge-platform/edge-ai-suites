@@ -193,7 +193,7 @@ RUN useradd -ms /bin/bash -G video,users,sudo tfcc && \
 RUN apt update && \
 	apt install -y -q --no-install-recommends autoconf automake libtool build-essential g++ \
 	bison pkg-config flex curl git git-lfs vim dkms cmake make wget \
-	debhelper devscripts mawk openssh-server libssl-dev libeigen3-dev libopencv-dev opencv-data \
+    debhelper devscripts mawk libssl-dev libeigen3-dev libopencv-dev opencv-data \
 	opencl-headers opencl-dev intel-gpu-tools va-driver-all libmfxgen1 libvpl2 \
 	libx11-dev libx11-xcb-dev libxcb-dri3-dev libxext-dev libxfixes-dev libwayland-dev \
 	libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps && \
