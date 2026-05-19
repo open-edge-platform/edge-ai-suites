@@ -241,10 +241,15 @@ input:
 
 Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
 
+`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera and driver support.
+
 ```yaml
 input:
   type: camera
-  serial: <camera_serial_number>          # camera serial number
+  serial: <camera_serial_number>   # required — camera serial number
+  pixel-format: mono8                # optional — e.g. mono8
+  width: 1280                      # optional — frame width in pixels
+  height: 720                      # optional — frame height in pixels
 ```
 
 ### Frame Output — WebRTC
