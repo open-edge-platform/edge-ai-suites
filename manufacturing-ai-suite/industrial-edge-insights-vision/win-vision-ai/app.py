@@ -1,4 +1,4 @@
-#
+﻿#
 # Apache v2 license
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
@@ -137,7 +137,7 @@ class App(AppRunner):
         mtx = self._config.mediamtx
         self._ensure_output_dirs()
         for name, entry in self._config.pipelines.items():
-            model = self._config.models[entry.inference.model_id] if entry.inference else None
+            model = self._config.models[entry.inference.model_id]
             launch_string = self._build_launch_string(name, entry, model, mtx.host_ip, mtx.port, mtx.webrtc_port)
             logger.info("[%s] launch string: %s", name, launch_string)
             pid = self._manager.create(
@@ -166,17 +166,6 @@ class App(AppRunner):
                               webrtc_port: int = 8889) -> str:
         """Build a GStreamer launch string (rtsp or webrtc output)."""
         frame = entry.output.frame
-
-        if model is None:
-            src = _get_source_elements(entry.input, "CPU")
-            if frame is not None:
-                encode = "identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse"
-                if frame.has_active_rtsp():
-                    return f"{src} ! videoconvert ! {encode} ! rtspclientsink location=rtsp://{host_ip}:{rtsp_port}{frame.path}"
-                if frame.has_active_webrtc():
-                    return f"{src} ! videoconvert ! {encode} ! whipclientsink signaller::whip-endpoint=http://{host_ip}:{webrtc_port}/{frame.peer_id}/whip"
-            logger.warning("[%s] No frame output configured — using d3d11videosink", pipeline_name)
-            return f"{src} ! d3d11videosink name=sink"
 
         element = {"detection": "gvadetect", "classification": "gvaclassify"}.get(model.type)
         if not element:

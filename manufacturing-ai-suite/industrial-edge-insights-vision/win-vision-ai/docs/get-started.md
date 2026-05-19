@@ -241,7 +241,7 @@ input:
 
 Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
 
-`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera and driver support.
+`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 ```yaml
 input:
@@ -379,11 +379,9 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 ### Supported Pipeline Combinations
 
-The following combinations are supported in structured configuration mode.
+The following combinations are supported in basic configuration mode.
 
-> **`input` is mandatory** for all pipeline combinations below.
-
-#### With Inference (`model_id` set)
+> **`input` and `inference` are mandatory** for all pipeline combinations below.
 
 | Frame Output | Metadata Output |
 |---|---|
@@ -404,19 +402,10 @@ The following combinations are supported in structured configuration mode.
 | None | MQTT + File |
 | None | None |
 
-#### Without Inference (no `model_id`)
-
-| Frame Output | Metadata Output |
-|---|---|
-| RTSP | None |
-| WebRTC | None |
-| None | None |
-
 > **Notes:**
-> - With inference, a single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
-> - Without inference, only one frame output type (`RTSP` or `WebRTC`) is supported per pipeline.
+> - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
 > - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
-> - Metadata output requires inference to be enabled.
+> - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
 
 For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
 
