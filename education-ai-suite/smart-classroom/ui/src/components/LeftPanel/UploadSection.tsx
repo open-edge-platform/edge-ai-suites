@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList } from "../../services/api";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList, csGetTags } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
 import FileManager from "./FileManager";
@@ -63,6 +63,8 @@ const UploadSection: React.FC = () => {
   const csServerFilesExist = useAppSelector((s) => s.ui.csServerFilesExist);
   const sessionIdRef = useRef<string | null>(sessionId);
   const monitoringActiveRef = useRef<boolean>(monitoringActive);
+  const serverTagsRef = useRef<string[]>([]);
+  const completedIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   useEffect(() => { monitoringActiveRef.current = monitoringActive; }, [monitoringActive]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,12 +94,19 @@ const UploadSection: React.FC = () => {
   useEffect(() => {
     const checkServerFiles = async () => {
       try {
-        const response = await csGetFilesList();
-        const hasFiles = (response.data?.files?.length ?? 0) > 0;
+        const [filesResponse, tags] = await Promise.all([
+          csGetFilesList(),
+          csGetTags(),
+        ]);
+        const hasFiles = (filesResponse.data?.files?.length ?? 0) > 0;
         dispatch(setCsServerFilesExist(hasFiles));
         if (hasFiles) {
           dispatch(setCsHasUploads(true));
           dispatch(setCsUploadsComplete(true));
+        }
+        if (Array.isArray(tags) && tags.length > 0) {
+          serverTagsRef.current = tags;
+          dispatch(setCsTags(tags));
         }
       } catch (err) {
         console.warn("Could not check server files:", err);
@@ -130,17 +139,33 @@ const UploadSection: React.FC = () => {
           e.status === "ALREADY_EXISTS" ||
           (e.fileType === "MP4" && ACTIVE.includes(e.status))
       );
-      dispatch(setCsUploadsComplete(anyUploaded));
+      // If backend files already exist, search must remain available even while
+      // new files are staged but not yet uploaded.
+      dispatch(setCsUploadsComplete(anyUploaded || csServerFilesExist));
     }
-  }, [entries, dispatch]);
+  }, [entries, dispatch, csServerFilesExist]);
 
   useEffect(() => {
-    const uploadedEntries = entries.filter(
-      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+    const newlyCompleted = entries.filter(
+      (e) =>
+        (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") &&
+        !completedIdsRef.current.has(e.id)
     );
-    const allTags = uploadedEntries.flatMap((e) => e.tags);
-    const uniqueTags = [...new Set(allTags)];
-    dispatch(setCsTags(uniqueTags));
+    if (newlyCompleted.length === 0) return;
+    newlyCompleted.forEach((e) => completedIdsRef.current.add(e.id));
+    csGetTags()
+      .then((tags) => {
+        if (Array.isArray(tags) && tags.length > 0) {
+          serverTagsRef.current = tags;
+          dispatch(setCsTags(tags));
+        }
+      })
+      .catch(() => {
+        // API unavailable — fall back to merging known tags
+        const entryTags = newlyCompleted.flatMap((e) => e.tags);
+        const uniqueTags = [...new Set([...serverTagsRef.current, ...entryTags])];
+        dispatch(setCsTags(uniqueTags));
+      });
   }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
@@ -442,8 +467,14 @@ const UploadSection: React.FC = () => {
     setEntries((prev) => {
       const next = prev.filter((e) => e.id !== id);
       if (next.length === 0) {
-        dispatch(setCsHasUploads(false));
-        dispatch(setCsUploadsComplete(false));
+        if (csServerFilesExist) {
+          // Backend files still exist — keep search available.
+          dispatch(setCsHasUploads(true));
+          dispatch(setCsUploadsComplete(true));
+        } else {
+          dispatch(setCsHasUploads(false));
+          dispatch(setCsUploadsComplete(false));
+        }
       }
       return next;
     });
@@ -725,9 +756,11 @@ return (
                       (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
                     );
                     setEntries([]);
-                    // Only reset upload-availability flags when no files exist on the backend.
-                    // Uploaded files remain on the server; search/Q&A should stay enabled.
-                    if (!anyUploadedToBackend && !csServerFilesExist) {
+                    if (csServerFilesExist || anyUploadedToBackend) {
+                      // Backend files still exist — restore availability so search stays enabled.
+                      dispatch(setCsHasUploads(true));
+                      dispatch(setCsUploadsComplete(true));
+                    } else {
                       dispatch(setCsHasUploads(false));
                       dispatch(setCsUploadsComplete(false));
                     }
@@ -752,6 +785,7 @@ return (
     <RemoveConfirmationModal
       isOpen={!!confirmRemoveId}
       fileName={entries.find((e) => e.id === confirmRemoveId)?.filename ?? ""}
+      isStaged={entries.find((e) => e.id === confirmRemoveId)?.status === "STAGED"}
       onCancel={() => setConfirmRemoveId(null)}
       onConfirm={confirmRemove}
     />

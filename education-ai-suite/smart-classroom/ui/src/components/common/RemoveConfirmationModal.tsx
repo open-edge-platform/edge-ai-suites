@@ -8,6 +8,7 @@ interface RemoveConfirmationModalProps {
   onCancel: () => void;
   onConfirm: () => void;
   isRemoving?: boolean;
+  isStaged?: boolean;
 }
 
 const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
@@ -16,6 +17,7 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
   onCancel,
   onConfirm,
   isRemoving = false,
+  isStaged = false,
 }) => {
   const { t } = useTranslation();
 
@@ -26,7 +28,9 @@ const RemoveConfirmationModal: React.FC<RemoveConfirmationModalProps> = ({
       <div className="rcm-modal">
         <p>{t("fileManager.removeConfirm", { fileName })}</p>
         <p className="rcm-modal-warning">
-          {t("fileManager.removeWarning")}
+          {isStaged
+            ? t("fileManager.removeWarningStagedFile")
+            : t("fileManager.removeWarning")}
         </p>
         <div className="rcm-modal-actions">
           <button onClick={onCancel} disabled={isRemoving}>
