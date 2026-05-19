@@ -58,9 +58,9 @@ Before running the application, you need to set several environment variables:
 
     Why this is needed: a single shared `TAG` forces both stacks to use the same version, which does not match independent VSS and Smart NVR release cycles.
 
-    Note: `setup.sh` includes a release mapping for `TAG=1.0.0` and automatically sets:
-    - `VSS_STACK_TAG=1.3.2`
-    - `SMART_NVR_STACK_TAG=1.2.4`
+    Note: `setup.sh` includes a release mapping for `TAG=2026.1.0-rc1` and automatically sets:
+    - `VSS_STACK_TAG=2026.1.0-rc1`
+    - `SMART_NVR_STACK_TAG=2026.1.0-rc1`
 
     You can still explicitly export `VSS_STACK_TAG` and `SMART_NVR_STACK_TAG` to override those defaults.
 
@@ -287,12 +287,13 @@ For RTSP test mode, start again with:
 - `source setup.sh --start-rtsp-test`
 
 ### Accuracy of search results
+
 The accuracy of search results vary based on multiple factors as listed in the VSS troubleshooting guide. The same considerations hold true for Live Video Search too as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised that the user not use the RTSP test mode to check accuracy of the search results. Live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search used exclusively to note the performance on given hardware platform.
 
 ## References
 
-- [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)
-- [VSS API](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/api-reference.html)
+- [Smart NVR docs](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-nvr/get-started.html)
+- [VSS API](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/video-search-and-summarization/api-reference.html)
 
 <!--hide_directive
 :::{toctree}

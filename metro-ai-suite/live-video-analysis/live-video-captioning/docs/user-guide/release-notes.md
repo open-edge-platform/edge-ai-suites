@@ -9,7 +9,7 @@
 - Integrated model-download service as a prerequisite step to download and prepare the model.
 - Implemented Helm chart support for deployment.
 - Updated UI/UX for Alert mode.
-- Added [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning-rag/index.html) as an additional feature included in Live Video Captioning, enabling Retrieval-Augmented Generation (RAG) chat.
+- Added [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-captioning-rag/index.html) as an additional feature included in Live Video Captioning, enabling Retrieval-Augmented Generation (RAG) chat.
 
 **Known Issues**
 

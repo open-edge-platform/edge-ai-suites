@@ -17,8 +17,8 @@ and manages the Smart Route Planning Agent.
 1. Clone the suite:
 
    Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   <!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
    git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
@@ -87,7 +87,7 @@ Agent and multiple Smart Traffic Intersection Agent edge nodes.
 
 ### Multi-Node Deployment Prerequisites
 
-1. Deploy the [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-traffic-intersection-agent/get-started.html#quick-start-with-setup-script) on each edge node.
+1. Deploy the [Smart Traffic Intersection Agent](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-traffic-intersection-agent/get-started.html#quick-start-with-setup-script) on each edge node.
 2. Ensure network connectivity between the central node and edge nodes.
 3. Note the IP address and port of each Smart Traffic Intersection Agent.
 

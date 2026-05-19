@@ -103,19 +103,19 @@ fi
 
 export APP_HOST_PORT=${APP_HOST_PORT:-12345}
 export HOST_IP=$(get_host_ip)
-export TAG=${TAG:-latest}
+export TAG=${TAG:-2026.1.0-rc1}
 
 # Stack-specific image tags (override-able via env vars)
 export VSS_STACK_TAG=${VSS_STACK_TAG:-$TAG}
 export SMART_NVR_STACK_TAG=${SMART_NVR_STACK_TAG:-$TAG}
 
-# Release-specific tag mapping for Live Video Search 1.0.0
-if [ "$TAG" = "1.0.0" ]; then
+# Release-specific tag mapping for Live Video Search 2026.1.0-rc1
+if [ "$TAG" = "2026.1.0-rc1" ]; then
     if [ -z "$VSS_STACK_TAG" ] || [ "$VSS_STACK_TAG" = "$TAG" ]; then
-        export VSS_STACK_TAG="1.3.2"
+        export VSS_STACK_TAG="2026.1.0-rc1"
     fi
     if [ -z "$SMART_NVR_STACK_TAG" ] || [ "$SMART_NVR_STACK_TAG" = "$TAG" ]; then
-        export SMART_NVR_STACK_TAG="1.2.4"
+        export SMART_NVR_STACK_TAG="2026.1.0-rc1"
     fi
 fi
 

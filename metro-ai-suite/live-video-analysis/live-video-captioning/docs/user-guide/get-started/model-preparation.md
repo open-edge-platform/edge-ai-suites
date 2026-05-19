@@ -1,16 +1,15 @@
 # Model Preparation
 
-To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [Model Download Microservice](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
+To run this sample application, a Vision-Language Model (VLM) is required. If you wish to enable the detection pipeline, you will also need a YOLO vision model. Model preparation is handled using the [Model Download Microservice](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) from the open-edge-platform/edge-ai-libraries. Follow the steps below to download and convert the required models:
 
 1. Clone the repository:
 
      Open a new terminal, clone the edge-ai-libraries repository.
 
      ```bash
-     # Clone the latest on the mainline
-     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b main
-     # Alternatively, clone a specific release branch
-     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b <release-tag>
+     # Clone the 2026.1 release branch
+     git clone https://github.com/open-edge-platform/edge-ai-libraries.git edge-ai-libraries -b release-2026.1.0
+
      ```
 
 2. Navigate to the directory:

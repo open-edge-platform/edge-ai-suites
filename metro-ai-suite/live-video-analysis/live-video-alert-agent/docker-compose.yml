@@ -112,7 +112,7 @@ services:
       - app_network
 
   live-video-alert-agent:
-    image: ${REGISTRY:-}live-video-alert-agent:${TAG:-latest}
+    image: ${REGISTRY:-}live-video-alert-agent:${TAG:-2026.1.0-rc1}
     build: .
     container_name: live-video-alert-agent
     restart: unless-stopped

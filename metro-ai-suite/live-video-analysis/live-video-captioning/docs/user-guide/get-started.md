@@ -23,11 +23,11 @@ when object detection in the pipeline is enabled. See [Object Detection Pipeline
 1. Clone the suite:
 
    Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   <!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/live-video-analysis/live-video-captioning
@@ -147,7 +147,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 ## Learn More
 
 - [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Model Download Microservice Get Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html)
+- [Model Download Microservice Get Started Guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html)
 - [Model Preparation](./get-started/model-preparation.md)
 - [Build from Source](./get-started/build-from-source.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.

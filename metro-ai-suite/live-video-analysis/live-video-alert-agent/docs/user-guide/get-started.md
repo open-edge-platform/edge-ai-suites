@@ -9,32 +9,28 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 ## Initial Setup
 
-1. Clone the suite:
+1. **Clone the suite**:
+   ```bash
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.1.0
+   ```
 
 2. **Navigate to the Directory**:
 
-     ```bash
-     cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
-     ```
-
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
-   cd edge-ai-suites
-   git sparse-checkout set metro-ai-suite
-   cd metro-ai-suite/live-video-analysis/live-video-alert-agent
+   cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
    ```
 
-2. Configure Image Registry and Tag:
+2. **Configure Image Registry and Tag**:
 
    ```bash
    export REGISTRY="intel/"
-   export TAG="latest"
+   export TAG="2026.1.0-rc1"
    export HF_TOKEN=<your-huggingface-token>
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
 
-3. Configure the Environment:
+3. **Configure the Environment**:
 
    Optional environment variables:
 
@@ -90,7 +86,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
    Configure MCP servers in `resources/mcp_servers.json`. See [API Reference](./api-reference.md#mcp) for details.
 
-4. Start the Application:
+4. **Start the Application**:
+
    Run the following command from the project root:
 
    ```bash
@@ -102,7 +99,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    - An init container runs briefly to set up volume permissions.
    - Subsequent runs start instantly
 
-5. Verify Deployment:
+5. **Verify Deployment**:
+
    Check that containers are running:
 
    ```bash
@@ -115,7 +113,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    docker logs live-video-alert-agent
    ```
 
-6. Access the Dashboard:
+6. **Access the Dashboard**:
+
    Open your browser and navigate to `http://localhost:9000` (Replace `localhost` with your
    server IP if accessing remotely).
 
