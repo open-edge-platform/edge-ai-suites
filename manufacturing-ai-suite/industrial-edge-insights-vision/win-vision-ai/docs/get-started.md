@@ -23,20 +23,15 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 ## Install Intel DL Streamer
 
-1. Download latest Dlstreamer zip for Windows from the Intel DL Streamer releases page (https://github.com/open-edge-platform/dlstreamer/releases/tag/v2026.0.0) and extract the dll files in C:\dlstreamer_dlls
+Download `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
 
-2. Open PowerShell **as Administrator** and run the setup script:
-
-```powershell
-cd C:\dlstreamer_dlls
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\setup_dls_env.ps1
-```
-This installs gstreamer folder inside Program Files folder.
+DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 
 ---
 
 ## Clone the Repository
+
+Open PowerShell and run all terminal commands:
 
 ```powershell
 git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
@@ -47,9 +42,9 @@ cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vis
 
 ```powershell
 python -m venv venv
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-pip install gstreamer-python
 ```
 
 ---
@@ -65,11 +60,8 @@ pip show gstreamer-python
 Note the `Location` field from the output (e.g., `C:\Users\<username>\AppData\Local\Programs\Python\Python312\Lib\site-packages`), then set `PYTHONPATH` using that path:
 
 ```powershell
-$env:GST_PLUGIN_PATH="C:\dlstreamer_dlls"
-$env:GSTREAMER_1_0_ROOT_MSVC_X86_64="C:\Program Files\gstreamer\1.0\msvc_x86_64"
 $env:PYTHONPATH="<gstreamer-python-location>\gstreamer_python\Lib\site-packages"
 $env:PYGI_DLL_DIRS="C:\Program Files\gstreamer\1.0\msvc_x86_64\bin"
-$env:PATH = "C:\Program Files\gstreamer\1.0\msvc_x86_64\bin;C:\dlstreamer_dlls;" + $env:PATH
 ```
 
 Verify GStreamer and DL Streamer plugins loaded correctly:
@@ -102,7 +94,7 @@ $repoRoot = "<path-to-win-vision-ai-clone>"
 $genicamRuntime = "$repoRoot\bin\Win64_x64"
 
 # Add gstgencamsrc.dll plugin directory to GStreamer plugin search path
-$env:GST_PLUGIN_PATH = "C:\dlstreamer_dlls;$repoRoot\bin"
+$env:GST_PLUGIN_PATH = "C:\Program Files\Intel\dlstreamer\bin;$repoRoot\bin"
 
 # GenICam transport layer — set to your camera vendor's GenTL producer path, for example:
 #   Basler pylon:           C:\Program Files\Basler\pylon\Runtime\x64
@@ -123,9 +115,6 @@ Verify the camera plugin loaded correctly:
 ```powershell
 gst-inspect-1.0 gencamsrc
 ```
-
-If the output says `No such element or plugin 'gencamsrc'`, see [Troubleshooting → Camera: `msvcr120.dll` / `msvcp120.dll` not found](#camera-msvcr120dll--msvcp120dll-not-found).
-
 ---
 
 ## Download MediaMTX (for RTSP / WebRTC streaming)
@@ -133,7 +122,7 @@ If the output says `No such element or plugin 'gencamsrc'`, see [Troubleshooting
 Required when any pipeline uses RTSP or WebRTC frame output.
 
 ```powershell
-python src/setup_mediamtx.py --dir <mediamtx_dir>
+python src/setup_mediamtx.py --dir <mediamtx_dir> --version v1.18.1
 $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 ```
 
@@ -252,10 +241,15 @@ input:
 
 Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
 
+`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+
 ```yaml
 input:
   type: camera
-  serial: <camera_serial_number>          # camera serial number
+  serial: <camera_serial_number>   # required — camera serial number
+  pixel-format: mono8                # optional — e.g. mono8
+  width: 1280                      # optional — frame width in pixels
+  height: 720                      # optional — frame height in pixels
 ```
 
 ### Frame Output — WebRTC
@@ -276,6 +270,19 @@ Streams to `rtsp://localhost:8554/front`. Open in VLC.
 ```yaml
 output:
   frame:
+    type: rtsp
+    path: /front
+```
+
+### Frame Output — WebRTC + RTSP (both on the same pipeline)
+
+Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
+
+```yaml
+output:
+  frame:
+    type: webrtc
+    peer_id: front
     type: rtsp
     path: /front
 ```
@@ -302,6 +309,7 @@ cd "C:\Program Files\mosquitto"
 .\mosquitto.exe -v
 
 # Terminal 2 — subscribe to verify
+# The topic passed to -t must match the topic value set in config.yaml (e.g. inference/front)
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
@@ -369,6 +377,40 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 ---
 
+### Supported Pipeline Combinations
+
+The following combinations are supported in basic configuration mode.
+
+> **`input` and `inference` are mandatory** for all pipeline combinations below.
+
+| Frame Output | Metadata Output |
+|---|---|
+| RTSP | MQTT |
+| WebRTC | MQTT |
+| RTSP + WebRTC | MQTT |
+| RTSP | File |
+| WebRTC | File |
+| RTSP + WebRTC | File |
+| RTSP | MQTT + File |
+| WebRTC | MQTT + File |
+| RTSP + WebRTC | MQTT + File |
+| RTSP | None |
+| WebRTC | None |
+| RTSP + WebRTC | None |
+| None | MQTT |
+| None | File |
+| None | MQTT + File |
+| None | None |
+
+> **Notes:**
+> - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
+> - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
+> - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
+
+For custom element chains or combinations not listed above, use [Raw Pipeline Mode](#advanced-raw-pipeline-mode).
+
+---
+
 ## Run the App
 
 ```powershell
@@ -392,10 +434,11 @@ Pass complete GStreamer strings directly — `models` and `pipelines` sections a
 
 ```yaml
 raw_pipelines:
-  front: " filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=file file-path=output/front-inference.jsonl ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
-  back:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=NPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
-  left:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! fakesink name=sink"
-  right:  "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
+  front: "filesrc location=\"C:/Users/path/to/video\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! d3d11videosink name=sink"
+  back: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
+  right: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
+  left: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
+  camera: "gencamsrc serial=12345678 pixel-format=mono8 name=src ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! d3d12videosink name=sink"
 ```
 Above pipelines are example pipelines to run with webrtc/rtsp/any sink element
 
@@ -404,25 +447,6 @@ MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears 
 ---
 
 ## Troubleshooting
-
-### Camera: `msvcr120.dll` / `msvcp120.dll` not found
-
-The GenICam VC120 DLLs depend on the Visual C++ 2013 Redistributable. Verify whether the required DLLs are present:
-
-```powershell
-"msvcr120: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
-"msvcp120: $(Test-Path 'C:\Windows\System32\msvcp120.dll')"
-```
-
-If either value is `False`, install the Visual C++ 2013 Redistributable:
-
-```powershell
-$url = "https://download.microsoft.com/download/2/E/6/2E61CFA4-993B-4DD4-91DA-3737CD5CD6E3/vcredist_x64.exe"
-$out = "$env:TEMP\vcredist_x64_2013.exe"
-Invoke-WebRequest -Uri $url -OutFile $out
-Start-Process $out -ArgumentList "/install /quiet /norestart" -Wait
-Write-Host "Done. msvcr120.dll now present: $(Test-Path 'C:\Windows\System32\msvcr120.dll')"
-```
 
 ### Inference on NPU fails with `Failed to construct OpenVINOImageInference` error
 

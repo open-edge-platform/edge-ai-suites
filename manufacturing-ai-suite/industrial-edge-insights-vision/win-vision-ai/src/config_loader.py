@@ -52,8 +52,10 @@ class ModelConfig:
 class InputConfig:
     type: str
     url: str = ""
-    # camera-specific field (only used when type == "camera")
+    # camera-specific fields (only used when type == "camera")
     serial: Optional[str] = None
+    # extra camera properties passed verbatim to gencamsrc (e.g. pixel-format, width, height)
+    properties: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -247,7 +249,7 @@ def _parse_pipeline_entry(name: str, raw: dict, models: Dict[str, ModelConfig], 
     return PipelineEntry(
         name=name,
         input=_parse_input(name, raw["input"]),
-        inference=_parse_inference(name, raw["inference"], models),
+        inference=_parse_inference(name, raw.get("inference") or {}, models),
         output=output_cfg,
         auto_start=bool(raw.get("auto_start", True)),
     )
@@ -267,9 +269,13 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
     if input_type == "camera":
         if "serial" not in raw:
             raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'serial'")
+        # Collect any extra keys as passthrough properties for gencamsrc
+        reserved = {"type", "serial"}
+        extra_props = {k: v for k, v in raw.items() if k not in reserved}
         return InputConfig(
             type=input_type,
             serial=str(raw["serial"]),
+            properties=extra_props,
         )
 
     if "url" not in raw:
@@ -282,9 +288,9 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
 
 def _parse_inference(pipeline_name: str, raw: dict, models: Dict[str, ModelConfig]) -> InferenceConfig:
     """Parse a pipeline's 'inference' section and validate model_id against the models dict."""
-    model_id = raw.get("model_id")
+    model_id = (raw.get("model_id") or "").strip()
     if not model_id:
-        raise ConfigError(f"Pipeline '{pipeline_name}': inference missing required field 'model_id'")
+        raise ConfigError(f"Pipeline '{pipeline_name}': inference.model_id is required")
     if model_id not in models:
         raise ConfigError(f"Pipeline '{pipeline_name}': inference.model_id '{model_id}' not found in models section")
     model_path = models[model_id].model
