@@ -12,17 +12,17 @@ Before you begin, ensure that you have the following:
 - A worker node reachable by your browser client. Prefer a GPU-capable worker node when available, because the chart pins the media and inference workloads to the selected node and DL Streamer benefits most from GPU access.
 - A writable host path for collector signal files on the target node. By default the chart uses `/tmp/lvc/collector-signals`.
 - An RTSP source reachable from the Kubernetes node that runs `dlstreamer-pipeline-server`.
-- Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html) which is responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
+- Setup the [Model Download chart](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html) which is responsible for all the models used in this Live Video Captioning chart. If you use gated Hugging Face models, a Hugging Face token is required.
 
 ## Prepare/Deploy model-download chart
 
-[Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) will be used for models management in Live Video Captioning.
+[Model Download Service](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) will be used for models management in Live Video Captioning.
 
 1. Install the model-download chart
-   <br>Refer to this [guide section](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
+   <br>Refer to this [guide section](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
 
 2. Configure the values.yaml file
-   <br> Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the chart.
+   <br> Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/model-download/chart/values.yaml) located in the chart.
 
    Configure the following:
 
@@ -98,7 +98,7 @@ Clone the repository containing the charts files:
 
 ```bash
 # Clone the latest on mainline
-git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b release-2026.1.0
 # Alternatively, clone a specific release branch
 git clone https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites -b <release-tag>
 ```
@@ -133,7 +133,7 @@ Other supporting services such as `mqtt-broker`, `live-metrics-service`, `multim
 
 For best performance, choose a worker node with a GPU. The chart can run with CPU-only inference, but a GPU-capable node is the preferred deployment target for DL Streamer and real-time media processing.
 
-In [values-override.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/live-video-analysis/live-video-captioning/charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
+In [values-override.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/live-video-analysis/live-video-captioning/charts/values-override.yaml), specify the Kubernetes node name by setting `global.nodeName`. This references the built-in `kubernetes.io/hostname` label, so no node labeling permissions are required.
 
 Example:
 
@@ -361,4 +361,4 @@ helm uninstall lvc -n "$my_namespace"
 - [Object Detection Pipeline](../how-to-guides/configure-object-detection-pipeline.md)
 - [Build from Source](../get-started/build-from-source.md)
 - [Embedding Creation with RAG](../how-to-guides/configure-embedding-creation-with-rag.md)
-- [Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)
+- [Model Download Service](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html)

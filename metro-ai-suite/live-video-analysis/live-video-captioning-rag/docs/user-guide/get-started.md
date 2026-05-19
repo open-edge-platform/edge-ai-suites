@@ -1,6 +1,6 @@
 # Get Started
 
-The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
+The Live Video Captioning RAG sample application is a retrieval-augmented generation workflow that creates caption-text embeddings and stores them in a vector database together with the corresponding video frames and metadata, using an LLM that is optimized and deployed using OpenVINO™ toolkit, for response generation. The application works with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/index.html) sample application that processes a Real-Time Streaming Protocol (RTSP) video stream, runs video analytics pipelines, and uses a Vision-Language Model (VLM) to generate live captions for video frames. The Live Video Captioning sample application then sends the frame data, caption text, and associated metadata to the Live Video Captioning RAG sample application so the latter can build an embedding context and store it in the vector database. The Live Video Captioning RAG sample application then provides chatbots that answer questions based on the caption text generated from the video frames.
 
 By following this guide, you will learn how to:
 
@@ -13,18 +13,18 @@ By following this guide, you will learn how to:
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) provided to prepare the model.
+- OpenVINO toolkit-compatible LLM in `llm_models/`. User may refer to the [model preparation steps](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/get-started/model-preparation.html) provided to prepare the model.
 
 ## Run the Application
 
 1. Clone the suite:
 
    Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   <!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/live-video-analysis/live-video-captioning-rag
@@ -106,9 +106,9 @@ By following this guide, you will learn how to:
 
 ## Integration with Live Video Captioning
 
-This sample application is designed to work together with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/index.html) sample application, which uses its video analytics pipeline to process video frames, generate captions, and send both frame and caption data so this application can create text embeddings and enable RAG-based contextual chat.
+This sample application is designed to work together with the [Live Video Captioning](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/index.html) sample application, which uses its video analytics pipeline to process video frames, generate captions, and send both frame and caption data so this application can create text embeddings and enable RAG-based contextual chat.
 
-For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
+For setup instructions, see [Setup Live Video Captioning RAG along with Live Video Captioning](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-video-captioning/how-to-guides/configure-embedding-creation-with-rag.html)
 
 ## Testing and Coverage
 

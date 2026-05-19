@@ -34,7 +34,7 @@ DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 Open PowerShell and run all terminal commands:
 
 ```powershell
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
@@ -74,7 +74,7 @@ gst-inspect-1.0 gvadetect
 
 To use a GenICam-compatible camera (e.g., Basler, Balluff, HikRobot), download the GenICam runtime DLLs and set the required environment variables.
 
-The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 #### Download GenICam Runtime DLLs
 

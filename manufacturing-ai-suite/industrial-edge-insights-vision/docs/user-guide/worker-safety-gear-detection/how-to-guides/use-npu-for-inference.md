@@ -9,10 +9,11 @@ Low-power accelerators like a Neural Processing Unit (NPU) can offload neural ne
 DLStreamer and the DLStreamer Pipeline Server support inference on NPU devices, allowing applications built on these frameworks to leverage NPU acceleration for improved efficiency and performance.
 
 Before running inference on an NPU, ensure that:
+
 - The host system includes a supported NPU device
 - The required NPU drivers are installed and properly configured
 
-For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
+For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
 
  For containerized application, following additional changes are required.
 
@@ -32,6 +33,7 @@ services:
       # you can add specific devices in case you don't want to provide access to all like below.
       - "/dev:/dev"
 ```
+
 The changes above adds the container user to the `render` group and provides access to the NPU devices.
 
 ### Hardware specific encoder/decoders
@@ -42,11 +44,11 @@ Gstreamer has a variety of hardware specific encoders and decoders elements such
 
 Additionally, one can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel NPUs.
 
-Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
+Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
 ### NPU specific element properties
 
-DL Streamer inference elements also provides property such as `device=NPU` and `pre-process-backend=va` which should be used in pipelines with NPU memory. It performs mapping to the system memory and uses VA pre-processor. Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
+DL Streamer inference elements also provides property such as `device=NPU` and `pre-process-backend=va` which should be used in pipelines with NPU memory. It performs mapping to the system memory and uses VA pre-processor. Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/model_preparation.html#model-pre-and-post-processing) for more.
 
 ## Tutorial on how to use NPU specific pipelines
 
@@ -63,7 +65,9 @@ The pipeline `worker_safety_gear_detection_npu` in `pipeline-server-config.json`
     ```sh
     docker compose up -d
     ```
+
 2. Start the pipeline.
+
     ```sh
     ./sample_start.sh -p worker_safety_gear_detection_npu
     ```

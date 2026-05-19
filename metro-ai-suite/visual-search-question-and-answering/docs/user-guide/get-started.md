@@ -16,11 +16,11 @@
 #### Option 1: Build from source
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+<!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set metro-ai-suite
 cd metro-ai-suite
@@ -29,7 +29,7 @@ cd metro-ai-suite
 Run the commands to build images for the microservices:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-libraries.git -b release-2026.1.0
 cd edge-ai-libraries/microservices
 
 docker build -t dataprep-visualdata-milvus:latest --build-arg https_proxy=$https_proxy --build-arg http_proxy=$http_proxy --build-arg no_proxy=$no_proxy -f visual-data-preparation-for-retrieval/milvus/src/Dockerfile .
@@ -96,8 +96,8 @@ Otherwise, if you would like to use your own data (images and video), make sure 
      ```
 
      > **Important:** You must set `EMBEDDING_MODEL_NAME` and `VLM_MODEL_NAME` before running `env.sh`. See
-     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for Multimodal Embedding Serving for available embedding models, and
-     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/multimodal-embedding-serving/docs/user-guide/supported-models.md) for Multimodal Embedding Serving for available embedding models, and
+     > [Supported models](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/vlm-openvino-serving/docs/user-guide/Overview.md#models-supported) for VLM OpenVINO for available VLM models.
 
      You might want to pay some attention to `DEVICE`, `VLM_DEVICE` and `EMBEDDING_DEVICE` in `env.sh`. By default, they are `GPU.1`, which applies to a standard hardware platform with an integrated GPU as `GPU.0` and a discrete GPU as `GPU.1`. You can refer to [OpenVINO's query device sample](https://docs.openvino.ai/2024/learn-openvino/openvino-samples/hello-query-device.html) to learn more about how to identify which GPU index should be set.
 

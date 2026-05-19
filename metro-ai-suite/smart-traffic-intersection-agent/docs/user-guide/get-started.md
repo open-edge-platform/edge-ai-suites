@@ -36,8 +36,8 @@ Traffic Intersection Agent.
 ### 1. Clone the Suite
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+<!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
@@ -120,7 +120,7 @@ locations on the same machine for `n` required instances.
 1. Clone the repository into a new directory:
 
    ```bash
-   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+   git clone --depth 1 -b release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
    cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
    ```
 
@@ -163,7 +163,7 @@ locations on the same machine for `n` required instances.
 1. Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
    ```bash
-   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+   git clone --depth 1 -b release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
    cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
    ```
 
@@ -250,7 +250,7 @@ export WEATHER_MOCK=True
 
 ### Customizing the video used by sample application
 
-The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
+The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
 
 ## Accessing the Services
 

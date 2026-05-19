@@ -37,7 +37,7 @@ Follow these steps to run the tests:
    Clone the repository to your local machine:
 
    ```bash
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
    cd edge-ai-suites/metro-ai-suite/smart-traffic-intersection-agent
    ```
 

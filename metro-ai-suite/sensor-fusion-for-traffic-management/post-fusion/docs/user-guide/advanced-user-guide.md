@@ -239,7 +239,7 @@ Environment requirement:
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -292,7 +292,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
@@ -329,7 +329,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -382,7 +382,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
@@ -420,7 +420,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -473,7 +473,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
@@ -511,7 +511,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -564,7 +564,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 
@@ -602,7 +602,7 @@ sudo -E ./build/bin/testGRPCCPlusLPipeline 127.0.0.1 50052 ai_inference/test/con
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 - `media_fusion` display type
 
@@ -655,7 +655,7 @@ Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suite
 > **Note:** Run with `root` if you want to get the GPU utilization profiling.
 > Change `/path-to-dataset` to your data path.
 
-Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
+Refer to [kitti360_guide.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/deployments/how_to_generate_kitti_format_dataset/kitti360_guide.md) for data preparation, or just use demo data in [kitti360](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/ai_inference/test/demo/kitti360).
 
 This section describes the unit tests of three major components: media processing, lidar processing, and fusion pipeline without display.
 

@@ -11,11 +11,11 @@
 
 **Development Testing:**
 
-Intel® Core&trade; i7-14700 based systems with Edge Microvisor Toolkit and Windows® 11 based Guest VM.
+Intel® Core™ i7-14700 based systems with Edge Microvisor Toolkit and Windows® 11 based Guest VM.
 
 **Documentation:**
 
-Documentation is **completed**. [README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/hmi-augmented-worker/README.md) is updated with installation steps and reference documents.
+Documentation is **completed**. [README.md](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/hmi-augmented-worker/README.md) is updated with installation steps and reference documents.
 
 **Known Limitations and Issues:**
 

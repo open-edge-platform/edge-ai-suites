@@ -34,11 +34,11 @@ By following this guide, you will learn how to:
 1. **Clone the Suite**:
 
    Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   <!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set metro-ai-suite
    cd metro-ai-suite/metro-vision-ai-app-recipe/
@@ -160,7 +160,7 @@ By following this guide, you will learn how to:
 ## Supporting Resources
 
 - [Troubleshooting](./troubleshooting.md): Find detailed steps to resolve common issues during deployments.
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer-pipeline-server/index.html): Intel microservice based on Python for video ingestion and deep learning inferencing functions.
 
 <!--hide_directive
 :::{toctree}

@@ -21,7 +21,7 @@ The sample application depends on VPP SDK and [live555](http://www.live555.com/)
   * [Known limitations](#known-limitations)
 
 ## License
-The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/main/LICENSE).
+The sample application is licensed under [APACHE 2.0](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/LICENSE).
 
 ## System requirements
 

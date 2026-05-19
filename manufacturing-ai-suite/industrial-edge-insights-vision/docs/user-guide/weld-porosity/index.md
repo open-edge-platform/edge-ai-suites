@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-vision/apps/weld-porosity/README.md">
      Readme
   </a>
 </div>
@@ -44,10 +44,10 @@ sample application.
 
 This sample application is built with the following Intel Edge AI Stack Microservices:
 
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
   is an interoperable containerized microservice based on Python for video ingestion
   and deep learning inferencing functions.
-- [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/microservices/model-download)
+- [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.1.0/microservices/model-download)
   is a microservice to download AI models so that they may be used by DLStreamer Pipeline Server.
 
 It also consists of the below Third-party microservices:

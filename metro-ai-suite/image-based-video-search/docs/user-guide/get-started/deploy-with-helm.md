@@ -43,7 +43,7 @@ Before You Begin, ensure the following:
 1. **Clone the repo**:
   - Clone the repo and go to helm directory
     ```bash
-    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+    git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
     cd edge-ai-suites/metro-ai-suite/image-based-video-search/chart
     ```
 

@@ -37,5 +37,5 @@ The software requirements to install the sample application are provided in othe
 
 ## Related Requirements
 
-- Smart NVR requirements: [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started/system-requirements.html)
-- VSS requirements: [System Requirements](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/get-started/system-requirements.html)
+- Smart NVR requirements: [System Requirements](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-nvr/get-started/system-requirements.html)
+- VSS requirements: [System Requirements](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/video-search-and-summarization/get-started/system-requirements.html)

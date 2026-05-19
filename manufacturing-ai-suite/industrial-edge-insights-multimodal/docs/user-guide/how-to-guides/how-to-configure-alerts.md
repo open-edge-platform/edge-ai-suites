@@ -9,13 +9,13 @@ This section provides instructions for setting up alerts in **Time Series Analyt
 #### Configure MQTT Alerts
 
 By default, the following MQTT alerts are configured in the
-[`configs/time-series-analytics-microservice/config.json`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json)
+[`configs/time-series-analytics-microservice/config.json`](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json)
 file (see the `alerts` section).
 
 #### Configure MQTT Alert in TICK Script
 
 The MQTT alert is configured by default in the TICK script. Refer to
-[`configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick`](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick)
+[`configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick`](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/tick_scripts/weld_anomaly_detector.tick)
 for the `alert()` block details.
 
 > **Note:** Setting **QoS** to `1` ensures messages are delivered at least once. Alerts are preserved and resent if the MQTT broker reconnects after downtime.

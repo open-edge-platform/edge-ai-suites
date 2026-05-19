@@ -117,7 +117,7 @@ EOF
 The installation script downloads three essential AI models:
 
 | **Model Name** | **Purpose** | **Framework** | **Size** |
-|----------------|-------------|---------------|----------|
+| -------------- | ----------- | ------------- | -------- |
 | YOLOv10s | Vehicle detection and tracking | PyTorch/OpenVINO | ~20MB |
 | license-plate-recognition-barrier-0007 | License plate text extraction | Intel OpenVINO | ~2MB |
 | vehicle-attributes-recognition-barrier-0039 | Vehicle type and color analysis | Intel OpenVINO | ~1MB |
@@ -252,6 +252,7 @@ docker compose up -d
 ```
 
 The deployment process will:
+
 - Pull required container images
 - Start the DL Streamer pipeline server
 - Initialize the Node-RED flow management
@@ -319,6 +320,7 @@ For local testing, you can use: `https://localhost/mediamtx/object_detection_1/`
 ![Vehicle Live Detection](_images/car_live_detection.jpg)
 
 Expected results:
+
 - Vehicle detection accuracy > 90%
 - License plate recognition for clearly visible plates
 - Vehicle attribute classification (car, truck, color)
@@ -330,6 +332,7 @@ Expected results:
 ### 1. **Container Startup Issues**
 
 If containers fail to start:
+
 ```bash
 # Check container logs for specific errors
 docker logs <container_name>
@@ -343,6 +346,7 @@ docker logs <container_name>
 ### 2. **Model Download Failures**
 
 If model download fails during installation:
+
 ```bash
 # Retry the installation with verbose output
 ./install.sh 2>&1 | tee install.log
@@ -357,6 +361,7 @@ df -h
 ### 3. **Pipeline Processing Errors**
 
 If video processing fails or shows poor accuracy:
+
 ```bash
 # Check pipeline server logs
 docker logs dlstreamer-pipeline-server
@@ -384,5 +389,5 @@ After successfully setting up the AI Tolling system, consider these enhancements
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite)
