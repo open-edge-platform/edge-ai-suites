@@ -47,8 +47,8 @@ class TaskService:
             # Also cleanup ChromaDB entries if any were created
             if file_key and bucket_name:
                 try:
-                    file_path_uri = f"local://{bucket_name}/{file_key}"
-                    asyncio.run(search_service.delete_file_index(file_path_uri, bucket_name))
+                    # delete_file_index will construct the URI internally, just pass the file_key
+                    asyncio.run(search_service.delete_file_index(file_key, bucket_name))
                     print(f"[CLEANUP] Deleted ChromaDB entries for: {file_key}", flush=True)
                 except Exception as chroma_error:
                     print(f"[WARN] Failed to cleanup ChromaDB: {chroma_error}", flush=True)
