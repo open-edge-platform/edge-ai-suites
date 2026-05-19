@@ -26,6 +26,37 @@ VIDEO_SUMMARIZATION_ENABLED = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").l
 
 class TaskService:
     @staticmethod
+    def _cleanup_failed_upload(db: Session, task: AITask):
+        """Cleanup FileAsset, physical file, and ChromaDB entries when task fails"""
+        try:
+            file_hash = task.payload.get("file_hash")
+            file_key = task.payload.get("file_key")
+            bucket_name = task.payload.get("bucket_name")
+
+            if file_hash:
+                asset = db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
+                if asset:
+                    db.delete(asset)
+                    db.commit()
+                    print(f"[CLEANUP] Removed FileAsset for failed task: {task.id}", flush=True)
+
+            if file_key:
+                storage_service.delete_file(file_key, missing_ok=True)
+                print(f"[CLEANUP] Deleted physical file: {file_key}", flush=True)
+
+            # Also cleanup ChromaDB entries if any were created
+            if file_key and bucket_name:
+                try:
+                    file_path_uri = f"local://{bucket_name}/{file_key}"
+                    asyncio.run(search_service.delete_file_index(file_path_uri, bucket_name))
+                    print(f"[CLEANUP] Deleted ChromaDB entries for: {file_key}", flush=True)
+                except Exception as chroma_error:
+                    print(f"[WARN] Failed to cleanup ChromaDB: {chroma_error}", flush=True)
+
+        except Exception as cleanup_error:
+            print(f"[WARN] Cleanup failed for task {task.id}: {cleanup_error}", flush=True)
+
+    @staticmethod
     async def handle_file_upload(
         db: Session, 
         storage_payload: dict,
@@ -211,6 +242,9 @@ class TaskService:
                     db.commit()
                     print(f"[FAILED] Task {task_id} failed: {task.result}", flush=True)
 
+                    # Cleanup on indexing failure (timeout, parsing error, etc.)
+                    TaskService._cleanup_failed_upload(db, task)
+
                 # Video summarization runs after task is marked COMPLETED
                 # so the file is already searchable during summarization
                 if do_summarize and ai_result and "error" not in ai_result:
@@ -271,22 +305,8 @@ class TaskService:
                 db.commit()
                 print(f"[FAILED] Task {task_id} failed: {e}", flush=True)
 
-                # Cleanup FileAsset and physical file on failure
-                try:
-                    file_hash = task.payload.get("file_hash")
-                    if file_hash:
-                        asset = db.query(FileAsset).filter(FileAsset.file_hash == file_hash).first()
-                        if asset:
-                            db.delete(asset)
-                            db.commit()
-                            print(f"[CLEANUP] Removed FileAsset for failed task: {task_id}", flush=True)
-
-                            file_key = task.payload.get("file_key")
-                            if file_key:
-                                storage_service.delete_file(file_key, missing_ok=True)
-                                print(f"[CLEANUP] Deleted physical file: {file_key}", flush=True)
-                except Exception as cleanup_error:
-                    print(f"[WARN] Failed to cleanup: {cleanup_error}", flush=True)
+                # Cleanup on exception (parsing crash, connection error, etc.)
+                TaskService._cleanup_failed_upload(db, task)
 
     @staticmethod
     def _process_ocr(file_key: str):
