@@ -53,6 +53,15 @@ def setup_helm_environment(request):
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name.lower() else "weld-defect-detection"
 
+    # === [GH_RUNNER_FIX BEGIN] populate chart-runtime files only ===
+    # helm/{nginx,influxdb,Telegraf}.conf etc. are produced by
+    # `make gen_helm_charts` and not tracked in git. Without them the
+    # chart installs with empty ConfigMaps and pods crash-loop.
+    # Idempotent: runs at most once per sample_app per pytest session.
+    assert helm_utils.ensure_chart_generated(chart_path, sample_app) == True, \
+        "Failed to generate Helm chart runtime files via 'make gen_helm_charts'."
+    # === [GH_RUNNER_FIX END] ===
+
     logger.debug(
         f"Installing Helm release... "
         f"Release Name: {release_name}, "
@@ -97,6 +106,13 @@ def setup_helm_weld_environment(request):
 
     # Determine SAMPLE_APP based on release name to match UDF package directory
     sample_app = "wind-turbine-anomaly-detection" if "wind" in release_name_weld.lower() else "weld-defect-detection"
+
+    # === [GH_RUNNER_FIX BEGIN] populate chart-runtime files only ===
+    # Same reason as setup_helm_environment above -- ensure helm/{nginx,
+    # influxdb,Telegraf}.conf etc. exist before helm install. Idempotent.
+    assert helm_utils.ensure_chart_generated(chart_path, sample_app) == True, \
+        "Failed to generate Helm chart runtime files via 'make gen_helm_charts'."
+    # === [GH_RUNNER_FIX END] ===
 
     logger.debug(
         f"Installing Helm release... "

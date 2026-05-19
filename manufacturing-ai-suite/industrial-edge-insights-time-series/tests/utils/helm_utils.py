@@ -1543,17 +1543,25 @@ def verify_influxdb_retention(namespace, chart_path, response):
         return None, False
 
 def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
-    """Run make gen_helm_chart in the parent directory."""
+    """Run `make gen_helm_charts SAMPLE_APP=<sample_app>` in the parent directory.
+
+    The Makefile target reads `${SAMPLE_APP}` (not `${app}`), so the variable
+    name must match exactly or the cp commands silently target empty paths and
+    Make aborts before populating helm/{nginx,influxdb,Telegraf}.conf etc.
+    """
     original_dir = os.getcwd()
     try:
-        
+
         os.chdir(chart_path)
         os.chdir("../")
         list_directory_contents()
 
         # Run the make command
-        logger.info("Generating Helm chart...")
-        result = subprocess.run(["make", "gen_helm_charts", "app=" + sample_app], capture_output=True, text=True, check=True)
+        logger.info(f"Generating Helm chart for SAMPLE_APP={sample_app}...")
+        result = subprocess.run(
+            ["make", "gen_helm_charts", "SAMPLE_APP=" + sample_app],
+            capture_output=True, text=True, check=True,
+        )
         logger.info(result.stdout)
         logger.info("Helm chart generated successfully.")
         list_directory_contents()
@@ -1565,6 +1573,36 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
     finally:
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
+
+
+# === [GH_RUNNER_FIX BEGIN] ensure helm chart files generated once per session ===
+# Files like helm/nginx.conf, helm/influxdb.conf, helm/init-influxdb.sh and
+# helm/Telegraf.conf are NOT tracked in git -- they're produced by
+# `make gen_helm_charts SAMPLE_APP=<app>`. On a fresh CI checkout they don't
+# exist, and Helm's {{ .Files.Get "<missing>" }} silently returns an empty
+# string, so the chart installs with EMPTY ConfigMaps. nginx then crashloops
+# with `no "events" section`, influxd with `Meta.Dir must be specified`, and
+# telegraf exits 0 immediately. Locally tests pass only because a prior manual
+# `make gen_helm_charts` left those files behind. Run generation once per
+# (sample_app) per pytest session.
+_gh_generated_for_sample_app = set()
+
+
+def ensure_chart_generated(chart_path, sample_app):
+    """Ensure helm chart runtime files are generated for `sample_app`.
+
+    Idempotent: only invokes `make gen_helm_charts` the first time it is
+    called for a given sample_app within the current process.
+    """
+    if not sample_app:
+        return True
+    if sample_app in _gh_generated_for_sample_app:
+        return True
+    ok = generate_helm_chart(chart_path, sample_app=sample_app)
+    if ok:
+        _gh_generated_for_sample_app.add(sample_app)
+    return ok
+# === [GH_RUNNER_FIX END] ===
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""
