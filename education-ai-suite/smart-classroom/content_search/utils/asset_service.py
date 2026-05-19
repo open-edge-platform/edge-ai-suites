@@ -52,9 +52,15 @@ class AssetService:
             return None
 
         # Allow re-upload if the associated task failed
-        related_task = db.query(AITask).filter(
-            AITask.payload['file_hash'].astext == file_hash
-        ).order_by(AITask.created_at.desc()).first()
+        # Query all tasks and filter in Python to avoid SQLAlchemy JSON syntax issues
+        all_tasks = db.query(AITask).order_by(AITask.created_at.desc()).all()
+
+        related_task = None
+        for task in all_tasks:
+            payload = task.payload if isinstance(task.payload, dict) else {}
+            if payload.get('file_hash') == file_hash:
+                related_task = task
+                break
 
         if related_task and related_task.status == "FAILED":
             print(f"[ASSET] Task {related_task.id} failed. Allowing re-upload for hash {file_hash}", flush=True)

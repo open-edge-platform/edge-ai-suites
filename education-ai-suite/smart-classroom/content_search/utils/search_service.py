@@ -37,7 +37,7 @@ class SearchService:
         }
         async with httpx.AsyncClient() as client:
             try:
-                response = await client.post(self.ingest_url, json=payload, timeout=300.0)
+                response = await client.post(self.ingest_url, json=payload, timeout=1800.0)
                 response.raise_for_status()
                 logger.info(f"Successfully triggered ingest for {file_path}")
                 return response.json()
