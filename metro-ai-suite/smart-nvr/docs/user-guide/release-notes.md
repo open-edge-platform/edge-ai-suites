@@ -28,7 +28,7 @@
 
 ## Previous Releases
 
-### Version 1.2.4-rc1
+### Version 1.2.4
 
 **Release Date**: 17 Feb 2026  
 
