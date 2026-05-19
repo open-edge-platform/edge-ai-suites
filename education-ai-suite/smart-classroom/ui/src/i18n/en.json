@@ -307,6 +307,7 @@
     "downloadTxt": "Download .txt",
     "removeConfirm": "Remove \"{{fileName}}\"?",
     "removeWarning": "This will permanently delete the file and its index data.",
+    "removeWarningStagedFile": "Are you sure you want to remove this file?",
     "removing": "Removing...",
     "filesExistMessage": "Files already exist. To view, navigate to \"View Files\" in \"Upload\" section.",
     "dismiss": "Dismiss",
