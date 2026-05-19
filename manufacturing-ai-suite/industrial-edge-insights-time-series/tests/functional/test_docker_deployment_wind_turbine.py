@@ -364,6 +364,21 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info("TC_013: Testing MQTT alerts functionality")
     context = setup_wind_turbine_environment
 
+    # ================================================================== #
+    # === [GH_RUNNER_FIX BEGIN] TC_013 only — pre-flight UDF reset ===== #
+    # Block 0/4 (defense-in-depth) — Even though TC_014's finalizer      #
+    # resets the loaded UDF back to MQTT, a cancelled or crashed prior   #
+    # CI run can leave an OPC-UA TICK loaded in TSAM (docker volumes     #
+    # persist across `make down` without -v).  reset_loaded_udf_to() is  #
+    # idempotent: it's a fast no-op when Kapacitor already runs the      #
+    # MQTT TICK, and re-uploads only when needed.  This makes TC_013     #
+    # deterministic regardless of execution order or prior-run state.    #
+    # ================================================================== #
+    logger.info("[GH_RUNNER_FIX] Pre-flight: ensuring loaded UDF is in MQTT mode")
+    if not docker_utils.reset_loaded_udf_to("mqtt"):
+        pytest.fail("[GH_RUNNER_FIX] reset_loaded_udf_to('mqtt') failed — see logs above")
+    # === [GH_RUNNER_FIX END] ========================================== #
+
     # ------------------------------------------------------------------
     # Phase 1: Deploy MQTT stack
     # ------------------------------------------------------------------
@@ -528,7 +543,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # Cleanup handled by fixture
 
 @pytest.mark.opcua
-def test_opcua_alerts(setup_wind_turbine_environment):
+def test_opcua_alerts(setup_wind_turbine_environment, request):
     """TC_014: Testing OPCUA alerts functionality.
 
     The underlying ``validate_opcua_alert_system`` helper performs 5 sequential
@@ -543,6 +558,24 @@ def test_opcua_alerts(setup_wind_turbine_environment):
 
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
+
+    # ================================================================== #
+    # === [GH_RUNNER_FIX BEGIN] TC_014 only — leave-no-trace finalizer = #
+    # This test ships an OPC-UA TICK to TSAM via upload_udf_tar_package. #
+    # Without cleanup, later MQTT-mode tests (e.g. TC_013) inherit the   #
+    # stale OPC-UA UDF because update_config_file() only POSTs config    #
+    # and does NOT re-upload the package.  Reset to the MQTT baseline on #
+    # teardown so subsequent tests see a clean state regardless of order #
+    # or failure point.  Runs on both pass and fail (pytest finalizer).  #
+    # ================================================================== #
+    def _reset_to_mqtt_baseline():
+        try:
+            ok = docker_utils.reset_loaded_udf_to("mqtt")
+            logger.info(f"[GH_RUNNER_FIX] TC_014 teardown: reset_loaded_udf_to('mqtt') -> {ok}")
+        except Exception as exc:
+            logger.warning(f"[GH_RUNNER_FIX] TC_014 teardown reset failed: {exc}")
+    request.addfinalizer(_reset_to_mqtt_baseline)
+    # === [GH_RUNNER_FIX END] ========================================== #
 
     # ------------------------------------------------------------------
     # Phase 1: Deploy OPC-UA stack

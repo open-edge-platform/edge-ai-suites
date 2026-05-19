@@ -1800,6 +1800,98 @@ def execute_gpu_config_curl(device="gpu"):
         logger.error(f"Error executing curl command: {e}")
         return False
 
+# ====================================================================== #
+# === [GH_RUNNER_FIX BEGIN] Cross-test alert-mode reset helpers ======== #
+# Problem these helpers solve                                            #
+# ----------------------------                                           #
+# ``test_opcua_alerts`` calls ``upload_udf_tar_package`` which deposits  #
+# an OPC-UA TICK script inside TSAM's UDF registry.  A subsequent test   #
+# such as ``test_mqtt_alerts`` only re-POSTs ``/ts-api/config`` and does #
+# NOT re-upload the UDF tar, so Kapacitor keeps executing the stale     #
+# OPC-UA TICK (``.post('/opcua_alerts')`` → 400) and the MQTT broker    #
+# never receives anything.                                              #
+#                                                                       #
+# These helpers provide an idempotent way for state-sensitive tests to  #
+# guarantee the loaded UDF matches the alert mode they require,         #
+# regardless of execution order.  They are also used as a finalizer in  #
+# tests that mutate the loaded UDF so cleanup happens at the source.    #
+# ====================================================================== #
+
+def _kapacitor_task_alert_mode_matches(alert_mode):
+    """Return True iff Kapacitor's loaded windturbine_anomaly_detector task is
+    currently executing the TICK for the given alert_mode ("mqtt" or "opcua").
+
+    Looks at the live task definition served by Kapacitor's REST API rather
+    than the .tick file on the test host, because TSAM uses its own copy of
+    the UDF package (only ``upload_udf_tar_package`` ships a new one).
+    Returns False on any error so the caller falls through to a re-upload
+    (safer than a false positive that skips needed remediation).
+    """
+    if alert_mode not in ("mqtt", "opcua"):
+        return False
+    tsam_name = constants.CONTAINERS["time_series_analytics"]["name"]
+    try:
+        result = subprocess.run(
+            ["docker", "exec", tsam_name,
+             "curl", "-s", "http://localhost:9092/kapacitor/v1/tasks/windturbine_anomaly_detector"],
+            capture_output=True, text=True, timeout=15,
+        )
+        if result.returncode != 0:
+            return False
+        body = result.stdout or ""
+        if alert_mode == "mqtt":
+            return ("my_mqtt_broker" in body) and ("opcua_alerts" not in body)
+        return ("opcua_alerts" in body) and ("my_mqtt_broker" not in body)
+    except Exception as exc:
+        logger.warning(f"[reset_loaded_udf_to] Kapacitor introspection failed: {exc}")
+        return False
+
+
+def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
+    """Ensure TSAM's loaded UDF package and config are in `alert_mode`.
+
+    Idempotent: if Kapacitor's running task already matches `alert_mode`,
+    returns True fast without re-tar/re-upload.  Otherwise:
+      1. Rewrites the on-disk TICK script to `alert_mode`.
+      2. Re-tars and POSTs the UDF package to ``/ts-api/udfs/package``.
+      3. POSTs ``/ts-api/config`` so Kapacitor reloads the task from the
+         freshly-uploaded package.
+
+    Used both as a finalizer in state-mutating tests (e.g. the OPC-UA
+    alert test resets back to MQTT baseline on teardown) and as an
+    optional pre-check at the top of state-consuming tests for
+    self-sufficiency in any execution order.
+
+    Args:
+        alert_mode: "mqtt" or "opcua".
+        sample_app: Sample app name passed to ``upload_udf_tar_package``.
+
+    Returns:
+        bool: True if the loaded UDF is in the requested mode after the call.
+    """
+    if alert_mode not in ("mqtt", "opcua"):
+        logger.error(f"[reset_loaded_udf_to] Invalid alert_mode '{alert_mode}'")
+        return False
+
+    if _kapacitor_task_alert_mode_matches(alert_mode):
+        logger.info(f"[reset_loaded_udf_to] Kapacitor already in '{alert_mode}' mode; skipping re-upload")
+        return True
+
+    logger.info(f"[reset_loaded_udf_to] Loaded UDF != '{alert_mode}'; rewriting TICK + re-uploading tar")
+    if check_and_update_tick_script(setup=alert_mode) is None:
+        logger.error(f"[reset_loaded_udf_to] Failed to rewrite TICK to '{alert_mode}'")
+        return False
+    if not upload_udf_tar_package(sample_app):
+        logger.error(f"[reset_loaded_udf_to] Failed to re-upload UDF tar for '{alert_mode}'")
+        return False
+    if not update_config_file(alert_mode):
+        logger.error(f"[reset_loaded_udf_to] Failed to POST '{alert_mode}' config")
+        return False
+    logger.info(f"[reset_loaded_udf_to] Reset to '{alert_mode}' completed")
+    return True
+# === [GH_RUNNER_FIX END] ============================================== #
+
+
 def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
     """Simple 5-step MQTT alert validation function with app-specific support."""
     logger.info("=== Simple MQTT Alert System Validation ===")
