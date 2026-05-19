@@ -20,6 +20,4 @@ Edge AI application for real-time deterministic threat detection. *(placeholder)
 |-----------------------------------------|--------------------------------------------|
 | `apps/handheld-multi-modal/`            | Handheld multi-modal application           |
 | `apps/deterministic-threat-detection/`  | Deterministic threat detection application |
-| `agentic/`                              | Agentic components                         |
-| `infra/`                                | Infrastructure and deployment assets       |
 | `docs/`                                 | Documentation                              |
