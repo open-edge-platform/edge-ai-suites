@@ -93,15 +93,25 @@ on:
         default: false
 
 jobs:
-  # Guard for manual dispatches: only allow runs from a release-* branch or
-  # a tag. The Actions UI shows every branch in its ref dropdown, so this
-  # step is what actually enforces the restriction.
-  guard-dispatch-ref:
-    name: Guard manual dispatch ref
-    if: github.event_name == 'workflow_dispatch'
+  changes:
+    name: Detect changed components
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
+      deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
+      solution: ${{ steps.force.outputs.solution || steps.filter.outputs.solution }}
     steps:
-      - name: Verify ref is a release-* branch or a tag
+      # Guard for manual dispatches: only allow runs from a release-* branch
+      # or a tag. The Actions UI shows every branch in its ref dropdown, so
+      # this step is what actually enforces the restriction. Folded into this
+      # job (rather than living in its own job we `needs:` on) to avoid the
+      # GitHub Actions quirk where downstream `needs.changes.outputs.*` are
+      # not propagated when the chain involves `if: always() && ...`.
+      - name: Guard manual dispatch ref
+        if: github.event_name == 'workflow_dispatch'
         run: |
           ref="${GITHUB_REF}"
           echo "Triggered from ref: $ref"
@@ -112,22 +122,6 @@ jobs:
             exit 1
           fi
 
-  changes:
-    name: Detect changed components
-    # On dispatch, wait for the ref guard to pass before doing anything.
-    needs: [guard-dispatch-ref]
-    if: |
-      always() &&
-      (needs.guard-dispatch-ref.result == 'success' || needs.guard-dispatch-ref.result == 'skipped')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
-      deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
-      solution: ${{ steps.force.outputs.solution || steps.filter.outputs.solution }}
-    steps:
       - name: Checkout
         uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
         with:
