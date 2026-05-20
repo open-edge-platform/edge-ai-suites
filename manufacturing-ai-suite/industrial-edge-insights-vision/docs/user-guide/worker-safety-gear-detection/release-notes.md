@@ -1,5 +1,16 @@
 # Release Notes: Worker Safety Gear Detection
 
+## Version 1.3.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+
+**Improved**
+
+- DL Streamer Pipeline Server version upgraded to 2026.1.0.
+
 ## Version 1.2.0
 
 **New**

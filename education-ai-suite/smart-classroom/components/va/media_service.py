@@ -157,7 +157,8 @@ class MediaService:
                 command,
                 stdout=self.log_file,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
                 cwd=str(self.mediamtx_dir),
                 creationflags=(

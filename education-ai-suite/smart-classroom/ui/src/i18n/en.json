@@ -247,7 +247,8 @@
     "summarizing":"Summarizing...",
     "summarize":"Summarize",
     "videoSummarizationToggle":"Enable video summarization for this file",
-    "summarizationFailed":"Video summarization failed. Please try again"
+    "summarizationFailed": "Video summarization failed. Please try again",
+    "unsupportedFilesWarning": "Unsupported file(s) skipped: {{files}}. Supported formats: MP4, JPG, PNG, JPEG, TXT, PDF, DOCX, DOC, PPTX, PPT, XLSX, XLS, HTML, HTM, XML, MD."
   },
   "searchSection": {
     "title": "Search",
@@ -284,6 +285,33 @@
     "inputPlaceholder": "Ask a question about your content…",
     "send": "Send (Enter)",
     "enterHint": "Enter to send · Shift+Enter for new line"
+  },
+  "fileManager": {
+    "viewFiles": "View Files",
+    "totalFiles": "Total Files:",
+    "refresh": "Refresh",
+    "back": "Back",
+    "loading": "Files Loading...",
+    "retry": "Retry",
+    "noFiles": "No files uploaded yet.",
+    "fileName": "File Name",
+    "type": "Type",
+    "filterByType": "Filter by Type",
+    "clear": "Clear",
+    "size": "Size",
+    "createdAt": "Created At",
+    "ocrPreview": "Click to preview OCR text",
+    "removeFile": "Remove file",
+    "ocrPreviewTitle": "\"{{filename}}\" plain-text preview",
+    "ocrLoading": "Loading...",
+    "downloadTxt": "Download .txt",
+    "removeConfirm": "Remove \"{{fileName}}\"?",
+    "removeWarning": "This will permanently delete the file and its index data.",
+    "removeWarningStagedFile": "Are you sure you want to remove this file?",
+    "removing": "Removing...",
+    "filesExistMessage": "Files already exist. To view, navigate to \"View Files\" in \"Upload\" section.",
+    "dismiss": "Dismiss",
+    "enabledAfterSegmentation": "Enabled only after content segmentation"
   },
   "resultSection": {
     "title": "Results",

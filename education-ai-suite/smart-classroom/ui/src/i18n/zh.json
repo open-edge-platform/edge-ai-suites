@@ -248,7 +248,8 @@
     "summarizing": "正在摘要...",
     "summarize": "摘要",
     "videoSummarizationToggle": "为此文件启用视频摘要",
-    "summarizationFailed": "视频摘要失败，请重试"
+    "summarizationFailed": "视频摘要失败，请重试",
+    "unsupportedFilesWarning": "已跳过不支持的文件：{{files}}。支持的格式：MP4、JPG、PNG、JPEG、TXT、PDF、DOCX、DOC、PPTX、PPT、XLSX、XLS、HTML、HTM、XML、MD。"
   },
   "searchSection": {
     "title": "搜索",
@@ -285,6 +286,33 @@
     "inputPlaceholder": "就您的内容提问…",
     "send": "发送（Enter）",
     "enterHint": "按 Enter 发送 · 按 Shift+Enter 换行"
+  },
+  "fileManager": {
+    "viewFiles": "查看文件",
+    "totalFiles": "文件总数：",
+    "refresh": "刷新",
+    "back": "返回",
+    "loading": "文件加载中...",
+    "retry": "重试",
+    "noFiles": "暂无上传文件。",
+    "fileName": "文件名",
+    "type": "类型",
+    "filterByType": "按类型筛选",
+    "clear": "清除",
+    "size": "大小",
+    "createdAt": "创建时间",
+    "ocrPreview": "点击预览 OCR 文本",
+    "removeFile": "删除文件",
+    "ocrPreviewTitle": "\"{{filename}}\" 纯文本预览",
+    "ocrLoading": "加载中...",
+    "downloadTxt": "下载 .txt",
+    "removeConfirm": "删除 \"{{fileName}}\"？",
+    "removeWarning": "这将永久删除该文件及其索引数据。",
+    "removeWarningStagedFile": "您确定要删除此文件吗？",
+    "removing": "删除中...",
+    "filesExistMessage": "文件已存在。如需查看，请在\"上传\"部分点击\"查看文件\"。",
+    "dismiss": "关闭",
+    "enabledAfterSegmentation": "仅在内容分段完成后启用"
   },
   "resultSection": {
     "title": "结果",
