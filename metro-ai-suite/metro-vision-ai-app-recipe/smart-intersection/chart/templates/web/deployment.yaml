@@ -57,6 +57,10 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-supass-secret
               key: supass
+        - name: DBHOST
+          value: smart-intersection-pgserver
+        - name: DBPORT
+          value: "5432"
         - name: EXAMPLEDB
           value: /home/scenescape/SceneScape/example_db/smart-intersection-ri.tar.bz2
         volumeMounts:
