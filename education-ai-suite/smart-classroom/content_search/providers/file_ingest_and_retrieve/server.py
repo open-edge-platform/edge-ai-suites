@@ -150,8 +150,9 @@ retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_m
 local_store = LocalStore.from_config()
 
 _frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
+_frame_extract_interval_sparse = int(os.getenv("FRAME_EXTRACT_INTERVAL_SPARSE", "90"))
 _do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
-logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, do_detect_and_crop={_do_detect_and_crop}")
+logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, frame_extract_interval_sparse={_frame_extract_interval_sparse}, do_detect_and_crop={_do_detect_and_crop}")
 
 @app.get("/v1/dataprep/health")
 def health():
@@ -239,7 +240,7 @@ async def ingest_dir(request: IngestDirRequest = Body(...)):
                 if not proc_files:
                     return None
 
-                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, frame_extract_interval_sparse=_frame_extract_interval_sparse, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)
 
@@ -276,7 +277,7 @@ async def ingest_file(request: IngestFileRequest = Body(...)):
                 logger.info(f"Successfully loaded file from storage: {local_file_path}")
                 meta["file_path"] = f"local://{bucket_name}/{file_path}"
                 meta["file_name"] = os.path.basename(file_path)
-                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, frame_extract_interval_sparse=_frame_extract_interval_sparse, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)
 
