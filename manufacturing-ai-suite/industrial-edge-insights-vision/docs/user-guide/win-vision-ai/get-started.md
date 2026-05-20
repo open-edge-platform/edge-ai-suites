@@ -240,8 +240,6 @@ input:
 :::{tab-item}hide_directive--> **RTSP**
 <!--hide_directive:sync: RTSP hide_directive-->
 
-<!--#### Input source — RTSP-->
-
 Requires [installed MediaMTX](#download-mediamtx-for-rtsp--webrtc-streaming).
 Start the RTSP servers:
 
@@ -254,8 +252,6 @@ input:
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **Camera (GenICam / Basler)**
 <!--hide_directive:sync: Camera hide_directive-->
-
-<!--#### Input source — Camera (GenICam / Basler)-->
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
@@ -292,8 +288,6 @@ output:
 :::{tab-item}hide_directive--> **RTSP**
 <!--hide_directive:sync: RTSP hide_directive-->
 
-<!--#### Frame Output — RTSP-->
-
 Streams to `rtsp://localhost:8554/front`. Open in VLC.
 
 ```yaml
@@ -306,8 +300,6 @@ output:
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **WebRTC + RTSP (both on the same pipeline)**
 <!--hide_directive:sync: WebRTCnRTSP hide_directive-->
-
-<!--#### Frame Output — WebRTC + RTSP (both on the same pipeline)-->
 
 Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
 
@@ -356,8 +348,6 @@ cd "C:\Program Files\mosquitto"
 <!--hide_directive:::
 :::{tab-item}hide_directive--> **File**
 <!--hide_directive:sync: File hide_directive-->
-
-<!--#### Metadata Output — File-->
 
 Writes inference results as JSON Lines to a local file inside output directory.
 
