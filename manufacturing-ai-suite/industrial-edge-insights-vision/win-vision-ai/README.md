@@ -50,6 +50,6 @@ control.
 
 - [Overview](../docs/user-guide/win-vision-ai/index.md) - architecture overview and feature summary.
 - [Get Started](../docs/user-guide/win-vision-ai/get-started.md) - step-by-step installation and configuration instructions.
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
+  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/supported_models.html)
   - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/main/scripts/download_models/README.md)
