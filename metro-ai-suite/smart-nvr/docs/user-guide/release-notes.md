@@ -1,5 +1,6 @@
 # Release Notes
 
+- [Version 2026.1.0-rc1](#version-202610-rc1)
 - [Version 1.2.4-rc1](#version-124-rc1)
 - [Version 1.2.3](#version-123)
 - [Version 1.2.2](#version-122)
@@ -9,15 +10,14 @@
 
 ## Current Release
 
-### Version 1.2.4-rc1
+### Version 2026.1.0-rc1
 
-**Release Date**: 17 Feb 2026  
+**Release Date**: 15 May 2026  
 
 **New Features**:
 
 - Dependabot fixes for security vulnerabilities in dependencies.
-- Documentation updates for clarity and accuracy.
-- Minor bug fixes.
+- Script update.
 
 **Known Issues**:
 
@@ -27,6 +27,16 @@
 - The **AI-Powered Event Viewer** feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
 
 ## Previous Releases
+
+### Version 1.2.4
+
+**Release Date**: 17 Feb 2026  
+
+**New Features**:
+
+- Dependabot fixes for security vulnerabilities in dependencies.
+- Documentation updates for clarity and accuracy.
+- Minor bug fixes.
 
 ### Version 1.2.3
 
