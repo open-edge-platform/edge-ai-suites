@@ -9,6 +9,8 @@ import logging
 from fastapi import HTTPException, UploadFile
 from typing import Optional
 
+from utils.file_validator import file_validator
+
 # Stream in 1 MiB chunks so memory stays bounded even for multi-GB uploads.
 _STREAM_CHUNK_SIZE = 1024 * 1024
 
@@ -46,9 +48,18 @@ class StorageService:
         if not self.is_available:
             raise RuntimeError(f"Storage Service is unavailable: {self._error_msg}")
 
+        is_valid, error_msg = file_validator.validate_basic_file(
+            filename=file.filename,
+            content_type=file.content_type,
+            file_size=file.size
+        )
+        if not is_valid:
+            logger.warning(f"Upload rejected: {error_msg}")
+            return {"validation_error": error_msg, "error_type": "invalid_file"}
+
         if max_size_bytes is not None and file.size and file.size > max_size_bytes:
             logger.warning(f"Upload rejected: file '{file.filename}' size {file.size} bytes exceeds maximum allowed {max_size_bytes} bytes")
-            raise HTTPException(status_code=413, detail="File size exceeds maximum allowed limit")
+            return {"validation_error": "File size exceeds maximum allowed limit", "error_type": "file_too_large"}
 
         run_id = str(uuid.uuid4())
         main_type = file.content_type.split('/')[0]
@@ -66,25 +77,34 @@ class StorageService:
 
         hasher = hashlib.sha256()
         total_bytes = 0
-        try:
-            with open(dst_path, "wb") as out:
-                while True:
-                    chunk = await file.read(_STREAM_CHUNK_SIZE)
-                    if not chunk:
-                        break
-                    total_bytes += len(chunk)
-                    if max_size_bytes is not None and total_bytes > max_size_bytes:
-                        logger.warning(f"Upload rejected during streaming: file '{file.filename}' reached {total_bytes} bytes, exceeds maximum allowed {max_size_bytes} bytes")
-                        raise HTTPException(status_code=413, detail="File size exceeds maximum allowed limit")
-                    hasher.update(chunk)
-                    out.write(chunk)
-        except HTTPException:
-            # Remove the partial file so we don't leave junk on disk.
-            try:
-                dst_path.unlink(missing_ok=True)
-            except Exception:
-                pass
-            raise
+        is_first_chunk = True
+        with open(dst_path, "wb") as out:
+            while True:
+                chunk = await file.read(_STREAM_CHUNK_SIZE)
+                if not chunk:
+                    break
+
+                if is_first_chunk:
+                    is_valid, error_msg = file_validator.validate_file_content(chunk, file.filename)
+                    if not is_valid:
+                        logger.warning(f"Upload rejected: {error_msg}")
+                        try:
+                            dst_path.unlink(missing_ok=True)
+                        except Exception:
+                            pass
+                        return {"validation_error": error_msg, "error_type": "invalid_file"}
+                    is_first_chunk = False
+
+                total_bytes += len(chunk)
+                if max_size_bytes is not None and total_bytes > max_size_bytes:
+                    logger.warning(f"Upload rejected during streaming: file '{file.filename}' reached {total_bytes} bytes, exceeds maximum allowed {max_size_bytes} bytes")
+                    try:
+                        dst_path.unlink(missing_ok=True)
+                    except Exception:
+                        pass
+                    return {"validation_error": "File size exceeds maximum allowed limit", "error_type": "file_too_large"}
+                hasher.update(chunk)
+                out.write(chunk)
 
         return {
             "source": "local",
