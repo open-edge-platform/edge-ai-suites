@@ -3,7 +3,7 @@
 
 FROM python:3.12-slim AS base
 
-ARG INSTALL_DRIVER_VERSION="25.48.36300"
+ARG INSTALL_DRIVER_VERSION="26.09.37435"
 
 # Copy drivers and set execute permission on sh files
 COPY ./drivers/install_gpu_drivers.sh /tmp/drivers/install_gpu_drivers.sh
