@@ -879,6 +879,19 @@ export async function getCsSystemConfig(): Promise<{
   });
 }
 
+export interface CsHealthStatus {
+  status: 'ok' | 'degraded';
+  timestamp: number;
+  video_summarization_enabled: boolean;
+  services: Record<string, string>;
+}
+
+export async function getCsHealth(): Promise<CsHealthStatus> {
+  const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/health`);
+  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  return res.json();
+}
+
 export async function csDownloadText(fileKey: string): Promise<string> {
   return safeApiCall(async () => {
     const res = await fetch(
@@ -1082,27 +1095,27 @@ export async function searchContent(sessionId: string, query: string, topK: numb
 
 // Content Search API - search for objects
 export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]> {
+  let response: Response;
   try {
-    const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
+    response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Content search failed: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    // API returns { code, data: { results: [...] }, message, timestamp }
-    return Array.isArray(data?.data?.results) ? data.data.results : [];
   } catch (error) {
-    console.error('csSearch error:', error);
-    return [];
+    throw new Error('BACKEND_UNAVAILABLE');
   }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Content search failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  // API returns { code, data: { results: [...] }, message, timestamp }
+  return Array.isArray(data?.data?.results) ? data.data.results : [];
 }
 
 // ── Q&A types ──────────────────────────────────────────────────────────────
