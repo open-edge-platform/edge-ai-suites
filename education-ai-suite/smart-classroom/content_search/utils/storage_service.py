@@ -102,7 +102,7 @@ class StorageService:
                         dst_path.unlink(missing_ok=True)
                     except Exception:
                         pass
-                    return {"validation_error": "File size exceeds maximum allowed limit", "error_type": "file_too_large"}
+                    return {"validation_error": f"File size {total_bytes / 1024 / 1024:.2f} MB exceeds maximum allowed {max_size_bytes / 1024 / 1024:.2f} MB", "error_type": "file_too_large"}
                 hasher.update(chunk)
                 out.write(chunk)
 
