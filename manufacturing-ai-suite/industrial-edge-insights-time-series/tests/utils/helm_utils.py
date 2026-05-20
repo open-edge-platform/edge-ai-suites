@@ -1695,10 +1695,16 @@ def get_pod_names(namespace):
 def check_pod_logs_for_errors(namespace, pod_name):
     """Check pod logs for errors."""
     try:
+        # === [GH_RUNNER_FIX BEGIN] widen log window only ===
+        # --tail=5 was too narrow: startup errors (e.g. kapacitor "UDF not
+        # found") scroll past within ~30s of runtime, causing TC_009 to
+        # falsely report "clean" logs before UDF activation. Widen to 500
+        # so genuine startup errors remain visible across the wait_time.
         result = subprocess.run(
-            ["kubectl", "logs", pod_name, "-n", namespace, "--tail=5"],
+            ["kubectl", "logs", pod_name, "-n", namespace, "--tail=500"],
             capture_output=True, text=True, check=True
         )
+        # === [GH_RUNNER_FIX END] ===
         logs = result.stdout.strip()
        
         # Filter out benign warnings that should not be treated as errors
