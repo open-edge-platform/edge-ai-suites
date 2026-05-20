@@ -5,12 +5,14 @@
 
 import os
 import json
+import socket
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from utils.database import get_db
 import time
+import httpx
 from utils.storage_service import storage_service
 from utils.search_service import search_service
 
@@ -31,20 +33,73 @@ async def get_config():
     }
 
 
+async def _check_http_health(url: str, timeout: float = 3.0) -> str:
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            resp = await client.get(url)
+            if resp.status_code < 400:
+                return "healthy"
+            return f"unhealthy: HTTP {resp.status_code}"
+    except Exception:
+        return "unavailable"
+
+
+def _check_tcp(host: str, port: int, timeout: float = 3.0) -> str:
+    try:
+        s = socket.create_connection((host, port), timeout=timeout)
+        s.close()
+        return "healthy"
+    except Exception:
+        return "unavailable"
+
+
 @router.get("/health")
 async def health_check(db: Session = Depends(get_db)):
+    vs_enabled = os.getenv("VIDEO_SUMMARIZATION_ENABLED", "true").lower() in ("true", "1", "yes")
+
+    # Database
     db_status = "healthy"
     try:
         db.execute(text("SELECT 1"))
     except Exception as e:
         db_status = f"unhealthy: {str(e)}"
 
+    # ChromaDB (TCP check)
+    chroma_host = os.getenv("CHROMA_HOST", "127.0.0.1")
+    chroma_port = int(os.getenv("CHROMA_PORT", "9090"))
+    chromadb_status = _check_tcp(chroma_host, chroma_port)
+
+    # File Ingest service
+    ingest_host = os.getenv("INGEST_HOST", "127.0.0.1")
+    ingest_port = os.getenv("INGEST_PORT", "9990")
+    ingest_status = await _check_http_health(f"http://{ingest_host}:{ingest_port}/v1/dataprep/health")
+
+    services = {
+        "database": db_status,
+        "chromadb": chromadb_status,
+        "file_ingest": ingest_status,
+    }
+
+    # VLM and video_preprocess only required when video summarization is enabled
+    if vs_enabled:
+        vlm_host = os.getenv("VLM_HOST", "127.0.0.1")
+        vlm_port = os.getenv("VLM_PORT", "9900")
+        vlm_status = await _check_http_health(f"http://{vlm_host}:{vlm_port}/health")
+
+        preprocess_host = os.getenv("PREPROCESS_HOST", "127.0.0.1")
+        preprocess_port = os.getenv("PREPROCESS_PORT", "8001")
+        preprocess_status = await _check_http_health(f"http://{preprocess_host}:{preprocess_port}/health")
+
+        services["vlm"] = vlm_status
+        services["video_preprocess"] = preprocess_status
+
+    all_healthy = all(v == "healthy" for v in services.values())
+
     return {
-        "status": "ok" if db_status == "healthy" else "error",
+        "status": "ok" if all_healthy else "degraded",
         "timestamp": time.time(),
-        "services": {
-            "database": db_status
-        }
+        "video_summarization_enabled": vs_enabled,
+        "services": services,
     }
 
 @router.post("/reconcile")

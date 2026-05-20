@@ -218,7 +218,9 @@
     "subtitle": "上传内容后，您可以使用文本或图像进行搜索",
     "uploadButton": "上传内容",
     "back": "← 返回",
-    "upload": "上传"
+    "upload": "上传",
+    "backendUnreachable": "无法连接到内容搜索后端服务，请确认服务是否正在运行。",
+    "servicesUnhealthy": "以下后端服务不可用：{{services}}。部分功能可能受限。"
   },
   "uploadSection":{
     "upload": "上传",
@@ -323,6 +325,8 @@
     "videos": "视频",
     "noResults": "未找到结果。",
     "noResultsHint": "尝试不同的问题或调整搜索筛选条件。",
+    "backendUnavailable": "无法连接到后端服务。",
+    "backendUnavailableHint": "请检查后端服务是否正在运行，然后重试。",
     "type": "类型：",
     "time": "时间：",
     "relevance": "相关性：",

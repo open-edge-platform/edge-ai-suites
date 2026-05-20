@@ -56,7 +56,11 @@ function isAllowed(filename: string): boolean {
 const TERMINAL: TaskStatus[] = ["COMPLETED", "FAILED", "ALREADY_EXISTS"];
 const ACTIVE: TaskStatus[] = ["PROCESSING", "PENDING"];
 
-const UploadSection: React.FC = () => {
+interface UploadSectionProps {
+  disabled?: boolean;
+}
+
+const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((s) => s.ui.sessionId);
@@ -526,7 +530,7 @@ return (
           </div>
 
           <div
-            className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}`}
+            className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}${disabled ? " cs-dropzone-modern--disabled" : ""}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -770,7 +774,7 @@ return (
                 </button>
                 <button
                   className="cs-upload-all-btn"
-                  disabled={!entries.some((e) => e.status === "STAGED")}
+                  disabled={disabled || !entries.some((e) => e.status === "STAGED")}
                   onClick={handleUploadAll}
                 >
                   {t("uploadSection.uploadFiles")}
