@@ -188,12 +188,10 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
 
         {fileType === "video" && meta.summary_text && (
           <div className="cs-result-item-summary">
-            <div className="cs-result-item-summary-row">
-              <span className="cs-result-item-summary-label">{t("resultSection.summarization")}:</span>
-              <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
-                {meta.summary_text}
-              </p>
-            </div>
+            <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
+              <span className="cs-result-item-summary-label">{t("resultSection.summarization")}: </span>
+              {meta.summary_text}
+            </p>
             <button
               className="cs-result-item-summary-toggle"
               onClick={() => setSummaryExpanded((prev) => !prev)}
