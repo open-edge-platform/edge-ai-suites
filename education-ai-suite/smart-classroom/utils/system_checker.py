@@ -91,6 +91,8 @@ def check_dlstreamer_installation() -> bool:
             ["gst-inspect-1.0.exe", "gvadetect"],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=10
         )
 
