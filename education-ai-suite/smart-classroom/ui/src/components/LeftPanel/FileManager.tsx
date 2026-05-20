@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { useTranslation } from "react-i18next";
 import "../../assets/css/FileManager.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csGetFilesList, csDownloadText, getOcrDownloadUrl } from "../../services/api";
+import { csGetFilesList, csDownloadText, getOcrDownloadUrl, mimeToShortType } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
 import { useFileRemoval } from "../../hooks/useFileRemoval";
@@ -179,7 +179,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
   const uniqueTypes = useMemo(() => {
     const types = new Set<string>();
     files.forEach((f) => {
-      const type = f.content_type.split("/")[1]?.toUpperCase() || f.content_type;
+      const type = mimeToShortType(f.content_type);
       types.add(type);
     });
     return Array.from(types).sort();
@@ -211,7 +211,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
     // Apply type filter (if any types selected, show only those)
     if (typeFilters.size > 0) {
       result = result.filter((f) => {
-        const type = f.content_type.split("/")[1]?.toUpperCase() || f.content_type;
+        const type = mimeToShortType(f.content_type);
         return typeFilters.has(type);
       });
     }
@@ -377,7 +377,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
                           )}
                         </div>
                       </td>
-                      <td>{file.content_type.split("/")[1]?.toUpperCase() || file.content_type}</td>
+                      <td>{mimeToShortType(file.content_type)}</td>
                       <td>{formatSize(file.size_bytes)}</td>
                       <td className="fm-created-at">{formatDate(file.created_at)}</td>
                       <td className="fm-col-remove">
