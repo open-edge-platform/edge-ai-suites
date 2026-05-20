@@ -455,6 +455,7 @@ content_search:
     visual_embedding_model: "CLIP/clip-xlm-roberta-base-vit-b-32"
     doc_embedding_model: "intfloat/multilingual-e5-small"
     frame_extract_interval: 30      # for video: extract a frame every N frames
+    frame_extract_interval_sparse: 90  # for long videos (>20min): extract a frame every N frames
     do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
     document_parser:
       chunk_method: "semantic"              # "fixed": split by character count; "semantic": split by topic/meaning using embeddings
