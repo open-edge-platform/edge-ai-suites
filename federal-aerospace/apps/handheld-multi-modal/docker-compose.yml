@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Placeholder docker compose for the Federal Aerospace blueprint.
+# Replaced with the real stack in a follow-up change.
+
+services:
+  fedaero-placeholder:
+    image: hello-world:latest
+    container_name: fedaero-placeholder
+    restart: "no"

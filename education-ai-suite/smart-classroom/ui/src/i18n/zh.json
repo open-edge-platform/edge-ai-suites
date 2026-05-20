@@ -308,6 +308,7 @@
     "downloadTxt": "下载 .txt",
     "removeConfirm": "删除 \"{{fileName}}\"？",
     "removeWarning": "这将永久删除该文件及其索引数据。",
+    "removeWarningStagedFile": "您确定要删除此文件吗？",
     "removing": "删除中...",
     "filesExistMessage": "文件已存在。如需查看，请在\"上传\"部分点击\"查看文件\"。",
     "dismiss": "关闭",

@@ -383,6 +383,9 @@ COPY --from=project-builder /lib/x86_64-linux-gnu /lib/x86_64-linux-gnu
 COPY --from=project-builder /home/tfcc/metro /home/tfcc/metro
 
 RUN python3 -m pip install --upgrade setuptools --break-system-packages
+RUN apt remove -y python3-wheel python3-mako || true
+RUN rm -rf /usr/lib/python3/dist-packages/wheel-0.42.0.dist-info /usr/lib/python3/dist-packages/Mako-1.3.2.dev0.egg-info
+RUN python3 -m pip install --ignore-installed --upgrade pip setuptools "wheel>=0.46.2" "Mako>=1.3.12" --break-system-packages
 
 # environment variables and bashrc configuration
 RUN echo "source /opt/intel/openvino_2025/setupvars.sh" >> /home/tfcc/.bashrc && \

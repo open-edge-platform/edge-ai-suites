@@ -192,7 +192,8 @@ python3 ../tools/kitti_3d_eval.py \
 Use a representative dataset and run the main applications without visualization when measuring latency.
 
 ```bash
-./bevfusion <dataset_path>
+./bevfusion <dataset_path> --num-samples N
+./bevfusion <dataset_path> --fp32 --num-samples N
 ./bevfusion_unified <dataset_path> --num-samples N
 ./bevfusion_unified <dataset_path> --fp16 --num-samples N
 ```
