@@ -12,18 +12,15 @@ class _ShortNameFormatter(logging.Formatter):
 
 _fmt = "%(levelname)s: [%(name)s] %(message)s"
 _datefmt = '%Y-%m-%d %H:%M:%S'
-logging.basicConfig(level=logging.INFO, format=_fmt, datefmt=_datefmt, force=True)
+logging.basicConfig(level=logging.WARNING, format=_fmt, datefmt=_datefmt, force=True)
 for _h in logging.root.handlers:
     _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
-for _noisy in [
-    "unstructured", "unstructured_inference", "detectron2",
-    "transformers", "urllib3", "httpx", "httpcore",
-    "opentelemetry", "PIL", "chromadb", "llama_index",
-    "sentence_transformers",
-    "huggingface_hub", "filelock", "optimum",
-    "pdfminer", "torch", "torch.jit", "timm",
+for _named in [
+    "server", "models", "clip_handler", "registry", "indexer",
+    "retriever", "reranker", "document_parser", "detector",
+    "chroma_client", "store",
 ]:
-    logging.getLogger(_noisy).setLevel(logging.WARNING)
+    logging.getLogger(_named).setLevel(logging.INFO)
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
 import langdetect
@@ -93,8 +90,31 @@ app = FastAPI()
 
 _collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
 
-_visual_model = get_visual_embedding_model()
-_document_model = get_document_embedding_model()
+_visual_model = None
+_document_model = None
+
+def _load_models_parallel():
+    global _visual_model, _document_model
+    results = {}
+
+    def _load_visual():
+        results["visual"] = get_visual_embedding_model()
+
+    def _load_document():
+        results["document"] = get_document_embedding_model()
+
+    t_vis = threading.Thread(target=_load_visual)
+    t_doc = threading.Thread(target=_load_document)
+    t_vis.start()
+    t_doc.start()
+    t_vis.join()
+    t_doc.join()
+
+    _visual_model = results["visual"]
+    _document_model = results["document"]
+    logger.info("All embedding models loaded in parallel.")
+
+_load_models_parallel()
 
 video_summary_id_map = {}
 
