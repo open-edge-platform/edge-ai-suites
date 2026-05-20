@@ -2,7 +2,7 @@
  * Conversation state (localStorage + helpers)
  */
 const ConversationState = (function () {
-    const STORAGE_KEY = 'lvc-conversations-v1';
+    const CONVERSATION_STORAGE_ID = 'lvc-conversations-v1';
 
     // state = { conversations: [ { id, title, createdAt, messages:[{role,text,ts}], framesMeta? } ], activeId }
     let state = loadState();
@@ -12,7 +12,7 @@ const ConversationState = (function () {
      */
     function loadState() {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
+            const raw = localStorage.getItem(CONVERSATION_STORAGE_ID);
             const parsed = raw ? JSON.parse(raw) : null;
             if (parsed && Array.isArray(parsed.conversations)) return parsed;
         } catch { }
@@ -23,7 +23,7 @@ const ConversationState = (function () {
      * Persists current state to localStorage
      */
     function persist() {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch { }
+        try { localStorage.setItem(CONVERSATION_STORAGE_ID, JSON.stringify(state)); } catch { }
     }
 
     /*
