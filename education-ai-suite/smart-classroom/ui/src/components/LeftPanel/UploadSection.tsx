@@ -694,7 +694,7 @@ return (
                             <span className="cs-failed-msg" title={entry.error ?? ""}>
                               {entry.fileType === "MP4"
                                 ? t("uploadSection.summarizationFailed")
-                                : `Upload of '${entry.filename}' failed. Please try again`}
+                                : entry.error || `Upload of '${entry.filename}' failed. Please try again`}
                             </span>
                             <div className="cs-failed-actions">
                               <button
