@@ -161,7 +161,7 @@ Controls per-pipeline FPS and latency reporting.
 
 ```yaml
 metrics:
-  enabled: false           # false = only frame count logged
+  enabled: false # false = only frame count logged
   export_interval_s: 5.0
   prometheus:
     enabled: false
@@ -198,51 +198,64 @@ metrics:
   export_interval_s: 5.0
   prometheus:
     enabled: true
-    port: 8000          # /metrics served at http://localhost:8000/metrics
+    port: 8000 # /metrics served at http://localhost:8000/metrics
 ```
 
 **Exposed gauges** (all labelled by `pipeline_id`):
 
-| Metric | Description |
-| ------ | ----------- |
-| `pipeline_avg_fps` | Rolling average FPS |
-| `pipeline_current_fps` | Instantaneous FPS |
+| Metric                    | Description                            |
+| ------------------------- | -------------------------------------- |
+| `pipeline_avg_fps`        | Rolling average FPS                    |
+| `pipeline_current_fps`    | Instantaneous FPS                      |
 | `pipeline_avg_latency_ms` | Rolling average inference latency (ms) |
-| `pipeline_frame_count` | Total frames processed |
-| `pipeline_running` | `1` if PLAYING, `0` otherwise |
+| `pipeline_frame_count`    | Total frames processed                 |
+| `pipeline_running`        | `1` if PLAYING, `0` otherwise          |
 
 #### Models
 
 ```yaml
 models:
   inst0:
-    type: detection          # detection | classification
+    type: detection # detection | classification
     model: "C:/Users/path/to/model.xml"
-    device: CPU              # CPU | GPU | NPU
+    device: CPU # CPU | GPU | NPU
     properties:
       batch_size: 1
       threshold: 0.4
 ```
 
-#### Input source — VIDEO FILE
+#### Input source
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Video file**
+<!--hide_directive:sync: Video hide_directive-->
 
 ```yaml
 input:
-  type: file                       # file | rtsp | camera
+  type: file # file | rtsp | camera
   url: "C:/Users/path/to/video"
 ```
 
-#### Input source — RTSP
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **RTSP**
+<!--hide_directive:sync: RTSP hide_directive-->
 
+<!--#### Input source — RTSP-->
+
+Requires [installed MediaMTX](#download-mediamtx-for-rtsp--webrtc-streaming).
 Start the RTSP servers:
 
 ```yaml
 input:
-  type: rtsp                       # file | rtsp | camera
+  type: rtsp # file | rtsp | camera
   url: "rtsp://<ip>:<port>/live.sdp"
 ```
 
-#### Input source — Camera (GenICam / Basler)
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Camera (GenICam / Basler)**
+<!--hide_directive:sync: Camera hide_directive-->
+
+<!--#### Input source — Camera (GenICam / Basler)-->
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
@@ -251,13 +264,20 @@ Requires the camera environment variables from [Set Environment Variables](#set-
 ```yaml
 input:
   type: camera
-  serial: <camera_serial_number>   # required — camera serial number
-  pixel-format: mono8                # optional — e.g. mono8
-  width: 1280                      # optional — frame width in pixels
-  height: 720                      # optional — frame height in pixels
+  serial: <camera_serial_number> # required — camera serial number
+  pixel-format: mono8 # optional — e.g. mono8
+  width: 1280 # optional — frame width in pixels
+  height: 720 # optional — frame height in pixels
 ```
 
-#### Frame Output — WebRTC
+<!--hide_directive:::
+::::hide_directive-->
+
+#### Frame Output
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **WebRTC**
+<!--hide_directive:sync: WebRTC hide_directive-->
 
 Streams to `http://localhost:8889/front`. Open in a browser.
 
@@ -268,7 +288,11 @@ output:
     peer_id: front
 ```
 
-#### Frame Output — RTSP
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **RTSP**
+<!--hide_directive:sync: RTSP hide_directive-->
+
+<!--#### Frame Output — RTSP-->
 
 Streams to `rtsp://localhost:8554/front`. Open in VLC.
 
@@ -279,7 +303,11 @@ output:
     path: /front
 ```
 
-#### Frame Output — WebRTC + RTSP (both on the same pipeline)
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **WebRTC + RTSP (both on the same pipeline)**
+<!--hide_directive:sync: WebRTCnRTSP hide_directive-->
+
+<!--#### Frame Output — WebRTC + RTSP (both on the same pipeline)-->
 
 Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
 
@@ -292,7 +320,14 @@ output:
     path: /front
 ```
 
-#### Metadata Output — MQTT
+<!--hide_directive:::
+::::hide_directive-->
+
+#### Metadata Output
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **MQTT**
+<!--hide_directive:sync: MQTT hide_directive-->
 
 Download the Mosquitto Windows installer from [the official Mosquitto website](https://mosquitto.org/download/) and install it.
 The default install path is `C:\Program Files\mosquitto\`.
@@ -318,7 +353,11 @@ cd "C:\Program Files\mosquitto"
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
-#### Metadata Output — File
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **File**
+<!--hide_directive:sync: File hide_directive-->
+
+<!--#### Metadata Output — File-->
 
 Writes inference results as JSON Lines to a local file inside output directory.
 
@@ -328,6 +367,9 @@ output:
     - type: file
       path: "output/front-inference.jsonl"
 ```
+
+<!--hide_directive:::
+::::hide_directive-->
 
 #### Full Pipeline Example
 
@@ -388,24 +430,24 @@ The following combinations are supported in basic configuration mode.
 
 > **Important:** `input` and `inference` are **mandatory** for all pipeline combinations below.
 
-| Frame Output | Metadata Output |
-| ------------ | --------------- |
-| RTSP | MQTT |
-| WebRTC | MQTT |
-| RTSP + WebRTC | MQTT |
-| RTSP | File |
-| WebRTC | File |
-| RTSP + WebRTC | File |
-| RTSP | MQTT + File |
-| WebRTC | MQTT + File |
-| RTSP + WebRTC | MQTT + File |
-| RTSP | None |
-| WebRTC | None |
-| RTSP + WebRTC | None |
-| None | MQTT |
-| None | File |
-| None | MQTT + File |
-| None | None |
+| Frame Output  | Metadata Output |
+| ------------- | --------------- |
+| RTSP          | MQTT            |
+| WebRTC        | MQTT            |
+| RTSP + WebRTC | MQTT            |
+| RTSP          | File            |
+| WebRTC        | File            |
+| RTSP + WebRTC | File            |
+| RTSP          | MQTT + File     |
+| WebRTC        | MQTT + File     |
+| RTSP + WebRTC | MQTT + File     |
+| RTSP          | None            |
+| WebRTC        | None            |
+| RTSP + WebRTC | None            |
+| None          | MQTT            |
+| None          | File            |
+| None          | MQTT + File     |
+| None          | None            |
 
 > **Notes:**
 >
