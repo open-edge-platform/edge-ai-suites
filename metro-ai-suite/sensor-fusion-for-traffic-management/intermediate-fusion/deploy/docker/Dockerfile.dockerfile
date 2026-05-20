@@ -46,7 +46,7 @@ RUN IGC_VERSION=2.32.7 && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libze-intel-gpu1_${NEO_VERSION}-0_amd64.deb && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/ww14.sum && \
     sha256sum -c ww14.sum && \
-    dpkg -i ./*.deb || apt-get -f install -y && \
+    dpkg -i ./*.deb || apt-get -f install -y --no-install-recommends && \
     rm -rf /tmp/neo_deps
 
 # Intel NPU drivers and prerequisites installation
@@ -174,7 +174,7 @@ RUN IGC_VERSION=2.32.7 && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libze-intel-gpu1_${NEO_VERSION}-0_amd64.deb && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/ww14.sum && \
     sha256sum -c ww14.sum && \
-    dpkg -i ./*.deb || apt-get -f install -y && \
+    dpkg -i ./*.deb || apt-get -f install -y --no-install-recommends && \
     rm -rf /tmp/neo_deps
 
 # Intel NPU drivers and prerequisites installation
@@ -214,7 +214,7 @@ RUN apt update && \
         -o xpu-smi_1.3.6_20260206.143628.1004f6cb.u24.04_amd64.deb \
         https://github.com/intel/xpumanager/releases/download/v1.3.6/xpu-smi_1.3.6_20260206.143628.1004f6cb.u24.04_amd64.deb && \
     dpkg -i xpu-smi_*.deb || true && \
-    apt-get update && apt-get -f install -y && \
+    apt-get update && apt-get -f install -y --no-install-recommends && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
