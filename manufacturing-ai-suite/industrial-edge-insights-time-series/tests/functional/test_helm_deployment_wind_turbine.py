@@ -145,8 +145,23 @@ def test_verify_pods_opcua_for_5mins(setup_helm_environment, telegraf_input_plug
     logger.info("Pods logs are working for opcua input plugin")
 
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
-def test_verify_pods_stability_after_udf_activation(setup_helm_environment, telegraf_input_plugin):
+def test_verify_pods_stability_after_udf_activation(setup_helm_environment, telegraf_input_plugin, request):
     logger.info("TC_009: Testing pods stability after UDF activation for OPC UA input plugin, checking helm install, pod logs and uninstall with valid values in values.yaml")
+    # === [GH_RUNNER_FIX BEGIN] TC_009 cross-test TICK reset ===
+    # setup_opcua_alerts(chart_path) below rewrites the on-disk TICK script
+    # (tick_scripts/windturbine_anomaly_detector.tick) to .post('/opcua_alerts').
+    # That mutation persists on the filesystem and is silently re-packaged
+    # by any later test calling setup_sample_app_udf_deployment_package(),
+    # producing a 400-emitting mismatch when the REST-API is configured for
+    # mqtt (e.g. TC_010). Register a finalizer that restores the TICK to
+    # mqtt mode so test isolation is preserved on both pass and fail paths.
+    def _restore_tick_to_mqtt():
+        try:
+            helm_utils.setup_mqtt_alerts(chart_path, sample_app=constants.WIND_SAMPLE_APP)
+        except Exception as e:
+            logger.warning(f"TC_009 finalizer: failed to reset TICK to mqtt mode: {e}")
+    request.addfinalizer(_restore_tick_to_mqtt)
+    # === [GH_RUNNER_FIX END] ===
     result = helm_utils.verify_pods(namespace)
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for OPC UA input plugin."
@@ -193,7 +208,16 @@ def test_verify_pods_stability_after_influxdb_restart(setup_helm_environment, te
     assert result is True, "Failed to verify pods for OPC UA input plugin."
     logger.info("All pods are running for opcua input plugin")
     time.sleep(3)  # Wait for the pods to stabilize
-    result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP)
+    # === [GH_RUNNER_FIX BEGIN] TC_010 opcua-mode UDF only ===
+    # Chart is deployed with the OPC UA telegraf plugin (no MQTT broker),
+    # so the UDF must POST alerts to the OPC UA endpoint. Configure the
+    # TICK alert handler and activate the UDF in opcua mode -- matches
+    # TC_009 -- otherwise the default mqtt-mode UDF emits 400s and the
+    # subsequent verify_pods_logs() assertion fails.
+    result = helm_utils.setup_opcua_alerts(chart_path)
+    assert result == True, "Failed to configure OPC UA alert in TICK script."
+    result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP, alert_mode="opcua")
+    # === [GH_RUNNER_FIX END] ===
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
