@@ -13,6 +13,9 @@ NC='\033[0m' # No Color
 export REGISTRY_URL=${REGISTRY_URL:-}
 export PROJECT_NAME=${PROJECT_NAME:-}
 export TAG=${TAG:-latest}
+export RTSP_STREAM_PORT=${RTSP_STREAM_PORT:-8554}
+RTSP_STREAM_BIND_IP=${RTSP_STREAM_BIND_IP:-0.0.0.0}
+
 
 [[ -n "$REGISTRY_URL" ]] && REGISTRY_URL="${REGISTRY_URL%/}/"
 [[ -n "$PROJECT_NAME" ]] && PROJECT_NAME="${PROJECT_NAME%/}/"
@@ -80,26 +83,23 @@ configure_scenescape_setup() {
     
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
-        
-        # Configure Frigate with Scenescape cameras
+
+        local metro_recipe_dir
+        metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
+
+        # Copy NVR resources into SI app directory
+        cp "./resources/compose-scenescape-rtsp.yml" "${metro_recipe_dir}/compose-scenescape.yml"
+        cp "./resources/si-rtsp-config.json" "${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
         cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
-        
-        # Substitute RTSP_STREAM_IP with host IP in the configuration
+
+        # Substitute placeholders in Frigate and DLStreamer configs
         local host_ip=$(get_host_ip)
-        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml"
-        print_success "Scenescape Frigate configuration activated"
+        local dlstreamer_config="${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
+        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml" "${dlstreamer_config}"
+        sed -i "s/{RTSP_STREAM_PORT}/${RTSP_STREAM_PORT}/g" "./resources/frigate-config/config.yml" "${dlstreamer_config}"
+        print_success "Scenescape configuration activated"
         
-        # Verify Scenescape certificates exist
-        SMART_INTERSECTION_CERTS="edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/certs"
-        if [ -f "${SMART_INTERSECTION_CERTS}/scenescape-ca.pem" ] && \
-           [ -f "${SMART_INTERSECTION_CERTS}/scenescape-broker.crt" ] && \
-           [ -f "${SMART_INTERSECTION_CERTS}/scenescape-broker.key" ]; then
-            print_success "Scenescape certificates found at ${SMART_INTERSECTION_CERTS}"
-        else
-            print_error "Scenescape is enabled but certificates not found at ${SMART_INTERSECTION_CERTS}"
-            print_info "Please ensure Smart Intersection application is running and certificates are generated"
-            return 1
-        fi
+
     else
         print_info "NVR_SCENESCAPE is disabled - using default configuration"
         cp "./resources/frigate-config/config-default.yml" "./resources/frigate-config/config.yml"
@@ -124,6 +124,65 @@ configure_genai_setup() {
         fi
     else
         print_info "NVR_GENAI is disabled"
+    fi
+}
+
+download_videos() {
+    local video_dir="./resources/videos"
+    local video_url="https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos"
+    local videos=(1122north_h264.ts 1122east_h264.ts 1122south_h264.ts 1122west_h264.ts)
+    mkdir -p "$video_dir"
+    local downloaded=false
+    for video in "${videos[@]}"; do
+        if [ ! -f "${video_dir}/${video}" ]; then
+            print_info "Downloading ${video}..."
+            if ! curl -fL "${video_url}/${video}" -o "${video_dir}/${video}"; then
+                print_error "Failed to download ${video}"
+                return 1
+            fi
+            downloaded=true
+        fi
+    done
+    [[ "$downloaded" == true ]] && print_success "Demo videos downloaded" || print_info "Demo videos already present"
+}
+
+start_rtsp_streamer() {
+    local videos=(1122north_h264.ts 1122east_h264.ts 1122south_h264.ts 1122west_h264.ts)
+    for video in "${videos[@]}"; do
+        if [ ! -f "./resources/videos/${video}" ]; then
+            print_error "Missing video: ./resources/videos/${video}"
+            return 1
+        fi
+    done
+    print_info "Starting MediaMTX RTSP streamer on ${RTSP_STREAM_BIND_IP}:${RTSP_STREAM_PORT}"
+    RTSP_STREAM_BIND_IP="$RTSP_STREAM_BIND_IP" RTSP_STREAM_PORT="$RTSP_STREAM_PORT" \
+        docker compose -p smartnvr-mediamtx -f streamer/docker-compose.yml up -d
+}
+
+stop_rtsp_streamer() {
+    if [ -f "streamer/docker-compose.yml" ]; then
+        docker compose -p smartnvr-mediamtx -f streamer/docker-compose.yml down || true
+    fi
+}
+
+start_scenescape() {
+    local metro_recipe_dir
+    metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
+    if [ ! -f "${metro_recipe_dir}/compose-scenescape.yml" ]; then
+        print_error "Smart Intersection compose not found at ${metro_recipe_dir}"
+        return 1
+    fi
+    if [ ! -f "${metro_recipe_dir}/smart-intersection/src/secrets/supass" ]; then
+        (cd "${metro_recipe_dir}" && bash install.sh smart-intersection)
+    fi
+    docker compose -f "${metro_recipe_dir}/compose-scenescape.yml" --env-file "${metro_recipe_dir}/.env" up -d
+}
+
+stop_scenescape() {
+    local metro_recipe_dir
+    metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
+    if [ -f "${metro_recipe_dir}/compose-scenescape.yml" ]; then
+        docker compose -f "${metro_recipe_dir}/compose-scenescape.yml" --env-file "${metro_recipe_dir}/.env" down || true
     fi
 }
 
@@ -187,20 +246,6 @@ validate_environment() {
             return 1
         fi
     fi
-    # Check for SceneScape MQTT settings if enabled
-    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
-        if [ -z "${SCENESCAPE_MQTT_USER}" ]; then
-            print_error "SCENESCAPE_MQTT_USER environment variable is required when NVR_SCENESCAPE is enabled"
-            print_info "Please set it to the MQTT username for SceneScape"
-            return 1
-        fi
-
-        if [ -z "${SCENESCAPE_MQTT_PASSWORD}" ]; then
-            print_error "SCENESCAPE_MQTT_PASSWORD environment variable is required when NVR_SCENESCAPE is enabled"
-            print_info "Please set it to the MQTT password for SceneScape"
-            return 1
-        fi
-    fi    
     # Check for MQTT user and password
     if [ -z "${MQTT_USER}" ]; then
         print_error "MQTT_USER environment variable is required"
@@ -223,10 +268,20 @@ start_services() {
         print_error "Environment validation failed. Please set the required variables."
         return 1
     fi
-    
-    # Configure Scenescape setup (config and certificates)
-    if ! configure_scenescape_setup; then
-        return 1
+
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        if ! download_videos; then
+            return 1
+        fi
+        if ! configure_scenescape_setup; then
+            return 1
+        fi
+        if ! start_rtsp_streamer; then
+            return 1
+        fi
+        if ! start_scenescape; then
+            return 1
+        fi
     fi
     
     # Configure GenAI setup
@@ -235,9 +290,12 @@ start_services() {
     fi
     
     print_info "Starting Docker Compose services..."
-    # Run the Docker Compose stack with all services
-    docker compose -f docker/compose.yaml up -d 
+    docker compose -f docker/compose.yaml up -d
     if [ $? -eq 0 ]; then
+    sleep 5
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        docker network connect metro-vision-ai-app-recipe_scenescape nvr-event-router 2>/dev/null || true
+    fi
     sleep 5
     print_success "Services are starting up..."
     print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
@@ -253,7 +311,8 @@ stop_services() {
     print_header "Stopping NVR Event Router Services"
     print_info "Stopping NVR Event Router services..."
     docker compose -f docker/compose.yaml down
-
+    stop_scenescape
+    stop_rtsp_streamer
     print_success "All services stopped."
 }
 
@@ -263,20 +322,40 @@ show_help() {
     echo -e "${WHITE}Usage:${NC} $0 [command]"
     echo ""
     echo -e "${WHITE}Commands:${NC}"
-    echo -e "  ${GREEN}start${NC}    - Start all services"
-    echo -e "  ${RED}stop${NC}     - Stop all services"
-    echo -e "  ${YELLOW}restart${NC}  - Restart all services"
-    echo -e "  ${BLUE}help${NC}     - Display this help message"
+    echo -e "  ${GREEN}start${NC}          - Start everything (RTSP streamer + Smart Intersection + Frigate + event router)"
+    echo -e "  ${RED}stop${NC}           - Stop everything"
+    echo -e "  ${YELLOW}restart${NC}        - Restart everything"
+    echo -e "  ${BLUE}help${NC}           - Display this help message"
     echo ""
     echo -e "${WHITE}Examples:${NC}"
-    echo -e "  ${CYAN}source setup.sh start${NC}     # Start the services"
-    echo -e "  ${CYAN}source setup.sh stop${NC}      # Stop the services"
-    echo -e "  ${CYAN}source setup.sh restart${NC}   # Restart the services"
+    echo -e "  ${CYAN}source setup.sh start${NC}     # Start all services"
+    echo -e "  ${CYAN}source setup.sh stop${NC}      # Stop all services"
+    echo -e "  ${CYAN}source setup.sh restart${NC}   # Restart all services"
     echo ""
 }
 
 # Main script logic
 case "$1" in
+    start-streamer)
+        print_header "Starting RTSP Streamer"
+        HOST_IP=$(get_host_ip)
+        export HOST_IP
+        if ! download_videos; then
+            exit 1
+        fi
+        if ! configure_scenescape_setup; then
+            exit 1
+        fi
+        if ! start_rtsp_streamer; then
+            exit 1
+        fi
+        print_success "RTSP streamer running on ${HOST_IP}:${RTSP_STREAM_PORT}"
+        ;;
+    stop-streamer)
+        print_header "Stopping RTSP Streamer"
+        stop_rtsp_streamer
+        print_success "RTSP streamer stopped."
+        ;;
     start)
         start_services
         ;;
