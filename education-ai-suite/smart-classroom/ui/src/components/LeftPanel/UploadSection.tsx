@@ -32,6 +32,7 @@ interface UploadEntry {
   tags: string[];
   vsEnabled: boolean;
   ocrTextKey: string | null;
+  videoSummaryStatus: string | null;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -131,13 +132,11 @@ const UploadSection: React.FC = () => {
   useEffect(() => {
     if (entries.length > 0) {
       dispatch(setCsHasUploads(true));
-      // MP4 files in ACTIVE state have already been uploaded to the backend
-      // (summarization is a background step), so treat them as available for search.
+      // Files are available for search once their ingest is COMPLETED or already existed.
       const anyUploaded = entries.some(
         (e) =>
           e.status === "COMPLETED" ||
-          e.status === "ALREADY_EXISTS" ||
-          (e.fileType === "MP4" && ACTIVE.includes(e.status))
+          e.status === "ALREADY_EXISTS"
       );
       // If backend files already exist, search must remain available even while
       // new files are staged but not yet uploaded.
@@ -222,7 +221,7 @@ const UploadSection: React.FC = () => {
 
   // Drive csSummarizing flag: true while any MP4 is still being summarized in the background.
   useEffect(() => {
-    const anySummarizing = entries.some((e) => e.fileType === "MP4" && ACTIVE.includes(e.status));
+    const anySummarizing = entries.some((e) => e.fileType === "MP4" && e.vsEnabled && e.videoSummaryStatus === "PROCESSING");
     dispatch(setCsSummarizing(anySummarizing));
   }, [entries, dispatch]);
 
@@ -253,11 +252,17 @@ const UploadSection: React.FC = () => {
             (result.result as any)?.file_key ??
             null;
           const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}) });
+          const videoSummaryStatus = (result.result as any)?.video_summary_status ?? null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
-            clearInterval(pollTimers.current[entryId]);
-            delete pollTimers.current[entryId];
+            // Keep polling if video summarization is still in progress
+            if (videoSummaryStatus === "PROCESSING") {
+              // Don't stop polling — summarization still running
+            } else {
+              clearInterval(pollTimers.current[entryId]);
+              delete pollTimers.current[entryId];
+            }
           }
         } catch {
           // ignore transient poll errors
@@ -287,6 +292,7 @@ const UploadSection: React.FC = () => {
         tags: [],
         vsEnabled: false,
         ocrTextKey: null,
+        videoSummaryStatus: null,
       }));
       setEntries((prev) => [...prev, ...newEntries]);
     },
@@ -675,7 +681,7 @@ return (
                             </span>
                           </label>
                         )}
-                        {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
+                        {entry.fileType === "MP4" && entry.vsEnabled && entry.status === "COMPLETED" && entry.videoSummaryStatus === "PROCESSING" && (
                           <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
                         )}
                         {entry.tags.length > 0 && (
@@ -714,15 +720,9 @@ return (
                         ) : (
                           <>
                             <span
-                              className={`cs-status-badge cs-status-badge--${
-                                entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                                  ? "completed"
-                                  : entry.status.toLowerCase()
-                              }`}
+                              className={`cs-status-badge cs-status-badge--${entry.status.toLowerCase()}`}
                             >
-                              {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                                ? t("uploadSection.uploaded")
-                                : getStatusLabel(entry.status)}
+                              {getStatusLabel(entry.status)}
                             </span>
                           </>
                         )}
