@@ -1,13 +1,13 @@
-# Get Started with WinVisionAI
+# Get Started
 
-A Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows.
+Win Vision AI is a Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows 11.
 
 ---
 
-## Install Python and git
+## Install Python and Git
 
-Install **Python 3.12 or higher** from https://www.python.org/downloads/.
-Install **Git for Windows** from https://git-scm.com/install/windows.
+Install **Python 3.12 or higher** from [the official Python website](https://www.python.org/downloads/).
+Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
 ---
 
@@ -23,19 +23,23 @@ $env:no_proxy    = "localhost,127.0.0.1"
 
 ## Install Intel DL Streamer
 
-Download `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
+Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
 
 DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
 
 ---
 
-## Clone the Repository
+## Clone the Suite
 
-Open PowerShell and run all terminal commands:
+Go to the target directory of your choice, open PowerShell and run all the terminal commands below.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```powershell
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
+git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
 ## Install Python Dependencies
@@ -115,6 +119,7 @@ Verify the camera plugin loaded correctly:
 ```powershell
 gst-inspect-1.0 gencamsrc
 ```
+
 ---
 
 ## Download MediaMTX (for RTSP / WebRTC streaming)
@@ -199,13 +204,12 @@ metrics:
 **Exposed gauges** (all labelled by `pipeline_id`):
 
 | Metric | Description |
-|---|---|
+| ------ | ----------- |
 | `pipeline_avg_fps` | Rolling average FPS |
 | `pipeline_current_fps` | Instantaneous FPS |
 | `pipeline_avg_latency_ms` | Rolling average inference latency (ms) |
 | `pipeline_frame_count` | Total frames processed |
 | `pipeline_running` | `1` if PLAYING, `0` otherwise |
-
 
 ### Models
 
@@ -384,7 +388,7 @@ The following combinations are supported in basic configuration mode.
 > **`input` and `inference` are mandatory** for all pipeline combinations below.
 
 | Frame Output | Metadata Output |
-|---|---|
+| ------------ | --------------- |
 | RTSP | MQTT |
 | WebRTC | MQTT |
 | RTSP + WebRTC | MQTT |
@@ -403,6 +407,7 @@ The following combinations are supported in basic configuration mode.
 | None | None |
 
 > **Notes:**
+>
 > - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
 > - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
 > - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
@@ -440,7 +445,8 @@ raw_pipelines:
   left: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
   camera: "gencamsrc serial=12345678 pixel-format=mono8 name=src ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! d3d12videosink name=sink"
 ```
-Above pipelines are example pipelines to run with webrtc/rtsp/any sink element
+
+The above pipelines are example pipelines to run with webrtc/rtsp/any sink element.
 
 MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears in a string.
 
@@ -450,4 +456,4 @@ MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears 
 
 ### Inference on NPU fails with `Failed to construct OpenVINOImageInference` error
 
-To solve this error, ensure you install the latest supported Intel® NPU Driver for Windows from [here](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html) for Intel® Core™ Ultra processors
+To solve this error, ensure you install the latest supported Intel® NPU Driver for Windows for Intel® Core™ Ultra processors from [the official Intel website](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html).
