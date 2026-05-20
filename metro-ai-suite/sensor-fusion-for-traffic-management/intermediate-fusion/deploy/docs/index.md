@@ -68,5 +68,6 @@ Get Started <GSG.md>
 Prerequisites <Prerequisites.md>
 Testing <Testing.md>
 Convert NVIDIA Checkpoint <nvidia_ckpt_to_intel_gpu.md>
+Training Installation <../../training/docs/install.md>
 :::
 hide_directive-->
