@@ -4,14 +4,14 @@ Win Vision AI is a Python application for running concurrent GStreamer inference
 
 ---
 
-## Install Python and Git
+## Prerequisites
+
+### Install Python and Git
 
 Install **Python 3.12 or higher** from [the official Python website](https://www.python.org/downloads/).
 Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
----
-
-## Set Proxies (Optional)
+### Set Proxies (Optional)
 
 ```powershell
 $env:http_proxy  = # example: http://proxy.example.com:891
@@ -19,17 +19,17 @@ $env:https_proxy = # example: http://proxy.example.com:891
 $env:no_proxy    = "localhost,127.0.0.1"
 ```
 
----
-
-## Install Intel DL Streamer
+### Install Intel DL Streamer
 
 Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
 
-DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
+> **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
 ---
 
-## Clone the Suite
+## Set Up the Application
+
+### Clone the Suite
 
 Go to the target directory of your choice, open PowerShell and run all the terminal commands below.
 If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -42,7 +42,7 @@ git sparse-checkout set manufacturing-ai-suite
 cd manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
-## Install Python Dependencies
+### Install Python Dependencies
 
 ```powershell
 python -m venv venv
@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 ---
 
-## Set Environment Variables
+### Set Environment Variables
 
 First, find the `gstreamer-python` install location:
 
@@ -74,13 +74,13 @@ Verify GStreamer and DL Streamer plugins loaded correctly:
 gst-inspect-1.0 gvadetect
 ```
 
-### Camera Input (Optional)
+#### Camera Input (Optional)
 
 To use a GenICam-compatible camera (e.g., Basler, Balluff, HikRobot), download the GenICam runtime DLLs and set the required environment variables.
 
 The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
-#### Download GenICam Runtime DLLs
+##### Download GenICam Runtime DLLs
 
 Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
 
@@ -88,7 +88,7 @@ Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win
 .\src\setup_genicam_runtime.ps1
 ```
 
-#### Set Camera Environment Variables
+##### Set Camera Environment Variables
 
 ```powershell
 # Path to your win-vision-ai clone root
@@ -122,7 +122,7 @@ gst-inspect-1.0 gencamsrc
 
 ---
 
-## Download MediaMTX (for RTSP / WebRTC streaming)
+### Download MediaMTX (for RTSP / WebRTC streaming)
 
 Required when any pipeline uses RTSP or WebRTC frame output.
 
@@ -133,7 +133,7 @@ $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 
 ---
 
-## Download a Model
+### Download a Model
 
 If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/main/scripts/download_models).
 
@@ -151,11 +151,11 @@ Use the exported `.xml` path in `config.yaml`.
 
 ---
 
-## Configure `config.yaml`
+### Configure `config.yaml`
 
-Use forward slashes in all YAML paths to avoid escape issues.
+> **Note:** Use forward slashes in all YAML paths to avoid escape issues.
 
-### Metrics
+#### Metrics
 
 Controls per-pipeline FPS and latency reporting.
 
@@ -180,7 +180,7 @@ When **disabled**, only the frame count is shown:
 state=PLAYING     frames=121
 ```
 
-#### Prometheus
+##### Prometheus
 
 When `metrics.enabled: true` and `metrics.prometheus.enabled: true`, the app starts an HTTP server and exposes a `/metrics` endpoint that Prometheus can scrape.
 
@@ -211,7 +211,7 @@ metrics:
 | `pipeline_frame_count` | Total frames processed |
 | `pipeline_running` | `1` if PLAYING, `0` otherwise |
 
-### Models
+#### Models
 
 ```yaml
 models:
@@ -224,7 +224,7 @@ models:
       threshold: 0.4
 ```
 
-### Input source — VIDEO FILE
+#### Input source — VIDEO FILE
 
 ```yaml
 input:
@@ -232,18 +232,19 @@ input:
   url: "C:/Users/path/to/video"
 ```
 
-### Input source — RTSP
+#### Input source — RTSP
 
-start the rtsp servers
+Start the RTSP servers:
+
 ```yaml
 input:
   type: rtsp                       # file | rtsp | camera
   url: "rtsp://<ip>:<port>/live.sdp"
 ```
 
-### Input source — Camera (GenICam / Basler)
+#### Input source — Camera (GenICam / Basler)
 
-Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
+Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
 `serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
@@ -256,7 +257,7 @@ input:
   height: 720                      # optional — frame height in pixels
 ```
 
-### Frame Output — WebRTC
+#### Frame Output — WebRTC
 
 Streams to `http://localhost:8889/front`. Open in a browser.
 
@@ -267,7 +268,7 @@ output:
     peer_id: front
 ```
 
-### Frame Output — RTSP
+#### Frame Output — RTSP
 
 Streams to `rtsp://localhost:8554/front`. Open in VLC.
 
@@ -278,7 +279,7 @@ output:
     path: /front
 ```
 
-### Frame Output — WebRTC + RTSP (both on the same pipeline)
+#### Frame Output — WebRTC + RTSP (both on the same pipeline)
 
 Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
 
@@ -291,10 +292,10 @@ output:
     path: /front
 ```
 
-### Metadata Output — MQTT
+#### Metadata Output — MQTT
 
-Download the Windows installer from https://mosquitto.org/download/ and install it.
-Default install path: `C:\Program Files\mosquitto\`.
+Download the Mosquitto Windows installer from [the official Mosquitto website](https://mosquitto.org/download/) and install it.
+The default install path is `C:\Program Files\mosquitto\`.
 Publishes inference results to an MQTT broker. Requires Mosquitto running on port 1883.
 
 ```yaml
@@ -317,7 +318,7 @@ cd "C:\Program Files\mosquitto"
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
-### Metadata Output — File
+#### Metadata Output — File
 
 Writes inference results as JSON Lines to a local file inside output directory.
 
@@ -328,7 +329,7 @@ output:
       path: "output/front-inference.jsonl"
 ```
 
-### Full Pipeline Example
+#### Full Pipeline Example
 
 ```yaml
 logging:
@@ -377,7 +378,7 @@ pipelines:
           path: "output/back-inference.jsonl"
 ```
 
-For detection models use model_id as inst0 and for classifcation models, you model_id as inst1
+For detection models use `model_id` as `inst0`, and for classifcation models use `model_id` as `inst1`.
 
 ---
 
@@ -385,7 +386,7 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 The following combinations are supported in basic configuration mode.
 
-> **`input` and `inference` are mandatory** for all pipeline combinations below.
+> **Important:** `input` and `inference` are **mandatory** for all pipeline combinations below.
 
 | Frame Output | Metadata Output |
 | ------------ | --------------- |
@@ -422,14 +423,14 @@ For custom element chains or combinations not listed above, use [Raw Pipeline Mo
 python app.py config.yaml
 ```
 
-On startup the app loads config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
+On startup the app loads the config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
 
 ```
 [front] RTSP stream:   rtsp://localhost:8554/front
 [back]  WebRTC stream: http://localhost:8889/back
 ```
 
-Press **Ctrl+C** to stop if you want to forcefully stop the application.
+Press **Ctrl+C** if you need to forcefully stop the application.
 
 ---
 
