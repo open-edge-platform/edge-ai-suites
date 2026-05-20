@@ -48,7 +48,7 @@ control.
 
 ## Documentation and Supporting Resources
 
-- [Overview](../docs/user-guide/win-vision-ai/index.md) - architectural overview and feature summary.
+- [Overview](../docs/user-guide/win-vision-ai/index.md) - architecture overview and feature summary.
 - [Get Started](../docs/user-guide/win-vision-ai/get-started.md) - step-by-step installation and configuration instructions.
 - [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
   - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html)
