@@ -1,0 +1,381 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# =============================================================================
+# Federal & Aerospace packaging workflow
+# =============================================================================
+#
+# What this workflow does, in plain terms:
+#
+#   It builds three zip artifacts from the `federal-aerospace/` directory:
+#     - federal-aerospace.zip            (the full solution)
+#     - handheld-multi-modal.zip         (one app)
+#     - deterministic-threat-detection.zip (the other app)
+#
+#   Where those zips end up depends on what triggered the workflow:
+#
+#   1. Pull request to main
+#        - Builds only the components whose files actually changed.
+#        - Uploads the zips as GitHub Actions artifacts (visible on the
+#          PR's checks page, retention follows the repo's Actions settings).
+#        - Does not touch any release.
+#
+#   2. Push to main
+#        - Forces a rebuild of all three components (so they stay in sync).
+#        - Uploads Actions artifacts (same as PRs).
+#        - Updates the rolling release `fedaero-latest`:
+#            * tag is force-moved to the new commit
+#            * all three zips on the release are replaced
+#            * marked as a prerelease (this repo ships multiple products,
+#              so neither this release nor the versioned one claims the
+#              repo-wide "Latest release" badge).
+#
+#   3. Manual dispatch from the Actions tab (workflow_dispatch)
+#        - Only allowed from `release-*` branches or any tag. Dispatching
+#          from any other ref fails fast with a clear error (the dispatch
+#          UI shows all branches; the guard step is what enforces this).
+#        - Always builds all three components (no per-component selection).
+#        - Uploads Actions artifacts.
+#        - Updates `fedaero-latest`.
+#        - If `publish_versioned_release` is ticked:
+#            * publishes a NEW immutable release at tag v$VERSION
+#            * fails fast if v$VERSION already exists (bump VERSION to cut
+#              a new versioned release — this is the only way to publish one)
+#            * not marked as the repo-wide "Latest release" either.
+#
+# End-user mental model:
+#   - v$VERSION releases (e.g. v1.0.0) → frozen, pinned, customer-facing.
+#   - `fedaero-latest` release → rolling dev build from `main`, prerelease,
+#     overwritten on every push. For devs / early testers.
+#
+# To cut a new versioned release:
+#   1. Open a PR bumping `VERSION` below (e.g. 1.0.0 → 1.1.0). Merge it.
+#   2. Go to Actions → "[FedAero] Package" → Run workflow.
+#   3. Tick "Publish a versioned release" and run.
+# =============================================================================
+
+name: "[FedAero] Package"
+run-name: "[FedAero] package (by @${{ github.actor }} via ${{ github.event_name }})"
+
+# Versioned release tag. Bump this when cutting a new immutable release,
+# then trigger the workflow manually with `publish_versioned_release: true`.
+env:
+  VERSION: "1.0.0"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  workflow_dispatch:
+    inputs:
+      vippet_ref:
+        description: "Optional override for the vippet ref (defaults to VIPPET_REF file)"
+        required: false
+        default: ""
+      publish_versioned_release:
+        description: "Publish an immutable versioned release at v$VERSION (fails if tag exists)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  # Guard for manual dispatches: only allow runs from a release-* branch or
+  # a tag. The Actions UI shows every branch in its ref dropdown, so this
+  # step is what actually enforces the restriction.
+  guard-dispatch-ref:
+    name: Guard manual dispatch ref
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify ref is a release-* branch or a tag
+        run: |
+          ref="${GITHUB_REF}"
+          echo "Triggered from ref: $ref"
+          if [[ "$ref" == refs/heads/release-* ]] || [[ "$ref" == refs/tags/* ]]; then
+            echo "OK — $ref is allowed for manual dispatch."
+          else
+            echo "::error::Manual dispatch is only allowed from a release-* branch or a tag. Got: $ref"
+            exit 1
+          fi
+
+  changes:
+    name: Detect changed components
+    # On dispatch, wait for the ref guard to pass before doing anything.
+    needs: [guard-dispatch-ref]
+    if: |
+      always() &&
+      (needs.guard-dispatch-ref.result == 'success' || needs.guard-dispatch-ref.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
+      deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
+      solution: ${{ steps.force.outputs.solution || steps.filter.outputs.solution }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      # Force-build everything on main pushes (so the rolling release stays
+      # coherent) and on any manual dispatch (always all three components).
+      - id: force
+        if: >-
+          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          github.event_name == 'workflow_dispatch'
+        run: |
+          echo "handheld-multi-modal=true"           >> "$GITHUB_OUTPUT"
+          echo "deterministic-threat-detection=true" >> "$GITHUB_OUTPUT"
+          echo "solution=true"                       >> "$GITHUB_OUTPUT"
+
+      - id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        with:
+          filters: |
+            handheld-multi-modal:
+              - 'federal-aerospace/apps/handheld-multi-modal/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            deterministic-threat-detection:
+              - 'federal-aerospace/apps/deterministic-threat-detection/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            solution:
+              - 'federal-aerospace/**'
+              - '.github/workflows/fedaero.yaml'
+
+  handheld-multi-modal:
+    name: Build handheld-multi-modal
+    needs: changes
+    if: needs.changes.outputs.handheld-multi-modal == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Build
+        env:
+          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
+        run: |
+          if [[ -n "$VIPPET_REF" ]]; then
+            make -C federal-aerospace handheld-multi-modal VIPPET_REF="$VIPPET_REF"
+          else
+            unset VIPPET_REF
+            make -C federal-aerospace handheld-multi-modal
+          fi
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: handheld-multi-modal
+          path: federal-aerospace/dist/handheld-multi-modal.zip
+          if-no-files-found: error
+
+  deterministic-threat-detection:
+    name: Build deterministic-threat-detection
+    needs: changes
+    if: needs.changes.outputs.deterministic-threat-detection == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - run: make -C federal-aerospace deterministic-threat-detection
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: deterministic-threat-detection
+          path: federal-aerospace/dist/deterministic-threat-detection.zip
+          if-no-files-found: error
+
+  federal-aerospace:
+    name: Build federal-aerospace (full solution)
+    needs: changes
+    if: needs.changes.outputs.solution == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Build
+        env:
+          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
+        run: |
+          if [[ -n "$VIPPET_REF" ]]; then
+            make -C federal-aerospace federal-aerospace VIPPET_REF="$VIPPET_REF"
+          else
+            unset VIPPET_REF
+            make -C federal-aerospace federal-aerospace
+          fi
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: federal-aerospace
+          path: federal-aerospace/dist/federal-aerospace.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish rolling release (fedaero-latest)
+    # Skip on PRs, and skip if no component was actually built this run
+    # (e.g. a manual dispatch for a single skipped component).
+    if: >-
+      github.event_name != 'pull_request' &&
+      (needs.changes.outputs.handheld-multi-modal == 'true' ||
+       needs.changes.outputs.deterministic-threat-detection == 'true' ||
+       needs.changes.outputs.solution == 'true')
+    needs:
+      - changes
+      - handheld-multi-modal
+      - deterministic-threat-detection
+      - federal-aerospace
+    runs-on: ubuntu-latest
+    permissions:
+      # contents: write is required to create/update releases and move the tag.
+      contents: write
+    steps:
+      # Pull artifacts into ./assets only for components that were actually
+      # built this run — mirrors the same gating used by the build jobs.
+      - name: Download handheld-multi-modal artifact
+        if: needs.changes.outputs.handheld-multi-modal == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: handheld-multi-modal
+          path: assets
+
+      - name: Download deterministic-threat-detection artifact
+        if: needs.changes.outputs.deterministic-threat-detection == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: deterministic-threat-detection
+          path: assets
+
+      - name: Download federal-aerospace artifact
+        if: needs.changes.outputs.solution == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: federal-aerospace
+          path: assets
+
+      # Sanity-check which zips landed before we touch the release.
+      - name: List downloaded assets
+        run: ls -la assets/
+
+      # Create-or-update the rolling release at tag `fedaero-latest`, move
+      # the tag to the current commit, and replace matching assets in place.
+      # The glob picks up only zips that were actually downloaded above;
+      # assets for components not built this run are left untouched on the
+      # existing release.
+      - name: Publish to rolling release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        with:
+          tag_name: fedaero-latest
+          name: "Federal and Aerospace | Edge AI Suites (latest)"
+          body: |
+            Rolling dev build from `main` @ ${{ github.sha }}.
+            For the stable pinned release see the "Latest release" badge.
+          # Auto-generate notes from PRs / commits since the previous run.
+          generate_release_notes: true
+          # Marked as prerelease so it doesn't compete with versioned releases
+          # for customer attention.
+          prerelease: true
+          # Force-move the tag to this commit on each publish.
+          files: assets/*.zip
+
+  release-versioned:
+    name: Publish immutable versioned release (v$VERSION)
+    # Only runs on manual dispatch with the publish_versioned_release box ticked.
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.event.inputs.publish_versioned_release == 'true'
+    needs:
+      - handheld-multi-modal
+      - deterministic-threat-detection
+      - federal-aerospace
+    runs-on: ubuntu-latest
+    permissions:
+      # contents: write is required to create the release and tag.
+      contents: write
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      # Hard-fail if v$VERSION already exists as a tag or a release.
+      # This is what makes versioned releases immutable — bumping VERSION
+      # in the workflow is the only way to publish a new one.
+      - name: Ensure version tag does not already exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${VERSION}"
+          echo "Checking for existing tag/release: $tag"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::Release $tag already exists. Bump VERSION in the workflow to publish a new versioned release."
+            exit 1
+          fi
+          if git ls-remote --tags --exit-code origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "::error::Tag $tag already exists on origin. Bump VERSION in the workflow to publish a new versioned release."
+            exit 1
+          fi
+          echo "OK — $tag is free."
+
+      # Pull all three artifacts. We force all three builds when publishing
+      # a versioned release, so all three are guaranteed to exist here.
+      - name: Download handheld-multi-modal artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: handheld-multi-modal
+          path: assets
+
+      - name: Download deterministic-threat-detection artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: deterministic-threat-detection
+          path: assets
+
+      - name: Download federal-aerospace artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: federal-aerospace
+          path: assets
+
+      - name: List downloaded assets
+        run: ls -la assets/
+
+      # Create the immutable versioned release. No tag move, no asset
+      # replacement — if the tag exists we'd have failed in the guard step.
+      - name: Publish versioned release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        with:
+          tag_name: "v${{ env.VERSION }}"
+          name: "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}"
+          body: |
+            Immutable versioned release built from `${{ github.sha }}`.
+
+            Contains:
+            - `federal-aerospace.zip` — full solution
+            - `handheld-multi-modal.zip` — handheld multi-modal app
+            - `deterministic-threat-detection.zip` — deterministic threat detection app
+          # Auto-generate changelog from PRs / commits since the previous tag.
+          generate_release_notes: true
+          prerelease: false
+          files: assets/*.zip
