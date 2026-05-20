@@ -42,7 +42,7 @@ Configure and start the Model Download service to manage LLM and embedding model
 ```bash
 cd $HOME/oep/edge-ai-libraries/microservices/model-download
 export REGISTRY="intel/"
-export TAG=1.2.0
+export TAG=2026.1.0-rc1
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 source scripts/run_service.sh up --plugins openvino --model-path $HOME/oep/models/
 ```
@@ -64,7 +64,7 @@ export EMBEDDING_MODEL_NAME=Alibaba-NLP/gte-large-en-v1.5
 export RERANKER_MODEL=BAAI/bge-reranker-base
 export DEVICE="CPU"
 export REGISTRY="intel/"
-export TAG=2.1.0-rc2
+export TAG=2026.1.0-rc1
 export MODEL_DOWNLOAD_HOST=localhost
 export MODEL_DOWNLOAD_PORT=8200
 source setup.sh llm=OVMS embed=OVMS
@@ -99,11 +99,10 @@ http://localhost:8101
 
 ### Technical Documentation
 
-- [Chat Q&A](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/chat-question-and-answer/index.html)
-<!-- - [Audio Analyzer](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/audio-analyzer/index.html)
-  \- Comprehensive documentation for multimodal audio processing capabilities -->
-<!-- currently commented out due to docs being taken down for restructuring -->
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
+- [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
+- [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
+  \- Comprehensive documentation for multimodal audio processing capabilities
+- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
   \- Vector database integration and document processing workflows
 - [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/multimodal-embedding-serving/docs/user-guide/index.md)
   \- Embedding generation service architecture and API documentation
