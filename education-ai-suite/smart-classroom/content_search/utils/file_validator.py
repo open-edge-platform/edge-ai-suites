@@ -11,17 +11,12 @@ logger = logging.getLogger(__name__)
 
 
 class FileValidator:
-    """Centralized file validation for uploads"""
-
-    # File size limits (in MB)
     DOCUMENT_MAX_MB = int(os.environ.get("DOCUMENT_MAX_MB", "100"))
     VIDEO_MAX_MB = int(os.environ.get("VIDEO_MAX_MB", "1024"))
 
-    # Video content type prefix and extensions
     VIDEO_CONTENT_PREFIX = "video/"
     VIDEO_EXTENSIONS = {".mp4", ".avi", ".mov", ".mkv"}
 
-    # Expected content types for common extensions
     EXTENSION_TO_CONTENT_TYPE = {
         ".pdf": "application/pdf",
         ".txt": "text/plain",
@@ -40,7 +35,6 @@ class FileValidator:
         ".png": "image/png",
     }
 
-    # Magic numbers (file signatures) for validation
     MAGIC_NUMBERS = {
         ".pdf": [b"%PDF"],
         ".png": [b"\x89PNG\r\n\x1a\n"],
@@ -75,10 +69,6 @@ class FileValidator:
         content_type: Optional[str],
         file_size: Optional[int]
     ) -> Tuple[bool, Optional[str]]:
-        """
-        Validate basic file properties before upload
-        Returns: (is_valid, error_message)
-        """
         if not filename:
             return False, "Filename is required"
 
@@ -114,10 +104,6 @@ class FileValidator:
         first_chunk: bytes,
         filename: str
     ) -> Tuple[bool, Optional[str]]:
-        """
-        Validate file content by checking magic number (file signature)
-        Returns: (is_valid, error_message)
-        """
         if not filename or not first_chunk:
             return True, None
 
@@ -142,6 +128,66 @@ class FileValidator:
         error_msg = f"File content mismatch: {filename} has extension {ext} but content does not match expected file signature"
         logger.warning(error_msg)
         return False, error_msg
+
+    @staticmethod
+    def validate_file_integrity(file_path: str) -> Tuple[bool, Optional[str]]:
+        if not os.path.exists(file_path):
+            return False, "File does not exist"
+
+        ext = os.path.splitext(file_path)[1].lower()
+
+        try:
+            if ext == '.pdf':
+                try:
+                    import pypdf
+                except ImportError:
+                    logger.warning("pypdf not installed, skipping PDF integrity check")
+                    return True, None
+
+                try:
+                    with open(file_path, 'rb') as f:
+                        reader = pypdf.PdfReader(f)
+                        page_count = len(reader.pages)
+                        if page_count == 0:
+                            return False, "PDF has no readable pages"
+                    logger.info(f"PDF validation passed: {page_count} pages")
+                    return True, None
+                except Exception as e:
+                    error_msg = f"PDF file is corrupted or unreadable: {str(e)}"
+                    logger.error(error_msg)
+                    return False, error_msg
+
+            elif ext in ['.mp4', '.avi', '.mov', '.mkv']:
+                try:
+                    import cv2
+                except ImportError:
+                    logger.warning("cv2 not installed, skipping video integrity check")
+                    return True, None
+
+                try:
+                    cap = cv2.VideoCapture(file_path)
+                    if not cap.isOpened():
+                        return False, "Video file is corrupted or unreadable"
+
+                    frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                    if frame_count <= 0:
+                        cap.release()
+                        return False, "Video file has no readable frames"
+
+                    cap.release()
+                    logger.info(f"Video validation passed: {frame_count} frames")
+                    return True, None
+                except Exception as e:
+                    error_msg = f"Video validation failed: {str(e)}"
+                    logger.error(error_msg)
+                    return False, error_msg
+
+        except Exception as e:
+            error_msg = f"File integrity validation error: {str(e)}"
+            logger.error(error_msg)
+            return False, error_msg
+
+        return True, None
 
 
 file_validator = FileValidator()

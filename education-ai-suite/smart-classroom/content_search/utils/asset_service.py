@@ -147,6 +147,55 @@ class AssetService:
                 }
             }
 
+        file_key = payload.get("file_key")
+        file_name_lower = (file.filename or "").lower()
+
+        if any(file_name_lower.endswith(ext) for ext in ['.pdf', '.mp4', '.avi', '.mov', '.mkv']):
+            from utils.crud_task import task_crud
+            from utils.schemas_task import TaskStatus
+            from utils.file_validator import file_validator
+
+            file_path = storage_service.get_file_disk_path(file_key)
+            is_valid, error_msg = file_validator.validate_file_integrity(str(file_path))
+
+            if not is_valid:
+                print(f"[ASSET] File integrity check failed: {file.filename}, Error: {error_msg}", flush=True)
+
+                try:
+                    storage_service.delete_file(file_key, missing_ok=True)
+                except Exception:
+                    pass
+
+                failed_task = task_crud.create_task(
+                    db,
+                    task_type="file_search",
+                    payload={
+                        "file_name": file.filename,
+                        "content_type": file.content_type,
+                        "file_key": file_key,
+                        "validation_error": error_msg,
+                        "error_type": "corrupted_file",
+                        **kwargs
+                    },
+                    status=TaskStatus.FAILED
+                )
+                failed_task.result = {
+                    "error": error_msg,
+                    "error_type": "corrupted_file"
+                }
+                db.commit()
+
+                return {
+                    "is_biz_error": True,
+                    "code": 40002,
+                    "message": f"File integrity validation failed: {error_msg}",
+                    "data": {
+                        "task_id": str(failed_task.id),
+                        "file_name": file.filename,
+                        "reason": error_msg
+                    }
+                }
+
         file_hash = payload["file_hash"]
 
         existing_asset = AssetService._find_existing_asset(db, file_hash)
