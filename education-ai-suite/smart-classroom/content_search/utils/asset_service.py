@@ -107,9 +107,46 @@ class AssetService:
     @staticmethod
     async def _prepare_and_upload_asset(db: Session, file: UploadFile, **kwargs) -> dict:
         max_size_bytes = _max_bytes_for(file)
+
         payload = await storage_service.upload_and_prepare_payload(
             file, max_size_bytes=max_size_bytes
         )
+
+        if "validation_error" in payload:
+            from utils.crud_task import task_crud
+            from utils.schemas_task import TaskStatus
+
+            error_code = 40002 if payload.get("error_type") == "invalid_file" else 41301
+
+            failed_task = task_crud.create_task(
+                db,
+                task_type="file_search",
+                payload={
+                    "file_name": file.filename,
+                    "content_type": file.content_type,
+                    "validation_error": payload["validation_error"],
+                    "error_type": payload["error_type"],
+                    **kwargs
+                },
+                status=TaskStatus.FAILED
+            )
+            failed_task.result = {
+                "error": payload["validation_error"],
+                "error_type": payload["error_type"]
+            }
+            db.commit()
+
+            return {
+                "is_biz_error": True,
+                "code": error_code,
+                "message": f"Upload validation failed: {payload['validation_error']}",
+                "data": {
+                    "task_id": str(failed_task.id),
+                    "file_name": file.filename,
+                    "reason": payload["validation_error"]
+                }
+            }
+
         file_hash = payload["file_hash"]
 
         existing_asset = AssetService._find_existing_asset(db, file_hash)
