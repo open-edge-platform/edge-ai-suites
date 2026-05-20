@@ -22,8 +22,6 @@
 
 ## Intel® OEP SDK Manager EAS-2026.0.0 Release
 
-### New 
-
 - **Updated Documentation**
     - Enhanced guides and tutorials for improved clarity and usability.
     - Latest best practices integrated across all learning materials.
