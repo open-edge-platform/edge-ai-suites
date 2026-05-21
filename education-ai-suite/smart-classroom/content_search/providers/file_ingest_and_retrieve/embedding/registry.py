@@ -70,5 +70,5 @@ def get_model_handler(
     config = CLIP_CONFIGS[model_name].copy()
     config["device"] = device or os.getenv("EMBEDDING_DEVICE", "CPU")
 
-    logger.info(f"Creating CLIPHandler for {model_id} with config: {config}")
+    logger.debug(f"Creating CLIPHandler for {model_id} with config: {config}")
     return CLIPHandler(config)

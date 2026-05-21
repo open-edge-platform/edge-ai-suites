@@ -122,6 +122,20 @@
   color: #6A6D75;
 }
 
+/* ───────── Result Error State ───────── */
+
+.cs-result-error .cs-result-error-title {
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: #d32f2f;
+}
+
+.cs-result-error .cs-result-empty-hint {
+  color: #d32f2f;
+  opacity: 0.8;
+}
+
 /* ───────── Result Item Card ───────── */
 
 .cs-result-item {
@@ -280,7 +294,6 @@
   font-size: 12px;
   font-weight: 600;
   color: #494B51;
-  flex-shrink: 0;
 }
 
 .cs-result-item-summary-text {

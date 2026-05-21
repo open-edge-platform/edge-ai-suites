@@ -1,5 +1,6 @@
 # Release Notes
 
+- [Version 1.3.4](#version-130)
 - [Version 1.2.0](#version-120)
 - [Version 1.1.0](#version-110)
 - [Version 1.0.1](#version-101)
@@ -7,6 +8,18 @@
 
 Details about the changes, improvements, and known issues in this release of the
 application.
+
+## Version 1.3.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+
+**Improved**
+
+- Bug fixes to improve UI/UX.
+- DL Streamer and DL Streamer Pipeline Server versions upgraded to 2026.1.0 
 
 ## Version 1.2.0
 
