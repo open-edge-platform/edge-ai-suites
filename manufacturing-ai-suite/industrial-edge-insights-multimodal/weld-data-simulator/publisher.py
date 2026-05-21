@@ -13,6 +13,7 @@ import subprocess
 import json
 import os
 import glob
+import csv
 from typing import Tuple, Optional
 import logging
 
@@ -41,6 +42,37 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Log format
 )
 logger = logging.getLogger(__name__)
+
+output_csv_path = None
+export_fieldnames = None
+
+def create_output_csv(base_filename: str, fieldnames: list, output_dir: str = "/simulation-output") -> str:
+    """
+    Create a CSV file for exported rows and write its header.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    output_csv_path = os.path.join(output_dir, f"{base_filename}_export.csv")
+
+    with open(output_csv_path, "w", newline="", encoding="utf-8") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=fieldnames)
+        writer.writeheader()
+
+    return output_csv_path
+
+
+def append_row_to_csv(output_csv_path: str, fieldnames: list, row_data: dict, frame, frame_name: str, defect_cat: str) -> None:
+    """
+    Append one processed CSV row to the export file.
+    """
+    with open(output_csv_path, "a", newline="", encoding="utf-8") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=fieldnames)
+        writer.writerow(row_data)
+    
+    images_dir = os.path.join(os.path.dirname(output_csv_path), "images", defect_cat)
+    os.makedirs(images_dir, exist_ok=True)
+    # Save frame
+    frame_path = os.path.join(images_dir, frame_name + ".jpg")
+    cv2.imwrite(frame_path, frame)
 
 def read_simulation_files(base_filename: str, simulation_data_dir: str = "/simulation-data") -> Tuple[Optional[str], Optional[str]]:
     """
@@ -194,6 +226,16 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     client.connect(MQTT_BROKER)
 
+    global output_csv_path, export_fieldnames
+
+    
+    if output_csv_path is None:
+        export_fieldnames = [column for column in df.columns if column not in {"Date", "Time", "Remarks ", "Part No ", "Part No"}]
+        export_fieldnames.append("time")
+        export_fieldnames.append("category")
+        export_fieldnames.append("frame_id")
+        output_csv_path = create_output_csv(base_filename, export_fieldnames)
+
     start_ffmpeg = False
     global ffmpeg_proc
 
@@ -244,11 +286,16 @@ def stream_video_and_csv(base_filename: str, simulation_data_dir: str = "/simula
         seconds = now_ns // 1_000_000_000
         nanoseconds = now_ns % 1_000_000_000
         csv_row["time"] = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(seconds)) + f".{nanoseconds:09d}Z"
+        csv_row["category"] = base_filename
+        csv_row["frame_id"] = base_filename + f"_{row_idx}"
+        append_row_to_csv(output_csv_path, export_fieldnames, csv_row, frame, csv_row["frame_id"], base_filename)
         # csv_row["frame_id"] = frame_id
         csv_row = json.dumps(csv_row)
         # Publish each CSV row only once
         
         # global published_data
+
+        
         
         client.publish(TS_TOPIC, str(csv_row))
         frame_id += 1

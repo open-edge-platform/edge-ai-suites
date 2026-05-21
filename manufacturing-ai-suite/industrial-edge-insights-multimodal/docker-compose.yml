@@ -227,6 +227,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
     volumes:
       - ./weld-data-simulator/simulation-data:/simulation-data
+      - /tmp/simulation-output:/simulation-output:rw
     networks:
     - timeseries_network
 

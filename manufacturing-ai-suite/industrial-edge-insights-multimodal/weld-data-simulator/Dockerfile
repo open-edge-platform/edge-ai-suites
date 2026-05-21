@@ -61,7 +61,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 COPY simulation-data /simulation-data
 COPY publisher.py /
 
-USER ${TIMESERIES_USER_NAME}
+# USER ${TIMESERIES_USER_NAME}
 
 HEALTHCHECK --interval=5m CMD exit 0
 
