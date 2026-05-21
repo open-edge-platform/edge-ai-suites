@@ -6,8 +6,10 @@ FROM python:3.12-slim
 ARG USER_ID=1000
 ARG USER_GROUP_ID=1000
 
-# Install system dependencies first
-RUN apt-get update
+# Apply latest Debian security updates from configured repositories.
+RUN apt-get update && \
+  apt-get upgrade -y && \
+  rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
@@ -20,8 +22,8 @@ RUN pip install uv && uv sync
 
 # Create non-root user and change ownership
 RUN groupadd -g ${USER_GROUP_ID} routeuser && \
-    useradd -m -s /bin/bash -u ${USER_ID} -g ${USER_GROUP_ID} routeuser && \
-    chown -R routeuser:routeuser /app
+  useradd -m -s /usr/sbin/nologin -u ${USER_ID} -g ${USER_GROUP_ID} routeuser && \
+  chown -R routeuser:routeuser /app
 
 USER routeuser
 
