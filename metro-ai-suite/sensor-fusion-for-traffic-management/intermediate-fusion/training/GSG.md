@@ -1053,4 +1053,13 @@ LD_LIBRARY_PATH=$OV_ROOT:$LD_LIBRARY_PATH \
 
 > For the **split** (PP) pipeline on KITTI — which is what `./bevfusion --preset kitti --int8` runs — see §4.4. The two paths are independent: `./bevfusion` ≠ `./bevfusion_unified`.
 
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Installation <docs/install.md>
+Convert NVIDIA Checkpoint <Guide/nvidia_ckpt_to_intel_gpu.md>
+:::
+hide_directive-->
+
 
