@@ -61,7 +61,7 @@ hardware platform's capabilities, this reference implementation serves as the pe
 
 Get Started <get-started-guide.md>
 How it Works <how-it-works.md>
-Intermediate Fusion <../../../intermediate-fusion/deploy/docs/index.md>
+Intermediate Fusion <./intermediate-fusion/deploy/docs/index.md>
 Advanced user guide <advanced-user-guide.md>
 APIs.md
 troubleshooting.md
