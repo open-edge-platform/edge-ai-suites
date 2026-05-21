@@ -14,7 +14,6 @@ Run in bevEnv (py3.8, torch 1.11, mmdet3d compiled ops):
 """
 
 import argparse
-import copy
 from functools import partial
 import os
 import sys
@@ -28,19 +27,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-
-def recursive_eval(obj, globals=None):
-    if globals is None:
-        globals = copy.deepcopy(obj)
-    if isinstance(obj, dict):
-        for k in obj:
-            obj[k] = recursive_eval(obj[k], globals)
-    elif isinstance(obj, list):
-        for k, v in enumerate(obj):
-            obj[k] = recursive_eval(v, globals)
-    elif isinstance(obj, str) and obj.startswith("${") and obj.endswith("}"):
-        obj = recursive_eval(eval(obj[2:-1], globals), globals)
-    return obj
+from mmdet3d.utils import recursive_eval
 
 
 def parse_args():
