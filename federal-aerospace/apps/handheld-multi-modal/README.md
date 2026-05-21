@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Handheld Multi-Modal
 
 Full-stack AI inference and observability platform for handheld deployment scenarios, optimized for Intel edge hardware.

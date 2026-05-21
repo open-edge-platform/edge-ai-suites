@@ -1,3 +1,7 @@
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
 # Whisper Speech-to-Text
 
 Local, private speech-to-text service powered by OpenAI Whisper.
