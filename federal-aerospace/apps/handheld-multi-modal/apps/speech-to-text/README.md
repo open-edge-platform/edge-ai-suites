@@ -13,7 +13,7 @@ Whisper STT is only accessible via the nginx TLS reverse proxy. The container po
 |----------|-----|-------|
 | Web UI | https://localhost:5443 | Browser recording + file upload — browser mic enabled (via nginx) |
 | Transcribe | `POST https://localhost:5443/transcribe` | Multipart `file` field (via nginx; use `-k` for self-signed cert) |
-| Metrics | `http://whisper.fedaero.intel.com:5000/metrics` | Prometheus — internal Docker network only |
+| Metrics | `http://localhost:5443/metrics` | Prometheus — internal Docker network only |
 
 ### Prometheus metrics
 
