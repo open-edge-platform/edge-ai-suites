@@ -1715,6 +1715,21 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "The directory '/.cache/pip' or its parent directory is not owned",  # pip cache warning
             "error while sending usage report",  # Kapacitor telemetry timeout (benign)
             "usage.influxdata.com",  # InfluxData usage reporting endpoint timeout
+            # === [GH_RUNNER_FIX BEGIN] benign startup-noise patterns ===
+            # Pydantic v2 deprecation warning embeds a doc URL containing the
+            # substring "errors" (e.g. "errors.pydantic.dev/2.13/migration/"),
+            # which falsely trips the naive case-insensitive "error" search.
+            "errors.pydantic.dev",
+            # Telegraf's OPC-UA input plugin logs a transient
+            # `E! [inputs.opcua] Error in plugin: connect failed: endpoint ...
+            # failed to get endpoints: ... connection refused`
+            # for the first ~30s while `ia-opcua-server` is still warming up.
+            # Telegraf reconnects automatically and writes batches successfully
+            # afterwards, so this startup error is benign for log-cleanliness
+            # checks taken after the helm `wait_time` stabilisation window.
+            "failed to get endpoints",
+            "Error in plugin: connect failed: endpoint",
+            # === [GH_RUNNER_FIX END] ===
         ]
         
         # Check if "error" exists in logs (case-insensitive)
