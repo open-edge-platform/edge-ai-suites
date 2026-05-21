@@ -77,29 +77,35 @@ get_host_ip() {
     echo "$HOST_IP"
 }
 
-# Function to configure Scenescape settings
+# Configure Scenescape or default Frigate mode
+# Internal flags: SCENESCAPE_SI_ONLY=true (skip Frigate), SCENESCAPE_NVR_ONLY=true (skip SI/DLStreamer)
+# Env override: RTSP_STREAM_HOST for remote RTSP IP
 configure_scenescape_setup() {
-    print_info "Configuring Scenescape setup based on NVR_SCENESCAPE setting"
-    
+
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         print_info "NVR_SCENESCAPE is enabled - configuring Scenescape mode"
 
         local metro_recipe_dir
         metro_recipe_dir="$(cd .. && pwd)/metro-vision-ai-app-recipe"
+        local rtsp_ip="${RTSP_STREAM_HOST:-$(get_host_ip)}"
 
-        # Copy NVR resources into SI app directory
-        cp "./resources/compose-scenescape-rtsp.yml" "${metro_recipe_dir}/compose-scenescape.yml"
-        cp "./resources/si-rtsp-config.json" "${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
-        cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+        if [ "${SCENESCAPE_NVR_ONLY}" != "true" ]; then
+            # Configure SI stack: compose + DLStreamer
+            local dlstreamer_config="${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
+            cp "./resources/compose-scenescape-rtsp.yml" "${metro_recipe_dir}/compose-scenescape.yml"
+            cp "./resources/si-rtsp-config.json" "${dlstreamer_config}"
+            sed -i "s/{RTSP_STREAM_IP}/${rtsp_ip}/g" "${dlstreamer_config}"
+            sed -i "s/{RTSP_STREAM_PORT}/${RTSP_STREAM_PORT}/g" "${dlstreamer_config}"
+        fi
 
-        # Substitute placeholders in Frigate and DLStreamer configs
-        local host_ip=$(get_host_ip)
-        local dlstreamer_config="${metro_recipe_dir}/smart-intersection/src/dlstreamer-pipeline-server/config.json"
-        sed -i "s/{RTSP_STREAM_IP}/${host_ip}/g" "./resources/frigate-config/config.yml" "${dlstreamer_config}"
-        sed -i "s/{RTSP_STREAM_PORT}/${RTSP_STREAM_PORT}/g" "./resources/frigate-config/config.yml" "${dlstreamer_config}"
+        if [ "${SCENESCAPE_SI_ONLY}" != "true" ]; then
+            # Configure Frigate for scenescape (uses remote RTSP_STREAM_HOST if set)
+            cp "./resources/frigate-config/config-scenescape.yml" "./resources/frigate-config/config.yml"
+            sed -i "s/{RTSP_STREAM_IP}/${rtsp_ip}/g" "./resources/frigate-config/config.yml"
+            sed -i "s/{RTSP_STREAM_PORT}/${RTSP_STREAM_PORT}/g" "./resources/frigate-config/config.yml"
+        fi
+
         print_success "Scenescape configuration activated"
-        
-
     else
         print_info "NVR_SCENESCAPE is disabled - using default configuration"
         cp "./resources/frigate-config/config-default.yml" "./resources/frigate-config/config.yml"
@@ -108,10 +114,8 @@ configure_scenescape_setup() {
 }
 
 configure_genai_setup() {
-    print_info "Configuring GenAI setup based on NVR_GENAI setting"
-    
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
-        print_info "NVR_GENAI is enabled - configuring GenAI mode"
+        print_info "Enabling GenAI detection in Frigate"
         
         if [ -f "./resources/frigate-config/config.yml" ]; then
             sed -i '/^\s*genai:/!b;n;s/enabled: false/enabled: true/' "./resources/frigate-config/config.yml"
@@ -186,21 +190,16 @@ stop_scenescape() {
     fi
 }
 
-# Function to validate required environment variables
-validate_environment() {    
-    # Check for NVR_GENAI flag
+validate_environment() {
     if [ -z "${NVR_GENAI}" ]; then
-        print_error "NVR_GENAI environment variable is required"
-        print_info "Please set it to 'true' or 'false' to enable/disable NVR GenAI features"
+        print_error "NVR_GENAI environment variable is required (true/false)"
         return 1
     fi
     if [ -z "${NVR_SCENESCAPE}" ]; then
-        print_error "NVR_SCENESCAPE environment variable is required"
-        print_info "Please set it to 'true' or 'false' to enable/disable NVR SceneScape features"
+        print_error "NVR_SCENESCAPE environment variable is required (true/false)"
         return 1
     fi
-
-    # Check for incompatible configuration
+    # Scenescape and GenAI are mutually exclusive
     if ([ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]) && ([ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]); then
         print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
         print_info "Please set NVR_GENAI to 'false' if using SceneScape, or disable NVR_SCENESCAPE"
@@ -232,7 +231,6 @@ validate_environment() {
         return 1
     fi
     
-    # Check for VLM Model Endpoint IP and port
     if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
         if [ -z "${VLM_SERVING_IP}" ]; then
             print_error "VLM_SERVING_IP environment variable is required when NVR_GENAI is enabled"
@@ -262,18 +260,19 @@ validate_environment() {
 start_services() {
     print_header "Starting NVR Event Router Services"
     HOST_IP=$(get_host_ip)
-    export HOST_IP=$(get_host_ip)
+    export HOST_IP
     # Validate environment variables and exit if validation fails
     if ! validate_environment; then
         print_error "Environment validation failed. Please set the required variables."
         return 1
     fi
 
+    if ! configure_scenescape_setup; then
+        return 1
+    fi
+
     if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
         if ! download_videos; then
-            return 1
-        fi
-        if ! configure_scenescape_setup; then
             return 1
         fi
         if ! start_rtsp_streamer; then
@@ -301,7 +300,7 @@ start_services() {
     print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
     else
         print_error "Docker Compose failed to start services."
-        exit 1
+        return 1
     fi
 
 }
@@ -316,21 +315,133 @@ stop_services() {
     print_success "All services stopped."
 }
 
+# ─── Remote mode: split-node deployment ───────────────────────────────
+
+start_si_services() {
+    print_header "Starting SI + RTSP Streamer (System 1 / SI-only mode)"
+    if [ "${NVR_SCENESCAPE}" != "True" ] && [ "${NVR_SCENESCAPE}" != "true" ]; then
+        print_error "start-si requires NVR_SCENESCAPE=true"
+        print_info "Run: export NVR_SCENESCAPE=true"
+        return 1
+    fi
+    HOST_IP=$(get_host_ip)
+    export HOST_IP
+
+    if ! download_videos; then
+        return 1
+    fi
+
+    if ! SCENESCAPE_SI_ONLY=true configure_scenescape_setup; then
+        return 1
+    fi
+
+    if ! start_rtsp_streamer; then
+        return 1
+    fi
+
+    if ! start_scenescape; then
+        return 1
+    fi
+
+    print_success "SI + RTSP stack is running on System 1."
+    echo ""
+    print_info "System 1 IP: ${CYAN}${HOST_IP}${NC}"
+    print_info "On System 2 (SmartNVR machine), run:"
+    echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
+    echo -e "  ${CYAN}export SCENESCAPE_MQTT_BROKER=${HOST_IP}${NC}"
+    echo -e "  ${CYAN}export RTSP_STREAM_HOST=${HOST_IP}${NC}"
+    echo -e "  ${CYAN}# ...plus VSS_*, MQTT_USER, MQTT_PASSWORD, etc.${NC}"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
+}
+
+stop_si_services() {
+    print_header "Stopping SI + RTSP Streamer (System 1)"
+    stop_scenescape
+    stop_rtsp_streamer
+    print_success "SI + RTSP stack stopped."
+}
+
+start_nvr_services() {
+    print_header "Starting SmartNVR (System 2 / NVR-only mode)"
+    if [ "${NVR_SCENESCAPE}" != "True" ] && [ "${NVR_SCENESCAPE}" != "true" ]; then
+        print_error "start-nvr requires NVR_SCENESCAPE=true"
+        print_info "Run: export NVR_SCENESCAPE=true"
+        return 1
+    fi
+    HOST_IP=$(get_host_ip)
+    export HOST_IP
+
+    if [ -z "${SCENESCAPE_MQTT_BROKER}" ]; then
+        print_error "SCENESCAPE_MQTT_BROKER is required in NVR-only mode."
+        print_info "Set it to System 1's IP: export SCENESCAPE_MQTT_BROKER=<system1_ip>"
+        return 1
+    fi
+
+    if [ -z "${RTSP_STREAM_HOST}" ]; then
+        print_error "RTSP_STREAM_HOST is required in NVR-only mode."
+        print_info "Set it to System 1's IP: export RTSP_STREAM_HOST=<system1_ip>"
+        return 1
+    fi
+
+    if ! validate_environment; then
+        print_error "Environment validation failed. Please set the required variables."
+        return 1
+    fi
+
+    if ! SCENESCAPE_NVR_ONLY=true configure_scenescape_setup; then
+        return 1
+    fi
+
+    if ! configure_genai_setup; then
+        return 1
+    fi
+
+    print_info "Starting Docker Compose services..."
+    export SCENESCAPE_MQTT_BROKER
+    docker compose -f docker/compose.yaml up -d
+    if [ $? -eq 0 ]; then
+        sleep 5
+        print_success "SmartNVR services are starting up..."
+        print_info "UI will be available at: ${CYAN}http://${HOST_IP}:7860${NC}"
+    else
+        print_error "Docker Compose failed to start services."
+        return 1
+    fi
+}
+
+stop_nvr_services() {
+    print_header "Stopping SmartNVR (System 2)"
+    docker compose -f docker/compose.yaml down
+    print_success "SmartNVR services stopped."
+}
+
 # Function to display help
 show_help() {
     print_header "NVR Event Router Setup Script"
     echo -e "${WHITE}Usage:${NC} $0 [command]"
     echo ""
     echo -e "${WHITE}Commands:${NC}"
-    echo -e "  ${GREEN}start${NC}          - Start everything (RTSP streamer + Smart Intersection + Frigate + event router)"
-    echo -e "  ${RED}stop${NC}           - Stop everything"
-    echo -e "  ${YELLOW}restart${NC}        - Restart everything"
+    echo -e "  ${GREEN}start${NC}          - Single-node: start everything (RTSP + SI + Frigate + event router)"
+    echo -e "  ${RED}stop${NC}           - Single-node: stop everything"
+    echo -e "  ${YELLOW}restart${NC}        - Single-node: restart everything"
+    echo -e "  ${GREEN}start-si${NC}       - Split-node System 1: start SI + RTSP streamer only"
+    echo -e "  ${RED}stop-si${NC}        - Split-node System 1: stop SI + RTSP streamer"
+    echo -e "  ${GREEN}start-nvr${NC}      - Split-node System 2: start SmartNVR only (requires SCENESCAPE_MQTT_BROKER + RTSP_STREAM_HOST)"
+    echo -e "  ${RED}stop-nvr${NC}       - Split-node System 2: stop SmartNVR"
     echo -e "  ${BLUE}help${NC}           - Display this help message"
     echo ""
     echo -e "${WHITE}Examples:${NC}"
-    echo -e "  ${CYAN}source setup.sh start${NC}     # Start all services"
-    echo -e "  ${CYAN}source setup.sh stop${NC}      # Stop all services"
-    echo -e "  ${CYAN}source setup.sh restart${NC}   # Restart all services"
+    echo -e "  ${CYAN}source setup.sh start${NC}          # Single-node: start all services"
+    echo -e "  ${CYAN}source setup.sh stop${NC}           # Single-node: stop all services"
+    echo -e "  ${CYAN}source setup.sh restart${NC}        # Single-node: restart all services"
+    echo ""
+    echo -e "  # Split-node — System 1 (SI + RTSP):${NC}"
+    echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
+    echo -e "  ${CYAN}source setup.sh start-si${NC}"
+    echo ""
+    echo -e "  # Split-node — System 2 (SmartNVR):${NC}"
+    echo -e "  ${CYAN}export NVR_SCENESCAPE=true SCENESCAPE_MQTT_BROKER=<sys1_ip> RTSP_STREAM_HOST=<sys1_ip>${NC}"
+    echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
     echo ""
 }
 
@@ -341,9 +452,6 @@ case "$1" in
         HOST_IP=$(get_host_ip)
         export HOST_IP
         if ! download_videos; then
-            exit 1
-        fi
-        if ! configure_scenescape_setup; then
             exit 1
         fi
         if ! start_rtsp_streamer; then
@@ -367,6 +475,18 @@ case "$1" in
         stop_services
         sleep 5
         start_services
+        ;;
+    start-si)
+        start_si_services
+        ;;
+    stop-si)
+        stop_si_services
+        ;;
+    start-nvr)
+        start_nvr_services
+        ;;
+    stop-nvr)
+        stop_nvr_services
         ;;
     help|-h|--help)
         show_help

@@ -78,7 +78,7 @@ services:
       MQTT_PASSWORD: ${MQTT_PASSWORD} 
       HOST_IP: ${HOST_IP}
       NVR_SCENESCAPE: ${NVR_SCENESCAPE}
-      SCENESCAPE_MQTT_BROKER: ${HOST_IP}
+      SCENESCAPE_MQTT_BROKER: ${SCENESCAPE_MQTT_BROKER:-${HOST_IP}}
 
   nvr-event-router-ui:
     container_name: nvr-event-router-ui
