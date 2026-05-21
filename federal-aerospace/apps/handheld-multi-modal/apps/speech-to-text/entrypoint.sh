@@ -1,4 +1,6 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 set -e
 
 # Ensure the whisper cache bind-mount directory is owned by the app user.

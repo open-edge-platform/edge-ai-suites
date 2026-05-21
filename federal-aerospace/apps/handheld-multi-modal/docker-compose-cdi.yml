@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 # Fed-Aero Application Blueprint
 # Grafana + LLM Services (OVMS + OpenWebUI)
 # CDI variant - OVMS uses CDI GPU allocation, all services pinned to CPUs 4-11

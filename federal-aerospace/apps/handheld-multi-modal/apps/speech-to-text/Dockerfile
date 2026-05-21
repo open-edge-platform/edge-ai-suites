@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
 FROM python:3.13-slim
 
 # Install ffmpeg (required by Whisper for audio decoding) and gosu for

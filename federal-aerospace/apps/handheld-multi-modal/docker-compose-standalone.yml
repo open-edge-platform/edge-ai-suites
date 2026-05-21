@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
 # Fed-Aero Application Blueprint — Standalone variant
 # Creates the fedaero network locally (no VIPPET required).
 # Use for development/testing only; make deploy is recommended for full operation.
