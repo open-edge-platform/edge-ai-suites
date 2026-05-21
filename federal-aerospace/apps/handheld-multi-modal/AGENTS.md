@@ -12,7 +12,7 @@ Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-tex
 | Mode | Compose file | When to use |
 |---|---|---|
 | Standard | `docker-compose.yml` | Production — requires VIPPET network |
-| CDI / SR-IOV | `docker-compose-cdi.yml` | Physical Function GPU passthrough (set `CDI_XE_DEVICE_0` in `.env`) |
+| CDI / SR-IOV | `docker-compose-cdi.yml` | Virtual/Physical Function GPU passthrough (set `CDI_XE_DEVICE_0` in `.env`) |
 | Standalone | `docker-compose-standalone.yml` | Dev / testing — creates its own `fedaero` network, no VIPPET needed |
 
 **Critical**: The main and CDI compose files declare the VIPPET network as `external: true`. Running `docker compose up` directly **will fail** unless VIPPET is already running. Always use `make deploy` / `make deploy-cdi`, or `make up-standalone` for development.
@@ -31,14 +31,8 @@ Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-tex
 | `apps/speech-to-text/static/index.html` | Browser-based STT demo UI |
 | `apps/grafana/provisioning/dashboards/` | Pre-provisioned dashboards (`panther-lake-compact-v2.json`, `panther-lake-live.json`) |
 | `apps/nginx/nginx.conf` | HTTPS reverse proxy (self-signed cert, TLS 1.3 only) |
+| `apps/nginx/nginx-standalone.conf` | HTTPS reverse proxy for standalone mode (no VIPPET UI block) |
 | `collector/telegraf.conf` | Telegraf config copied into VIPPET metrics-manager by `make vippet-configure` |
-| `benchmarks/load-test.sh` | LLM load test (concurrent requests, latency/throughput) |
-| `benchmarks/extract-metrics.py` | Pull metrics from VIPPET InfluxDB into CSV |
-| `benchmarks/visualize-metrics.py` | Plot extracted CSVs to PNG |
-| `benchmarks/hardware_report.sh` | Collect host hardware info |
-| `benchmarks/realtime/` | Cyclictest results and RT kernel config |
-| `benchmarks/results/` | Raw benchmark output (JSONL, NPU CSVs) |
-| `tools/setup-proxy.sh` | Configure Docker proxy settings |
 
 ## Key Environment Variables
 
@@ -46,7 +40,6 @@ Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-tex
 |---|---|---|
 | `RENDER_GID` | `make setup` (auto-detect) | GPU device group for OVMS |
 | `GRAFANA_PASSWORD` | manual / defaults `admin` | Grafana admin password |
-| `GRAFANA_BASIC_AUTH` | `make setup` (derived) | base64 `admin:<password>` used by Telegraf |
 | `CDI_XE_DEVICE_0` | manual | CDI device path (CDI variant only) |
 
 Run `make setup` (idempotent) to auto-populate `.env` before any `make up` variant.
@@ -80,6 +73,6 @@ Open WebUI, Grafana, and Whisper STT are only accessible via the nginx TLS rever
 | Open WebUI | https://localhost:8443 | LLM chat (via nginx) |
 | Grafana | https://localhost:7443 | Dashboards (via nginx) |
 | Whisper STT | https://localhost:5443 | Speech-to-text (via nginx) |
-| VIPPET UI | https://localhost:443 | via nginx |
-| OVMS OpenAI API | http://localhost:9000/v3 | `POST /chat/completions` |
-| OVMS metrics | http://localhost:9000/metrics | Prometheus |
+| VIPPET UI | https://localhost:443 | via nginx (standard/CDI modes only) |
+| Metrics Manager | http://localhost:9090 | Prometheus metrics API |
+| Metrics Manager | http://localhost:9273 | Telegraf metrics endpoint |
