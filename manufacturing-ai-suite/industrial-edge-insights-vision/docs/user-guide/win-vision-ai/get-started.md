@@ -1,17 +1,17 @@
-# Get Started with WinVisionAI
+# Get Started
 
-A Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows.
-
----
-
-## Install Python and git
-
-Install **Python 3.12 or higher** from https://www.python.org/downloads/.
-Install **Git for Windows** from https://git-scm.com/install/windows.
+Win Vision AI is a Python application for running concurrent GStreamer inference pipelines on Intel hardware (CPU / GPU / NPU) on Windows 11.
 
 ---
 
-## Set Proxies (Optional)
+## Prerequisites
+
+### Install Python and Git
+
+Install **Python 3.12 or higher** from [the official Python website](https://www.python.org/downloads/).
+Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
+
+### Set Proxies (Optional)
 
 ```powershell
 $env:http_proxy  = # example: http://proxy.example.com:891
@@ -19,26 +19,30 @@ $env:https_proxy = # example: http://proxy.example.com:891
 $env:no_proxy    = "localhost,127.0.0.1"
 ```
 
----
+### Install Intel DL Streamer
 
-## Install Intel DL Streamer
+Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
 
-Download `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer releases page](https://github.com/open-edge-platform/dlstreamer/releases) and follow the [Windows installation guide](https://github.com/open-edge-platform/dlstreamer/blob/main/docs/user-guide/get_started/install/install_guide_windows.md).
-
-DL Streamer installs by default to `C:\Program Files\Intel\dlstreamer`.
+> **Note:** By default, DL Streamer installs to `C:\Program Files\Intel\dlstreamer`.
 
 ---
 
-## Clone the Repository
+## Set Up the Application
 
-Open PowerShell and run all terminal commands:
+### Clone the Suite
+
+Go to the target directory of your choice, open PowerShell and run all the terminal commands below.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```powershell
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
+git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set manufacturing-ai-suite
+cd manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai
 ```
 
-## Install Python Dependencies
+### Install Python Dependencies
 
 ```powershell
 python -m venv venv
@@ -49,7 +53,7 @@ pip install -r requirements.txt
 
 ---
 
-## Set Environment Variables
+### Set Environment Variables
 
 First, find the `gstreamer-python` install location:
 
@@ -70,13 +74,13 @@ Verify GStreamer and DL Streamer plugins loaded correctly:
 gst-inspect-1.0 gvadetect
 ```
 
-### Camera Input (Optional)
+#### Camera Input (Optional)
 
 To use a GenICam-compatible camera (e.g., Basler, Balluff, HikRobot), download the GenICam runtime DLLs and set the required environment variables.
 
 The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
-#### Download GenICam Runtime DLLs
+##### Download GenICam Runtime DLLs
 
 Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
 
@@ -84,7 +88,7 @@ Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win
 .\src\setup_genicam_runtime.ps1
 ```
 
-#### Set Camera Environment Variables
+##### Set Camera Environment Variables
 
 ```powershell
 # Path to your win-vision-ai clone root
@@ -115,9 +119,10 @@ Verify the camera plugin loaded correctly:
 ```powershell
 gst-inspect-1.0 gencamsrc
 ```
+
 ---
 
-## Download MediaMTX (for RTSP / WebRTC streaming)
+### Download MediaMTX (for RTSP / WebRTC streaming)
 
 Required when any pipeline uses RTSP or WebRTC frame output.
 
@@ -128,7 +133,7 @@ $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 
 ---
 
-## Download a Model
+### Download a Model
 
 If you want to download YOLO models, you can refer to the [DL Streamer download scripts](https://github.com/open-edge-platform/dlstreamer/tree/main/scripts/download_models).
 
@@ -146,17 +151,17 @@ Use the exported `.xml` path in `config.yaml`.
 
 ---
 
-## Configure `config.yaml`
+### Configure `config.yaml`
 
-Use forward slashes in all YAML paths to avoid escape issues.
+> **Note:** Use forward slashes in all YAML paths to avoid escape issues.
 
-### Metrics
+#### Metrics
 
 Controls per-pipeline FPS and latency reporting.
 
 ```yaml
 metrics:
-  enabled: false           # false = only frame count logged
+  enabled: false # false = only frame count logged
   export_interval_s: 5.0
   prometheus:
     enabled: false
@@ -175,7 +180,7 @@ When **disabled**, only the frame count is shown:
 state=PLAYING     frames=121
 ```
 
-#### Prometheus
+##### Prometheus
 
 When `metrics.enabled: true` and `metrics.prometheus.enabled: true`, the app starts an HTTP server and exposes a `/metrics` endpoint that Prometheus can scrape.
 
@@ -193,66 +198,82 @@ metrics:
   export_interval_s: 5.0
   prometheus:
     enabled: true
-    port: 8000          # /metrics served at http://localhost:8000/metrics
+    port: 8000 # /metrics served at http://localhost:8000/metrics
 ```
 
 **Exposed gauges** (all labelled by `pipeline_id`):
 
-| Metric | Description |
-|---|---|
-| `pipeline_avg_fps` | Rolling average FPS |
-| `pipeline_current_fps` | Instantaneous FPS |
+| Metric                    | Description                            |
+| ------------------------- | -------------------------------------- |
+| `pipeline_avg_fps`        | Rolling average FPS                    |
+| `pipeline_current_fps`    | Instantaneous FPS                      |
 | `pipeline_avg_latency_ms` | Rolling average inference latency (ms) |
-| `pipeline_frame_count` | Total frames processed |
-| `pipeline_running` | `1` if PLAYING, `0` otherwise |
+| `pipeline_frame_count`    | Total frames processed                 |
+| `pipeline_running`        | `1` if PLAYING, `0` otherwise          |
 
-
-### Models
+#### Models
 
 ```yaml
 models:
   inst0:
-    type: detection          # detection | classification
+    type: detection # detection | classification
     model: "C:/Users/path/to/model.xml"
-    device: CPU              # CPU | GPU | NPU
+    device: CPU # CPU | GPU | NPU
     properties:
       batch_size: 1
       threshold: 0.4
 ```
 
-### Input source — VIDEO FILE
+#### Input source
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **Video file**
+<!--hide_directive:sync: Video hide_directive-->
 
 ```yaml
 input:
-  type: file                       # file | rtsp | camera
+  type: file # file | rtsp | camera
   url: "C:/Users/path/to/video"
 ```
 
-### Input source — RTSP
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **RTSP**
+<!--hide_directive:sync: RTSP hide_directive-->
 
-start the rtsp servers
+Requires [installed MediaMTX](#download-mediamtx-for-rtsp--webrtc-streaming).
+Start the RTSP servers:
+
 ```yaml
 input:
-  type: rtsp                       # file | rtsp | camera
+  type: rtsp # file | rtsp | camera
   url: "rtsp://<ip>:<port>/live.sdp"
 ```
 
-### Input source — Camera (GenICam / Basler)
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **Camera (GenICam / Basler)**
+<!--hide_directive:sync: Camera hide_directive-->
 
-Requires the camera env variables from [Set Environment Variables](#set-environment-variables).
+Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
 `serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 ```yaml
 input:
   type: camera
-  serial: <camera_serial_number>   # required — camera serial number
-  pixel-format: mono8                # optional — e.g. mono8
-  width: 1280                      # optional — frame width in pixels
-  height: 720                      # optional — frame height in pixels
+  serial: <camera_serial_number> # required — camera serial number
+  pixel-format: mono8 # optional — e.g. mono8
+  width: 1280 # optional — frame width in pixels
+  height: 720 # optional — frame height in pixels
 ```
 
-### Frame Output — WebRTC
+<!--hide_directive:::
+::::hide_directive-->
+
+#### Frame Output
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **WebRTC**
+<!--hide_directive:sync: WebRTC hide_directive-->
 
 Streams to `http://localhost:8889/front`. Open in a browser.
 
@@ -263,7 +284,9 @@ output:
     peer_id: front
 ```
 
-### Frame Output — RTSP
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **RTSP**
+<!--hide_directive:sync: RTSP hide_directive-->
 
 Streams to `rtsp://localhost:8554/front`. Open in VLC.
 
@@ -274,7 +297,9 @@ output:
     path: /front
 ```
 
-### Frame Output — WebRTC + RTSP (both on the same pipeline)
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **WebRTC + RTSP (both on the same pipeline)**
+<!--hide_directive:sync: WebRTCnRTSP hide_directive-->
 
 Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` simultaneously.
 
@@ -287,10 +312,17 @@ output:
     path: /front
 ```
 
-### Metadata Output — MQTT
+<!--hide_directive:::
+::::hide_directive-->
 
-Download the Windows installer from https://mosquitto.org/download/ and install it.
-Default install path: `C:\Program Files\mosquitto\`.
+#### Metadata Output
+
+<!--hide_directive::::{tab-set}
+:::{tab-item}hide_directive--> **MQTT**
+<!--hide_directive:sync: MQTT hide_directive-->
+
+Download the Mosquitto Windows installer from [the official Mosquitto website](https://mosquitto.org/download/) and install it.
+The default install path is `C:\Program Files\mosquitto\`.
 Publishes inference results to an MQTT broker. Requires Mosquitto running on port 1883.
 
 ```yaml
@@ -313,7 +345,9 @@ cd "C:\Program Files\mosquitto"
 & "C:\Program Files\mosquitto\mosquitto_sub.exe" -h localhost -t inference/front -v
 ```
 
-### Metadata Output — File
+<!--hide_directive:::
+:::{tab-item}hide_directive--> **File**
+<!--hide_directive:sync: File hide_directive-->
 
 Writes inference results as JSON Lines to a local file inside output directory.
 
@@ -324,7 +358,10 @@ output:
       path: "output/front-inference.jsonl"
 ```
 
-### Full Pipeline Example
+<!--hide_directive:::
+::::hide_directive-->
+
+#### Full Pipeline Example
 
 ```yaml
 logging:
@@ -373,7 +410,7 @@ pipelines:
           path: "output/back-inference.jsonl"
 ```
 
-For detection models use model_id as inst0 and for classifcation models, you model_id as inst1
+For detection models use `model_id` as `inst0`, and for classifcation models use `model_id` as `inst1`.
 
 ---
 
@@ -381,28 +418,29 @@ For detection models use model_id as inst0 and for classifcation models, you mod
 
 The following combinations are supported in basic configuration mode.
 
-> **`input` and `inference` are mandatory** for all pipeline combinations below.
+> **Important:** `input` and `inference` are **mandatory** for all pipeline combinations below.
 
-| Frame Output | Metadata Output |
-|---|---|
-| RTSP | MQTT |
-| WebRTC | MQTT |
-| RTSP + WebRTC | MQTT |
-| RTSP | File |
-| WebRTC | File |
-| RTSP + WebRTC | File |
-| RTSP | MQTT + File |
-| WebRTC | MQTT + File |
-| RTSP + WebRTC | MQTT + File |
-| RTSP | None |
-| WebRTC | None |
-| RTSP + WebRTC | None |
-| None | MQTT |
-| None | File |
-| None | MQTT + File |
-| None | None |
+| Frame Output  | Metadata Output |
+| ------------- | --------------- |
+| RTSP          | MQTT            |
+| WebRTC        | MQTT            |
+| RTSP + WebRTC | MQTT            |
+| RTSP          | File            |
+| WebRTC        | File            |
+| RTSP + WebRTC | File            |
+| RTSP          | MQTT + File     |
+| WebRTC        | MQTT + File     |
+| RTSP + WebRTC | MQTT + File     |
+| RTSP          | None            |
+| WebRTC        | None            |
+| RTSP + WebRTC | None            |
+| None          | MQTT            |
+| None          | File            |
+| None          | MQTT + File     |
+| None          | None            |
 
 > **Notes:**
+>
 > - A single pipeline can output to both RTSP and WebRTC simultaneously using a GStreamer `tee`.
 > - Multiple metadata outputs (`MQTT` + `File`) can be combined on the same pipeline.
 > - When no frame output is configured, the pipeline renders locally using `d3d11videosink`.
@@ -417,14 +455,14 @@ For custom element chains or combinations not listed above, use [Raw Pipeline Mo
 python app.py config.yaml
 ```
 
-On startup the app loads config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
+On startup the app loads the config, starts MediaMTX, launches all pipelines, and prints viewer URLs:
 
 ```
 [front] RTSP stream:   rtsp://localhost:8554/front
 [back]  WebRTC stream: http://localhost:8889/back
 ```
 
-Press **Ctrl+C** to stop if you want to forcefully stop the application.
+Press **Ctrl+C** if you need to forcefully stop the application.
 
 ---
 
@@ -440,7 +478,8 @@ raw_pipelines:
   left: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
   camera: "gencamsrc serial=12345678 pixel-format=mono8 name=src ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! d3d12videosink name=sink"
 ```
-Above pipelines are example pipelines to run with webrtc/rtsp/any sink element
+
+The above pipelines are example pipelines to run with webrtc/rtsp/any sink element.
 
 MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears in a string.
 
@@ -450,4 +489,4 @@ MediaMTX starts automatically when `rtspclientsink` or `whipclientsink` appears 
 
 ### Inference on NPU fails with `Failed to construct OpenVINOImageInference` error
 
-To solve this error, ensure you install the latest supported Intel® NPU Driver for Windows from [here](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html) for Intel® Core™ Ultra processors
+To solve this error, ensure you install the latest supported Intel® NPU Driver for Windows for Intel® Core™ Ultra processors from [the official Intel website](https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html).

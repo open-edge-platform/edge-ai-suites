@@ -49,6 +49,7 @@ Content-Type: application/json
 | 20000 | SUCCESS | Task submitted, query successful, or cleanup completed. |
 | 40000 | BAD_REQUEST | General logic error (e.g., trying to delete a processing task). |
 | 40001 | AUTH_FAILED | Invalid username or password. |
+| 40002 | INVALID_FILE | File validation failed (empty file, content mismatch, or corrupted). |
 | 40901 | FILE_ALREADY_EXISTS | File already existed (Hash exist). |
 | 50001 | FILE_TYPE_ERROR | Unsupported file format (Allowed: mp4, mov, jpg, png, pdf). |
 | 50002 | TASK_NOT_FOUND | Task ID does not exist or has expired. |

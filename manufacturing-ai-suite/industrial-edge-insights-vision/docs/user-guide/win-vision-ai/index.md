@@ -1,7 +1,18 @@
 # Win Vision AI
 
+<!--hide_directive
+<div class="component_card_widget">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai">
+     GitHub
+  </a>
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/README.md">
+     Readme
+  </a>
+</div>
+hide_directive-->
+
 **Win Vision AI** is a Python application for running multiple AI inference pipelines
-concurrently on Intel hardware (CPU / GPU / NPU). Built on GStreamer and Intel®
+concurrently on Intel hardware (CPU / GPU / NPU) on Windows. Built on GStreamer and Intel®
 DL Streamer, it handles the end-to-end pipeline — from camera or video input,
 through OpenVINO-accelerated detection and classification, to live RTSP / WebRTC
 streaming and structured metadata output.
@@ -14,9 +25,7 @@ control.
 
 ## Architecture
 
-<div style="text-align: center;">
-    <img src=../docs/user-guide/win-vision-ai/_assets/winvisionai-architecture.drawio.svg width=800>
-</div>
+![Win Vision AI Architecture](./_assets/winvisionai-architecture.drawio.svg)
 
 ### Inputs
 
@@ -46,10 +55,17 @@ control.
 - **Browser / VLC** — consume the live stream over WebRTC or RTSP
 - **MQTT subscriber** — consumes inference metadata published to the MQTT broker
 
-## Documentation and Supporting Resources
+## Supporting Resources
 
-- [Overview](../docs/user-guide/win-vision-ai/index.md) - architecture overview and feature summary.
-- [Get Started](../docs/user-guide/win-vision-ai/get-started.md) - step-by-step installation and configuration instructions.
 - [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
   - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/supported_models.html)
   - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/main/scripts/download_models/README.md)
+
+<!--hide_directive
+:::{toctree}
+:hidden:
+
+Get Started <./get-started.md>
+
+:::
+hide_directive-->
