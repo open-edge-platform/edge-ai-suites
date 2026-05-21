@@ -22,8 +22,9 @@ set -o pipefail
 
 # Default URLs for linux-npu-driver and Level Zero (can be overridden
 # via environment variables or Docker build args).
-: "${NPU_DRIVER_URL:=https://github.com/intel/linux-npu-driver/releases/download/v1.23.0/linux-npu-driver-v1.23.0.20250827-17270089246-ubuntu2204.tar.gz}"
-: "${LEVEL_ZERO_URL:=https://github.com/oneapi-src/level-zero/releases/download/v1.22.4/level-zero_1.22.4+u22.04_amd64.deb}"
+# v1.32.1 supports Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake, and Wildcat Lake.
+: "${NPU_DRIVER_URL:=https://github.com/intel/linux-npu-driver/releases/download/v1.32.1/linux-npu-driver-v1.32.1.20260422-24767473183-ubuntu2404.tar.gz}"
+: "${LEVEL_ZERO_URL:=https://snapshot.ppa.launchpadcontent.net/kobuk-team/intel-graphics/ubuntu/20260324T100000Z/pool/main/l/level-zero-loader/libze1_1.27.0-1~24.04~ppa2_amd64.deb}"
 
 # LEVEL_ZERO_URL can be overridden or set empty to skip Level Zero
 # installation if a compatible runtime is already present.
@@ -44,17 +45,24 @@ fi
 
 tar -xf "${TARBALL_NAME}"
 
-# Install all .deb packages from linux-npu-driver bundle
-if ! dpkg -i ./*.deb; then
-    # Attempt to fix missing dependencies
-    apt-get update && apt-get -f install -y || true
+# Install all .deb packages from linux-npu-driver bundle using apt
+# (apt handles dependencies better than dpkg)
+apt-get update
+if ! apt-get install -y --no-install-recommends --allow-downgrades ./intel-*.deb 2>/dev/null; then
+    # Fallback to dpkg for non-Ubuntu base images
+    dpkg -i ./intel-*.deb || true
+    apt-get -f install -y || true
 fi
 
-# Optionally install Level Zero runtime if URL provided
+# Install Level Zero loader if URL provided
 if [ -n "${LEVEL_ZERO_URL}" ]; then
-    curl -L -O "${LEVEL_ZERO_URL}" && \
-    dpkg -i level-zero_*.deb || true
+    curl -L -o level-zero-loader.deb "${LEVEL_ZERO_URL}" && \
+    apt-get install -y --no-install-recommends --allow-downgrades ./level-zero-loader.deb 2>/dev/null || \
+    dpkg -i ./level-zero-loader.deb || true
 fi
+
+# Ensure render group exists in container (for device access)
+groupadd -f render 2>/dev/null || true
 
 apt-get clean && rm -rf /var/lib/apt/lists/*
 rm -rf /tmp/npu_deps
