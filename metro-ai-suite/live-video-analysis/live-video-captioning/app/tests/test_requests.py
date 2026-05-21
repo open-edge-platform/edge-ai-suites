@@ -6,6 +6,7 @@
 import pytest
 from pydantic import ValidationError
 from backend.models.requests import StartRunRequest
+from unittest.mock import patch
 
 
 # ---------------------------------------------------------------------------
@@ -83,10 +84,26 @@ class TestStartRunRequestInvalidUrl:
         with pytest.raises(ValidationError, match="hostname"):
             StartRunRequest(rtspUrl="rtsp:///no-host")
 
-    def test_bare_hostname_without_dot_rejected(self):
-        """Single-label hostnames (no dot) are rejected for domain names."""
-        with pytest.raises(ValidationError, match="qualified domain"):
-            StartRunRequest(rtspUrl="rtsp://localhost/stream")
+    def test_bare_hostname_without_dot_accepted(self):
+        """Single-label hostnames are accepted for local/service discovery usage."""
+        req = StartRunRequest(rtspUrl="rtsp://localhost/stream")
+        assert req.rtspUrl == "rtsp://localhost/stream"
+
+    def test_invalid_hostname_format_rejected(self):
+        """Hostnames with invalid characters are rejected."""
+        with pytest.raises(ValidationError, match="Invalid hostname format"):
+            StartRunRequest(rtspUrl="rtsp://bad_host!/stream")
+
+    def test_hostname_with_trailing_dot_rejected(self):
+        """Hostnames ending with a dot are rejected."""
+        with pytest.raises(ValidationError):
+            StartRunRequest(rtspUrl="rtsp://camera.example.com./stream")
+
+    def test_hostname_trailing_dot_branch_covered(self):
+        """Covers explicit trailing-dot guard when hostname syntax check is bypassed."""
+        with patch("backend.models.requests.re.match", return_value=True):
+            with pytest.raises(ValidationError, match="Hostname cannot end with a dot"):
+                StartRunRequest(rtspUrl="rtsp://camera.example.com./stream")
 
 
 # ---------------------------------------------------------------------------

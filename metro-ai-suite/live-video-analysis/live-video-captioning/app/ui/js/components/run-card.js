@@ -2,6 +2,42 @@
  * Run card UI component
  */
 const RunCardComponent = (function () {
+    const MODEL_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
+    const DETECTION_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>';
+
+    function createChip(text, iconSvg, inlineStyles) {
+        const chip = document.createElement('span');
+        chip.className = 'chip';
+        if (inlineStyles) Object.assign(chip.style, inlineStyles);
+        if (iconSvg) chip.insertAdjacentHTML('beforeend', iconSvg);
+        chip.appendChild(document.createTextNode(text));
+        return chip;
+    }
+
+    function createTooltipRow(label, value, valueClassName) {
+        const row = document.createElement('div');
+        row.className = 'info-tooltip-row';
+
+        const labelEl = document.createElement('strong');
+        labelEl.textContent = `${label}:`;
+
+        const valueEl = document.createElement('span');
+        if (valueClassName) valueEl.className = valueClassName;
+        valueEl.textContent = value;
+
+        row.appendChild(labelEl);
+        row.appendChild(document.createTextNode(' '));
+        row.appendChild(valueEl);
+        return row;
+    }
+
+    function getFrameQualityDisplay(frameQuality, frameWidth, frameHeight) {
+        if (frameQuality === 'custom') {
+            return `Custom (${frameWidth ?? '?'}×${frameHeight ?? '?'})`;
+        }
+        return ({ best: 'Best (1280×720)', better: 'Better (640×480)', good: 'Good (480×360)' }[frameQuality] || frameQuality);
+    }
+
     function formatRunNameForDisplay(runId) {
         // Convert underscores to spaces for UI display
         if (!runId) return runId;
@@ -35,30 +71,38 @@ const RunCardComponent = (function () {
 
         // Format run name for display: underscores become spaces
         const displayRunName = formatRunNameForDisplay(run.runId);
-        headerLeft.innerHTML = `
-            <span class="dot active"></span>
-            <span><strong> Run Name : </strong>${displayRunName}</strong></span>
-            <span style="color: var(--muted); margin: 0 4px;">|</span>
-            <span class="chip" style="background: var(--accent); color: var(--bg);">
-                ${deviceIcon}
-                <strong>${deviceType}</strong>
-            </span>
-            <span class="chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                ${run.modelName || 'Unknown'}
-            </span>
-            ${run.isEnabledDetection ? `
-                <span class="chip">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                    <path d="M16 2v4"></path>
-                    <path d="M8 2v4"></path>
-                    <path d="M3 10h18"></path>
-                </svg>
-                ${run.detectionModelName}
-                </span>
-            ` : ``}
-        `;
+        const dot = document.createElement('span');
+        dot.className = 'dot active';
+        headerLeft.appendChild(dot);
+
+        const runNameWrap = document.createElement('span');
+        const runNameLabel = document.createElement('strong');
+        runNameLabel.textContent = ' Run Name : ';
+        runNameWrap.appendChild(runNameLabel);
+        runNameWrap.appendChild(document.createTextNode(displayRunName || 'N/A'));
+        headerLeft.appendChild(runNameWrap);
+
+        const divider = document.createElement('span');
+        divider.style.color = 'var(--muted)';
+        divider.style.margin = '0 4px';
+        divider.textContent = '|';
+        headerLeft.appendChild(divider);
+
+        const deviceChip = document.createElement('span');
+        deviceChip.className = 'chip';
+        deviceChip.style.background = 'var(--accent)';
+        deviceChip.style.color = 'var(--bg)';
+        deviceChip.insertAdjacentHTML('beforeend', deviceIcon);
+        const deviceStrong = document.createElement('strong');
+        deviceStrong.textContent = deviceType;
+        deviceChip.appendChild(deviceStrong);
+        headerLeft.appendChild(deviceChip);
+
+        headerLeft.appendChild(createChip(run.modelName || 'Unknown', MODEL_ICON_SVG));
+
+        if (run.isEnabledDetection) {
+            headerLeft.appendChild(createChip(run.detectionModelName || 'N/A', DETECTION_ICON_SVG));
+        }
 
         // Info button with tooltip
         const infoBtn = document.createElement('button');
@@ -70,32 +114,35 @@ const RunCardComponent = (function () {
         // Create tooltip element
         const tooltip = document.createElement('div');
         tooltip.className = 'info-tooltip';
-        tooltip.innerHTML = `
-            <div class="info-tooltip-title">Run Details</div>
-            <div class="info-tooltip-row"><strong>Pipeline:</strong> <span>${run.pipelineName || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>RTSP URL:</strong> <span>${run.rtspUrl || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>Max Tokens:</strong> <span>${run.maxTokens || 'N/A'}</span></div>
-            <div class="info-tooltip-row"><strong>Prompt:</strong> <span class="info-tooltip-prompt">${run.prompt || 'N/A'}</span></div>
-            ${(run.frameRate != null)
-                ? `<div class="info-tooltip-row"><strong>Frame Rate:</strong> <span>${run.frameRate || 'N/A'}</span></div>`
-                : ''}
-            ${(run.chunkSize != null)
-                ? `<div class="info-tooltip-row"><strong>Chunk Size:</strong> <span>${run.chunkSize || 'N/A'}</span></div>`
-                : ''}
-            ${(run.frameQuality != null)
-                ? `<div class="info-tooltip-row"><strong>Frame Quality:</strong> <span>${
-                    run.frameQuality === 'custom'
-                        ? `Custom (${run.frameWidth ?? '?'}×${run.frameHeight ?? '?'})`
-                        : ({ best: 'Best (1280×720)', better: 'Better (640×480)', good: 'Good (480×360)' }[run.frameQuality] || run.frameQuality)
-                }</span></div>`
-                : ''}
-            ${(run.isEnabledDetection && (run.detectionModelName ?? '') !== '')
-                ? `<div class="info-tooltip-row"><strong>Detection Model:</strong> <span>${run.detectionModelName}</span></div>`
-                : ''}
-            ${(run.isEnabledDetection && (run.detectionThreshold ?? '') !== '')
-                ? `<div class="info-tooltip-row"><strong>Detection Threshold:</strong> <span>${run.detectionThreshold}</span></div>`
-                : ''}
-        `;
+        const tooltipTitle = document.createElement('div');
+        tooltipTitle.className = 'info-tooltip-title';
+        tooltipTitle.textContent = 'Run Details';
+        tooltip.appendChild(tooltipTitle);
+        tooltip.appendChild(createTooltipRow('Pipeline', run.pipelineName || 'N/A'));
+        tooltip.appendChild(createTooltipRow('RTSP URL', run.rtspUrl || 'N/A'));
+        tooltip.appendChild(createTooltipRow('Max Tokens', String(run.maxTokens ?? 'N/A')));
+        tooltip.appendChild(createTooltipRow('Prompt', run.prompt || 'N/A', 'info-tooltip-prompt'));
+
+        if (run.frameRate != null) {
+            tooltip.appendChild(createTooltipRow('Frame Rate', String(run.frameRate || 'N/A')));
+        }
+        if (run.chunkSize != null) {
+            tooltip.appendChild(createTooltipRow('Chunk Size', String(run.chunkSize || 'N/A')));
+        }
+        if (run.frameQuality != null) {
+            tooltip.appendChild(
+                createTooltipRow(
+                    'Frame Quality',
+                    getFrameQualityDisplay(run.frameQuality, run.frameWidth, run.frameHeight)
+                )
+            );
+        }
+        if (run.isEnabledDetection && (run.detectionModelName ?? '') !== '') {
+            tooltip.appendChild(createTooltipRow('Detection Model', run.detectionModelName));
+        }
+        if (run.isEnabledDetection && (run.detectionThreshold ?? '') !== '') {
+            tooltip.appendChild(createTooltipRow('Detection Threshold', String(run.detectionThreshold)));
+        }
         tooltip.style.display = 'none';
         document.body.appendChild(tooltip);
 
