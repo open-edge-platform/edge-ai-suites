@@ -7,9 +7,15 @@ Fuzz / robustness test for the Whisper STT REST API.
 The script fires a structured battery of crafted requests at the STT service
 and flags any unexpected server errors (5xx) or connection failures.
 
+By default the battery is run in a continuous loop for 1 hour so that each
+iteration sees freshly generated random audio content.  Use --duration 0 for
+a single-pass run (useful in CI).
+
 Usage (host default = https://localhost:5443):
     python tests/fuzz_stt_api.py
     python tests/fuzz_stt_api.py --host https://192.168.1.10:5443
+    python tests/fuzz_stt_api.py --duration 0          # single pass
+    python tests/fuzz_stt_api.py --duration 1800       # 30 minutes
     python tests/fuzz_stt_api.py --timeout 60 --seed 1337
 
 Or via Make:
@@ -26,6 +32,7 @@ Exit codes:
 
 import argparse
 import os
+import random
 import struct
 import sys
 import time
@@ -58,12 +65,10 @@ def make_wav(
     RIFF/WAVE container).
     """
     if pcm_data is None:
-        import random
-        rng = random.Random(0)
         num_samples = int(sample_rate * duration_secs)
         pcm_data = struct.pack(
             f"<{num_samples}h",
-            *[rng.randint(-32768, 32767) for _ in range(num_samples)],
+            *[random.randint(-32768, 32767) for _ in range(num_samples)],
         )
 
     byte_rate   = sample_rate * num_channels * bits_per_sample // 8
@@ -139,9 +144,10 @@ class Result:
 class STTFuzzer:
     """Fires crafted HTTP requests at the STT API and records the results."""
 
-    def __init__(self, host: str, timeout: int = 30):
+    def __init__(self, host: str, timeout: int = 30, verbose: bool = False):
         self.host    = host.rstrip("/")
         self.timeout = timeout
+        self.verbose = verbose
         self.session = requests.Session()
         self.session.verify = False
         self.results: List[Result] = []
@@ -199,7 +205,9 @@ class STTFuzzer:
         r = Result(name, sc, expected, body, duration, error)
         self.results.append(r)
         status_str = str(sc) if sc is not None else "ERR"
-        print(f"  {r.symbol} [{status_str:>4}] {name:<65} {duration:6.0f}ms")
+        # Default mode: quiet runtime output; only failures are printed.
+        if self.verbose or not r.passed:
+            print(f"  {r.symbol} [{status_str:>4}] {name:<65} {duration:6.0f}ms")
         if not r.passed and (body or error):
             snippet = (error or body).replace("\n", " ")[:120]
             print(f"         └─ {snippet}")
@@ -212,21 +220,24 @@ class STTFuzzer:
     # ------------------------------------------------------------------
 
     def test_health(self):
-        print("\n── /health ──────────────────────────────────────────────────────────────")
+        if self.verbose:
+            print("\n── /health ──────────────────────────────────────────────────────────────")
         for method in ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]:
             sc, body, dur, err = self._request(method, "/health")
             expected = [200] if method in ("GET", "HEAD") else [200, 405, 400, 404]
             self._rec(f"health  {method}", sc, expected, body, dur, err)
 
     def test_metrics(self):
-        print("\n── /metrics ─────────────────────────────────────────────────────────────")
+        if self.verbose:
+            print("\n── /metrics ─────────────────────────────────────────────────────────────")
         for method in ["GET", "POST", "DELETE", "PUT"]:
             sc, body, dur, err = self._request(method, "/metrics")
             expected = [200] if method == "GET" else [200, 405, 400, 404]
             self._rec(f"metrics {method}", sc, expected, body, dur, err)
 
     def test_missing_audio_field(self):
-        print("\n── /transcribe — missing / wrong field ──────────────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — missing / wrong field ──────────────────────────────────")
         wav = make_wav()
 
         cases = [
@@ -242,7 +253,8 @@ class STTFuzzer:
             self._rec(name, sc, [400], body, dur, err)
 
     def test_wrong_methods(self):
-        print("\n── /transcribe — wrong HTTP methods ─────────────────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — wrong HTTP methods ─────────────────────────────────────")
         wav = make_wav()
         for method in ["GET", "PUT", "DELETE", "PATCH", "HEAD"]:
             sc, body, dur, err = self._request(
@@ -252,7 +264,8 @@ class STTFuzzer:
             self._rec(f"method {method}", sc, [405, 400, 404, 200], body, dur, err)
 
     def test_binary_content(self):
-        print("\n── /transcribe — binary / crafted audio content ─────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — binary / crafted audio content ─────────────────────────")
         valid_wav = make_wav()
 
         cases = [
@@ -288,7 +301,8 @@ class STTFuzzer:
             self._rec(label, sc, [200, 400, 415, 500], body, dur, err)
 
     def test_filename_injection(self):
-        print("\n── /transcribe — filename injection / edge cases ────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — filename injection / edge cases ────────────────────────")
         wav = make_wav()
         cases = [
             ("no extension",               "audiofile"),
@@ -313,7 +327,8 @@ class STTFuzzer:
             self._rec(f"filename: {label}", sc, [200, 400, 500], body, dur, err)
 
     def test_query_params(self):
-        print("\n── /transcribe — query-parameter fuzzing ────────────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — query-parameter fuzzing ────────────────────────────────")
         wav = make_wav()
         cases = [
             ("stream=true",             {"stream": "true"}),
@@ -339,7 +354,8 @@ class STTFuzzer:
             self._rec(f"param: {label}", sc, expected, body, dur, err)
 
     def test_content_type(self):
-        print("\n── /transcribe — Content-Type / raw body ────────────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — Content-Type / raw body ────────────────────────────────")
         wav = make_wav()
         cases = [
             ("JSON body",                   "application/json",           b'{"audio": "data"}'),
@@ -358,7 +374,8 @@ class STTFuzzer:
             self._rec(f"content-type: {label}", sc, [400, 415, 200, 500], body, dur, err)
 
     def test_headers(self):
-        print("\n── /transcribe — header injection / oversized headers ───────────────────")
+        if self.verbose:
+            print("\n── /transcribe — header injection / oversized headers ───────────────────")
         wav = make_wav()
         cases = [
             ("X-Forwarded-For injection",   {"X-Forwarded-For": "127.0.0.1; rm -rf /"}),
@@ -375,7 +392,8 @@ class STTFuzzer:
             self._rec(f"header: {label}", sc, [200, 400, 413, 431, 500], body, dur, err)
 
     def test_multi_file(self):
-        print("\n── /transcribe — multiple files / extra fields ──────────────────────────")
+        if self.verbose:
+            print("\n── /transcribe — multiple files / extra fields ──────────────────────────")
         wav = make_wav()
         cases = [
             ("two 'audio' parts",
@@ -393,7 +411,8 @@ class STTFuzzer:
             self._rec(f"multi: {label}", sc, [200, 400], body, dur, err)
 
     def test_path_variants(self):
-        print("\n── path variants / URL injection ────────────────────────────────────────")
+        if self.verbose:
+            print("\n── path variants / URL injection ────────────────────────────────────────")
         wav = make_wav()
         paths = [
             "/transcribe/",
@@ -417,29 +436,47 @@ class STTFuzzer:
     # Runner
     # ------------------------------------------------------------------
 
-    def run(self) -> int:
+    def run(self, duration: int = 3600) -> int:
         print(f"\n{'='*78}")
         print(f"  Whisper STT API — Fuzz / Robustness Test")
-        print(f"  Target : {self.host}")
+        print(f"  Target   : {self.host}")
+        if duration > 0:
+            print(f"  Duration : {duration}s (Ctrl-C to stop early)")
+        else:
+            print(f"  Duration : single pass")
         print(f"{'='*78}")
 
-        self.test_health()
-        self.test_metrics()
-        self.test_missing_audio_field()
-        self.test_wrong_methods()
-        self.test_binary_content()
-        self.test_filename_injection()
-        self.test_query_params()
-        self.test_content_type()
-        self.test_headers()
-        self.test_multi_file()
-        self.test_path_variants()
+        deadline  = (time.time() + duration) if duration > 0 else None
+        iteration = 0
+
+        while True:
+            iteration += 1
+            if deadline is not None:
+                remaining = deadline - time.time()
+                if remaining <= 0:
+                    break
+                if self.verbose:
+                    print(f"\n── Iteration {iteration}  ({remaining:.0f}s remaining) {'─'*40}")
+
+            self.test_health()
+            self.test_metrics()
+            self.test_missing_audio_field()
+            self.test_wrong_methods()
+            self.test_binary_content()
+            self.test_filename_injection()
+            self.test_query_params()
+            self.test_content_type()
+            self.test_headers()
+            self.test_multi_file()
+            self.test_path_variants()
+
+            if deadline is None:
+                break
 
         total          = len(self.results)
         passed         = sum(1 for r in self.results if r.passed)
         server_errs    = sum(1 for r in self.results if r.is_unexpected_server_error)
         conn_errs      = sum(1 for r in self.results if r.is_unexpected_error)
-        # Informational: 5xx that were listed as expected (e.g. bad audio input)
         expected_5xx   = sum(
             1 for r in self.results
             if r.status is not None and r.status >= 500
@@ -447,6 +484,7 @@ class STTFuzzer:
         )
 
         print(f"\n{'='*78}")
+        print(f"  Iterations: {iteration}")
         print(f"  Results : {passed}/{total} expected-status checks passed")
         if server_errs:
             print(f"  {FAIL}  Unexpected server errors (5xx) : {server_errs}")
@@ -493,10 +531,26 @@ Examples:
         "--timeout", type=int, default=30,
         help="Per-request timeout in seconds (default: %(default)s)",
     )
+    parser.add_argument(
+        "--duration", type=int, default=3600,
+        help="How long to run the fuzz loop in seconds; 0 = single pass (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--seed", type=int, default=None,
+        help="Random seed for reproducible runs (default: random)",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true",
+        help="Print all test-case results during execution (default: print failures only)",
+    )
     args = parser.parse_args()
 
-    fuzzer = STTFuzzer(host=args.host, timeout=args.timeout)
-    sys.exit(fuzzer.run())
+    seed = args.seed if args.seed is not None else random.randrange(2**32)
+    random.seed(seed)
+    print(f"[fuzz] seed={seed}  duration={args.duration}s  host={args.host}")
+
+    fuzzer = STTFuzzer(host=args.host, timeout=args.timeout, verbose=args.verbose)
+    sys.exit(fuzzer.run(duration=args.duration))
 
 
 if __name__ == "__main__":
