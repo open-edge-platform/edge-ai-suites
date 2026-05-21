@@ -19,6 +19,7 @@ import argparse
 import json
 import os
 import pickle
+from importlib import import_module
 
 import numpy as np
 from pyquaternion import Quaternion
@@ -35,6 +36,30 @@ KITTI_CAT_TO_NUSCENES = {
     "Misc": "ignore",
     "DontCare": "ignore",
 }
+
+
+_ALLOWED_PICKLE_GLOBALS = {
+    "builtins": {
+        "dict", "list", "tuple", "set", "frozenset", "slice",
+        "str", "int", "float", "bool", "bytes",
+    },
+    "collections": {"OrderedDict", "defaultdict"},
+    "numpy": {"dtype", "ndarray"},
+    "numpy.core.multiarray": {"_reconstruct", "scalar"},
+    "numpy._core.multiarray": {"_reconstruct", "scalar"},
+}
+
+
+class RestrictedUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        allowed_names = _ALLOWED_PICKLE_GLOBALS.get(module)
+        if allowed_names and name in allowed_names:
+            return getattr(import_module(module), name)
+        raise pickle.UnpicklingError(f"Unsupported pickle global: {module}.{name}")
+
+
+def load_restricted_pickle(file_obj):
+    return RestrictedUnpickler(file_obj).load()
 
 
 def kitti_bbox3d_to_lidar(bbox_3d, lidar2cam):
@@ -72,7 +97,7 @@ def kitti_bbox3d_to_lidar(bbox_3d, lidar2cam):
 
 def convert_pkl(input_pkl, output_pkl, src_root):
     with open(input_pkl, "rb") as f:
-        raw_data = pickle.load(f)
+        raw_data = load_restricted_pickle(f)
 
     if isinstance(raw_data, list):
         print(f"  {input_pkl} is already a list — skipping conversion.")

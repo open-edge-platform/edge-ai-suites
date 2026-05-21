@@ -13,13 +13,12 @@ Usage:
   # From dataset (recommended) - loads real data directly from the dataset:
   python precompute_geometry.py <config.yaml> <checkpoint.pth> --from-dataset [-o output_dir]
 
-  # From saved data file:
-  python precompute_geometry.py <config.yaml> <checkpoint.pth> --data-path <example-data.pth> [-o output_dir]
+    # From saved tensor data file:
+    python precompute_geometry.py <config.yaml> <checkpoint.pth> --data-path <example-data.pth> [-o output_dir]
 """
 
 import os
 import sys
-import copy
 import struct
 import argparse
 import warnings
@@ -31,6 +30,8 @@ import torch
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+from mmdet3d.utils import recursive_eval
 
 
 def save_intervals_to_bin(interval_starts, interval_lengths, ranks_bev, filename):
@@ -66,22 +67,6 @@ def save_indices_to_bin(indices, filename):
         f.write(indices_uint32.tobytes())
 
     print(f"  Indices saved to {filename}: {len(indices_uint32)} indices")
-
-
-def recursive_eval(obj, globals=None):
-    if globals is None:
-        globals = copy.deepcopy(obj)
-    if isinstance(obj, dict):
-        for key in obj:
-            obj[key] = recursive_eval(obj[key], globals)
-    elif isinstance(obj, list):
-        for k, val in enumerate(obj):
-            obj[k] = recursive_eval(val, globals)
-    elif isinstance(obj, str) and obj.startswith("${") and obj.endswith("}"):
-        obj = eval(obj[2:-1], globals)
-        obj = recursive_eval(obj, globals)
-    return obj
-
 
 def to_cuda(val):
     """Move a tensor or DataContainer to CUDA."""
@@ -142,7 +127,7 @@ def parse_args():
     source.add_argument("--from-dataset", action="store_true",
                         help="Load real data from the dataset (recommended)")
     source.add_argument("--data-path", type=str, default=None,
-                        help="Path to example-data.pth (saved via tools/dump)")
+                        help="Path to example-data.pth saved as tensors only")
 
     parser.add_argument("--split", type=str, default="val", choices=["train", "val"],
                         help="Dataset split to use with --from-dataset (default: val)")
@@ -215,8 +200,8 @@ def main():
             compute_geometry_from_data(model, vtransform, data)
 
     elif args.data_path and os.path.exists(args.data_path):
-        print(f"  Loading data from {args.data_path}")
-        data = torch.load(args.data_path)
+        print(f"  Loading tensor data from {args.data_path}")
+        data = torch.load(args.data_path, weights_only=True)
 
         ranks_bev, ranks_depth, ranks_feat, \
         interval_starts, interval_lengths, indices = \

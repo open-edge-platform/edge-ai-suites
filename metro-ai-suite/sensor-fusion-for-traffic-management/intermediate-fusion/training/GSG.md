@@ -739,7 +739,7 @@ Outputs: `<out-dir>/{camera,lidar,map}/`.
 **Run this before any ONNX export** — generates `indices.bin` + `intervals.bin` consumed by both the unified model and the camera sub-model:
 
 ```bash
-# From a saved data sample
+# From a saved tensor data sample
 $PYTHON export/precompute_geometry.py $CP_CONFIG $CP_CKPT \
     --data-path tools/dump/00000/example-data.pth \
     -o export/geometry

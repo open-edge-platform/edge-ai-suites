@@ -247,7 +247,8 @@ def main():
         )
         outputs = multi_gpu_test(model, data_loader, args.tmpdir, args.gpu_collect)
     
-    torch.save(model, 'ptq.pth')
+    state_dict = model.module.state_dict() if hasattr(model, "module") else model.state_dict()
+    torch.save({"state_dict": state_dict}, 'ptq.pth')
     rank, _ = get_dist_info()
     if rank == 0:
         if args.out:

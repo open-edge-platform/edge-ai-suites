@@ -109,6 +109,7 @@ def main() -> None:
 
     from torchpack.utils.config import configs
     from mmcv import Config
+    from mmcv.runner import load_checkpoint
     from mmdet3d.models import build_model
     from mmdet3d.utils import recursive_eval
 
@@ -117,8 +118,7 @@ def main() -> None:
     cfg.model.train_cfg = None
 
     model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
-    ckpt = torch.load(args.ckpt, map_location="cpu")
-    model.load_state_dict(ckpt["state_dict"], strict=False)
+    load_checkpoint(model, args.ckpt, map_location="cpu", strict=False)
     model = model.cuda().eval()
     print(f"[cam-export] model loaded from {args.ckpt}")
 
