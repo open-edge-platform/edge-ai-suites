@@ -4,6 +4,31 @@ import cv2
 import os
 import csv
 import argparse
+from importlib import import_module
+
+
+_ALLOWED_PICKLE_GLOBALS = {
+    "builtins": {
+        "dict", "list", "tuple", "set", "frozenset", "slice",
+        "str", "int", "float", "bool", "bytes",
+    },
+    "collections": {"OrderedDict", "defaultdict"},
+    "numpy": {"dtype", "ndarray"},
+    "numpy.core.multiarray": {"_reconstruct", "scalar"},
+    "numpy._core.multiarray": {"_reconstruct", "scalar"},
+}
+
+
+class RestrictedUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        allowed_names = _ALLOWED_PICKLE_GLOBALS.get(module)
+        if allowed_names and name in allowed_names:
+            return getattr(import_module(module), name)
+        raise pickle.UnpicklingError(f"Unsupported pickle global: {module}.{name}")
+
+
+def load_restricted_pickle(file_obj):
+    return RestrictedUnpickler(file_obj).load()
 
 # Read the ground truth pickle files and plot the radar detections on the corresponding images
 def read_GT_plot(gt_dir, img_dir, output_dir, csv_file_path):
@@ -23,7 +48,7 @@ def read_GT_plot(gt_dir, img_dir, output_dir, csv_file_path):
         
         # Load the radar data from the pickle file
         with open(gt_path, 'rb') as f:
-            radar_data = pickle.load(f)
+            radar_data = load_restricted_pickle(f)
         
         # Construct the corresponding image file path
         img_file = gt_file.replace('.pickle', '.jpg')

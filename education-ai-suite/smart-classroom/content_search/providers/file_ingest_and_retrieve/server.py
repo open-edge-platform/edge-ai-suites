@@ -12,18 +12,15 @@ class _ShortNameFormatter(logging.Formatter):
 
 _fmt = "%(levelname)s: [%(name)s] %(message)s"
 _datefmt = '%Y-%m-%d %H:%M:%S'
-logging.basicConfig(level=logging.INFO, format=_fmt, datefmt=_datefmt, force=True)
+logging.basicConfig(level=logging.WARNING, format=_fmt, datefmt=_datefmt, force=True)
 for _h in logging.root.handlers:
     _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
-for _noisy in [
-    "unstructured", "unstructured_inference", "detectron2",
-    "transformers", "urllib3", "httpx", "httpcore",
-    "opentelemetry", "PIL", "chromadb", "llama_index",
-    "sentence_transformers",
-    "huggingface_hub", "filelock", "optimum",
-    "pdfminer", "torch", "torch.jit", "timm",
+for _named in [
+    "server", "models", "clip_handler", "registry", "indexer",
+    "retriever", "reranker", "document_parser", "detector",
+    "chroma_client", "store",
 ]:
-    logging.getLogger(_noisy).setLevel(logging.WARNING)
+    logging.getLogger(_named).setLevel(logging.INFO)
 warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
 
 import langdetect
@@ -93,8 +90,31 @@ app = FastAPI()
 
 _collection_name = os.getenv("CHROMA_COLLECTION_NAME", "content-search")
 
-_visual_model = get_visual_embedding_model()
-_document_model = get_document_embedding_model()
+_visual_model = None
+_document_model = None
+
+def _load_models_parallel():
+    global _visual_model, _document_model
+    results = {}
+
+    def _load_visual():
+        results["visual"] = get_visual_embedding_model()
+
+    def _load_document():
+        results["document"] = get_document_embedding_model()
+
+    t_vis = threading.Thread(target=_load_visual)
+    t_doc = threading.Thread(target=_load_document)
+    t_vis.start()
+    t_doc.start()
+    t_vis.join()
+    t_doc.join()
+
+    _visual_model = results["visual"]
+    _document_model = results["document"]
+    logger.info("All embedding models loaded in parallel.")
+
+_load_models_parallel()
 
 video_summary_id_map = {}
 
@@ -130,8 +150,9 @@ retriever = ChromaRetriever(collection_name=_collection_name, visual_embedding_m
 local_store = LocalStore.from_config()
 
 _frame_extract_interval = int(os.getenv("FRAME_EXTRACT_INTERVAL", "15"))
+_frame_extract_interval_sparse = int(os.getenv("FRAME_EXTRACT_INTERVAL_SPARSE", "90"))
 _do_detect_and_crop = os.getenv("DO_DETECT_AND_CROP", "false").lower() == "true"
-logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, do_detect_and_crop={_do_detect_and_crop}")
+logger.info(f"Video ingest config: frame_extract_interval={_frame_extract_interval}, frame_extract_interval_sparse={_frame_extract_interval_sparse}, do_detect_and_crop={_do_detect_and_crop}")
 
 @app.get("/v1/dataprep/health")
 def health():
@@ -219,7 +240,7 @@ async def ingest_dir(request: IngestDirRequest = Body(...)):
                 if not proc_files:
                     return None
 
-                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+                return indexer.add_embedding(proc_files, metas, frame_extract_interval=_frame_extract_interval, frame_extract_interval_sparse=_frame_extract_interval_sparse, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)
 
@@ -256,7 +277,7 @@ async def ingest_file(request: IngestFileRequest = Body(...)):
                 logger.info(f"Successfully loaded file from storage: {local_file_path}")
                 meta["file_path"] = f"local://{bucket_name}/{file_path}"
                 meta["file_name"] = os.path.basename(file_path)
-                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, do_detect_and_crop=_do_detect_and_crop)
+                return indexer.add_embedding([local_file_path], [meta], frame_extract_interval=_frame_extract_interval, frame_extract_interval_sparse=_frame_extract_interval_sparse, do_detect_and_crop=_do_detect_and_crop)
 
         res = await asyncio.to_thread(_blocking_ingest)
 

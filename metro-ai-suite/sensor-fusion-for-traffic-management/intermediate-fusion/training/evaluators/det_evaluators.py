@@ -122,7 +122,7 @@ class RoadSideEvaluator():
             pred_label_path = result2kitti(result_files["img_bbox"], out_dir, self.data_root, self.gt_label_path, demo=False)
         else:
             pred_label_path = result2kitti_rope3d(result_files["img_bbox"], out_dir, self.data_root, self.gt_label_path, demo=False)
-        return kitti_evaluation(pred_label_path, self.gt_label_path, current_classes=self.current_classes, metric_path= (out_dir + '/tmp/metric') )
+        return kitti_evaluation(pred_label_path, self.gt_label_path, current_classes=self.current_classes, metric_path=(os.path.join(out_dir, 'metric_workspace', 'metric')))
 
     def _format_bbox(self, results, img_metas, jsonfile_prefix=None):
         nusc_annos = {}

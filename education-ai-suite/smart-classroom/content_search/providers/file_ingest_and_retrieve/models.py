@@ -51,7 +51,7 @@ def get_document_embedding_model():
 
         local_path = Path(os.getcwd()).parent / "models" / "openvino" / doc_model_path
         if local_path.exists():
-            logger.info(f"Loading document embedding OV IR from {local_path}")
+            logger.debug(f"Loading document embedding OV IR from {local_path}")
             _document_embedding_model = OpenVINOEmbedding(
                 model_id_or_path=str(local_path),
                 device=run_device,
@@ -59,7 +59,7 @@ def get_document_embedding_model():
                 text_instruction="passage: ",
             )
         else:
-            logger.info(f"Converting document embedding model {doc_model_path} to OV IR and saving to {local_path}")
+            logger.info(f"Converting document embedding model {doc_model_path} to OV IR (first run)")
             _document_embedding_model = OpenVINOEmbedding(
                 model_id_or_path=doc_model_path,
                 device=run_device,
@@ -70,5 +70,5 @@ def get_document_embedding_model():
             _document_embedding_model._model.save_pretrained(str(local_path))
             _document_embedding_model._tokenizer.save_pretrained(str(local_path))
 
-        logger.info(f"Document embedding model {doc_model_path} initialized and cached on device {run_device}")
+        logger.info(f"Document embedding model initialized: {doc_model_path} on {run_device}")
     return _document_embedding_model

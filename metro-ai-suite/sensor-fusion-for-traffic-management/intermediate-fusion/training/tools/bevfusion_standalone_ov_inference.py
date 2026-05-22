@@ -56,6 +56,7 @@ import os
 import pickle
 import struct
 import sys
+from importlib import import_module
 from typing import Dict, List, Optional, Tuple
 
 import cv2
@@ -82,6 +83,30 @@ VOXEL_SIZE = [0.1, 0.1, 0.2]
 SPARSE_SHAPE = [800, 800, 40]
 MAX_NUM_POINTS = 10
 MAX_VOXELS_TEST = 160000
+
+
+_ALLOWED_PICKLE_GLOBALS = {
+    "builtins": {
+        "dict", "list", "tuple", "set", "frozenset", "slice",
+        "str", "int", "float", "bool", "bytes",
+    },
+    "collections": {"OrderedDict", "defaultdict"},
+    "numpy": {"dtype", "ndarray"},
+    "numpy.core.multiarray": {"_reconstruct", "scalar"},
+    "numpy._core.multiarray": {"_reconstruct", "scalar"},
+}
+
+
+class RestrictedUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        allowed_names = _ALLOWED_PICKLE_GLOBALS.get(module)
+        if allowed_names and name in allowed_names:
+            return getattr(import_module(module), name)
+        raise pickle.UnpicklingError(f"Unsupported pickle global: {module}.{name}")
+
+
+def load_restricted_pickle(file_obj):
+    return RestrictedUnpickler(file_obj).load()
 
 
 def init_dataset_geometry_from_onnx(onnx_path: str) -> None:
@@ -216,7 +241,7 @@ def parse_args():
 def load_annotations(ann_file: str) -> list:
     """Load annotation pickle file."""
     with open(ann_file, "rb") as f:
-        data = pickle.load(f)
+        data = load_restricted_pickle(f)
     return data
 
 

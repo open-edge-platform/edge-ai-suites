@@ -217,7 +217,9 @@
     "subtitle": "Upload content, then search with text or an image",
     "uploadButton": "Upload Content",
     "back": "← Back",
-    "upload": "Upload"
+    "upload": "Upload",
+    "backendUnreachable": "Unable to connect to the Content Search backend. Please ensure the service is running.",
+    "servicesUnhealthy": "Some backend services are unavailable: {{services}}. Functionality may be limited."
   },
   "uploadSection":{
     "upload":"Upload",
@@ -322,6 +324,8 @@
     "videos": "Videos",
     "noResults": "No result found.",
     "noResultsHint": "Try a different question or adjust your search filters.",
+    "backendUnavailable": "Unable to connect to the backend service.",
+    "backendUnavailableHint": "Please check that the backend server is running and try again.",
     "type": "Type:",
     "time": "Time:",
     "relevance": "Relevance:",
