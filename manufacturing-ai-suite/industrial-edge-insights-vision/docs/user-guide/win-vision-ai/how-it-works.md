@@ -21,18 +21,18 @@ This document provides an overview of the architecture and components of Win Vis
 
 ### Inference
 
-- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO
+- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO™
   on:
-  - CPU: runs inference using the OpenVINO runtime on system memory
-  - GPU: runs inference using the D3D11 OpenVINO plugin with D3D11 shared memory
-  - NPU: runs inference using the OpenVINO runtime on the neural engine
+  - CPU: runs inference using the OpenVINO™ runtime on system memory
+  - GPU: runs inference using the D3D11 OpenVINO™ plugin with D3D11 shared memory
+  - NPU: runs inference using the OpenVINO™ runtime on the neural engine
 
 ### Outputs
 
 - **MediaMTX** — re-streams encoded video over RTSP (port 8554) and WebRTC (port 8889)
 - **MQTT broker** — receives structured inference metadata over TCP (port 1883)
 - **JSON file** — writes inference metadata to a file using the DL Streamer `gvametapublish`
-  element (for information on the element, see [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/elements/gvametapublish.html))
+  element (for information on the element, see [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/elements/gvametapublish.html))
 
 ### Viewers
 
@@ -41,6 +41,6 @@ This document provides an overview of the architecture and components of Win Vis
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
+  - [DL Streamer Supported Models](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/supported_models.html)
   - [DL Streamer Model Conversion Scripts README](https://github.com/open-edge-platform/dlstreamer/blob/main/scripts/download_models/README.md)
