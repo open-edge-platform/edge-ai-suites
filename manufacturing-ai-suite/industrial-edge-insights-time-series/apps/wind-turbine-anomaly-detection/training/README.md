@@ -60,7 +60,7 @@ python train.py \
 
 ```bash
 python train.py \
-  --data synthetic_T1.csv \
+  --data synthetic_dataset.csv \
   --target grid_activepower \
   --features wind_speed \
   --output-model rf_anomaly_model_compact.pkl \
