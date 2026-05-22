@@ -21,11 +21,11 @@ This document provides an overview of the architecture and components of Win Vis
 
 ### Inference
 
-- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO
+- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO™
   on:
-  - CPU: runs inference using the OpenVINO runtime on system memory
-  - GPU: runs inference using the D3D11 OpenVINO plugin with D3D11 shared memory
-  - NPU: runs inference using the OpenVINO runtime on the neural engine
+  - CPU: runs inference using the OpenVINO™ runtime on system memory
+  - GPU: runs inference using the D3D11 OpenVINO™ plugin with D3D11 shared memory
+  - NPU: runs inference using the OpenVINO™ runtime on the neural engine
 
 ### Outputs
 

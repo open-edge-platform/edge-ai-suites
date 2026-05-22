@@ -14,7 +14,7 @@ hide_directive-->
 **Win Vision AI** is a Python application for running multiple AI inference pipelines
 concurrently on Intel hardware (CPU / GPU / NPU) on Windows. Built on GStreamer and Intel®
 DL Streamer, it handles the end-to-end pipeline — from camera or video input,
-through OpenVINO-accelerated detection and classification, to live RTSP / WebRTC
+through OpenVINO™-accelerated detection and classification, to live RTSP / WebRTC
 streaming and structured metadata output.
 
 Configuration is YAML-driven: define your models, input sources, and outputs, then
