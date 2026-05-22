@@ -31,10 +31,10 @@ Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patche
 
 ## Documentation
 
-- [Get Started — Use Case 1](./get-started.md)
-- [Get Started — Use Case 2](./get-started-scenescape.md)
-- [How-to Guides](./how-to-guides.md)
-- [Release Notes](./release-notes.md)
+- [Get Started — Use Case 1](./docs/user-guide/get-started.md)
+- [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
+- [How-to Guides](./docs/user-guide/how-to-guides.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Key References
 
