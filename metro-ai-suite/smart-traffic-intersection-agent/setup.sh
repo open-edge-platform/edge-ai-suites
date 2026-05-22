@@ -48,7 +48,7 @@ export OVMS_CONFIG_DIR="${APP_DIR}/.ovms"
 if [ "$ENABLE_TC" = "true" ]; then
     TC_OVERLAY_AGENT="-f ${APP_DIR}/docker/tc-overlay-agent.yaml"
     if [ "$1" = "--setup" ] || [ "$1" = "--run" ] || [ "$1" = "--restart" ]; then
-        if [ "$VLM_DEVICE" = "GPU" ]; then
+        if [ "$VLM_TARGET_DEVICE" = "GPU" ]; then
             echo -e "${RED}ERROR: GPU accelerator is not supported for Trusted Compute${NC}"
             echo -e "${YELLOW}Please use VLM_DEVICE=CPU or disable Trusted Compute${NC}"
             return 1
