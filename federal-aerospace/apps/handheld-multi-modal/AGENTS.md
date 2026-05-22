@@ -5,7 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 
 # Fed-Aero Application Blueprint — Agent Context File
 
-Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-text (Whisper), a chat UI (Open WebUI), and metrics/dashboards (Grafana) on Intel edge hardware. Deploys alongside VIPPET, sharing its Docker network.
+Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-text (Whisper), a chat UI (Open WebUI), a Visual Pipeline and Platform Evaluation Tool and metrics/dashboards (Grafana) on Intel edge hardware.
 
 ## Deployment Modes
 
@@ -31,7 +31,7 @@ Docker Compose blueprint that wires together LLM inference (OVMS), speech-to-tex
 | `apps/speech-to-text/static/index.html` | Browser-based STT demo UI |
 | `apps/grafana/provisioning/dashboards/` | Pre-provisioned dashboards (`panther-lake-compact-v2.json`, `panther-lake-live.json`) |
 | `apps/nginx/nginx.conf` | HTTPS reverse proxy (self-signed cert, TLS 1.3 only) |
-| `apps/nginx/nginx-standalone.conf` | HTTPS reverse proxy for standalone mode (no VIPPET UI block) |
+| `apps/nginx/nginx-standalone.conf` | HTTPS reverse proxy for standalone mode (without VIPPET UI block) |
 | `collector/telegraf.conf` | Telegraf config copied into VIPPET metrics-manager by `make vippet-configure` |
 
 ## Key Environment Variables

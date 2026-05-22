@@ -15,7 +15,7 @@ OpenVINO-accelerated LLM inference on Intel iGPU with a web chat interface.
 
 Both services are defined in the root [`docker-compose.yml`](../../docker-compose.yml) and share the `fedaero` network.
 
-> Speech-to-text is handled by the standalone Whisper STT service — see [`../speech-to-text/`](../speech-to-text/).
+> Speech-to-text is handled by the standalone Whisper STT service — see the `speech-to-text/` directory.
 
 ## APIs
 
@@ -23,9 +23,11 @@ Open WebUI is only accessible via the nginx TLS reverse proxy. The container por
 
 | Endpoint | URL | Notes |
 |----------|-----|-------|
-| Open WebUI | https://localhost:8443 | Chat UI — browser mic enabled (via nginx) |
+| Open WebUI | https://localhost:8443 | Chat UI |
 | OVMS OpenAI-compatible API | http://localhost:9000/v3 | Direct host access; also used internally by Open WebUI |
 | OVMS metrics | http://localhost:9000/metrics | Prometheus metrics |
+
+## Checking the model readiness
 
 Check OVMS model readiness:
 
@@ -59,7 +61,7 @@ Models are downloaded from HuggingFace on first start and persisted in the `ovms
 | `OpenVINO/mistral-7b-instruct-v0.3-int8-ov` | ~7 GB | High quality, needs more VRAM |
 | `OpenVINO/Qwen2.5-7B-Instruct-int8-ov` | ~8 GB | Excellent instruction following |
 
-### fp16 — full precision, best quality (requires ≥16 GB iGPU shared memory)
+### fp16 — full precision, best quality (requires ≥16 GB memory)
 
 | Model | Size | Notes |
 |-------|------|-------|
