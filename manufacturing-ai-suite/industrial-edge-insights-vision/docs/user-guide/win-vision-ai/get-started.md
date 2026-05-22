@@ -12,7 +12,7 @@ Install **Python 3.12 or higher** from [the official Python website](https://www
 Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
 ### Set Proxies (Optional)
-Open PowerShell and run all the terminal commands below
+Go to the target directory of your choice, open PowerShell and run all the terminal commands below
 
 ```powershell
 $env:http_proxy  = # example: http://proxy.example.com:891
@@ -32,7 +32,6 @@ Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer
 
 ### Clone the Suite
 
-Go to the target directory of your choice.
 If you want to clone a specific release branch, replace `main` with the desired tag.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
