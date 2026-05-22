@@ -25,20 +25,21 @@ Open WebUI is only accessible via the nginx TLS reverse proxy. The container por
 | OVMS OpenAI-compatible API | http://localhost:9000/v3 | Direct host access; also used internally by Open WebUI |
 | OVMS metrics | http://localhost:9000/metrics | Prometheus metrics |
 
-## Checking the model readiness
+## Changing the model
 
-Check OVMS model readiness:
+Edit the `--source_model` argument on the `ovms` service in the root `docker-compose.yml`.
+Models are downloaded from HuggingFace on first start and persisted in the `ovms_models` Docker volume.
+
+Because the download happens on first start, OVMS will accept connections before the
+model is actually ready to serve requests. After changing the model (or on a fresh
+start), check readiness before sending inference requests:
 
 ```bash
 curl http://localhost:9000/v1/config
 ```
 
-When you see `"state": "AVAILABLE"` the model is ready.
-
-## Changing the model
-
-Edit the `--source_model` argument on the `ovms` service in the root `docker-compose.yml`.
-Models are downloaded from HuggingFace on first start and persisted in the `ovms_models` Docker volume.
+When you see `"state": "AVAILABLE"` the model is ready. Until then the model is still
+downloading or loading, and inference requests will fail.
 
 ### int4 — fastest, lowest memory (recommended for iGPU)
 
