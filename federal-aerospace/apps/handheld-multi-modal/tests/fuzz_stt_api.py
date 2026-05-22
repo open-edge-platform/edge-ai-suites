@@ -7,7 +7,7 @@ Fuzz / robustness test for the Whisper STT REST API.
 The script fires a structured battery of crafted requests at the STT service
 and flags any unexpected server errors (5xx) or connection failures.
 
-By default the battery is run in a continuous loop for 1 hour so that each
+By default the test set is run in a continuous loop for 1 hour so that each
 iteration sees freshly generated random audio content.  Use --duration 0 for
 a single-pass run (useful in CI).
 

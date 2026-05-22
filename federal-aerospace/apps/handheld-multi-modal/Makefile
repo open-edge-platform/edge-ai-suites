@@ -54,7 +54,8 @@ TEMPLATE_DIR := $(SELF_DIR)/templates
 	deploy deploy-cdi \
 	up up-cdi up-standalone down down-cdi down-standalone restart restart-cdi \
 	build rebuild clean health test urls build-whisper \
-	stage vippet
+	stage vippet \
+	restler-build restler-stt restler-package
 
 help: ## Show this help
 	@awk ' \
@@ -259,8 +260,91 @@ vippet: ## Sparse-checkout vippet into $(VIPPET_DEST) for packaging (called by s
 	cp -a "$(WORK_DIR)/vippet_src/$(VIPPET_PATH)/." "$(VIPPET_DEST)/$(VIPPET_PATH)/"
 	@echo "$(VIPPET_REF)" > "$(VIPPET_DEST)/.vippet-ref"
 
-STT_HOST ?= https://localhost:5443
+RESTLER_EVIDENCE_ZIP ?= $(WORK_DIR)/restler-evidence.zip
+
+STT_HOST         ?= https://localhost:5443
+RESTLER_VERSION  ?= v9.3.1
+RESTLER_IMAGE    ?= restler-fuzzer:$(RESTLER_VERSION)
+RESTLER_DIR      := $(WORK_DIR)/restler
+STT_RESTLER_IP   ?= localhost
+STT_RESTLER_PORT ?= 5443
+RESTLER_BUDGET   ?= 0.5
+
 fuzz-stt: ## Fuzz / robustness test the Whisper STT API (override with STT_HOST=https://…)
 	@command -v python3 >/dev/null 2>&1 || { echo "python3 not found"; exit 1; }
 	@python3 -c "import requests" 2>/dev/null || { echo "Missing dependency — run: pip install requests"; exit 1; }
 	python3 tests/fuzz_stt_api.py --host "$(STT_HOST)"
+
+restler-build: ## Build the RESTler Docker image from source (once; RESTLER_VERSION overridable)
+	@if docker image inspect "$(RESTLER_IMAGE)" > /dev/null 2>&1; then \
+		echo "✓ $(RESTLER_IMAGE) already present"; \
+	else \
+		echo "Building RESTler $(RESTLER_VERSION) — this takes a few minutes (no binary releases exist)..."; \
+		docker build \
+			-t "$(RESTLER_IMAGE)" \
+			"https://github.com/microsoft/restler-fuzzer.git#$(RESTLER_VERSION)"; \
+	fi
+
+restler-stt: restler-build ## RESTler fuzz the Whisper STT API for RESTLER_BUDGET hours (default 0.5h)
+	@echo ">> RESTler fuzz: https://$(STT_RESTLER_IP):$(STT_RESTLER_PORT) budget=$(RESTLER_BUDGET)h"
+	@mkdir -p "$(RESTLER_DIR)"
+	@echo "  Step 1: compile grammar from tests/stt-openapi.yaml"
+	docker run --rm \
+		--workdir /work \
+		-v "$(SELF_DIR)/tests/stt-openapi.yaml:/work/stt-openapi.yaml:ro" \
+		-v "$(RESTLER_DIR):/work" \
+		"$(RESTLER_IMAGE)" \
+		/RESTler/restler/Restler compile --api_spec /work/stt-openapi.yaml
+	@echo "  Step 2: fuzz (budget=$(RESTLER_BUDGET)h)"
+	docker run --rm \
+		--workdir /work \
+		--network host \
+		-v "$(RESTLER_DIR):/work" \
+		-v "$(SELF_DIR)/tests/restler-settings.json:/work/restler-settings.json:ro" \
+		"$(RESTLER_IMAGE)" \
+		/RESTler/restler/Restler fuzz \
+			--grammar_file /work/Compile/grammar.py \
+			--dictionary_file /work/Compile/dict.json \
+			--settings /work/restler-settings.json \
+			--target_ip $(STT_RESTLER_IP) \
+			--target_port $(STT_RESTLER_PORT) \
+			--time_budget $(RESTLER_BUDGET)
+	@LATEST=$$(ls -td "$(RESTLER_DIR)/Fuzz/RestlerResults/experiment"*/ 2>/dev/null | head -1); \
+	echo ">> RESTler results: $${LATEST:-$(RESTLER_DIR)/Fuzz/RestlerResults/}"
+
+restler-package: ## Assemble RESTler evidence ZIP for submission (run after restler-stt)
+	@set -eu; \
+	LATEST=$$(ls -td "$(RESTLER_DIR)/Fuzz/RestlerResults/experiment"*/ 2>/dev/null | head -1); \
+	[ -n "$$LATEST" ] || { echo "ERROR: No RESTler results found. Run 'make restler-stt' first." >&2; exit 1; }; \
+	EXP_ID=$$(basename "$${LATEST%/}"); \
+	echo ">> Packaging $$EXP_ID into evidence ZIP..."; \
+	OUT="$(WORK_DIR)/restler-evidence"; \
+	LOGS="$$OUT/Fuzz/RestlerResults/$$EXP_ID/logs"; \
+	RESPONSE_BUCKETS="$(RESTLER_DIR)/Fuzz/ResponseBuckets"; \
+	rm -rf "$$OUT"; \
+	mkdir -p "$$LOGS/bug_buckets" "$$LOGS/ResponseBuckets"; \
+	cp "$$LATEST/logs/main.txt" "$$LOGS/main.txt"; \
+	if [ -f "$$LATEST/logs/bug_buckets/bug_buckets.txt" ]; then \
+		cp "$$LATEST/logs/bug_buckets/bug_buckets.txt" "$$LOGS/bug_buckets/bug_buckets.txt"; \
+	else \
+		printf 'Bug buckets summary\n===================\n\nNo bugs detected (0 bug buckets).\n' \
+			> "$$LOGS/bug_buckets/bug_buckets.txt"; \
+	fi; \
+	TS="$$LATEST/logs/testing_summary.json"; \
+	if [ -f "$$RESPONSE_BUCKETS/errorBuckets.json" ]; then \
+		cp "$$RESPONSE_BUCKETS/errorBuckets.json" "$$LOGS/ResponseBuckets/errorBuckets.json"; \
+	fi; \
+	if [ -f "$$RESPONSE_BUCKETS/runSummary.json" ]; then \
+		cp "$$RESPONSE_BUCKETS/runSummary.json" "$$LOGS/ResponseBuckets/runSummary.json"; \
+	else \
+		python3 -c "import json,sys; ts=json.load(open(sys.argv[1])); sent=ts.get('total_requests_sent',{}); total=sum(v for v in sent.values() if isinstance(v,int)); bugs=sum(ts.get('bug_buckets',{}).values()); print(json.dumps({'requestsCount':total,'sequencesCount':0,'bugCount':bugs,'codeCounts':{},'errorBuckets':ts.get('bug_buckets',{})},indent=4))" "$$TS" \
+			> "$$LOGS/ResponseBuckets/runSummary.json"; \
+	fi; \
+	cp "$(SELF_DIR)/tests/stt-openapi.yaml" "$$OUT/stt-openapi.yaml"; \
+	printf 'RESTler Evidence Package\n========================\nTool:     RESTler $(RESTLER_VERSION)\nDate:     %s\nTarget:   https://$(STT_RESTLER_IP):$(STT_RESTLER_PORT)\nBudget:   $(RESTLER_BUDGET) hours\n\nCommand:\n  make restler-stt STT_RESTLER_IP=$(STT_RESTLER_IP) STT_RESTLER_PORT=$(STT_RESTLER_PORT) RESTLER_BUDGET=$(RESTLER_BUDGET)\n\nSettings (tests/restler-settings.json):\n  no_ssl: false                    TLS enabled\n  disable_cert_validation: true    self-signed cert accepted\n  time_budget: $(RESTLER_BUDGET)h, max_combinations: 20, request_throttle_ms: 200\n\nGrammar:    auto-compiled from stt-openapi.yaml (no manual edits)\nDictionary: auto-generated (no manual edits)\nCheckers:   default (PayloadBodyChecker, InvalidValueChecker)\n' \
+		"$$(date -u '+%Y-%m-%d %H:%M UTC')" > "$$OUT/README.txt"; \
+	rm -f "$(RESTLER_EVIDENCE_ZIP)"; \
+	cd "$(WORK_DIR)" && zip -r "restler-evidence.zip" "restler-evidence/"; \
+	echo ""; \
+	echo ">> ZIP ready: $(RESTLER_EVIDENCE_ZIP)"; \
+	unzip -l "$(RESTLER_EVIDENCE_ZIP)" | awk '/---/{found=1; next} found && /---/{exit} found{print "  " $$4}'

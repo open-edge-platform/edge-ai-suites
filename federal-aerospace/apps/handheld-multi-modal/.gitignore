@@ -48,3 +48,4 @@ Thumbs.db
 benchmarks/extracted*/
 apps/LLM-OpenWebUI/models/**
 data/**
+.work/
