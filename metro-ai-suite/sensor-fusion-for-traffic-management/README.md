@@ -20,8 +20,8 @@ Use this implementation for the original post-fusion traffic pipelines, includin
 Use this implementation for the BEVFusion-based intermediate-fusion deployment.
 
 - [Intermediate-fusion README](./intermediate-fusion/README.md)
-- [Intermediate-fusion Docker guide](./intermediate-fusion/docker/README_Docker.md)
-- [Intermediate-fusion host guide](./intermediate-fusion/docs/GSG.md)
+- [Intermediate-fusion Docker guide](./intermediate-fusion/deploy/docker/README_Docker.md)
+- [Intermediate-fusion host guide](./intermediate-fusion/deploy/docs/GSG.md)
 
 ## Directory Layout
 
