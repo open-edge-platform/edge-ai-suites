@@ -6,11 +6,6 @@ FROM python:3.12-slim
 ARG USER_ID=1000
 ARG USER_GROUP_ID=1000
 
-# Apply latest Debian security updates from configured repositories.
-RUN apt-get update && \
-  apt-get upgrade -y && \
-  rm -rf /var/lib/apt/lists/*
-
 # Set working directory
 WORKDIR /app
 
