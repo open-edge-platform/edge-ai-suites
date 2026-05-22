@@ -9,7 +9,7 @@ services:
   # service starts. Grafana runs as uid 472 without doing its own chown;
   # OVMS runs as a non-root uid without a chown entrypoint.
   init:
-    image: alpine
+    image: alpine:3.23.4
     network_mode: none
     restart: "no"
     volumes:

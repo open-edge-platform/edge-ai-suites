@@ -3,16 +3,16 @@
 
 FROM python:3.13-slim
 
-# Install ffmpeg (required by Whisper for audio decoding) and gosu for
-# privilege-dropping in the entrypoint.
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get upgrade -y \
+    && apt-get install -y --no-install-recommends \
     ffmpeg \
     gosu \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN pip install --upgrade setuptools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
