@@ -18,7 +18,7 @@ publisherResources: {}
 
 images:
   rtspPublisher: jrottenberg/ffmpeg:6.1-alpine
-  rtspServer: bluenviron/mediamtx:latest
+  rtspServer: bluenviron/mediamtx:1.18.2
 
 rtspTest:
   enabled: true
