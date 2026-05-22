@@ -119,7 +119,7 @@ const RunCardComponent = (function () {
         tooltipTitle.textContent = 'Run Details';
         tooltip.appendChild(tooltipTitle);
         tooltip.appendChild(createTooltipRow('Pipeline', run.pipelineName || 'N/A'));
-        tooltip.appendChild(createTooltipRow('RTSP URL', run.rtspUrl || 'N/A'));
+        tooltip.appendChild(createTooltipRow('Stream Source', run.rtspUrl || 'N/A'));
         tooltip.appendChild(createTooltipRow('Max Tokens', String(run.maxTokens ?? 'N/A')));
         tooltip.appendChild(createTooltipRow('Prompt', run.prompt || 'N/A', 'info-tooltip-prompt'));
 
