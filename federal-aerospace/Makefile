@@ -96,7 +96,7 @@ $(SOLUTION_ZIP): $(HANDHELD_STAMP) \
 		--exclude='apps/handheld-multi-modal/VIPPET_REF' \
 		--exclude='apps/handheld-multi-modal/.work' \
 		./ "$(SOLUTION_STAGE)/federal-aerospace/"
-	cp -a "$(HANDHELD_STAGE)/vippet" "$(SOLUTION_STAGE)/federal-aerospace/apps/handheld-multi-modal/"
+	cp -a "$(HANDHELD_STAGE)/vippet-fedaero" "$(SOLUTION_STAGE)/federal-aerospace/apps/handheld-multi-modal/"
 	@mkdir -p "$(DIST_DIR)"
 	@rm -f "$@"
 	cd "$(SOLUTION_STAGE)" && zip -rq "$(abspath $@)" federal-aerospace

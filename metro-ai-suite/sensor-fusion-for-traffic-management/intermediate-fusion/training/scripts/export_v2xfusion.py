@@ -48,6 +48,14 @@ from pytorch_quantization.nn.modules.tensor_quantizer import TensorQuantizer
 from pytorch_quantization.nn.modules.tensor_quantizer import TensorQuantizer
 import tensor
 import numpy as np
+import quantize as quantize
+
+
+def quantize_net(model):
+    quantize.quantize_encoders_lidar_branch(model.encoders.lidar.backbone)
+    quantize.quantize_encoders_camera_branch(model.encoders.camera)
+    quantize.quantize_decoder(model.decoder)
+    return model
 
 def parse_args():
     parser = argparse.ArgumentParser(description="MMDet test (and eval) a model")
@@ -234,7 +242,9 @@ def main():
 
     # build the model and load checkpoint
     cfg.model.train_cfg = None
-    model  = torch.load(args.checkpoint).module
+    model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
+    model = quantize_net(model)
+    load_checkpoint(model, args.checkpoint, map_location="cpu", strict=False)
     if export_fp16:
         for name, item in model.named_modules():
             if isinstance(item, TensorQuantizer):

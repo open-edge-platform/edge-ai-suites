@@ -42,6 +42,7 @@ type ResultTab = "all" | "document" | "image" | "video";
 
 interface ResultSectionProps {
   results: SearchResult[];
+  error?: string | null;
 }
 
 function getFileName(result: SearchResult): string {
@@ -52,7 +53,7 @@ function getFileName(result: SearchResult): string {
   return "Unknown";
 }
 
-const ResultSection: React.FC<ResultSectionProps> = ({ results }) => {
+const ResultSection: React.FC<ResultSectionProps> = ({ results, error }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ResultTab>("all");
 
@@ -102,14 +103,19 @@ const ResultSection: React.FC<ResultSectionProps> = ({ results }) => {
       </div>
 
       <div className="cs-result-grid">
-        {filteredResults.length === 0 ? (
+        {error ? (
+          <div className="cs-result-empty cs-result-error">
+            <span className="cs-result-error-title">{t("resultSection.backendUnavailable")}</span>
+            <span className="cs-result-empty-hint">{t("resultSection.backendUnavailableHint")}</span>
+          </div>
+        ) : filteredResults.length === 0 ? (
           <div className="cs-result-empty">
-            <img 
-              src={searchIcon} 
-              alt="search" 
-              className="cs-result-empty-icon" 
-              width="48" 
-              height="48" 
+            <img
+              src={searchIcon}
+              alt="search"
+              className="cs-result-empty-icon"
+              width="48"
+              height="48"
             />
             <span className="cs-result-empty-title">{t("resultSection.noResults")}</span>
             <span className="cs-result-empty-hint">{t("resultSection.noResultsHint")}</span>
@@ -188,12 +194,10 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
 
         {fileType === "video" && meta.summary_text && (
           <div className="cs-result-item-summary">
-            <div className="cs-result-item-summary-row">
-              <span className="cs-result-item-summary-label">{t("resultSection.summarization")}:</span>
-              <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
-                {meta.summary_text}
-              </p>
-            </div>
+            <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
+              <span className="cs-result-item-summary-label">{t("resultSection.summarization")}: </span>
+              {meta.summary_text}
+            </p>
             <button
               className="cs-result-item-summary-toggle"
               onClick={() => setSummaryExpanded((prev) => !prev)}

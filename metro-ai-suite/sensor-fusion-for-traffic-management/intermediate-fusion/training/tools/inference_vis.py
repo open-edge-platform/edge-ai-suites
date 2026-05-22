@@ -1,5 +1,4 @@
 import argparse
-import copy
 import os
 
 import mmcv
@@ -24,22 +23,6 @@ from mmdet3d.utils import get_root_logger, convert_sync_batchnorm, recursive_eva
 # import tinyq
 from functools import partial
 from mmdet3d.datasets.v2x_dataset import collate_fn
-
-def recursive_eval(obj, globals=None):
-    if globals is None:
-        globals = copy.deepcopy(obj)
-
-    if isinstance(obj, dict):
-        for key in obj:
-            obj[key] = recursive_eval(obj[key], globals)
-    elif isinstance(obj, list):
-        for k, val in enumerate(obj):
-            obj[k] = recursive_eval(val, globals)
-    elif isinstance(obj, str) and obj.startswith("${") and obj.endswith("}"):
-        obj = eval(obj[2:-1], globals)
-        obj = recursive_eval(obj, globals)
-
-    return obj
 
 
 def main() -> None:
