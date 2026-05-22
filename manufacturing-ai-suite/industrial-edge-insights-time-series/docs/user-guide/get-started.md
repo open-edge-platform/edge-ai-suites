@@ -49,10 +49,10 @@ To configure Docker:
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
 cd edge-ai-suites
 git sparse-checkout set manufacturing-ai-suite
 cd manufacturing-ai-suite/industrial-edge-insights-time-series
@@ -143,8 +143,6 @@ make up_mqtt_ingestion app="weld-defect-detection" num_of_streams=<NUMBER_OF_STR
 
 ### Benchmarking
 
-To run benchmarking with batch processing, append `batch` to the `make` command.
-
 To enable benchmarking for Docker Compose deployment:
 
 1. Set `number_of_data_points_per_stream=<NUM_POINTS>` in the `make` command.
@@ -153,7 +151,29 @@ To enable benchmarking for Docker Compose deployment:
 
   `BENCHMARK_TOTAL_PTS = number_of_data_points_per_stream * num_of_streams`
 
-Eg. For Weld Defect Detection, use:
+
+#### With Stream Processing User Defined Function (UDF)
+
+To execute benchmarking with stream processing UDF, execute the following commands:
+
+For example, for Weld Defect Detection, use:
+
+```bash
+make up_mqtt_ingestion app=weld-defect-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>
+```
+
+Example:
+
+```bash
+make up_mqtt_ingestion app=weld-defect-detection num_of_streams=4 number_of_data_points_per_stream=500
+```
+
+
+#### With Batch Processing User Defined Function (UDF)
+
+To run benchmarking with batch processing UDF, append `batch` to the `make` command.
+
+For example, for Weld Defect Detection, use:
 
 ```bash
 make up_mqtt_ingestion batch app=weld-defect-detection num_of_streams=<NUMBER_OF_STREAMS> number_of_data_points_per_stream=<NUM_POINTS>

@@ -24,16 +24,16 @@ Deploy these on separate devices:
 - **VSS Search**: Handles video search functionality
 - **VSS Summary**: Provides video summarization capabilities
 
-[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
+[VSS Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/sample-applications/video-search-and-summarization/docs/user-guide/get-started.md)
 
 ### 2. VLM Microservice (Optional)
 
 Required only when enabling AI-powered event descriptions (`NVR_GENAI=true`):
 
-- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
+- Runs the VLM model defined in the Frigate [config file](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/smart-nvr/resources/frigate-config/config.yml)
 - Use `VLM_MAX_COMPLETION_TOKENS` to limit response length during deployment
 
-[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
+[VLM Serving Documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/vlm-openvino-serving/docs/user-guide/get-started.md)
 
 ## Helm Chart Installation
 
@@ -52,7 +52,7 @@ There are two options to get the charts in your workspace:
 Use the following command to pull the Helm chart from Docker Hub:
 
 ```bash
-helm pull oci://registry-1.docker.io/intel/smart-nvr --version <version-no>
+helm pull oci://registry-1.docker.io/intel/smart-nvr --version 2026.1.0-rc1
 ```
 
 Refer to the [release notes](../release-notes.md) for details on the latest version number to
@@ -63,7 +63,7 @@ use for the sample application.
 After pulling the chart, extract the `.tgz` file:
 
 ```bash
-tar -xvf smart-nvr-<version-no>.tgz
+tar -xvf smart-nvr-2026.1.0-rc1.tgz
 ```
 
 This will create a directory named `smart-nvr` containing the chart files. Navigate to the
@@ -80,7 +80,7 @@ cd smart-nvr
 Clone the repository containing the Helm chart:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b release-2026.1.0
 ```
 
 ##### Step 2: Change to the Chart Directory

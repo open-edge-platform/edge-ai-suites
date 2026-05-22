@@ -218,7 +218,9 @@
     "subtitle": "上传内容后，您可以使用文本或图像进行搜索",
     "uploadButton": "上传内容",
     "back": "← 返回",
-    "upload": "上传"
+    "upload": "上传",
+    "backendUnreachable": "无法连接到内容搜索后端服务，请确认服务是否正在运行。",
+    "servicesUnhealthy": "以下后端服务不可用：{{services}}。部分功能可能受限。"
   },
   "uploadSection":{
     "upload": "上传",
@@ -287,6 +289,33 @@
     "send": "发送（Enter）",
     "enterHint": "按 Enter 发送 · 按 Shift+Enter 换行"
   },
+  "fileManager": {
+    "viewFiles": "查看文件",
+    "totalFiles": "文件总数：",
+    "refresh": "刷新",
+    "back": "返回",
+    "loading": "文件加载中...",
+    "retry": "重试",
+    "noFiles": "暂无上传文件。",
+    "fileName": "文件名",
+    "type": "类型",
+    "filterByType": "按类型筛选",
+    "clear": "清除",
+    "size": "大小",
+    "createdAt": "创建时间",
+    "ocrPreview": "点击预览 OCR 文本",
+    "removeFile": "删除文件",
+    "ocrPreviewTitle": "\"{{filename}}\" 纯文本预览",
+    "ocrLoading": "加载中...",
+    "downloadTxt": "下载 .txt",
+    "removeConfirm": "删除 \"{{fileName}}\"？",
+    "removeWarning": "这将永久删除该文件及其索引数据。",
+    "removeWarningStagedFile": "您确定要删除此文件吗？",
+    "removing": "删除中...",
+    "filesExistMessage": "文件已存在。如需查看，请在\"上传\"部分点击\"查看文件\"。",
+    "dismiss": "关闭",
+    "enabledAfterSegmentation": "仅在内容分段完成后启用"
+  },
   "resultSection": {
     "title": "结果",
     "subtitle": "按相似度排序（最高排名优先）",
@@ -296,6 +325,8 @@
     "videos": "视频",
     "noResults": "未找到结果。",
     "noResultsHint": "尝试不同的问题或调整搜索筛选条件。",
+    "backendUnavailable": "无法连接到后端服务。",
+    "backendUnavailableHint": "请检查后端服务是否正在运行，然后重试。",
     "type": "类型：",
     "time": "时间：",
     "relevance": "相关性：",

@@ -27,6 +27,30 @@ an introduction.
   export TAG="2026.1.0-rc1"
   ```
 
+## Using Edge Microvisor Toolkit
+
+If you are running STIA on an OS image built with **Edge Microvisor Toolkit (EMT)** — an Azure Linux-based build pipeline for Intel® platforms — the deployment approach depends on the EMT flavor. Refer to the detailed documentation for [EMT-D](https://github.com/open-edge-platform/edge-microvisor-toolkit/blob/3.0/docs/developer-guide/emt-architecture-overview.md#developer-node-mutable-iso-image) and [EMT-S](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for full details.
+
+### EMT-D (Mutable)
+
+EMT-D is a **mutable** image that supports standard package management. You can run the `setup.sh` script directly on the node after installing any required dependencies using `dnf` or `tdnf`.
+
+### EMT-S (Immutable)
+
+EMT-S is an **immutable** OS image — standard package managers such as `apt` are not available, and the `setup.sh` script **cannot be run directly on the EMT-S node** (doing so will fail with `sudo: apt: command not found`). Use one of the following approaches:
+
+- **Option 1 (USB provisioning):** While preparing the USB drive, copy the required Docker images under `/opt/user-apps` on the image, then flash and deploy the Edge node.
+- **Option 2 (Remote copy):** On a Ubuntu development system, pull/build all required Docker images and prepare the project directory. Copy the entire directory to the EMT-S node without modifications and deploy from there. This approach has been verified to successfully bring up all containers.
+
+If any packages must be installed on EMT-S, use the installroot method (replace `<package>` with the required package name):
+
+```bash
+sudo env no_proxy="localhost,127.0.0.1" dnf --installroot=/opt/user-apps/tools/ -y install <package>
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/user-apps/tools/usr/lib/
+```
+
+Refer to the [EMT-S documentation](https://github.com/open-edge-platform/edge-microvisor-toolkit-standalone-node) for further details.
+
 ## Quick Start with Setup Script
 
 Intel recommends using the automated setup script that handles environment configuration,
@@ -36,8 +60,8 @@ Traffic Intersection Agent.
 ### 1. Clone the Suite
 
 Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+<!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
@@ -120,7 +144,7 @@ locations on the same machine for `n` required instances.
 1. Clone the repository into a new directory:
 
    ```bash
-   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
+   git clone --depth 1 -b release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance1
    cd edge-ai-suites-instance1/metro-ai-suite/smart-traffic-intersection-agent/
    ```
 
@@ -163,7 +187,7 @@ locations on the same machine for `n` required instances.
 1. Open a new terminal window and move to new directory. Clone the repository into the new directory:
 
    ```bash
-   git clone --depth 1 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
+   git clone --depth 1 -b release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git edge-ai-suites-instance2
    cd edge-ai-suites-instance2/metro-ai-suite/smart-traffic-intersection-agent/
    ```
 
@@ -250,7 +274,7 @@ export WEATHER_MOCK=True
 
 ### Customizing the video used by sample application
 
-The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
+The video used by this sample application is determined by the configuration in [Smart Intersection application](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/smart-intersection/index.html). Refer to its documentation for further details.
 
 ## Accessing the Services
 

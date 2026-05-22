@@ -10,7 +10,7 @@ With this feature, during runtime, you can download a new model using the micros
 ### Pre-requisites
 
 We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`.
-To learn how to setup Model Download, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#quick-start)
+To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#quick-start-with-setup-script)
 
 If not available, you can simulate this by downloading the sample model from edge-ai-resources repository [here](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/INT8/pallet_defect_detection.zip). Once downloaded, extract to `/tmp/models` directory.
 
@@ -101,7 +101,7 @@ If not available, you can simulate this by downloading the sample model from edg
 
    ### Downloading model with Model Download
 
-   At this point, user would like to restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use the [Model Download](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/index.md) microservice to help download the model. It supports downloading public models as well as Geti models from a running Geti server. To learn more about the microservice, see how to [get started with it](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md).
+   At this point, user would like to restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use the [Model Download](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti models from a running Geti server. To learn more about the microservice, see how to [get started with it](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html).
 
    For our demonstration, we will assume the pallet defect detection model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
 
@@ -149,6 +149,6 @@ If not available, you can simulate this by downloading the sample model from edg
 
 ### Downloading models from Geti Server
 
-To learn how to download models from a running Geti server, see [here](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started.md#sample-usage-with-curl-command)
+To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command)
 
 > **Note:** The downloaded model(s) must be accessible to the DL Streamer pipeline server container. If not, please add it to volumes section of dltreamer-pipeline-server in compose file, and restart the DLSPS service.

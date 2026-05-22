@@ -2,13 +2,13 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking">
      GitHub
   </a>
-  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/README.md">
      Readme
   </a>
-  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/get-started.md">
+  <a class="icon_download" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking/docs/user-guide/get-started.md">
      Installation guide
   </a>
 </div>
@@ -45,7 +45,7 @@ It integrates various components such as MQTT, Node-RED, and Grafana to provide 
 - [System Requirements](./get-started/system-requirements.md)
 - [Get Started](./get-started.md)
 - [Customize the Application](./how-to-guides/customize-application.md)
-- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
+- [DL Streamer Pipeline Server](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer-pipeline-server/index.html)
 - [Release Notes](./release-notes.md)
 
 <!--hide_directive

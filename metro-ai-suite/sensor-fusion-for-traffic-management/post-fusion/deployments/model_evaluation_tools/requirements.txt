@@ -5,7 +5,7 @@ cycler==0.12.1
 filelock==3.20.3
 fonttools==4.62.1
 fsspec==2024.6.1
-idna==3.10
+idna==3.15
 Jinja2==3.1.6
 kiwisolver==1.4.8
 MarkupSafe==2.1.5

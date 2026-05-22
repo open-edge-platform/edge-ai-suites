@@ -111,7 +111,7 @@ const LeftPanel = () => {
           className="search-wrapper"
           title={
             contentSegmentationStatus !== "complete"
-              ? "Enabled only after content segmentation"
+              ? t("fileManager.enabledAfterSegmentation")
               : ""
           }
         >

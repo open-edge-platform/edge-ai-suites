@@ -19,11 +19,11 @@ By following this guide, you will learn how to:
 
 1. **Clone the Suite and update the `.env` file**:
    - Go to the target directory of your choice and clone the suite.
-     If you want to clone a specific release branch, replace `main` with the desired tag.
-     To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+     <!--If you want to clone a specific release branch, replace `release-2026.1.0` with the desired tag.-->
+     To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
      ```bash
-     git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+     git clone --filter=blob:none --sparse --branch release-2026.1.0 https://github.com/open-edge-platform/edge-ai-suites.git
      cd edge-ai-suites
      git sparse-checkout set metro-ai-suite
      cd metro-ai-suite/image-based-video-search
@@ -73,7 +73,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2026.1.0-ubuntu24-rc1 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.1.0-ubuntu24-rc1.1 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 

@@ -44,13 +44,32 @@ Real-time visual monitoring of worker safety gear.
 ::::
 hide_directive-->
 
+[Win Vision AI](./win-vision-ai/index.md), in contrast to the other vision apps, is a more
+generalised Python-based Windows application for running multiple AI inference pipelines on
+any DL Streamer-compatible models, with flexible input and output options. It can be used as
+a reference application and architectural template for building custom AI vision solutions on
+Windows using Intel hardware.
+
+<!--hide_directive
+::::{grid} 1 2 3 4
+:::{grid-item-card} Win Vision AI
+:class-card: homepage-card-container-big
+:link: ./win-vision-ai/index.html
+
+A Windows application for running any Vision workloads on DL Streamer-supported models.
+:::
+::::
+hide_directive-->
+
 <!--hide_directive
 :::{toctree}
 :hidden:
 
-pallet-defect-detection/index
-pcb-anomaly-detection/index
-weld-porosity/index
-worker-safety-gear-detection/index
+./pallet-defect-detection/index.md
+./pcb-anomaly-detection/index.md
+./weld-porosity/index.md
+./worker-safety-gear-detection/index.md
+./win-vision-ai/index.md
+
 :::
 hide_directive-->

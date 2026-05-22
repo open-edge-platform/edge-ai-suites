@@ -169,4 +169,4 @@ Run video decode + detection with yolo detection model
 
 ## Run Sample Application in docker
 
-Build docker image and Run in docker container, for information see the [guide](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/video-processing-for-nvr/docker/README.md).
+Build docker image and Run in docker container, for information see the [guide](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/video-processing-for-nvr/docker/README.md).

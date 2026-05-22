@@ -62,6 +62,7 @@ Video File Details
 </summary>
 
 The sample video contains:
+
 - Multiple vehicles in various parking scenarios
 - Examples of both clustered (crowded) and scattered vehicle arrangements
 - Duration: Approximately 21 seconds of footage
@@ -1004,8 +1005,8 @@ As per the business logic mentioned in previous steps, you would see that when a
 
 ## Supporting Resources
 
-- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/index.html)
-- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite)
+- [DL Streamer Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/index.html)
+- [Metro AI Solutions](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite)
 - [Node-RED Official Documentation](https://nodered.org/docs/)
 - [MQTT Protocol Specification](https://mqtt.org/)
 - [Euclidean Distance Algorithms](https://en.wikipedia.org/wiki/Euclidean_distance)
