@@ -281,6 +281,7 @@ jobs:
       - name: Publish to rolling release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
         with:
+          token: ${{ secrets.SIV_USER_TOKEN_GH }}
           tag_name: fedaero-latest
           name: "Federal and Aerospace | Edge AI Suites (latest)"
           body: |
@@ -318,7 +319,7 @@ jobs:
       # in the workflow is the only way to publish a new one.
       - name: Ensure version tag does not already exist
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SIV_USER_TOKEN_GH }}
         run: |
           tag="v${VERSION}"
           echo "Checking for existing tag/release: $tag"
@@ -360,6 +361,7 @@ jobs:
       - name: Publish versioned release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
         with:
+          token: ${{ secrets.SIV_USER_TOKEN_GH }}
           tag_name: "v${{ env.VERSION }}"
           name: "Federal and Aerospace | Edge AI Suites v${{ env.VERSION }}"
           body: |
