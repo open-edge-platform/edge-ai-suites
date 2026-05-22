@@ -526,9 +526,9 @@ best_model = grid_search.best_estimator_
 
 ### Data Sources
 
-- **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)
-- Training File: `training/T1.csv`
-- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv`
+- **Primary Dataset**: Project-generated synthetic wind turbine SCADA dataset (see `training/generate_synthetic_dataset.py`)
+- Training File: `training/synthetic_dataset.csv`
+- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv` (subset of the generated synthetic dataset)
 
 ### Tools and Libraries
 
