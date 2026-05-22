@@ -72,6 +72,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_HOST", ingest.get("host_addr", "127.0.0.1"))
         _set("INGEST_PORT", ingest.get("port", "9990"))
         _set("FRAME_EXTRACT_INTERVAL", str(ingest.get("frame_extract_interval", 15)))
+        _set("FRAME_EXTRACT_INTERVAL_SPARSE", str(ingest.get("frame_extract_interval_sparse", 90)))
         _set("DO_DETECT_AND_CROP", str(ingest.get("do_detect_and_crop", False)).lower())
         _set("INGEST_DEVICE", ingest.get("doc_embedding_device", "CPU"))
         _set("VISUAL_EMBEDDING_MODEL", ingest.get("visual_embedding_model", "CLIP/clip-xlm-roberta-base-vit-b-32"))

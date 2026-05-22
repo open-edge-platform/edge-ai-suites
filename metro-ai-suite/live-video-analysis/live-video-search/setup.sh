@@ -253,6 +253,15 @@ else
     configure_device "CPU"
 fi
 
+# Set DRI_MOUNT_PATH based on whether /dev/dri exists and is not empty
+if [ -d /dev/dri ] && [ "$(ls -A /dev/dri)" ]; then
+    export DRI_MOUNT_PATH="/dev/dri"
+    echo -e "${GREEN}/dev/dri found and not empty. Will mount.${NC}"
+else
+    export DRI_MOUNT_PATH="/dev/null"
+    echo -e "${YELLOW}/dev/dri not found or empty, will mount /dev/null instead.${NC}"
+fi
+
 # YOLOX models
 export YOLOX_MODELS_VOLUME_NAME=${YOLOX_MODELS_VOLUME_NAME:-vdms-yolox-models}
 export YOLOX_MODELS_MOUNT_PATH=${YOLOX_MODELS_MOUNT_PATH:-/app/models/yolox}

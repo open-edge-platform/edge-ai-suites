@@ -1,0 +1,82 @@
+augment3d:
+  scale: [0.95, 1.05]
+  rotate: [-0.3925, 0.3925]
+  translate: 0
+
+model:
+  encoders:
+    lidar:
+      voxelize_reduce: false
+      voxelize:
+        max_num_points: 100
+        point_cloud_range: ${point_cloud_range}
+        voxel_size:  [0.8, 0.8, 8]
+        # max_voxels: [120000, 160000]
+        # max_voxels: [4000, 4000]
+        max_voxels: [12000,12000]
+      backbone:
+        type: PointPillarsEncoder
+        pts_voxel_encoder: 
+          type: PillarFeatureNet
+          in_channels: 4
+          voxel_size:  [0.8, 0.8, 8]
+          point_cloud_range: ${point_cloud_range}
+        pts_middle_encoder:
+          type: PointPillarsScatter
+          output_shape: [100, 100]
+    camera:
+      vtransform:
+        type: LSSV2XTransform
+        image_size: ${image_size}
+        xbound: [0, 80.0, 0.8]
+        ybound: [-40.0, 40.0, 0.8]
+        zbound: [-10.0, 10.0, 20.0]
+        dbound: [1.0, 60.0, 1.0]
+  heads:
+    object:
+      train_cfg:
+        point_cloud_range: ${point_cloud_range}
+        grid_size: [800, 800, 40]
+        voxel_size: ${voxel_size}
+        out_size_factor: 8
+        dense_reg: 1
+        gaussian_overlap: 0.1
+        max_objs: 500
+        min_radius: 2
+        code_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.2, 0.2]
+      bbox_coder:
+        type: CenterPointBBoxCoder
+        pc_range: ${point_cloud_range}
+        post_center_range: [0.0, -45.0, -5.0, 85.0, 45.0, 3.0]
+        max_num: 500
+        score_threshold: 0.1
+        out_size_factor: 8
+        voxel_size: ${voxel_size[:2]}
+        code_size: 9
+      test_cfg:
+        post_center_limit_range: [0.0, -45.0, -10.0, 85.0, 45.0, 10.0]
+        max_per_img: 500
+        max_pool_nms: false
+        min_radius: [4, 12, 10, 1, 0.85, 0.175]
+        score_threshold: 0.1
+        out_size_factor: 8
+        voxel_size: ${voxel_size[:2]}
+        pre_max_size: 1000
+        post_max_size: 83
+        nms_thr: 0.2
+        nms_type:
+          - circle
+          - rotate
+          - rotate
+          - circle
+          - rotate
+          - rotate
+        nms_scale:
+          - [1.0]
+          - [1.0, 1.0]
+          - [1.0, 1.0]
+          - [1.0]
+          - [1.0, 1.0]
+          - [2.5, 4.0]
+
+lr_config: null

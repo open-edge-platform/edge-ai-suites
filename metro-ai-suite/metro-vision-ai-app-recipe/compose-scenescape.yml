@@ -223,7 +223,7 @@ services:
       - "5432:5432"
 
   web:
-    image: intel/scenescape-manager:v2026.0.0
+    image: intel/scenescape-manager:v2026.1.0-rc1
     init: true
     networks:
       scenescape:
@@ -243,11 +243,11 @@ services:
       - HTTPS_PROXY=${https_proxy}
       - SUPASS=${SUPASS}
       - EXAMPLEDB=/home/scenescape/SceneScape/smart-intersection-ri.tar.bz2
+      - DBHOST=pgserver
+      - DBPORT=5432
     command: >
       webserver
-      --dbhost pgserver
       --dbtype postgres
-      --dbport 5432
       --broker broker.scenescape.intel.com
       --brokerauth /run/secrets/browser.auth
       --brokerrootcert /run/secrets/certs/scenescape-ca.pem
@@ -281,7 +281,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:v2026.0.0
+    image: intel/scenescape-controller:v2026.1.0-rc1
     init: true
     environment:
       - http_proxy=${http_proxy}

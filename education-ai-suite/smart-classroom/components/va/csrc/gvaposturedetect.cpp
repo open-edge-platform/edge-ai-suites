@@ -304,9 +304,14 @@ static GstFlowReturn gst_posture_detect_transform_ip(GstBaseTransform *trans, Gs
         for (GList *l = roi.get_params(); l; l = g_list_next(l)) {
             GstStructure *s = GST_STRUCTURE(l->data);
             GVA::Tensor tensor(s);
-            if (!tensor.is_detection() && tensor.format() == "keypoints") {
+            if (!tensor.is_detection() && tensor.type() == GVA::GST_ANALYTICS_KEYPOINTS_2_TENSOR) {
+                if (tensor.format() != GST_ANALYTICS_KEYPOINT_BODY_POSE_COCO_17) {
+                    GST_ELEMENT_ERROR(self, STREAM, FAILED,
+                                      ("Unsupported keypoint format: %s", tensor.format().c_str()), (NULL));
+                    return GST_FLOW_ERROR;
+                }
                 auto keypoints_data = tensor.data<float>();
-                auto confidence = tensor.get_vector<float>("confidence");
+                auto confidence = tensor.confidences();
                 auto dims = tensor.dims();
 
                 if (dims.size() >= 2) {

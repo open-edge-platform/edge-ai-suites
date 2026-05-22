@@ -80,6 +80,20 @@ class ContentSegmentationComponent(PipelineComponent):
         return None
 
     @staticmethod
+    def _repair_truncated_array(text: str) -> str | None:
+        """Attempt to recover a valid JSON array from truncated LLM output by
+        truncating at the last complete object and closing the array."""
+        start = text.find("[")
+        if start == -1:
+            return None
+        last_brace = text.rfind("},")
+        if last_brace == -1:
+            last_brace = text.rfind("}")
+        if last_brace == -1:
+            return None
+        return text[start:last_brace + 1] + "]"
+
+    @staticmethod
     def _clean_topics_output(raw: str) -> str:
         """
         Clean the raw output from the model to extract a valid JSON array string.
@@ -116,6 +130,14 @@ class ContentSegmentationComponent(PipelineComponent):
         if extracted:
             result = try_parse(extracted)
             if result:
+                return result
+
+        # Strategy 5: repair truncated array by truncating at last complete object
+        repaired = ContentSegmentationComponent._repair_truncated_array(text)
+        if repaired:
+            result = try_parse(repaired)
+            if result:
+                logger.warning("_clean_topics_output: recovered from truncated LLM output.")
                 return result
 
         logger.error("_clean_topics_output: all strategies failed. Preview: %s", raw[:200])
