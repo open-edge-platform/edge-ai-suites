@@ -15,8 +15,6 @@ OpenVINO-accelerated LLM inference on Intel iGPU with a web chat interface.
 
 Both services are defined in the root [`docker-compose.yml`](../../docker-compose.yml) and share the `fedaero` network.
 
-> Speech-to-text is handled by the standalone Whisper STT service — see the `speech-to-text/` directory.
-
 ## APIs
 
 Open WebUI is only accessible via the nginx TLS reverse proxy. The container port is not exposed to the host.
