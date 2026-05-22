@@ -515,9 +515,10 @@ best_model = grid_search.best_estimator_
 - [UDF Implementation](https://github.com/open-edge-platform/edge-ai-suites/blob/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config/udfs/windturbine_anomaly_detector.py)
 
 ### Data Sources
-- **Primary Dataset**: [Kaggle Wind Turbine SCADA Dataset](https://www.kaggle.com/datasets/berkerisen/wind-turbine-scada-dataset)
-- Training File: `training/T1.csv`
-- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv`
+
+- **Primary Dataset**: Project-generated synthetic wind turbine SCADA dataset (see `training/generate_synthetic_dataset.py`)
+- Training File: `training/synthetic_dataset.csv`
+- Simulation File: `simulation-data/wind-turbine-anomaly-detection.csv` (subset of the generated synthetic dataset)
 
 ### Tools and Libraries
 - **Intel® Extension for Scikit-learn**: Performance optimization
