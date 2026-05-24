@@ -282,7 +282,7 @@ kubectl get pods -n smart-intersection -o jsonpath='{range .items[*]}{.metadata.
 kubectl get pods -n smart-intersection
 
 # Check DL Streamer pod logs to ensure containers started successfully
-kubectl logs -n smart-intersection -l app.kubernetes.io/component=dlstreamer-pipeline-server
+kubectl logs -n smart-intersection -l app=smart-intersection-dlstreamer-pipeline-server --tail=30
 ```
 
 You should see the DL Streamer Pipeline Server pods running with the Trusted Compute runtime class.
