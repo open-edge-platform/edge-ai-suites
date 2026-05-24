@@ -262,7 +262,7 @@ helm upgrade --install smart-intersection ./smart-intersection/chart \
   --create-namespace \
   --set global.storageClassName="" \
   --set trustedCompute.enabled=true \
-  -n smart-intersection \
+  -n smart-intersection
   
 ```
 
