@@ -545,17 +545,17 @@ Error: No prediction files found in build/pred/
    # Visually inspect if detections look good
    ```
 
-4. **Compare INT8 vs FP32**
+4. **Compare INT8 vs FP16**
    ```bash
-   # Generate FP32 predictions
-  ./build/bevfusion dataset --fp32 --dump-pred --pred-dir build/pred_fp32
+  # Generate FP16 predictions
+  ./build/bevfusion dataset --fp16 --dump-pred --pred-dir build/pred_fp16
    
    # Evaluate both
   python3 tools/kitti_3d_eval.py --gt dataset/label_2 --pred build/pred --out build/eval_int8
-  python3 tools/kitti_3d_eval.py --gt dataset/label_2 --pred build/pred_fp32 --out build/eval_fp32
+  python3 tools/kitti_3d_eval.py --gt dataset/label_2 --pred build/pred_fp16 --out build/eval_fp16
    
    # Compare summary.csv files
-  diff build/eval_int8/summary.csv build/eval_fp32/summary.csv
+  diff build/eval_int8/summary.csv build/eval_fp16/summary.csv
    ```
 
 ---
