@@ -1,7 +1,5 @@
 # Quick Start Guide
 
-The automated scripts handle dependency installation, basic configuration settings, and service startup with minimal user intervention.
-
 ### Step 1: Run Setup Script (First-Time Only)
 
 Open PowerShell and navigate to the smart-classroom directory:
@@ -45,12 +43,11 @@ If you encounter issues during automated setup, refer to the manual steps below:
 
 | Issue | Solution |
 |-------|----------|
-| FFmpeg installation fails | See [Manual Step 1A](#a-install-ffmpeg) |
-| DL Streamer download fails | See [Manual Step 1B](#b-install-dl-streamer) |
-| Python dependencies fail | See [Manual Step 1D](#d-install-python-dependencies) |
-| Content Search fails | See [Manual Step 4](#step-4-set-up-content-search) |
-| Frontend fails to start | See [Manual Step 5](#step-5-bring-up-the-frontend) |
-| Proxy/network issues | Configure proxy in setup script or see [Network Requirements](#c-network-requirements-for-content-search) |
+| FFmpeg installation fails | See [Manual Step 1A](get-started.md#a-install-ffmpeg-required-for-audio-processing) |
+| DL Streamer download fails | See [Manual Step 1B](get-started.md#b-install-dl-streamer) |
+| Python dependencies fail | See [Manual Step 1D](get-started.md#d-install-python-dependencies) |
+| Content Search fails | See [Manual Step 4](get-started.md#step-4-set-up-content-search) |
+| Frontend fails to start | See [Manual Step 5](get-started.md#step-5-bring-up-the-frontend) |
 
 ---
 
@@ -62,11 +59,20 @@ After initial setup is complete, use the start script for subsequent runs or aft
 .\start-smart-classroom.ps1
 ```
 
+The startup script performs:
+
+- **Service Detection** - Checks running services
+- **Restart Options** - Restart, skip, or abort choices
+- **Proxy Configuration** - Loads from `.proxy-config`
+- **ASR Configuration** - Change speech recognition settings
+- **Sequential Launch** - Backend → Content Search → Frontend
+- **Graceful Shutdown** - `Q` to stop all, `E` to keep running
+
 > **Tip:** If you modify `config.yaml`, just run this script directly — no need to re-run `setup-smart-classroom.ps1`.
 
-> **For more details on individual components, troubleshooting, or custom configurations, refer to the [Manual Setup](#manual-setup) section below.**
-
 ---
+
+The automated scripts handle dependency installation, basic configuration settings, and service startup with minimal user intervention.
 
 ## Manual Setup
 
@@ -90,5 +96,3 @@ The manual guide covers:
 | Backend | 8000 | http://localhost:8000/health |
 | Content Search | 9011 | http://localhost:9011/api/v1/system/health |
 | Frontend | 5173 | http://localhost:5173 |
-
-
