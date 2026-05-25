@@ -133,7 +133,7 @@ images:
   mqttBroker: "eclipse-mosquitto:2.0.21"
   redis: "redis:7"
   telemetryCollector: "intel/vippet-collector:2026.0.0"
-  rtspServer: "bluenviron/mediamtx:latest"
+  rtspServer: "bluenviron/mediamtx:1.18.2"
   rtspPublisher: "jrottenberg/ffmpeg:6.1-alpine"
 
 persistence:

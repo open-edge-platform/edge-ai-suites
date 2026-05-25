@@ -1,29 +1,35 @@
-# Federal Aerospace Application Blueprint
+<!--
+SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+SPDX-License-Identifier: Apache-2.0
+-->
+# Federal Aerospace — Handheld Multi-Modal
 
 This package contains:
 
 - `handheld-multi-modal/` — Federal Aerospace handheld multi-modal application (docker compose stack).
-- `vippet/`    — Visual Pipeline and Platform Evaluation Tool, sparse-checked-out
-                 from [open-edge-platform/edge-ai-libraries](https://github.com/open-edge-platform/edge-ai-libraries).
-- `run.sh`     — convenience script that brings up both docker compose stacks.
+- `vippet-fedaero/`       — Visual Pipeline and Platform Evaluation Tool, pre-checked-out at the pinned revision.
+- `run.sh`                — convenience wrapper around `make deploy` / `make down`.
 
 ## Prerequisites
 
 - Docker Engine 24+ with the Compose v2 plugin (`docker compose ...`).
-- The package extracted under `/opt/intel/eas/fedaero/app-blueprint/`.
+- Intel GPU with OpenVINO driver (iGPU or discrete Xe GPU).
 
 ## Running
 
 ```bash
-cd /opt/intel/eas/fedaero/app-blueprint
-./run.sh up      # start both stacks (default)
+./run.sh up      # deploy vippet + handheld-multi-modal stack (default)
 ./run.sh down    # stop both stacks
-./run.sh logs    # tail logs from both stacks
+./run.sh logs    # tail logs from the handheld-multi-modal stack
 ```
 
-`run.sh up` runs, in order:
+Or invoke make directly:
 
-1. `docker compose -f handheld-multi-modal/docker-compose.yml up -d`
-2. `docker compose -f vippet/compose.yml up -d`
+```bash
+cd handheld-multi-modal
+make deploy        # standard GPU
+make deploy-cdi    # CDI / SR-IOV
+make down          # stop everything
+```
 
-The pinned vippet revision is recorded in `vippet/.vippet-ref`.
+`make deploy` configures vippet, starts it, waits for the Docker network, then brings up the handheld-multi-modal stack. The pinned vippet revision is recorded in `vippet/.vippet-ref`.
