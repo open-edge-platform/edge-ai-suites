@@ -35,7 +35,7 @@ improvements.
   "Weld Defect Detection" across all configurations, documentation, and scripts.
 - **UDF Deployment Package Format**: User Defined Function deployment package format for the sample apps will be generated in
 tar format and used to configure Time Series Analytics microservice
-- **Security**: Upgradedd to latest available third-party versions in all applicable manifests
+- **Security**: Upgraded to latest available third-party versions in all applicable manifests
 - **Documentation**: Time-Series vs Multimodal Weld Defect Detection
   distinction clarified, Weld Defect Detection docs updated for GPU usage, OPC-UA
   alert configuration docs updated, broken references and typos fixed.
