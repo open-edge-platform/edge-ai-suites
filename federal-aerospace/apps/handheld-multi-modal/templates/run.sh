@@ -2,44 +2,27 @@
 # SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 #
-# Bring up (or tear down) the Federal Aerospace blueprint and the vippet stack.
+# Convenience wrapper for the Federal Aerospace handheld multi-modal stack.
+# vippet is included in this package; make deploy handles the full deployment.
 #
 # Usage: ./run.sh [up|down|logs]
 
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BLUEPRINT_COMPOSE="${HERE}/handheld-multi-modal/docker-compose.yml"
-VIPPET_COMPOSE="${HERE}/vippet/compose.yml"
+APP_DIR="${HERE}/handheld-multi-modal"
 
 action="${1:-up}"
 
-require_file() {
-  if [[ ! -f "$1" ]]; then
-    echo "error: required compose file not found: $1" >&2
-    exit 1
-  fi
-}
-
-require_file "${BLUEPRINT_COMPOSE}"
-require_file "${VIPPET_COMPOSE}"
-
 case "${action}" in
   up)
-    docker compose -f "${BLUEPRINT_COMPOSE}" up -d
-    docker compose -f "${VIPPET_COMPOSE}" up -d
+    make -C "${APP_DIR}" deploy
     ;;
   down)
-    docker compose -f "${VIPPET_COMPOSE}" down || true
-    docker compose -f "${BLUEPRINT_COMPOSE}" down || true
+    make -C "${APP_DIR}" down
     ;;
   logs)
-    docker compose -f "${BLUEPRINT_COMPOSE}" logs -f --tail=100 &
-    BP_PID=$!
-    docker compose -f "${VIPPET_COMPOSE}" logs -f --tail=100 &
-    VP_PID=$!
-    trap 'kill ${BP_PID} ${VP_PID} 2>/dev/null || true' EXIT
-    wait
+    docker compose -f "${APP_DIR}/docker-compose.yml" logs -f --tail=100
     ;;
   *)
     echo "usage: $0 [up|down|logs]" >&2

@@ -63,7 +63,7 @@ class MediaService:
     def _build_runtime_config(self, rtsp_enabled: bool, webrtc_enabled: bool) -> Path:
         """Write a per-instance runtime config with only the required protocol enabled.
 
-        Disables rtmp, hls, and srt in every instance to prevent port conflicts
+        Disables rtmp, hls, srt, and api in every instance to prevent port conflicts
         when multiple MediaMTX instances run side-by-side.
         """
         text = (self.mediamtx_dir / "mediamtx.yml").read_text(encoding="utf-8")
@@ -73,9 +73,10 @@ class MediaService:
             ("rtmp",   False),
             ("hls",    False),
             ("srt",    False),
+            ("api",    False),
         ]:
             text = re.sub(
-                rf"^{proto}:\s*(yes|no)\s*$",
+                rf"^{proto}:\s*(yes|no|true|false)\s*$",
                 f"{proto}: {'yes' if enabled else 'no'}",
                 text, flags=re.MULTILINE,
             )

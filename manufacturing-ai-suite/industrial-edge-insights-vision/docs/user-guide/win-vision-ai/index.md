@@ -14,7 +14,7 @@ hide_directive-->
 **Win Vision AI** is a Python application for running multiple AI inference pipelines
 concurrently on Intel hardware (CPU / GPU / NPU) on Windows. Built on GStreamer and Intel®
 DL Streamer, it handles the end-to-end pipeline — from camera or video input,
-through OpenVINO-accelerated detection and classification, to live RTSP / WebRTC
+through OpenVINO™-accelerated detection and classification, to live RTSP / WebRTC
 streaming and structured metadata output.
 
 Configuration is YAML-driven: define your models, input sources, and outputs, then
@@ -23,37 +23,12 @@ control.
 
 > **Platform:** Windows 11
 
-## Architecture
+## Layered Architecture
 
-![Win Vision AI Architecture](./_assets/winvisionai-architecture.drawio.svg)
+![Win Vision AI Layered Architecture](./_assets/winvisionai-arch-layered.drawio.svg)
 
-### Inputs
-
-- **Video file** — local video file playback
-- **RTSP camera** — network camera stream
-- **GenICam camera** — industrial camera via GenICam SDK
-
-### Application
-
-- **Config Loader** — loads and validates YAML configuration; defines models and pipelines
-- **Pipeline Manager** — manages N parallel GStreamer pipelines with FPS and latency probes
-- **Media Manager** — manages the embedded MediaMTX server for RTSP and WebRTC output
-- **Metrics Collector** — exports pipeline metrics to log or Prometheus
-
-### Inference
-
-- **Intel DL Streamer** — runs object detection and classification inference using OpenVINO on CPU, GPU, or NPU
-
-### Outputs
-
-- **MediaMTX** — re-streams encoded video over RTSP (port 8554) and WebRTC (port 8889)
-- **MQTT broker** — receives structured inference metadata over TCP (port 1883)
-- **JSON file** — writes inference metadata to disk
-
-### Viewers
-
-- **Browser / VLC** — consume the live stream over WebRTC or RTSP
-- **MQTT subscriber** — consumes inference metadata published to the MQTT broker
+For a more detailed description of the architecture and components, including inputs and
+outputs, see [How It Works](./how-it-works.md).
 
 ## Supporting Resources
 
@@ -66,6 +41,7 @@ control.
 :hidden:
 
 Get Started <./get-started.md>
+How It Works <./how-it-works.md>
 
 :::
 hide_directive-->
