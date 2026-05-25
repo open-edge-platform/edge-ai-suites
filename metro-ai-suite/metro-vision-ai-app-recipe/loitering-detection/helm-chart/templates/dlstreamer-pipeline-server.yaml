@@ -103,10 +103,6 @@ spec:
       - name: {{ $.Values.config.dlstreamer_pipeline_server.name }}
         image: {{ $.Values.dlstreamer_pipeline_server.image }}:{{ $.Values.dlstreamer_pipeline_server.imageTag }}
         imagePullPolicy: {{ $.Values.imagePullPolicy }}
-        {{- if $.Values.privileged_access_required }}
-        securityContext:
-          privileged: true  # Required for direct access to /dev
-        {{- else }}
         securityContext:
           runAsNonRoot: true
           readOnlyRootFilesystem: true
@@ -115,27 +111,23 @@ spec:
           capabilities:
             drop:
               - ALL
-        {{- end }}
         {{- if $.Values.gpu.enabled }}
         resources:
           limits:
             {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
+        {{- else if $.Values.npu.enabled }}
+        resources:
+          limits:
+            {{ $.Values.gpu.type }}: {{ $.Values.gpu.count }}
+            {{ $.Values.npu.type }}: {{ $.Values.npu.count }}
         {{- end }}
         volumeMounts:
         - mountPath: /var/cache/pipeline_root
           name: vol-pipeline-root-tmpfs0
-        - name: dev-gpu
-          mountPath: /dev/dri
-          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
-        - name: dev-npu
-          mountPath: /dev/accel
-          readOnly: true # Reduce risk while preserving access to GPU/NPU devices
         - name: dev-shm
           mountPath: /dev/shm
         - name: var-tmp
           mountPath: /var/tmp
-        - name: run-udev
-          mountPath: /run/udev
         - name: {{ $.Values.volumes.pipelines.name }}
           mountPath: {{ $.Values.volumes.pipelines.location }}
         - name: dlstreamer-pipeline-server-input
@@ -185,21 +177,12 @@ spec:
       volumes:
       - name: vol-pipeline-root-tmpfs0
         emptyDir: {}
-      - name: dev-gpu
-        hostPath:
-          path: /dev/dri
-      - name: dev-npu
-        hostPath:
-          path: /dev/accel
       - name: dev-shm
         hostPath:
           path: /dev/shm
       - name: var-tmp
         hostPath:
           path: /var/tmp
-      - name: run-udev
-        hostPath:
-          path: /run/udev
       - name: {{ $.Values.volumes.pipelines.name }}
         hostPath:
           path: {{ $.Values.volumes.pipelines.hostpath }}

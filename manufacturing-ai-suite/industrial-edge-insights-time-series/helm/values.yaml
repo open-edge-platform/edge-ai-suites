@@ -59,7 +59,10 @@ images:
   time_series_analytics_image: intel/ia-time-series-analytics-microservice
   opcua_server_image: intel/ia-opcua-server
   mqtt_publisher_image: intel/ia-mqtt-publisher
-privileged_access_required: false
+gpu:
+  enabled: false
+  type: "gpu.intel.com/i915"
+  count: 1
 config:
   influx_db_server:
     name: influxdb

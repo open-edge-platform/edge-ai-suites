@@ -32,7 +32,6 @@ env:
   OPCUA_SERVER_USERNAME:
   OPCUA_SERVER_PASSWORD:
   SAMPLE_APP: worker-safety-gear-detection
-privileged_access_required: false
 gpu:
   enabled: false
   type: "gpu.intel.com/i915"

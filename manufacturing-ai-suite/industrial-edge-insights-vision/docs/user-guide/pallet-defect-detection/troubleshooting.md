@@ -85,14 +85,6 @@ gpu:
    count: 1
 ```
 
-## Deploying without Intel GPU K8S Extension
-
-If you're deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-
-```sh
-privileged_access_required: true
-```
-
 ## Inferencing on NPU
 
 To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to the relevant [DL Streamer instructions](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers) to install Intel NPU drivers.
