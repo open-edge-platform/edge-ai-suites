@@ -475,6 +475,7 @@
                 pipeline_name: it.pipeline_name,
                 pipeline_display_name: displayName,
                 pipeline_type: t,
+                pipeline_default: it.pipeline_default === true,
             });
         }
         const normalized = Array.from(map.values()).sort((a, b) => {
@@ -495,7 +496,8 @@
         }
 
         if (normalized.length > 0) {
-            select.value = normalized[0].pipeline_name;
+            const preferredDefault = normalized.find((p) => p.pipeline_default === true);
+            select.value = (preferredDefault || normalized[0]).pipeline_name;
         }
 
         toggleDetectionFieldsByText();
@@ -630,7 +632,6 @@
                     metadataFile: runData.metadataFile,
                     modelName: runData.modelName || 'Unknown',
                     pipelineName: runData.pipelineName || '',
-                    pipelineDisplayName: runData.pipelineDisplayName || runData.pipelineName || '',
                     prompt: runData.prompt || 'N/A',
                     maxTokens: runData.maxTokens || 'N/A',
                     rtspUrl: runData.rtspUrl || 'N/A',
@@ -787,7 +788,6 @@
                 detectionThreshold: detectionThreshold,
                 modelName: modelName,
                 pipelineName: pipelineName,
-                pipelineDisplayName: data.pipelineDisplayName || pipelineName,
                 prompt: prompt,
                 maxTokens: maxTokens,
                 rtspUrl: rtspUrl,

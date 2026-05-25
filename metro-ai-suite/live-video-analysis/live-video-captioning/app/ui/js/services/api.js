@@ -57,14 +57,16 @@ const ApiService = (function () {
                         const display = typeof it.pipeline_display_name === 'string' && it.pipeline_display_name.trim()
                             ? it.pipeline_display_name
                             : it.pipeline_name;
+                        const isDefault = it.pipeline_default === true;
                         return {
                             pipeline_name: it.pipeline_name,
                             pipeline_display_name: display,
                             pipeline_type: type,
+                            pipeline_default: isDefault,
                         };
                     }
                     if (typeof it === 'string') {
-                        return { pipeline_name: it, pipeline_display_name: it, pipeline_type: 'non-detection' };
+                        return { pipeline_name: it, pipeline_display_name: it, pipeline_type: 'non-detection', pipeline_default: false };
                     }
                     return null;
                 })

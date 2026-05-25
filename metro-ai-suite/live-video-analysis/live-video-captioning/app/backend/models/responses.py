@@ -31,6 +31,7 @@ class PipelineInfo(BaseModel):
     pipeline_name: str
     pipeline_display_name: Optional[str] = None
     pipeline_type: Literal["detection", "non-detection"]
+    pipeline_default: bool = False
 
 
 class PipelineInfoList(BaseModel):
