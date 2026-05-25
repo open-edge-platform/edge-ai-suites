@@ -1,22 +1,7 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Smart Classroom Setup Script (Windows Only) - Check Requirements, Configure, and Start
-.DESCRIPTION
-    1. Configures proxy for downloads (if behind corporate firewall)
-    2. Checks system requirements (OS, CPU, RAM, Storage, GPU, NPU, Python, Node.js)
-    3. Checks application dependencies (FFmpeg, DL Streamer) - auto-installs if missing
-    4. Configures smart-classroom settings (language, upload limits, OCR)
-    5. Launches the start-smart-classroom.ps1 script
-.NOTES
-    Run this script to set up and start Smart Classroom
-    Requires: Python 3.12.x, Node.js v18+, Windows 11, 32GB RAM, FFmpeg, DL Streamer
-    Proxy settings are saved to .proxy-config for future runs
-#>
-
 param(
     [switch]$Help,
-    [switch]$NoElevate  # Skip auto-elevation
+    [switch]$NoElevate  
 )
 
 # ============================================================================
@@ -38,7 +23,6 @@ if (-not $NoElevate) {
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
         
-        # Build argument list preserving switches
         $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
         if ($Help) { $argList += " -Help" }
         $argList += " -NoElevate"  # Prevent infinite elevation loop
@@ -123,9 +107,7 @@ $script:httpsProxy = ""
 $script:noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
-# Check if proxy config file exists
 if (Test-Path $proxyConfigFile) {
-    # Load existing proxy settings
     $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
     $script:httpProxy = $proxyConfig.httpProxy
     $script:httpsProxy = $proxyConfig.httpsProxy
@@ -155,12 +137,10 @@ if (Test-Path $proxyConfigFile) {
         $newHttpsProxy = Read-Host "HTTPS_PROXY [$($script:httpsProxy)]"
         $newNoProxy = Read-Host "NO_PROXY    [$($script:noProxy)]"
         
-        # Use new value if provided, otherwise keep existing
         if ($newHttpProxy) { $script:httpProxy = $newHttpProxy }
         if ($newHttpsProxy) { $script:httpsProxy = $newHttpsProxy }
         if ($newNoProxy) { $script:noProxy = $newNoProxy }
         
-        # Save updated settings
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -198,7 +178,6 @@ if (Test-Path $proxyConfigFile) {
             $script:httpsProxy = $script:httpProxy
         }
         
-        # Save settings for future runs
         $proxyConfig = @{
             httpProxy = $script:httpProxy
             httpsProxy = $script:httpsProxy
@@ -207,7 +186,6 @@ if (Test-Path $proxyConfigFile) {
         $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
         Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
     } else {
-        # Save empty config so we don't ask again
         $proxyConfig = @{
             httpProxy = ""
             httpsProxy = ""
@@ -298,16 +276,12 @@ Write-Host ""
 $checksFailed = $false
 $warnings = @()
 
-# ---------------------------------------------------------------------------
-# Check Windows 11
-# ---------------------------------------------------------------------------
 Write-Host "Checking OS..." -ForegroundColor White
 try {
     $osInfo = Get-CimInstance -ClassName Win32_OperatingSystem
     $osCaption = $osInfo.Caption
     $osBuild = [int]$osInfo.BuildNumber
     
-    # Windows 11 has build number >= 22000
     if ($osBuild -ge 22000) {
         Write-Host "  [OK] $osCaption (Build $osBuild)" -ForegroundColor Green
     } else {
@@ -319,15 +293,11 @@ try {
     $warnings += "OS version could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# Check Processor (Intel Core Ultra preferred)
-# ---------------------------------------------------------------------------
 Write-Host "Checking Processor..." -ForegroundColor White
 try {
     $cpuInfo = Get-CimInstance -ClassName Win32_Processor | Select-Object -First 1
     $cpuName = $cpuInfo.Name
     
-    # Check for Intel Core Ultra
     if ($cpuName -match "Intel.*Core.*Ultra") {
         Write-Host "  [OK] $cpuName" -ForegroundColor Green
     } elseif ($cpuName -match "Intel") {
@@ -344,9 +314,6 @@ try {
     $warnings += "Processor could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# Check Memory (32 GB minimum)
-# ---------------------------------------------------------------------------
 Write-Host "Checking Memory..." -ForegroundColor White
 try {
     $memInfo = Get-CimInstance -ClassName Win32_ComputerSystem
@@ -366,9 +333,6 @@ try {
     $warnings += "Memory could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# Check Storage (50 GB free on script drive)
-# ---------------------------------------------------------------------------
 Write-Host "Checking Storage..." -ForegroundColor White
 try {
     $driveLetter = (Split-Path -Qualifier $ScriptDir)
@@ -395,9 +359,6 @@ try {
     $warnings += "Storage could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# Check Intel GPU (iGPU or Arc)
-# ---------------------------------------------------------------------------
 Write-Host "Checking GPU..." -ForegroundColor White
 try {
     $gpuList = Get-CimInstance -ClassName Win32_VideoController
@@ -425,9 +386,6 @@ try {
     $warnings += "GPU could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# NPU Driver Installation Function
-# ---------------------------------------------------------------------------
 function Install-NPUDriver {
     Write-Host ""
     Write-Host "  ============================================" -ForegroundColor Cyan
@@ -435,8 +393,6 @@ function Install-NPUDriver {
     Write-Host "  ============================================" -ForegroundColor Cyan
     Write-Host ""
     
-    # Intel NPU Driver - latest version info
-    # Check https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html for updates
     $npuDriverVersion = "32.0.100.4778"
     $npuDriverFileName = "npu_win_$npuDriverVersion.exe"
     $npuDriverUrl = "https://downloadmirror.intel.com/919954/$npuDriverFileName"
@@ -446,7 +402,6 @@ function Install-NPUDriver {
     Write-Host "  Supports: Core Ultra Series 1, 2, 3 (Meteor Lake, Arrow Lake, Lunar Lake, Panther Lake)" -ForegroundColor Gray
     Write-Host ""
     
-    # Step 1: Download the driver
     Write-Host "  Step 1: Downloading NPU Driver..." -ForegroundColor Yellow
     Write-Host "    URL: $npuDriverUrl" -ForegroundColor DarkGray
     if ($script:httpProxy) { Write-Host "    Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
@@ -455,7 +410,6 @@ function Install-NPUDriver {
     
     $downloadSuccess = $false
     
-    # Method 1: Try with Invoke-WebRequestWithProxy
     try {
         Invoke-WebRequestWithProxy -Uri $npuDriverUrl -OutFile $npuDriverPath -UseBasicParsing
         if (Test-Path $npuDriverPath) {
@@ -472,7 +426,6 @@ function Install-NPUDriver {
         Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
     }
     
-    # Method 2: Try with curl.exe
     if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
         Write-Host "    Trying curl.exe..." -ForegroundColor Gray
         try {
@@ -508,17 +461,14 @@ function Install-NPUDriver {
     
     Write-Host ""
     
-    # Step 2: Run the installer
     Write-Host "  Step 2: Running NPU Driver Installer..." -ForegroundColor Yellow
     Write-Host "    Please follow the on-screen instructions." -ForegroundColor Gray
     Write-Host "    The installer window will open shortly..." -ForegroundColor Gray
     Write-Host ""
     
     try {
-        # Run the installer (not silent - let user see progress)
         $process = Start-Process -FilePath $npuDriverPath -Wait -PassThru
         
-        # Cleanup installer
         Remove-Item $npuDriverPath -Force -ErrorAction SilentlyContinue
         
         if ($process.ExitCode -eq 0) {
@@ -541,9 +491,8 @@ function Install-NPUDriver {
     Write-Host "    2. Re-run this setup script to verify NPU detection" -ForegroundColor Gray
     Write-Host ""
     
-    # Check if NPU is now detected (unlikely before restart but worth checking)
     $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue | 
-                        Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" }
+                        Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" } }
     
     if ($npuDevicesRecheck) {
         $npuName = ($npuDevicesRecheck | Select-Object -First 1).FriendlyName
@@ -555,17 +504,12 @@ function Install-NPUDriver {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Check Intel NPU
-# ---------------------------------------------------------------------------
 Write-Host "Checking NPU..." -ForegroundColor White
 try {
-    # Check for Intel NPU in device manager
     $npuDevices = Get-PnpDevice -Class "System" -ErrorAction SilentlyContinue | 
                   Where-Object { $_.FriendlyName -match "NPU|Neural" }
     
     if (-not $npuDevices) {
-        # Also check in other categories
         $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
                       Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" }
     }
@@ -604,9 +548,6 @@ try {
     $warnings += "NPU could not be verified"
 }
 
-# ---------------------------------------------------------------------------
-# Check Python 3.12.x (auto-install if missing)
-# ---------------------------------------------------------------------------
 Write-Host "Checking Python version..." -ForegroundColor White
 
 function Install-Python312 {
@@ -615,7 +556,6 @@ function Install-Python312 {
     Write-Host ""
     Write-Host "  Installing Python $Version..." -ForegroundColor Yellow
     
-    # Determine architecture
     $is64Bit = [Environment]::Is64BitOperatingSystem
     if ($is64Bit) {
         $installerName = "python-$Version-amd64.exe"
@@ -627,7 +567,6 @@ function Install-Python312 {
     $installerPath = Join-Path $env:TEMP $installerName
     
     try {
-        # Download installer
         Write-Host "  Downloading from: $installerUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -636,11 +575,6 @@ function Install-Python312 {
         if (Test-Path $installerPath) {
             Write-Host "  Running installer (this may take a few minutes)..." -ForegroundColor Gray
             
-            # Run Python installer silently with options:
-            # /quiet - silent install
-            # InstallAllUsers=1 - install for all users
-            # PrependPath=1 - add Python to PATH
-            # Include_test=0 - skip test suite
             $arguments = "/quiet InstallAllUsers=1 PrependPath=1 Include_test=0"
             $process = Start-Process -FilePath $installerPath -ArgumentList $arguments -Wait -PassThru
             
@@ -648,10 +582,8 @@ function Install-Python312 {
                 Write-Host "  [OK] Python $Version installed successfully" -ForegroundColor Green
                 Write-Host "  NOTE: You may need to restart PowerShell for PATH changes" -ForegroundColor Cyan
                 
-                # Clean up
                 Remove-Item $installerPath -Force -ErrorAction SilentlyContinue
                 
-                # Refresh PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 
                 return $true
@@ -725,9 +657,6 @@ if ($pythonNeedsInstall) {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Check Node.js v18+ (auto-install if missing)
-# ---------------------------------------------------------------------------
 Write-Host "Checking Node.js version..." -ForegroundColor White
 
 function Get-LatestNodeLTSVersion {
@@ -745,17 +674,15 @@ function Get-LatestNodeLTSVersion {
         }
         $indexJson = Invoke-RestMethod @params
         
-        # Find the latest LTS version
         $latestLTS = $indexJson | Where-Object { $_.lts -ne $false } | Select-Object -First 1
         
         if ($latestLTS) {
-            # Version is in format "v22.15.0", remove the 'v'
             return $latestLTS.version.TrimStart('v')
         }
     } catch {
         Write-Host "  [WARN] Could not fetch latest version, using fallback" -ForegroundColor Yellow
     }
-    return "22.15.0"  # Fallback version
+    return "22.15.0"
 }
 
 function Install-NodeJS {
@@ -765,13 +692,11 @@ function Install-NodeJS {
     $Version = Get-LatestNodeLTSVersion
     Write-Host "  Installing Node.js v$Version (Latest LTS)..." -ForegroundColor Yellow
     
-    # Determine architecture
     $arch = if ([Environment]::Is64BitOperatingSystem) { "x64" } else { "x86" }
     $msiUrl = "https://nodejs.org/dist/v$Version/node-v$Version-$arch.msi"
     $msiPath = Join-Path $env:TEMP "node-v$Version-$arch.msi"
     
     try {
-        # Download MSI
         Write-Host "  Downloading from: $msiUrl" -ForegroundColor Gray
         if ($script:httpProxy) { Write-Host "  Using proxy: $($script:httpProxy)" -ForegroundColor DarkGray }
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -780,17 +705,14 @@ function Install-NodeJS {
         if (Test-Path $msiPath) {
             Write-Host "  Running installer (this may take a minute)..." -ForegroundColor Gray
             
-            # Run MSI installer silently
             $process = Start-Process -FilePath "msiexec.exe" -ArgumentList "/i `"$msiPath`" /qn /norestart" -Wait -PassThru
             
             if ($process.ExitCode -eq 0) {
                 Write-Host "  [OK] Node.js v$Version installed successfully" -ForegroundColor Green
                 Write-Host "  NOTE: You may need to restart PowerShell for PATH changes" -ForegroundColor Cyan
                 
-                # Clean up
                 Remove-Item $msiPath -Force -ErrorAction SilentlyContinue
                 
-                # Refresh PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 
                 return $true
@@ -862,9 +784,6 @@ if (-not $nodeInstalled) {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Exit if any checks failed
-# ---------------------------------------------------------------------------
 if ($checksFailed) {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Red
@@ -923,14 +842,10 @@ Write-Host ""
 
 $appChecksFailed = $false
 
-# ---------------------------------------------------------------------------
-# FFmpeg Installation Function
-# ---------------------------------------------------------------------------
 function Install-FFmpeg {
     Write-Host ""
     Write-Host "  Installing FFmpeg..." -ForegroundColor Yellow
     
-    # Try winget first (cleanest method)
     try {
         $wingetAvailable = Get-Command winget -ErrorAction SilentlyContinue
         if ($wingetAvailable) {
@@ -938,7 +853,6 @@ function Install-FFmpeg {
             $process = Start-Process -FilePath "winget" -ArgumentList "install -e --id Gyan.FFmpeg --accept-source-agreements --accept-package-agreements" -Wait -PassThru -NoNewWindow
             
             if ($process.ExitCode -eq 0) {
-                # Refresh PATH
                 $env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
                 Write-Host "  [OK] FFmpeg installed via winget" -ForegroundColor Green
                 return $true
@@ -948,12 +862,10 @@ function Install-FFmpeg {
         Write-Host "  [INFO] winget not available, trying manual download..." -ForegroundColor Gray
     }
     
-    # Manual download from gyan.dev (most popular Windows FFmpeg builds)
     try {
         $ffmpegDir = "C:\ffmpeg"
         $ffmpegZip = Join-Path $env:TEMP "ffmpeg-release.zip"
         
-        # Download latest release essentials build
         $downloadUrl = "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip"
         
         Write-Host "  Downloading from: $downloadUrl" -ForegroundColor Gray
@@ -964,22 +876,17 @@ function Install-FFmpeg {
         if (Test-Path $ffmpegZip) {
             Write-Host "  Extracting to $ffmpegDir..." -ForegroundColor Gray
             
-            # Create directory if needed
             if (-not (Test-Path $ffmpegDir)) {
                 New-Item -ItemType Directory -Path $ffmpegDir -Force | Out-Null
             }
             
-            # Extract
             Expand-Archive -Path $ffmpegZip -DestinationPath $env:TEMP -Force
             
-            # Find the extracted folder (name includes version)
             $extractedFolder = Get-ChildItem -Path $env:TEMP -Directory -Filter "ffmpeg-*-essentials_build" | Select-Object -First 1
             
             if ($extractedFolder) {
-                # Move contents to C:\ffmpeg
                 Copy-Item -Path "$($extractedFolder.FullName)\*" -Destination $ffmpegDir -Recurse -Force
                 
-                # Add to system PATH
                 $ffmpegBin = Join-Path $ffmpegDir "bin"
                 $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
                 
@@ -989,7 +896,6 @@ function Install-FFmpeg {
                     Write-Host "  Added $ffmpegBin to system PATH" -ForegroundColor Gray
                 }
                 
-                # Cleanup
                 Remove-Item $ffmpegZip -Force -ErrorAction SilentlyContinue
                 Remove-Item $extractedFolder.FullName -Recurse -Force -ErrorAction SilentlyContinue
                 
@@ -1006,10 +912,6 @@ function Install-FFmpeg {
     }
 }
 
-# ---------------------------------------------------------------------------
-# DL Streamer DLLs-Only Installation Function (manual extraction method)
-# Downloads dlstreamer_dlls_2026.0.0.zip and extracts to C:/
-# ---------------------------------------------------------------------------
 function Install-DLStreamerDLLs {
     Write-Host ""
     Write-Host "  ============================================" -ForegroundColor Cyan
@@ -1027,7 +929,6 @@ function Install-DLStreamerDLLs {
     $dlstreamerDllPath = "C:\dlls_windows"
     
     try {
-        # Step 1: Download the ZIP file
         Write-Host "  Step 1: Download DLLs package" -ForegroundColor Yellow
         $zipPath = Join-Path $env:TEMP $zipName
         
@@ -1038,7 +939,6 @@ function Install-DLStreamerDLLs {
         
         $downloadSuccess = $false
         
-        # Method 1: Try with Invoke-WebRequestWithProxy
         try {
             Invoke-WebRequestWithProxy -Uri $downloadUrl -OutFile $zipPath -UseBasicParsing
             if (Test-Path $zipPath) {
@@ -1055,7 +955,6 @@ function Install-DLStreamerDLLs {
             Write-Host "    [WARN] PowerShell download failed: $($_.Exception.Message)" -ForegroundColor Yellow
         }
         
-        # Method 2: Try with curl.exe
         if (-not $downloadSuccess -and (Get-Command curl.exe -ErrorAction SilentlyContinue)) {
             Write-Host "    Trying curl.exe..." -ForegroundColor Gray
             try {
@@ -1085,10 +984,8 @@ function Install-DLStreamerDLLs {
         
         Write-Host ""
         
-        # Step 2: Extract to C:/
         Write-Host "  Step 2: Extract to C:/" -ForegroundColor Yellow
         
-        # Remove existing folder if present
         if (Test-Path $dlstreamerDllPath) {
             Write-Host "    Removing existing folder: $dlstreamerDllPath" -ForegroundColor Gray
             Remove-Item -Path $dlstreamerDllPath -Recurse -Force -ErrorAction SilentlyContinue
@@ -1104,38 +1001,30 @@ function Install-DLStreamerDLLs {
             return $false
         }
         
-        # Cleanup ZIP file
         Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
         
         Write-Host ""
         
-        # Step 3: Add to PATH environment variable
         Write-Host "  Step 3: Configure PATH environment variable" -ForegroundColor Yellow
         
-        # Get current system PATH
         $currentPath = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
         
-        # Check if already in PATH
         if ($currentPath -notlike "*$dlstreamerDllPath*") {
-            # Add to system PATH
             $newPath = "$currentPath;$dlstreamerDllPath"
             [System.Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
             Write-Host "    [OK] Added to system PATH: $dlstreamerDllPath" -ForegroundColor Green
             
-            # Also update current session
             $env:Path = "$env:Path;$dlstreamerDllPath"
         } else {
             Write-Host "    [OK] Already in system PATH: $dlstreamerDllPath" -ForegroundColor Green
         }
         
-        # Set DLSTREAMER_DIR environment variable
         [System.Environment]::SetEnvironmentVariable("DLSTREAMER_DIR", $dlstreamerDllPath, "Machine")
         $env:DLSTREAMER_DIR = $dlstreamerDllPath
         Write-Host "    [OK] Set DLSTREAMER_DIR: $dlstreamerDllPath" -ForegroundColor Green
         
         Write-Host ""
         
-        # Step 4: Install Python Dependencies
         Write-Host "  Step 4: Install Python Dependencies" -ForegroundColor Yellow
         
         $requirementsFile = Join-Path $dlstreamerDllPath "requirements.txt"
@@ -1156,7 +1045,6 @@ function Install-DLStreamerDLLs {
         
         Write-Host ""
         
-        # Step 5: Run Python Environment Setup Script
         Write-Host "  Step 5: Run Python Environment Setup Script" -ForegroundColor Yellow
         
         $setupPythonScript = Join-Path $dlstreamerDllPath "setup_dls_env.ps1"
@@ -1203,9 +1091,6 @@ function Install-DLStreamerDLLs {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Check FFmpeg (required for audio processing)
-# ---------------------------------------------------------------------------
 Write-Host "Checking FFmpeg..." -ForegroundColor White
 $ffmpegInstalled = $false
 
@@ -1248,9 +1133,6 @@ if (-not $ffmpegInstalled) {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Check DL Streamer
-# ---------------------------------------------------------------------------
 Write-Host ""
 Write-Host "Checking DL Streamer..." -ForegroundColor White
 
@@ -1310,9 +1192,6 @@ if (-not $dlStreamerFound) {
     }
 }
 
-# ---------------------------------------------------------------------------
-# Exit if application checks failed
-# ---------------------------------------------------------------------------
 if ($appChecksFailed) {
     Write-Host ""
     Write-Host "========================================" -ForegroundColor Red
