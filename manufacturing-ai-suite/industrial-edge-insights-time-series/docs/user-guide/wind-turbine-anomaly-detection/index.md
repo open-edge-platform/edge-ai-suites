@@ -32,7 +32,7 @@ of Telegraf, InfluxDB, and the Time Series Analytics microservice using Kapacito
 
 Below is an explanation of how this architecture translates to data flow in the wind turbine
 anomaly detection use case, in which the data is ingested using the OPC-UA server/MQTT publisher
-simulators and anomaly alerts are published to a OPC-UA server/MQTT broker.
+simulators and anomaly alerts are published to an OPC-UA server/MQTT broker.
 
 #### **Data Sources**
 
@@ -56,7 +56,7 @@ This data is ingested into **Telegraf** through the **OPC-UA** protocol using th
 (TICK Scripts, UDFs, Models) from the sample apps. The UDF deployment package for the Wind
 Turbine Anomaly Detection sample app is available in [this folder](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/wind-turbine-anomaly-detection/time-series-analytics-config).
 
-Directory details is as below:
+Directory details are as below:
 
 ##### **`config.json`**
 
@@ -74,7 +74,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | -------- | -------------------------------------------------------------------------------------------- | ------------------------------------ |
 | `name`   | The name of the UDF script.                                                                  | `"windturbine_anomaly_detector"`     |
 | `models` | The name of the model file used by the UDF.                                                  | `"windturbine_anomaly_detector.pkl"` |
-| `device` | Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu` | `cpu`                                |
+| `device` | Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU` | `CPU`                                |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
