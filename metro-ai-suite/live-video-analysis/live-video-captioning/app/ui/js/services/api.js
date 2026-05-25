@@ -29,6 +29,17 @@ const ApiService = (function () {
         }
     }
 
+    async function fetchCameras() {
+        try {
+            const resp = await fetch('/api/cameras', { method: 'GET' });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            return Array.isArray(data?.cameras) ? data.cameras : [];
+        } catch (_err) {
+            return [];
+        }
+    }
+
     async function fetchPipelines() {
         try {
             const resp = await fetch('/api/pipelines', { method: 'GET' });
@@ -131,6 +142,7 @@ const ApiService = (function () {
     return {
         fetchModels,
         fetchDetectionModels,
+        fetchCameras,
         fetchPipelines,
         fetchRuns,
         startRun,

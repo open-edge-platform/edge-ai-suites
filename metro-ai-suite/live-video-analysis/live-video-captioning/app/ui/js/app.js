@@ -12,6 +12,11 @@
         pipelineSelect: document.getElementById('pipelineSelect'),
         maxTokensInput: document.getElementById('maxTokensInput'),
         captionHistoryInput: document.getElementById('captionHistoryInput'),
+        streamSourceTypeSelect: document.getElementById('streamSourceTypeSelect'),
+        cameraDeviceRow: document.getElementById('cameraDeviceRow'),
+        cameraDeviceSelect: document.getElementById('cameraDeviceSelect'),
+        cameraDeviceWarning: document.getElementById('cameraDeviceWarning'),
+        rtspInputRow: document.getElementById('rtspInputRow'),
         rtspInput: document.getElementById('rtspInput'),
         runNameInput: document.getElementById('runNameInput'),
         startBtn: document.getElementById('startBtn'),
@@ -35,7 +40,7 @@
         pipelineServerError: document.getElementById('pipelineServerError'),
     };
 
-    const state = { selectedRunId: null, runs: new Map() };
+    const state = { selectedRunId: null, runs: new Map(), isStarting: false };
     const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
 
     (function initDetectionVisibility() {
@@ -321,6 +326,101 @@
         select.value = preferred;
     }
 
+    function setCameraOptions(cameras) {
+        const select = els.cameraDeviceSelect;
+        if (!select) return;
+
+        select.innerHTML = '';
+
+        if (!Array.isArray(cameras) || cameras.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No usable camera devices found';
+            select.appendChild(opt);
+            select.disabled = true;
+            return;
+        }
+
+        select.disabled = false;
+        for (const camera of cameras) {
+            if (!camera || typeof camera.device_path !== 'string') continue;
+            const opt = document.createElement('option');
+            opt.value = camera.device_path;
+            const deviceName = (typeof camera.device_name === 'string' && camera.device_name.trim())
+                ? camera.device_name.trim()
+                : camera.device_path;
+            opt.textContent = `${deviceName} (${camera.device_path})`;
+            select.appendChild(opt);
+        }
+    }
+
+    function updateCameraWarningVisibility() {
+        if (!els.cameraDeviceWarning) return;
+        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const noUsableCamera = !els.cameraDeviceSelect
+            || els.cameraDeviceSelect.disabled
+            || !els.cameraDeviceSelect.value;
+        els.cameraDeviceWarning.style.display = (isCameraMode && noUsableCamera) ? '' : 'none';
+    }
+
+    function updateStartButtonAvailability() {
+        if (!els.startBtn) return;
+        if (state.isStarting) {
+            els.startBtn.disabled = true;
+            return;
+        }
+
+        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const noUsableCamera = !els.cameraDeviceSelect
+            || els.cameraDeviceSelect.disabled
+            || !els.cameraDeviceSelect.value;
+
+        els.startBtn.disabled = isCameraMode && noUsableCamera;
+    }
+
+    async function loadCameraDevices() {
+        try {
+            const cameras = await ApiService.fetchCameras();
+            const usableCameras = cameras.filter((camera) => camera?.has_usable_format === true);
+            setCameraOptions(usableCameras);
+            SettingsManager.restoreSelectValues(els);
+            updateCameraWarningVisibility();
+            updateStartButtonAvailability();
+            updatePipelineInfo(usableCameras.length > 0 ? 'Camera devices loaded' : 'No usable camera devices found');
+        } catch (_err) {
+            setCameraOptions([]);
+            updateCameraWarningVisibility();
+            updateStartButtonAvailability();
+            updatePipelineInfo('Camera list unavailable');
+        }
+    }
+
+    function updateStreamSourceInputs() {
+        const sourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const isCamera = sourceType === 'camera';
+
+        if (els.cameraDeviceRow) {
+            els.cameraDeviceRow.style.display = isCamera ? '' : 'none';
+        }
+        if (els.rtspInputRow) {
+            els.rtspInputRow.style.display = isCamera ? 'none' : '';
+        }
+
+        if (els.cameraDeviceSelect) {
+            els.cameraDeviceSelect.disabled = !isCamera || els.cameraDeviceSelect.options.length === 0;
+        }
+        if (els.rtspInput) {
+            els.rtspInput.disabled = isCamera;
+        }
+
+        if (isCamera && els.cameraDeviceSelect?.options.length === 0) {
+            loadCameraDevices();
+        }
+
+        updateCameraWarningVisibility();
+        updateStartButtonAvailability();
+    }
+
     function setPipelineOptions(pipelines) {
         const select = els.pipelineSelect;
         if (!select) return;
@@ -533,7 +633,10 @@
 
     async function startPipeline(evt) {
         evt.preventDefault();
-        const rtspUrl = els.rtspInput.value.trim();
+        const streamSourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const rtspUrl = streamSourceType === 'camera'
+            ? (els.cameraDeviceSelect?.value || '').trim()
+            : (els.rtspInput?.value || '').trim();
         const defaultPrompt = cfg.defaultPrompt || 'Describe what you see in one sentence.';
         const prompt = (els.promptInput.value || '').trim() || defaultPrompt;
         const modelName = (els.modelNameSelect?.value || '').trim() || ApiService.DEFAULT_MODEL;
@@ -599,8 +702,16 @@
             runName = RunCardComponent.getUniqueRunName(runName, existingRunIds);
         }
 
-        if (!rtspUrl) return;
-        els.startBtn.disabled = true;
+        if (!rtspUrl) {
+            if (streamSourceType === 'camera') {
+                updatePipelineInfo('No usable camera selected. Connect a camera or switch to RTSP Stream.');
+                updateCameraWarningVisibility();
+                updateStartButtonAvailability();
+            }
+            return;
+        }
+        state.isStarting = true;
+        updateStartButtonAvailability();
         updatePipelineInfo('Starting pipeline...');
         try {
             const requestBody = { rtspUrl, prompt, detectionModelName, detectionThreshold, modelName, maxNewTokens: maxTokens, pipelineName: effectivePipelineName };
@@ -646,7 +757,8 @@
         } catch (err) {
             updatePipelineInfo(`Start failed: ${err.message}`);
         } finally {
-            els.startBtn.disabled = false;
+            state.isStarting = false;
+            updateStartButtonAvailability();
         }
     }
 
@@ -704,6 +816,19 @@
         if (els.pipelineSelect) {
             els.pipelineSelect.addEventListener('change', toggleDetectionFieldsByText);
         }
+
+        if (els.streamSourceTypeSelect) {
+            els.streamSourceTypeSelect.addEventListener('change', updateStreamSourceInputs);
+        }
+        if (els.cameraDeviceSelect) {
+            els.cameraDeviceSelect.addEventListener('change', () => {
+                updateCameraWarningVisibility();
+                updateStartButtonAvailability();
+            });
+        }
+
+        loadCameraDevices();
+        updateStreamSourceInputs();
 
         function updateCustomDimensionsVisibility() {
             const isCustom = els.frameQualitySelect?.value === 'custom';

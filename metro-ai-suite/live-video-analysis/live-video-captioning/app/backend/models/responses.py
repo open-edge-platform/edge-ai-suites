@@ -34,3 +34,15 @@ class PipelineInfo(BaseModel):
 
 class PipelineInfoList(BaseModel):
     pipelines: List[PipelineInfo]
+
+
+class CameraDevice(BaseModel):
+    device_path: str
+    device_name: Optional[str] = None
+    pixel_formats: List[str]
+    usable_formats: List[str]
+    has_usable_format: bool
+
+
+class CameraDeviceList(BaseModel):
+    cameras: List[CameraDevice]
