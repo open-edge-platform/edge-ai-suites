@@ -186,6 +186,8 @@ Follow the [Trusted Compute baremetal installation guide](https://docs.openedgep
 
 > **Note:** Trusted Compute version 1.5.0 is required for this deployment.
 
+> **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
+
 ### 2. Deploy the Smart Intersection Sample Application with Trusted Compute
 
 **Configure Network Settings**
