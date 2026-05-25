@@ -35,6 +35,10 @@ const CONFIG = {
         {
           label: "Visual AI Demo Kit",
           value: "VISUAL_AI_DEMO"
+        },
+        {
+          label: "Drone Mission Compute SDK",
+          value: "DRONE_MISSION_COMPUTE"
         }
       ]
     },
@@ -215,6 +219,21 @@ const CONFIG = {
             "MQTT Broker",
             "Edge AI Suites - Repo"
           ]
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          components: [
+            "OpenVINO Model Server",
+            "DLStreamer",
+            "Edge Robotics Compute",
+            "ROS 2 OpenVINO",
+            "Edge AI Libraries - Repo",
+            "Edge AI Suites - Repo"
+          ]
         }
       ]
     },
@@ -277,6 +296,14 @@ const CONFIG = {
         },
         {
           when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.0.0/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
+        },
+        {
+          when: {
             SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
@@ -300,6 +327,14 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/visual-ai-demo-kit.sh | bash`
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `curl -fsS https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/metro-ai-suite/metro-sdk-manager/scripts/drone-mission-compute-sdk.sh | bash`
         }
 
       ]
@@ -365,6 +400,15 @@ const CONFIG = {
         },
         {
           when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/2026.0/edge-ai-suites/metro-sdk-manager/drone-mission-compute-sdk/get-started.html`
+        },
+        {
+          when: {
             SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
@@ -389,6 +433,15 @@ const CONFIG = {
           },
           text: `Get Started`,
           link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          text: `Get Started`,
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/drone-mission-compute-sdk/get-started.html`
         }
       ]
     },
@@ -492,6 +545,20 @@ const CONFIG = {
         },
         {
           when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "2026.0"
+          },
+          links: [
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2025/get-started.html" },
+            { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html" },
+            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
             SDK: "OEP_VISION",
             OP_SYSTEM: "UBUNTU",
             VERSION: "latest"
@@ -533,6 +600,20 @@ const CONFIG = {
           links: [
             { text: "DL Streamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
             { text: "DL Streamer Pipeline Server", url: "https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer-pipeline-server/index.html" },
+            { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
+            { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
+          ]
+        },
+        {
+          when: {
+            SDK: "DRONE_MISSION_COMPUTE",
+            OP_SYSTEM: "UBUNTU",
+            VERSION: "latest"
+          },
+          links: [
+            { text: "OpenVINO", url: "https://docs.openvino.ai/2025/get-started.html" },
+            { text: "OpenVINO Model Server", url: "https://docs.openvino.ai/2025/model-server/ovms_what_is_openvino_model_server.html" },
+            { text: "DLStreamer", url: "http://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dl-streamer/index.html" },
             { text: "Edge AI Libraries", url: "https://docs.openedgeplatform.intel.com/dev/ai-libraries.html"},
             { text: "Edge AI Suites", url: "https://docs.openedgeplatform.intel.com/dev/ai-suite-metro.html"}
           ]

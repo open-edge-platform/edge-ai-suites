@@ -16,6 +16,7 @@ OEP SDK Manager is a comprehensive development tool that streamlines discovering
 | OEP Vision AI SDK | `scripts/oep-vision-ai-sdk.sh` | `docs/user-guide/oep-vision-ai-sdk/` | DLStreamer, OpenVINO, Pipeline Server, Scenescape — visual AI inference & spatial analytics |
 | OEP Gen AI SDK | `scripts/oep-gen-ai-sdk.sh` | `docs/user-guide/oep-gen-ai-sdk/` | Audio Analyzer, VLM serving, embedding, document ingestion |
 | Visual AI Demo Kit | `scripts/visual-ai-demo-kit.sh` | `docs/user-guide/visual-ai-demo-kit/` | DLStreamer Pipeline Server, Node-RED, Grafana, MQTT, MediaMTX |
+| Drone Mission Compute SDK | `scripts/drone-mission-compute-sdk.sh` | `docs/user-guide/drone-mission-compute-sdk/` | OpenVINO, DLStreamer, ROS 2 OpenVINO — robotics vision & compute pipelines |
 
 Each SDK installs Docker container images and clones GitHub repositories (`edge-ai-libraries`, `edge-ai-suites`).
 
@@ -34,11 +35,13 @@ metro-sdk-manager/
 │       ├── release-notes.md
 │       ├── oep-vision-ai-sdk/       # Vision SDK tutorials (get-started + tutorials 1-6)
 │       ├── oep-gen-ai-sdk/          # Gen AI SDK tutorials (get-started)
-│       └── visual-ai-demo-kit/        # Demo Kit tutorials (get-started + tutorials 1-3)
+│       ├── visual-ai-demo-kit/        # Demo Kit tutorials (get-started + tutorials 1-3)
+│       └── drone-mission-compute-sdk/  # Drone Mission Compute SDK tutorials (get-started)
 ├── scripts/
 │   ├── oep-vision-ai-sdk.sh         # Vision SDK installer
 │   ├── oep-gen-ai-sdk.sh            # Gen AI SDK installer
-│   └── visual-ai-demo-kit.sh          # Visual AI Demo Kit installer
+│   ├── visual-ai-demo-kit.sh          # Visual AI Demo Kit installer
+│   └── drone-mission-compute-sdk.sh   # Drone Mission Compute SDK installer
 ├── .gitignore
 ├── README.md
 └── AGENTS.md                          # This file
