@@ -3,6 +3,9 @@ Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- if and .Values.vlmServing.trustedCompute.enabled .Values.vlmServing.gpu.enabled -}}
+{{- fail "Invalid configuration: vlmServing.trustedCompute.enabled and vlmServing.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 {{- $targetDevice := ternary "GPU" .Values.vlmServing.env.targetDevice .Values.vlmServing.gpu.enabled -}}
 {{- $needsGpu := contains "GPU" $targetDevice -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}

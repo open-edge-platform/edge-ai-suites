@@ -1,3 +1,6 @@
+{{- if and .Values.trustedCompute.enabled .Values.dlstreamerPipelineServer.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and dlstreamerPipelineServer.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
