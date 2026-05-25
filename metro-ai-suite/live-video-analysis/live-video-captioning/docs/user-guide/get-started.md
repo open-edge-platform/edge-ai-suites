@@ -1,10 +1,10 @@
 # Get Started
 
-The Live Video Captioning sample application demonstrates real-time video captioning using Deep Learning Streamer (DL Streamer) and OpenVINO™ toolkit. The sample application processes the Real-Time Streaming Protocol (RTSP) video stream or USB Cameras and applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model (VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
+Live Video Captioning processes RTSP streams or USB camera feeds through a DL Streamer pipeline and uses a Vision-Language Model (VLM) to generate real-time captions. It also reports throughput and latency metrics.
 
 This section shows how to:
 
-- **Set up the sample application**: Use Docker Compose tool to deploy the application quickly in your environment.
+- **Set up the sample application**: Download the models and use Docker Compose tool to deploy the application quickly in your environment.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
 
@@ -14,7 +14,6 @@ This section shows how to:
 - Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 - RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
-- OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./get-started/model-preparation.md) to prepare the model.
 
 ## Run the Application
 
@@ -58,7 +57,8 @@ This script sets these important values:
 | `ENABLE_DETECTION_PIPELINE` | Enables optional object detection when set to `true`. |
 | `CAPTION_HISTORY` | Number of previous captions shown in the UI. |
 
-## 3. Prepare models
+
+## 3. Download Models (one-time)
 
 Download the required captioning model:
 
@@ -87,7 +87,7 @@ http://<HOST_IP>:4173
 
 Then:
 
-1. Enter an RTSP stream URL.
+1. Enter an RTSP stream URL/USB camera.
 2. Select a VLM model.
 3. Adjust the prompt and maximum token settings if needed.
 4. Click **Start**.
