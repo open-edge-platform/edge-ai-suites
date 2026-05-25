@@ -102,7 +102,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 ##### **`udfs/`**
 
 Contains the Python script to process the incoming data.
-Uses Random Forest Regressor and Linear Regression machine learning algos accelerated with
+Uses Random Forest Regressor machine learning algorithm accelerated with
 [Intel® Extension for Scikit-learn\*](https://www.intel.com/content/www/us/en/developer/tools/oneapi/scikit-learn.html)
 to run on CPU/GPU to detect the anomalous power generation data points relative to wind speed.
 
