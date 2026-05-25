@@ -168,7 +168,12 @@ services:
       # Embedding and vectordatabase
       - ENABLE_EMBEDDING=${ENABLE_EMBEDDING:-false}
       - LIVE_VIDEO_RAG_HOST_PORT=${LIVE_VIDEO_RAG_HOST_PORT:-4172}
+    device_cgroup_rules:
+    # Broad access to USB devices is required to support a wide range of USB cameras.
+    - 'c 189:* rmw'
+    - 'a 189:* rwm'
     volumes:
+      - "/dev:/dev"
       - "./ov_models:/app/ov_models:ro"
       - "./ov_detection_models:/app/ov_detection_models:ro"
     ports:

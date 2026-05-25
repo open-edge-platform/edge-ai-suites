@@ -4,6 +4,8 @@
 const RunCardComponent = (function () {
     const MODEL_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>';
     const DETECTION_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>';
+    const CAMERA_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>';
+    const RTSP_ICON_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 0 20"></path><path d="M12 2a15.3 15.3 0 0 0 0 20"></path></svg>';
 
     function createChip(text, iconSvg, inlineStyles) {
         const chip = document.createElement('span');
@@ -42,6 +44,12 @@ const RunCardComponent = (function () {
         // Convert underscores to spaces for UI display
         if (!runId) return runId;
         return runId.replace(/_/g, ' ');
+    }
+
+    function inferSourceType(streamSource) {
+        const source = (streamSource || '').toString().trim().toLowerCase();
+        if (source.startsWith('/dev/video')) return 'camera';
+        return 'rtsp';
     }
 
     function createRunElement(run, onStopCallback) {
@@ -97,6 +105,11 @@ const RunCardComponent = (function () {
         deviceStrong.textContent = deviceType;
         deviceChip.appendChild(deviceStrong);
         headerLeft.appendChild(deviceChip);
+
+        const sourceType = inferSourceType(run.rtspUrl);
+        const sourceLabel = sourceType === 'camera' ? 'Camera' : 'RTSP';
+        const sourceIcon = sourceType === 'camera' ? CAMERA_ICON_SVG : RTSP_ICON_SVG;
+        headerLeft.appendChild(createChip(sourceLabel, sourceIcon));
 
         headerLeft.appendChild(createChip(run.modelName || 'Unknown', MODEL_ICON_SVG));
 

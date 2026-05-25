@@ -5,6 +5,16 @@ from fastapi import HTTPException
 from ..config import PIPELINE_NAME, PIPELINE_SERVER_URL, ENABLE_DETECTION_PIPELINE
 from .http_client import http_json
 
+_PIPELINE_DISPLAY_NAME_MAP = {
+    "GenAI_Camera_Pipeline_on_CPU": "GenAI_Pipeline_on_CPU",
+    "GenAI_Camera_Pipeline_on_GPU": "GenAI_Pipeline_on_GPU",
+}
+
+
+def get_pipeline_display_name(pipeline_name: str) -> str:
+    """Resolve a UI display name for a pipeline while preserving internal IDs."""
+    return _PIPELINE_DISPLAY_NAME_MAP.get(pipeline_name, pipeline_name)
+
 
 def discover_models(root: Path) -> List[str]:
     """Discover available models from the models directory."""
@@ -68,6 +78,7 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
     Discover available pipelines from the pipeline server and return a List of dicts:
     {
       "pipeline_name": <name>,
+            "pipeline_display_name": <display_name>,
       "pipeline_type": "detection" | "non-detection"
     }
 
@@ -93,7 +104,13 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         if not isinstance(items, List):
             # Fallback to a single default pipeline
             # Optional filtering: if detection were disabled, 'non-detection' remains
-            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+            return [
+                {
+                    "pipeline_name": PIPELINE_NAME,
+                    "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                    "pipeline_type": "non-detection",
+                }
+            ]
 
         results: List[Dict[str, str]] = []
 
@@ -120,18 +137,32 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
             else:
                 continue
 
-            results.append({"pipeline_name": name, "pipeline_type": pipeline_type})
+            results.append(
+                {
+                    "pipeline_name": name,
+                    "pipeline_display_name": get_pipeline_display_name(name),
+                    "pipeline_type": pipeline_type,
+                }
+            )
 
         # Optional filtering based on your existing flag
         if not ENABLE_DETECTION_PIPELINE:
             results = [r for r in results if r["pipeline_type"] != "detection"]
 
         # Filter out proxy pipelines (hidden from UI, used internally for default resolution)
-        results = [r for r in results if not r["pipeline_name"].endswith("_Default_Resolution")]
+        results = [
+            r for r in results if not r["pipeline_name"].endswith("_Default_Resolution")
+        ]
 
         # Fallback if nothing usable left
         if not results:
-            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+            return [
+                {
+                    "pipeline_name": PIPELINE_NAME,
+                    "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                    "pipeline_type": "non-detection",
+                }
+            ]
 
         return results
 
@@ -139,4 +170,10 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         raise
     except Exception:
         # Conservative fallback for parse / unexpected errors
-        return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+        return [
+            {
+                "pipeline_name": PIPELINE_NAME,
+                "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                "pipeline_type": "non-detection",
+            }
+        ]
