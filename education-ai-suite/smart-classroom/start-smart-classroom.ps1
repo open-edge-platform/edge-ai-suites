@@ -1,21 +1,9 @@
 #!/usr/bin/env pwsh
-<#
-.SYNOPSIS
-    Smart Classroom Unified Startup Script (Windows Only)
-.DESCRIPTION
-    Launches the Smart Classroom application with all required services:
-    1. Backend Python service (port 8000) - includes paddleocr if OCR enabled
-    2. Content Search service (port 9011) - includes install.ps1 setup
-    3. Frontend UI (port 5173)
-.NOTES
-    Terminals launch sequentially: Backend -> Content Search -> Frontend
-#>
-
 param(
     [switch]$SkipProxy,
     [switch]$Restart,
     [switch]$Help,
-    [switch]$NoElevate  # Skip auto-elevation (for testing)
+    [switch]$NoElevate  
 )
 
 # ============================================================================
@@ -37,7 +25,6 @@ if (-not $NoElevate) {
     if (-not $isAdmin) {
         Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
         
-        # Build argument list preserving switches
         $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
         if ($SkipProxy) { $argList += " -SkipProxy" }
         if ($Restart) { $argList += " -Restart" }
@@ -91,7 +78,6 @@ function Stop-AllServices {
     Write-Host "========================================" -ForegroundColor Yellow
     Write-Host ""
     
-    # Check and stop Backend
     $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping Backend (port 8000)..." -ForegroundColor Yellow
@@ -102,7 +88,6 @@ function Stop-AllServices {
         Write-Host "    Backend stopped." -ForegroundColor Gray
     }
     
-    # Check and stop Content Search
     $connections = Get-NetTCPConnection -LocalPort 9011 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping Content Search (port 9011)..." -ForegroundColor Yellow
@@ -113,7 +98,6 @@ function Stop-AllServices {
         Write-Host "    Content Search stopped." -ForegroundColor Gray
     }
     
-    # Check and stop ChromaDB (used by Content Search)
     $connections = Get-NetTCPConnection -LocalPort 9090 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping ChromaDB (port 9090)..." -ForegroundColor Yellow
@@ -124,7 +108,6 @@ function Stop-AllServices {
         Write-Host "    ChromaDB stopped." -ForegroundColor Gray
     }
     
-    # Check and stop Frontend
     $connections = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping Frontend (port 5173)..." -ForegroundColor Yellow
@@ -159,7 +142,6 @@ trap {
 # ============================================================================
 # PLATFORM DETECTION
 # ============================================================================
-# $IsWindowsOS already defined at top for auto-elevation
 $IsLinuxOS = $IsLinux -or ($PSVersionTable.Platform -eq "Unix")
 
 Write-Host ""
@@ -240,7 +222,6 @@ function Remove-VirtualEnvironments {
     $backendVenv = Join-Path $parentDir "smartclassroom"
     $contentSearchVenv = Join-Path $ScriptDir "content_search\venv_content_search"
     
-    # Kill any python processes that might be using the venvs
     Write-Host "    Terminating Python processes that may be using venvs..." -ForegroundColor Gray
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
@@ -253,7 +234,6 @@ function Remove-VirtualEnvironments {
     
     if (Test-Path $backendVenv) {
         Write-Host "    Removing Backend venv: $backendVenv" -ForegroundColor Gray
-        # Try multiple times in case of file locks
         for ($i = 1; $i -le 3; $i++) {
             Remove-Item -Path $backendVenv -Recurse -Force -ErrorAction SilentlyContinue
             if (-not (Test-Path $backendVenv)) { break }
@@ -271,7 +251,6 @@ function Remove-VirtualEnvironments {
     
     if (Test-Path $contentSearchVenv) {
         Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
-        # Try multiple times in case of file locks
         for ($i = 1; $i -le 3; $i++) {
             Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
             if (-not (Test-Path $contentSearchVenv)) { break }
@@ -331,7 +310,6 @@ if ($Restart) {
     if ($contentSearchRunning) { 
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
-    # Always try to stop ChromaDB (may be orphaned)
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
     
@@ -347,7 +325,6 @@ if ($Restart) {
     $script:skipContentSearch = $false
     $script:skipFrontend = $false
 } elseif ($anyRunning) {
-    # Some or all services running - show menu
     Write-Host "  What would you like to do?" -ForegroundColor Yellow
     Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
     Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
@@ -365,7 +342,6 @@ if ($Restart) {
             if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
-            # Always try to stop ChromaDB (may be orphaned)
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
             
@@ -395,7 +371,6 @@ if ($Restart) {
             if ($contentSearchRunning) { 
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
-            # Always try to stop ChromaDB (may be orphaned)
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
             Write-Host "  All services stopped. Exiting." -ForegroundColor Green
@@ -413,15 +388,12 @@ if ($Restart) {
         }
     }
 } else {
-    # No services running - clean up orphaned processes and start fresh
     Write-Host "  No main services detected." -ForegroundColor Green
     Write-Host ""
     Write-Host "  Stopping any orphaned processes (ChromaDB, Python)..." -ForegroundColor Yellow
     
-    # Stop orphaned ChromaDB if running (may be left over from previous crash)
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
     
-    # Kill orphaned Python processes from venvs
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
         if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
@@ -433,7 +405,6 @@ if ($Restart) {
     Write-Host ""
     Write-Host "  Starting all services fresh..." -ForegroundColor Green
     
-    # Delete virtual environments for a clean start
     Remove-VirtualEnvironments
 }
 
@@ -460,9 +431,7 @@ $noProxy = ""
 $proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
 if (-not $SkipProxy) {
-    # Check if proxy config file exists
     if (Test-Path $proxyConfigFile) {
-        # Load existing proxy settings
         $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
         $httpProxy = $proxyConfig.httpProxy
         $httpsProxy = $proxyConfig.httpsProxy
@@ -491,12 +460,10 @@ if (-not $SkipProxy) {
             $newHttpsProxy = Read-Host "HTTPS_PROXY [$httpsProxy]"
             $newNoProxy = Read-Host "NO_PROXY    [$noProxy]"
             
-            # Use new value if provided, otherwise keep existing
             if ($newHttpProxy) { $httpProxy = $newHttpProxy }
             if ($newHttpsProxy) { $httpsProxy = $newHttpsProxy }
             if ($newNoProxy) { $noProxy = $newNoProxy }
             
-            # Save updated settings
             $proxyConfig = @{
                 httpProxy = $httpProxy
                 httpsProxy = $httpsProxy
@@ -513,7 +480,6 @@ if (-not $SkipProxy) {
             Write-Host "  Using saved proxy settings." -ForegroundColor Gray
         }
     } else {
-        # First run - ask user to configure proxy
         Write-Host ""
         Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
         Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
@@ -532,7 +498,6 @@ if (-not $SkipProxy) {
             
             if (-not $httpsProxy -and $httpProxy) { $httpsProxy = $httpProxy }
             
-            # Save settings for future runs
             $proxyConfig = @{
                 httpProxy = $httpProxy
                 httpsProxy = $httpsProxy
@@ -541,7 +506,6 @@ if (-not $SkipProxy) {
             $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
             Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
         } else {
-            # Save empty config so we don't ask again
             $proxyConfig = @{
                 httpProxy = ""
                 httpsProxy = ""
@@ -552,7 +516,6 @@ if (-not $SkipProxy) {
         }
     }
     
-    # Apply proxy settings to current session
     if ($httpProxy) {
         $env:HTTP_PROXY = $httpProxy
         $env:http_proxy = $httpProxy
@@ -662,23 +625,19 @@ if (Test-Path $configPath) {
         Write-Host "  OCR: Disabled" -ForegroundColor Gray
     }
     
-    # Check and display ASR settings
     Write-Host ""
     Write-Host "  ASR (Speech Recognition) Settings:" -ForegroundColor Cyan
     
-    # Extract current ASR device from config
     $currentAsrDevice = "CPU"
     if ($configContent -match "asr:\s*\n(?:.*\n)*?\s*device:\s*(\w+)") {
         $currentAsrDevice = $matches[1]
     }
     
-    # Extract current ASR provider
     $currentAsrProvider = "openai"
     if ($configContent -match "asr:\s*\n\s*provider:\s*(\w+)") {
         $currentAsrProvider = $matches[1]
     }
     
-    # Extract current ASR model name
     $currentAsrModel = "whisper-small"
     if ($configContent -match "asr:\s*\n(?:.*\n)*?\s*name:\s*([\w-]+)") {
         $currentAsrModel = $matches[1]
@@ -689,13 +648,11 @@ if (Test-Path $configPath) {
     Write-Host "    Device:   $currentAsrDevice" -ForegroundColor Gray
     Write-Host ""
     
-    # Ask if user wants to change ASR settings
     $changeAsr = Read-Host "  Do you want to change ASR settings? (Y/N)"
     
     if ($changeAsr -match "^[Yy]") {
         Write-Host ""
         
-        # ASR Provider selection
         Write-Host "  Select ASR Provider (current: $currentAsrProvider):" -ForegroundColor Yellow
         Write-Host "    [1] openai   - OpenAI Whisper (recommended)" -ForegroundColor White
         Write-Host "    [2] openvino - Intel OpenVINO optimized" -ForegroundColor White
@@ -724,7 +681,6 @@ if (Test-Path $configPath) {
         
         Write-Host ""
         
-        # ASR Model selection
         Write-Host "  Select ASR Model (current: $currentAsrModel):" -ForegroundColor Yellow
         Write-Host "    [1] whisper-base  - Smaller, faster" -ForegroundColor White
         Write-Host "    [2] whisper-small - Balanced (recommended)" -ForegroundColor White
@@ -757,7 +713,6 @@ if (Test-Path $configPath) {
         
         Write-Host ""
         
-        # ASR Device selection
         Write-Host "  Select ASR Device (current: $currentAsrDevice):" -ForegroundColor Yellow
         Write-Host "    [C] CPU - Recommended, most compatible" -ForegroundColor White
         Write-Host "    [G] GPU - Faster if supported" -ForegroundColor White
@@ -783,7 +738,6 @@ if (Test-Path $configPath) {
             Write-Host "    Device unchanged: $currentAsrDevice" -ForegroundColor Gray
         }
         
-        # Save all changes to config.yaml
         try {
             Set-Content -Path $configPath -Value $configContent -NoNewline
             Write-Host ""
