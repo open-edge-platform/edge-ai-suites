@@ -70,7 +70,7 @@ From `build/`:
 
 ```bash
 ./bevfusion <dataset_path> [--preset v2x|kitti] [--model-dir DIR] \
-    [--fp32] [--int8] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] \
+    [--fp16] [--int8] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] \
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
     [--vis-dir DIR] [--device DEVICE] \
@@ -83,8 +83,8 @@ Important options:
 - `--preset v2x|kitti`: select DAIR-V2X or KITTI-360 geometry and post-process settings.
 - `--model-dir DIR`: override the default split-model directory. The default is `../data/v2xfusion/pointpillars` for `v2x` and `../data/kitti/pointpillars` for `kitti`.
 - Default behavior requests all available INT8 component models. On Battlemage GPUs, the split pipeline uses `fuser.onnx` instead of `quantized_fuser.xml` for the known INT8 fuser issue.
-- PFE selection uses `quantized_lidar_pfe.xml` for INT8. FP32 runs prefer `lidar_pfe_v7000.onnx` and fall back to `lidar_pfe_v6000.onnx` when v7000 is not present.
-- `--fp32`: switch all split components to FP32 ONNX models.
+- PFE selection uses `quantized_lidar_pfe.xml` for INT8. `--fp16` runs prefer `lidar_pfe_v7000.onnx` and fall back to `lidar_pfe_v6000.onnx` when v7000 is not present.
+- `--fp16`: switch all split components to the non-quantized ONNX models and run them with FP16 inference.
 - `--int8`: explicitly use all available INT8 component models.
 - `--repeat N`: run the dataset multiple times.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
@@ -95,9 +95,9 @@ Example commands:
 
 ```bash
 ./bevfusion ../data/v2xfusion/dataset
-./bevfusion ../data/v2xfusion/dataset --fp32
+./bevfusion ../data/v2xfusion/dataset --fp16
 ./bevfusion ../data/kitti/dataset --preset kitti
-./bevfusion ../data/kitti/dataset --preset kitti --fp32
+./bevfusion ../data/kitti/dataset --preset kitti --fp16
 ```
 
 With the bundled release assets, a successful runtime smoke run ends with output similar to:
@@ -198,7 +198,7 @@ Use a representative dataset and run the main applications without visualization
 ./bevfusion_unified <dataset_path> --fp16 --num-samples N
 ```
 
-Successful runs end with a `[perf]` summary. For the split pipeline the summary includes lidar, camera, fusion, and total latency. For the unified pipeline the summary includes voxelization, preprocess, inference, postprocess, and total latency. Default runs use INT8 models; add `--fp32` for split-model FP32 comparison or `--fp16` for unified FP16 comparison.
+Successful runs end with a `[perf]` summary. For the split pipeline the summary includes lidar, camera, fusion, and total latency. For the unified pipeline the summary includes voxelization, preprocess, inference, postprocess, and total latency. Default runs use INT8 models; add `--fp16` for split-model or unified FP16 comparison.
 
 ## 9. Troubleshooting
 
