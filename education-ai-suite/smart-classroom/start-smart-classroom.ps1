@@ -1,7 +1,7 @@
 #!/usr/bin/env pwsh
 <#
 .SYNOPSIS
-    Smart Classroom Unified Startup Script (Windows & Linux)
+    Smart Classroom Unified Startup Script (Windows Only)
 .DESCRIPTION
     Launches the Smart Classroom application with all required services:
     1. Backend Python service (port 8000) - includes paddleocr if OCR enabled
@@ -13,18 +13,62 @@
 
 param(
     [switch]$SkipProxy,
-    [switch]$Help
+    [switch]$Restart,
+    [switch]$Help,
+    [switch]$NoElevate  # Skip auto-elevation (for testing)
 )
+
+# ============================================================================
+# WINDOWS-ONLY CHECK
+# ============================================================================
+$IsWindowsOS = $IsWindows -or ($PSVersionTable.PSVersion.Major -lt 6) -or ($env:OS -eq "Windows_NT")
+
+if (-not $IsWindowsOS) {
+    Write-Host "ERROR: This script is designed for Windows only." -ForegroundColor Red
+    exit 1
+}
+
+# ============================================================================
+# AUTO-ELEVATE TO ADMINISTRATOR
+# ============================================================================
+if (-not $NoElevate) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    
+    if (-not $isAdmin) {
+        Write-Host "Requesting Administrator privileges..." -ForegroundColor Yellow
+        
+        # Build argument list preserving switches
+        $argList = "-NoExit -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+        if ($SkipProxy) { $argList += " -SkipProxy" }
+        if ($Restart) { $argList += " -Restart" }
+        if ($Help) { $argList += " -Help" }
+        $argList += " -NoElevate"  # Prevent infinite elevation loop
+        
+        try {
+            Start-Process powershell -Verb RunAs -ArgumentList $argList
+            Write-Host "Elevated window launched. You can close this window." -ForegroundColor Green
+            exit 0
+        } catch {
+            Write-Host "Failed to elevate. Please run as Administrator manually." -ForegroundColor Red
+            Write-Host "Right-click PowerShell -> Run as Administrator" -ForegroundColor Yellow
+            exit 1
+        }
+    }
+}
 
 if ($Help) {
     Write-Host @"
 Smart Classroom Startup Script
 
-Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Help]
+Usage: ./start-smart-classroom.ps1 [-SkipProxy] [-Restart] [-NoElevate] [-Help]
 
 Options:
     -SkipProxy    Skip proxy configuration prompts
+    -Restart      Kill existing services and restart (no prompt)
+    -NoElevate    Skip auto-elevation to Administrator (Windows)
     -Help         Show this help message
+
+Note: On Windows, the script automatically requests Administrator privileges.
 
 Services Launched (in order):
     1. Backend (port 8000)     - Main Python pipeline service (with paddleocr if OCR enabled)
@@ -36,9 +80,86 @@ Services Launched (in order):
 }
 
 # ============================================================================
+# CTRL+C HANDLER - Stop services on script exit
+# ============================================================================
+$script:servicesStarted = $false
+
+function Stop-AllServices {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host "   STOPPING ALL SERVICES..." -ForegroundColor Yellow
+    Write-Host "========================================" -ForegroundColor Yellow
+    Write-Host ""
+    
+    # Check and stop Backend
+    $connections = Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping Backend (port 8000)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    Backend stopped." -ForegroundColor Gray
+    }
+    
+    # Check and stop Content Search
+    $connections = Get-NetTCPConnection -LocalPort 9011 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping Content Search (port 9011)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    Content Search stopped." -ForegroundColor Gray
+    }
+    
+    # Check and stop ChromaDB (used by Content Search)
+    $connections = Get-NetTCPConnection -LocalPort 9090 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping ChromaDB (port 9090)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    ChromaDB stopped." -ForegroundColor Gray
+    }
+    
+    # Check and stop Frontend
+    $connections = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping Frontend (port 5173)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    Frontend stopped." -ForegroundColor Gray
+    }
+    
+    Write-Host ""
+    Write-Host "  All services stopped." -ForegroundColor Green
+}
+
+# Register Ctrl+C handler
+[Console]::TreatControlCAsInput = $false
+$null = Register-EngineEvent -SourceIdentifier PowerShell.Exiting -Action {
+    if ($script:servicesStarted) {
+        Stop-AllServices
+    }
+}
+
+trap {
+    Write-Host ""
+    Write-Host "  Script interrupted!" -ForegroundColor Red
+    if ($script:servicesStarted) {
+        Stop-AllServices
+    }
+    exit 1
+}
+
+# ============================================================================
 # PLATFORM DETECTION
 # ============================================================================
-$IsWindowsOS = $IsWindows -or ($PSVersionTable.PSVersion.Major -lt 6) -or ($env:OS -eq "Windows_NT")
+# $IsWindowsOS already defined at top for auto-elevation
 $IsLinuxOS = $IsLinux -or ($PSVersionTable.Platform -eq "Unix")
 
 Write-Host ""
@@ -48,6 +169,10 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Platform: $(if ($IsWindowsOS) { 'Windows' } else { 'Linux' })" -ForegroundColor Yellow
 Write-Host "PowerShell: $($PSVersionTable.PSVersion)" -ForegroundColor Yellow
+if ($IsWindowsOS) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    Write-Host "Admin: $(if ($isAdmin) { 'Yes' } else { 'No' })" -ForegroundColor $(if ($isAdmin) { 'Green' } else { 'Yellow' })
+}
 Write-Host ""
 
 # ============================================================================
@@ -65,7 +190,265 @@ Write-Host "Working Directory: $ScriptDir" -ForegroundColor Gray
 Set-Location $ScriptDir
 
 # ============================================================================
-# STEP 1: PROXY CONFIGURATION
+# CHECK FOR RUNNING SERVICES
+# ============================================================================
+function Test-PortInUse {
+    param([int]$Port)
+    
+    if ($IsWindowsOS) {
+        $connection = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+        return $null -ne $connection
+    } else {
+        $result = bash -c "ss -tuln | grep -q ':$Port '" 2>$null
+        return $LASTEXITCODE -eq 0
+    }
+}
+
+function Stop-ServiceOnPort {
+    param([int]$Port, [string]$ServiceName)
+    
+    if ($IsWindowsOS) {
+        $connections = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+        if ($connections) {
+            Write-Host "  Stopping $ServiceName on port $Port..." -ForegroundColor Yellow
+            $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+            foreach ($procId in $procIds) {
+                try {
+                    Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+                    Write-Host "    Killed process $procId" -ForegroundColor Gray
+                } catch {
+                    Write-Host "    Could not kill process $procId" -ForegroundColor Yellow
+                }
+            }
+            Start-Sleep -Seconds 2
+        }
+    } else {
+        $result = bash -c "ss -tuln | grep -q ':$Port '" 2>$null
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "  Stopping $ServiceName on port $Port..." -ForegroundColor Yellow
+            bash -c "fuser -k $Port/tcp" 2>$null
+            Start-Sleep -Seconds 2
+        }
+    }
+}
+
+# Function to clean up virtual environments for fresh restart
+function Remove-VirtualEnvironments {
+    Write-Host "  Cleaning up virtual environments..." -ForegroundColor Yellow
+    
+    $parentDir = Split-Path $ScriptDir -Parent
+    $backendVenv = Join-Path $parentDir "smartclassroom"
+    $contentSearchVenv = Join-Path $ScriptDir "content_search\venv_content_search"
+    
+    # Kill any python processes that might be using the venvs
+    Write-Host "    Terminating Python processes that may be using venvs..." -ForegroundColor Gray
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
+        $procPath = $_.Path
+        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+            Write-Host "      Killing Python process $($_.Id): $procPath" -ForegroundColor Gray
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Start-Sleep -Seconds 2
+    
+    if (Test-Path $backendVenv) {
+        Write-Host "    Removing Backend venv: $backendVenv" -ForegroundColor Gray
+        # Try multiple times in case of file locks
+        for ($i = 1; $i -le 3; $i++) {
+            Remove-Item -Path $backendVenv -Recurse -Force -ErrorAction SilentlyContinue
+            if (-not (Test-Path $backendVenv)) { break }
+            Write-Host "      Retry $i - waiting for file handles to release..." -ForegroundColor DarkYellow
+            Start-Sleep -Seconds 2
+        }
+        if (Test-Path $backendVenv) {
+            Write-Host "    WARNING: Could not fully remove Backend venv. Some files may be locked." -ForegroundColor Yellow
+        } else {
+            Write-Host "    Backend venv removed." -ForegroundColor Gray
+        }
+    } else {
+        Write-Host "    Backend venv not found (will be created fresh)" -ForegroundColor Gray
+    }
+    
+    if (Test-Path $contentSearchVenv) {
+        Write-Host "    Removing Content Search venv: $contentSearchVenv" -ForegroundColor Gray
+        # Try multiple times in case of file locks
+        for ($i = 1; $i -le 3; $i++) {
+            Remove-Item -Path $contentSearchVenv -Recurse -Force -ErrorAction SilentlyContinue
+            if (-not (Test-Path $contentSearchVenv)) { break }
+            Write-Host "      Retry $i - waiting for file handles to release..." -ForegroundColor DarkYellow
+            Start-Sleep -Seconds 2
+        }
+        if (Test-Path $contentSearchVenv) {
+            Write-Host "    WARNING: Could not fully remove Content Search venv. Some files may be locked." -ForegroundColor Yellow
+        } else {
+            Write-Host "    Content Search venv removed." -ForegroundColor Gray
+        }
+    } else {
+        Write-Host "    Content Search venv not found (will be created fresh)" -ForegroundColor Gray
+    }
+    
+    Write-Host "  Virtual environments cleaned." -ForegroundColor Green
+}
+
+Write-Host ""
+Write-Host "[PRE-CHECK] DETECTING RUNNING SERVICES" -ForegroundColor Cyan
+Write-Host "--------------------------------------" -ForegroundColor Cyan
+
+$backendRunning = Test-PortInUse -Port 8000
+$contentSearchRunning = Test-PortInUse -Port 9011
+$frontendRunning = Test-PortInUse -Port 5173
+
+$anyRunning = $backendRunning -or $contentSearchRunning -or $frontendRunning
+
+# Initialize skip flags based on running state
+$script:skipBackend = $backendRunning
+$script:skipContentSearch = $contentSearchRunning
+$script:skipFrontend = $frontendRunning
+
+Write-Host ""
+Write-Host "  Service Status:" -ForegroundColor Yellow
+if ($backendRunning) { 
+    Write-Host "    [RUNNING] Backend (port 8000)" -ForegroundColor Green 
+} else { 
+    Write-Host "    [STOPPED] Backend (port 8000)" -ForegroundColor Red 
+}
+if ($contentSearchRunning) { 
+    Write-Host "    [RUNNING] Content Search (port 9011)" -ForegroundColor Green 
+} else { 
+    Write-Host "    [STOPPED] Content Search (port 9011)" -ForegroundColor Red 
+}
+if ($frontendRunning) { 
+    Write-Host "    [RUNNING] Frontend (port 5173)" -ForegroundColor Green 
+} else { 
+    Write-Host "    [STOPPED] Frontend (port 5173)" -ForegroundColor Red 
+}
+Write-Host ""
+
+if ($Restart) {
+    # -Restart flag: stop all running services and start fresh
+    Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
+    if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
+    if ($contentSearchRunning) { 
+        Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
+    }
+    # Always try to stop ChromaDB (may be orphaned)
+    Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+    if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
+    
+    $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+    if ($deleteVenvs.ToUpper() -eq "Y") {
+        Remove-VirtualEnvironments
+        Write-Host "  All services will be restarted with new environments." -ForegroundColor Green
+    } else {
+        Write-Host "  Keeping existing virtual environments. Restarting services." -ForegroundColor Green
+    }
+    
+    $script:skipBackend = $false
+    $script:skipContentSearch = $false
+    $script:skipFrontend = $false
+} elseif ($anyRunning) {
+    # Some or all services running - show menu
+    Write-Host "  What would you like to do?" -ForegroundColor Yellow
+    Write-Host "    [R] Restart - Kill services and restart" -ForegroundColor White
+    Write-Host "    [S] Skip    - Use existing services (only start missing ones)" -ForegroundColor White
+    Write-Host "    [A] Abort   - Stop all services and exit" -ForegroundColor White
+    Write-Host "    [E] Exit    - Exit script without changes" -ForegroundColor White
+    Write-Host ""
+    
+    $choice = Read-Host "  Enter choice (R/S/A/E)"
+    
+    switch ($choice.ToUpper()) {
+        "R" {
+            Write-Host ""
+            Write-Host "  Restarting all services..." -ForegroundColor Yellow
+            if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
+            if ($contentSearchRunning) { 
+                Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
+            }
+            # Always try to stop ChromaDB (may be orphaned)
+            Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+            if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
+            
+            $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
+            if ($deleteVenvs.ToUpper() -eq "Y") {
+                Remove-VirtualEnvironments
+            } else {
+                Write-Host "  Keeping existing virtual environments." -ForegroundColor Gray
+            }
+            
+            $script:skipBackend = $false
+            $script:skipContentSearch = $false
+            $script:skipFrontend = $false
+            Write-Host "  Existing services stopped." -ForegroundColor Green
+        }
+        "S" {
+            Write-Host ""
+            Write-Host "  Smart Start: Keeping running services, starting stopped ones." -ForegroundColor Yellow
+            $script:skipBackend = $backendRunning
+            $script:skipContentSearch = $contentSearchRunning
+            $script:skipFrontend = $frontendRunning
+        }
+        "A" {
+            Write-Host ""
+            Write-Host "  Stopping all services..." -ForegroundColor Yellow
+            if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
+            if ($contentSearchRunning) { 
+                Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
+            }
+            # Always try to stop ChromaDB (may be orphaned)
+            Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+            if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
+            Write-Host "  All services stopped. Exiting." -ForegroundColor Green
+            exit 0
+        }
+        "E" {
+            Write-Host ""
+            Write-Host "  Exiting without changes. Services still running." -ForegroundColor Yellow
+            exit 0
+        }
+        default {
+            Write-Host ""
+            Write-Host "  Invalid choice. Aborting." -ForegroundColor Red
+            exit 1
+        }
+    }
+} else {
+    # No services running - clean up orphaned processes and start fresh
+    Write-Host "  No main services detected." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "  Stopping any orphaned processes (ChromaDB, Python)..." -ForegroundColor Yellow
+    
+    # Stop orphaned ChromaDB if running (may be left over from previous crash)
+    Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+    
+    # Kill orphaned Python processes from venvs
+    Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
+        $procPath = $_.Path
+        if ($procPath -and ($procPath -like "*smartclassroom*" -or $procPath -like "*venv_content_search*")) {
+            Write-Host "    Killing orphaned Python: $($_.Id)" -ForegroundColor Gray
+            Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "  Starting all services fresh..." -ForegroundColor Green
+    
+    # Delete virtual environments for a clean start
+    Remove-VirtualEnvironments
+}
+
+# Summary
+Write-Host ""
+Write-Host "  Action Summary:" -ForegroundColor Cyan
+if ($script:skipBackend) { Write-Host "    Backend:        SKIP (already running)" -ForegroundColor Gray }
+else { Write-Host "    Backend:        START" -ForegroundColor Green }
+if ($script:skipContentSearch) { Write-Host "    Content Search: SKIP (already running)" -ForegroundColor Gray }
+else { Write-Host "    Content Search: START" -ForegroundColor Green }
+if ($script:skipFrontend) { Write-Host "    Frontend:       SKIP (already running)" -ForegroundColor Gray }
+else { Write-Host "    Frontend:       START" -ForegroundColor Green }
+
+# ============================================================================
+# STEP 1: PROXY CONFIGURATION (Persistent)
 # ============================================================================
 Write-Host ""
 Write-Host "[1/4] PROXY CONFIGURATION" -ForegroundColor Green
@@ -74,39 +457,153 @@ Write-Host "-------------------------" -ForegroundColor Green
 $httpProxy = ""
 $httpsProxy = ""
 $noProxy = ""
+$proxyConfigFile = Join-Path $ScriptDir ".proxy-config"
 
 if (-not $SkipProxy) {
-    Write-Host ""
-    Write-Host "Enter proxy settings (leave blank to skip):" -ForegroundColor Yellow
-    Write-Host ""
+    # Check if proxy config file exists
+    if (Test-Path $proxyConfigFile) {
+        # Load existing proxy settings
+        $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
+        $httpProxy = $proxyConfig.httpProxy
+        $httpsProxy = $proxyConfig.httpsProxy
+        $noProxy = $proxyConfig.noProxy
+        
+        Write-Host ""
+        Write-Host "  Saved proxy settings found:" -ForegroundColor Cyan
+        if ($httpProxy) { Write-Host "    HTTP_PROXY:  $httpProxy" -ForegroundColor Gray }
+        if ($httpsProxy) { Write-Host "    HTTPS_PROXY: $httpsProxy" -ForegroundColor Gray }
+        if ($noProxy) { Write-Host "    NO_PROXY:    $noProxy" -ForegroundColor Gray }
+        if (-not $httpProxy -and -not $httpsProxy) { Write-Host "    (No proxy configured)" -ForegroundColor Gray }
+        Write-Host ""
+        
+        Write-Host "  [Y] Yes - Change proxy settings" -ForegroundColor White
+        Write-Host "  [N] No  - Use saved proxy settings" -ForegroundColor White
+        Write-Host "  [S] Skip - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $changeProxy = Read-Host "Do you want to change proxy settings? (Y/N/S)"
+        
+        if ($changeProxy -match "^[Yy]") {
+            Write-Host ""
+            Write-Host "Enter new proxy settings (press Enter to keep current value):" -ForegroundColor Yellow
+            Write-Host ""
+            
+            $newHttpProxy = Read-Host "HTTP_PROXY  [$httpProxy]"
+            $newHttpsProxy = Read-Host "HTTPS_PROXY [$httpsProxy]"
+            $newNoProxy = Read-Host "NO_PROXY    [$noProxy]"
+            
+            # Use new value if provided, otherwise keep existing
+            if ($newHttpProxy) { $httpProxy = $newHttpProxy }
+            if ($newHttpsProxy) { $httpsProxy = $newHttpsProxy }
+            if ($newNoProxy) { $noProxy = $newNoProxy }
+            
+            # Save updated settings
+            $proxyConfig = @{
+                httpProxy = $httpProxy
+                httpsProxy = $httpsProxy
+                noProxy = $noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Proxy settings updated and saved." -ForegroundColor Green
+        } elseif ($changeProxy -match "^[Ss]") {
+            $httpProxy = ""
+            $httpsProxy = ""
+            $noProxy = ""
+            Write-Host "  No proxy - using direct connection." -ForegroundColor Yellow
+        } else {
+            Write-Host "  Using saved proxy settings." -ForegroundColor Gray
+        }
+    } else {
+        # First run - ask user to configure proxy
+        Write-Host ""
+        Write-Host "  [Y] Yes - Configure proxy" -ForegroundColor White
+        Write-Host "  [N] No  - No proxy (direct connection)" -ForegroundColor White
+        Write-Host ""
+        $configureProxy = Read-Host "Do you want to configure a proxy? (Y/N)"
+        
+        if ($configureProxy -match "^[Yy]") {
+            Write-Host ""
+            Write-Host "Enter proxy settings:" -ForegroundColor Yellow
+            Write-Host "  (Common Intel proxy: http://proxy-iind.intel.com:912)" -ForegroundColor DarkGray
+            Write-Host ""
+            
+            $httpProxy = Read-Host "HTTP_PROXY"
+            $httpsProxy = Read-Host "HTTPS_PROXY (press Enter to use same as HTTP)"
+            $noProxy = Read-Host "NO_PROXY"
+            
+            if (-not $httpsProxy -and $httpProxy) { $httpsProxy = $httpProxy }
+            
+            # Save settings for future runs
+            $proxyConfig = @{
+                httpProxy = $httpProxy
+                httpsProxy = $httpsProxy
+                noProxy = $noProxy
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  Proxy settings saved to .proxy-config" -ForegroundColor Green
+        } else {
+            # Save empty config so we don't ask again
+            $proxyConfig = @{
+                httpProxy = ""
+                httpsProxy = ""
+                noProxy = ""
+            }
+            $proxyConfig | ConvertTo-Json | Set-Content $proxyConfigFile
+            Write-Host "  No proxy configured. Settings saved." -ForegroundColor Gray
+        }
+    }
     
-    $httpProxy = Read-Host "HTTP_PROXY  (e.g., http://proxy-iind.intel.com:912)"
-    $httpsProxy = Read-Host "HTTPS_PROXY (e.g., http://proxy-iind.intel.com:912)"
-    $noProxy = Read-Host "NO_PROXY    (e.g., localhost,127.0.0.1,::)"
-    
+    # Apply proxy settings to current session
     if ($httpProxy) {
         $env:HTTP_PROXY = $httpProxy
         $env:http_proxy = $httpProxy
-        Write-Host "  Set HTTP_PROXY=$httpProxy" -ForegroundColor Gray
+        Write-Host "  Applied HTTP_PROXY=$httpProxy" -ForegroundColor Gray
     }
     
     if ($httpsProxy) {
         $env:HTTPS_PROXY = $httpsProxy
         $env:https_proxy = $httpsProxy
-        Write-Host "  Set HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
+        Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
     }
     
     if ($noProxy) {
         $env:NO_PROXY = $noProxy
         $env:no_proxy = $noProxy
-        Write-Host "  Set NO_PROXY=$noProxy" -ForegroundColor Gray
-    }
-    
-    if (-not $httpProxy -and -not $httpsProxy -and -not $noProxy) {
-        Write-Host "  No proxy configured (direct connection)" -ForegroundColor Gray
+        Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
     }
 } else {
-    Write-Host "  Skipped (using existing environment)" -ForegroundColor Gray
+    # -SkipProxy flag: load saved settings without prompting user
+    Write-Host "  Loading proxy from .proxy-config (skipping prompts)..." -ForegroundColor Gray
+    
+    if (Test-Path $proxyConfigFile) {
+        $proxyConfig = Get-Content $proxyConfigFile | ConvertFrom-Json
+        $httpProxy = $proxyConfig.httpProxy
+        $httpsProxy = $proxyConfig.httpsProxy
+        $noProxy = $proxyConfig.noProxy
+        
+        if ($httpProxy) {
+            $env:HTTP_PROXY = $httpProxy
+            $env:http_proxy = $httpProxy
+            Write-Host "  Applied HTTP_PROXY=$httpProxy" -ForegroundColor Gray
+        }
+        
+        if ($httpsProxy) {
+            $env:HTTPS_PROXY = $httpsProxy
+            $env:https_proxy = $httpsProxy
+            Write-Host "  Applied HTTPS_PROXY=$httpsProxy" -ForegroundColor Gray
+        }
+        
+        if ($noProxy) {
+            $env:NO_PROXY = $noProxy
+            $env:no_proxy = $noProxy
+            Write-Host "  Applied NO_PROXY=$noProxy" -ForegroundColor Gray
+        }
+        
+        if (-not $httpProxy -and -not $httpsProxy) {
+            Write-Host "  No proxy configured in .proxy-config" -ForegroundColor Gray
+        }
+    } else {
+        Write-Host "  No .proxy-config file found" -ForegroundColor Gray
+    }
 }
 
 # ============================================================================
@@ -164,6 +661,146 @@ if (Test-Path $configPath) {
     } else {
         Write-Host "  OCR: Disabled" -ForegroundColor Gray
     }
+    
+    # Check and display ASR settings
+    Write-Host ""
+    Write-Host "  ASR (Speech Recognition) Settings:" -ForegroundColor Cyan
+    
+    # Extract current ASR device from config
+    $currentAsrDevice = "CPU"
+    if ($configContent -match "asr:\s*\n(?:.*\n)*?\s*device:\s*(\w+)") {
+        $currentAsrDevice = $matches[1]
+    }
+    
+    # Extract current ASR provider
+    $currentAsrProvider = "openai"
+    if ($configContent -match "asr:\s*\n\s*provider:\s*(\w+)") {
+        $currentAsrProvider = $matches[1]
+    }
+    
+    # Extract current ASR model name
+    $currentAsrModel = "whisper-small"
+    if ($configContent -match "asr:\s*\n(?:.*\n)*?\s*name:\s*([\w-]+)") {
+        $currentAsrModel = $matches[1]
+    }
+    
+    Write-Host "    Provider: $currentAsrProvider" -ForegroundColor Gray
+    Write-Host "    Model:    $currentAsrModel" -ForegroundColor Gray
+    Write-Host "    Device:   $currentAsrDevice" -ForegroundColor Gray
+    Write-Host ""
+    
+    # Ask if user wants to change ASR settings
+    $changeAsr = Read-Host "  Do you want to change ASR settings? (Y/N)"
+    
+    if ($changeAsr -match "^[Yy]") {
+        Write-Host ""
+        
+        # ASR Provider selection
+        Write-Host "  Select ASR Provider (current: $currentAsrProvider):" -ForegroundColor Yellow
+        Write-Host "    [1] openai   - OpenAI Whisper (recommended)" -ForegroundColor White
+        Write-Host "    [2] openvino - Intel OpenVINO optimized" -ForegroundColor White
+        Write-Host "    [3] funasr   - FunASR (Chinese support)" -ForegroundColor White
+        Write-Host "    [N] No change" -ForegroundColor White
+        $providerChoice = Read-Host "  Choice (1/2/3/N)"
+        
+        $newProvider = $null
+        switch -Regex ($providerChoice) {
+            "^1" { $newProvider = "openai" }
+            "^2" { $newProvider = "openvino" }
+            "^3" { $newProvider = "funasr" }
+        }
+        
+        if ($newProvider -and $newProvider -ne $currentAsrProvider) {
+            try {
+                $configContent = $configContent -replace "(asr:\s*\n\s*provider:\s*)\w+", "`${1}$newProvider"
+                Write-Host "    [OK] Provider changed to: $newProvider" -ForegroundColor Green
+                $currentAsrProvider = $newProvider
+            } catch {
+                Write-Host "    [WARN] Could not update provider: $_" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "    Provider unchanged: $currentAsrProvider" -ForegroundColor Gray
+        }
+        
+        Write-Host ""
+        
+        # ASR Model selection
+        Write-Host "  Select ASR Model (current: $currentAsrModel):" -ForegroundColor Yellow
+        Write-Host "    [1] whisper-base  - Smaller, faster" -ForegroundColor White
+        Write-Host "    [2] whisper-small - Balanced (recommended)" -ForegroundColor White
+        Write-Host "    [3] whisper-medium - Better accuracy" -ForegroundColor White
+        Write-Host "    [4] whisper-large - Best accuracy, slower" -ForegroundColor White
+        Write-Host "    [5] paraformer-zh - Chinese optimized (FunASR)" -ForegroundColor White
+        Write-Host "    [N] No change" -ForegroundColor White
+        $modelChoice = Read-Host "  Choice (1/2/3/4/5/N)"
+        
+        $newModel = $null
+        switch -Regex ($modelChoice) {
+            "^1" { $newModel = "whisper-base" }
+            "^2" { $newModel = "whisper-small" }
+            "^3" { $newModel = "whisper-medium" }
+            "^4" { $newModel = "whisper-large" }
+            "^5" { $newModel = "paraformer-zh" }
+        }
+        
+        if ($newModel -and $newModel -ne $currentAsrModel) {
+            try {
+                $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*name:\s*)[\w-]+", "`${1}$newModel"
+                Write-Host "    [OK] Model changed to: $newModel" -ForegroundColor Green
+                $currentAsrModel = $newModel
+            } catch {
+                Write-Host "    [WARN] Could not update model: $_" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "    Model unchanged: $currentAsrModel" -ForegroundColor Gray
+        }
+        
+        Write-Host ""
+        
+        # ASR Device selection
+        Write-Host "  Select ASR Device (current: $currentAsrDevice):" -ForegroundColor Yellow
+        Write-Host "    [C] CPU - Recommended, most compatible" -ForegroundColor White
+        Write-Host "    [G] GPU - Faster if supported" -ForegroundColor White
+        Write-Host "    [N] No change" -ForegroundColor White
+        $deviceChoice = Read-Host "  Choice (C/G/N)"
+        
+        $newDevice = $null
+        if ($deviceChoice -match "^[Cc]") {
+            $newDevice = "CPU"
+        } elseif ($deviceChoice -match "^[Gg]") {
+            $newDevice = "GPU"
+        }
+        
+        if ($newDevice -and $newDevice -ne $currentAsrDevice) {
+            try {
+                $configContent = $configContent -replace "(asr:\s*\n(?:.*\n)*?\s*device:\s*)\w+", "`${1}$newDevice"
+                Write-Host "    [OK] Device changed to: $newDevice" -ForegroundColor Green
+                $currentAsrDevice = $newDevice
+            } catch {
+                Write-Host "    [WARN] Could not update device: $_" -ForegroundColor Yellow
+            }
+        } else {
+            Write-Host "    Device unchanged: $currentAsrDevice" -ForegroundColor Gray
+        }
+        
+        # Save all changes to config.yaml
+        try {
+            Set-Content -Path $configPath -Value $configContent -NoNewline
+            Write-Host ""
+            Write-Host "  [OK] ASR settings saved to config.yaml" -ForegroundColor Green
+        } catch {
+            Write-Host "  [WARN] Could not save config.yaml: $_" -ForegroundColor Yellow
+        }
+        
+        Write-Host ""
+        Write-Host "  Final ASR Settings:" -ForegroundColor Cyan
+        Write-Host "    Provider: $currentAsrProvider" -ForegroundColor Gray
+        Write-Host "    Model:    $currentAsrModel" -ForegroundColor Gray
+        Write-Host "    Device:   $currentAsrDevice" -ForegroundColor Gray
+    } else {
+        Write-Host "  ASR settings unchanged" -ForegroundColor Gray
+    }
+    
 } else {
     Write-Host "  config.yaml not found, assuming OCR disabled" -ForegroundColor Gray
 }
@@ -183,11 +820,144 @@ Write-Host ""
 Write-Host "[4/4] LAUNCHING SERVICES" -ForegroundColor Green
 Write-Host "------------------------" -ForegroundColor Green
 Write-Host ""
-Write-Host "Terminals will launch sequentially:" -ForegroundColor Yellow
-Write-Host "  1. Backend (port 8000)" -ForegroundColor White
-Write-Host "  2. Content Search (port 9011)" -ForegroundColor White
+Write-Host "Terminals will launch sequentially with health checks:" -ForegroundColor Yellow
+Write-Host "  1. Backend (port 8000) - wait until healthy" -ForegroundColor White
+Write-Host "  2. Content Search (port 9011) - wait until healthy" -ForegroundColor White
 Write-Host "  3. Frontend (port 5173)" -ForegroundColor White
 Write-Host ""
+Write-Host "Press Ctrl+C to stop all services and exit." -ForegroundColor DarkGray
+Write-Host ""
+
+# Mark that services are being started (for Ctrl+C handler)
+$script:servicesStarted = $true
+
+# Health check function (no timeout - relies on crash detection)
+function Wait-ForService {
+    param(
+        [string]$ServiceName,
+        [string]$Url,
+        [int]$Port,
+        [int[]]$DependentPorts = @(),
+        [string]$CommandLinePattern = "",  # Pattern to match in process command line (e.g., "main.py", "start_services.py")
+        [int]$IntervalSeconds = 5
+    )
+    
+    $elapsed = 0
+    $initialGracePeriod = 10  # Short grace period before checking for crashes
+    Write-Host "  Waiting for $ServiceName to be healthy..." -ForegroundColor Gray
+    Write-Host "  Health check: $Url" -ForegroundColor DarkGray
+    Write-Host "  (No timeout - will wait until service is ready or crashes)" -ForegroundColor DarkGray
+    
+    while ($true) {
+        # After initial grace period, check if dependent services are still running
+        if ($elapsed -ge $initialGracePeriod) {
+            foreach ($depPort in $DependentPorts) {
+                $depListening = Get-NetTCPConnection -LocalPort $depPort -State Listen -ErrorAction SilentlyContinue
+                if (-not $depListening) {
+                    Write-Host ""
+                    Write-Host ""
+                    Write-Host "========================================" -ForegroundColor Red
+                    Write-Host "  ERROR: DEPENDENT SERVICE STOPPED" -ForegroundColor Red
+                    Write-Host "========================================" -ForegroundColor Red
+                    Write-Host ""
+                    Write-Host "  Service on port $depPort is no longer running." -ForegroundColor Red
+                    Write-Host "  Cannot continue starting $ServiceName." -ForegroundColor Yellow
+                    Write-Host ""
+                    Write-Host "  NOTE: $ServiceName might still be running in its terminal." -ForegroundColor DarkYellow
+                    Write-Host "        Please check and close it manually if needed." -ForegroundColor DarkYellow
+                    Write-Host ""
+                    return $false
+                }
+            }
+        }
+        
+        # After initial grace period, check if service crashed
+        if ($elapsed -ge $initialGracePeriod -and $Port -gt 0) {
+            $listening = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+            if (-not $listening) {
+                # Port not listening - check if the service process is still running
+                $serviceRunning = $false
+                
+                # Get all python processes
+                $pythonProcs = Get-CimInstance Win32_Process -Filter "Name='python.exe'" -ErrorAction SilentlyContinue
+                
+                # Check for pip running (either as pip.exe or python -m pip)
+                $pipProcs = Get-CimInstance Win32_Process -Filter "Name='pip.exe'" -ErrorAction SilentlyContinue
+                if ($pipProcs) {
+                    $serviceRunning = $true
+                }
+                
+                # Also check for python running pip (python -m pip install ...)
+                if (-not $serviceRunning) {
+                    foreach ($proc in $pythonProcs) {
+                        if ($proc.CommandLine -and ($proc.CommandLine -like "*pip*install*" -or $proc.CommandLine -like "*-m pip*")) {
+                            $serviceRunning = $true
+                            break
+                        }
+                    }
+                }
+                
+                # Check for python with specific command line pattern (main.py, start_services.py)
+                if (-not $serviceRunning -and $CommandLinePattern) {
+                    foreach ($proc in $pythonProcs) {
+                        if ($proc.CommandLine -and $proc.CommandLine -like "*$CommandLinePattern*") {
+                            $serviceRunning = $true
+                            break
+                        }
+                    }
+                }
+                
+                # Check for npm/node processes (for Frontend)
+                if (-not $serviceRunning) {
+                    $npmProcs = Get-CimInstance Win32_Process -Filter "Name='npm.exe' OR Name='npm.cmd'" -ErrorAction SilentlyContinue
+                    if ($npmProcs) {
+                        $serviceRunning = $true
+                    }
+                }
+                
+                if (-not $serviceRunning) {
+                    $nodeProcs = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue
+                    foreach ($proc in $nodeProcs) {
+                        # Check if node is running vite or npm
+                        if ($proc.CommandLine -and ($proc.CommandLine -like "*vite*" -or $proc.CommandLine -like "*npm*" -or $proc.CommandLine -like "*5173*")) {
+                            $serviceRunning = $true
+                            break
+                        }
+                    }
+                }
+                
+                if (-not $serviceRunning) {
+                    # No matching process running and port not listening = crashed or user closed terminal
+                    Write-Host ""
+                    Write-Host ""
+                    Write-Host "========================================" -ForegroundColor Red
+                    Write-Host "  ERROR: $ServiceName CRASHED" -ForegroundColor Red
+                    Write-Host "========================================" -ForegroundColor Red
+                    Write-Host ""
+                    Write-Host "  No process is listening on port $Port." -ForegroundColor Red
+                    Write-Host "  Check the $ServiceName terminal for error messages." -ForegroundColor Yellow
+                    Write-Host ""
+                    return $false
+                }
+                # else: process still running (pip or python with matching command), keep waiting
+            }
+        }
+        
+        try {
+            $response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 5 -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                Write-Host "`r  [$elapsed s] $ServiceName is healthy!                              " -ForegroundColor Green
+                return $true
+            }
+        } catch {
+            # Service not ready yet, continue waiting
+        }
+        
+        Write-Host "`r  [$elapsed s] Waiting for $ServiceName...                    " -NoNewline -ForegroundColor Gray
+        Start-Sleep -Seconds $IntervalSeconds
+        $elapsed += $IntervalSeconds
+    }
+}
 
 # Build proxy commands for child terminals
 $proxyCommands = ""
@@ -207,20 +977,23 @@ if ($IsWindowsOS) {
     # ========================================================================
     # TERMINAL 1: BACKEND (with paddleocr check)
     # ========================================================================
-    Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
-    
-    # Build paddleocr install command if OCR enabled
-    $paddleocrCmd = ""
-    if ($ocrEnabled) {
-        $paddleocrCmd = @"
+    if ($script:skipBackend) {
+        Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
+    } else {
+        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
+        
+        # Build paddleocr install command if OCR enabled
+        $paddleocrCmd = ""
+        if ($ocrEnabled) {
+            $paddleocrCmd = @"
 
 Write-Host ''
 Write-Host 'Installing PaddleOCR (OCR enabled in config)...' -ForegroundColor Yellow
 pip install paddleocr==2.7.0.3 --no-deps
 "@
-    }
-    
-    $backendScript = @"
+        }
+        
+        $backendScript = @"
 `$ErrorActionPreference = 'Continue'
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
@@ -237,13 +1010,23 @@ Set-Location `$parentDir
 Write-Host "Working directory: `$PWD" -ForegroundColor Gray
 Write-Host ''
 
-# Check if venv exists
+# Check if venv exists and is valid
 `$venvPath = '.\smartclassroom'
-if (-not (Test-Path "`$venvPath\Scripts\Activate.ps1")) {
+`$venvValid = (Test-Path "`$venvPath\Scripts\Activate.ps1") -and (Test-Path "`$venvPath\Scripts\python.exe")
+
+if (-not `$venvValid) {
+    # Remove broken/partial venv if exists
+    if (Test-Path `$venvPath) {
+        Write-Host 'Removing incomplete smartclassroom venv...' -ForegroundColor Yellow
+        Remove-Item -Path `$venvPath -Recurse -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+    
     Write-Host 'Creating smartclassroom virtual environment...' -ForegroundColor Yellow
     python -m venv `$venvPath
     if (`$LASTEXITCODE -ne 0) {
         Write-Host 'Failed to create virtual environment!' -ForegroundColor Red
+        Write-Host 'Try running: Remove-Item -Path smartclassroom -Recurse -Force' -ForegroundColor Yellow
         Read-Host 'Press Enter to close'
         exit 1
     }
@@ -275,16 +1058,27 @@ python main.py
     }
     
     Write-Host "  Backend terminal launched" -ForegroundColor Green
-    Write-Host "  Waiting 5 seconds before launching Content Search..." -ForegroundColor Gray
-    Start-Sleep -Seconds 5
+    Write-Host ""
+    }  # End of skipBackend check
+    
+    # Wait for Backend to be healthy before starting Content Search
+    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
+    if (-not $backendHealthy) {
+        Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
+        exit 1
+    }
     
     # ========================================================================
     # TERMINAL 2: CONTENT SEARCH
     # ========================================================================
-    Write-Host ""
-    Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-    
-    $contentSearchScript = @"
+    if ($script:skipContentSearch) {
+        Write-Host ""
+        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
+    } else {
+        Write-Host ""
+        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
+        
+        $contentSearchScript = @"
 `$ErrorActionPreference = 'Continue'
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass -Force
 
@@ -300,13 +1094,23 @@ Set-Location '$ScriptDir\content_search'
 Write-Host "Working directory: `$PWD" -ForegroundColor Gray
 Write-Host ''
 
-# Check if venv exists
+# Check if venv exists and is valid
 `$venvPath = '.\venv_content_search'
-if (-not (Test-Path "`$venvPath\Scripts\Activate.ps1")) {
+`$venvValid = (Test-Path "`$venvPath\Scripts\Activate.ps1") -and (Test-Path "`$venvPath\Scripts\python.exe")
+
+if (-not `$venvValid) {
+    # Remove broken/partial venv if exists
+    if (Test-Path `$venvPath) {
+        Write-Host 'Removing incomplete venv_content_search...' -ForegroundColor Yellow
+        Remove-Item -Path `$venvPath -Recurse -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 1
+    }
+    
     Write-Host 'Creating venv_content_search virtual environment...' -ForegroundColor Yellow
     python -m venv `$venvPath
     if (`$LASTEXITCODE -ne 0) {
         Write-Host 'Failed to create virtual environment!' -ForegroundColor Red
+        Write-Host 'Try running: Remove-Item -Path venv_content_search -Recurse -Force' -ForegroundColor Yellow
         Read-Host 'Press Enter to close'
         exit 1
     }
@@ -348,16 +1152,27 @@ python .\start_services.py
     }
     
     Write-Host "  Content Search terminal launched" -ForegroundColor Green
-    Write-Host "  Waiting 5 seconds before launching Frontend..." -ForegroundColor Gray
-    Start-Sleep -Seconds 5
+    Write-Host ""
+    }  # End of skipContentSearch check
+    
+    # Wait for Content Search to be healthy before starting Frontend
+    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+    if (-not $csHealthy) {
+        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
+        exit 1
+    }
     
     # ========================================================================
     # TERMINAL 3: FRONTEND
     # ========================================================================
-    Write-Host ""
-    Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
-    
-    $frontendScript = @"
+    if ($script:skipFrontend) {
+        Write-Host ""
+        Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
+    } else {
+        Write-Host ""
+        Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
+        
+        $frontendScript = @"
 `$ErrorActionPreference = 'Continue'
 
 Write-Host '========================================' -ForegroundColor Cyan
@@ -386,6 +1201,15 @@ npm run dev -- --host 0.0.0.0 --port 5173
     }
     
     Write-Host "  Frontend terminal launched" -ForegroundColor Green
+    Write-Host ""
+    }  # End of skipFrontend check
+    
+    # Wait for Frontend to be healthy
+    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
+    if (-not $frontendHealthy) {
+        Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
+        exit 1
+    }
     
 } else {
     # ========== LINUX ==========
@@ -421,10 +1245,13 @@ npm run dev -- --host 0.0.0.0 --port 5173
     if ($noProxy) { $proxyExport += "export no_proxy='$noProxy'; export NO_PROXY='$noProxy'; " }
     
     # Terminal 1: Backend
-    Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
-    $paddleCmd = if ($ocrEnabled) { "pip install paddleocr==2.7.0.3 --no-deps; " } else { "" }
-    $parentDir = Split-Path $ScriptDir -Parent
-    $be_bash = @"
+    if ($script:skipBackend) {
+        Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
+    } else {
+        Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
+        $paddleCmd = if ($ocrEnabled) { "pip install paddleocr==2.7.0.3 --no-deps; " } else { "" }
+        $parentDir = Split-Path $ScriptDir -Parent
+        $be_bash = @"
 $proxyExport
 cd '$parentDir'
 echo '========================================'
@@ -443,20 +1270,29 @@ echo 'Starting Backend (port 8000)...'
 python main.py
 exec bash
 "@
+        
+        if ($terminalCmd -eq "gnome-terminal") {
+            Start-Process gnome-terminal -ArgumentList "--title=Backend", "--", "bash", "-c", $be_bash
+        } elseif ($terminalCmd -eq "konsole") {
+            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Backend", "-e", "bash", "-c", $be_bash
+        } else {
+            Start-Process xterm -ArgumentList "-title", "Backend", "-e", "bash", "-c", $be_bash
+        }
+    }  # End of skipBackend check
     
-    if ($terminalCmd -eq "gnome-terminal") {
-        Start-Process gnome-terminal -ArgumentList "--title=Backend", "--", "bash", "-c", $be_bash
-    } elseif ($terminalCmd -eq "konsole") {
-        Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Backend", "-e", "bash", "-c", $be_bash
-    } else {
-        Start-Process xterm -ArgumentList "-title", "Backend", "-e", "bash", "-c", $be_bash
+    # Wait for Backend to be healthy
+    $backendHealthy = Wait-ForService -ServiceName "Backend" -Url "http://localhost:8000/health" -Port 8000 -CommandLinePattern "main.py"
+    if (-not $backendHealthy) {
+        Write-Host "Exiting script due to Backend startup failure." -ForegroundColor Red
+        exit 1
     }
     
-    Start-Sleep -Seconds 5
-    
     # Terminal 2: Content Search
-    Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
-    $cs_bash = @"
+    if ($script:skipContentSearch) {
+        Write-Host "Skipping Content Search (already running on port 9011)" -ForegroundColor Yellow
+    } else {
+        Write-Host "Launching Terminal 2: Content Search..." -ForegroundColor Yellow
+        $cs_bash = @"
 $proxyExport
 cd '$ScriptDir/content_search'
 echo '========================================'
@@ -473,20 +1309,29 @@ echo 'Starting Content Search (port 9011)...'
 python start_services.py
 exec bash
 "@
+        
+        if ($terminalCmd -eq "gnome-terminal") {
+            Start-Process gnome-terminal -ArgumentList "--title=ContentSearch", "--", "bash", "-c", $cs_bash
+        } elseif ($terminalCmd -eq "konsole") {
+            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=ContentSearch", "-e", "bash", "-c", $cs_bash
+        } else {
+            Start-Process xterm -ArgumentList "-title", "ContentSearch", "-e", "bash", "-c", $cs_bash
+        }
+    }  # End of skipContentSearch check
     
-    if ($terminalCmd -eq "gnome-terminal") {
-        Start-Process gnome-terminal -ArgumentList "--title=ContentSearch", "--", "bash", "-c", $cs_bash
-    } elseif ($terminalCmd -eq "konsole") {
-        Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=ContentSearch", "-e", "bash", "-c", $cs_bash
-    } else {
-        Start-Process xterm -ArgumentList "-title", "ContentSearch", "-e", "bash", "-c", $cs_bash
+    # Wait for Content Search to be healthy
+    $csHealthy = Wait-ForService -ServiceName "Content Search" -Url "http://localhost:9011/api/v1/system/health" -Port 9011 -DependentPorts @(8000) -CommandLinePattern "start_services.py"
+    if (-not $csHealthy) {
+        Write-Host "Exiting script due to Content Search startup failure." -ForegroundColor Red
+        exit 1
     }
     
-    Start-Sleep -Seconds 5
-    
     # Terminal 3: Frontend
-    Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
-    $fe_bash = @"
+    if ($script:skipFrontend) {
+        Write-Host "Skipping Frontend (already running on port 5173)" -ForegroundColor Yellow
+    } else {
+        Write-Host "Launching Terminal 3: Frontend..." -ForegroundColor Yellow
+        $fe_bash = @"
 cd '$ScriptDir/ui'
 echo '========================================'
 echo '  FRONTEND UI'
@@ -496,13 +1341,21 @@ echo 'Starting Frontend (port 5173)...'
 npm run dev -- --host 0.0.0.0 --port 5173
 exec bash
 "@
+        
+        if ($terminalCmd -eq "gnome-terminal") {
+            Start-Process gnome-terminal -ArgumentList "--title=Frontend", "--", "bash", "-c", $fe_bash
+        } elseif ($terminalCmd -eq "konsole") {
+            Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Frontend", "-e", "bash", "-c", $fe_bash
+        } else {
+            Start-Process xterm -ArgumentList "-title", "Frontend", "-e", "bash", "-c", $fe_bash
+        }
+    }  # End of skipFrontend check
     
-    if ($terminalCmd -eq "gnome-terminal") {
-        Start-Process gnome-terminal -ArgumentList "--title=Frontend", "--", "bash", "-c", $fe_bash
-    } elseif ($terminalCmd -eq "konsole") {
-        Start-Process konsole -ArgumentList "--new-tab", "-p", "tabtitle=Frontend", "-e", "bash", "-c", $fe_bash
-    } else {
-        Start-Process xterm -ArgumentList "-title", "Frontend", "-e", "bash", "-c", $fe_bash
+    # Wait for Frontend to be healthy
+    $frontendHealthy = Wait-ForService -ServiceName "Frontend" -Url "http://localhost:5173" -Port 5173 -DependentPorts @(8000, 9011) -CommandLinePattern "npm"
+    if (-not $frontendHealthy) {
+        Write-Host "Exiting script due to Frontend startup failure." -ForegroundColor Red
+        exit 1
     }
 }
 
@@ -510,24 +1363,38 @@ exec bash
 # COMPLETION MESSAGE
 # ============================================================================
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "   ALL TERMINALS LAUNCHED" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Host "========================================" -ForegroundColor Green
+Write-Host "   ALL SERVICES ARE HEALTHY!" -ForegroundColor Green
+Write-Host "========================================" -ForegroundColor Green
 Write-Host ""
 Write-Host "Services:" -ForegroundColor Yellow
-Write-Host "  1. Backend        -> http://localhost:8000" -ForegroundColor White
-Write-Host "  2. Content Search -> http://localhost:9011" -ForegroundColor White
-Write-Host "  3. Frontend       -> http://localhost:5173" -ForegroundColor White
+Write-Host "  1. Backend        -> http://localhost:8000  [HEALTHY]" -ForegroundColor White
+Write-Host "  2. Content Search -> http://localhost:9011  [HEALTHY]" -ForegroundColor White
+Write-Host "  3. Frontend       -> http://localhost:5173  [HEALTHY]" -ForegroundColor White
 Write-Host ""
-Write-Host "Wait for all services to initialize, then open:" -ForegroundColor Green
-Write-Host "  http://localhost:5173" -ForegroundColor Cyan
+Write-Host "Open in browser: http://localhost:5173" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "To verify Content Search health:" -ForegroundColor Gray
-if ($IsWindowsOS) {
-    Write-Host '  Invoke-RestMethod -Uri "http://127.0.0.1:9011/api/v1/system/health"' -ForegroundColor DarkGray
-} else {
-    Write-Host '  curl http://127.0.0.1:9011/api/v1/system/health' -ForegroundColor DarkGray
+Write-Host "========================================" -ForegroundColor Yellow
+Write-Host "  Press 'Q' to stop all services and exit" -ForegroundColor Yellow
+Write-Host "  Press 'E' to exit (keep services running)" -ForegroundColor Yellow
+Write-Host "========================================" -ForegroundColor Yellow
+Write-Host ""
+
+# Wait for user input to stop services or exit
+while ($true) {
+    $key = Read-Host "Enter choice (Q/E)"
+    switch ($key.ToUpper()) {
+        "Q" {
+            Stop-AllServices
+            exit 0
+        }
+        "E" {
+            Write-Host ""
+            Write-Host "  Exiting. Services will continue running in their terminals." -ForegroundColor Green
+            Write-Host "  Close the terminal windows manually to stop services." -ForegroundColor Gray
+            Write-Host ""
+            $script:servicesStarted = $false  # Prevent trap from stopping services
+            exit 0
+        }
+    }
 }
-Write-Host ""
-Write-Host "Press Ctrl+C in each terminal to stop services." -ForegroundColor Yellow
-Write-Host ""
