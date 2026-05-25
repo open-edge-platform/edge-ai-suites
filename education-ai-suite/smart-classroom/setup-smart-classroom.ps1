@@ -492,7 +492,7 @@ function Install-NPUDriver {
     Write-Host ""
     
     $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue | 
-                        Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" } }
+                        Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" }
     
     if ($npuDevicesRecheck) {
         $npuName = ($npuDevicesRecheck | Select-Object -First 1).FriendlyName
