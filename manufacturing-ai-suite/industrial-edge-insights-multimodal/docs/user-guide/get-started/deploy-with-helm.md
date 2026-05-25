@@ -8,56 +8,6 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
  Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to set up Kubernetes cluster on the web with host OS as Ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
-- **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
-
-  ```bash
-  # Pick a release version compatible with your cluster
-  export RELEASE_VERSION=v0.35.0
-
-  # Step 1: Create namespace for the Intel device plugins
-  kubectl create namespace intel-device-plugins
-
-  # Step 2: Allow privileged pods in the device plugin namespace
-  # Required because the plugin needs hostPath mounts and access to host device files.
-  kubectl label namespace intel-device-plugins \
-    pod-security.kubernetes.io/enforce=privileged \
-    pod-security.kubernetes.io/audit=privileged \
-    pod-security.kubernetes.io/warn=privileged \
-    --overwrite
-
-  # Step 3: Install Node Feature Discovery (NFD)
-  # NFD uses its own namespace: node-feature-discovery
-  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=${RELEASE_VERSION}"
-
-  # Step 4: Allow privileged pods in the NFD namespace
-  kubectl label namespace node-feature-discovery \
-    pod-security.kubernetes.io/enforce=privileged \
-    pod-security.kubernetes.io/audit=privileged \
-    pod-security.kubernetes.io/warn=privileged \
-    --overwrite
-
-  # Step 5: Install Intel GPU NodeFeatureRules
-  # These rules let NFD detect and label Intel GPU nodes.
-  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=${RELEASE_VERSION}"
-
-  # Step 6: Verify NFD pods are running
-  kubectl get pods -n node-feature-discovery
-
-  # Step 7: Verify the node got Intel GPU and NPU labels
-  kubectl get node $(hostname) --show-labels | tr ',' '\n' | grep intel
-
-  # Step 8: Install the Intel GPU device plugin
-  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
-
-  # Step 9: Install the Intel NPU device plugin
-  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
-  ```
-
-  Verify the GPU and NPU resources are advertised on nodes:
-  ```bash
-  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
-  ```
-  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 > **Note:**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
@@ -125,6 +75,13 @@ You can either generate or download the Helm charts.
 > 1. Uninstall Helm charts if already installed.
 > 2. Note the `helm install` command fails if the above required fields are not populated
 >    as per the rules called out in the `values.yaml` file.
+> 3. To deploy with GPU or NPU support for inferencing, use the following command:
+>
+>       ```bash
+>       helm install multimodal-weld-defect-detection \
+>           --set privileged_access_required=true \
+>           . -n multimodal-sample-app --create-namespace
+>       ```
 
 To install Helm charts, use one of the following options:
 

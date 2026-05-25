@@ -93,10 +93,6 @@ gpu:
   enabled: false
   type: "gpu.intel.com/i915"
   count: 1
-npu:
-  enabled: false
-  type: "npu.intel.com/accel"
-  count: 1
 images:
   # Please provide the suffix for the image version you want to use like rc1, rc2, git hash id etc.
   image_suffix: "2026.1.0-rc1"
@@ -107,6 +103,7 @@ images:
   dlstreamer_pipeline_server: intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1.1
   fusion_analytics_image: intel/ia-multimodal-fusion-analytics
   seaweedfs_image: chrislusf/seaweedfs:4.23
+privileged_access_required: false
 config:
   influx_db_server:
     name: influxdb

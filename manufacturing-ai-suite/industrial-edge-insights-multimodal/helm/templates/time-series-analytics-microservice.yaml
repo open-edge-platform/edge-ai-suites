@@ -53,8 +53,13 @@ spec:
         image: {{ .Values.DOCKER_REGISTRY }}{{ .Values.images.time_series_analytics_image }}:{{ .Values.images.image_suffix | default "latest" }}{{ if .Values.images.weekly_build_date }}-{{ .Values.images.weekly_build_date }}-weekly{{ end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
+          {{- if .Values.privileged_access_required }}
+          privileged: true # Required for /dev/dri access, if using GPU devices
+          allowPrivilegeEscalation: true
+          {{- else }}
           privileged: false
           allowPrivilegeEscalation: false
+          {{- end }}
           runAsNonRoot: true
           readOnlyRootFilesystem: true
           capabilities:
@@ -65,6 +70,14 @@ spec:
         volumeMounts:
         - name: vol-temp-time-series-analytics-microservice
           mountPath: /tmp
+        {{- if .Values.privileged_access_required }}
+        - name: dev-dri
+          mountPath: /dev/dri
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
+        {{- end }}
+        - name: run-udev
+          mountPath: /run/udev
+          readOnly: true # Keep the device mount read-only; actual device access is governed by container privileges and device permissions
 
         env:
         - name: HTTP_PROXY
@@ -110,3 +123,11 @@ spec:
       volumes:
       - name: vol-temp-time-series-analytics-microservice
         emptyDir: {}
+      {{- if .Values.privileged_access_required }}
+      - name: dev-dri
+        hostPath:
+          path: /dev/dri
+      {{- end }}
+      - name: run-udev
+        hostPath:
+          path: /run/udev

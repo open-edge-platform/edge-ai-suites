@@ -112,6 +112,8 @@
        password: <password>
    ```
 
+   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+
 5. Install pre-requisites. Run with sudo if needed.
 
    ```sh

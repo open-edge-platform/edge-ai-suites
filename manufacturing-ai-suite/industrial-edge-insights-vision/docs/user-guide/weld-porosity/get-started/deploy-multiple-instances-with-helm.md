@@ -109,6 +109,8 @@
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
+   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
+
 4. Install pre-requisites for all instances
 
    ```sh

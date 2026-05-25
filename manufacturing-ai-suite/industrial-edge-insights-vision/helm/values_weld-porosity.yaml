@@ -36,6 +36,10 @@ gpu:
   enabled: false
   type: "gpu.intel.com/i915"
   count: 1
+npu:
+  enabled: false
+  type: "npu.intel.com/accel"
+  count: 1
 webrtcturnserver:
   username:
   password:

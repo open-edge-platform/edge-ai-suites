@@ -152,7 +152,6 @@ spec:
       - name: var-tmp
         hostPath:
           path: /var/tmp
-          path: /run/udev
       - name: pipeline-resources-models
         emptyDir: {}
       - name: pipeline-resources-videos
