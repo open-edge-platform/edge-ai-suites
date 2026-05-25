@@ -35,8 +35,8 @@ Copy the `ptp_frame_timestamp.py` and `config.json` from the `deterministic-thre
 module to the current docker directory.
 
 ```bash
-cp edge-ai-suites/metro-ai-suite/deterministic-threat-detection/rtsp_camera_stream/ptp_frame_timestamp.py .
-cp edge-ai-suites/metro-ai-suite/deterministic-threat-detection/rtsp_camera_stream/config.json .
+cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/rtsp_camera_stream/ptp_frame_timestamp.py .
+cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/rtsp_camera_stream/config.json .
 ```
 
 > **Note:** Make sure to update the RTSP camera `<rtsp-camera-username>`,
