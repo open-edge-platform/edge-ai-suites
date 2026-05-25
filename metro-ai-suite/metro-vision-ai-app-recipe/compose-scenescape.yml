@@ -221,6 +221,12 @@ services:
       - pgserver-db:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scenescape -d scenescape"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
 
   web:
     image: intel/scenescape-manager:v2026.1.0-rc1
@@ -231,7 +237,7 @@ services:
           - web.scenescape.intel.com
     depends_on:
       pgserver:
-        condition: service_started
+        condition: service_healthy
       broker:
         condition: service_started
     environment:
