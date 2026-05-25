@@ -149,7 +149,7 @@ make demo
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
 ```bash
-cd edge-ai-suites/metro-ai-suite/deterministic-threat-detection
+cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection
 bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.sh
 ```
 

@@ -8,22 +8,16 @@ description = "Smart Route Planner - Agentic AI based Commuter Support System"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "black>=26.3.1",
-    "branca==0.6.0",
     "folium==0.14.0",
     "gpxpy",
     "gradio==6.13.0",
-    "isort",
+    "langchain-core>=1.3.3",
     "langgraph==1.1.9",
-    "mypy",
-    "numpy>1.24.3",
-    "pandas",
-    "pillow>=12.1.1",
+    "langsmith>=0.8.0",
     "pydantic",
-    "pytest>=9.0.3",
-    "python-dateutil",
+    "python-multipart>=0.0.27",
     "requests>=2.33.0",
-    "rich",
     "typing-extensions",
+    "urllib3>=2.7.0",
     "websockets>=16.0"
 ]
