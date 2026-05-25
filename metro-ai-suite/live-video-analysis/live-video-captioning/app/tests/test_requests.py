@@ -115,6 +115,14 @@ class TestStartRunRequestInvalidUrl:
             with pytest.raises(ValidationError, match="Hostname cannot end with a dot"):
                 StartRunRequest(rtspUrl="rtsp://camera.example.com./stream")
 
+    def test_unexpected_exception_wrapped_as_validation_error(self):
+        """Unexpected parser errors are wrapped into a user-friendly ValueError."""
+        with patch(
+            "backend.models.requests.urlparse", side_effect=RuntimeError("boom")
+        ):
+            with pytest.raises(ValidationError, match="Invalid RTSP URL format: boom"):
+                StartRunRequest(rtspUrl="rtsp://camera.example.com/stream")
+
 
 # ---------------------------------------------------------------------------
 # Field boundary checks

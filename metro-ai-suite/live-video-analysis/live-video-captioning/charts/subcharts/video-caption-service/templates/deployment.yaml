@@ -30,9 +30,17 @@ spec:
     spec:
       {{- include "lvc.imagePullSecrets" . | nindent 6 }}
       {{- include "lvc.nodeAffinity" . | nindent 6 }}
-      {{- with .Values.podSecurityContext }}
+      {{- if or .Values.podSecurityContext .Values.supplementalGroups }}
       securityContext:
+        {{- with .Values.podSecurityContext }}
         {{- toYaml . | nindent 8 }}
+        {{- end }}
+        {{- with .Values.supplementalGroups }}
+        supplementalGroups:
+          {{- range . }}
+          - {{ . }}
+          {{- end }}
+        {{- end }}
       {{- end }}
       # initContainer waits until at least one model directory is present in the
       # PVC, ensuring the download Job has completed before the service starts.
@@ -180,6 +188,8 @@ spec:
               subPath: detection-models
               readOnly: true
             {{- end }}
+            - name: dev
+              mountPath: /dev
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       volumes:
@@ -194,3 +204,6 @@ spec:
         - name: models
           persistentVolumeClaim:
             claimName: {{ include "video-caption-service.modelsPvcName" . }}
+        - name: dev
+          hostPath:
+            path: /dev

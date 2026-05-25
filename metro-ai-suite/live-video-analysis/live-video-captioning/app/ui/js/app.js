@@ -40,7 +40,12 @@
         pipelineServerError: document.getElementById('pipelineServerError'),
     };
 
-    const state = { selectedRunId: null, runs: new Map(), isStarting: false };
+    const state = {
+        selectedRunId: null,
+        runs: new Map(),
+        isStarting: false,
+        allPipelines: [],
+    };
     const CHAT_TAB_NAME = 'Live Caption RAG Dashboard';
 
     (function initDetectionVisibility() {
@@ -296,6 +301,59 @@
         els.pipelineInfo.textContent = text;
     }
 
+    function isCameraPipelineName(pipelineName) {
+        return typeof pipelineName === 'string' && pipelineName.includes('_Camera_');
+    }
+
+    function hasCameraSourceOption() {
+        return !!els.streamSourceTypeSelect?.querySelector('option[value="camera"]');
+    }
+
+    function getSelectedSourceType() {
+        const selected = els.streamSourceTypeSelect?.value;
+        if (selected === 'rtsp') return 'rtsp';
+        if (selected === 'camera' && hasCameraSourceOption()) return 'camera';
+        return hasCameraSourceOption() ? 'camera' : 'rtsp';
+    }
+
+    function setCameraSourceAvailability(hasUsableCameras) {
+        const select = els.streamSourceTypeSelect;
+        if (!select) return;
+
+        let cameraOption = select.querySelector('option[value="camera"]');
+        if (hasUsableCameras) {
+            if (!cameraOption) {
+                cameraOption = document.createElement('option');
+                cameraOption.value = 'camera';
+                cameraOption.textContent = 'Camera Device';
+                select.insertBefore(cameraOption, select.firstChild);
+            }
+            return;
+        }
+
+        if (cameraOption) {
+            cameraOption.remove();
+        }
+
+        // Ensure dropdown stays on a valid mode when camera source is unavailable.
+        if (select.value !== 'rtsp') {
+            select.value = 'rtsp';
+            SettingsManager.saveSettings(els);
+        }
+    }
+
+    function filterPipelinesBySourceType(pipelines) {
+        const sourceType = getSelectedSourceType();
+        const list = Array.isArray(pipelines) ? pipelines : [];
+        return list.filter((pipeline) => {
+            const name = pipeline?.pipeline_name;
+            if (typeof name !== 'string') return false;
+            return sourceType === 'camera'
+                ? isCameraPipelineName(name)
+                : !isCameraPipelineName(name);
+        });
+    }
+
     function setModelOptions(models) {
         const select = els.modelNameSelect;
         if (!select) return;
@@ -356,7 +414,7 @@
 
     function updateCameraWarningVisibility() {
         if (!els.cameraDeviceWarning) return;
-        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const isCameraMode = getSelectedSourceType() === 'camera';
         const noUsableCamera = !els.cameraDeviceSelect
             || els.cameraDeviceSelect.disabled
             || !els.cameraDeviceSelect.value;
@@ -370,12 +428,15 @@
             return;
         }
 
-        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const isCameraMode = getSelectedSourceType() === 'camera';
         const noUsableCamera = !els.cameraDeviceSelect
             || els.cameraDeviceSelect.disabled
             || !els.cameraDeviceSelect.value;
+        const noCompatiblePipeline = !els.pipelineSelect
+            || els.pipelineSelect.disabled
+            || !(els.pipelineSelect.value || '').trim();
 
-        els.startBtn.disabled = isCameraMode && noUsableCamera;
+        els.startBtn.disabled = (isCameraMode && noUsableCamera) || noCompatiblePipeline;
     }
 
     async function loadCameraDevices() {
@@ -383,20 +444,22 @@
             const cameras = await ApiService.fetchCameras();
             const usableCameras = cameras.filter((camera) => camera?.has_usable_format === true);
             setCameraOptions(usableCameras);
+            setCameraSourceAvailability(usableCameras.length > 0);
             SettingsManager.restoreSelectValues(els);
+            updateStreamSourceInputs();
             updateCameraWarningVisibility();
             updateStartButtonAvailability();
-            updatePipelineInfo(usableCameras.length > 0 ? 'Camera devices loaded' : 'No usable camera devices found');
         } catch (_err) {
             setCameraOptions([]);
+            setCameraSourceAvailability(false);
+            updateStreamSourceInputs();
             updateCameraWarningVisibility();
             updateStartButtonAvailability();
-            updatePipelineInfo('Camera list unavailable');
         }
     }
 
     function updateStreamSourceInputs() {
-        const sourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const sourceType = getSelectedSourceType();
         const isCamera = sourceType === 'camera';
 
         if (els.cameraDeviceRow) {
@@ -417,6 +480,8 @@
             loadCameraDevices();
         }
 
+        refreshPipelineOptionsBySourceType();
+
         updateCameraWarningVisibility();
         updateStartButtonAvailability();
     }
@@ -426,15 +491,33 @@
         if (!select) return;
         select.innerHTML = '';
 
-        const list = Array.isArray(pipelines) && pipelines.length
-            ? pipelines
-            : [{ pipeline_name: ApiService.DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
+        const list = Array.isArray(pipelines) ? pipelines : [];
+
+        if (list.length === 0) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No compatible pipeline available';
+            select.appendChild(opt);
+            select.disabled = true;
+            toggleDetectionFieldsByText();
+            return;
+        }
+
+        select.disabled = false;
 
         const map = new Map();
         for (const it of list) {
             if (!it || typeof it !== 'object' || typeof it.pipeline_name !== 'string') continue;
             const t = it.pipeline_type === 'detection' ? 'detection' : 'non-detection';
-            map.set(it.pipeline_name, { pipeline_name: it.pipeline_name, pipeline_type: t });
+            const displayName = (typeof it.pipeline_display_name === 'string' && it.pipeline_display_name.trim())
+                ? it.pipeline_display_name
+                : it.pipeline_name;
+            map.set(it.pipeline_name, {
+                pipeline_name: it.pipeline_name,
+                pipeline_display_name: displayName,
+                pipeline_type: t,
+                pipeline_default: it.pipeline_default === true,
+            });
         }
         const normalized = Array.from(map.values()).sort((a, b) => {
             if (a.pipeline_type !== b.pipeline_type) {
@@ -443,18 +526,19 @@
             return a.pipeline_name.localeCompare(b.pipeline_name);
         });
 
-        for (const { pipeline_name, pipeline_type } of normalized) {
+        for (const { pipeline_name, pipeline_display_name, pipeline_type } of normalized) {
             const opt = document.createElement('option');
             opt.value = pipeline_name;
             opt.textContent = pipeline_type === 'detection'
-                ? `${pipeline_name}  [Detection]`
-                : pipeline_name;
+                ? `${pipeline_display_name}  [Detection]`
+                : pipeline_display_name;
             opt.dataset.pipelineType = pipeline_type;
             select.appendChild(opt);
         }
 
         if (normalized.length > 0) {
-            select.value = normalized[0].pipeline_name;
+            const preferredDefault = normalized.find((p) => p.pipeline_default === true);
+            select.value = (preferredDefault || normalized[0]).pipeline_name;
         }
 
         toggleDetectionFieldsByText();
@@ -486,12 +570,19 @@
         }
     }
 
+    function refreshPipelineOptionsBySourceType() {
+        const filtered = filterPipelinesBySourceType(state.allPipelines);
+        setPipelineOptions(filtered);
+        SettingsManager.restoreSelectValues(els);
+        toggleDetectionFieldsByText();
+        updateStartButtonAvailability();
+    }
+
     async function loadPipelines() {
         try {
             const pipelines = await ApiService.fetchPipelines();
-            setPipelineOptions(pipelines);
-            SettingsManager.restoreSelectValues(els);
-            toggleDetectionFieldsByText();
+            state.allPipelines = pipelines;
+            refreshPipelineOptionsBySourceType();
         } catch (_err) {
             if (els.pipelineServerError) {
                 els.pipelineServerError.textContent = 'Pipeline server not reachable. Please check the logs.';
@@ -633,14 +724,19 @@
 
     async function startPipeline(evt) {
         evt.preventDefault();
-        const streamSourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const streamSourceType = getSelectedSourceType();
         const rtspUrl = streamSourceType === 'camera'
             ? (els.cameraDeviceSelect?.value || '').trim()
             : (els.rtspInput?.value || '').trim();
         const defaultPrompt = cfg.defaultPrompt || 'Describe what you see in one sentence.';
         const prompt = (els.promptInput.value || '').trim() || defaultPrompt;
         const modelName = (els.modelNameSelect?.value || '').trim() || ApiService.DEFAULT_MODEL;
-        const pipelineName = (els.pipelineSelect?.value || '').trim() || ApiService.DEFAULT_PIPELINE;
+        const pipelineName = (els.pipelineSelect?.value || '').trim();
+        if (!pipelineName) {
+            updatePipelineInfo('No compatible pipeline available for selected stream source type.');
+            updateStartButtonAvailability();
+            return;
+        }
         const maxTokensRaw = (els.maxTokensInput?.value || '').toString().trim();
         const maxTokensParsed = Number.parseInt(maxTokensRaw, 10);
         const maxTokens = Number.isFinite(maxTokensParsed) && maxTokensParsed > 0 ? maxTokensParsed : 70;
@@ -704,7 +800,6 @@
 
         if (!rtspUrl) {
             if (streamSourceType === 'camera') {
-                updatePipelineInfo('No usable camera selected. Connect a camera or switch to RTSP Stream.');
                 updateCameraWarningVisibility();
                 updateStartButtonAvailability();
             }
