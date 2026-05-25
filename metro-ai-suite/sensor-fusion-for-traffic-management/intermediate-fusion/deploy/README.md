@@ -19,31 +19,31 @@ This deploy tree contains the Intel GPU inference assets for the BEVFusion proje
 
 Choose the workflow that matches your goal:
 
-1. `docker/README_Docker.md`
+1. [Docker README on GH](docker/README_Docker.md)
 
    Recommended first stop for a quick run with the published Docker image.
 
-2. `docs/Prerequisites.md`
+2. [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md)
 
    Prepare the host for a native build and install the project dependencies.
 
-3. `docs/GSG.md`
+3. [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md)
 
    Build and run the native applications, export predictions, and troubleshoot common issues.
 
-4. `docs/Testing.md`
+4. [Executable Reference](../../docs/user-guide/intermediate-fusion/Testing.md)
 
    Review the available executables plus the native and Docker smoke-test flows.
 
-5. `tools/README_eval.md`
+5. [KITTI 3D Object Detection Evaluation](./tools/README_eval.md)
 
    Run KITTI-format evaluation and interpret the generated metrics.
 
-6. `tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md`
+6. [DAIR-V2X-I to KITTI Format Conversion Guide](./tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md)
 
    Convert DAIR-V2X-I into KITTI format and verify the converted calibration outputs.
 
-7. `tools/how_to_generate_kitti_format_dataset/kitti360_guide.md`
+7. [KITTI-360 Conversion Guide](./tools/how_to_generate_kitti_format_dataset/kitti360_guide.md)
 
    Convert Kitti360 into KITTI format with the bundled helper scripts.
 
@@ -68,7 +68,7 @@ To work interactively inside the published image instead:
 bash docker/run_docker.sh intel/tfcc:bevfusion
 ```
 
-If this container workflow is enough for your use case, you can skip the native build steps in `docs/Prerequisites.md` and `docs/GSG.md`.
+If this container workflow is enough for your use case, you can skip the native build steps in [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md) and the [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md).
 
 ## Native Host Entry Points
 

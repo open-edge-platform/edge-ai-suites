@@ -11,7 +11,7 @@
 </div>
 hide_directive-->
 
-A multi-modal reference implementation to accurately monitor traffic conditions by blending
+A multi-modal reference implementation that accurately monitors traffic conditions by blending
 camera and sensor inputs. While cameras capture high-resolution visual data, radar/lidar
 sensors precisely measure the speed and distance, even under challenging conditions, such as
 fog, rain, or darkness.
@@ -63,7 +63,5 @@ Get Started <get-started-guide.md>
 How it Works <how-it-works.md>
 Advanced user guide <advanced-user-guide.md>
 APIs.md
-troubleshooting.md
-release-notes.md
 :::
 hide_directive-->
