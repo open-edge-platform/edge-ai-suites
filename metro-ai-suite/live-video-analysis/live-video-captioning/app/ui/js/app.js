@@ -305,8 +305,45 @@
         return typeof pipelineName === 'string' && pipelineName.includes('_Camera_');
     }
 
+    function hasCameraSourceOption() {
+        return !!els.streamSourceTypeSelect?.querySelector('option[value="camera"]');
+    }
+
+    function getSelectedSourceType() {
+        const selected = els.streamSourceTypeSelect?.value;
+        if (selected === 'rtsp') return 'rtsp';
+        if (selected === 'camera' && hasCameraSourceOption()) return 'camera';
+        return hasCameraSourceOption() ? 'camera' : 'rtsp';
+    }
+
+    function setCameraSourceAvailability(hasUsableCameras) {
+        const select = els.streamSourceTypeSelect;
+        if (!select) return;
+
+        let cameraOption = select.querySelector('option[value="camera"]');
+        if (hasUsableCameras) {
+            if (!cameraOption) {
+                cameraOption = document.createElement('option');
+                cameraOption.value = 'camera';
+                cameraOption.textContent = 'Camera Device';
+                select.insertBefore(cameraOption, select.firstChild);
+            }
+            return;
+        }
+
+        if (cameraOption) {
+            cameraOption.remove();
+        }
+
+        // Ensure dropdown stays on a valid mode when camera source is unavailable.
+        if (select.value !== 'rtsp') {
+            select.value = 'rtsp';
+            SettingsManager.saveSettings(els);
+        }
+    }
+
     function filterPipelinesBySourceType(pipelines) {
-        const sourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const sourceType = getSelectedSourceType();
         const list = Array.isArray(pipelines) ? pipelines : [];
         return list.filter((pipeline) => {
             const name = pipeline?.pipeline_name;
@@ -377,7 +414,7 @@
 
     function updateCameraWarningVisibility() {
         if (!els.cameraDeviceWarning) return;
-        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const isCameraMode = getSelectedSourceType() === 'camera';
         const noUsableCamera = !els.cameraDeviceSelect
             || els.cameraDeviceSelect.disabled
             || !els.cameraDeviceSelect.value;
@@ -391,7 +428,7 @@
             return;
         }
 
-        const isCameraMode = (els.streamSourceTypeSelect?.value || 'camera') === 'camera';
+        const isCameraMode = getSelectedSourceType() === 'camera';
         const noUsableCamera = !els.cameraDeviceSelect
             || els.cameraDeviceSelect.disabled
             || !els.cameraDeviceSelect.value;
@@ -407,18 +444,22 @@
             const cameras = await ApiService.fetchCameras();
             const usableCameras = cameras.filter((camera) => camera?.has_usable_format === true);
             setCameraOptions(usableCameras);
+            setCameraSourceAvailability(usableCameras.length > 0);
             SettingsManager.restoreSelectValues(els);
+            updateStreamSourceInputs();
             updateCameraWarningVisibility();
             updateStartButtonAvailability();
         } catch (_err) {
             setCameraOptions([]);
+            setCameraSourceAvailability(false);
+            updateStreamSourceInputs();
             updateCameraWarningVisibility();
             updateStartButtonAvailability();
         }
     }
 
     function updateStreamSourceInputs() {
-        const sourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const sourceType = getSelectedSourceType();
         const isCamera = sourceType === 'camera';
 
         if (els.cameraDeviceRow) {
@@ -683,7 +724,7 @@
 
     async function startPipeline(evt) {
         evt.preventDefault();
-        const streamSourceType = els.streamSourceTypeSelect?.value === 'rtsp' ? 'rtsp' : 'camera';
+        const streamSourceType = getSelectedSourceType();
         const rtspUrl = streamSourceType === 'camera'
             ? (els.cameraDeviceSelect?.value || '').trim()
             : (els.rtspInput?.value || '').trim();
