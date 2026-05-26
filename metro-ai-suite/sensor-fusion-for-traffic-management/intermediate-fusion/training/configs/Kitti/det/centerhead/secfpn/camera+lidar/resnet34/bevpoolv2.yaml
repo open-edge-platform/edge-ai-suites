@@ -1,0 +1,6 @@
+model:
+  encoders:
+    camera:
+      vtransform:
+        use_bevpool: bevpoolv2
+        depth_threshold: 0

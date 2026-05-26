@@ -46,7 +46,7 @@ RUN IGC_VERSION=2.32.7 && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libze-intel-gpu1_${NEO_VERSION}-0_amd64.deb && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/ww14.sum && \
     sha256sum -c ww14.sum && \
-    dpkg -i ./*.deb || apt-get -f install -y && \
+    dpkg -i ./*.deb || apt-get -f install -y --no-install-recommends && \
     rm -rf /tmp/neo_deps
 
 # Intel NPU drivers and prerequisites installation
@@ -174,7 +174,7 @@ RUN IGC_VERSION=2.32.7 && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/libze-intel-gpu1_${NEO_VERSION}-0_amd64.deb && \
     curl -fL --retry 5 --retry-delay 2 --retry-connrefused -O https://github.com/intel/compute-runtime/releases/download/${NEO_VERSION}/ww14.sum && \
     sha256sum -c ww14.sum && \
-    dpkg -i ./*.deb || apt-get -f install -y && \
+    dpkg -i ./*.deb || apt-get -f install -y --no-install-recommends && \
     rm -rf /tmp/neo_deps
 
 # Intel NPU drivers and prerequisites installation
@@ -193,7 +193,7 @@ RUN useradd -ms /bin/bash -G video,users,sudo tfcc && \
 RUN apt update && \
 	apt install -y -q --no-install-recommends autoconf automake libtool build-essential g++ \
 	bison pkg-config flex curl git git-lfs vim dkms cmake make wget \
-	debhelper devscripts mawk openssh-server libssl-dev libeigen3-dev libopencv-dev opencv-data \
+    debhelper devscripts mawk libssl-dev libeigen3-dev libopencv-dev opencv-data \
 	opencl-headers opencl-dev intel-gpu-tools va-driver-all libmfxgen1 libvpl2 \
 	libx11-dev libx11-xcb-dev libxcb-dri3-dev libxext-dev libxfixes-dev libwayland-dev \
 	libgtk2.0-0 libgl1 libsm6 libxext6 x11-apps && \
@@ -214,7 +214,7 @@ RUN apt update && \
         -o xpu-smi_1.3.6_20260206.143628.1004f6cb.u24.04_amd64.deb \
         https://github.com/intel/xpumanager/releases/download/v1.3.6/xpu-smi_1.3.6_20260206.143628.1004f6cb.u24.04_amd64.deb && \
     dpkg -i xpu-smi_*.deb || true && \
-    apt-get update && apt-get -f install -y && \
+    apt-get update && apt-get -f install -y --no-install-recommends && \
     apt clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 

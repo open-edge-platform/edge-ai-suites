@@ -122,7 +122,7 @@ Usage:
 
 ```bash
 ./bevfusion <dataset_path> [--preset v2x|kitti] [--model-dir DIR] \
-  [--fp32] [--int8] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] \
+  [--fp16] [--int8] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] \
   [--vis] [--save-image] [--save-video] [--display] [--util] \
   [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
   [--vis-dir DIR] [--device DEVICE] \
@@ -135,18 +135,19 @@ Key parameters:
 - `--preset v2x|kitti`: select model geometry and post-process geometry.
 - `--model-dir DIR`: override the decoupled split-model directory.
 - Default behavior requests all available INT8 component models. On Battlemage GPUs, the split pipeline uses `fuser.onnx` instead of `quantized_fuser.xml` for the known INT8 fuser issue.
-- PFE selection prefers `lidar_pfe_v7000.onnx` and falls back to `lidar_pfe_v6000.onnx` for FP32 runs. INT8 PFE uses `quantized_lidar_pfe.xml` with the v7000 voxel count.
-- `--fp32`: switch all split components to FP32 ONNX models.
+- PFE selection prefers `lidar_pfe_v7000.onnx` and falls back to `lidar_pfe_v6000.onnx` for `--fp16` runs. INT8 PFE uses `quantized_lidar_pfe.xml` with the v7000 voxel count.
+- `--fp16`: switch all split components to the non-quantized ONNX models and run them with FP16 inference.
 - `--int8`: explicitly use all available INT8 component models.
 - `--repeat N`: run the dataset multiple times.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
 - `--dump-pred --pred-dir DIR`: write KITTI-format predictions.
 - `--save-image`, `--save-video`, `--display`: enable visualization output.
 
-Example command:
+Example commands:
 
 ```bash
 ./bevfusion ../data/v2xfusion/dataset
+./bevfusion ../data/v2xfusion/dataset --fp16
 ```
 
 When you use the bundled release assets, successful runtime smoke output typically includes:
@@ -398,7 +399,7 @@ Purpose: run the canonical split-model pipeline class directly over a dataset ro
 Usage:
 
 ```bash
-./test_bevfusion_pipeline <dataset_path> [--preset v2x|kitti] [--model-dir DIR] [--num-samples N] [--warmup N] [--fp32]
+./test_bevfusion_pipeline <dataset_path> [--preset v2x|kitti] [--model-dir DIR] [--num-samples N] [--warmup N] [--fp16]
 ```
 
 Expected output includes:

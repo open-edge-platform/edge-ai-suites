@@ -280,11 +280,8 @@ class Indexer:
         return {"visual": res_visual, "document": res_document}, all_ids
 
     def get_image_embedding(self, image):
-        embedding_tensor = self.visual_embedding_model.handler.encode_image(image)
-        # Convert tensor to a list of floats for ChromaDB
-        # The result is a batch of one, so we extract the single embedding list
-
-        return embedding_tensor.cpu().numpy().tolist()[0]
+        embedding = self.visual_embedding_model.handler.encode_image(image)
+        return embedding.tolist()[0]
 
     def get_document_embedding(self, text):
         if not self.document_embedding_model:
@@ -292,12 +289,16 @@ class Indexer:
         with self._embed_lock:
             return self.document_embedding_model.get_text_embedding(text)
 
-    def process_video(self, video_path, meta, frame_extract_interval=15, do_detect_and_crop=True):
+    def process_video(self, video_path, meta, frame_extract_interval=15, do_detect_and_crop=True, frame_extract_interval_sparse=90):
         entities = []
         video = VideoFileClip(video_path)
         try:
             frame_counter = 0
             frame_extract_interval = int(frame_extract_interval)
+            frame_extract_interval_sparse = int(frame_extract_interval_sparse)
+            if video.duration > 20 * 60:
+                frame_extract_interval = frame_extract_interval_sparse
+                logger.info(f"Video {video_path} is longer than 20min ({video.duration:.0f}s), using sparse interval: {frame_extract_interval}")
             fps = video.fps
             total_frames = int(video.duration * fps)
             extracted_count = 0
@@ -435,6 +436,7 @@ class Indexer:
             raise ValueError(f"Number of files and metas must be the same. files: {len(files)}, metas: {len(metas)}")
         
         frame_extract_interval = kwargs.get("frame_extract_interval")
+        frame_extract_interval_sparse = kwargs.get("frame_extract_interval_sparse", 90)
         do_detect_and_crop = kwargs.get("do_detect_and_crop", True)
         entities = []
         doc_extensions = ('.txt', '.pdf', '.docx', '.doc', '.pptx', '.ppt', '.xlsx',
@@ -448,7 +450,7 @@ class Indexer:
             if file_lower.endswith('.mp4'):
                 meta["type"] = "video"
                 logger.info(f"Processing video: {file}")
-                entities.extend(self.process_video(file, meta, frame_extract_interval, do_detect_and_crop))
+                entities.extend(self.process_video(file, meta, frame_extract_interval, do_detect_and_crop, frame_extract_interval_sparse=frame_extract_interval_sparse))
             elif file_lower.endswith(('.jpg', '.png', '.jpeg')):
                 meta["type"] = "image"
                 logger.info(f"Processing image: {file}")
@@ -460,6 +462,7 @@ class Indexer:
                     entities.extend(self.process_document(file, meta))
                 except Exception as e:
                     logger.error(f"Error processing document {file}: {e}")
+                    raise
             else:
                 logger.warning(f"Unsupported file type: {file}")
 

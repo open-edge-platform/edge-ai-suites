@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import "../../assets/css/UploadSection.css";
 import handwrittenIcon from "../../assets/images/handwritten_preview.svg";
-import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList } from "../../services/api";
+import { csUploadIngest, csQueryTask, csIngest, csCleanupTask, csDownloadText, getOcrDownloadUrl, createSession, startMonitoring, csGetFilesList, csGetTags } from "../../services/api";
 import OcrPreviewModal from "../Modals/OcrPreviewModal";
 import RemoveConfirmationModal from "../common/RemoveConfirmationModal";
 import FileManager from "./FileManager";
@@ -32,6 +32,7 @@ interface UploadEntry {
   tags: string[];
   vsEnabled: boolean;
   ocrTextKey: string | null;
+  videoSummaryStatus: string | null;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -55,7 +56,11 @@ function isAllowed(filename: string): boolean {
 const TERMINAL: TaskStatus[] = ["COMPLETED", "FAILED", "ALREADY_EXISTS"];
 const ACTIVE: TaskStatus[] = ["PROCESSING", "PENDING"];
 
-const UploadSection: React.FC = () => {
+interface UploadSectionProps {
+  disabled?: boolean;
+}
+
+const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const sessionId = useAppSelector((s) => s.ui.sessionId);
@@ -63,6 +68,8 @@ const UploadSection: React.FC = () => {
   const csServerFilesExist = useAppSelector((s) => s.ui.csServerFilesExist);
   const sessionIdRef = useRef<string | null>(sessionId);
   const monitoringActiveRef = useRef<boolean>(monitoringActive);
+  const serverTagsRef = useRef<string[]>([]);
+  const completedIdsRef = useRef<Set<string>>(new Set());
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   useEffect(() => { monitoringActiveRef.current = monitoringActive; }, [monitoringActive]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -92,12 +99,19 @@ const UploadSection: React.FC = () => {
   useEffect(() => {
     const checkServerFiles = async () => {
       try {
-        const response = await csGetFilesList();
-        const hasFiles = (response.data?.files?.length ?? 0) > 0;
+        const [filesResponse, tags] = await Promise.all([
+          csGetFilesList(),
+          csGetTags(),
+        ]);
+        const hasFiles = (filesResponse.data?.files?.length ?? 0) > 0;
         dispatch(setCsServerFilesExist(hasFiles));
         if (hasFiles) {
           dispatch(setCsHasUploads(true));
           dispatch(setCsUploadsComplete(true));
+        }
+        if (Array.isArray(tags) && tags.length > 0) {
+          serverTagsRef.current = tags;
+          dispatch(setCsTags(tags));
         }
       } catch (err) {
         console.warn("Could not check server files:", err);
@@ -122,25 +136,39 @@ const UploadSection: React.FC = () => {
   useEffect(() => {
     if (entries.length > 0) {
       dispatch(setCsHasUploads(true));
-      // MP4 files in ACTIVE state have already been uploaded to the backend
-      // (summarization is a background step), so treat them as available for search.
+      // Files are available for search once their ingest is COMPLETED or already existed.
       const anyUploaded = entries.some(
         (e) =>
           e.status === "COMPLETED" ||
-          e.status === "ALREADY_EXISTS" ||
-          (e.fileType === "MP4" && ACTIVE.includes(e.status))
+          e.status === "ALREADY_EXISTS"
       );
-      dispatch(setCsUploadsComplete(anyUploaded));
+      // If backend files already exist, search must remain available even while
+      // new files are staged but not yet uploaded.
+      dispatch(setCsUploadsComplete(anyUploaded || csServerFilesExist));
     }
-  }, [entries, dispatch]);
+  }, [entries, dispatch, csServerFilesExist]);
 
   useEffect(() => {
-    const uploadedEntries = entries.filter(
-      (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
+    const newlyCompleted = entries.filter(
+      (e) =>
+        (e.status === "COMPLETED" || e.status === "ALREADY_EXISTS") &&
+        !completedIdsRef.current.has(e.id)
     );
-    const allTags = uploadedEntries.flatMap((e) => e.tags);
-    const uniqueTags = [...new Set(allTags)];
-    dispatch(setCsTags(uniqueTags));
+    if (newlyCompleted.length === 0) return;
+    newlyCompleted.forEach((e) => completedIdsRef.current.add(e.id));
+    csGetTags()
+      .then((tags) => {
+        if (Array.isArray(tags) && tags.length > 0) {
+          serverTagsRef.current = tags;
+          dispatch(setCsTags(tags));
+        }
+      })
+      .catch(() => {
+        // API unavailable — fall back to merging known tags
+        const entryTags = newlyCompleted.flatMap((e) => e.tags);
+        const uniqueTags = [...new Set([...serverTagsRef.current, ...entryTags])];
+        dispatch(setCsTags(uniqueTags));
+      });
   }, [entries, dispatch]);
 
   const toggleSelectAll = () => {
@@ -197,7 +225,7 @@ const UploadSection: React.FC = () => {
 
   // Drive csSummarizing flag: true while any MP4 is still being summarized in the background.
   useEffect(() => {
-    const anySummarizing = entries.some((e) => e.fileType === "MP4" && ACTIVE.includes(e.status));
+    const anySummarizing = entries.some((e) => e.fileType === "MP4" && e.vsEnabled && e.videoSummaryStatus === "PROCESSING");
     dispatch(setCsSummarizing(anySummarizing));
   }, [entries, dispatch]);
 
@@ -228,11 +256,18 @@ const UploadSection: React.FC = () => {
             (result.result as any)?.file_key ??
             null;
           const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}) });
+          const videoSummaryStatus = (result.result as any)?.video_summary_status ?? null;
+          const errorMsg = status === "FAILED" ? ((result.result as any)?.error ?? null) : null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}), ...(errorMsg ? { error: errorMsg } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
-            clearInterval(pollTimers.current[entryId]);
-            delete pollTimers.current[entryId];
+            // Keep polling if video summarization is still in progress
+            if (videoSummaryStatus === "PROCESSING") {
+              // Don't stop polling — summarization still running
+            } else {
+              clearInterval(pollTimers.current[entryId]);
+              delete pollTimers.current[entryId];
+            }
           }
         } catch {
           // ignore transient poll errors
@@ -262,6 +297,7 @@ const UploadSection: React.FC = () => {
         tags: [],
         vsEnabled: false,
         ocrTextKey: null,
+        videoSummaryStatus: null,
       }));
       setEntries((prev) => [...prev, ...newEntries]);
     },
@@ -442,8 +478,14 @@ const UploadSection: React.FC = () => {
     setEntries((prev) => {
       const next = prev.filter((e) => e.id !== id);
       if (next.length === 0) {
-        dispatch(setCsHasUploads(false));
-        dispatch(setCsUploadsComplete(false));
+        if (csServerFilesExist) {
+          // Backend files still exist — keep search available.
+          dispatch(setCsHasUploads(true));
+          dispatch(setCsUploadsComplete(true));
+        } else {
+          dispatch(setCsHasUploads(false));
+          dispatch(setCsUploadsComplete(false));
+        }
       }
       return next;
     });
@@ -483,13 +525,13 @@ return (
                 className="cs-view-files-btn"
                 onClick={() => setShowFileManager(true)}
               >
-                View Files
+                {t("fileManager.viewFiles")}
               </button>
             )}
           </div>
 
           <div
-            className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}`}
+            className={`cs-dropzone-modern ${isDragOver ? "cs-dropzone-modern--active" : ""}${disabled ? " cs-dropzone-modern--disabled" : ""}`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -644,7 +686,7 @@ return (
                             </span>
                           </label>
                         )}
-                        {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status) && (
+                        {entry.fileType === "MP4" && entry.vsEnabled && entry.status === "COMPLETED" && entry.videoSummaryStatus === "PROCESSING" && (
                           <span className="cs-summarizing-label">{t("uploadSection.summarizing")}</span>
                         )}
                         {entry.tags.length > 0 && (
@@ -661,9 +703,9 @@ return (
                         {entry.status === "FAILED" ? (
                           <div className="cs-failed-cell">
                             <span className="cs-failed-msg" title={entry.error ?? ""}>
-                              {entry.fileType === "MP4"
+                              {entry.error || (entry.fileType === "MP4"
                                 ? t("uploadSection.summarizationFailed")
-                                : `Upload of '${entry.filename}' failed. Please try again`}
+                                : `Upload of '${entry.filename}' failed. Please try again`)}
                             </span>
                             <div className="cs-failed-actions">
                               <button
@@ -683,15 +725,9 @@ return (
                         ) : (
                           <>
                             <span
-                              className={`cs-status-badge cs-status-badge--${
-                                entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                                  ? "completed"
-                                  : entry.status.toLowerCase()
-                              }`}
+                              className={`cs-status-badge cs-status-badge--${entry.status.toLowerCase()}`}
                             >
-                              {entry.fileType === "MP4" && entry.vsEnabled && entry.status !== "ALREADY_EXISTS" && ACTIVE.includes(entry.status)
-                                ? t("uploadSection.uploaded")
-                                : getStatusLabel(entry.status)}
+                              {getStatusLabel(entry.status)}
                             </span>
                           </>
                         )}
@@ -725,9 +761,11 @@ return (
                       (e) => e.status === "COMPLETED" || e.status === "ALREADY_EXISTS"
                     );
                     setEntries([]);
-                    // Only reset upload-availability flags when no files exist on the backend.
-                    // Uploaded files remain on the server; search/Q&A should stay enabled.
-                    if (!anyUploadedToBackend && !csServerFilesExist) {
+                    if (csServerFilesExist || anyUploadedToBackend) {
+                      // Backend files still exist — restore availability so search stays enabled.
+                      dispatch(setCsHasUploads(true));
+                      dispatch(setCsUploadsComplete(true));
+                    } else {
                       dispatch(setCsHasUploads(false));
                       dispatch(setCsUploadsComplete(false));
                     }
@@ -737,7 +775,7 @@ return (
                 </button>
                 <button
                   className="cs-upload-all-btn"
-                  disabled={!entries.some((e) => e.status === "STAGED")}
+                  disabled={disabled || !entries.some((e) => e.status === "STAGED")}
                   onClick={handleUploadAll}
                 >
                   {t("uploadSection.uploadFiles")}
@@ -752,6 +790,7 @@ return (
     <RemoveConfirmationModal
       isOpen={!!confirmRemoveId}
       fileName={entries.find((e) => e.id === confirmRemoveId)?.filename ?? ""}
+      isStaged={entries.find((e) => e.id === confirmRemoveId)?.status === "STAGED"}
       onCancel={() => setConfirmRemoveId(null)}
       onConfirm={confirmRemove}
     />

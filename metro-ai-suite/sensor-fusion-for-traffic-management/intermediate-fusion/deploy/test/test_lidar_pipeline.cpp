@@ -56,19 +56,15 @@ std::filesystem::path choose_pfe_model(const Args& args)
             return int8_path;
         }
     }
-    for (const auto& candidate : {args.model_dir / "lidar_pfe_v7000.onnx", args.model_dir / "lidar_pfe_v6000.onnx"}) {
-        if (std::filesystem::exists(candidate)) {
-            return candidate;
-        }
+    const auto candidate = args.model_dir / "lidar_pfe_v7000.onnx";
+    if (std::filesystem::exists(candidate)) {
+        return candidate;
     }
     throw std::runtime_error("Missing lidar PFE model under " + args.model_dir.string());
 }
 
 int infer_max_voxels_from_pfe_path(const std::string& pfe_path)
 {
-    if (pfe_path.find("v6000") != std::string::npos) {
-        return 6000;
-    }
     if (pfe_path.find("v7000") != std::string::npos) {
         return 7000;
     }

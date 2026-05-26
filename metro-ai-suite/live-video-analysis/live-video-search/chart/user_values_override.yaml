@@ -1,3 +1,4 @@
+
 # DO NOT COMMIT/PUSH THIS FILE TO ANY REPO WITH UPDATED VALUES. IT CAN LEAD TO CREDENTIAL LEAKS.
 # RESET ALL THE VALUES HERE TO DEFAULT, BEFORE COMMITING/PUSHING.
 global:
@@ -7,7 +8,7 @@ global:
   vssStackTag: ''
   smartNvrStackTag: ''
   usePvc: true
-  keepPvc: false
+  keepPvc: true
 
   # Storage mode
   # false = RWO: pods sharing PVCs are co-located on the same node (default, works with any storage class)
@@ -15,23 +16,23 @@ global:
   persistence:
     rwxEnabled: false
     # Storage class for shared PVCs. Leave empty to use cluster default.
-    storageClassName: ""
+    storageClassName: ''
 
   # Proxy settings
   proxy:
-    httpProxy: 'http://proxy-dmz.intel.com:911'
-    httpsProxy: 'http://proxy-dmz.intel.com:912'
+    httpProxy: ''
+    httpsProxy: ''
   # Credentials required by services (LVS canonical)
   credentials:
-    minioRootUser: 'minio'
-    minioRootPassword: 'minio_minio'
-    postgresUser: 'postgres'
-    postgresPassword: 'postures'
-    mqttUser: 'mqtt'
-    mqttPassword: 'mqtt'
+    minioRootUser: ''
+    minioRootPassword: ''
+    postgresUser: ''
+    postgresPassword: ''
+    mqttUser: ''
+    mqttPassword: ''
   # Environment values
   env:
-    embeddingModelName: 'CLIP/clip-vit-b-32'
+    embeddingModelName: ''
     frameInterval: '15'
     enableObjectDetection: 'true'
     detectionConfidence: '0.85'
@@ -42,8 +43,8 @@ global:
     vdmsDataprepEnabled: false
     # Set `key` and `device` if GPU is enabled.
     # Update as per the cluster node label key for GPU assigned by the device plugin.
-    key: 'gpu.intel.com/i915'
-    # key: "gpu.intel.com/xe"
+    key: ''
+    # key: 'gpu.intel.com/xe'
     # Set `device` when GPU mode is enabled.
     # Set value to `GPU` to deploy on GPU.
     device: 'GPU'

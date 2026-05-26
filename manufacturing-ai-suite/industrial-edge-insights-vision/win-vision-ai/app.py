@@ -1,4 +1,4 @@
-#
+﻿#
 # Apache v2 license
 # Copyright (C) 2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import logging
+import re
 import sys
 import os
 from pathlib import Path
@@ -66,20 +67,18 @@ class App(AppRunner):
         logger.info("App stopped")
 
     def _start_mediamtx(self) -> None:
-        """Start dedicated MediaMTX instance(s) — one per protocol actually used.
-
-        Each instance is configured with ONLY its own protocol enabled (rtmp/hls/srt
-        disabled) so streams cannot be read via any unintended protocol.
-        """
+        """Start MediaMTX — one combined instance, or one per protocol when different pipelines use different protocols."""
         if self._config.raw_pipeline_mode:
             raw_vals = [val for val in self._config.raw_pipelines.values() if val.strip()]
             rtsp_needed = any("rtspclientsink" in val for val in raw_vals)
             webrtc_needed = any("whipclientsink" in val for val in raw_vals)
+            both_in_same = any("rtspclientsink" in val and "whipclientsink" in val for val in raw_vals)
         else:
             frames = [entry.output.frame for entry in self._config.pipelines.values()
                       if entry.output.frame is not None]
             rtsp_needed = any(frame.has_active_rtsp() for frame in frames)
             webrtc_needed = any(frame.has_active_webrtc() for frame in frames)
+            both_in_same = any(frame.has_active_rtsp() and frame.has_active_webrtc() for frame in frames)
 
         if not rtsp_needed and not webrtc_needed:
             return
@@ -93,17 +92,19 @@ class App(AppRunner):
             return
 
         cfg = self._config.mediamtx
-        if rtsp_needed:
-            svc = MediaService(mediamtx_exe=mediamtx_exe, port=cfg.port, instance_id="rtsp")
-            if not svc.launch_server(rtsp_enabled=True, webrtc_enabled=False):
-                logger.warning("MediaMTX RTSP instance did not start — RTSP output may fail")
+        if rtsp_needed and webrtc_needed and not both_in_same:
+            for instance_id, rtsp_on, webrtc_on in [("rtsp", True, False), ("webrtc", False, True)]:
+                svc = MediaService(mediamtx_exe=mediamtx_exe, port=cfg.port, instance_id=instance_id)
+                if not svc.launch_server(rtsp_enabled=rtsp_on, webrtc_enabled=webrtc_on):
+                    logger.warning("MediaMTX (%s) did not start — stream output may fail", instance_id)
+                self._media_list.append(svc)
+        else:
+            svc = MediaService(mediamtx_exe=mediamtx_exe, port=cfg.port,
+                               instance_id="rtsp" if not webrtc_needed else ("webrtc" if not rtsp_needed else "combined"))
+            if not svc.launch_server(rtsp_enabled=rtsp_needed, webrtc_enabled=webrtc_needed):
+                logger.warning("MediaMTX did not start — stream output may fail")
             self._media_list.append(svc)
 
-        if webrtc_needed:
-            svc = MediaService(mediamtx_exe=mediamtx_exe, port=cfg.port, instance_id="webrtc")
-            if not svc.launch_server(rtsp_enabled=False, webrtc_enabled=True):
-                logger.warning("MediaMTX WebRTC instance did not start — WebRTC output may fail")
-            self._media_list.append(svc)
 
     def _start_metrics(self) -> None:
         """Create and start the MetricsCollector with a Prometheus or log exporter."""
@@ -117,8 +118,8 @@ class App(AppRunner):
         """Launch all configured pipelines.
 
         In raw pipeline mode, submits each non-empty string directly to the pipeline
-        manager with no source/sink tracking. In structured mode, builds a GStreamer
-        launch string from config and logs the RTSP/WebRTC viewer URLs.
+        manager. In structured mode, builds a GStreamer launch string from config and
+        logs the RTSP/WebRTC viewer URLs.
         """
         if self._config.raw_pipeline_mode:
             active = {name: s.strip() for name, s in self._config.raw_pipelines.items() if s.strip()}
@@ -132,6 +133,12 @@ class App(AppRunner):
                     on_completed=self._on_completed, on_error=self._on_error,
                 )
                 logger.info("Launched raw pipeline '%s'", pid)
+                rtsp_match = re.search(r"rtspclientsink\s+location=(rtsp://\S+)", launch_string)
+                whip_match = re.search(r"whipclientsink\s+signaller::whip-endpoint=(http://\S+)/whip", launch_string)
+                if rtsp_match:
+                    logger.info("[%s] RTSP stream:   %s", name, rtsp_match.group(1))
+                if whip_match:
+                    logger.info("[%s] WebRTC stream: %s", name, whip_match.group(1))
             return
 
         mtx = self._config.mediamtx
@@ -154,6 +161,7 @@ class App(AppRunner):
                 if frame.has_active_webrtc():
                     logger.info("[%s] WebRTC stream: http://%s:%d/%s", name, mtx.host_ip, mtx.webrtc_port, frame.peer_id)
 
+
     def _ensure_output_dirs(self) -> None:
         """Create parent directories for any file-based metadata outputs."""
         for entry in self._config.pipelines.values():
@@ -164,7 +172,9 @@ class App(AppRunner):
     def _build_launch_string(self, pipeline_name: str, entry: PipelineEntry, model: ModelConfig,
                               host_ip: str = "localhost", rtsp_port: int = 8554,
                               webrtc_port: int = 8889) -> str:
-        """Build a GStreamer launch string (rtsp or webrtc output, never both)."""
+        """Build a GStreamer launch string (rtsp or webrtc output)."""
+        frame = entry.output.frame
+
         element = {"detection": "gvadetect", "classification": "gvaclassify"}.get(model.type)
         if not element:
             raise NotImplementedError(f"_build_launch_string: model type {model.type!r} not implemented")
@@ -192,13 +202,20 @@ class App(AppRunner):
         metadata_chain = f"queue ! gvametaconvert add-empty-results=true ! {meta_sinks} ! " if meta_sinks else ""
 
         parts = [_get_source_elements(entry.input, device), inference, f"{metadata_chain}queue ! gvawatermark ! {tail}"]
-        frame = entry.output.frame
         if frame is not None:
-            encode = "identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse"
-            if frame.has_active_rtsp():
-                parts.append(f"{encode} ! rtspclientsink location=rtsp://{host_ip}:{rtsp_port}{frame.path}")
-            elif frame.has_active_webrtc():
-                parts.append(f"{encode} ! whipclientsink signaller::whip-endpoint=http://{host_ip}:{webrtc_port}/{frame.peer_id}/whip")
+            enc = "mfh264enc bitrate=2000 gop-size=15 ! h264parse"
+            rtsp_sink = f"rtspclientsink location=rtsp://{host_ip}:{rtsp_port}{frame.path}"
+            webrtc_sink = f"whipclientsink signaller::whip-endpoint=http://{host_ip}:{webrtc_port}/{frame.peer_id}/whip"
+            has_rtsp, has_webrtc = frame.has_active_rtsp(), frame.has_active_webrtc()
+            if has_rtsp and has_webrtc:
+                parts.append(f"identity name=sink ! tee name=t t. ! queue ! {enc} ! {rtsp_sink} t. ! queue ! {enc} ! {webrtc_sink}")
+            elif has_rtsp:
+                parts.append(f"identity name=sink ! {enc} ! {rtsp_sink}")
+            else:
+                parts.append(f"identity name=sink ! {enc} ! {webrtc_sink}")
+        else:
+            logger.warning("[%s] No frame output configured — using d3d11videosink", pipeline_name)
+            parts.append("d3d11videosink name=sink")
         return " ! ".join(parts)
 
 
@@ -215,10 +232,8 @@ def _get_source_elements(cfg, device: str = "CPU") -> str:
     if cfg.type == "rtsp":
         return f'rtspsrc location="{cfg.url}" latency=200 name=src ! rtph264depay ! h264parse ! d3d11h264dec'
     if cfg.type == "camera":
-        src = (
-            f'gencamsrc serial={cfg.serial} pixel-format=mono8 '
-            f'width=1920 height=1080 name=src'
-        )
+        extra = " ".join(f"{k}={v}" for k, v in cfg.properties.items())
+        src = f'gencamsrc serial={cfg.serial}{" " + extra if extra else ""} name=src'
         if device == "CPU":
             return f'{src} ! videoconvert'
         else:
