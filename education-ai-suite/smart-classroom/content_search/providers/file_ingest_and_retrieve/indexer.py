@@ -280,11 +280,8 @@ class Indexer:
         return {"visual": res_visual, "document": res_document}, all_ids
 
     def get_image_embedding(self, image):
-        embedding_tensor = self.visual_embedding_model.handler.encode_image(image)
-        # Convert tensor to a list of floats for ChromaDB
-        # The result is a batch of one, so we extract the single embedding list
-
-        return embedding_tensor.cpu().numpy().tolist()[0]
+        embedding = self.visual_embedding_model.handler.encode_image(image)
+        return embedding.tolist()[0]
 
     def get_document_embedding(self, text):
         if not self.document_embedding_model:

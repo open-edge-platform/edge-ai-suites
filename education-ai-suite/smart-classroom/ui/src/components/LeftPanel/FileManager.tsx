@@ -277,7 +277,7 @@ const FileManager: React.FC<FileManagerProps> = ({ onBack }) => {
         {error && (
           <div className="fm-error">
             <span>{error}</span>
-            <button onClick={fetchFiles}>{t("fileManager.retry")}</button>
+            <button onClick={fetchFiles}>Retry</button>
           </div>
         )}
 
