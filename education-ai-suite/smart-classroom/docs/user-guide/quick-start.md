@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-### Step 1: Run Setup Script (First-Time Only)
+## Step 1: Run Setup Script (First-Time Only)
 
 Open PowerShell and navigate to the smart-classroom directory:
 
@@ -28,7 +28,7 @@ The setup script will:
 
 4. **Launch Smart Classroom** (automatically runs `start-smart-classroom.ps1`)
 
-### Step 2: Access the Application
+## Step 2: Access the Application
 
 Once all services are running, open your browser:
 
@@ -37,7 +37,7 @@ Once all services are running, open your browser:
 
 ---
 
-### Automated Setup - Troubleshooting
+## Automated Setup - Troubleshooting
 
 If you encounter issues during automated setup, refer to the manual steps below:
 
