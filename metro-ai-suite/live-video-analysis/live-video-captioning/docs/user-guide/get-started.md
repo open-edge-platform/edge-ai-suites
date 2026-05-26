@@ -17,11 +17,11 @@ This section shows how to:
 
 ## Run the Application
 
-1. Clone the suite:
+### 1. Clone the suite:
 
-   Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
 git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -30,7 +30,7 @@ git sparse-checkout set metro-ai-suite
 cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-## 2. Create `.env`
+### 2. Create `.env`
 
 Run the setup helper:
 
@@ -58,7 +58,7 @@ This script sets these important values:
 | `CAPTION_HISTORY` | Number of previous captions shown in the UI. |
 
 
-## 3. Download Models (one-time)
+### 3. Download Models (one-time)
 
 Download the required captioning model:
 
@@ -71,13 +71,13 @@ Download the required captioning model:
 
 For more model options, see [Model Preparation](./get-started/model-preparation.md).
 
-## 4. Start the application
+### 4. Start the application
 
 ```bash
 docker compose up -d
 ```
 
-## 5. Use the dashboard
+### 5. Use the dashboard
 
 Open:
 
@@ -94,7 +94,7 @@ Then:
 
 If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so the stream connection does not go through the proxy.
 
-## Stop the application
+### 6. Stop the application
 
 ```bash
 docker compose down
