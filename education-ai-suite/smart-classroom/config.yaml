@@ -1,7 +1,7 @@
 app:
   name: Smart Classroom
   cleanup_on_exit: true
-  use_ov_genai: True # True or False, applicable for provider: openvino
+  use_ov_genai: False # True or False, applicable for provider: openvino
   language: en # en or zh
 
 monitoring:
@@ -237,6 +237,16 @@ models:
     name: "BAAI/bge-large-en-v1.5"
     min_score: 0.65
 
+  ocr:
+    enabled: false # Set to false to disable OCR features
+    provider: openvino # native or openvino
+    device: CPU # CPU or GPU
+    model_dir: models/ocr/paddle # Base directory for OCR models
+    ocr_version: PP-OCRv4
+    det_model: en_PP-OCRv3_det_infer
+    rec_model: en_PP-OCRv4_rec_infer
+    cls_model: ch_ppocr_mobile_v2.0_cls_infer
+
 
 mindmap:
   system_prompt:
@@ -416,6 +426,8 @@ content_search:
   storage:
     data_dir: './data/local_storage'
     bucket: "content-search"
+    document_max_mb: 100    # maximum upload size for documents (MB)
+    video_max_mb: 1024      # maximum upload size for videos (MB)
 
   vlm:
     model_name: "Qwen/Qwen2.5-VL-3B-Instruct"
@@ -443,6 +455,7 @@ content_search:
     visual_embedding_model: "CLIP/clip-xlm-roberta-base-vit-b-32"
     doc_embedding_model: "intfloat/multilingual-e5-small"
     frame_extract_interval: 30      # for video: extract a frame every N frames
+    frame_extract_interval_sparse: 90  # for long videos (>20min): extract a frame every N frames
     do_detect_and_crop: false        # for video/image: run object detection and crop before embedding
     document_parser:
       chunk_method: "semantic"              # "fixed": split by character count; "semantic": split by topic/meaning using embeddings
@@ -462,3 +475,4 @@ content_search:
     max_tokens: 1024        # maximum tokens the VLM can generate for an answer (prevents mid-sentence cutoff)
     max_history_turns: 3    # number of prior conversation turns (user+assistant pairs) sent to the VLM
     context_window: 16384   # token budget for dynamic context selection; 
+    retrieval_score_threshold: 85  # minimum relevance score (0-100) a chunk must have to be used as context

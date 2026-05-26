@@ -57,6 +57,10 @@ spec:
             secretKeyRef:
               name: {{ .Release.Name }}-supass-secret
               key: supass
+        - name: DBHOST
+          value: smart-intersection-pgserver
+        - name: DBPORT
+          value: "5432"
         - name: EXAMPLEDB
           value: /home/scenescape/SceneScape/example_db/smart-intersection-ri.tar.bz2
         volumeMounts:
@@ -72,10 +76,6 @@ spec:
           runAsUser: 0
           runAsGroup: 0
           readOnlyRootFilesystem: false
-          capabilities:
-            add:
-              - SYS_ADMIN
-          privileged: true
         command: ["/bin/bash", "-e", "-c"]
         args:
         - >

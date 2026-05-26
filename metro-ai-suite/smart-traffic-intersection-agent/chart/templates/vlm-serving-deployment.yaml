@@ -128,7 +128,6 @@ spec:
             {{- if $needsGpu }}
             - name: dri-device
               mountPath: /dev/dri
-              readOnly: true
             {{- end }}
           livenessProbe:
             httpGet:

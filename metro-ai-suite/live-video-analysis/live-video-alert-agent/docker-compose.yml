@@ -16,10 +16,8 @@ services:
       - HTTPS_PROXY=${https_proxy}
       - no_proxy=${no_proxy}
       - NO_PROXY=${no_proxy}
-      - VLM_NAME=${MODEL_NAME:-Phi-3.5-vision}
       - VLM_REPO=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
-      - LLM_NAME=${LLM_MODEL:-Phi-4-mini-instruct-int4-ov}
-      - LLM_REPO=${OVMS_LLM_SOURCE_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
+      - LLM_REPO=${LLM_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
       - VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
       - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
     volumes:
@@ -45,10 +43,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - HF_TOKEN=${HF_TOKEN}
-      - OVMS_SOURCE_MODEL=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
-      - MODEL_NAME=${MODEL_NAME:-Phi-3.5-Vision}
-      - TARGET_DEVICE=${TARGET_DEVICE:-CPU}
+      - TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
     volumes:
       - ovms-models:/models
     ulimits:
@@ -91,7 +86,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - TARGET_DEVICE=${TARGET_DEVICE:-CPU}
+      - TARGET_DEVICE=${LLM_TARGET_DEVICE:-CPU}
     volumes:
       - ovms-models:/models
     ulimits:
@@ -137,7 +132,7 @@ services:
       # ---- ADK mode ----
       - USE_ADK=${USE_ADK:-true}
       # ---- LLM endpoint ----
-      - LLM_MODEL=${LLM_MODEL:-Phi-4-mini-instruct-int4-ov}
+      - LLM_REPO=${LLM_REPO:-OpenVINO/Phi-4-mini-instruct-int4-ov}
       # ---- snapshot tool ----
       - SNAPSHOT_DIR=/app/snapshots
       # ---- webhook action tool (optional) ----

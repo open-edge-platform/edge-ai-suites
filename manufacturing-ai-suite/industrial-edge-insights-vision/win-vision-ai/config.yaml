@@ -1,0 +1,89 @@
+# Logging
+logging:
+  level: INFO                          # DEBUG | INFO | WARNING | ERROR | CRITICAL
+  format: "%(asctime)s %(levelname)-7s %(name)s — %(message)s"
+  file: null                           # path to enable rotating file log
+
+# Metrics
+metrics:
+  enabled: false
+  export_interval_s: 5.0
+  prometheus:
+    enabled: false
+    port: 8000
+
+# ---------------- For Advanced Users Only --------------------
+# Raw pipeline mode — set any value to a GStreamer string to bypass models/pipelines below.
+raw_pipelines:
+  front: "" #"filesrc location=\"C:/Users/path/to/video\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! d3d11videosink name=sink"
+  back: "" #"filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
+  right: "" #"filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
+  left: "" #"filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
+  camera: "" #"gencamsrc serial=12345678 pixel-format=mono8 name=src ! videoscale ! video/x-raw, width=1920,height=1080 ! videoconvert ! queue ! d3d12videosink name=sink"
+  
+#--------------------------------------------------------------
+#--------------------------------------------------------------
+
+#----------------- Basic Configuration Steps --------------------
+# Models
+models:
+  inst0:
+    type: detection                    # detection | classification
+    model: "C:/Users/path/to/detection/model.xml"  # add detection model path
+    device: GPU                        # CPU | GPU | NPU
+    properties:
+      batch_size: 1
+      threshold: 0.4
+  inst1:
+    type: classification
+    model: "C:/Users/path/to/classification/model.xml"  #add classification model path
+    device: GPU
+    properties:
+      batch_size: 4
+
+# Pipelines
+pipelines:
+  front:
+    input:
+      type: file                             # file
+      url: "C:/Users/path/to/video"          # add video path
+      #type: rtsp                            # rtsp
+      #url: "rtsp://<ip>:<port>/live.sdp"    # add video path
+      #type: camera                          # camera
+      #serial: 1234567                       # add camera serial number
+      #pixel-format: mono8                   # add camera pixel format (e.g. mono8, bgr8, etc.)
+      #width: 1280                           # add camera width
+      #height: 720                           # add camera height              
+    inference:
+      model_id: inst0
+    output:
+      frame:                          
+        - type: webrtc                   # webrtc 
+          peer_id: front                 # http://localhost:8889/front 
+        #- type: rtsp                    # rtsp
+        #  path: /front                  # rtsp://localhost:8554/front 
+      metadata:
+        #- type: mqtt
+        #  topic: inference/front
+        #  port: 1883
+        - type: file
+          path: "output/front-inference.jsonl"
+  back:
+    input:
+      type: file
+      url: "C:/Users/path/to/video"
+    inference:
+      model_id: inst0
+    output:
+      frame: 
+        - type: webrtc                   # webrtc 
+          peer_id: back                  # http://localhost:8889/back 
+        #- type: rtsp                    # rtsp
+        #  path: /back                   # rtsp://localhost:8554/back 
+      metadata:
+        #- type: mqtt
+        #  topic: inference/back
+        #  port: 1883
+        - type: file
+          path: "output/back-inference.jsonl"
+  

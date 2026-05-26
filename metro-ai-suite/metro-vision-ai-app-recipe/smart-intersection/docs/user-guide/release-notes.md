@@ -1,5 +1,17 @@
 # Release Notes
 
+## v1.19.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+
+**Improved**
+
+- DL Streamer Pipeline Server version upgraded to 2026.1.0.
+- Intel® SceneScape version upgraded 2026.1.0.
+- Optimized the latency for GPU and NPU workloads.
+
 ## v1.18.0
 
 **New**

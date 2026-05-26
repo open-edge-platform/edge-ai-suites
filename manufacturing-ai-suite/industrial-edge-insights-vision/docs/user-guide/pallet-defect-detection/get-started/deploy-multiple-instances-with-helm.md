@@ -14,7 +14,7 @@
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
    ```sh
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git
+   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
@@ -766,8 +766,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline. 
-   
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline.
+
    Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
 
    ```json
@@ -796,7 +796,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ]
    ```
 
-5. Start the pipeline with the above payload. 
+5. Start the pipeline with the above payload.
 
    Below is an example for starting an instance for pallet-defect-detection:
 
@@ -819,7 +819,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 7. Copy the new model to the `dlstreamer-pipeline-server` pod to make it available for application while launching pipeline.
 
    ```sh
-   
+
    POD_NAME=$(kubectl get pods -n <INSTANCE_NAME> -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | grep deployment-dlstreamer-pipeline-server | head -n 1)
 
    kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
@@ -833,7 +833,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 9. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline with this new model.
-   
+
    Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
 
    ```json

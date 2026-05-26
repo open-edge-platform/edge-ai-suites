@@ -31,7 +31,9 @@ spec:
         - name: https_proxy
           value: {{ $.Values.env.https_proxy }}
         - name: no_proxy
-          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }}"
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},nginx-reverse-proxy"
+        - name: NO_PROXY
+          value: "{{ $.Values.env.no_proxy }},{{ $.Values.env.HOST_IP }},nginx-reverse-proxy"
         - name: GF_SERVER_ROOT_URL
           value: https://localhost:30443/grafana/
         - name: GF_SERVER_SERVE_FROM_SUB_PATH
@@ -48,6 +50,9 @@ spec:
         - name: grafana-visualizer
           mountPath: /var/lib/grafana/dashboards/visualizer.json
           subPath: visualizer.json
+        - name: grafana-prometheus
+          mountPath: /var/lib/grafana/dashboards/prometheus.json
+          subPath: prometheus.json
       volumes:
       - name: dashboards-config
         configMap:
@@ -58,6 +63,9 @@ spec:
       - name: grafana-visualizer
         configMap:
           name: grafana-visualizer
+      - name: grafana-prometheus
+        configMap:
+          name: grafana-prometheus
 ---
 apiVersion: v1
 kind: Service
@@ -102,3 +110,12 @@ metadata:
 data:
   visualizer.json: |
     {{ (.Files.Get "config/grafana/dashboards/visualizer.json" | replace "0.0.0.0" (.Values.env.HOST_IP | printf "%s:30443")) | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-prometheus
+  namespace: {{ $.Values.namespace }}
+data:
+  prometheus.json: |
+    {{ .Files.Get "config/grafana/dashboards/prometheus.json" | nindent 4 }}

@@ -4,7 +4,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Docker and Docker Compose v2.20.2 or later
 - Internet connection (for initial VLM model download)
 
 ## Initial Setup
@@ -12,6 +12,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 1. Clone the suite:
 
 2. **Navigate to the Directory**:
+
      ```bash
      cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-alert-agent
      ```
@@ -28,6 +29,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```bash
    export REGISTRY="intel/"
    export TAG="latest"
+   export HF_TOKEN=<your-huggingface-token>
    ```
 
    Skip this step if you prefer to build the sample application from source. For detailed instructions, refer to [How to Build from Source](./get-started/build-from-source.md) guide for details.
@@ -40,12 +42,8 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    # Pre-configure a video stream
    export RTSP_URL=rtsp://<camera-ip>:<port>/stream
 
-   # VLM model selection (default: Phi-3.5-vision-instruct-int4-ov)
-   export OVMS_SOURCE_MODEL=OpenVINO/InternVL2-2B-int4-ov
-   export MODEL_NAME=InternVL2-2B
-
-   # Application port (default: 9000)
-   export PORT=9001
+   # VLM model selection 
+   export OVMS_SOURCE_MODEL=<vlm-model-name>   #Example: Openvino/Phi-3.5-vision-instruct-int4-ov
 
    # Log verbosity
    export LOG_LEVEL=DEBUG
@@ -54,19 +52,22 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    **Agentic dispatch — choose one mode:**
 
    *Option A — Google ADK with local OVMS (default, fully offline):*
+
    ```bash
    export USE_ADK=true
    export COMPOSE_PROFILES=adk-llm
-   export LLM_MODEL=Phi-4-mini-instruct-int4-ov
+   export LLM_MODEL=<llm-model-name>   #Example: Openvino/Phi-4-mini-instruct-int4-ov
    ```
 
    *Option B — Rule-based (no LLM needed):*
+
    ```bash
    export USE_ADK=false
    export COMPOSE_PROFILES=[]
    ```
 
    **Action tools** (configure the ones you want active):
+
    ```bash
    # Webhook (receives HMAC-signed POST)
    export WEBHOOK_URL=https://hooks.example.com/alert
@@ -81,10 +82,12 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
    ```
 
    **MCP (Model Context Protocol) — optional external tool servers:**
+
    ```bash
    export MCP_ENABLED=true                      # default: true
    export MCP_CONFIG_FILE=resources/mcp_servers.json  # path to MCP server config
    ```
+
    Configure MCP servers in `resources/mcp_servers.json`. See [API Reference](./api-reference.md#mcp) for details.
 
 4. Start the Application:
@@ -135,6 +138,7 @@ This guide covers the rapid deployment of the Live Video Alert Agent system usin
 2. Click **Save** to activate
 
    Alternatively, configure alerts via the REST API:
+
    ```bash
    curl -X POST http://localhost:9000/config/alerts \
      -H "Content-Type: application/json" \
@@ -253,6 +257,7 @@ docker compose up -d
 ```
 
 ## Learn More
+
 - [Build from Source](./get-started/build-from-source.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
 
@@ -263,7 +268,6 @@ docker compose up -d
 ./get-started/system-requirements
 ./get-started/build-from-source
 ./get-started/deploy-with-helm
-
 
 :::
 hide_directive-->

@@ -44,6 +44,22 @@
   margin-right: 0;
 }
 
+.accordion-value {
+  font-size: 0.85rem;
+  color: #333;
+  word-break: break-word;
+  margin-top: 4px;
+}
+.accordion-content {
+  font-weight: bold;
+  color: #333;
+}
+
+.accordion-content p{
+  font-weight: normal;
+  color: #333;
+}
+
 h3 {
   margin-bottom: 10px;
   font-weight: bold;

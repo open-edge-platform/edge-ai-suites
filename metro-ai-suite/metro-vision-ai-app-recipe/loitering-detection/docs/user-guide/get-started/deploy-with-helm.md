@@ -34,7 +34,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -51,10 +51,10 @@ Optional: Pull the helm chart and replace the existing helm-chart folder with it
 cd loitering-detection
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.4.0
+helm pull oci://registry-1.docker.io/intel/loitering-detection --version 1.5.0-rc1
 
 #unzip the package using the following command
-tar -xvf loitering-detection-1.4.0.tgz
+tar -xvf loitering-detection-1.5.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv loitering-detection helm-chart

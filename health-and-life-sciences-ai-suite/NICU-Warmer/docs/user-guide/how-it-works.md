@@ -9,7 +9,7 @@ At a high level, the system is composed of several microservices that work toget
 video, run 5 AI models on Intel hardware (GPU, NPU, and CPU), aggregate results, and expose
 them to a React dashboard for clinicians.
 
-```
+```text
 Video Source (file or uploaded .mp4)
     │
     ▼
@@ -104,7 +104,7 @@ The **nicu-mqtt** service provides message passing between pipeline and backend:
 The **nicu-metrics-collector** service gathers hardware and system metrics from the host:
 
 - Runs with `pid: host` and access to `/dev/dri` and system paths under `/sys` and `/proc`.
-- Collects GPU, NPU, CPU, memory, and power statistics from Intel telemetry tools and kernel
+- Collects GPU, NPU, CPU, memory, and power statistics from Intel® telemetry tools and kernel
   interfaces.
 - Exposes metrics via REST API on port 9100, proxied by the backend to the dashboard.
 - Provides platform information (processor model, GPU type, NPU availability, memory size,

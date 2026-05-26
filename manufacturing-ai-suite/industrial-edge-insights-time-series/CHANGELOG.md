@@ -2,6 +2,71 @@
 
 All notable changes to this project are documented in this file.
 
+## [2026.1] - June 2026
+
+### Added
+- Added batch processing UDF variants for Wind Turbine Anomaly Detection and Weld Defect Detection apps, including Kapacitor TICK scripts, per-app `config-batch.json`, and `make batch` support. ([#2586])
+- Added classification training and inference scripts for Weld Defect Detection using a scikit-learn (Intel-accelerated) classifier pipeline. ([#2354])
+- Added functional tests for time-series analytics and Helm deployment workflows. ([#2283])
+- Added check to verify nginx is running during `make up`. ([#2510])
+- Added sparse checkout guidance to Manufacturing documentation. ([#2479])
+
+### Changed
+- Renamed sample app "Weld Anomaly Detection" to "Weld Defect Detection" across all configs, docs, and scripts. ([#2504])
+- Removed LinearRegression model from Wind Turbine Anomaly Detection; RandomForestRegressor (Intel® Extension for Scikit-learn) is now the only inference model, with updated training scripts and adjusted anomaly scoring thresholds. ([#2509])
+- Updated UDF package upload format from zip to tar archives. ([#2441])
+- Removed unused pip packages from wind turbine training `requirements.txt`. ([#2642])
+- Updated `setuptools` to the latest version in training requirements. ([#2647])
+- Updated version to `2026.1.0`. ([#2387])
+
+### Security
+- Bumped `cryptography` from 46.0.5 to 47.0.0. ([#2352])
+- Updated Docker Compose service image versions to address security vulnerabilities. ([#2579])
+- Bumped `requests` to 2.33.0 in test. ([#2343])
+
+### Fixed
+- Fixed Helm automation deployment issues. ([#2424])
+- Fixed failing functional test cases. ([#2450])
+- Removed OPC-UA server port range to fix connectivity issues. ([#2524])
+- Fixed CI/CD GitHub workflow issues for time-series. ([#2346])
+
+### Documentation
+- Distinguished Time-Series vs Multimodal Weld Defect Detection documentation. ([#2607])
+- Updated Weld Defect Detection docs to use GPU. ([#2528])
+- Updated OPC-UA alert configuration documentation. ([#2522])
+- Fixed broken reference in Weld Defect Detection documentation. ([#2581])
+- Fixed typos in documentation. ([#2565])
+
+---
+[#2283]: https://github.com/open-edge-platform/edge-ai-suites/pull/2283
+[#2343]: https://github.com/open-edge-platform/edge-ai-suites/pull/2343
+[#2346]: https://github.com/open-edge-platform/edge-ai-suites/pull/2346
+[#2352]: https://github.com/open-edge-platform/edge-ai-suites/pull/2352
+[#2354]: https://github.com/open-edge-platform/edge-ai-suites/pull/2354
+[#2369]: https://github.com/open-edge-platform/edge-ai-suites/pull/2369
+[#2383]: https://github.com/open-edge-platform/edge-ai-suites/pull/2383
+[#2385]: https://github.com/open-edge-platform/edge-ai-suites/pull/2385
+[#2387]: https://github.com/open-edge-platform/edge-ai-suites/pull/2387
+[#2424]: https://github.com/open-edge-platform/edge-ai-suites/pull/2424
+[#2441]: https://github.com/open-edge-platform/edge-ai-suites/pull/2441
+[#2450]: https://github.com/open-edge-platform/edge-ai-suites/pull/2450
+[#2472]: https://github.com/open-edge-platform/edge-ai-suites/pull/2472
+[#2479]: https://github.com/open-edge-platform/edge-ai-suites/pull/2479
+[#2504]: https://github.com/open-edge-platform/edge-ai-suites/pull/2504
+[#2509]: https://github.com/open-edge-platform/edge-ai-suites/pull/2509
+[#2510]: https://github.com/open-edge-platform/edge-ai-suites/pull/2510
+[#2522]: https://github.com/open-edge-platform/edge-ai-suites/pull/2522
+[#2524]: https://github.com/open-edge-platform/edge-ai-suites/pull/2524
+[#2528]: https://github.com/open-edge-platform/edge-ai-suites/pull/2528
+[#2565]: https://github.com/open-edge-platform/edge-ai-suites/pull/2565
+[#2579]: https://github.com/open-edge-platform/edge-ai-suites/pull/2579
+[#2581]: https://github.com/open-edge-platform/edge-ai-suites/pull/2581
+[#2586]: https://github.com/open-edge-platform/edge-ai-suites/pull/2586
+[#2607]: https://github.com/open-edge-platform/edge-ai-suites/pull/2607
+[#2642]: https://github.com/open-edge-platform/edge-ai-suites/pull/2642
+[#2647]: https://github.com/open-edge-platform/edge-ai-suites/pull/2647
+---
+
 ## [2026.0] - Mar 2026
 
 ### Added

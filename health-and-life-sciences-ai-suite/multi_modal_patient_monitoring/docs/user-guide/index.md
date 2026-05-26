@@ -1,3 +1,5 @@
+# Multi-Modal Patient Monitoring
+
 <!--hide_directive
 <div class="component_card_widget">
   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/health-and-life-sciences-ai-suite/multi_modal_patient_monitoring">
@@ -8,8 +10,6 @@
   </a>
 </div>
 hide_directive-->
-
-# Multi-Modal Patient Monitoring
 
 The Multi-Modal Patient Monitoring application is a reference workload that demonstrates how
 multiple AI pipelines can run simultaneously on a single Intel® platform, providing
@@ -39,9 +39,10 @@ orchestrated, monitored, and visualized in a clinical-style scenario.
 - [System Requirements](./get-started/system-requirements.md) – Hardware, software, and network requirements, plus an overview of the AI models used by each workload.
 - [How It Works](./how-it-works.md) – High-level architecture, service responsibilities, and
   data/control flows.
+- [Release Notes](./release-notes.md) – Version history and known issues.
 
 > **Disclaimer:** This application is provided for development and evaluation purposes only and is _not_
-intended for clinical or diagnostic use.
+> intended for clinical or diagnostic use.
 
 <!--hide_directive
 :::{toctree}
