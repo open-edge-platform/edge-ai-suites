@@ -12,6 +12,7 @@ Install **Python 3.12 or higher** from [the official Python website](https://www
 Install **Git for Windows** from [the official Git website](https://git-scm.com/install/windows).
 
 ### Set Proxies (Optional)
+Go to the target directory of your choice, open PowerShell and run all the terminal commands below
 
 ```powershell
 $env:http_proxy  = # example: http://proxy.example.com:891
@@ -31,7 +32,6 @@ Download the latest `dlstreamer-<version>-win64.exe` from the [Intel DL Streamer
 
 ### Clone the Suite
 
-Go to the target directory of your choice, open PowerShell and run all the terminal commands below.
 If you want to clone a specific release branch, replace `main` with the desired tag.
 To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
@@ -126,7 +126,10 @@ gst-inspect-1.0 gencamsrc
 
 Required when any pipeline uses RTSP or WebRTC frame output.
 
+Create a new directory where MediaMTX will be downloaded, then run the setup script pointing to that directory:
+
 ```powershell
+New-Item -ItemType Directory -Path "<mediamtx_dir>"
 python src/setup_mediamtx.py --dir <mediamtx_dir> --version v1.18.1
 $env:MEDIAMTX_PATH = "<mediamtx_dir>\mediamtx.exe"
 ```
@@ -152,6 +155,8 @@ Use the exported `.xml` path in `config.yaml`.
 ---
 
 ### Configure `config.yaml`
+
+> **Note:** The `config.yaml` file is located in the `win-vision-ai` directory of your clone (i.e., `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/win-vision-ai/config.yaml`).
 
 > **Note:** Use forward slashes in all YAML paths to avoid escape issues.
 
@@ -255,15 +260,15 @@ input:
 
 Requires the camera environment variables from [Set Environment Variables](#set-environment-variables).
 
-`serial` is the only required field. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
+`serial`, `pixel-format`, `width`, and `height` are all required fields. Any additional properties are passed verbatim to the `gencamsrc` GStreamer element — add as many as your camera/driver/gencamsrc support.
 
 ```yaml
 input:
   type: camera
   serial: <camera_serial_number> # required — camera serial number
-  pixel-format: mono8 # optional — e.g. mono8
-  width: 1280 # optional — frame width in pixels
-  height: 720 # optional — frame height in pixels
+  pixel-format: mono8 # required — e.g. mono8
+  width: 1280 # required — frame width in pixels
+  height: 720 # required — frame height in pixels
 ```
 
 <!--hide_directive:::
@@ -280,8 +285,8 @@ Streams to `http://localhost:8889/front`. Open in a browser.
 ```yaml
 output:
   frame:
-    type: webrtc
-    peer_id: front
+    - type: webrtc
+      peer_id: front
 ```
 
 <!--hide_directive:::
@@ -293,8 +298,8 @@ Streams to `rtsp://localhost:8554/front`. Open in VLC.
 ```yaml
 output:
   frame:
-    type: rtsp
-    path: /front
+    - type: rtsp
+      path: /front
 ```
 
 <!--hide_directive:::
@@ -306,10 +311,10 @@ Streams to both `http://localhost:8889/front` and `rtsp://localhost:8554/front` 
 ```yaml
 output:
   frame:
-    type: webrtc
-    peer_id: front
-    type: rtsp
-    path: /front
+    - type: webrtc
+      peer_id: front
+    - type: rtsp
+      path: /front
 ```
 
 <!--hide_directive:::
@@ -389,8 +394,8 @@ pipelines:
       model_id: inst0
     output:
       frame:
-        type: rtsp
-        path: /front
+        - type: rtsp
+          path: /front
       metadata:
         - type: mqtt
           topic: inference/front
@@ -403,8 +408,8 @@ pipelines:
       model_id: inst0
     output:
       frame:
-        type: webrtc
-        peer_id: back
+        - type: webrtc
+          peer_id: back
       metadata:
         - type: file
           path: "output/back-inference.jsonl"

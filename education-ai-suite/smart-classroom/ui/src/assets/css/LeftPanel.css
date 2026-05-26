@@ -26,6 +26,20 @@
   overflow-y: auto;
 }
 
+.cs-health-banner {
+  background: #fdecea;
+  border: 1px solid #d32f2f;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 12px 0;
+}
+
+.cs-health-banner__text {
+  font-size: 12px;
+  line-height: 16px;
+  color: #b71c1c;
+}
+
 
 .tabs {
   display: flex;
