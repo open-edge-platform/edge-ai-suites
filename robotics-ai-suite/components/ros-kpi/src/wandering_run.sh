@@ -9,13 +9,18 @@
 #
 # Usage:
 #   bash src/wandering_run.sh [--goals N] [--timeout SECS] [--record] [--plot]
-#                              [--output-parent DIR]
+#                              [--output-parent DIR] [--side-terminals]
 #
 #   --goals  N           Stop after N 'Goal was reached' events (0 = ignore, default: Ctrl-C)
 #   --timeout N          Hard stop after N seconds (default: 0 = off)
 #   --record             Record KPI topics to an MCAP bag
 #   --plot               Also save trigger-timeline PNG plots after analysis
 #   --output-parent DIR  Store session under DIR instead of monitoring_sessions/wandering/
+#   --side-terminals     Open htop and qmassa in secondary Terminator windows
+#                        (requires terminator; qmassa window skipped if not installed)
+#
+#   GPU and NPU monitoring are enabled automatically when the appropriate hardware
+#   and drivers are detected (xe/i915 GPU driver + qmassa; Intel NPU sysfs).
 
 set -euo pipefail
 
@@ -72,19 +77,21 @@ GOAL_TARGET=0
 MAX_TIMEOUT=0
 RECORD_MODE=0
 PLOT_MODE=0
+SIDE_TERMINALS=0
 SESSION_DIR=""
 OUTPUT_PARENT=""
 LAUNCH_LOG=""   # set after SESSION_DIR is created
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --goals)          GOAL_TARGET="$2"; shift 2 ;;
-    --timeout)        MAX_TIMEOUT="$2"; shift 2 ;;
-    --record)         RECORD_MODE=1; shift ;;
-    --plot)           PLOT_MODE=1; shift ;;
-    --output-parent)  OUTPUT_PARENT="$2"; shift 2 ;;
+    --goals)           GOAL_TARGET="$2"; shift 2 ;;
+    --timeout)         MAX_TIMEOUT="$2"; shift 2 ;;
+    --record)          RECORD_MODE=1; shift ;;
+    --plot)            PLOT_MODE=1; shift ;;
+    --output-parent)   OUTPUT_PARENT="$2"; shift 2 ;;
+    --side-terminals)  SIDE_TERMINALS=1; shift ;;
     -h|--help)
-      sed -n '10,18p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
+      sed -n '10,20p' "${BASH_SOURCE[0]}" | sed 's/^# \?//'
       trap - EXIT; exit 0 ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
@@ -104,6 +111,7 @@ fi
 [[ "$RECORD_MODE"  -eq 1 ]] && echo "    Recording        : KPI topics → session bag"
 [[ "$PLOT_MODE"    -eq 1 ]] && echo "    Plots            : trigger-timeline PNGs"
 [[ -n "$OUTPUT_PARENT" ]]   && echo "    Output parent    : $OUTPUT_PARENT"
+echo "    HW monitoring    : auto-detect (GPU/NPU enabled if valid drivers present)"
 echo "============================================================"
 echo ""
 
@@ -157,16 +165,35 @@ echo ""
 echo "Waiting 12s for simulation to initialise..."
 sleep 12
 
-# ── Process 2: graph monitor ──────────────────────────────────────────────────
-echo "Starting graph monitor..."
+# ── Process 2: stack monitor (graph + resources + auto-detected GPU/NPU) ─────
+# GPU and NPU are enabled automatically by monitor_stack.py when the correct
+# drivers and tools are present (xe/qmassa, i915/qmassa, NPU sysfs).
+echo "Starting monitor stack..."
 python3 "$SCRIPT_DIR/monitor_stack.py" \
-  --graph-only \
   --interval 0.5 \
   --output-dir "$SESSION_DIR" \
   --use-sim-time \
   > "$SESSION_DIR/monitor_stack.log" 2>&1 &
 MONITOR_PID=$!
 echo "  Monitor PID : $MONITOR_PID"
+
+# ── Optional side terminals (htop + qmassa) ───────────────────────────────────
+if [[ "$SIDE_TERMINALS" -eq 1 ]]; then
+  if command -v terminator &>/dev/null; then
+    echo "  Opening side terminals..."
+    terminator -e "htop" --title="htop — wandering monitor" &
+    _QMASSA_BIN=$(command -v qmassa 2>/dev/null \
+      || find ~/.cargo/bin ~/.local/bin /usr/bin -maxdepth 1 -name qmassa 2>/dev/null | head -1 || true)
+    if [[ -n "$_QMASSA_BIN" ]]; then
+      terminator -e "$_QMASSA_BIN" --title="qmassa — GPU monitor" &
+      echo "  Side terminals : htop + qmassa"
+    else
+      echo "  Side terminals : htop only (qmassa not found — run: make install-qmassa)"
+    fi
+  else
+    echo "  WARNING: --side-terminals requested but 'terminator' not found on PATH" >&2
+  fi
+fi
 echo ""
 
 # ── Main loop ─────────────────────────────────────────────────────────────────
