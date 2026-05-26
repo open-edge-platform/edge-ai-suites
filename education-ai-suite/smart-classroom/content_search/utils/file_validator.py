@@ -37,16 +37,18 @@ class FileValidator:
 
     MAGIC_NUMBERS = {
         ".pdf": [b"%PDF"],
-        ".png": [b"\x89PNG\r\n\x1a\n"],
-        ".jpg": [b"\xff\xd8\xff"],
-        ".jpeg": [b"\xff\xd8\xff"],
+        ".doc": [b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"],
+        ".xls": [b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"],
+        ".ppt": [b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"],
         ".docx": [b"PK\x03\x04"],
         ".pptx": [b"PK\x03\x04"],
         ".xlsx": [b"PK\x03\x04"],
         ".zip": [b"PK\x03\x04"],
-        ".mp4": [b"\x00\x00\x00\x18ftypmp4", b"\x00\x00\x00\x1cftypmp42", b"\x00\x00\x00\x20ftypisom"],
+        ".png": [b"\x89PNG\r\n\x1a\n"],
+        ".jpg": [b"\xff\xd8\xff"],
+        ".jpeg": [b"\xff\xd8\xff"],
+        # MP4 and MOV use ftyp-based validation in validate_file_content()
         ".avi": [b"RIFF"],
-        ".mov": [b"\x00\x00\x00\x14ftyp", b"\x00\x00\x00\x18ftyp", b"\x00\x00\x00\x1cftyp", b"\x00\x00\x00\x20ftyp"],
         ".mkv": [b"\x1a\x45\xdf\xa3"],
     }
 
@@ -108,6 +110,20 @@ class FileValidator:
             return True, None
 
         name_lower = filename.lower()
+
+        # MP4/MOV: check for 'ftyp' signature at bytes 4-8
+        if name_lower.endswith(('.mp4', '.mov')):
+            if len(first_chunk) >= 8:
+                if first_chunk[4:8] == b'ftyp':
+                    return True, None
+                else:
+                    error_msg = f"File content mismatch: {filename} has MP4/MOV extension but missing 'ftyp' signature (found: {first_chunk[4:8]})"
+                    logger.warning(error_msg)
+                    return False, error_msg
+            else:
+                error_msg = f"File content mismatch: {filename} is too small to be a valid MP4/MOV file"
+                logger.warning(error_msg)
+                return False, error_msg
         ext = None
         for possible_ext in FileValidator.MAGIC_NUMBERS.keys():
             if name_lower.endswith(possible_ext):
