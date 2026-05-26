@@ -257,7 +257,8 @@ const UploadSection: React.FC<UploadSectionProps> = ({ disabled }) => {
             null;
           const ocrTextKey = (result.result as any)?.ocr_text_key ?? null;
           const videoSummaryStatus = (result.result as any)?.video_summary_status ?? null;
-          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}) });
+          const errorMsg = status === "FAILED" ? ((result.result as any)?.error ?? null) : null;
+          updateEntry(entryId, { status, progress, ...(fileKey ? { fileKey } : {}), ...(ocrTextKey ? { ocrTextKey } : {}), ...(videoSummaryStatus ? { videoSummaryStatus } : {}), ...(errorMsg ? { error: errorMsg } : {}) });
 
           if (status === "COMPLETED" || status === "FAILED") {
             // Keep polling if video summarization is still in progress
@@ -702,9 +703,9 @@ return (
                         {entry.status === "FAILED" ? (
                           <div className="cs-failed-cell">
                             <span className="cs-failed-msg" title={entry.error ?? ""}>
-                              {entry.fileType === "MP4"
+                              {entry.error || (entry.fileType === "MP4"
                                 ? t("uploadSection.summarizationFailed")
-                                : entry.error || `Upload of '${entry.filename}' failed. Please try again`}
+                                : `Upload of '${entry.filename}' failed. Please try again`)}
                             </span>
                             <div className="cs-failed-actions">
                               <button
