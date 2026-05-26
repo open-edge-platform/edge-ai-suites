@@ -16,12 +16,12 @@ logging.basicConfig(level=logging.WARNING, format=_fmt, datefmt=_datefmt, force=
 for _h in logging.root.handlers:
     _h.setFormatter(_ShortNameFormatter(_fmt, datefmt=_datefmt))
 for _named in [
-    "server", "models", "clip_handler", "registry", "indexer",
+    "server", "models", "clip_handler", "indexer",
     "retriever", "reranker", "document_parser", "detector",
     "chroma_client", "store",
 ]:
     logging.getLogger(_named).setLevel(logging.INFO)
-warnings.filterwarnings("ignore", category=FutureWarning, module="timm")
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 import langdetect
 langdetect.detector_factory.init_factory()
@@ -95,6 +95,12 @@ _document_model = None
 
 def _load_models_parallel():
     global _visual_model, _document_model
+
+    import torch
+    import open_clip
+    import transformers
+    import openvino
+
     results = {}
 
     def _load_visual():
