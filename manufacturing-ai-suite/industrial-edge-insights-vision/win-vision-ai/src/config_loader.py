@@ -70,10 +70,10 @@ class FrameOutputConfig:
     path: str = ""        # used when type == "rtsp"
 
     def has_active_rtsp(self) -> bool:
-        return self.type == "rtsp"
+        return bool(self.path)
 
     def has_active_webrtc(self) -> bool:
-        return self.type == "webrtc"
+        return bool(self.peer_id)
 
 
 @dataclass
@@ -240,7 +240,7 @@ def _parse_pipeline_entry(name: str, raw: dict, models: Dict[str, ModelConfig], 
     else:
         frame = default_output.frame
         if frame is not None:
-            if frame.type == "rtsp":
+            if frame.has_active_rtsp():
                 frame = FrameOutputConfig(type="rtsp", path=f"/{name}")
             else:
                 frame = FrameOutputConfig(type="webrtc", peer_id=name)
@@ -269,6 +269,12 @@ def _parse_input(pipeline_name: str, raw: dict) -> InputConfig:
     if input_type == "camera":
         if "serial" not in raw:
             raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'serial'")
+        if not raw.get("pixel-format"):
+            raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'pixel-format' — enter a valid value (e.g. mono8, bgr8)")
+        if not raw.get("width"):
+            raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'width' — enter a valid integer value")
+        if not raw.get("height"):
+            raise ConfigError(f"Pipeline '{pipeline_name}': camera input missing required field 'height' — enter a valid integer value")
         # Collect any extra keys as passthrough properties for gencamsrc
         reserved = {"type", "serial"}
         extra_props = {k: v for k, v in raw.items() if k not in reserved}
@@ -300,9 +306,20 @@ def _parse_inference(pipeline_name: str, raw: dict, models: Dict[str, ModelConfi
 
 
 def _parse_output(pipeline_name: str, raw: dict, require_path: bool = True) -> OutputConfig:
-    """Parse an 'output' section into an OutputConfig with optional frame and metadata sinks."""
+    """Parse an 'output' section into an OutputConfig with optional frame and metadata sinks.
+
+    'frame' accepts a list of one or two entries (type: rtsp / type: webrtc).
+    When two entries are present both protocols run simultaneously.
+    'metadata' is a list of zero or more sink entries (mqtt, file, etc.).
+    """
     frame_raw = raw.get("frame")
-    frame = _parse_frame_output(pipeline_name, frame_raw, require_path) if frame_raw else None
+    frame_items = frame_raw if isinstance(frame_raw, list) else ([frame_raw] if frame_raw else [])
+    parsed = [_parse_frame_output(pipeline_name, entry, require_path) for entry in frame_items]
+    if len(parsed) == 2:
+        frame = FrameOutputConfig(type="", path=parsed[0].path or parsed[1].path,
+                                  peer_id=parsed[0].peer_id or parsed[1].peer_id)
+    else:
+        frame = parsed[0] if parsed else None
     metadata = [_parse_metadata_output(pipeline_name, idx, m) for idx, m in enumerate(raw.get("metadata") or [])]
     return OutputConfig(frame=frame, metadata=metadata)
 

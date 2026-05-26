@@ -36,7 +36,7 @@ class CLIPHandler(BaseEmbeddingModel):
 
             local_path = Path(os.getcwd()).parent / "models" / "clip" / f"{self.model_name}-{self.pretrained}.pt"
             if local_path.exists():
-                logger.info(f"Loading CLIP model {self.model_name} from local cache: {local_path}")
+                logger.debug(f"Loading CLIP model {self.model_name} from local cache: {local_path}")
                 self.model, _, self.preprocess = open_clip.create_model_and_transforms(
                     self.model_name,
                     pretrained=str(local_path),

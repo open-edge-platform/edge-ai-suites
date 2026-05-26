@@ -34,7 +34,7 @@ struct Args {
 void print_usage(const char* argv0)
 {
     std::cerr << "Usage: " << argv0 << " <dataset_path> [--preset v2x|kitti] [--model-dir DIR] "
-              << "[--num-samples N] [--warmup N] [--device DEVICE] [--int8] [--fp32]\n";
+              << "[--num-samples N] [--warmup N] [--device DEVICE] [--int8] [--fp16]\n";
 }
 
 Args parse_args(int argc, char** argv)
@@ -73,8 +73,10 @@ Args parse_args(int argc, char** argv)
             args.device = next();
         } else if (key == "--int8") {
             args.use_int8 = true;
-        } else if (key == "--fp32") {
+        } else if (key == "--fp16") {
             args.use_int8 = false;
+        } else if (key == "--fp32") {
+            throw std::runtime_error("--fp32 was renamed to --fp16 for test_bevfusion_pipeline");
         } else {
             positional.push_back(key);
         }
@@ -113,7 +115,7 @@ int main(int argc, char** argv)
         sycl::queue queue = create_opencl_queue();
         auto& context_manager = GPUContextManager::getInstance();
         if (!context_manager.isInitialized()) {
-            if (!context_manager.initialize(queue, !args.use_int8)) {
+            if (!context_manager.initialize(queue)) {
                 std::cerr << "Failed to initialize GPUContextManager\n";
                 return 1;
             }

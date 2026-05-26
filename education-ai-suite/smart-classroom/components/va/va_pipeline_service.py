@@ -149,6 +149,8 @@ class VideoAnalyticsPipelineService:
                 ["gst-discoverer-1.0.exe", file_path],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=10,
             )
             combined_output = result.stdout + result.stderr
@@ -376,7 +378,8 @@ class VideoAnalyticsPipelineService:
                 command,
                 stdout=log_handle,
                 stderr=subprocess.STDOUT,
-                universal_newlines=True,
+                encoding="utf-8",
+                errors="replace",
                 bufsize=1,
                 env=os.environ.copy(),
                 creationflags=(

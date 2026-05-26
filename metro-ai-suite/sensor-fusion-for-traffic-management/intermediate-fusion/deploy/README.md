@@ -126,16 +126,16 @@ If you want to build the Docker image locally instead of pulling it, add `--buil
 ## Included Sample Assets
 
 - `data/v2xfusion/dataset/`: DAIR-V2X sample dataset for smoke tests.
-- `data/v2xfusion/pointpillars/`: DAIR-V2X split-model assets for `bevfusion`, including INT8 IR and FP32 ONNX files.
+- `data/v2xfusion/pointpillars/`: DAIR-V2X split-model assets for `bevfusion`, including INT8 IR and the non-quantized ONNX files used by `bevfusion --fp16`.
 - `data/v2xfusion/second/`: DAIR-V2X unified-model assets for `bevfusion_unified`, including INT8 IR and FP16 ONNX files.
 - `data/kitti/dataset/`: KITTI-360 sample dataset for smoke tests.
-- `data/kitti/pointpillars/`: KITTI-360 split-model assets for `bevfusion`, including INT8 IR and FP32 ONNX files.
+- `data/kitti/pointpillars/`: KITTI-360 split-model assets for `bevfusion`, including INT8 IR and the non-quantized ONNX files used by `bevfusion --fp16`.
 - `data/kitti/second/`: KITTI-360 unified-model assets for `bevfusion_unified`, including INT8 IR and FP16 ONNX files.
 - `data/v2xfusion/dump_bins/`: intermediate tensors used by several module tests.
 
 The bundled model files under `data/*/pointpillars` and `data/*/second` are dummy weights in the current release package. They preserve the runtime interfaces so the pipelines can be launched and profiled, but they do not produce meaningful detections or evaluation results.
 
-For split-model PFE selection, both DAIR-V2X and KITTI-360 prefer the v7000 PFE shape and fall back to v6000 only when v7000 is not present. Default split and unified runs request INT8 models; on Battlemage GPUs the split pipeline keeps the known INT8 fuser protection and uses `fuser.onnx` while the other available INT8 split components remain enabled. `--fp32` selects split-model FP32 ONNX components, and `--fp16` selects unified FP16 ONNX models.
+For split-model PFE selection, both DAIR-V2X and KITTI-360 prefer the v7000 PFE shape and fall back to v6000 only when v7000 is not present. Default split and unified runs request INT8 models; on Battlemage GPUs the split pipeline keeps the known INT8 fuser protection and uses `fuser.onnx` while the other available INT8 split components remain enabled. `bevfusion --fp16` switches the split pipeline to the non-quantized ONNX components, and `bevfusion_unified --fp16` selects the unified FP16 ONNX model.
 
 ## Additional Utilities
 
