@@ -325,7 +325,7 @@
             if (!cameraOption) {
                 cameraOption = document.createElement('option');
                 cameraOption.value = 'camera';
-                cameraOption.textContent = 'Camera Device';
+                cameraOption.textContent = 'Host Camera';
                 select.insertBefore(cameraOption, select.firstChild);
             }
             return;
