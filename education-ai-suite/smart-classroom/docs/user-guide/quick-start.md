@@ -33,7 +33,7 @@ The setup script will:
 Once all services are running, open your browser:
 
 - **Local:** http://localhost:5173
-- **Network:** http://\<YOUR_IP\>:5173
+- **Network:** http://YOUR_IP:5173
 
 ---
 
@@ -64,11 +64,10 @@ The startup script performs:
 - **Service Detection** - Checks running services
 - **Restart Options** - Restart, skip, or abort choices
 - **Proxy Configuration** - Loads from `.proxy-config`
-- **ASR Configuration** - Change speech recognition settings
-- **Sequential Launch** - Backend → Content Search → Frontend
+- **Sequential Launch** - Backend -> Content Search -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running
 
-> **Tip:** If you modify `config.yaml`, just run this script directly — no need to re-run `setup-smart-classroom.ps1`.
+> **Tip:** If you modify `config.yaml`, just run this script directly - no need to re-run `setup-smart-classroom.ps1`.
 
 ---
 
