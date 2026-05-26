@@ -9,7 +9,7 @@ cd edge-ai-suites\education-ai-suite\smart-classroom
 .\setup-smart-classroom.ps1
 ```
 
-> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`. Use this for subsequent runs or after modifying `config.yaml`.
+> **Note:** If all prerequisites are already installed (FFmpeg, DL Streamer, Python dependencies), you can skip setup and directly run `.\start-smart-classroom.ps1`.
 
 The setup script will:
 
@@ -67,11 +67,7 @@ The startup script performs:
 - **Sequential Launch** - Backend -> Content Search -> Frontend
 - **Graceful Shutdown** - `Q` to stop all, `E` to keep running
 
-> **Tip:** If you modify `config.yaml`, just run this script directly - no need to re-run `setup-smart-classroom.ps1`.
-
 ---
-
-The automated scripts handle dependency installation, basic configuration settings, and service startup with minimal user intervention.
 
 ## Manual Setup
 
