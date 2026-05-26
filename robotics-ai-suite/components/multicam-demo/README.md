@@ -25,7 +25,7 @@ The setup looks like as described in the table below.
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -188,11 +188,11 @@ Press "Del" or "Esc" button at boot to go into the BIOS. Once in the BIOS, set t
 
 ##### Prerequisites
 
-* [Prepare the target system](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
-* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
-* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
-* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
-* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
+* [Prepare the target system](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html)
+* [Setup the Robotics AI Dev Kit APT Repositories](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#set-up-the-autonomous-mobile-robot-apt-repositories)
+* [Install OpenVINO™ Packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-openvino-packages)
+* [Install Robotics AI Dev Kit Deb packages](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-autonomous-mobile-robot-deb-packages)
+* [Install the Intel® NPU Driver on Intel® Core™ Ultra Processors (if applicable)](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html#install-the-intel-npu-driver-on-intel-core-ultra-processors)
 
 ##### Install iGPU drivers on 12th Gen Intel® Core™ i7 processor
 
@@ -347,7 +347,7 @@ All the four cameras are started, after approx 15-20sec, as shown in the below p
    ```bash
    sudo intel_gpu_top
    ```
-   
+
    ```text
     intel_gpu_top: ../tools/intel_gpu_top.c:1909: init_engine_classes: Assertion `max >= 0' failed.
     Aborted
@@ -386,13 +386,13 @@ Open the /etc/default/grub file. Add the following to the **GRUB_CMDLINE_LINUX**
 
     # Save the file and do update grub
    sudo update-grub
-  
+
 
 Reboot the system.
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/openvino/pyrealsense2_d457_multicam_object_detection_tutorial.html).
 
 ## License
 

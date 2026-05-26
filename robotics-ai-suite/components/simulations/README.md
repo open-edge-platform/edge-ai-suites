@@ -14,7 +14,7 @@ A collection of ROS 2 simulation packages and tutorials for robotics application
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -153,7 +153,7 @@ These simulations can be launched individually or combined depending on your tes
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/simulation/index.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/simulation/index.html).
 
 ## License
 
