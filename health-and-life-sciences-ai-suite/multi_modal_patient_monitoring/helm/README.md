@@ -20,8 +20,11 @@ NGINX Ingress Controller running in your cluster before installing the chart wit
 # Install NGINX Ingress Controller via Helm
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo update
+
+# Default install – uses NodePort (works on bare-metal and single-node clusters):
 helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+  --namespace ingress-nginx --create-namespace \
+  --set controller.service.type=NodePort
 
 # Wait for the controller to be ready
 kubectl wait --namespace ingress-nginx \
@@ -30,22 +33,23 @@ kubectl wait --namespace ingress-nginx \
   --timeout=120s
 ```
 
+> **Cloud environments:** If your cluster has a cloud load-balancer provider (e.g.
+> EKS, GKE, AKS), you may omit `--set controller.service.type=NodePort` to use
+> the default `LoadBalancer` service type instead.
+
 For **Minikube**, enable the built-in ingress addon instead:
 ```bash
 minikube addons enable ingress
 ```
 
-If your ingress controller `EXTERNAL-IP` stays `pending` (common on bare-metal clusters),
-you have two supported options:
-
-1. Install a LoadBalancer implementation such as MetalLB.
-2. Expose the ingress controller via NodePort.
-
-Example for existing ingress-nginx install:
-```bash
-kubectl patch svc ingress-nginx-controller -n ingress-nginx \
-  -p '{"spec":{"type":"NodePort"}}'
-```
+> **Already installed with LoadBalancer and `EXTERNAL-IP` stuck in `<pending>`?**
+> Patch the existing controller to NodePort:
+> ```bash
+> kubectl patch svc ingress-nginx-controller -n ingress-nginx \
+>   -p '{"spec":{"type":"NodePort"}}'
+> ```
+> Or install a bare-metal load balancer such as MetalLB (see
+> [Option B](#option-b--install-metallb-bare-metal-load-balancer) below).
 
 If you do not have an ingress controller and do not wish to install one, set
 `ingress.enabled: false` in `values.yaml` and use port-forwarding to access the
@@ -204,7 +208,79 @@ echo "<IP> multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
 ```
 Replace <IP> with the value shown in the ADDRESS column.
 
-#### 3. If the ADDRESS Field is Empty (Common in Minikube)
+#### 3. If the ADDRESS Field is Empty
+
+The ADDRESS column can remain empty in several environments. Follow the instructions
+for your setup:
+
+##### Bare-metal clusters (no cloud load balancer)
+
+If you followed the default install instructions above (NodePort), the Ingress ADDRESS
+column may remain empty but the controller is still reachable via any node IP and the
+allocated NodePort.
+
+Retrieve the allocated NodePort and use any node IP to access the application:
+
+```bash
+# Get the HTTP NodePort
+kubectl get svc ingress-nginx-controller -n ingress-nginx \
+  -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}'
+```
+
+Map the hostname to a node IP:
+```bash
+echo "<NODE_IP> multi-modal-patient-monitoring.local" | sudo tee -a /etc/hosts
+```
+
+Access the application at `http://multi-modal-patient-monitoring.local:<NodePort>/`
+
+If the ingress controller was installed with the `LoadBalancer` service type and
+`EXTERNAL-IP` stays in `<pending>` state, patch it to NodePort:
+
+```bash
+kubectl patch svc ingress-nginx-controller -n ingress-nginx \
+  -p '{"spec":{"type":"NodePort"}}'
+```
+
+##### Option B – Install MetalLB (bare-metal load balancer)
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
+
+# Wait for MetalLB to be ready
+kubectl wait --namespace metallb-system \
+  --for=condition=ready pod \
+  --selector=app=metallb \
+  --timeout=120s
+```
+
+Then configure an IP address pool matching your network (replace the range below):
+```yaml
+# metallb-config.yaml
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default-pool
+  namespace: metallb-system
+spec:
+  addresses:
+    - 192.168.1.240-192.168.1.250   # <-- adjust to your LAN range
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: default
+  namespace: metallb-system
+```
+
+```bash
+kubectl apply -f metallb-config.yaml
+```
+
+After MetalLB assigns an IP, the Ingress ADDRESS will populate automatically.
+
+##### Minikube
+
 Some local Kubernetes environments (such as Minikube) do not automatically populate the ingress IP.
 
 Retrieve the Minikube cluster IP:
