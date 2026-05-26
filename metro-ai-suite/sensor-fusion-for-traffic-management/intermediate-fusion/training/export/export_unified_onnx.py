@@ -730,6 +730,7 @@ def main():
     print("[1/5] Loading model ...")
     from torchpack.utils.config import configs
     from mmcv import Config
+    from mmcv.runner import load_checkpoint
     from mmdet3d.models import build_model
     from mmdet3d.utils import recursive_eval
 
@@ -738,8 +739,7 @@ def main():
     cfg.model.train_cfg = None
 
     model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
-    ckpt = torch.load(args.checkpoint, map_location='cpu')
-    model.load_state_dict(ckpt['state_dict'], strict=False)
+    load_checkpoint(model, args.checkpoint, map_location="cpu", strict=False)
     model.cuda().eval()
     print("  Model loaded successfully")
     print()

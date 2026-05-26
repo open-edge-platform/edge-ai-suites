@@ -25,7 +25,7 @@ for Multimodal applications.
 
 ### Data flow explanation
 
-As seen in the architecture diagram above, the sample app at a high-level comprises of a data
+As seen in the architecture diagram above, the sample app at a high-level comprises a data
 simulator, analytics and visualization components.
 Below is an explanation of how this architecture translates to data flow in the weld defect
 detection use case.
@@ -102,11 +102,11 @@ An array defining one or more video output destinations. Each entry requires a `
 
 ##### 2.2 Time Series Analytics Microservice
 
-**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the RandomForestClassifier model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. Also, publishes all the processed weld sensor data points over MQTT.
+**Time Series Analytics Microservice** uses **Kapacitor** - a real-time data processing engine that enables users to analyze time series data. It reads the weld sensor data points point by point coming from **Telegraf**, runs the RandomForestClassifier model to identify the anomalies, writes the results into configured measurement/table in **InfluxDB** and publishes anomalous data over MQTT. It also publishes all the processed weld sensor data points over MQTT.
 
 The UDF deployment package used for
 weld data is available
-at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/config/time-series-analytics-microservice`. Directory details is as below:
+at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice`. Directory details are as below:
 
 ###### `config.json`
 
@@ -117,7 +117,8 @@ The `udfs` section specifies the details of the UDFs used in the task.
 | Key     | Description                                         | Example Value                   |
 |---------|-----------------------------------------------------|---------------------------------|
 | `name`  | The name of the UDF script.                         | `"weld_anomaly_detector"`       |
-| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.cb"`    |
+| `models`| The name of the model file used by the UDF.         | `"weld_anomaly_detector.pkl"`    |
+| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`   |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 
@@ -137,7 +138,7 @@ The `mqtt` section specifies the MQTT broker details for sending alerts.
 
 ###### `udfs/`
 
-Contains the python script to process the incoming data.
+Contains the Python script to process the incoming data.
 Uses RandomForestClassifier machine learning algorithm from the scikit-learn library (Intel accelerated) to run on CPU/GPU to
 detect anomalous weld data points using sensor data.
 
@@ -153,7 +154,7 @@ The `weld_anomaly_detector.pkl` is a model built using the RandomForestClassifie
 
 ##### 2.3 Fusion Analytics
 
-**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**
+**Fusion Analytics** subscribes to the MQTT topics coming out of `DL Streamer Pipeline Server` and `Time Series Analytics Microservice`, applies `AND`/`OR` logic to determine the anomalies during the weld process, publishes the results over MQTT and writes the results as a measurement in **InfluxDB**.
 It also stores the vision metadata from the `DL Streamer Pipeline Server` as a measurement in **InfluxDB**.
 
 #### 3. Data Storage

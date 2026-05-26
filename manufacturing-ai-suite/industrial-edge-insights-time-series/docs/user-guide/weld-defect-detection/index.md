@@ -21,7 +21,7 @@ for Time-series applications.
 
 ## App Architecture
 
-As seen in the following architecture diagram, the sample app at a high-level comprises of data simulators(can act as data destinations if configured) - these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising of Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
+As seen in the following architecture diagram, the sample app, at a high level, comprises data simulators (which can act as data destinations if configured) - these in the real world would be the physical devices - and the generic Time Series AI stack based on **TICK Stack**, comprising Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor, and Grafana.
 
 ![Weld Defect Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-defect-detection-timeseries-ai-stack-architecture.png)
 
@@ -45,7 +45,7 @@ Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/indust
 
 **Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
 
-Directory details is as below:
+Directory details are as below:
 
 ##### **`config.json`**
 
@@ -63,7 +63,7 @@ The `udfs` section specifies the details of the UDFs used in the task.
 |---------|---------------------------------------------------------------------------------------------|----------------------------------------|
 | `name`  | The name of the UDF script.                                                                 | `"weld_defect_detector.py"`       |
 | `models`| The names of the model files used by the UDF.                                               | `"weld_defect_detector.pkl"` |
-| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu`| `cpu`                                  |
+| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`                                  |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
 ---

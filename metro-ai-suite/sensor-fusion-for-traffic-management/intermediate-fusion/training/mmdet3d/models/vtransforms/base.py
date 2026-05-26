@@ -663,25 +663,14 @@ class V2XTransform(nn.Module):
             denorms = kwargs['denorms']
 
         feat, depth, x = self.get_cam_feats(img, export=True)
-        torch.save([
-            camera2lidar,
-            camera_intrinsics,
-            img_aug_matrix,
-            lidar_aug_matrix,
-            denorms
-        ], "metas.pth")
 
         with no_jit_trace():
-            camera2lidar, camera_intrinsics, img_aug_matrix, lidar_aug_matrix, denorms = torch.load("metas.pth")
-            if os.path.exists('metas.pth'):
-                os.remove('metas.pth')
-
             geom = self.get_geometry_rays(
-                camera2lidar,
-                camera_intrinsics,
-                img_aug_matrix,
-                lidar_aug_matrix,
-                denorms
+                camera2lidar.detach(),
+                camera_intrinsics.detach(),
+                img_aug_matrix.detach(),
+                lidar_aug_matrix.detach(),
+                denorms.detach() if torch.is_tensor(denorms) else denorms,
             )
             x, local_intervals, local_geom_feats = self.bev_pool(geom, x ,export= True)
             global newx

@@ -102,7 +102,7 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
 
 3. Use the following command to verify that all containers are active and error-free.
 
-   > **Note:** The command `make status` may show errors in containers like ia-grafana when user have not logged in
+   > **Note:** The command `make status` may show errors in containers like ia-grafana when the user has not logged in
    > for the first login OR due to session timeout. Just login again in Grafana and functionality wise if things are working, then
    > ignore `user token not found` errors along with other minor errors which may show up in Grafana logs.
 
@@ -160,7 +160,7 @@ curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_de
      docker exec -it ia-influxdb bash
     ```
 
-2. Run following commands to see the data in InfluxDB*.
+2. Run the following commands to see the data in InfluxDB*.
 
    > **NOTE:**
    > Please ignore the error message `There was an error writing history file: open /.influx_history: read-only file system` happening in the InfluxDB shell.
