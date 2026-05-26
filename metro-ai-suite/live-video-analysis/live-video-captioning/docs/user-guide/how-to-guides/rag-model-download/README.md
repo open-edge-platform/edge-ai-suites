@@ -1,6 +1,6 @@
 # RAG Model Download
 
-This guide is for the optional Live Video Captioning RAG setup. You do not need these steps for the base captioning application.
+This guide covers the optional Live Video Captioning RAG setup. These steps are not required for the base Live Video Captioning application.
 
 ## What RAG needs
 
@@ -16,7 +16,7 @@ From the `live-video-captioning` directory:
 
 ```bash
 ./model_download_scripts/download_models.sh \
-  --model microsoft/Phi-3.5-mini-instruct \
+  --model Qwen/Qwen2.5-7B-Instruct \
   --type llm \
   --device CPU \
   --weight-format int8
@@ -30,9 +30,9 @@ For gated Hugging Face models, set a token first:
 export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
 ```
 
-## Review embedding defaults
+## Review Embedding Defaults
 
-The default embedding and LLM settings are in:
+The default embeddings and LLM settings are in:
 
 ```text
 scripts/setup_embeddings.sh
@@ -44,7 +44,7 @@ Update these values only if you want different models or devices:
 EMBEDDING_MODEL_NAME=QwenText/qwen3-embedding-0.6b
 EMBEDDING_DEVICE=CPU
 LLM_DEVICE=CPU
-LLM_MODEL_ID=microsoft/Phi-3.5-mini-instruct
+LLM_MODEL_ID=Qwen/Qwen2.5-7B-Instruct
 ```
 
 ## Enable RAG services

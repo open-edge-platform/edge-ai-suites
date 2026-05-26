@@ -39,7 +39,7 @@ DEVICE="CPU"
 PRECISION="int8"
 MODEL=""
 
-EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/yogeshmpandey/edge-ai-libraries/feat/ephemeral-container/microservices/model-download/scripts/run_ephemeral.sh}"
+EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/yogeshmpandey/edge-ai-libraries/feat/ephemeral-container/microservices/model-download/scripts/get_model.sh}"
 IMAGE_TAG="${TAG:-latest}"
 OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
 
@@ -214,7 +214,8 @@ if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
   fi
 
   if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
-    TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
+    # Preserve the full model path (org/model) in final output when present.
+    TARGET_DIR="${FINAL_DIR}/${MODEL}"
     mkdir -p "${TARGET_DIR}"
     mv "${MODEL_SRC}"/* "${TARGET_DIR}"/
     log "Relocated model to: ${TARGET_DIR}"

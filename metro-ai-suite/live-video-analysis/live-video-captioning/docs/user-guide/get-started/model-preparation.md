@@ -2,7 +2,7 @@
 
 Live Video Captioning needs at least one Vision Language Model (VLM) in `ov_models/`. Object detection is optional and uses models in `ov_detection_models/`.
 
-The provided helper uses the ephemeral model-download container flow from the Model Download project. It starts a temporary container, downloads or converts the model, writes the files to this repository, and removes the container when finished. You do not need to clone `edge-ai-libraries` or run a separate model-download service.
+The provided helper uses the ephemeral model-download container flow from the [Model Download project](https://docs.openedgeplatform.intel.com/2026.0/edge-ai-libraries/model-download/index.html) in Open Edge Platform. It starts a temporary container, downloads or converts the model, writes the files to this repository, and removes the container when finished. No separate model-download setup is required.
 
 ## Prerequisites
 
@@ -13,6 +13,9 @@ The provided helper uses the ephemeral model-download container flow from the Mo
 
   ```bash
   export HUGGINGFACEHUB_API_TOKEN=<your-huggingface-token>
+
+  # Optional: To download the model to a different path (for example, ~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag for live-video-captioning-rag standalone deployment), export:
+  export MODEL_PATH=~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
   ```
 
 ## Download a VLM model
@@ -28,7 +31,7 @@ The model is prepared under `ov_models/`.
 
 Supported weight formats are `int4`, `int8`, and `fp16`. The default is `int8`.
 
-## Optional: download an object-detection model
+## Optional: Download an Object-Detection Model
 
 Download a YOLO model only if you plan to enable the object-detection pipeline:
 
@@ -44,7 +47,7 @@ Then enable detection in `.env`:
 ENABLE_DETECTION_PIPELINE=true
 ```
 
-## Optional: change the conversion device
+## Optional: Change the Conversion Device Configuration
 
 For VLM conversion, set the target device:
 
