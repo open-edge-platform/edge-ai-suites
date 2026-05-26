@@ -119,7 +119,7 @@ docker run -it --rm --net=host \
   -v $HOME/.Xauthority:/home/dlstreamer/.Xauthority:ro \
   --group-add $RENDER_GROUP_ID \
   --device=/dev/dri \
-  intel/dlstreamer:2026.0.0-ubuntu24 \
+  intel/dlstreamer:2026.1.0-ubuntu24-rc1 \
   bash -c "export MODELS_PATH=/home/dlstreamer/data/models && \
            /opt/intel/dlstreamer/samples/gstreamer/gst_launch/human_pose_estimation/human_pose_estimation.sh \
            /home/dlstreamer/data/face-demographics-walking.mp4"
