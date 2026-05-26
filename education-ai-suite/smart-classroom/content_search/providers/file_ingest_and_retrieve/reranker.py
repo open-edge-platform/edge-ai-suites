@@ -8,7 +8,7 @@ from pathlib import Path
 
 import math
 
-import torch
+import numpy as np
 from optimum.intel import OVModelForSequenceClassification
 from transformers import AutoTokenizer
 
@@ -302,7 +302,7 @@ class PostProcessor:
                          converted_count, len(remove_indices))
 
     def _rerank_documents(self, query: str, doc_results: list[dict]) -> list[dict]:
-        """Re-score documents with BAAI/bge-reranker-large cross-encoder.
+        """Re-score documents with cross-encoder reranker.
 
         Documents missing ``chunk_text`` in metadata are kept at their
         original rank position but do not receive a reranker score.
@@ -324,11 +324,10 @@ class PostProcessor:
             pairs = [[query, r["meta"]["chunk_text"]] for _, r in with_text]
             logger.debug("[rerank] Scoring %d doc pairs with cross-encoder", len(pairs))
             inputs = self.tokenizer(
-                pairs, padding=True, truncation=True, max_length=512, return_tensors="pt",
+                pairs, padding=True, truncation=True, max_length=512, return_tensors="np",
             )
-            with torch.no_grad():
-                logits = self.reranker_model(**inputs).logits.squeeze(-1)
-            scores = logits.float().cpu().tolist()
+            logits = self.reranker_model(**inputs).logits.squeeze(-1)
+            scores = logits.astype(np.float32).tolist()
             if isinstance(scores, float):
                 scores = [scores]
 

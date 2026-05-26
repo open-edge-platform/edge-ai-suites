@@ -465,7 +465,7 @@ content_search:
       semantic_breakpoint_percentile: 85 # (semantic mode) higher = fewer, larger chunks; lower = more, smaller chunks (range: 0-100)
       semantic_buffer_size: 2            # (semantic mode) how many neighboring sentences to group when comparing similarity; larger = less sensitive to noise
     reranker:
-      model: "BAAI/bge-reranker-large"
+      model: "BAAI/bge-reranker-base"
       device: "GPU"
       dedup_time_threshold: 5    # seconds — frames closer than this from the same video are merged
       overfetch_multiplier: 3    # retrieve top_k * N candidates from DB before post-processing
