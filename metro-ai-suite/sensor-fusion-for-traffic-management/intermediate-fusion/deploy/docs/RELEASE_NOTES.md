@@ -1,6 +1,6 @@
 # Release Notes
 
-## Intel® OEP Sensor Fusion For Traffic Management EAS-2026.1 Release
+## Intel® OEP Sensor Fusion For Traffic Management EAS-2026.1.0 Release
 
 ### Overview
 
