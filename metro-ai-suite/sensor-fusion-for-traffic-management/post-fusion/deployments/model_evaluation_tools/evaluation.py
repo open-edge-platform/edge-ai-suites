@@ -128,7 +128,7 @@ def calculate_bbox_iou(box1, box2):
     
     return iou
 
-def eval(gt_dir, pred_dir, classname, ovthresh=0.5, use_07_metric=False):
+def evaluate_class(gt_dir, pred_dir, classname, ovthresh=0.5, use_07_metric=False):
     target_class_id = CLASS_TO_ID[classname]
     class_recs, npos = load_ground_truth(gt_dir, target_class_id)
     # print(class_recs, npos)
@@ -191,8 +191,8 @@ def eval(gt_dir, pred_dir, classname, ovthresh=0.5, use_07_metric=False):
 
 
 def evaluate_model(gt_dir, pred_dir, ovthresh=0.5, use_07_metric=False):
-    rec1, prec1, ap1 = eval(gt_dir, pred_dir, "car", ovthresh, use_07_metric)
-    rec2, prec2, ap2 = eval(gt_dir, pred_dir, "truck", ovthresh, use_07_metric)
+    rec1, prec1, ap1 = evaluate_class(gt_dir, pred_dir, "car", ovthresh, use_07_metric)
+    rec2, prec2, ap2 = evaluate_class(gt_dir, pred_dir, "truck", ovthresh, use_07_metric)
     print("****************************************")
     print("category:    car     truck")
     print(f"ap:        {ap1:.4f}    {ap2:.4f}")

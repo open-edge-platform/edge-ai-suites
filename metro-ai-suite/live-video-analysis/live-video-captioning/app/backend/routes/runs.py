@@ -239,7 +239,7 @@ async def _multiplexed_metadata_generator() -> AsyncGenerator[str, None]:
 
             except Exception as e:
                 logger.error(f"Error in multiplexed metadata generator: {e}")
-                yield f": error - {e}\n\n"
+                yield ": error\n\n"
                 await asyncio.sleep(1)
 
     finally:
