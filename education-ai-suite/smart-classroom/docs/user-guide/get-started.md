@@ -133,12 +133,6 @@ content_search:
 
 ## Step 3: Run the Application
 
-Activate the environment before running the application:
-
-```bash
-smartclassroom\Scripts\activate
-```
-
 Run the backend:
 
 ```bash
