@@ -385,7 +385,7 @@ Manually invoke an MCP tool for testing.
   {
     "tool": "mcp_prometheus_execute_query",
     "status": "success",
-    "result": {},
+    "result": {...},
     "duration_ms": 45.3
   }
   ```
