@@ -21,7 +21,7 @@ spec:
     spec:
       initContainers:
         - name: init-resources
-          image: curlimages/curl:latest
+          image: curlimages/curl:8.20.0
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
           command: ["/bin/sh", "/scripts/init.sh"]
           env:
