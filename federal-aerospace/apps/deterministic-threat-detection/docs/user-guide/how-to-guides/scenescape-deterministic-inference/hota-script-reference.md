@@ -55,7 +55,7 @@ OUTPUT_DIRECTORY = "dataset"     # Where reconstructed JSON files are written
 **Key CLI arguments:**
 
 ```
---broker       MQTT broker host (default: 10.106.147.105)
+--broker       MQTT broker host (default: 127.0.0.1)
 --topics       Camera MQTT topics to monitor for frame gating
 --target       iperf3 server host
 --bitrate      iperf3 UDP bitrate (default: 960M)
