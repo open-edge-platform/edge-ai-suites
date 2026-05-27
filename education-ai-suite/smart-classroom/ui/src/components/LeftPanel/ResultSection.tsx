@@ -24,6 +24,7 @@ export interface CsSearchResultMeta {
   video_start_second?: number;
   video_end_second?: number;
   summary_text?: string;
+  chunk_text?: string;
   doc_page_number?: number;
   tags?: string[];
   doc_filetype?: string;
@@ -139,6 +140,7 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
   const tags = Array.isArray(meta.tags) ? meta.tags : [];
   const fileType = meta.type;
   const filePath = meta.file_path;
+  const isIndependentText = !meta.file_name && fileType === "document";
 
   const renderPreview = () => {
     // For image type, build the HTTP URL from the local:// path and try to display it
@@ -176,14 +178,46 @@ const ResultCard: React.FC<{ result: SearchResult }> = ({ result }) => {
       </div>
 
       <div className="cs-result-item-content">
-        <div className="cs-result-item-row">
-          <span className="cs-result-item-value" title={fileName}>{fileName}</span>
-        </div>
-
-        {fileType === "document" && (
-          <div className="cs-result-item-row">
-            <span className="cs-result-item-page-label">Page: {meta.doc_page_number ?? "NA"}</span>
+        {isIndependentText ? (
+          <div className="cs-result-item-summary">
+            <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
+              <span className="cs-result-item-summary-label">Raw Text: </span>
+              {meta.chunk_text}
+            </p>
+            <button
+              className="cs-result-item-summary-toggle"
+              onClick={() => setSummaryExpanded((prev) => !prev)}
+            >
+              {summaryExpanded ? t("resultSection.showLess") : t("resultSection.showMore")}
+            </button>
           </div>
+        ) : (
+          <>
+            <div className="cs-result-item-row">
+              <span className="cs-result-item-value" title={fileName}>{fileName}</span>
+            </div>
+
+            {fileType === "document" && (
+              <div className="cs-result-item-row">
+                <span className="cs-result-item-page-label">Page: {meta.doc_page_number ?? "NA"}</span>
+              </div>
+            )}
+
+            {fileType === "document" && meta.chunk_text && (
+              <div className="cs-result-item-summary">
+                <p className={`cs-result-item-summary-text${summaryExpanded ? " cs-result-item-summary-text--expanded" : ""}`}>
+                  <span className="cs-result-item-summary-label">Raw Text: </span>
+                  {meta.chunk_text}
+                </p>
+                <button
+                  className="cs-result-item-summary-toggle"
+                  onClick={() => setSummaryExpanded((prev) => !prev)}
+                >
+                  {summaryExpanded ? t("resultSection.showLess") : t("resultSection.showMore")}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {fileType === "video" && (
