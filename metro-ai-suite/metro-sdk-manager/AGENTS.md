@@ -24,14 +24,11 @@ Each SDK installs Docker container images and clones GitHub repositories (`edge-
 ```
 metro-sdk-manager/
 ├── docs/                              # Sphinx documentation source
-│   ├── _static/
-│   │   ├── installer/
-│   │   │   ├── selector.html          # Interactive SDK selector UI
-│   │   │   ├── style.css              # Selector styles
-│   │   │   ├── config.js              # SDK options, versions, install commands
-│   │   │   └── iframe-resizer.js      # Responsive iframe helper
-│   │   ├── logo.svg
-│   │   └── one-edge-platform-login-title.png
+│   ├── oep-sdk-manager-files/
+│   │   ├── selector.html          # Interactive SDK selector UI
+│   │   ├── style.css              # Selector styles
+│   │   ├── config.js              # SDK options, versions, install commands
+│   │   └── iframe-resizer.js      # Responsive iframe helper
 │   └── user-guide/
 │       ├── index.md                   # Landing page (embeds installer iframe)
 │       ├── release-notes.md
@@ -56,6 +53,7 @@ metro-sdk-manager/
 - **Install Scripts**: Bash (strict mode: `set -euo pipefail`)
 - **Docker Images**: Each SDK defines its images array in the install script
 - **Source Repos**: GitHub repos (edge-ai-libraries, edge-ai-suites) cloned at specific release branches
+- **Current Release Branch**: `release-2026.1.0` (RC1) — Docker images use `-rc1` suffix tags where available
 - **Linting**: ShellCheck, markdownlint, doc8, pylint, black, yamllint, reuse (license), Trivy
 - **Build System**: GNU Make with Python virtualenv (provided by CI; `Makefile` and `requirements.txt` are gitignored)
 
@@ -110,7 +108,7 @@ markdownlint-cli2 "**/*.md"
 - Images go in `images/` subdirectory next to the tutorial
 - Use `<!--hide_directive ... hide_directive-->` for Sphinx-only directives that should not render on GitHub
 
-### Installer UI (`docs/_static/installer/`)
+### Installer UI (`docs/oep-sdk-manager-files/`)
 
 - Vanilla JS — no frameworks or bundlers
 - All SDK options, versions, and install commands are defined in `config.js`
@@ -122,7 +120,7 @@ markdownlint-cli2 "**/*.md"
 All new source files must include:
 
 ```
-# SPDX-FileCopyrightText: (C) 2025 Intel Corporation
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 ```
 
@@ -132,7 +130,7 @@ Use the language-appropriate comment syntax (`#`, `//`, `/* */`).
 
 1. Create the install script in `scripts/<sdk-name>.sh` following the existing pattern (define `repositories`, `images`, `NAME`).
 2. Add a tutorial directory under `docs/user-guide/<sdk-name>/` with at minimum `get-started.md`.
-3. Add the SDK entry to `docs/_static/installer/config.js` (options, components, and install commands).
+3. Add the SDK entry to `docs/oep-sdk-manager-files/config.js` (options, components, and install commands).
 4. Register the tutorial in the toctree in `docs/user-guide/index.md`.
 
 ## Security Rules
@@ -144,7 +142,7 @@ Use the language-appropriate comment syntax (`#`, `//`, `/* */`).
 
 ## File Modification Rules
 
-1. When updating Docker image versions in `scripts/`, also update the corresponding component lists in `docs/_static/installer/config.js`.
+1. When updating Docker image versions in `scripts/`, also update the corresponding component lists in `docs/oep-sdk-manager-files/config.js`.
 2. Do not add gitignored build/config files (`Makefile`, `requirements.txt`, `VERSION`, `docconf/`, `docs/conf.py`, etc.) — those are managed by CI.
 3. Test install scripts with `--skip-images` for a dry-run validation.
 
