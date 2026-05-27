@@ -3,6 +3,8 @@ Modified from https://github.com/AIR-THU/DAIR-V2X/blob/main/tools/dataset_conver
 '''
 import argparse
 import os
+import shutil
+from pathlib import Path
 from scripts.data_converter.gen_kitti.label_lidarcoord_to_cameracoord import gen_lidar2cam
 from scripts.data_converter.gen_kitti.label_json2kitti import json2kitti, rewrite_label, label_filter
 from scripts.data_converter.gen_kitti.gen_calib2kitti import gen_calib2kitti
@@ -27,18 +29,26 @@ parser.add_argument("--temp-root", type=str, default="./tmp_file", help="Tempora
 
 
 def mdkir_kitti(target_root):
-    if not os.path.exists(target_root):
-        os.makedirs(target_root)
-    os.system("mkdir -p %s/training" % target_root)
-    os.system("mkdir -p %s/training/calib" % target_root)
-    os.system("mkdir -p %s/training/label_2" % target_root)
-    os.system("mkdir -p %s/testing" % target_root)
-    os.system("mkdir -p %s/ImageSets" % target_root)
+    target_path = Path(target_root)
+    target_path.mkdir(parents=True, exist_ok=True)
+    (target_path / "training").mkdir(parents=True, exist_ok=True)
+    (target_path / "training" / "calib").mkdir(parents=True, exist_ok=True)
+    (target_path / "training" / "label_2").mkdir(parents=True, exist_ok=True)
+    (target_path / "testing").mkdir(parents=True, exist_ok=True)
+    (target_path / "ImageSets").mkdir(parents=True, exist_ok=True)
 
 
 def rawdata_copy(source_root, target_root):
-    os.system("cp -r %s/image %s/training/image_2" % (source_root, target_root))
-    os.system("cp -r %s/velodyne %s/training/velodyne" % (source_root, target_root))
+    shutil.copytree(
+        Path(source_root) / "image",
+        Path(target_root) / "training" / "image_2",
+        dirs_exist_ok=True,
+    )
+    shutil.copytree(
+        Path(source_root) / "velodyne",
+        Path(target_root) / "training" / "velodyne",
+        dirs_exist_ok=True,
+    )
 
 
 def kitti_pcd2bin(target_root):
@@ -65,8 +75,13 @@ if __name__ == "__main__":
 
     print("================ Start to Generate Label ================")
     temp_root = args.temp_root
-    os.system("mkdir -p %s" % temp_root)
-    os.system("rm -rf %s/*" % temp_root)
+    temp_root_path = Path(temp_root)
+    temp_root_path.mkdir(parents=True, exist_ok=True)
+    for child in temp_root_path.iterdir():
+        if child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
     gen_lidar2cam(source_root, temp_root, label_type="camera")
 
     json_root = os.path.join(temp_root, "label", "camera")
@@ -75,7 +90,7 @@ if __name__ == "__main__":
     rewrite_label(kitti_label_root)
     label_filter(kitti_label_root)
 
-    os.system("rm -rf %s" % temp_root)
+    shutil.rmtree(temp_root_path)
 
     print("================ Start to Generate Calibration Files ================")
     path_camera_intrinsic = os.path.join(source_root, "calib/camera_intrinsic")

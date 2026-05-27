@@ -51,7 +51,7 @@ def get_task(task_id: UUID, db: Session = Depends(get_db)):
             "status": task.status,
             # "progress": getattr(task, "progress", 0),
             "progress": 100,
-            "result": task.result if task.status == "COMPLETED" else None
+            "result": task.result if task.status in ("COMPLETED", "FAILED") else None
         },
         message="Query successful"
     )

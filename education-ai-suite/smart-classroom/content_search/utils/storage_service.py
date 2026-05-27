@@ -59,7 +59,7 @@ class StorageService:
 
         if max_size_bytes is not None and file.size and file.size > max_size_bytes:
             logger.warning(f"Upload rejected: file '{file.filename}' size {file.size} bytes exceeds maximum allowed {max_size_bytes} bytes")
-            return {"validation_error": "File size exceeds maximum allowed limit", "error_type": "file_too_large"}
+            return {"validation_error": f"File size {file.size / 1024 / 1024:.2f} MB exceeds maximum allowed {max_size_bytes / 1024 / 1024:.2f} MB", "error_type": "file_too_large"}
 
         run_id = str(uuid.uuid4())
         main_type = file.content_type.split('/')[0]
@@ -102,7 +102,7 @@ class StorageService:
                         dst_path.unlink(missing_ok=True)
                     except Exception:
                         pass
-                    return {"validation_error": "File size exceeds maximum allowed limit", "error_type": "file_too_large"}
+                    return {"validation_error": f"File size {total_bytes / 1024 / 1024:.2f} MB exceeds maximum allowed {max_size_bytes / 1024 / 1024:.2f} MB", "error_type": "file_too_large"}
                 hasher.update(chunk)
                 out.write(chunk)
 

@@ -47,6 +47,7 @@ def build_pt_model(config_path: str, ckpt_path: str):
     """Load the PointPillars BEVFusion model in eval mode on CUDA."""
     from torchpack.utils.config import configs
     from mmcv import Config
+    from mmcv.runner import load_checkpoint
     from mmdet3d.models import build_model
     from mmdet3d.utils import recursive_eval
 
@@ -54,8 +55,7 @@ def build_pt_model(config_path: str, ckpt_path: str):
     cfg = Config(recursive_eval(configs), filename=config_path)
     cfg.model.train_cfg = None
     model = build_model(cfg.model, test_cfg=cfg.get("test_cfg"))
-    ckpt = torch.load(ckpt_path, map_location="cpu")
-    model.load_state_dict(ckpt["state_dict"], strict=False)
+    load_checkpoint(model, ckpt_path, map_location="cpu", strict=False)
     return model.cuda().eval(), cfg
 
 

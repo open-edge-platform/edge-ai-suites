@@ -370,7 +370,7 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/oep-vision-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/oep-vision-ai-sdk/get-started.html`
         },
         {
           when: {
@@ -379,7 +379,7 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/oep-gen-ai-sdk/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/oep-gen-ai-sdk/get-started.html`
         },
         {
           when: {
@@ -388,7 +388,7 @@ const CONFIG = {
             VERSION: "latest"
           },
           text: `Get Started`,
-          link: `https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/metro-sdk-manager/visual-ai-demo-kit/get-started.html`
+          link: `https://docs.openedgeplatform.intel.com/dev/OEP-articles/oep-sdk-manager/visual-ai-demo-kit/get-started.html`
         }
       ]
     },

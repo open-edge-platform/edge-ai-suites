@@ -1,5 +1,4 @@
 import argparse
-import copy
 import os
 
 import mmcv
@@ -16,23 +15,7 @@ from mmdet3d.core import LiDARInstance3DBoxes
 from mmdet3d.core.utils import visualize_camera, visualize_lidar, visualize_map
 from mmdet3d.datasets import build_dataloader, build_dataset
 from mmdet3d.models import build_model
-
-
-def recursive_eval(obj, globals=None):
-    if globals is None:
-        globals = copy.deepcopy(obj)
-
-    if isinstance(obj, dict):
-        for key in obj:
-            obj[key] = recursive_eval(obj[key], globals)
-    elif isinstance(obj, list):
-        for k, val in enumerate(obj):
-            obj[k] = recursive_eval(val, globals)
-    elif isinstance(obj, str) and obj.startswith("${") and obj.endswith("}"):
-        obj = eval(obj[2:-1], globals)
-        obj = recursive_eval(obj, globals)
-
-    return obj
+from mmdet3d.utils import recursive_eval
 
 
 def main() -> None:

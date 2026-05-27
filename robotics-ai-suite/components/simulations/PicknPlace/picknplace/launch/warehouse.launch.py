@@ -81,17 +81,10 @@ def generate_launch_description():
         env_str)
     ld.add_action(set_env_vars_resources)
 
-    # Set CycloneDDS config to increase max participant limit (needed for multi-robot)
-    # Search upward from package_path for cyclonedds.xml
-    _search = os.path.dirname(package_path)
-    cyclonedds_config = ''
-    for _ in range(8):
-        candidate = os.path.join(_search, 'cyclonedds.xml')
-        if os.path.exists(candidate):
-            cyclonedds_config = candidate
-            break
-        _search = os.path.dirname(_search)
-    if cyclonedds_config:
+    # Set CycloneDDS config to increase max participant limit (needed for multi-robot).
+    # cyclonedds.xml is installed alongside this package under share/picknplace/.
+    cyclonedds_config = os.path.join(package_path, 'cyclonedds.xml')
+    if os.path.exists(cyclonedds_config):
         set_cyclonedds = SetEnvironmentVariable(
             'CYCLONEDDS_URI', f'file://{cyclonedds_config}')
         ld.add_action(set_cyclonedds)

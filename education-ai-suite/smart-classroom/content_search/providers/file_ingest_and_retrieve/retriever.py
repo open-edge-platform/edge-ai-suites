@@ -32,7 +32,7 @@ class ChromaRetriever:
         self.document_embedding_model = document_embedding_model or get_document_embedding_model()
 
         # Post-processor (reranker + dedup + slot allocation)
-        reranker_model = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-large")
+        reranker_model = os.environ.get("RERANKER_MODEL", "BAAI/bge-reranker-base")
         reranker_device = os.environ.get("RERANKER_DEVICE", "CPU")
         dedup_time_threshold = float(os.environ.get("RERANKER_DEDUP_TIME_THRESHOLD", "5.0"))
         overfetch_multiplier = int(os.environ.get("RERANKER_OVERFETCH_MULTIPLIER", "3"))
@@ -52,8 +52,8 @@ class ChromaRetriever:
         self._embed_lock = doc_embed_lock or threading.Lock()
 
     def get_visual_query_embedding(self, query):
-        embedding_tensor = self.visual_embedding_model.handler.encode_text(query)
-        return embedding_tensor.cpu().numpy().tolist()
+        embedding = self.visual_embedding_model.handler.encode_text(query)
+        return embedding.tolist()
 
     def get_document_query_embedding(self, query):
         if not self.document_embedding_model:
@@ -64,8 +64,8 @@ class ChromaRetriever:
     def get_image_embedding(self, image_base64):
         img_data = base64.b64decode(image_base64)
         img = Image.open(io.BytesIO(img_data)).convert("RGB")
-        embedding_tensor = self.visual_embedding_model.handler.encode_image(img)
-        return embedding_tensor.cpu().numpy().tolist()
+        embedding = self.visual_embedding_model.handler.encode_image(img)
+        return embedding.tolist()
 
     def _build_where_clause(self, filters: dict, list_filter_mode: str = "or") -> dict:
         """Build a ChromaDB where clause from a filters dict.

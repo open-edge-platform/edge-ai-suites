@@ -118,7 +118,7 @@ class Summarizer(BaseSummarizer):
             try:
                 with audio_pipeline_lock:
                     model = self._load_model()
-                    return model.generate(
+                    output = model.generate(
                         input_ids=inputs.input_ids,
                         max_new_tokens=max_new_tokens,
 
@@ -130,6 +130,8 @@ class Summarizer(BaseSummarizer):
                         pad_token_id=self.tokenizer.eos_token_id,
                         eos_token_id=self.tokenizer.eos_token_id,
                     )
+                    generated_ids = output[:, inputs.input_ids.shape[1]:]
+                    return self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
             finally:
                 if model is not None:
                     self._destroy_model(model)

@@ -343,7 +343,8 @@ class TestMetadataStream:
         ), patch("backend.routes.runs.asyncio.sleep", AsyncMock()):
             gen = runs_module._multiplexed_metadata_generator()
             event = await anext(gen)
-            assert event.startswith(": error - boom")
+            assert event.startswith(": error")
+            assert "boom" not in event
             await gen.aclose()
 
     @pytest.mark.asyncio

@@ -1,0 +1,115 @@
+{
+  "schema_version": "level1_v1",
+  "throughput_hz": 20.0,
+  "mean_latency_ms": 50.0,
+  "max_jitter_ms": 5.0,
+  "min_jitter_ms": 0.5,
+  "mean_jitter_ms": 2.0,
+  "jitter_stdev_ms": 1.0,
+  "cpu_mean_pct": 30.0,
+  "cpu_max_pct": 60.0,
+  "per_node": {
+    "/camera_node": {
+      "throughput_hz": 20.0,
+      "mean_latency_ms": 10.0,
+      "mean_jitter_ms": 1.0,
+      "max_jitter_ms": 3.0,
+      "num_samples": 200,
+      "primary_input": "/camera/raw",
+      "primary_output": "/camera/image",
+      "pipeline_stage": "Sensor"
+    },
+    "/detector_node": {
+      "throughput_hz": 18.0,
+      "mean_latency_ms": 40.0,
+      "mean_jitter_ms": 3.0,
+      "max_jitter_ms": 8.0,
+      "num_samples": 180,
+      "primary_input": "/camera/image",
+      "primary_output": "/detections",
+      "pipeline_stage": "Perception"
+    },
+    "/planner_node": {
+      "throughput_hz": 15.0,
+      "mean_latency_ms": 60.0,
+      "mean_jitter_ms": 4.0,
+      "max_jitter_ms": 12.0,
+      "num_samples": 190,
+      "primary_input": "/detections",
+      "primary_output": "/cmd_vel",
+      "pipeline_stage": "Planning"
+    }
+  },
+  "pairs": [
+    {
+      "node": "/camera_node",
+      "input": "/camera/raw",
+      "output": "/camera/image",
+      "pipeline_stage": "Sensor",
+      "n": 200,
+      "mean_ms": 10.0,
+      "stdev_ms": 1.2,
+      "min_ms": 7.0,
+      "p50_ms": 10.0,
+      "p90_ms": 12.0,
+      "p99_ms": 14.0,
+      "max_ms": 16.0,
+      "trigger_count": 200,
+      "fps": 20.0,
+      "jitter_mean_ms": 1.0,
+      "jitter_max_ms": 3.0
+    },
+    {
+      "node": "/detector_node",
+      "input": "/camera/image",
+      "output": "/detections",
+      "pipeline_stage": "Perception",
+      "n": 180,
+      "mean_ms": 40.0,
+      "stdev_ms": 3.5,
+      "min_ms": 30.0,
+      "p50_ms": 39.0,
+      "p90_ms": 46.0,
+      "p99_ms": 52.0,
+      "max_ms": 58.0,
+      "trigger_count": 180,
+      "fps": 18.0,
+      "jitter_mean_ms": 3.0,
+      "jitter_max_ms": 8.0
+    },
+    {
+      "node": "/planner_node",
+      "input": "/detections",
+      "output": "/cmd_vel",
+      "pipeline_stage": "Planning",
+      "n": 190,
+      "mean_ms": 60.0,
+      "stdev_ms": 5.0,
+      "min_ms": 45.0,
+      "p50_ms": 59.0,
+      "p90_ms": 68.0,
+      "p99_ms": 75.0,
+      "max_ms": 82.0,
+      "trigger_count": 190,
+      "fps": 15.0,
+      "jitter_mean_ms": 4.0,
+      "jitter_max_ms": 12.0
+    }
+  ],
+  "metadata": {
+    "name": "baseline_session",
+    "datetime": "2026-04-29T00:00:00Z",
+    "hostname": "baseline-host",
+    "arch": "x86_64",
+    "os": "Linux 6.8.0",
+    "data_path": "/tmp/baseline_session",
+    "framework_version": "0.1.7",
+    "ros_distro": "jazzy",
+    "hardware": {
+      "cpu_model": "Intel Core Ultra 7 165H",
+      "cpu_cores": 16,
+      "gpu_model": null,
+      "total_ram_gb": 32.0
+    }
+  }
+}
