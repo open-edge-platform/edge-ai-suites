@@ -133,6 +133,12 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
 ```sh
 cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+| grep -oP '"id":\s*"\K[^"]+'); do
+    curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+done;
+
 curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
   -X POST -H 'Content-Type: application/json' \
   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
@@ -143,6 +149,12 @@ curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_de
 >
 > ```sh
 > cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+>
+> for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+> | grep -oP '"id":\s*"\K[^"]+'); do
+>    curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+> done;
+>
 > curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
 >   -X POST -H 'Content-Type: application/json' \
 >   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
