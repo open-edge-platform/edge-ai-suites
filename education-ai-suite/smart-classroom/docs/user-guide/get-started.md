@@ -65,7 +65,7 @@ ocr:
 
 ### F. Install Content Search Dependencies
 
-Run the installation script in PowerShell with Administrator privileges:
+Run the installation script in **PowerShell** with Administrator privileges:
 
 ```PowerShell
 cd smart-classroom\content_search
@@ -159,10 +159,12 @@ Content Search provides multimodal semantic search, AI-driven video summarizatio
 
 ### A. Create Content Search Virtual Environment
 
+Open a new **Powershell** window:
+
 ```PowerShell
 cd smart-classroom\content_search
 python -m venv venv_content_search
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
@@ -170,7 +172,7 @@ python -m pip install -r requirements.txt
 ### B. Launch Content Search Services
 
 ```PowerShell
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python .\start_services.py
 ```
 
