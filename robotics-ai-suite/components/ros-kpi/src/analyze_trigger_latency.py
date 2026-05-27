@@ -661,6 +661,135 @@ def _hardware_info() -> dict:
     }
 
 
+def _read_cpu_thermal_sysfs() -> dict:
+    """
+    Read CPU package temperature and throttle state from local sysfs.
+
+    Temperature source: the ``x86_pkg_temp`` thermal zone under
+    ``/sys/class/thermal/thermal_zone*/``.
+
+    Throttle detection: compares ``scaling_cur_freq`` against
+    ``cpuinfo_max_freq`` for CPU 0; throttling is assumed when the current
+    frequency falls below 95 % of the maximum.
+
+    Returns ``{'temp_c': float|None, 'throttled': bool|None}``.
+    """
+    import glob as _glob
+
+    temp_c: Optional[float] = None
+    throttled: Optional[bool] = None
+
+    for zone_dir in sorted(_glob.glob('/sys/class/thermal/thermal_zone*')):
+        try:
+            zone_type = open(f'{zone_dir}/type').read().strip()
+            if zone_type == 'x86_pkg_temp':
+                raw = int(open(f'{zone_dir}/temp').read().strip())
+                temp_c = round(raw / 1000.0, 1)
+                break
+        except (OSError, ValueError):
+            continue
+
+    try:
+        cur = int(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq').read().strip())
+        mxf = int(open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read().strip())
+        throttled = cur < mxf * 0.95
+    except (OSError, ValueError):
+        throttled = None
+
+    return {'temp_c': temp_c, 'throttled': throttled}
+
+
+def _load_resource_thermal(session_dir: Path) -> dict:
+    """
+    Build a session-level thermal summary from the resource logs in *session_dir*.
+
+    Reads:
+      - ``gpu_usage.log``  - JSON-lines written by monitor_resources.monitor_gpu()
+      - ``npu_usage.log``  - JSON-lines written by monitor_resources.monitor_npu()
+      - sysfs live read    - CPU package temperature at analysis time
+
+    Returns a dict with the keys expected by the Level 1 KPI ``thermal`` section:
+      cpu_temp_c     - mean CPU package temperature (°C), or None
+      gpu_temp_c     - mean GPU temperature (°C), or None
+      npu_temp_c     - mean NPU temperature (°C), or None
+      cpu_throttled  - True if CPU throttling was observed, False/None otherwise
+      gpu_throttled  - True if GPU throttling was observed during the session
+      npu_throttled  - True/False when NPU monitoring was active (cur_freq < max_freq*0.95),
+                       None when npu_usage.log is absent
+    """
+    result: dict = {
+        'cpu_temp_c':    None,
+        'gpu_temp_c':    None,
+        'npu_temp_c':    None,
+        'cpu_throttled': None,
+        'gpu_throttled': None,
+        'npu_throttled': None,
+    }
+
+    # ── GPU: read gpu_usage.log ──────────────────────────────────────────────
+    gpu_log = session_dir / 'gpu_usage.log'
+    if gpu_log.exists():
+        gpu_temps: List[float] = []
+        gpu_throttled_any = False
+        try:
+            for raw in gpu_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('temp_c') is not None:
+                    gpu_temps.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    gpu_throttled_any = True
+        except OSError:
+            pass
+        if gpu_temps:
+            result['gpu_temp_c']    = round(statistics.mean(gpu_temps), 1)
+            result['gpu_throttled'] = gpu_throttled_any
+
+    # ── NPU: read npu_usage.log ──────────────────────────────────────────────
+    npu_log = session_dir / 'npu_usage.log'
+    if npu_log.exists():
+        npu_temps: List[float] = []
+        npu_throttled_any = False
+        try:
+            for raw in npu_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('temp_c') is not None:
+                    npu_temps.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    npu_throttled_any = True
+        except OSError:
+            pass
+        if npu_temps:
+            result['npu_temp_c'] = round(statistics.mean(npu_temps), 1)
+        if npu_temps or npu_throttled_any:
+            result['npu_throttled'] = npu_throttled_any
+
+    # ── CPU: live sysfs read ─────────────────────────────────────────────────
+    try:
+        cpu_thermal = _read_cpu_thermal_sysfs()
+        result['cpu_temp_c']    = cpu_thermal.get('temp_c')
+        result['cpu_throttled'] = cpu_thermal.get('throttled')
+    except Exception:
+        pass
+
+    return result
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  JSON schema validation
 # ──────────────────────────────────────────────────────────────────────────────
@@ -782,6 +911,7 @@ def build_performance_kpi(
         'jitter_stdev_ms':  sys_jit_std,
         'cpu_mean_pct':     None,
         'cpu_max_pct':      None,
+        'thermal':          _load_resource_thermal(session_dir),
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
         'metadata': {
