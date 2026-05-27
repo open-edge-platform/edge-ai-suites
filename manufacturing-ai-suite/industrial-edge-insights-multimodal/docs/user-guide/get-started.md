@@ -131,22 +131,40 @@ curl -k -X 'POST' \
 By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the following command:
 
-```sh
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
-  -X POST -H 'Content-Type: application/json' \
-  -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
-```
+- To run inference on with GPU, 
 
-> **Note:**
-> To run inference on `NPU`, use:
->
-> ```sh
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
-> ```
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+- To run inference on `NPU`, use:
+
+  > **Note:** Ensure NPU support is available on your platform before running NPU inference.
+
+  ```sh
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:3000/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+    curl -k --location -X DELETE "https://localhost:3000/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:3000/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
+
+
+> **Note:** When stopping the pipeline, Grafana may display the error message: **"Error: stream not found, retrying in some seconds"**. This is expected behavior. The stream will automatically reconnect and resume in Grafana once the pipeline is started again.
 
 ## Verify the Multimodal Weld Defect Detection Results
 
