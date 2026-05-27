@@ -263,13 +263,13 @@ You can check the following:
 #### Introduction to the ROS 2 Navigation Parameter File
 
 The Autonomous Mobile Robot pipeline for AMRs uses the
-[Navigation 2 package](https://navigation.ros.org) from ROS 2. Setting parameters specific to the
+[Navigation 2 package](https://wiki.ros.org/navigation) from ROS 2. Setting parameters specific to the
 robot and the mapping area is essential for the Navigation 2 packages to function properly.
 
 #### Robot Navigation Parameter File
 
-To help understand the options in this parameter file, see ROS 2
-[Navigation 2 Packages Configuration Guide](https://navigation.ros.org/configuration/index.html).
+To help understand the options in this parameter file, see the configuration guide for ROS 2
+[Navigation 2 Packages](https://wiki.ros.org/navigation).
 
 With numerous parameters to configure, Intel® recommends referring to
 Navigation 2 documentation for a comprehensive understanding of the setup.
