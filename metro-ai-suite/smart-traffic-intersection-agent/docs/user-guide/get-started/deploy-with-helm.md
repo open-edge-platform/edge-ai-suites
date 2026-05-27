@@ -433,6 +433,8 @@ helm install stia . -n <your-namespace> --create-namespace \
 
 The OVMS VLM serving pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and model data from untrusted co-tenants on the same host.
 
+> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
+
 > **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy with Helm](#steps-to-deploy-with-helm) section above.
 
 ### 3. Verify Trusted Compute Deployment
