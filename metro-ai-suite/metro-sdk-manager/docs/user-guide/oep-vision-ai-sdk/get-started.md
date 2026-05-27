@@ -76,7 +76,7 @@ docker run --rm -it --name dlstreamer \
   -v $PWD:/data \
   -e DISPLAY=$DISPLAY \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
-  intel/dlstreamer:2026.0.0-ubuntu24
+  intel/dlstreamer:2026.1.0-ubuntu24-rc1
 ```
 
 ```bash

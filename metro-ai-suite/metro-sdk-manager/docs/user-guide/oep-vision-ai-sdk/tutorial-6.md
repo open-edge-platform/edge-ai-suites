@@ -76,8 +76,8 @@ docker compose --profile controller down --remove-orphans
 
 ## Next Steps
 
-- [SceneScape Tutorial](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/tutorial.md): Follow examples to explore core SceneScape functionality
-- [How to Use the 3D UI](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-use-3D-UI.md): Explore the 3D visualization interface
-- [How to Integrate Cameras and Sensors](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-integrate-cameras-and-sensors.md): Connect live cameras and sensors
-- [How to Create a New Scene](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/building-a-scene/how-to-create-new-scene.md): Build your own scene from scratch
+- [SceneScape Get Started](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/get-started.md): Follow the getting started guide to explore core SceneScape functionality
+- [How to Use the 3D UI](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/ui-tutorial.md): Explore the 3D visualization interface
+- [How to Integrate Cameras and Sensors](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/integrate-cameras-and-sensors.md): Connect live cameras and sensors
+- [How to Create a New Scene](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/how-to-guides/build-a-scene/create-new-scene.md): Build your own scene from scratch
 - [API Reference](https://github.com/open-edge-platform/scenescape/blob/main/docs/user-guide/api-reference.md): Full REST API documentation
