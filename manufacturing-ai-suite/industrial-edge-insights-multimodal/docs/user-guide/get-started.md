@@ -148,6 +148,8 @@ To trigger the model inference on `GPU` in DL Streamer Pipeline Server, run the 
 
 - To run inference on `NPU`, use:
 
+  > **Note:** Ensure NPU support is available on your platform before running NPU inference.
+
   ```sh
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
