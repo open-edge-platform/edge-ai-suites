@@ -65,7 +65,7 @@ cat > oep_vision_pipeline.sh << 'EOF'
 
 # OEP Vision AI DLStreamer Pipeline for Performance Testing using Docker
 CURRENT_DIR=$(pwd)
-MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.bin"
+MODEL_PATH="$CURRENT_DIR/public/yolov10s/FP32/yolov10s.xml"
 VIDEO_PATH="$CURRENT_DIR/bottle-detection.mp4"
 DEVICE=GPU
 RENDER_GROUP_ID=$(getent group render | awk -F: '{printf "%s\n", $3}')
