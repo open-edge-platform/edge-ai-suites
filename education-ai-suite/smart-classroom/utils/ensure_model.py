@@ -67,13 +67,26 @@ def _cache_diarization_dependencies_locally(pipeline_dir: str, hf_token: str = N
     pipeline_params = pipeline_config.get("pipeline", {}).get("params", {})
     changed = False
 
-    for key in ("segmentation", "embedding"):
+    for key in ("segmentation", "embedding", "plda"):
         model_ref = pipeline_params.get(key)
         if not isinstance(model_ref, str):
             continue
-        if os.path.isfile(model_ref):
+        if os.path.isfile(model_ref) or os.path.isdir(model_ref):
             continue
         if "/" not in model_ref:
+            continue
+
+        # pyannote 4.0 uses "$model/<name>" to reference sub-models bundled in the snapshot
+        if model_ref.startswith("$model/"):
+            sub_name = model_ref[len("$model/"):]
+            sub_dir = os.path.join(pipeline_dir, sub_name)
+            local_checkpoint = os.path.join(sub_dir, HF_PYTORCH_WEIGHTS_NAME)
+            if os.path.exists(local_checkpoint):
+                pipeline_params[key] = local_checkpoint
+                changed = True
+            elif os.path.isdir(sub_dir):
+                pipeline_params[key] = sub_dir
+                changed = True
             continue
 
         dependency_dir = os.path.join(pipeline_dir, "dependencies", model_ref.replace("/", "_"))
