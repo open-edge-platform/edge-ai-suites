@@ -1,6 +1,6 @@
 # OEP Vision AI SDK - Tutorial 4
 
-This tutorial demonstrates how to build sophisticated video analytics pipelines using Intel® DL Streamer framework. You'll learn to create real-time human pose estimation applications, understand GStreamer pipeline architecture, and develop custom video analytics solutions for computer vision applications.
+This tutorial demonstrates how to build sophisticated video analytics pipelines using Intel® DL Streamer framework. You will learn to create real-time human pose estimation applications, understand GStreamer pipeline architecture, and develop custom video analytics solutions for computer vision applications.
 
 ## Overview
 
@@ -47,6 +47,7 @@ Before starting this tutorial, ensure you have:
 
 **Important Display Requirements**
 This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+
 - Ubuntu Server (no GUI)
 - Remote SSH sessions without X11 forwarding
 - Headless systems
@@ -133,4 +134,4 @@ docker run -it --rm --net=host \
 - Multi-person pose estimation support
 - Hardware-accelerated inference using OpenVINO
 
-![Human Pose Estimation](images/tutorial_dlstreamer_container.png)
+![Human Pose Estimation](./images/tutorial_dlstreamer_container.png)
