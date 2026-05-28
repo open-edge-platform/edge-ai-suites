@@ -39,7 +39,7 @@ DEVICE="CPU"
 PRECISION="int8"
 MODEL=""
 
-EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/yogeshmpandey/edge-ai-libraries/feat/ephemeral-container/microservices/model-download/scripts/get_model.sh}"
+EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh}"
 IMAGE_TAG="${TAG:-latest}"
 OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
 
@@ -213,9 +213,14 @@ if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
     MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
   fi
 
-  if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
-    # Preserve the full model path (org/model) in final output when present.
+  if [[ "${MODEL_TYPE}" == "vlm" ]]; then
+    TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
+  elif [[ "${MODEL_TYPE}" == "llm" ]]; then
+    # For LLMs, preserve the org/model structure if present
     TARGET_DIR="${FINAL_DIR}/${MODEL}"
+  fi
+
+  if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
     mkdir -p "${TARGET_DIR}"
     mv "${MODEL_SRC}"/* "${TARGET_DIR}"/
     log "Relocated model to: ${TARGET_DIR}"
@@ -230,12 +235,15 @@ elif [[ "${MODEL_TYPE}" == "vision" ]]; then
   MODEL_BASENAME="${MODEL##*/}"
   TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
   mkdir -p "${TARGET_DIR}"
-  # Vision models may have a 'public' subdirectory
-  if [[ -d "${MODEL_DOWNLOAD_PATH}/public" ]]; then
+  # Vision models may be nested under ultralytics/public/<model>.
+  # Flatten to: ov_detection_models/<model>/public/<model>
+  if [[ -d "${MODEL_DOWNLOAD_PATH}/ultralytics/public" ]]; then
+    mv "${MODEL_DOWNLOAD_PATH}/ultralytics/public" "${TARGET_DIR}"/
+  elif [[ -d "${MODEL_DOWNLOAD_PATH}/public" ]]; then
     mv "${MODEL_DOWNLOAD_PATH}/public" "${TARGET_DIR}"/
   else
-    # Move whatever is in the staging dir
-    find "${MODEL_DOWNLOAD_PATH}" -mindepth 1 -maxdepth 1 -exec mv {} "${TARGET_DIR}"/ \;
+    err "Could not find vision model files under ${MODEL_DOWNLOAD_PATH}/ultralytics/public or ${MODEL_DOWNLOAD_PATH}/public"
+    exit 1
   fi
   log "Relocated model to: ${TARGET_DIR}"
 fi

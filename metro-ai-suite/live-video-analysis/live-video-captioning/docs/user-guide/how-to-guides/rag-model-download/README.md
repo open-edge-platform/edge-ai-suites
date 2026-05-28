@@ -16,7 +16,7 @@ From the `live-video-captioning` directory:
 
 ```bash
 ./model_download_scripts/download_models.sh \
-  --model Qwen/Qwen2.5-7B-Instruct \
+  --model Qwen/Qwen2.5-3B-Instruct \
   --type llm \
   --device CPU \
   --weight-format int8
@@ -44,7 +44,7 @@ Update these values only if you want different models or devices:
 EMBEDDING_MODEL_NAME=QwenText/qwen3-embedding-0.6b
 EMBEDDING_DEVICE=CPU
 LLM_DEVICE=CPU
-LLM_MODEL_ID=Qwen/Qwen2.5-7B-Instruct
+LLM_MODEL_ID=Qwen/Qwen2.5-3B-Instruct
 ```
 
 ## Enable RAG services
