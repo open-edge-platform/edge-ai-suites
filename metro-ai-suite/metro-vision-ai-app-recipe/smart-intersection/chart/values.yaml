@@ -45,14 +45,14 @@ ntpserver:
 
 nodered:
   repository: docker.io/nodered/node-red
-  tag: "latest"
+  tag: "4.1"
   # Overrides the storage class name
   storageClassName: "standard"
   storageSize: "1Gi"
 
 broker:
   repository: eclipse-mosquitto
-  tag: 2.0.21
+  tag: 2.0.22
 
   # UID:GID to run container as (defaulting to 1000:1000 unless overridden)
   uid: 1000
