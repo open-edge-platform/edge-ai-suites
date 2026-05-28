@@ -34,7 +34,7 @@ images:
     tag: latest
   curl:
     repository: curlimages/curl
-    tag: latest
+    tag: 8.20.0
   busybox:
     repository: busybox
     tag: latest
