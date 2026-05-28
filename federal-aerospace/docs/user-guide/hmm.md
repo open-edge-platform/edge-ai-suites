@@ -30,7 +30,7 @@ For more information refer to [documentation](https://github.com/open-webui/open
 ### (OPTIONAL) Proxy configuration
 
 Depending on network configuration of the system, additional configuration of proxy might be needed.
-Ensure that /etc/environment contains proxy variables, replacing `proxy-example:123` with a valid proxy for the local environment.
+Ensure that `/etc/environment` contains proxy variables, replacing `proxy-example:123` with a valid proxy for the local environment.
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
@@ -101,7 +101,7 @@ Unzip downloaded files
 unzip handheld-multi-modal.zip
 ```
 
-Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, refer to [proxy configuration step](#proxy-configuration)
+Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, refer to [proxy configuration step](#optional-proxy-configuration)
 
 ```bash
 cd handheld-multi-modal
