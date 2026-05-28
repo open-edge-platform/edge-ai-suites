@@ -12,7 +12,7 @@ This section shows how to:
 
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
 - Install Docker platform: [Installation Guide](https://docs.docker.com/engine/install/). Install the Ubuntu platform version.
-- In case the sample application is used with RTSP streams, setup of the RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files should be done separately. Reference instructions are provided [here]().
+- In case the sample application is used with RTSP streams, setup of the RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files should be done separately. Reference instructions are provided [here](./get-started/simulated-rtsp-stream-guide.md).
 
 ## Run the Application
 
