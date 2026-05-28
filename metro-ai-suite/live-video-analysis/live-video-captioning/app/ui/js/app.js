@@ -782,6 +782,8 @@
         const PROXY_PIPELINE_MAP = {
             'GenAI_Pipeline_on_CPU': 'GenAI_Pipeline_on_CPU_Default_Resolution',
             'GenAI_Pipeline_on_GPU': 'GenAI_Pipeline_on_GPU_Default_Resolution',
+            'GenAI_Camera_Pipeline_on_CPU': 'GenAI_Camera_Pipeline_on_CPU_Default_Resolution',
+            'GenAI_Camera_Pipeline_on_GPU': 'GenAI_Camera_Pipeline_on_GPU_Default_Resolution',
         };
         const effectivePipelineName = (qualityKey === 'default' && PROXY_PIPELINE_MAP[pipelineName])
             ? PROXY_PIPELINE_MAP[pipelineName]
