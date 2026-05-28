@@ -39,12 +39,15 @@ export https_proxy="http://proxy-example:123"
 export ftp_proxy="http://proxy-example:123"
 export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
 EOF
+
+source /etc/environment
 ```
 
 Configure proxy for Docker
 
 ```bash
-sudo tee -a ~/.docker/config.json > /dev/null <<EOF
+mkdir -p ~/.docker
+tee -a ~/.docker/config.json > /dev/null <<EOF
 {
     "proxies": {
         "default": {
@@ -55,6 +58,7 @@ sudo tee -a ~/.docker/config.json > /dev/null <<EOF
     }
 }
 EOF
+```
 
 Configure proxy for Docker containers
 
@@ -66,6 +70,21 @@ Environment="HTTP_PROXY=http://proxy-example:123"
 Environment="HTTPS_PROXY=http://proxy-example:123"
 Environment="NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
 EOF
+```
+
+Restart docker
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+Verify that Docker uses configured proxies
+```bash
+╰$ docker info|grep -i PROX
+ HTTP Proxy: http://proxy-example:123
+ HTTPS Proxy: http://proxy-example:123
+ No Proxy: localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager
 ```
 
 ### Deploying the applications
