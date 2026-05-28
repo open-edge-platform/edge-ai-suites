@@ -1,12 +1,12 @@
 # OEP Vision AI SDK - Tutorial 3
 
-This tutorial demonstrates how to implement real-time object detection using YOLOv10s model with OpenVINO Runtime. You'll learn to create a complete computer vision application that processes video streams, performs AI inference, and displays results with bounding boxes and confidence scores in real-time.
+This tutorial demonstrates how to implement real-time object detection using YOLOv10s model with OpenVINO Runtime. You will learn to create a complete computer vision application that processes video streams, performs AI inference, and displays results with bounding boxes and confidence scores in real-time.
 
 ## Overview
 
-Object detection is a fundamental computer vision task that identifies and localizes objects within images or video streams. This tutorial uses YOLOv10s (You Only Look Once version 10 small), a state-of-the-art object detection model optimized for real-time performance. You'll build a complete application using OpenVINO Runtime for optimized inference on Intel hardware.
+Object detection is a fundamental computer vision task that identifies and localizes objects within images or video streams. This tutorial uses YOLOv10s (You Only Look Once version 10 small), a state-of-the-art object detection model optimized for real-time performance. You will build a complete application using OpenVINO Runtime for optimized inference on Intel hardware.
 
-In this tutorial, you'll analyze a city intersection video to detect vehicles, pedestrians, and traffic infrastructure in real-time. This practical example demonstrates how AI can be applied to traffic monitoring, urban planning, and smart city applications.
+In this tutorial, you will analyze a city intersection video to detect vehicles, pedestrians, and traffic infrastructure in real-time. This practical example demonstrates how AI can be applied to traffic monitoring, urban planning, and smart city applications.
 
 ## Time to Complete
 
@@ -46,6 +46,7 @@ Before starting this tutorial, ensure you have:
 
 **Important Display Requirements**
 This tutorial requires **Ubuntu Desktop** with a physical display and active graphical session. It will **not work** with:
+
 - Ubuntu Server (no GUI)
 - Remote SSH sessions without X11 forwarding
 - Headless systems
@@ -257,19 +258,20 @@ docker run -it --rm \
   --user root \
   openvino/ubuntu24_dev:2026.0.0
 ```
+
 ```bash
 apt update
 apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module libcanberra-gtk3-module build-essential cmake git pkg-config libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev ffmpeg
 pip install opencv-python "numpy<2"
-
 ```
+
 ```bash
 python3 /home/openvino/inference.py
 ```
 
 **Expected Console Output:**
 
-![Tutorial 3 Output](images/tutorial-3-output.png)
+![Tutorial 3 Output](./images/tutorial-3-output.png)
 
 ### Step 6: Run Object Detection on GPU (Optional)
 
@@ -289,11 +291,13 @@ docker run -it --rm \
   --user root \
   openvino/ubuntu24_dev:2026.0.0
 ```
+
 ```bash
 apt update
 apt install -y libgtk2.0-dev pkg-config libcanberra-gtk-module libcanberra-gtk3-module build-essential cmake git pkg-config libgtk2.0-dev libavcodec-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-dev ffmpeg
 pip install opencv-python "numpy<2"
 ```
+
 ```bash
 python3 /home/openvino/inference.py
 ```
@@ -320,7 +324,7 @@ python3 /home/openvino/inference.py --conf 0.3 --iou 0.5
 - **Optimization**: FP16 precision for optimal performance on Intel hardware
 
 **Detection Classes:**
-The model can detect 80 different object classes from the COCO dataset. In the city intersection video, you'll commonly see:
+The model can detect 80 different object classes from the COCO dataset. In the city intersection video, you will commonly see:
 
 - **People**: person
 - **Vehicles**: car, truck, bus, motorcycle, bicycle

@@ -1,10 +1,11 @@
 # AI Crowd Analytics through Vibe Coding
 
-This tutorial walks you through leveraging an existing 'Metro Vision AI App Recipe powered application' and turning it into a 'new application' by 'vibe coding', all while the underlying application architecture remains the same.
+This tutorial walks you through leveraging an existing Metro Vision AI App Recipe-powered application
+ and turning it into a 'new application' by 'vibe coding', all while the underlying application architecture remains the same.
 
 ## Metro Vision AI App Recipe Architecture
 
-![Metro Vision AI App Recipe Architecture](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
+![Metro Vision AI App Recipe Architecture](./_images/metro-vision-ai-app-recipe-architecture.drawio.svg "metro vision ai app recipe architecture")
 
 ### Key Features of this architecture
 
@@ -23,21 +24,21 @@ This architecture is capable of building any typical Vision AI sample applicatio
 
 ## How to leverage an existing 'Metro Vision AI App Recipe powered application' and turn it into a 'new application' by 'vibe coding'
 
-The below aspects need to be updated accordingly, in order to leverage an existing 'Metro Vision AI App Recipe powered application' and turn it into a 'new application' by 'vibe coding':
+The below aspects need to be updated accordingly, in order to leverage an existing Metro Vision AI App Recipe-powered application and turn it into a 'new application' by 'vibe coding':
 
 - **AI model:** This is the new AI model that serves the inference purposes of the new application.
 - **Video file:** This is the new video source that serves as input to the new application.
 - **Vision Analytics Pipeline:** This is the AI processing DL Streamer pipeline that needs to be modified appropriately, considering the new AI model and new video source input.
-- **Node Red Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which would be provided as insights in the grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the github copilot offering.
+- **Node-RED Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which would be provided as insights in the Grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the GitHub Copilot offering.
 - **Configuration updates:** This is the application configuration such as self signed certificates, docker compose, node-red, grafana etc.,
 
 Note: The underlying application architecture remains the same.
 
 ## Build a new application: 'AI Crowd Analytics'
 
- Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
+Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
 
-We will leverage the 'Smart Parking' application as the existing 'Metro Vision AI App Recipe powered application' and turn it into a 'AI Crowd Analytics' application.
+We will use the [Smart Parking](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/index.html) application as the existing Metro Vision AI App Recipe-powered application and turn it into an 'AI Crowd Analytics' application.
 
 ### 1. **Create the Crowd Analytics Application Directory**
 
@@ -62,6 +63,7 @@ Video File Details
 </summary>
 
 The sample video contains:
+
 - Multiple vehicles in various parking scenarios
 - Examples of both clustered (crowded) and scattered vehicle arrangements
 - Duration: Approximately 21 seconds of footage
@@ -127,6 +129,7 @@ cat > ./crowd-analytics/src/dlstreamer-pipeline-server/config.json << 'EOF'
 }
 EOF
 ```
+
 <details>
 <summary>
 Pipeline Configuration Explanation
@@ -183,11 +186,12 @@ docker compose up -d
 
 ### 7. **Customize Node-RED Business Logic**
 
-The following steps guide you through customizing Node-RED flows to implement crowd analytics logic for vehicle detection data. You'll learn how to connect to MQTT data streams from the crowd analytics pipeline, calculate vehicle proximities using Euclidean distances, detect crowd formations (clusters of vehicles in close proximity), and create enhanced analytics outputs.
+The following steps guide you through customizing Node-RED flows to implement crowd analytics logic for vehicle detection data. You will learn how to connect to MQTT data streams from the crowd analytics pipeline, calculate vehicle proximities using Euclidean distances, detect crowd formations (clusters of vehicles in close proximity), and create enhanced analytics outputs.
 
 #### 7.1 **Business Logic Overview**
 
 The custom Node-RED flow implements crowd detection algorithms:
+
 - **MQTT Input Node**: Subscribes to vehicle detection data from YOLO11s pipeline
 - **Vehicle Position Extractor**: Parses bounding box coordinates (x, y, w, h format) to calculate centroids.
 - **Hotspot Detector**: Computes Euclidean distances between all vehicle pairs. Applies proximity thresholds to identify crowd formations (2+ vehicles in close proximity)
@@ -196,9 +200,9 @@ The custom Node-RED flow implements crowd detection algorithms:
 
 #### 7.2 **Vibe coding with Claude Sonnet 4.5**
 
-In order to achieve the above business logic, we performed vibe coding with Claude Sonnet 4.5 that is available as a part of Github Co-pilot integration with VSCode.
+In order to achieve the above business logic, we performed vibe coding with Claude Sonnet 4.5 that is available as a part of GitHub Copilot integration with VSCode.
 
-Essentially, we put ourselves in the shoes of an architect, and put co-pilot in the shoes of a developer. Then we describe our architecture to co-pilot and ask it to generate code to achieve individual components within that architecture.
+Essentially, we put ourselves in the shoes of an architect, and put Copilot in the shoes of a developer. Then we describe our architecture to Copilot and ask it to generate code to achieve individual components within that architecture.
 
 In this context, our architecture consists of below 3 functions/components as detailed above:
 - **Vehicle Position Extractor**
@@ -207,12 +211,12 @@ In this context, our architecture consists of below 3 functions/components as de
 
 Here are the example prompts that we used:
 
-- **Prompt for Vehicle Position Extractor**: The code output from co-pilot after vibe coding with this prompt is used in step #7.7 below
+- **Prompt for Vehicle Position Extractor**: The code output from Copilot after vibe coding with this prompt is used in step #7.7 below
     - Here is the metadata output from DL Streamer Pipeline Server (Video Analytics pipeline) that does object detection. [PASTE METADATA HERE]. Provide a node red function that parses bounding box coordinates (x, y, w, h format) to calculate centroids, only include objects that are vehicles and return output message with vehicle positions.
         > Note: After completing step #7.6 and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
         ![Crowd Analytics Node-RED Debug Panel](_images/crowd-analytics-debug-panel.png)
 
-- **Prompt for Hotspot Detector**: The code output from co-pilot after vibe coding with this prompt is used in step #7.8 below
+- **Prompt for Hotspot Detector**: The code output from Copilot after vibe coding with this prompt is used in step #7.8 below
     - Based on the output of the previous function node, compute hotspots of vehicles. Include configurable parameters for the below in the code:
         - Maximum distance (pixels) to consider vehicles part of same hotspot
         - Distance calculation method: "euclidean", "manhattan", "horizontal", "vertical" etc.,
