@@ -26,7 +26,10 @@ class LLMBridge:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.logger.info('PrimGenerator Init')
-        self.model_path = "/home/intel/ov_models/Phi-4-mini-instruct-int8-ov"
+        import os
+        home_dir = os.path.expanduser("~")
+        self.model_path = os.path.join(home_dir, "ov_models/Phi-4-mini-instruct-int8-ov")
+        print(f"Loading LLM model from {self.model_path}...")
 
         ov_config = {"PERFORMANCE_HINT": "LATENCY", "NUM_STREAMS": "1", "CACHE_DIR": "model_cache"}
         self.model = OVModelForCausalLM.from_pretrained(self.model_path,
@@ -40,7 +43,7 @@ class LLMBridge:
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path,
                                                   trust_remote_code=True)
 
-        self.PHI4_PROMPT_FORMAT = "<|user|>\n{prompt}<|end|>\n<|assistant|>\n"
+        self.LLM_PROMPT_FORMAT = "<|user|>\n{prompt}<|end|>\n<|assistant|>\n"
 
         # remove CoT and emphasize the suck() function
         self.codegen_prompt = """
@@ -80,6 +83,73 @@ release()
 prepare_state()
 #end
     """
+        # for Qwen model, use below prompt.
+        if "Qwen" in self.model_path:
+            self.codegen_prompt = """
+You are a robot control code generator.
+
+CRITICAL RULES (MUST FOLLOW):
+- ONLY output code
+- DO NOT output <think> or any reasoning
+- DO NOT explain anything
+- DO NOT add any text before or after the code
+- DO NOT output comments
+- If you output anything other than the required format, the answer is invalid
+- If you generate "<think>", the answer is invalid
+
+OUTPUT FORMAT (STRICT):
+Your output must be EXACTLY:
+
+#code start
+...code...
+#end
+
+CODE RULES:
+- Use ONLY the provided functions
+- DO NOT invent new functions
+- Always follow correct sequence
+- Use variable name exactly: target_pose
+
+ACTION RULES:
+- Picking MUST follow:
+  get_pick_pose → move → suck
+- Placing MUST follow:
+  get_place_pose → move → release
+- Always start with prepare_state()
+- Always end with prepare_state()
+
+AVAILABLE FUNCTIONS:
+- prepare_state()
+- get_pick_pose(obj_name)
+- get_place_pose(obj_name)
+- move(target_pose)
+- suck()
+- release()
+
+EXAMPLE:
+
+Command: Pick up the red apple and place it into the green box, then return the robot to its default position.
+
+Output:
+#code start
+prepare_state()
+target_pose = get_pick_pose('red apple')
+move(target_pose)
+suck()
+target_pose = get_place_pose('green box')
+move(target_pose)
+release()
+prepare_state()
+#end
+
+TASK:
+
+Command: {your_command_here}
+
+Output:
+Output MUST start directly with "#code start".
+#code start
+    """
 
         self.objextract_prompt = """
 Given a command that instructs a robot to move an object to a specific destination, extract and list the object being moved and the destination. The command could be in various formats, such as 'Move [object] to [destination]', 'Pick up [object] and move it to [destination]', or 'Grab [object] and move it to [destination]'. For example, if the command is 'Pick up the book and move it to the table', your response should identify 'the book' as the object and 'the table' as the destination."
@@ -100,6 +170,45 @@ Examples:
    Object: The yellow orange
    Destination: The shelf        
     """
+        # for Qwen model, use below prompt
+        if "Qwen" in self.model_path:
+            self.objextract_prompt = """
+You are an information extractor.
+
+TASK:
+From the given command, extract:
+1) the object being moved
+2) the destination (where the object should be moved to)
+
+OUTPUT FORMAT (STRICT):
+Return EXACTLY two lines and nothing else:
+Object: <object text>
+Destination: <destination text>
+
+RULES:
+- Do NOT explain.
+- Do NOT output examples.
+- Do NOT output <think> or any reasoning.
+- Preserve the original wording from the command as much as possible.
+- If either field is missing or unclear, output "UNKNOWN" for that field.
+
+Examples:
+Command: Move the book to the table
+Object: the book
+Destination: the table
+
+Command: Pick up the red pen and move it to the drawer
+Object: the red pen
+Destination: the drawer
+
+Command: Grab the yellow orange and move it to the shelf
+Object: the yellow orange
+Destination: the shelf
+
+Now extract from this command:
+Command: "{command}"
+"""
+
         self.stop_tokens = [151643, 151645]
         self.stop_tokens = [StopOnTokens(self.stop_tokens)]
         # reduce max new token of the output
@@ -108,17 +217,44 @@ Examples:
         #if we want to show debug info ,we need to reset logging level because ipex may set it to INFO.
         self.logger.setLevel(logging.DEBUG)
 
-    def phi4_generate(self, prompt, command):
+    def llm_generate(self, prompt, command):
         input = prompt + '\n\nPlease give the code of the following command strictly following **Expected Output**:\n**Command**:: ' + command
-        phi4_prompt = self.PHI4_PROMPT_FORMAT.format(prompt=input)
+        llm_prompt = self.LLM_PROMPT_FORMAT.format(prompt=input)
+
+        # for Qwen model, use below prompt
+        if "Qwen" in self.model_path:
+            messages = []
+            output_example = """
+prepare_state()
+target_pose = get_pick_pose('{object}')
+move(target_pose)
+suck()
+target_pose = get_place_pose('{place}')
+move(target_pose)
+release()
+prepare_state()
+"""
+            g_prompt = input+'\n'+output_example
+            messages.append({"role": "system", "content": g_prompt})
+            messages.append({"role": "user", "content": command})
+            llm_prompt = self.tokenizer.apply_chat_template(
+                    messages,
+                    tokenize=False,
+                    add_generation_prompt=True
+                )
+
+        # add bad words
+        bad_words = ["<think>"]
+        bad_words_ids = self.tokenizer(bad_words, add_special_tokens=False).input_ids
 
         st = time.time()
-        model_inputs = self.tokenizer([phi4_prompt], return_tensors="pt")
+        model_inputs = self.tokenizer([llm_prompt], return_tensors="pt")
         generated_ids = self.model.generate(
             model_inputs.input_ids,
             max_new_tokens=self.n_predict,
             do_sample= False,
             stopping_criteria=StoppingCriteriaList(self.stop_tokens),
+            bad_words_ids=bad_words_ids,
             pad_token_id=self.pad_token_id)
         generated_ids = [
             output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)]
@@ -144,11 +280,11 @@ Examples:
 # #end
 # '''
 #         return pesudo_output
-        return self.phi4_generate(self.codegen_prompt, command)
+        return self.llm_generate(self.codegen_prompt, command)
 
     def extract_object(self, command):
    #      return '''
    # Object: The dog
    # Destination: Default
    #      '''
-        return self.phi4_generate(self.objextract_prompt, command)
+        return self.llm_generate(self.objextract_prompt, command)

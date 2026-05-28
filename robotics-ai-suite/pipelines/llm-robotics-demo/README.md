@@ -23,15 +23,11 @@ Comprehensive documentation on this component is available here: [Link](https://
 > [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
 > and also ensure you have the following list-table prerequisites:
 
-  -----------------------------------------------------------------------
-  Specification                       Recommended
-  ----------------------------------- -----------------------------------
-  Processor                           Intel® Core™ Ultra 7 Processor 265H
-
-  Storage                             256G
-
-  Memory                              LPDDR5, 6400 MHz, 16G x 2
-  -----------------------------------------------------------------------
+| Specification | Recommended |
+| --- | --- |
+| Processor | Intel® Core™ Ultra X7 Processor 358H |
+| Storage | 256G |
+| Memory | LPDDR5, 6400 MHz, 32G × 2 |
 
 ## JAKA robot arm setup
 
@@ -43,8 +39,7 @@ JAKA robot-arm ROS2 application.
 1.  Install dependency:
 
     ``` bash
-    sudo apt install libeigen3-dev python3-pip python3-venv cmake
-    sudo python3 -m pip install pymodbus==v3.6.9
+    sudo apt install libeigen3-dev python3-pip python3-venv cmake python3-pymodbus libxcb-cursor0
     ```
 
 2.  Install PLCopen library:
@@ -53,7 +48,7 @@ JAKA robot-arm ROS2 application.
     sudo apt install libshmringbuf libshmringbuf-dev plcopen-ruckig plcopen-ruckig-dev plcopen-motion plcopen-motion-dev plcopen-servo plcopen-servo-dev plcopen-databus plcopen-databus-dev
     ```
 
-### Install ROS2 Iron
+### Install ROS2 Jazzy
 
 1.  Install dependency:
 
@@ -69,7 +64,7 @@ JAKA robot-arm ROS2 application.
     sudo apt update
     ```
 
-3.  Setup the public ROS2 Iron APT repository:
+3.  Setup the public ROS2 APT repository:
 
     ``` bash
     sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key  -o /usr/share/keyrings/ros-archive-keyring.gpg
@@ -78,11 +73,11 @@ JAKA robot-arm ROS2 application.
     sudo apt update
     ```
 
-4.  Install ROS2 Iron packages:
+4.  Install ROS2 Jazzy packages:
 
     ``` bash
     sudo apt install -y python3-colcon-common-extensions python3-argcomplete python3-pykdl
-    sudo apt install -y ros-iron-desktop ros-iron-moveit* ros-iron-osqp-vendor ros-iron-ament-cmake-google-benchmark librange-v3-dev ros-iron-ros-testing
+    sudo apt install -y ros-jazzy-desktop ros-jazzy-moveit* ros-jazzy-osqp-vendor ros-jazzy-ament-cmake-google-benchmark librange-v3-dev ros-jazzy-ros-testing
     sudo bash -c 'echo -e "Package: *\nPin: origin eci.intel.com\nPin-Priority: 1000" > /etc/apt/preferences.d/isar'
     ```
 
@@ -92,20 +87,20 @@ JAKA robot-arm ROS2 application.
 
     ``` bash
     cd ~/Downloads/
-    sudo apt source ros-humble-pykdl-utils ros-humble-jaka-bringup ros-humble-jaka-description ros-humble-jaka-hardware ros-humble-jaka-moveit-config ros-humble-jaka-moveit-py ros-humble-jaka-servo ros-humble-run-jaka-moveit ros-humble-run-jaka-plc
+    sudo apt source ros-jazzy-pykdl-utils ros-jazzy-jaka-bringup ros-jazzy-jaka-description ros-jazzy-jaka-hardware ros-jazzy-jaka-moveit-config ros-jazzy-jaka-moveit-py ros-jazzy-jaka-servo ros-jazzy-run-jaka-moveit ros-jazzy-run-jaka-plc
     ```
 
 2.  Create workspace for robot arm source code:
 
     ``` bash
     mkdir -p ~/ws_jaka/src
-    cp -r ~/Downloads/ros-humble-jaka-bringup-3.2.0/robot_arm/ ~/ws_jaka/src
+    cp -r ~/Downloads/ros-jazzy-jaka-bringup-3.2.0/robot_arm/ ~/ws_jaka/src
     ```
 
 3.  Build JAKA robot arm source code:
 
     ``` bash
-    cd ~/ws_jaka/ && source /opt/ros/iron/setup.bash
+    cd ~/ws_jaka/ && source /opt/ros/jazzy/setup.bash
     touch src/robot_arm/jaka/jaka_servo/COLCON_IGNORE
     colcon build
     ```
@@ -126,7 +121,7 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
 1.  Install FunASR environment:
 
     ``` bash
-    sudo apt install funasr llm-robotics
+    sudo apt install funasr
     cd /opt/funasr/
     sudo bash install_funasr.sh
     ```
@@ -135,9 +130,8 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
 
     ``` bash
     sudo chown -R $USER /opt/funasr/
-    sudo chown -R $USER /opt/llm-robotics/
     mkdir /opt/funasr/FunASR/funasr/models/intel/
-    cp -r /opt/llm-robotics/asr-openvino-demo/models/* /opt/funasr/FunASR/funasr/models/intel/
+    cp -r <path_to_llm-robotics-demo>/asr-openvino-demo/models/* /opt/funasr/FunASR/funasr/models/intel/
     ```
 
 3.  Create a virtual FunASR Python environment:
@@ -155,13 +149,13 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
     cd /opt/funasr/FunASR/
     pip install -e ./
     python ov_convert_FunASR.py
-    cp -r ~/.cache/modelscope/hub/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch /opt/llm-robotics/asr-openvino-demo/
+    cp -r ~/.cache/modelscope/hub/iic/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch <path_to_llm-robotics-demo>/asr-openvino-demo/
     ```
 
 5.  Quantitative model using `ovc`:
 
     ``` bash
-    cd /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
+    cd <path_to_llm-robotics-demo>/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
     ovc model.onnx --output_model=model_bb_fp16
     ovc model_eb.onnx --output_model=model_eb_fp16
     ```
@@ -194,6 +188,66 @@ sudo apt-get install cmake libopenblas-dev libssl-dev portaudio19-dev ffmpeg git
     pip install -e ./
     ```
 
+## MeloTTS setup
+
+This section will provide a step-by-step guide to setup a MeloTTS server.
+
+### Install dependencies
+
+``` bash
+# System packages
+sudo apt-get install -y python3-venv build-essential python3-dev git-all libgl1-mesa-dev ffmpeg
+
+# Create and activate virtual environment
+cd <path_to_llm-robotics-demo>/tts-openvino-demo/
+python3 -m venv venv-tts
+source venv-tts/bin/activate
+
+# Install Python dependencies
+pip install -r requirement.txt --extra-index-url https://download.pytorch.org/whl/cpu
+```
+
+### Prepare model assets
+
+#### Export OpenVINO IR models
+
+Follow below OpenVINO notebook to export and save OpenVoice2 + MeloTTS IR models:
+
+- [OpenVoice2 and MeloTTS](https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.1/notebooks/openvoice2-and-melotts)
+
+#### Arrange local runtime files
+
+``` bash
+# Create target directory
+mkdir -p ~/ov_models/TTS/
+
+# Copy model assets
+cp -r <path_to_openvino_notebooks>/notebooks/openvoice2-and-melotts/checkpoints ~/ov_models/TTS/
+cp -r <path_to_openvino_notebooks>/notebooks/openvoice2-and-melotts/MeloTTS ~/ov_models/TTS/
+cp -r <path_to_openvino_notebooks>/notebooks/openvoice2-and-melotts/openvino_irs ~/ov_models/TTS/
+cp -r <path_to_openvino_notebooks>/notebooks/openvoice2-and-melotts/OpenVoice ~/ov_models/TTS/
+```
+
+#### Prepare Torch Hub offline cache (manual, with expected tree layout)
+
+``` bash
+# Build a Torch Hub-like directory structure under Downloads
+mkdir -p ~/Downloads/torch_hub_local/hub
+cd ~/Downloads/torch_hub_local/hub
+
+# Download fixed tag v3.0
+git clone --depth 1 --branch v3.0 https://github.com/snakers4/silero-vad.git snakers4_silero-vad_v3.0
+
+# Create compatibility link (some hubconf paths still reference *_master)
+ln -sfn snakers4_silero-vad_v3.0 snakers4_silero-vad_master
+
+# Optional trusted marker file
+touch trusted_list
+
+# Copy cache under ov_models/TTS for centralized management
+cp -r ~/Downloads/torch_hub_local ~/ov_models/TTS/
+```
+
 ## LLM and vision models setup
 
 This section will provide a step-by-step guide to setup a virtual Python
@@ -204,7 +258,7 @@ environment to run LLM demo.
 1.  Install the `pip` packages for LLM:
 
     ``` bash
-    cd /opt/llm-robotics/LLM/
+    cd <path_to_llm-robotics-demo>/LLM/
     python3 -m venv venv-llm
     source venv-llm/bin/activate
     pip install -r requirement.txt
@@ -223,16 +277,16 @@ environment to run LLM demo.
 Follow the OpenVINO documentation below to export and save `SAM` model:
 
 - SAM:
-  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/segment-anything>
+  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.1/notebooks/segment-anything>
 
 Modify the loading PATH of models to the exported model path, the
 default path is:
 
-> ``` console
-> # /opt/llm-robotics/LLM/utils/mobilesam_helper.py:L88-L89
-> ov_sam_encoder_path = f"/home/intel/ov_models/sam_image_encoder.xml"
-> ov_sam_predictor_path = f"/home/intel/ov_models/sam_mask_predictor.xml"
-> ```
+``` console
+# <path_to_llm-robotics-demo>/LLM/utils/mobilesam_helper.py:L91-L92
+ov_sam_encoder_path = os.path.join(home_dir, "ov_models/sam_image_encoder.xml")
+ov_sam_predictor_path = os.path.join(home_dir, "ov_models/sam_mask_predictor.xml")
+```
 
 ### Setup the CLIP model
 
@@ -240,14 +294,14 @@ Follow the OpenVINO documentation below to export and save
 `CLIP (ViT-B)` model:
 
 - CLIP:
-  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2025.2/notebooks/clip-zero-shot-image-classification>
+  <https://github.com/openvinotoolkit/openvino_notebooks/tree/2026.1/notebooks/clip-zero-shot-image-classification>
 
 Modify the loading PATH of models to the exported model path, the
 default path is:
 
 ``` console
-# /opt/llm-robotics/LLM/utils/mobilesam_helper.py:L87
-clip_model_path = f"/home/intel/ov_models/clip-vit-base-patch16.xml"
+# <path_to_llm-robotics-demo>/LLM/utils/mobilesam_helper.py:L90
+clip_model_path = os.path.join(home_dir, "ov_models/clip-vit-base-patch16/FP16/openvino_model.xml")
 ```
 
 ### Setup the `Phi-4-mini-instruct-int8-ov` model
@@ -260,6 +314,7 @@ sudo apt install git-lfs
 mkdir ~/ov_models && cd ~/ov_models
 GIT_LFS_SKIP_SMUDGE=1 git clone https://hf-mirror.com/OpenVINO/Phi-4-mini-instruct-int8-ov
 git lfs pull
+# If git lfs pull fails, use huggingface_hub to download the model instead.
 ```
 
 Set the environment variable:
@@ -267,9 +322,12 @@ Set the environment variable:
 Modify the loading PATH of models to the exported model path, the
 default path is:
 
-# /opt/llm-robotics/LLM/llm_bridge.py:L27
-self.model_path = "/home/intel/ov_models/Phi-4-mini-instruct-int8-ov"
+``` console
+# <path_to_llm-robotics-demo>/LLM/llm_bridge.py:L31
+self.model_path = os.path.join(home_dir, "ov_models/Phi-4-mini-instruct-int8-ov")
 ```
+
+For `Qwen3-8B-int8-ov` model, follow the same deployment steps as `Phi-4-mini-instruct-int8-ov`; place the model files under `~/ov_models` and update `model_path` accordingly.
 
 ## Run pipeline
 
@@ -281,15 +339,10 @@ demo.
 Please connect the following items to the [\|Core\|](##SUBST##|Core|)
 Ultra IPC.
 
-  -----------------------------------------------------------------------------------------------
-  Item     Explanation                      LINK
-  -------- -------------------------------- -----------------------------------------------------
-  Camera   Intel® RealSense™ Depth Camera   <https://www.intelrealsense.com/depth-camera-d435/>
-           D435                             
-
-  USB Mic  Audio input device of FunASR,    UGREEN CM564
-           16k sampling rate                
-  -----------------------------------------------------------------------------------------------
+| Item | Explanation | Link |
+| --- | --- | --- |
+| Camera | RealSense™ Depth Camera D435 | <https://www.realsenseai.com/products/stereo-depth-camera-d435/> |
+| USB Mic | Audio input device of FunASR, 16k sampling rate | UGREEN CM564 |
 
 ### Launch LLM Robotic Demo
 
@@ -303,22 +356,29 @@ ROS2 component, and non-real-time LLM component.
 
 1.  Launch the OpenVINO FunASR server:
 
-    
+    ``` bash
     source /opt/funasr/venv-asr/bin/activate
-    python3 /opt/funasr/FunASR/runtime/python/websocket/funasr_wss_server.py --port 10095 --certfile "" --keyfile "" --asr_model /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
+    python3 /opt/funasr/FunASR/runtime/python/websocket/funasr_wss_server.py --port 10095 --certfile "" --keyfile "" --asr_model <path_to_llm-robotics-demo>/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
     ```
 
-2.  Launch the real-time application:
+2.  Launch the OpenVINO MeloTTS server:
 
-    
+    ``` bash
+    source <path_to_venv-tts>/bin/activate
+    python3 <path_to_llm-robotics-demo>/tts-openvino-demo/tts_server.py --host 0.0.0.0 --port 10096
+    ```
+
+3.  Launch the real-time application:
+
+    ``` bash
     # affinity real time application to core 3
-    sudo taskset -c 3 plc_rt_pos_rtmotion
+    sudo taskset -c 3 /opt/plcopen/plc_rt_pos_rtmotion
     ```
 
     If the real-time application launches successfully, the terminal
     will show the following:
 
-    
+    ``` console
     Axis 0 initialized.
     Axis 1 initialized.
     Axis 2 initialized.
@@ -328,12 +388,9 @@ ROS2 component, and non-real-time LLM component.
     Function blocks initialized.
     ```
 
-3.  Launch the JAKA robot arm ROS2 node:
+4.  Launch the JAKA robot arm ROS2 node:
 
-    > [!IMPORTANT]
-    > Execute the following commands as privileged user (`root`).
-
-    
+    ``` bash
     source ~/ws_jaka/install/setup.bash
     ros2 launch jaka_moveit_py jaka_motion_planning.launch.py
     ```
@@ -342,11 +399,10 @@ ROS2 component, and non-real-time LLM component.
 
     ![image](README.assets/jaka-robot-arm.png)
 
-4.  Launch the LLM application:
+5.  Launch the LLM application:
 
-    
-    source /opt/intel/oneapi/setvars.sh
-    cd /opt/llm-robotics/LLM/
+    ``` bash
+    cd <path_to_llm-robotics-demo>/LLM/
     source venv-llm/bin/activate
     python main.py
     ```
