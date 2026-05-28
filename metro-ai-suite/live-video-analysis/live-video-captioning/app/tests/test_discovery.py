@@ -243,6 +243,36 @@ class TestDiscoverPipelinesRemote:
         # All detection pipelines filtered out; fallback returned
         assert all(r["pipeline_type"] == "non-detection" for r in result)
 
+    def test_camera_detection_display_names_are_mapped(self):
+        """Camera detection pipelines keep camera IDs but use non-camera UI labels."""
+        payload = [
+            {
+                "version": "GenAI_Camera_Detection_Pipeline_on_CPU",
+                "parameters": {"properties": {"detection_model_name": {}}},
+            },
+            {
+                "version": "GenAI_Camera_Detection_Pipeline_on_GPU",
+                "parameters": {"properties": {"detection_model_name": {}}},
+            },
+        ]
+
+        with self._mock_http(payload), patch(
+            "backend.services.discovery.ENABLE_DETECTION_PIPELINE", True
+        ):
+            result = discover_pipelines_remote()
+
+        display_by_name = {
+            item["pipeline_name"]: item["pipeline_display_name"] for item in result
+        }
+        assert (
+            display_by_name["GenAI_Camera_Detection_Pipeline_on_CPU"]
+            == "GenAI_Detection_Pipeline_on_CPU"
+        )
+        assert (
+            display_by_name["GenAI_Camera_Detection_Pipeline_on_GPU"]
+            == "GenAI_Detection_Pipeline_on_GPU"
+        )
+
     def test_proxy_pipelines_are_hidden_from_results(self):
         """Proxy pipelines for default resolution are not exposed to the UI."""
         payload = [

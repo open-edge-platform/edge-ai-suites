@@ -8,6 +8,8 @@ from .http_client import http_json
 _PIPELINE_DISPLAY_NAME_MAP = {
     "GenAI_Camera_Pipeline_on_CPU": "GenAI_Pipeline_on_CPU",
     "GenAI_Camera_Pipeline_on_GPU": "GenAI_Pipeline_on_GPU",
+    "GenAI_Camera_Detection_Pipeline_on_CPU": "GenAI_Detection_Pipeline_on_CPU",
+    "GenAI_Camera_Detection_Pipeline_on_GPU": "GenAI_Detection_Pipeline_on_GPU",
 }
 
 
