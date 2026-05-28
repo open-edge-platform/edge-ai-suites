@@ -50,7 +50,7 @@ This sample application is built with the following Intel Edge AI Stack Microser
 - [Model Download](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html)
   is a microservice to download AI models so that they may be used by DL Streamer Pipeline Server.
 
-It also consists of the below Third-party microservices:
+It also consists of these Third-party microservices:
 
 - [Nginx](https://hub.docker.com/_/nginx)
   is a high-performance web server and reverse proxy that provides TLS termination and unified HTTPS access.
@@ -58,12 +58,12 @@ It also consists of the below Third-party microservices:
   is a real-time media server and media proxy that allows to publish webrtc stream.
 - [Coturn Server](https://hub.docker.com/r/coturn/coturn)
   is a media traffic NAT traversal server and gateway.
-- [Open telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
+- [Open Telemetry Collector](https://hub.docker.com/r/otel/opentelemetry-collector-contrib)
   is a set of receivers, exporters, processors, connectors for Open Telemetry.
 - [Prometheus](https://hub.docker.com/r/prom/prometheus)
   is a systems and service monitoring system used for viewing Open Telemetry.
 - [Minio](https://hub.docker.com/r/minio/minio)
-  is high performance object storage that is API compatible with
+  is a high performance object storage system that is API compatible with
   Amazon S3 cloud storage service.
 
 ## Features

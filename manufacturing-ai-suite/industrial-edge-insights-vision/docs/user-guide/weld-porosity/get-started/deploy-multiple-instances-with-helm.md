@@ -5,11 +5,11 @@
 - Ensure you have the **minimum system requirements** for this application.
 - K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 ## Setup the application
 
-> **Note**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
+> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -58,7 +58,8 @@
    MTX_WEBRTCICESERVERS2_0_USERNAME=<username>  # WebRTC credentials e.g. intel1234
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
-    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
+
+   > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
 4. Install pre-requisites for all instances
 
@@ -67,17 +68,17 @@
    ```
 
     This does the following:
-    - Parses through the config.yml
+    - Parses through the `config.yml`
     - Downloads resources for each instance
-    - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file, payload.json, Chart.yaml, pipeline-server-config.json and values.yaml.
-    - Updates and adds the ports mentioned in config.yml to the respective values.yaml file
+    - Creates a folder helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, `.env` file, `payload.json`, `Chart.yaml`, `pipeline-server-config.json` and `values.yaml`.
+    - Updates and adds the ports mentioned in `config.yml` to the respective `values.yaml` file
     - Sets executable permissions for scripts
 
 ## Deploy the application
 
-### Install helm charts
+### Install Helm charts
 
-1. Install the helm chart for all instances
+1. Install the Helm chart for all instances
 
    ```sh
    ./run.sh helm_install
@@ -117,7 +118,7 @@
    ./sample_list.sh helm
    ```
 
-   This lists the pipeline loaded in DLStreamer Pipeline Server.
+   This lists the pipeline loaded in DL Streamer Pipeline Server.
 
    Output:
 
@@ -196,7 +197,7 @@
    ]
    ```
 
-2. Start the pipeline for all instances in the config.yml file
+2. Start the pipeline for all instances in the `config.yml` file
 
    ```sh
    ./sample_start.sh helm
@@ -372,7 +373,6 @@
            ...
    ]
    ```
-
 
 2. Start the pipeline for <INSTANCE_NAME> where pipeline is loaded from <file>:
 
@@ -641,6 +641,7 @@
 ```sh
 ./run.sh helm_uninstall
 ```
+
 Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## Storing frames to S3 storage
@@ -649,7 +650,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart.
+2. Install the Helm chart.
 
    ```sh
    ./run.sh helm_install
@@ -692,7 +693,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 5. Create a S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in config.yml for each instance and credentials with that of the running MinIO server. Name the file as `create_bucket_<INSTANCE_NAME>.py`.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Name the file as `create_bucket_<INSTANCE_NAME>.py`.
 
    ```python
    import boto3
@@ -718,7 +719,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    python3 create_bucket_<INSTANCE_NAME>.py
    ```
 
-6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the config.yml for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for weld-porosity.  Please adjust the source path of models and videos appropriately for other sample applications.
+6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP and the `<NGINX_HTTPS_PORT>` mentioned in the `config.yml` for each instance. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline for weld-porosity.  Please adjust the source path of models and videos appropriately for other sample applications.
 
    ```sh
     curl -k https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/user_defined_pipelines/weld_porosity_classification_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -745,18 +746,19 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
-8. Uninstall the helm chart.
+8. Uninstall the Helm chart.
 
    ```sh
    ./run.sh helm_uninstall
    ```
+
 9. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
 
 ## MLOps using Model Download
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart
+2. Install the Helm chart
 
    ```sh
    ./run.sh helm_install
@@ -803,10 +805,12 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./sample_start.sh helm -i <INSTANCE_NAME> -p weld_porosity_classification_mlops
    ```
+
    Note the instance-id.
 
 6. Download and prepare the model. Below is an example for downloading and preparing model for weld-porosity-classification. Please modify MODEL_URL for the other sample applications.
-   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   > **Note:** For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
     export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/d7f7d4d6109ac977129e344ed2d730c430656feb/models/INT8/weld_porosity_classification.zip'
@@ -823,10 +827,11 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
     kubectl cp new-model $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
-   >NOTE- If there are multiple sample_apps in config.yml, repeat steps 6 and 7 for each sample app and instance.
 
+   > **Note:** If there are multiple sample_apps in `config.yml`, repeat steps 6 and 7 for each sample app and instance.
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
+
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:<NGINX_HTTPS_PORT>/api/pipelines/{instance_id}
    ```
@@ -858,7 +863,6 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
     ```
 
 10. View the WebRTC streaming on `https://<HOST_IP>:<NGINX_HTTPS_PORT>/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
-
 
 ## Troubleshooting
 
