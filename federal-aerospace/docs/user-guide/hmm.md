@@ -1,4 +1,4 @@
-# Handheld multi-modal
+# Handheld Multi-Modal
 
 ## Applications
 
@@ -27,10 +27,10 @@ For more information refer to [documentation](https://github.com/open-webui/open
 
 ## Deployment
 
-### Proxy configuration
+### (OPTIONAL) Proxy configuration
 
-(OPTIONAL) Depending on network configuration of the system, additional configuration of proxy might be needed on the system.
-Ensure that /etc/environment contains proxy variables, replacing `proxy-example:123` with valid proxy for local environment.
+Depending on network configuration of the system, additional configuration of proxy might be needed.
+Ensure that /etc/environment contains proxy variables, replacing `proxy-example:123` with a valid proxy for the local environment.
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
@@ -101,14 +101,14 @@ Unzip downloaded files
 unzip handheld-multi-modal.zip
 ```
 
-Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If error occurs during installation, refer to [proxy configuration step](#proxy-configuration)
+Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, refer to [proxy configuration step](#proxy-configuration)
 
 ```bash
 cd handheld-multi-modal
 ./run up
 ```
 
-After script finishes, check that containers are running by running
+After script finishes, check that containers are running by executing following command
 
 ```bash
 ╰$ docker ps
@@ -126,4 +126,4 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp  
 ```
 
-After applications are deployed, refer to [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access specific application. Since none of the applications provides authentication/authorization, all applications are available only on `localhost` and not exposed under any external IP address.
+After applications are deployed, refer to [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. Since none of the applications provide authentication/authorization, all applications are available only on `localhost` and not exposed under any external IP address.
