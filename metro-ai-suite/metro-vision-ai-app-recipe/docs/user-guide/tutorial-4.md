@@ -1,10 +1,11 @@
 # AI Crowd Analytics through Vibe Coding
 
-This tutorial walks you through leveraging an existing 'Metro Vision AI App Recipe powered application' and turning it into a 'new application' by 'vibe coding', all while the underlying application architecture remains the same.
+This tutorial walks you through leveraging an existing Metro Vision AI App Recipe-powered application
+ and turning it into a 'new application' by 'vibe coding', all while the underlying application architecture remains the same.
 
 ## Metro Vision AI App Recipe Architecture
 
-![Metro Vision AI App Recipe Architecture](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
+![Metro Vision AI App Recipe Architecture](./_images/metro-vision-ai-app-recipe-architecture.drawio.svg "metro vision ai app recipe architecture")
 
 ### Key Features of this architecture
 
@@ -23,21 +24,21 @@ This architecture is capable of building any typical Vision AI sample applicatio
 
 ## How to leverage an existing 'Metro Vision AI App Recipe powered application' and turn it into a 'new application' by 'vibe coding'
 
-The below aspects need to be updated accordingly, in order to leverage an existing 'Metro Vision AI App Recipe powered application' and turn it into a 'new application' by 'vibe coding':
+The below aspects need to be updated accordingly, in order to leverage an existing Metro Vision AI App Recipe-powered application and turn it into a 'new application' by 'vibe coding':
 
 - **AI model:** This is the new AI model that serves the inference purposes of the new application.
 - **Video file:** This is the new video source that serves as input to the new application.
 - **Vision Analytics Pipeline:** This is the AI processing DL Streamer pipeline that needs to be modified appropriately, considering the new AI model and new video source input.
-- **Node Red Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which would be provided as insights in the grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the github copilot offering.
+- **Node-RED Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which would be provided as insights in the Grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the GitHub Copilot offering.
 - **Configuration updates:** This is the application configuration such as self signed certificates, docker compose, node-red, grafana etc.,
 
 Note: The underlying application architecture remains the same.
 
 ## Build a new application: 'AI Crowd Analytics'
 
- Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
+Now let us get started with building a new 'AI Crowd Analytics' application that automatically detects vehicles and identifies whether they form a "crowd" (closely grouped vehicles) or are scattered individually. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams and analyze vehicle clustering patterns in real-time.
 
-We will leverage the 'Smart Parking' application as the existing 'Metro Vision AI App Recipe powered application' and turn it into a 'AI Crowd Analytics' application.
+We will use the [Smart Parking](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-parking/index.html) application as the existing Metro Vision AI App Recipe-powered application and turn it into an 'AI Crowd Analytics' application.
 
 ### 1. **Create the Crowd Analytics Application Directory**
 
@@ -128,6 +129,7 @@ cat > ./crowd-analytics/src/dlstreamer-pipeline-server/config.json << 'EOF'
 }
 EOF
 ```
+
 <details>
 <summary>
 Pipeline Configuration Explanation
@@ -184,11 +186,12 @@ docker compose up -d
 
 ### 7. **Customize Node-RED Business Logic**
 
-The following steps guide you through customizing Node-RED flows to implement crowd analytics logic for vehicle detection data. You'll learn how to connect to MQTT data streams from the crowd analytics pipeline, calculate vehicle proximities using Euclidean distances, detect crowd formations (clusters of vehicles in close proximity), and create enhanced analytics outputs.
+The following steps guide you through customizing Node-RED flows to implement crowd analytics logic for vehicle detection data. You will learn how to connect to MQTT data streams from the crowd analytics pipeline, calculate vehicle proximities using Euclidean distances, detect crowd formations (clusters of vehicles in close proximity), and create enhanced analytics outputs.
 
 #### 7.1 **Business Logic Overview**
 
 The custom Node-RED flow implements crowd detection algorithms:
+
 - **MQTT Input Node**: Subscribes to vehicle detection data from YOLO11s pipeline
 - **Vehicle Position Extractor**: Parses bounding box coordinates (x, y, w, h format) to calculate centroids.
 - **Hotspot Detector**: Computes Euclidean distances between all vehicle pairs. Applies proximity thresholds to identify crowd formations (2+ vehicles in close proximity)
@@ -197,40 +200,57 @@ The custom Node-RED flow implements crowd detection algorithms:
 
 #### 7.2 **Vibe coding with Claude Sonnet 4.5**
 
-In order to achieve the above business logic, we performed vibe coding with Claude Sonnet 4.5 that is available as a part of Github Co-pilot integration with VSCode.
+In order to achieve the above business logic, we performed vibe coding with Claude Sonnet 4.5 that is available as a part of GitHub Copilot integration with VSCode.
 
-Essentially, we put ourselves in the shoes of an architect, and put co-pilot in the shoes of a developer. Then we describe our architecture to co-pilot and ask it to generate code to achieve individual components within that architecture.
+Essentially, we put ourselves in the shoes of an architect, and put Copilot in the shoes of a developer. Then we describe our architecture to Copilot and ask it to generate code to achieve individual components within that architecture.
 
 In this context, our architecture consists of below 3 functions/components as detailed above:
+
 - **Vehicle Position Extractor**
 - **Hotspot Detector**
 - **Hotspot Analytics Generator**
 
 Here are the example prompts that we used:
 
-- **Prompt for Vehicle Position Extractor**: The code output from co-pilot after vibe coding with this prompt is used in step #7.7 below
-    - Here is the metadata output from DL Streamer Pipeline Server (Video Analytics pipeline) that does object detection. [PASTE METADATA HERE]. Provide a node red function that parses bounding box coordinates (x, y, w, h format) to calculate centroids, only include objects that are vehicles and return output message with vehicle positions.
-        > Note: After completing step #7.6 and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
-        ![Crowd Analytics Node-RED Debug Panel](_images/crowd-analytics-debug-panel.png)
+- **Prompt for Vehicle Position Extractor**: The code output from Copilot after vibe coding with this prompt is used in step [#7.7](#77-implement-vehicle-position-extraction-function) below
 
-- **Prompt for Hotspot Detector**: The code output from co-pilot after vibe coding with this prompt is used in step #7.8 below
-    - Based on the output of the previous function node, compute hotspots of vehicles. Include configurable parameters for the below in the code:
-        - Maximum distance (pixels) to consider vehicles part of same hotspot
-        - Distance calculation method: "euclidean", "manhattan", "horizontal", "vertical" etc.,
-        - Minimum number of parked vehicles to form a hotspot
-        - Maximum movement (pixels) to consider a vehicle stationary
-        - Frames vehicle must stay stationary to be marked as parked
-- **Prompt for Hotspot Analytics Generator**: The code output from co-pilot after vibe coding with this prompt is used in step #7.9 below
-    - Based on the output of the previous function node, generate a table-friendly output with one row per hotspot that can be displayed on a Grafana dashboard. Ensure that each hotpost becomes a separate MQTT message for proper Grafana table visualization
+  ```text
+  Here is the metadata output from DL Streamer Pipeline Server (Video Analytics pipeline) that does object detection.
+  [PASTE METADATA HERE].
+  Provide a Node-RED function that parses bounding box coordinates (x, y, w, h format) to calculate centroids, only include objects that are vehicles and return output message with vehicle positions.
+  ```
 
-Note: The exact output for the above prompts from co-pilot weren't used as is. It involved more 'prompt engineering' and 'fine tuning' along with setting the correct default configurable options in the code as a part of vibe coding with co-pilot to achive the code that best suits our use case.
+  > **Note:** After completing step [#7.6](#76-add-debug-output-for-vehicle-data-monitoring) and starting the pipeline using the curl command, open the Node-RED debug panel on the right (bug icon). Select the Vehicle Data Monitor debug node from the drop down in the debug panel to view the metadata, which is used in the prompt to generate Extract Vehicle Positions.
+
+![Crowd Analytics Node-RED Debug Panel](_images/crowd-analytics-debug-panel.png "crowd analytics node-red debug panel")
+
+- **Prompt for Hotspot Detector**: The code output from Copilot after vibe coding with this prompt is used in step [#7.8](#78-implement-hotspot-detection-algorithm) below
+
+  ```text
+  - Based on the output of the previous function node, compute hotspots of vehicles. Include configurable parameters for the below in the code:
+    - Maximum distance (pixels) to consider vehicles part of same hotspot
+    - Distance calculation method: "euclidean", "manhattan", "horizontal", "vertical" etc.,
+    - Minimum number of parked vehicles to form a hotspot
+    - Maximum movement (pixels) to consider a vehicle stationary
+    - Frames vehicle must stay stationary to be marked as parked
+  ```
+
+- **Prompt for Hotspot Analytics Generator**: The code output from co-pilot after vibe coding with this prompt is used in step [#7.9](#79-add-hotspot-analytics-output-processing) below
+
+  ```text
+  - Based on the output of the previous function node, generate a table-friendly output with one row per hotspot that can be displayed on a Grafana dashboard. Ensure that each hotspot becomes a separate MQTT message for proper Grafana table visualization
+  ```
+
+> **Note:** The exact output for the above prompts from Copilot was not used as is. It involved more 'prompt engineering' and 'fine tuning' along with setting the correct default configurable options in the code as a part of vibe coding with Copilot to achieve the code that best suits our use case.
 
 #### 7.3 **Access the Node-RED Interface**
 
 Open your web browser and navigate to the Node-RED interface:
+
 ```
 https://<HOST_IP>/nodered/
 ```
+
 Replace `<HOST_IP>` with your actual system IP address.
 
 #### 7.4 **Clear Existing Node-RED Flows**
@@ -275,7 +295,7 @@ Create a debug node to monitor incoming vehicle detection data:
 3. **Deploy and Test**:
    - Click **Deploy**
    - Check the debug panel (bug icon in the right sidebar) for incoming vehicle detection messages
-   - The debug messages from this node is being used to generate the code for extracting vehicle positions in step #7.7 using prompt engineering.
+   - The debug messages from this node is being used to generate the code for extracting vehicle positions in step [#7.7](#77-implement-vehicle-position-extraction-function) using prompt engineering.
 
 #### 7.7 **Implement Vehicle Position Extraction Function**
 
@@ -786,34 +806,41 @@ Create debug nodes to monitor the hotspot analytics pipeline:
 
 #### 7.13 **Expected Node-RED Flow**
 
-![Crowd Analytics Node-RED Flow](_images/crowd-analytics-node-red-flow.png)
+![Crowd Analytics Node-RED Flow](_images/crowd-analytics-node-red-flow.png "crowd analytics node-red flow")
+
+---
 
 ### **Appendix: Fine-tuning Node-RED Functions with Claude Sonnet 4.5**
 
-When developing Node-RED function nodes for advanced analytics, you can leverage prompt engineering with Claude Sonnet 4.5 to iteratively refine your code. Here’s how you can approach fine-tuning:
+When developing Node-RED function nodes for advanced analytics, you can leverage prompt engineering with Claude Sonnet 4.5 to iteratively refine your code. Here is how you can approach fine-tuning:
 
 ![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-1.png)
 ![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-2.png)
 ![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-3.png)
 ![Crowd Analytics Node-RED Flow](_images/crowd-analytics-prompt-4.png)
 
+---
+
 ### 8. **Visualizing Hotspot Analytics in Grafana**
 
-The hotspot analytics data that would be published to `hotspot_analytics` can be visualized in real-time using Grafana.
+The hotspot analytics data that is published to `hotspot_analytics` can be visualized in real-time using Grafana.
 
-#### 8.1 **Access Grafana**: Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`)
+#### 8.1 **Access Grafana**
 
-#### 8.2 **Create New Dashboard**:
+Navigate to `https://<HOST_IP>/grafana` (Username: `admin`, Password: `admin`).
 
-   - Click the "+" icon in the right sidebar
-   - Select "New Dashboard" from the top right menu
-   - Click "Add Visualization"
-   - Close the pop-up window.
+#### 8.2 **Create a New Dashboard**
 
-#### 8.3 **Add Real-Time Video Stream Panel**
+- Click the "+" icon in the right sidebar
+- Select "New Dashboard" from the top right menu
+- Click "Add Visualization"
+- Close the pop-up window.
 
-1. **Create HTML Panel for Live Feed**:
-   - In the panel editor, change the visualization type to "Text" (On Right side of Visualization Editor Drop Down) from the already present default type (generally 'Time series' is the default)
+#### 8.3 **Add a Real-Time Video Stream Panel**
+
+1. **Create a HTML Panel for Live Feed**:
+
+   - In the panel editor, change the visualization type to "Text" (On Right side of Visualization Editor Drop Down) from the already present default type (generally, 'Time series' is the default)
    - In the panel options set title to "Live Vehicle Crowd Detection Feed"
    - In the Text option, switch mode to "HTML" mode
    - Add the following iframe code in the "Content":
@@ -829,21 +856,24 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
    ```
 
 2. **Save Dashboard**
+
    - Click the "save dashboard" icon at the top right corner of the dashboard
    - Name your dashboard "Title" as "Vehicle Crowd Analytics Dashboard"
    - Click Save
    - Click "Back to dashboard" on the top right
 
-#### 8.4 **Create Crowd Analytics Data Table**
+#### 8.4 **Create a Crowd Analytics Data Table**
 
 1. **Add New Panel and Configure Data Source**:
+
    - Click "Add" on the top right and select "Visualization" from the dropdown to create another visualization
    - Set your MQTT data source as "grafana-mqtt-datasource"
-   - Configure topic to fetch hotspot analytics data: Update Topic to "hotspot_analytics"
-   - Select "Table" as the visualization type (On Right side of Visualization Editor Drop Down) from the already present default type (generally 'Time series' is the default)
+   - Configure the topic to fetch hotspot analytics data: Update Topic to "hotspot_analytics"
+   - Select "Table" as the visualization type (On Right side of Visualization Editor Drop Down) from the already present default type (generally, 'Time series' is the default)
    - Set "Title" under "Panel Options" to "Real-time Vehicle Hotspot Analytics"
 
 2. **Run the pipeline**:
+
    - Use the curl command to start the crowd analytics pipeline
 
         ```bash
@@ -870,9 +900,10 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
         }'
         ```
 
-    **Note: It is essential for the pipeline to remain running while applying the transformations in the next step**
+    > **Note:** It is essential for the pipeline to remain running while applying the transformations in the next step
 
 3. **Add Transformations** (Transform tab at bottom):
+
    - **Sort by**:
       - Click **"+ Add transformation"** → Select **"Sort by"**
       - **Field**: Select **"Time"**
@@ -935,13 +966,13 @@ The hotspot analytics data that would be published to `hotspot_analytics` can be
         }'
         ```
 
-        Note: You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
+        > **Note:** You can check if a pipeline is running currently with `curl -k -s https://localhost/api/pipelines/status`
 
 #### 8.5 **Expected Results**
 
-As per the business logic mentioned in previous steps, you would see that when a minimum of 2 cars are together (parked next to each other), you would see that it is detected as a hotspot. The metadata of the hotspot such as the cars involved in the hotspot, for how long the cars are parked, for how many frames the cars are parked etc., can be seen in the table.
+As per the business logic mentioned in previous steps, you will see that when a minimum of 2 cars are together (parked next to each other), it is detected as a hotspot. The metadata of the hotspot, such as the cars involved in the hotspot, for how long the cars are parked, for how many frames the cars are parked, etc., can be seen in the table.
 
-![Crowd Analytics Grafana](_images/crowd-analytics-grafana.png)
+![Crowd Analytics Grafana](_images/crowd-analytics-grafana.png "crowd analytics grafana")
 
 ## Troubleshooting
 

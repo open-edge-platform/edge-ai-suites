@@ -10,7 +10,7 @@ hide_directive-->
 
 This sample app demonstrates how AI-driven analytics enable edge devices to monitor weld quality.
 It detects anomalous weld patterns and alerts operators for timely intervention,
-ensuring proactive maintenance, safety, and operational efficiency. No more failures
+ensuring proactive maintenance, safety, and operational efficiency to avoid failures
 and unplanned downtime.
 
 In this article, you can learn about the architecture of the sample and its data flow.
@@ -19,15 +19,15 @@ If you want to start working with it, instead, check out the
 [Get Started Guide](../get-started.md) or [How-to Guides](../how-to-guides.md)
 for Time-series applications.
 
-## App Architecture
+## Application Architecture
 
-As seen in the following architecture diagram, the sample app, at a high level, comprises data simulators (which can act as data destinations if configured) - these in the real world would be the physical devices - and the generic Time Series AI stack based on **TICK Stack**, comprising Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor, and Grafana.
+As seen in the following architecture diagram, the sample app at a high-level comprises data simulators (can act as data destinations if configured) — these in the real world would be the physical devices, the generic Time Series AI stack based on **TICK Stack** comprising Telegraf, InfluxDB, Time Series Analytics microservice using Kapacitor and Grafana.
 
 ![Weld Defect Detection - Time Series AI Stack Architecture Diagram](../_assets/weld-defect-detection-timeseries-ai-stack-architecture.png)
 
 ### Data flow explanation
 
-Let's discuss how this architecture translates to data flow in the `Weld Defect Detection` use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to MQTT broker.
+This section describes how this architecture translates to data flow in the `Weld Defect Detection` use case, by ingesting the data using the MQTT publisher simulator and publishing the anomaly alerts to the MQTT broker.
 
 #### **Data Sources**
 
@@ -43,29 +43,30 @@ Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/indust
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function(UDF) deployment package(TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available at `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config`.
+**Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package (TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available in the [Time Series Analytics Microservice Configuration directory for Time Series Insights](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config).
 
-Directory details are as below:
+Details of the directory are as below:
 
 ##### **`config.json`**
 
 The `task` section defines the settings for the Kapacitor task and User-Defined Functions (UDFs).
 
-| Key                     | Description                                                                                     | Example Value                          |
-|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------|
-| `udfs`                  | Configuration for the User-Defined Functions (UDFs).                                           | See below for details.                 |
+| Key    | Description                                          | Example Value          |
+| ------ | ---------------------------------------------------- | ---------------------- |
+| `udfs` | Configuration for the User-Defined Functions (UDFs). | See below for details. |
 
 **UDFs Configuration**:
 
 The `udfs` section specifies the details of the UDFs used in the task.
 
-| Key     | Description                                                                                 | Example Value                          |
-|---------|---------------------------------------------------------------------------------------------|----------------------------------------|
-| `name`  | The name of the UDF script.                                                                 | `"weld_defect_detector.py"`       |
-| `models`| The names of the model files used by the UDF.                                               | `"weld_defect_detector.pkl"` |
-| `device`| Specifies the hardware `CPU` or `GPU` for executing the UDF model inference. Default is `CPU`| `CPU`                                  |
+| Key      | Description                                                                                  | Example Value                |
+| -------- | -------------------------------------------------------------------------------------------- | ---------------------------- |
+| `name`   | The name of the UDF script.                                                                  | `"weld_defect_detector.py"`  |
+| `models` | The names of the model files used by the UDF.                                                | `"weld_defect_detector.pkl"` |
+| `device` | Specifies the hardware `CPU` or `GPU` for executing the UDF model inference.Default is `cpu` | `cpu`                        |
 
 > **Note:** The maximum allowed size for `config.json` is 5 KB.
+
 ---
 
 **Alerts Configuration**:
@@ -76,11 +77,11 @@ The `alerts` section defines the settings for alerting over MQTT protocol.
 
 The `mqtt` section specifies the MQTT broker details for sending alerts.
 
-| Key                 | Description                                                                 | Example Value          |
-|---------------------|-----------------------------------------------------------------------------|------------------------|
-| `mqtt_broker_host`  | The hostname or IP address of the MQTT broker.                              | `"ia-mqtt-broker"`     |
-| `mqtt_broker_port`  | The port number of the MQTT broker.                                         | `1883`                |
-| `name`              | The name of the MQTT broker configuration.                                 | `"my_mqtt_broker"`     |
+| Key                | Description                                    | Example Value      |
+| ------------------ | ---------------------------------------------- | ------------------ |
+| `mqtt_broker_host` | The hostname or IP address of the MQTT broker. | `"ia-mqtt-broker"` |
+| `mqtt_broker_port` | The port number of the MQTT broker.            | `1883`             |
+| `name`             | The name of the MQTT broker configuration.     | `"my_mqtt_broker"` |
 
 ##### **`udfs/`**
 

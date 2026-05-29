@@ -24,7 +24,7 @@ SceneScape's evaluation framework uses the [TrackEval](https://github.com/Jonath
 scenescape/tools/tracker/evaluation/
 ```
 
-For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/2026.1.0-rc1/tools/tracker/evaluation/README.md).
+For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tools/tracker/evaluation/README.md).
 
 ### How the Existing Evaluation Pipeline Works
 
