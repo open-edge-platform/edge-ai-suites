@@ -66,3 +66,4 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 ```
+> **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.
