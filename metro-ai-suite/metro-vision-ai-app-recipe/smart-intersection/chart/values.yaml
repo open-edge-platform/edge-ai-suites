@@ -31,13 +31,13 @@ externalUrls:
 images:
   alpine:
     repository: alpine
-    tag: latest
+    tag: 3.23.4
   curl:
     repository: curlimages/curl
     tag: 8.20.0
   busybox:
     repository: busybox
-    tag: latest
+    tag: 1.38.0
 
 ntpserver:
   repository: docker.io/dockurr/chrony
