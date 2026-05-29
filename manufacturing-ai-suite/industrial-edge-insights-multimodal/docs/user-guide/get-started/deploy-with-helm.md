@@ -162,29 +162,52 @@ following cURL command.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
 > - To run model inference on `GPU` or `NPU`, substitute the device using the sed commands shown below.
 
-```bash
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
-  -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
-```
 
-> To run on `GPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
-> ```
->
-> To run on `NPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
-> ```
+- To run inference on with CPU (Default), 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
+
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
+  ```
+
+- To run inference on with `GPU`, 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+
+
+- To run inference on with `GPU`, 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
 
 **Time Series Analytics Microservice**
 
