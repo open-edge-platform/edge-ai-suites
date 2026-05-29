@@ -65,7 +65,7 @@ bash scripts/setup_env.sh
   --weight-format int8
 ```
 
-This downloads the AI model that powers the captions. It only needs to run once. THe model parameter is configurable and the user is requested to confirm the license agreement before the download.
+This downloads the AI model that powers the captions. It only needs to run once. The model parameter is configurable and the user is requested to confirm the license agreement before the download.
 
 ---
 
@@ -91,7 +91,7 @@ Replace `<YOUR_IP>` with the IP address shown at the end of Step 2, or find it b
 
 ### Using the Dashboard
 
-1. **Enter your video source** — paste an RTSP camera URL (for example `rtsp://192.168.1.10/stream`) or select theUSB/webcam device in case it is available.
+1. **Enter your video source** — paste an RTSP camera URL (for example `rtsp://192.168.1.10/stream`) or select the USB/webcam device in case it is available.
 2. **Select a model** — choose from the available AI models in the drop-down list.
 3. **Click Start** — captions appear alongside the live video preview.
 
