@@ -20,40 +20,41 @@ interface Pose3DVisualizerProps {
   isExpanded: boolean;
 }
 
-// ✅ Configuration constants
+// Configuration constants
 const SPHERE_RADIUS = 5;
 const LINE_WIDTH = 3;
 const SPHERE_SEGMENTS = 16;
 const LINE_OPACITY = 0.9;
 
-// ✅ Exact skeleton connections from backend (engine3js.py)
-const POSE_CONNECTIONS: [number, number][] = [
-  [0, 1],    // neck-nose
-  [1, 16],   // nose-left eye
-  [16, 18],  // left eye-left ear
-  [1, 15],   // nose-right eye
-  [15, 17],  // right eye-right ear
-  [0, 3],    // neck-left shoulder
-  [3, 4],    // left shoulder-left elbow
-  [4, 5],    // left elbow-left wrist
-  [0, 9],    // neck-right shoulder
-  [9, 10],   // right shoulder-right elbow
-  [10, 11],  // right elbow-right wrist
-  [0, 6],    // neck-left hip
-  [6, 7],    // left hip-left knee
-  [7, 8],    // left knee-left ankle
-  [0, 12],   // neck-right hip
-  [12, 13],  // right hip-right knee
-  [13, 14],  // right knee-right ankle
+// COCO 17-joint skeleton (YOLO-Pose: index 0=nose, 1-4=eyes/ears)
+const COCO_17_CONNECTIONS: [number, number][] = [
+  [0, 1],    // nose-left eye
+  [0, 2],    // nose-right eye
+  [1, 3],    // left eye-left ear
+  [2, 4],    // right eye-right ear
+  [5, 6],    // left shoulder-right shoulder
+  [5, 7],    // left shoulder-left elbow
+  [7, 9],    // left elbow-left wrist
+  [6, 8],    // right shoulder-right elbow
+  [8, 10],   // right elbow-right wrist
+  [5, 11],   // left shoulder-left hip
+  [6, 12],   // right shoulder-right hip
+  [11, 12],  // left hip-right hip
+  [11, 13],  // left hip-left knee
+  [13, 15],  // left knee-left ankle
+  [12, 14],  // right hip-right knee
+  [14, 16],  // right knee-right ankle
 ];
 
-// ✅ Single color scheme for all people
+const MAX_CONNECTIONS = COCO_17_CONNECTIONS.length;
+
+// Single color scheme for all people
 const SKELETON_COLOR = {
   sphere: 0x00ff00,  // Green for joint spheres
   line: 0xffff00     // Yellow for connecting lines
 };
 
-// ✅ Grid and Axes Configuration
+// Grid and Axes Configuration
 const SHOW_GRID = true;           // Set to false to hide grid
 const SHOW_AXES = true;           // Set to false to hide axes
 const GRID_SIZE = 1000;            // Size of the grid
@@ -113,7 +114,7 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
     // Axes helper (Red = X, Green = Y, Blue = Z)
     if (SHOW_AXES && AXES_SIZE > 0) {
       const axesHelper = new THREE.AxesHelper(AXES_SIZE);
-      axesHelper.position.y = GRID_Y_POSITION; // ✅ Move axes to same level as grid
+      axesHelper.position.y = GRID_Y_POSITION;
       scene.add(axesHelper);
     }
 
@@ -123,7 +124,7 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
       const spheres: THREE.Mesh[] = [];
       const lines: THREE.Line[] = [];
 
-      for (let i = 0; i < 19; i++) {
+      for (let i = 0; i < 19; i++) { // 19 = max joints across both formats
         const geometry = new THREE.SphereGeometry(SPHERE_RADIUS, SPHERE_SEGMENTS, SPHERE_SEGMENTS);
         const material = new THREE.MeshPhongMaterial({
           color: SKELETON_COLOR.sphere,
@@ -136,8 +137,8 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
         spheres.push(sphere);
       }
 
-      // ✅ Create line objects for fixed POSE_CONNECTIONS
-      POSE_CONNECTIONS.forEach(([start, end]) => {
+      // Pre-allocate lines for the max connection count (both formats)
+      for (let i = 0; i < MAX_CONNECTIONS; i++) {
         const geometry = new THREE.BufferGeometry();
         const positions = new Float32Array([0, 0, 0, 0, 0, 0]);
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
@@ -153,7 +154,7 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
         line.visible = false;
         scene.add(line);
         lines.push(line);
-      });
+      }
 
       peopleObjects.push({ spheres, lines });
     }
@@ -237,8 +238,9 @@ const Pose3DVisualizer: React.FC<Pose3DVisualizerProps> = ({ people, isExpanded 
         }
       });
 
-      // ✅ Update connections using fixed anatomical structure
-      POSE_CONNECTIONS.forEach(([startIdx, endIdx], lineIdx) => {
+      // COCO-17 skeleton connections
+      const connections = COCO_17_CONNECTIONS;
+      connections.forEach(([startIdx, endIdx], lineIdx) => {
         if (lineIdx >= lines.length) return;
 
         const line = lines[lineIdx];

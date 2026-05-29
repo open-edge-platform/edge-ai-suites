@@ -20,14 +20,14 @@ rppg:
       video_dir: /videos/rppg
       video_url: https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi
 
-pose-3d:
+pose-estimation:
   models:
-    - name: human-pose-estimation-3d-0001
-      type: 3d-pose
-      hub: hls
+    - name: yolo11m-pose
+      type: yolo-pose
+      hub: ultralytics
+      model_id: yolo11m-pose
       target_dir: /models/3d-pose
-      model_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2022.1/human-pose-estimation-3d-0001/human-pose-estimation-3d.tar.gz
-      ir_file: human-pose-estimation-3d-0001.xml
+      ir_file: yolo11m-pose.xml
       video_dir: /videos/3d-pose
       video_url: https://www.pexels.com/download/video/30141958
       

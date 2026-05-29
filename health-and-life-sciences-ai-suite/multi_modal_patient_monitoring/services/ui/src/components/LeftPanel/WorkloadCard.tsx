@@ -1,7 +1,6 @@
 import React from 'react';
 import fullscreenIcon from '../../assets/images/fullScreenIcon.svg';
 import minimizeIcon from '../../assets/images/minimize.svg';
-import Pose3DVisualizer from './Pose3DVisualizer';
 import '../../assets/css/WorkloadCard.css';
 
 interface WorkloadConfig {
@@ -23,7 +22,6 @@ interface WorkloadCardProps {
   onExpand: () => void;
   waveform?: number[];
   frameData?: string;
-  // ✅ Replace joints with people
   people?: Array<{
     person_id: number;
     joints_3d: Array<{
@@ -153,23 +151,7 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
     ctx.stroke();
   };
 
-  React.useEffect(() => {
-    // if (config.id === '3d-pose') {
-    //   // ✅ Log every 30 frames (approximately once per second at 30 FPS)
-    //   if (eventCount > 0 && eventCount % 30 === 0) {
-    //     console.log('[WorkloadCard] 🎯 3D Pose Update (every 30 frames):', {
-    //       status,
-    //       eventCount,
-    //       peopleDetected: people?.length || 0,
-    //       isExpanded,
-    //       hasValidPeople: people && people.length > 0 && people[0].joints_3d?.length > 0,
-    //       firstPersonJoints: people?.[0]?.joints_3d?.length || 0,
-    //       timestamp: new Date().toLocaleTimeString(),
-    //       framesSinceStart: eventCount
-    //     });
-    //   }
-    // }
-  }, [people, isExpanded, status, config.id, latestVitals, eventCount]);
+
 
   return (
     <div
@@ -197,133 +179,72 @@ const WorkloadCard: React.FC<WorkloadCardProps> = ({
         <span className="status-text">{status}</span>
       </div>
 
-      {/* ✅ For 3D Pose: Video + 3D Graph side-by-side when expanded */}
       {config.id === '3d-pose' ? (
         <div style={{
           marginTop: '12px',
           flex: '1 1 auto',
           display: 'flex',
-          flexDirection: isExpanded ? 'row' : 'column', // ✅ Row when expanded
-          gap: isExpanded ? '16px' : '8px',
+          flexDirection: 'column',
+          gap: '8px',
           minHeight: 0,
           overflow: 'hidden'
         }}>
-          {/* Video Stream Section */}
-          <div style={{
-            flex: isExpanded ? '1 1 50%' : '1 1 auto',
-            display: 'flex',
-            flexDirection: 'column',
-            minHeight: 0,
-            minWidth: 0
+          <h4 style={{ 
+            fontSize: '12px', 
+            marginBottom: '4px', 
+            color: '#6A6D75',
+            fontWeight: '500'
           }}>
-            <h4 style={{ 
-              fontSize: '12px', 
-              marginBottom: '8px', 
-              color: '#6A6D75',
-              fontWeight: '500'
-            }}>
-              {status === 'running' ? '🎥 Live Video Feed' : '📹 Video Feed'}
-            </h4>
-            {status === 'running' ? (
-              <img
-                src={poseStreamUrl}
-                alt="3D Pose Stream"
-                style={{
-                  width: '100%',
-                  height: isExpanded ? '400px' : '200px',
-                  objectFit: 'contain',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: '#000',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-                }}
-                onError={(e) => {
-                  // Silent error handling
-                }}
-              />
-            ) : (
-              <div style={{
+            {status === 'running' ? '🎥 Live Detection Feed' : '📹 Video Feed'}
+            {status === 'running' && people && people.length > 0 && ` (${people.length} ${people.length === 1 ? 'person' : 'people'})`}
+          </h4>
+          {status === 'running' ? (
+            <img
+              src={poseStreamUrl}
+              alt="Pose Estimation Stream"
+              style={{
                 width: '100%',
-                height: isExpanded ? '400px' : '200px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                height: isExpanded ? '500px' : '200px',
+                objectFit: 'contain',
                 borderRadius: '8px',
                 border: '1px solid #e0e0e0',
-                backgroundColor: '#f8f9fa',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+                backgroundColor: '#000',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+              }}
+              onError={(e) => {
+                // Silent error handling
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '100%',
+              height: isExpanded ? '500px' : '200px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '8px',
+              border: '1px solid #e0e0e0',
+              backgroundColor: '#f8f9fa',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
+            }}>
+              <div style={{
+                textAlign: 'center',
+                color: '#999',
+                fontSize: '14px',
+                padding: '20px'
               }}>
-                <div style={{
-                  textAlign: 'center',
-                  color: '#999',
-                  fontSize: '14px',
-                  padding: '20px'
-                }}>
-                  <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
-                  <div style={{ fontWeight: '500' }}>Video feed paused</div>
-                  <div style={{ fontSize: '12px', marginTop: '5px', color: '#bbb' }}>
-                    Start the workload to see live stream
-                  </div>
+                <div style={{ fontSize: '48px', marginBottom: '10px' }}>📹</div>
+                <div style={{ fontWeight: '500' }}>Video feed paused</div>
+                <div style={{ fontSize: '12px', marginTop: '5px', color: '#bbb' }}>
+                  Start the workload to see live stream
                 </div>
               </div>
-            )}
-            
-          </div>
-
-          {/* 3D Skeleton Visualization - Only when expanded */}
-          {isExpanded && (
-            <div style={{
-              flex: '1 1 50%',
-              display: 'flex',
-              flexDirection: 'column',
-              minHeight: 0,
-              minWidth: 0
-            }}>
-              <h4 style={{ 
-                fontSize: '12px', 
-                marginBottom: '8px', 
-                color: '#6A6D75',
-                fontWeight: '500'
-              }}>
-                👤 3D Skeleton Visualization {people && people.length > 0 && `(${people.length} ${people.length === 1 ? 'person' : 'people'})`}
-              </h4>
-              
-              {status === 'running' ? (
-                <Pose3DVisualizer 
-                  people={people && people.length > 0 ? people : []}  // ✅ Pass all people
-                  isExpanded={isExpanded} 
-                />
-              ) : (
-                <div style={{
-                  width: '100%',
-                  height: '400px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '8px',
-                  border: '1px solid #e0e0e0',
-                  backgroundColor: '#f8f9fa',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
-                }}>
-                  <div style={{
-                    textAlign: 'center',
-                    color: '#999',
-                    fontSize: '14px'
-                  }}>
-                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>👤</div>
-                    <div style={{ fontWeight: '500' }}>Waiting for pose data</div>
-                    <div style={{ fontSize: '12px', marginTop: '5px', color: '#bbb' }}>
-                      Start the workload to see 3D skeleton
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           )}
         </div>
       ) : (
         <>
-          {/* ✅ For other workloads: Show vitals */}
+
           <div className="workload-vitals">
             {Object.keys(latestVitals).length > 0 ? (
               <div className="vitals-list">

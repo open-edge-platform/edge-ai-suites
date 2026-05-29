@@ -152,7 +152,7 @@ services:
       network_mode: "host"
       environment:
         - VIDEO_FILE=/videos/3d-pose/face-demographics-walking.mp4
-        - MODEL_PATH=/models/3d-pose/human-pose-estimation-3d-0001.xml
+        - MODEL_PATH=${POSE_MODEL_PATH:-/models/3d-pose/yolo11m-pose.xml}
         - AGGREGATOR_ADDRESS=localhost:50051
         - SOURCE_ID=3d-pose-camera-1
         - DEVICE_CONFIG_PATH=/app/configs/device.yaml
@@ -214,6 +214,8 @@ services:
         NO_PROXY: ${NO_PROXY}
     image: intel/hl-ai-ui:${TAG:-1.0.1}
     container_name: ui  
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "3000:3000"
     depends_on:

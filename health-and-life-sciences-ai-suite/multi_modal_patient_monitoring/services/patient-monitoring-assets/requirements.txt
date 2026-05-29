@@ -18,6 +18,9 @@ onnx==1.17.0
 onnxscript==0.2.5
 PyYAML==6.0.2
 
+# YOLO-Pose model export
+ultralytics==8.3.147
+
 # OpenVINO (model conversion)
 openvino==2024.6.0
 

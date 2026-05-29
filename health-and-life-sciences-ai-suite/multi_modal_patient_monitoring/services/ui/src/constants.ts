@@ -35,9 +35,9 @@ export const WORKLOADS = [
   },
   {
     id: '3d-pose',
-    name: '3D Pose',
+    name: 'Pose Estimation',
     color: '#0071c5',
-    description: '3D Body Pose Estimation with joint tracking',
+    description: 'Real-time body pose estimation with joint tracking',
     dataKeys: ['activity'] as const, // Pose estimation keys
     hasWaveform: false,
   },
@@ -97,12 +97,12 @@ export const WORKLOAD_INFO = [
   },
   {
     id: '3d-pose',
-    name: '3D Pose',
-    fullName: '3D Human Pose Estimation',
+    name: 'Pose Estimation',
+    fullName: 'Human Pose Estimation',
     description: 'Real-time patient posture and movement tracking. Monitors fall risk, gait analysis, and activity levels using computer vision.',
     metrics: ['Skeletal Joint Tracking', 'Fall Detection', 'Activity Recognition'],
     medicalTerms: [
-      { term: '3D Pose', full: '3D Human Pose Estimation' },
+      { term: 'Pose Estimation', full: 'Human Pose Estimation' },
       { term: 'Gait Analysis', full: 'Gait Pattern Assessment' },
       { term: 'ADL', full: 'Activities of Daily Living' },
       { term: 'ROM', full: 'Range of Motion' },

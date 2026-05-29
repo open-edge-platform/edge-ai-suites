@@ -8,11 +8,11 @@ export type StartResponse = {
 };
 export type StopResponse = { status: string; message: string };
 
-// Derive API base URL from env or the host the UI is served from
+// Derive API base URL: use nginx reverse proxy at /api to avoid cross-origin issues
 const API_HOST = import.meta.env.VITE_API_HOST || window.location.hostname;
 const API_PORT = import.meta.env.VITE_API_PORT || '8001';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
-const AGGREGATOR_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`;
+const AGGREGATOR_URL = import.meta.env.VITE_API_BASE_URL || `${window.location.origin}/api`;
 // const METRICS_URL = import.meta.env.VITE_METRICS_BASE_URL || `http://${API_HOST}:${METRICS_PORT}`;
 
 // console.log('[API] Aggregator URL:', AGGREGATOR_URL);
