@@ -26,8 +26,6 @@ This release introduces **GPU/NPU hardware acceleration** support for performing
 - **New Classifier ML Model**: The weld defect detection pipeline on the Time Series Analytics
   microservice now uses a scikit-learn's (Intel accelerated) RandomForestClassifier model, replacing
   the previous CatBoost model, with optional explanation payloads and updated model artifacts.
-- **Renamed Sample App**: "Weld Anomaly Detection" has been renamed to
-  "Weld Defect Detection" across all configurations, documentation, and scripts.
 - **UDF Package Format**: UDF sample app archives now use tar format instead of zip.
 - **Security**: Upgraded to latest available third-party versions in all applicable manifests
 - **Documentation**: Time Series vs Multimodal Weld Defect Detection
