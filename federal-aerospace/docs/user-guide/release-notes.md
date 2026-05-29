@@ -1,4 +1,4 @@
-# Release Notes: Handheld multi-modal
+# Release Notes: Handheld Multi-Modal Application
 
 ## Version 1.0.0
 
@@ -10,7 +10,7 @@ This is the initial release of the application, therefore, it is considered a pr
 
 The initial feature set of the application is now available:
 
-- Scripts to build power-optimized OS with built-in drivers for hardware (GPU, NPU, SRIOV etc...)
+- Scripts to build power-optimized OS with built-in drivers for hardware, for example, GPU, NPU, and Single Root I/O Virtualization (SR-IOV).
 - Local LLM inference server
 - Speech-to-text service
 - Chat UI
@@ -18,4 +18,4 @@ The initial feature set of the application is now available:
 
 **Known issues**
 
-- When Virtual function is used for GPU, metrics in Vippet are not available. Works correctly when Physical function is used.
+- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The virtual function works correctly when the physical function is used.

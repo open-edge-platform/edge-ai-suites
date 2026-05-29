@@ -1,36 +1,36 @@
-# Handheld Multi-Modal
+# Handheld Multi-Modal Applications and Deployment
 
-## Applications
+## Handheld Multi-Modal Applications
 
-Full-stack AI inference and observability platform for handheld scenarios. Combines LLM inference (OpenVINO Model Server), speech-to-text (Whisper), a chat UI (Open WebUI), and metrics dashboards (Grafana), running alongside the [Visual Pipeline and Platform Evaluation Tool (vippet)](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
+The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios. The application combines LLM inference capability served through the OpenVINO Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; and runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
 
-### VIPPET
+### Visual Pipeline and Platform Evaluation Tool
 
 The Visual Pipeline and Platform Evaluation Tool simplifies hardware selection for AI workloads by enabling
 configuration of workload parameters, performance benchmarking, and analysis of key metrics such as throughput,
 CPU usage, and GPU usage. With its intuitive interface, the tool provides actionable insights that support
 optimized hardware selection and performance tuning.
 
-For more information refer to [documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/tools/visual-pipeline-and-platform-evaluation-tool/README.md)
+For more information, see  [documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/tools/visual-pipeline-and-platform-evaluation-tool/README.md).
 
-### Whisper
+### Whisper Model
 
 Whisper is a general-purpose speech recognition model. It is trained on a large dataset of diverse audio and is also a multitasking model that can perform multilingual speech recognition, speech translation, and language identification.
 
-For more information refer to [documentation](https://github.com/openai/whisper)
+For more information, see [documentation](https://github.com/openai/whisper).
 
 ### Web UI
 
 **Open WebUI is an [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
 
-For more information refer to [documentation](https://github.com/open-webui/open-webui)
+For more information, see [documentation](https://github.com/open-webui/open-webui).
 
-## Deployment
+## Handheld Multi-Modal Deployment
 
-### (OPTIONAL) Proxy configuration
+### (Optional) Configure the Proxy
 
-Depending on network configuration of the system, additional configuration of proxy might be needed.
-Ensure that `/etc/environment` contains proxy variables, replacing `proxy-example:123` with a valid proxy for the local environment.
+Depending on the system's network configuration, you may need an additional proxy configuration.
+Ensure that `/etc/environment` contains proxy variables; replace `proxy-example:123` with a valid proxy for the local environment:
 
 ```bash
 sudo tee -a /etc/environment > /dev/null <<EOF
@@ -43,7 +43,7 @@ EOF
 source /etc/environment
 ```
 
-Configure proxy for Docker
+Configure the proxy for the Docker client:
 
 ```bash
 mkdir -p ~/.docker
@@ -60,7 +60,7 @@ tee -a ~/.docker/config.json > /dev/null <<EOF
 EOF
 ```
 
-Configure proxy for Docker containers
+Configure the proxy for Docker containers:
 
 ```bash
 sudo mkdir -p /etc/systemd/system/docker.service.d
@@ -72,14 +72,14 @@ Environment="NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.c
 EOF
 ```
 
-Restart docker
+Restart the Docker daemon:
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-Verify that Docker uses configured proxies
+Verify the Docker daemon's proxy configurations:
 ```bash
 ╰$ docker info|grep -i PROX
  HTTP Proxy: http://proxy-example:123
@@ -87,28 +87,28 @@ Verify that Docker uses configured proxies
  No Proxy: localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager
 ```
 
-### Deploying the applications
+### Deploy the Application
 
-Download ZIP file with code:
+Download the compressed file:
 
 ```bash
 curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip
 ```
 
-Unzip downloaded files
+Decompress the downloaded file:
 
 ```bash
 unzip handheld-multi-modal.zip
 ```
 
-Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, refer to [proxy configuration step](#optional-proxy-configuration)
+Run the script that installs all dependencies, downloads models, and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, see [proxy configuration step](#optional-proxy-configuration):
 
 ```bash
 cd handheld-multi-modal
 ./run up
 ```
 
-After script finishes, check that containers are running by executing following command
+After the script finishes, verify that the containers are running:
 
 ```bash
 ╰$ docker ps
@@ -126,4 +126,6 @@ f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypo
 c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp  
 ```
 
-After applications are deployed, refer to [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. Since none of the applications provide authentication/authorization, all applications are available only on `localhost` and not exposed under any external IP address.
+After applications are deployed, see [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. The applications do not provide authentication or authorization, hence are only available on the `localhost` and are not exposed under any external IP address.
+
+
