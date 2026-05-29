@@ -1,14 +1,10 @@
 # AI Tolling System Tutorial
 
-<!--
-**Sample Description**: This tutorial demonstrates how to build an intelligent tolling system using edge AI technologies for real-time vehicle detection, license plate recognition, and vehicle attribute analysis.
--->
-
-This tutorial walks you through creating an AI-powered tolling system that automatically detects vehicles, recognizes license plates, and analyzes vehicle attributes in real-time. The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained AI models to process video streams from toll booth cameras, enabling automated toll collection and traffic monitoring.
-
-<!--
-**What You Can Do**: This guide covers the complete development workflow for building an AI tolling application.
--->
+This tutorial walks you through creating an AI-powered tolling system that automatically
+detects vehicles, recognizes license plates, and analyzes vehicle attributes in real-time.
+The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained
+AI models to process video streams from toll booth cameras, enabling automated toll collection
+and traffic monitoring.
 
 By following this guide, you will learn how to:
 
@@ -27,10 +23,7 @@ By following this guide, you will learn how to:
 
 ## Application Architecture Overview
 
-<!--
-**Architecture Image Placeholder**: Add architecture diagram showing the flow from video input through AI models to toll processing output
--->
-![AI Tolling Sytem Diagram](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
+![AI Tolling System Diagram](./_images/metro-vision-ai-app-recipe-architecture.drawio.svg "ai tolling system diagram")
 
 The AI Tolling system consists of several key components:
 
@@ -116,11 +109,11 @@ EOF
 
 The installation script downloads three essential AI models:
 
-| **Model Name** | **Purpose** | **Framework** | **Size** |
-|----------------|-------------|---------------|----------|
-| YOLOv10s | Vehicle detection and tracking | PyTorch/OpenVINO | ~20MB |
-| license-plate-recognition-barrier-0007 | License plate text extraction | Intel OpenVINO | ~2MB |
-| vehicle-attributes-recognition-barrier-0039 | Vehicle type and color analysis | Intel OpenVINO | ~1MB |
+| **Model Name**                              | **Purpose**                     | **Framework**    | **Size** |
+| ------------------------------------------- | ------------------------------- | ---------------- | -------- |
+| YOLOv10s                                    | Vehicle detection and tracking  | PyTorch/OpenVINO | ~20MB    |
+| license-plate-recognition-barrier-0007      | License plate text extraction   | Intel OpenVINO   | ~2MB     |
+| vehicle-attributes-recognition-barrier-0039 | Vehicle type and color analysis | Intel OpenVINO   | ~1MB     |
 
 <details>
 <summary>
@@ -252,6 +245,7 @@ docker compose up -d
 ```
 
 The deployment process will:
+
 - Pull required container images
 - Start the DL Streamer pipeline server
 - Initialize the Node-RED flow management
@@ -316,9 +310,10 @@ https://<HOST_IP>/mediamtx/object_detection_1/
 
 For local testing, you can use: `https://localhost/mediamtx/object_detection_1/`
 
-![Vehicle Live Detection](_images/car_live_detection.jpg)
+![Live Vehicle Detection](./_images/car_live_detection.jpg "live vehicle detection")
 
 Expected results:
+
 - Vehicle detection accuracy > 90%
 - License plate recognition for clearly visible plates
 - Vehicle attribute classification (car, truck, color)
@@ -330,6 +325,7 @@ Expected results:
 ### 1. **Container Startup Issues**
 
 If containers fail to start:
+
 ```bash
 # Check container logs for specific errors
 docker logs <container_name>
@@ -343,6 +339,7 @@ docker logs <container_name>
 ### 2. **Model Download Failures**
 
 If model download fails during installation:
+
 ```bash
 # Retry the installation with verbose output
 ./install.sh 2>&1 | tee install.log
@@ -357,6 +354,7 @@ df -h
 ### 3. **Pipeline Processing Errors**
 
 If video processing fails or shows poor accuracy:
+
 ```bash
 # Check pipeline server logs
 docker logs dlstreamer-pipeline-server
