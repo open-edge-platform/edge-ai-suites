@@ -4,7 +4,7 @@
 
 **Features**
 
-- Added support for helmchart deployment
+- Added support for helm chart deployment
 
 **Known Issues/Limitations**
 - First‑time model downloads may take several minutes.

@@ -1,3 +1,158 @@
+ros-jazzy-benchmark-framework (0.1.16) UNRELEASED; urgency=low
+
+  * Bag-replay benchmarking without a live robot or simulator (ITEP-90271).
+    - src/bag_replay_run.sh: new script — replays any ROS 2 bag at configurable
+      rate/loop count through the monitor stack; collects Level 1 and Level 2
+      KPIs deterministically; supports --rate, --loop, --plot, --output-parent.
+    - Makefile: bag-replay, bag-replay-plot, bag-replay-benchmark targets.
+  * fast_mapping benchmark pipeline (ITEP-90271).
+    - src/fastmapping_run.sh: launches fast_mapping_node + bag replay of the
+      bundled spinning RGB-D bag (/opt/ros/<distro>/share/bagfiles/spinning);
+      auto-detects ROS distro; stops node gracefully and waits for procedure
+      table flush before analysis.
+    - src/analyze_fastmapping_log.py: parses fast_mapping_node.log to extract
+      per-procedure timing (wait/preprocess/octree/publish) and patches kpi.json
+      in-place with throughput_hz, mean_latency_ms, jitter fields, per_node and
+      pairs entries; falls back to window-based KPIs when node is killed before
+      shutdown table is printed.
+    - Makefile: fastmapping, fastmapping-plot, fastmapping-benchmark targets;
+      FASTMAPPING_BAG points to the bundled spinning bag.
+  * GPU visualization fixes (ITEP-90243 follow-up).
+    - src/gpu_engine_defs.py: ENGINE_CLASSES regex now matches i915 fdinfo key
+      names ("copy" → Blitter, "video-enhance" → VE).
+    - src/visualize_gpu.py: dynamic y-axis (no 100 % ceiling clip); new
+      per-engine detail panel; MaxNLocator prevents MAXTICKS warnings at >100 %
+      busy; frequency panel shows graceful fallback message when all-zero.
+    - src/monitor_resources.py: supplement i915 GT frequency from sysfs
+      gt_act_freq_mhz / gt_max_freq_mhz when qmassa reports 0.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 13 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.15) UNRELEASED; urgency=low
+
+  * Add NPU throttle detection to sysfs monitor (ITEP-90244).
+    - monitor_resources.py: _read_sysfs_npu() now emits 'throttled' bool
+      (True when cur_freq_mhz < max_freq_mhz * 0.95); console output shows
+      ⚠THROTTLE indicator when active.
+    - analyze_trigger_latency.py: _load_resource_thermal() reads 'throttled'
+      from npu_usage.log; 'npu_throttled' in thermal KPI section is now
+      True/False (not always None) when npu_usage.log is present.
+    - Dependency security: bump pillow >=12.2.0 (5 CVEs), pytest >=9.0.3
+      (1 CVE), add pygments >=2.20.0 (1 CVE) to dev deps.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 08 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.14) UNRELEASED; urgency=low
+
+  * Correlate GPU/NPU thermal and throttle data with Level 1 JSON output
+    (ITEP-90245).
+    - analyze_trigger_latency.py: add _read_cpu_thermal_sysfs() and
+      _load_resource_thermal() helpers; build_performance_kpi() now includes
+      a 'thermal' section: cpu_temp_c, gpu_temp_c, npu_temp_c,
+      cpu_throttled, gpu_throttled, npu_throttled.
+    - monitor_resources.py: add _read_cpu_thermal_sysfs() helper; reads
+      x86_pkg_temp sysfs zone and cpufreq scaling_cur_freq for throttle
+      detection.
+    - schemas/kpi_level1_v1.json: add optional 'thermal' object property
+      with all six fields; existing KPI files without 'thermal' remain valid.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 08 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.13) UNRELEASED; urgency=low
+
+  * Remove intel_gpu_top entirely; use qmassa exclusively for GPU monitoring.
+    - monitor_resources.py: remove _try_intel_gpu_top_local, _find_local_igt,
+      _parse_igt_clients; simplify probe_gpu_available and monitor_gpu to
+      qmassa-only (sysfs RC6 fallback retained for remote sessions).
+    - gpu_pid_analyzer.py: full rewrite for qmassa; remove --remote-ip/--remote-user;
+      update print_snapshot, CSV output, collect_snapshot and main().
+    - visualize_gpu.py: remove intel_gpu_top source guards; engine/power panels
+      now work for any qmassa record.
+    - visualize_resources.py: remove intel_gpu_top source guards from has_power,
+      has_engines, and frequency panel (RC6 overlay removed).
+    - monitor_stack.py: update --gpu help text (no CAP_PERFMON required).
+    - Makefile: remove setup-remote-gpu target.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 06 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.12) UNRELEASED; urgency=low
+
+  * Add 'make install-qmassa' target: installs Rust toolchain via rustup
+    (minimal profile) if cargo is absent, then runs
+    cargo install --locked qmassa qmmd; binaries land in ~/.cargo/bin/.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 06 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.11) UNRELEASED; urgency=low
+
+  * Add qmassa/xe GPU monitoring support in src/monitor_resources.py:
+    auto-detects active DRM driver (xe vs i915) at runtime via sysfs symlink;
+    xe systems use qmassa -x (headless JSON) for per-PID engine utilisation,
+    power, throttle, VRAM/SMEM, and temperature (dGPU); i915 systems continue
+    to use intel_gpu_top -J; both fall back to sysfs RC6 residency on failure.
+  * Add _try_qmassa_local(), _find_local_qmassa(), _detect_gpu_driver() helpers
+    in src/monitor_resources.py; search ~/.cargo/bin, /usr/local/bin, etc.
+  * Update src/gpu_engine_defs.py: add Compute engine class (xe ccs); extend
+    Render/3D, Blitter, Video, VE regexes to match xe names (rcs, bcs, vcs,
+    vecs) alongside existing i915 names.
+  * Add _PmtTelemetry class to src/monitor_resources.py: reads Intel PMT binary
+    sysfs interface (/sys/class/intel_pmt/telem*) to provide NPU power (W),
+    junction temperature (degC), and NoC memory bandwidth (MB/s); auto-detects
+    SKU via GUID (MTL, ARL, ARL-H/S, LNL, PTL, WCL); purely additive — SSH
+    remote monitoring path unaffected.
+  * Extend _read_sysfs_npu() to bracket its sysfs delta-sample with PMT
+    pre/post reads; adds power_w, temp_c, bw_mbps, pmt_gen fields to
+    npu_usage.log JSON-lines when PMT is available.
+  * Extend monitor_npu() console output to show power, temperature, and BW
+    when present.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 05 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.10) UNRELEASED; urgency=low
+
+  * Add regression-check CI job to .github/workflows/build-test-scan.yml:
+    runs Level 1 and Level 2 baseline-vs-baseline smoke tests after unit-tests
+    job, gates on exit code from compare_kpi.py.
+  * Add regression-check-l2 Makefile target: symmetric with regression-check
+    for Level 2 KPI JSON comparisons.
+  * Update regression-check Makefile target help comment to clarify Level 1 scope.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 05 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.9) UNRELEASED; urgency=low
+
+  * Migrate test suite to pytest framework; all tests runnable via 'make test'
+    or 'uv run pytest tests/ -v' without ROS 2, robot, or hardware.
+  * Add tests/conftest.py: centralises sys.path setup for all test modules.
+  * Add tests/fixtures.py: single source of truth for synthetic Level 1 and
+    Level 2 KPI payloads shared across test files.
+  * Add tests/test_aggregate_kpi.py (37 tests): boundary-condition coverage for
+    _health, _consistency, _classify; aggregate() statistics, sort order,
+    min-runs filtering, node_filter, and zero-stdev single-run edge case.
+  * Add tests/test_trigger_latency.py (30 tests): _is_internal topic-filter
+    regex (13 filtered + 8 pass-through topics); find_trigger binary-search
+    (9 edge cases including empty list, exact match, before-all timestamps).
+  * Add tests/test_wandering_metrics.py (25 tests): _extract_goals,
+    _extract_elapsed, _extract_rtf, _extract_hz, _verdict regex extractors
+    with spacing variants, absent fields, and multi-block cases.
+  * Fix schemas/kpi_level1_v1.json: add missing 'pipeline_stage' field to
+    'pairs' items (additionalProperties: false was rejecting valid output).
+  * Add 'make test' target to Makefile.
+  * Update CI (.github/workflows/build-test-scan.yml): replace three separate
+    'python3 tests/test_*.py' steps with single 'uv run pytest tests/ -v'.
+  * Update docs/COMMANDS.md: Unit Tests section; make test in Quick Reference.
+  * Update docs/IMPROVEMENTS.md: May 2026 entry documenting test suite.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Mon, 04 May 2026 00:00:00 +0000
+
+ros-jazzy-benchmark-framework (0.1.8) UNRELEASED; urgency=low
+
+  * Add src/compare_kpi.py: KPI regression detection CLI (--baseline, --current,
+    --threshold, --report). Supports Level 1 and Level 2 JSON outputs.
+  * Add synthetic baseline fixtures and unit tests for regression detection.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Tue, 29 Apr 2026 00:00:00 +0000
+
 ros-jazzy-benchmark-framework (0.1.7) UNRELEASED; urgency=low
 
   * Add --csv-out flag to analyze_trigger_latency.py: writes a flat CSV with

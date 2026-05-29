@@ -1,8 +1,26 @@
 # Release Notes
 
-## Intel® OEP SDK Manager EAS-2026.0.0 Release
+## Intel® OEP SDK Manager EAS-2026.1.0-rc1 Release
 
-### New 
+### New
+
+- **Version 2026.1 Release Candidate**
+    - Updated Docker images to 2026.1.0 RC1 tags across all SDKs.
+    - Git repositories updated to release-2026.1.0 branch.
+- **Component Version Updates**
+    - DL Streamer updated to 2026.1.0-rc1 with latest performance improvements.
+    - OpenVINO Model Server upgraded to 2026.1 for enhanced model serving.
+    - SceneScape components updated to v2026.1.0-rc1.
+    - Gen AI microservices updated to 2026.1.0-rc1 release candidate tags.
+- **Gen AI SDK Enhancements**
+    - Chat Q&A updated to 2026.1.0-rc1 with improved RAG capabilities.
+    - Model Download service updated to 2026.1.0-rc1.
+    - Document Ingestion and Embedding services upgraded to 2026.1.0-rc1.
+- **Updated Documentation**
+    - Enhanced guides and tutorials for improved clarity and usability.
+    - All tutorials updated with latest container image references.
+
+## Intel® OEP SDK Manager EAS-2026.0.0 Release
 
 - **Updated Documentation**
     - Enhanced guides and tutorials for improved clarity and usability.
@@ -13,28 +31,4 @@
 - **Gen AI Tutorials**
     - Updated to leverage latest Gen AI SDK capabilities and workflows.
     - Improved examples demonstrating current best practices and advanced techniques.
-
-
-## Intel® OEP SDK Manager EAS-2025.2.0 Release
-
-- **Installer** - https://docs.openedgeplatform.intel.com/2025.2/edge-ai-suites/metro-sdk-manager/index.html
-- **Unified SDK Management**
-Provides a single interface to manage installation and updates for:
-    - OEP Vision AI SDK
-    - OEP Gen AI SDK
-    - Visual AI Demo Kit
-- **Simplified Installation**
-    - One-line command for quick setup of SDKs and all dependencies.
-    - Validated across multiple Intel platforms for reliability.
-    - Streamlined process designed for developers and integrators to save time and effort.
-- **Comprehensive Documentation**
-    - Getting Started Guide for fast onboarding.
-    - Step-by-Step Tutorials to master Intel components and workflows.
-    - Detailed examples for Vision AI, Generative AI, and visual AI demo kit to accelerate learning and development.
-- **Intel Component Integration**
-    - Optimized pipelines for inference and benchmarking.
-    - Full hardware acceleration support with OpenVINO™ and DL Streamer integration for high-performance AI workloads.
-- **Developer-Friendly Features**
-    - Easy binary installs and direct GitHub sourcing for flexibility.
-    - Clear roadmap outlining future enhancements and SDK updates to keep developers ahead.
 

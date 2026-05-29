@@ -1,6 +1,6 @@
 # Running NVIDIA's V2X-I PointPillars Dense FP16 Model on Intel GPU
 
-**Purpose.** This guide describes how to take a model trained with NVIDIA's [CUDA-V2XFusion](https://github.com/NVIDIA-AI-IOT/Lidar_AI_Solution/tree/master/CUDA-V2XFusion) reference design and deploy it on Intel GPU via the [applications.iot.video-edge-cloud.gpu-bev-fusion](https://github.com/intel-innersource/applications.iot.video-edge-cloud.gpu-bev-fusion) deploy binary.
+**Purpose.** This guide describes how to take a model trained with NVIDIA's [CUDA-V2XFusion](https://github.com/NVIDIA-AI-IOT/Lidar_AI_Solution/tree/master/CUDA-V2XFusion) reference design and deploy it on Intel GPU via the [intermediate-fusion](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion) deploy binary.
 
 **Audience.** Customers who already hold a CUDA-V2XFusion-trained checkpoint — either NVIDIA's provided reference model `dense_epoch_100_.pth`, or a checkpoint you produced yourself by following NVIDIA's reference training flow — and want to run inference on Intel platform without any retraining or C++ changes on the deploy side.
 
@@ -32,7 +32,7 @@
                               quantized_head.{xml,bin}
           │
           ▼
- [Copy to deploy tree]   ─> applications.iot.video-edge-cloud.gpu-bev-fusion/
+ [Copy to deploy tree]   ─> edge-ai-suites/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/
                               deploy/data/v2xfusion/pointpillars/
           │
           ▼
@@ -71,7 +71,7 @@ That is everything. The export and quantize scripts reuse `mmdet3d`, `mmcv`, and
 
 ### 2.4 Clone the deploy repo and build it
 
-Clone [applications.iot.video-edge-cloud.gpu-bev-fusion](https://github.com/intel-innersource/applications.iot.video-edge-cloud.gpu-bev-fusion) and follow its own documentation for the build:
+Clone [edge-ai-suites](https://github.com/open-edge-platform/edge-ai-suites.git) and follow its own documentation for the build:
 
 - `deploy/README.md` — top-level build instructions.
 - `deploy/docs/Prerequisites.md` — oneAPI + custom OpenVINO installation.
@@ -199,7 +199,7 @@ SUMMARY
 The deploy binary looks for its model files under `deploy/data/v2xfusion/pointpillars/` by default for `--preset v2x`. Copy both the FP32 fallback ONNXs and the INT8 IRs into that directory:
 
 ```bash
-DEPLOY_DIR=/path/to/applications.iot.video-edge-cloud.gpu-bev-fusion/deploy/data/v2xfusion/pointpillars
+DEPLOY_DIR=/path/to/edge-ai-suites/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/data/v2xfusion/pointpillars
 
 mkdir -p "$DEPLOY_DIR"
 
@@ -230,7 +230,7 @@ If you want to keep multiple model variants side by side, you can put them under
 Source the oneAPI and OpenVINO environments exactly as the deploy repo's own `deploy/README.md` / `deploy/docs/GSG.md` describe, then:
 
 ```bash
-cd /path/to/applications.iot.video-edge-cloud.gpu-bev-fusion/deploy/build
+cd /path/to/edge-ai-suites/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/build
 ./bevfusion /path/to/v2x_dataset --preset v2x --int8 --num-samples 30 --vis --save-video --vis-dir ./viz
 ```
 

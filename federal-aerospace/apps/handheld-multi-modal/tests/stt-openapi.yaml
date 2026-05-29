@@ -1,0 +1,124 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# OpenAPI 3.0 spec for the Whisper STT service.
+# Used by RESTler (make restler-stt) and any other spec-driven tooling.
+openapi: "3.0.3"
+info:
+  title: Whisper STT
+  description: Speech-to-text transcription service backed by faster-whisper.
+  version: "1.0"
+
+servers:
+  - url: https://localhost:5443
+
+paths:
+
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness / readiness check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  model:
+                    type: string
+                    example: base
+
+  /metrics:
+    get:
+      operationId: getMetrics
+      summary: Prometheus metrics (text/plain exposition format)
+      responses:
+        "200":
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /transcribe:
+    post:
+      operationId: transcribeAudio
+      summary: Transcribe an uploaded audio file
+      parameters:
+        - name: stream
+          in: query
+          required: false
+          description: >
+            When true the response is an NDJSON stream of partial results
+            rather than a single JSON object.
+          schema:
+            type: boolean
+            enum: [true, false]
+            default: false
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - audio
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                  description: >
+                    Audio file to transcribe.  Accepts any format supported by
+                    ffmpeg (WAV, WebM, MP3, OGG, …).  Maximum size 200 MB.
+      responses:
+        "200":
+          description: Transcription result (non-streaming)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  text:
+                    type: string
+                    description: Full concatenated transcript
+                  language:
+                    type: string
+                    description: Detected language code (e.g. "en")
+                  processing_time_seconds:
+                    type: number
+                  segments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        start:
+                          type: number
+                        end:
+                          type: number
+                        text:
+                          type: string
+        "400":
+          description: Missing or invalid audio field
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Transcription or server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
