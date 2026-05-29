@@ -9,9 +9,10 @@ from utils.ocr_utils.file_detection import is_digital_pdf
 from utils.ocr_utils.pdf_utils import pdf_to_images
 from constants.ocr_constant import (
     SUPPORTED_PDF_EXTENSIONS,
+    SUPPORTED_OCR_EXTENSIONS,
     CODE_OCR_SUCCESS, MSG_OCR_SUCCESS, MSG_OCR_FAILURE,
     OCRStatus,
-    ERR_NO_FILE_PROVIDED, ERR_UNSUPPORTED_PDF_TYPE,
+    ERR_NO_FILE_PROVIDED, ERR_UNSUPPORTED_PDF_TYPE, ERR_UNSUPPORTED_OCR_TYPE,
     ERR_MISSING_SESSION_ID, ERR_ANALYZING_DOCUMENT, ERR_PROCESSING_DOCUMENT
 )
 from dto.ocr_dto import OCRResponse
@@ -113,10 +114,10 @@ def ocr_extract_text(file: UploadFile, session_id: str) -> OCRResponse:
         if not file.filename:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ERR_NO_FILE_PROVIDED)
         
-        is_valid, file_ext = validate_file_extension(file.filename, SUPPORTED_PDF_EXTENSIONS)
+        is_valid, file_ext = validate_file_extension(file.filename, SUPPORTED_OCR_EXTENSIONS)
         if not is_valid:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ERR_UNSUPPORTED_PDF_TYPE)
-        
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=ERR_UNSUPPORTED_OCR_TYPE)
+
         content = file.file.read()
         temp_path = save_temp_file(content, f"ocr_extract_{session_id}", file.filename)
         

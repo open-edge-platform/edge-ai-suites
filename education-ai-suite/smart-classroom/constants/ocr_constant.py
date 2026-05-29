@@ -10,6 +10,8 @@ class OCRStatus(Enum):
 
 # Supported file extensions
 SUPPORTED_PDF_EXTENSIONS = ['.pdf']
+SUPPORTED_IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']
+SUPPORTED_OCR_EXTENSIONS = SUPPORTED_PDF_EXTENSIONS + SUPPORTED_IMAGE_EXTENSIONS
 
 # Default OCR configuration
 DEFAULT_PROVIDER = "openvino"
@@ -33,6 +35,7 @@ MSG_OCR_FAILURE = "Error occurred while processing the file"
 # Error detail messages
 ERR_NO_FILE_PROVIDED = "No file provided"
 ERR_UNSUPPORTED_PDF_TYPE = f"Unsupported file type. Allowed: {SUPPORTED_PDF_EXTENSIONS}"
+ERR_UNSUPPORTED_OCR_TYPE = f"Unsupported file type. Allowed: {SUPPORTED_OCR_EXTENSIONS}"
 ERR_MISSING_SESSION_ID = "Missing required header: X-Session-ID"
 ERR_ANALYZING_DOCUMENT = "Error analyzing document: {}"
 ERR_PROCESSING_DOCUMENT = "Error processing document: {}"
