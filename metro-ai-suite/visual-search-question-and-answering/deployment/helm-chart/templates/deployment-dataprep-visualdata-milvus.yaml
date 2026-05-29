@@ -34,6 +34,18 @@ spec:
           value: {{ required "Value for `global.EMBEDDING_MODEL_NAME` is required!" .Values.global.EMBEDDING_MODEL_NAME | quote }}
         - name: EMBEDDING_BASE_URL
           value: {{ .Values.multimodalembeddingServing.env.EMBEDDING_BASE_URL | quote }}
+        - name: USE_SDK_EMBEDDING
+          value: {{ .Values.dataprepVisualdataMilvus.env.USE_SDK_EMBEDDING | default "true" | quote }}
+        - name: EMBEDDING_DEVICE
+          value: {{ .Values.dataprepVisualdataMilvus.env.EMBEDDING_DEVICE | default .Values.dataprepVisualdataMilvus.env.DEVICE | quote }}
+        - name: EMBEDDING_USE_OV
+          value: {{ .Values.dataprepVisualdataMilvus.env.EMBEDDING_USE_OV | default "false" | quote }}
+        - name: EMBEDDING_OV_MODELS_DIR
+          value: {{ .Values.dataprepVisualdataMilvus.env.EMBEDDING_OV_MODELS_DIR | default "/home/user/ov_models" | quote }}
+        - name: EMBEDDING_BATCH_SIZE
+          value: {{ .Values.dataprepVisualdataMilvus.env.EMBEDDING_BATCH_SIZE | default "32" | quote }}
+        - name: MAX_CONCURRENT_EMBEDDINGS
+          value: {{ .Values.dataprepVisualdataMilvus.env.MAX_CONCURRENT_EMBEDDINGS | default "8" | quote }}
         - name: DEVICE
           value: {{ .Values.dataprepVisualdataMilvus.env.DEVICE | quote }}
         - name: HF_ENDPOINT
@@ -51,6 +63,10 @@ spec:
           mountPath: /home/user/data
         - name: workspace
           mountPath: /home/user/models
+        - name: workspace
+          mountPath: /home/user/ov_models
+        - name: workspace
+          mountPath: /home/user/.cache/huggingface
         livenessProbe:
           httpGet:
             path: /v1/dataprep/health
