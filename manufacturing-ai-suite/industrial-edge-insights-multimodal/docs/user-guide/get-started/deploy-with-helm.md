@@ -163,11 +163,12 @@ following cURL command.
 > - To run model inference on `GPU` or `NPU`, substitute the device using the sed commands shown below.
 
 
-- To run inference on with CPU (Default), 
+- To run inference on `CPU` (Default), 
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
 
+  # Deletes all existing pipelines before starting a new one
   for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
       curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
@@ -177,11 +178,12 @@ following cURL command.
     -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
   ```
 
-- To run inference on with `GPU`, 
+- To run inference on `GPU`, 
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
+  # Deletes all existing pipelines before starting a new one
   for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
       curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
@@ -194,11 +196,12 @@ following cURL command.
 
 
 
-- To run inference on with `GPU`, 
+- To run inference on `GPU`, 
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
 
+  # Deletes all existing pipelines before starting a new one
   for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
   | grep -oP '"id":\s*"\K[^"]+'); do
       curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
