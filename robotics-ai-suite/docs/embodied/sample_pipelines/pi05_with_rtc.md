@@ -8,7 +8,7 @@ Architecturally, π₀.₅ distinguishes itself through a specialized "Action Ex
 
 Key structural features of π₀.₅ include:
 
-- **AdaRMSNorm Conditioning**: The flow timestep $t$ is injected directly into the normalization layers of the Action Expert via Adaptive RMS Normalization, providing more effective conditioning than standard concatenation.
+- **AdaRMSNorm Conditioning**: The flow timestep *t* is injected directly into the normalization layers of the Action Expert via Adaptive RMS Normalization, providing more effective conditioning than standard concatenation.
 - **Discretized State Tokenization**: Robot proprioceptive state is discretized and treated as text tokens within the input prefix, allowing the model to "read" its physical state using the same attention mechanisms as natural language.
 - **Unified Prefix Processing**: Visual patch tokens from SigLIP and text tokens are concatenated into a single sequence, which the transformer processes holistically before passing context to the Action Expert.
 
@@ -31,12 +31,17 @@ This project demonstrates an implementation of Pi0.5 + RTC using the OpenVINO to
 
 ## Installation
 
-This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. To set up the environment, you need to initialize and patch the submodule:
+This project extends the open-source project [LeRobot](https://github.com/huggingface/lerobot) to provide OpenVINO acceleration and Real-Time Chunking (RTC) features on Intel compute platforms. Please get the source code from Open Edge Platform repo [here](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/pi05-rtc-ov). To set up the environment, you need to initialize and patch the submodule:
 
 ```bash
 git submodule update --init lerobot
 cd lerobot
-git am ../patches/*.patch
+```
+
+Apply the patches:
+
+```bash
+git am --whitespace=fix ../patches/*.patch
 ```
 
 ### Setup Python Environment
@@ -78,14 +83,14 @@ To convert the standard Pi05 model to OpenVINO IR (without RTC support), use the
 **Arguments:**
 
 - `--torch_dir`: Path to the pretrained PyTorch model checkpoint or the Hugging Face repo. Default: "lerobot/pi05_base"
-- `--ov_output_dir`: Directory where an OpenVINO IR model will be saved.
+- `--ov_output_dir`: Directory for saving the OpenVINO IR model.
 - `--dataset_path`: (Optional) Path to a local LeRobotDataset directory. If provided, the converter uses dataset stats and the first sample to build real preprocessed inputs (instead of random dummy inputs).
 - `--compress_int8`: (Optional) Compress weights to INT8. `nncf` is required.
 - `--save_fp32`: (Optional) Save an OpenVINO model in FP32 format (FP16 by default).
 - `--override`: (Optional) Overwrite existing files.
 - `--camera_num`, `-c`: (Optional) Number of cameras (batch size for image input). Default: 4.
 
-> **Attention:** Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. If you encounter download errors, follow the [instructions](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) on how to log in and authorize your account.
+> **Notice:** Using the Pi0.5 model in LeRobot will automatically download the [google/paligemma-3b-pt-224](https://huggingface.co/google/paligemma-3b-pt-224) from Hugging Face. Due to author restrictions, downloading the model requires logging into your Hugging Face account. If you encounter download errors, follow the [instructions](https://huggingface.co/docs/huggingface_hub/quick-start#authentication) on how to log in and authorize your account.
 
 Examples (`uv`):
 
@@ -196,6 +201,9 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
 - `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
 
+> **Note**: If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
+
+
 ### Evaluation Script Overview
 
 `eval_aloha.py` provides an evaluation script for the ALOHA pipeline that can run:
@@ -231,21 +239,27 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 **Visualization/Logging:**
 
-- `--plot`: Enable visualization (typically used with MuJoCo).
-
-> **Note:** If visualization windows do not appear when using `--plot`, install python3-tk to enable the Matplotlib interactive backend: `sudo apt install python3-tk`.
-
+- `--plot`: Enable visualization (MuJoCo only). Renders the simulation in a separate subprocess using OpenCV shared memory.
 - `--save_traj`: Save trajectory data and plots.
 - `--save_traj_path`: Output directory for saved trajectories/plots. Default: `trajectory_plots`.
 
+**Keyboard controls (during evaluation):**
+
+| Key     | Action                          |
+|---------|---------------------------------|
+| `Space` | Pause / resume execution        |
+| `r`     | Toggle RTC on/off at runtime    |
+
 ### Simulation Pipeline
+
+> **Note:** If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
 
 > **Note:** If you encounter MESA warnings, try `sudo apt install mesa-utils libgl1-mesa-dri libglx-mesa0`.
 
-Run `sim_transfer_cube` in MuJoCo, using an OpenVINO model:
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \
@@ -253,10 +267,12 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-Run `sim_transfer_cube` in MuJoCo, using an OpenVINO model with RTC:
+> **Note:** `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
+
+#### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model with RTC
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \
@@ -270,7 +286,7 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
 
 The real-robot pipeline focuses on running inference on the physical ALOHA hardware.
 
-Run `transfer_cube` on a real ALOHA robot, using an OpenVINO model:
+#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO model
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \
@@ -282,7 +298,7 @@ uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
-Run `transfer_cube` on a real ALOHA robot, using an OpenVINO model with RTC:
+#### Run `transfer_cube` on a real ALOHA robot using an OpenVINO model with RTC
 
 ```bash
 uv run --extra pi-ov examples/aloha/eval_aloha.py \

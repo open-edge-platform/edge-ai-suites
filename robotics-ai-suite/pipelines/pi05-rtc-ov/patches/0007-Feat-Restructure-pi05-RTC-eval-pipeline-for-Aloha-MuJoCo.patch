@@ -1,0 +1,1902 @@
+From 406e35eef106ddea6e83f9f32912f5ac4e41989e Mon Sep 17 00:00:00 2001
+From: yichongt <yichong.tang@intel.com>
+Date: Thu, 28 May 2026 14:15:09 +0800
+Subject: [PATCH 1/2] [Feat] Restructure the pi05 + RTC eval pipeline for the
+ Aloha MuJoCo simulator. (#3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+* [Refactor] aloha eval pipeline: persistent threads, render decoupling, viz subprocess
+
+Restructure the pi05 + RTC eval pipeline so it can run multiple episodes back-to-back
+without thread restarts and without the local desktop GUI starving the action loop:
+
+- Make get_actions and actor_control persistent across episodes; use episode_end_event
+  for episode-boundary signaling and keep the EGL/GL context bound to a single thread
+  for the whole run.
+- Add keyboard control (Space pause/resume, r toggle RTC), per-episode pause
+  state, and BooleanOptional --rtc-enabled flag.
+- MujocoAlohaRobot: dedicated render thread with its own EGL context via mujoco.Renderer
+  and a _physics_lock; 24fps angle-camera viz + on-demand 4-camera inference renders;
+  reuse env across episodes; fix multi-episode reset (do not call physics.reset_context()
+  a second time, which was wiping cube pose back to XML default).
+- Force MUJOCO_GL=egl so rendering goes through DRM/iGPU instead of GLFW/X11.
+- Move visualization into a child process via shared memory + cv2.imshow, freeing the
+  main GIL so it does not contend with X11 / GUI events under a local desktop.
+- Save trajectory data as .npz/.json alongside the existing plot.
+- Switch base deps to Python 3.12 and opencv-python (GUI build) needed by the cv2
+  child-process viewer.
+
+* Fix Python version mismatch in CI workflows (3.10 → 3.12)
+---
+ .github/workflows/fast_tests.yml         |    2 +-
+ .github/workflows/full_tests.yml         |    2 +-
+ .github/workflows/nightly.yml            |    2 +-
+ .github/workflows/quality.yml            |    2 +-
+ .github/workflows/release.yml            |    4 +-
+ .github/workflows/unbound_deps_tests.yml |    2 +-
+ examples/aloha/eval_aloha.py             | 1019 ++++++++++++++--------
+ examples/aloha/robot_interfaces.py       |  390 +++++++--
+ pyproject.toml                           |   12 +-
+ src/lerobot/policies/rtc/action_queue.py |    8 +-
+ 10 files changed, 1025 insertions(+), 418 deletions(-)
+
+diff --git a/.github/workflows/fast_tests.yml b/.github/workflows/fast_tests.yml
+index 10ec911..0d4c4a9 100644
+--- a/.github/workflows/fast_tests.yml
++++ b/.github/workflows/fast_tests.yml
+@@ -44,7 +44,7 @@ permissions:
+ # Sets up the environment variables
+ env:
+   UV_VERSION: "0.8.0"
+-  PYTHON_VERSION: "3.10"
++  PYTHON_VERSION: "3.12"
+ 
+ # Ensures that only the latest commit for a PR or branch is built, canceling older runs.
+ concurrency:
+diff --git a/.github/workflows/full_tests.yml b/.github/workflows/full_tests.yml
+index 4dce312..b68d69b 100644
+--- a/.github/workflows/full_tests.yml
++++ b/.github/workflows/full_tests.yml
+@@ -37,7 +37,7 @@ permissions:
+ # Sets up the environment variables
+ env:
+   UV_VERSION: "0.8.0"
+-  PYTHON_VERSION: "3.10"
++  PYTHON_VERSION: "3.12"
+   DOCKER_IMAGE_NAME: huggingface/lerobot-gpu
+ 
+ # Ensures that only the latest action is built, canceling older runs.
+diff --git a/.github/workflows/nightly.yml b/.github/workflows/nightly.yml
+index 45bfb9b..0916625 100644
+--- a/.github/workflows/nightly.yml
++++ b/.github/workflows/nightly.yml
+@@ -28,7 +28,7 @@ on:
+ # Sets up the environment variables
+ env:
+   UV_VERSION: "0.8.0"
+-  PYTHON_VERSION: "3.10"
++  PYTHON_VERSION: "3.12"
+   DOCKER_IMAGE_NAME_CPU: huggingface/lerobot-cpu:latest
+   DOCKER_IMAGE_NAME_GPU: huggingface/lerobot-gpu:latest
+ 
+diff --git a/.github/workflows/quality.yml b/.github/workflows/quality.yml
+index 0dc94cd..a84e9c1 100644
+--- a/.github/workflows/quality.yml
++++ b/.github/workflows/quality.yml
+@@ -50,7 +50,7 @@ jobs:
+       - name: Set up Python
+         uses: actions/setup-python@v6
+         with:
+-          python-version: '3.10'
++          python-version: '3.12'
+ 
+       - name: Run pre-commit hooks
+         uses: pre-commit/action@v3.0.1 # zizmor: ignore[unpinned-uses]
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index bcab4c2..e95d6ce 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -22,7 +22,7 @@ on:
+ # Sets up the environment variables
+ env:
+   UV_VERSION: "0.8.0"
+-  PYTHON_VERSION: "3.10"
++  PYTHON_VERSION: "3.12"
+ 
+ jobs:
+   # This job builds the Python package and publishes it to PyPI
+@@ -45,7 +45,7 @@ jobs:
+       - name: Set up Python
+         uses: actions/setup-python@v6
+         with:
+-          python-version: '3.10'
++          python-version: '3.12'
+ 
+       - name: Extract Version
+         id: extract_info
+diff --git a/.github/workflows/unbound_deps_tests.yml b/.github/workflows/unbound_deps_tests.yml
+index a75ecc1..a191e29 100644
+--- a/.github/workflows/unbound_deps_tests.yml
++++ b/.github/workflows/unbound_deps_tests.yml
+@@ -29,7 +29,7 @@ permissions:
+ # Sets up the environment variables
+ env:
+   UV_VERSION: "0.8.0"
+-  PYTHON_VERSION: "3.10"
++  PYTHON_VERSION: "3.12"
+   DOCKER_IMAGE_NAME: huggingface/lerobot-gpu:unbound
+ 
+ # Ensures that only the latest action is built, canceling older runs.
+diff --git a/examples/aloha/eval_aloha.py b/examples/aloha/eval_aloha.py
+index bc8ee26..fa5db08 100644
+--- a/examples/aloha/eval_aloha.py
++++ b/examples/aloha/eval_aloha.py
+@@ -1,12 +1,22 @@
+ import argparse
++import os
++
++# Force mujoco to use EGL (headless, iGPU direct via DRM) instead of GLFW (X11),
++# so rendering doesn't compete with the local desktop X server / cv2 window.
++# Use plain assignment (not setdefault) — a stale shell env like MUJOCO_GL=glfw
++# would otherwise silently put rendering back on X11 and reintroduce GIL/X11
++# contention with the cv2 window.
++os.environ['MUJOCO_GL'] = 'egl'
+ 
+ import torch
+ import time
+-import threading
+ import logging
+ import math
+ import traceback
+ import sys
++import tty
++import termios
++import select
+ import matplotlib.pyplot as plt
+ from pathlib import Path
+ import numpy as np
+@@ -74,257 +84,396 @@ class LocalDatasetMetadata:
+     def fps(self):
+         return self.info.get("fps", 30)
+ 
++def keyboard_listener(
++    execution_paused_event: Event,
++    rtc_enabled_ref: list,
++    rtc_config,
++    keyboard_shutdown_event: Event,
++    episode_started_ref: list,
++):
++    """
++    Keyboard controls (requires a TTY):
++      Space  - start / pause / resume action_control
++      r / R  - toggle rtc_enabled on/off
++
++    keyboard_shutdown_event: set only when the whole process exits (not between episodes)
++    episode_started_ref:     [bool] reset to False at the start of each episode by main()
++    """
++    if not sys.stdin.isatty():
++        logger.warning("[KEYBOARD] stdin is not a TTY, keyboard control disabled.")
++        return
++
++    fd = sys.stdin.fileno()
++    old_settings = termios.tcgetattr(fd)
++    logger.info("[KEYBOARD] Controls: [Space] Start/Pause/Resume  [r] Toggle RTC")
++    try:
++        tty.setcbreak(fd)
++        while not keyboard_shutdown_event.is_set():
++            ready, _, _ = select.select([sys.stdin], [], [], 0.1)
++            if not ready:
++                continue
++            ch = sys.stdin.read(1)
++            if ch == ' ':
++                if execution_paused_event.is_set():
++                    execution_paused_event.clear()
++                    if not episode_started_ref[0]:
++                        episode_started_ref[0] = True
++                        logger.info("[KEYBOARD] Execution started")
++                    else:
++                        logger.info("[KEYBOARD] Resumed action control")
++                else:
++                    execution_paused_event.set()
++                    logger.info("[KEYBOARD] Paused action control")
++            elif ch in ('r', 'R'):
++                new_val = not rtc_enabled_ref[0]
++                rtc_enabled_ref[0] = new_val
++                # Must also update rtc_config so ActionQueue.merge() switches mode
++                rtc_config.enabled = new_val
++                state_str = "ENABLED" if new_val else "DISABLED"
++                logger.info(f"[KEYBOARD] RTC {state_str}")
++    except Exception as e:
++        logger.error(f"[KEYBOARD] Error: {e}")
++    finally:
++        try:
++            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
++        except Exception:
++            pass
++
++
+ def get_actions(
+     policy,
+     robot: RobotWrapper,
+-    action_queue: ActionQueue,
++    action_queue_ref: list,
+     shutdown_event: Event,
+     fps: float,
+-    rtc_enabled: bool,
++    rtc_enabled_ref: list,
+     preprocessor,
+     postprocessor,
+     ready_event: Event,
+     start_execution_event: Event,
+     actor_done_event: Event,
++    episode_end_event: Event = None,
+     min_queue_size_before_refill: int = 30,
+     device: str = "cpu",
+     task_description: str = "Do something",
+-    log_data: dict = None
++    log_data_ref=None,
++    execution_paused_event=None,
++    num_episodes: int = 1,
+ ):
++    """Persistent inference thread that runs across all episodes.
++
++    Waits for ready_event each episode, runs inference loop until shutdown_event,
++    then waits for actor_done_event before the next episode begins.
++    """
+     try:
+-        ready_event.wait()
+         latency_tracker = LatencyTracker()
+         time_per_action = 1.0 / fps
+-        
+-        # Determine threshold
+-        get_actions_threshold = min_queue_size_before_refill
+-        if not rtc_enabled:
+-            get_actions_threshold = 0
+-
+-        while not shutdown_event.is_set():
+-            if action_queue.qsize() <= get_actions_threshold:
+-                # 1. Prepare for inference
+-                current_time = time.perf_counter()
+-                action_index_before_inference = action_queue.get_action_index()
+-                action_qsize_before_inference = action_queue.qsize()
+-                prev_actions = action_queue.get_left_over()
+-                prev_actions = prev_actions.unsqueeze(0) if prev_actions is not None else None
+-
+-                if rtc_enabled:
+-                    inference_latency = latency_tracker.max()
+-                    inference_delay = math.ceil(inference_latency / time_per_action)
+-                    if inference_delay == 0 and start_execution_event.is_set():
+-                        inference_delay = 20  # Ensure at least 20 chunk delay
+-                else:
+-                    inference_delay = 0
+ 
+-                # 2. Capture Observation
+-                real_obs = robot.get_observation(render_image=True)
+-                
+-                # 3. Process Observation (Using preprocessor)
+-                batch = {}
+-                
+-                # Image Mapping
+-                if 'images' in real_obs:
+-                    # Figure out which image feature keys this checkpoint expects
+-                    cfg = getattr(policy, "config", None)
+-                    image_feature_keys = set(getattr(cfg, "image_features", {}).keys()) if cfg is not None else set()
+-
+-                    for key, img in real_obs['images'].items():
+-                        policy_key = None
+-
+-                        # Map high camera
+-                        if key == 'camera_high':
+-                            if "observation.images.cam_high" in image_feature_keys:
+-                                policy_key = "observation.images.cam_high"
+-                            elif "observation.images.top" in image_feature_keys:
+-                                policy_key = "observation.images.top"
+-
+-                        # Map low/angle camera
+-                        elif key == 'camera_low':
+-                            if "observation.images.cam_low" in image_feature_keys:
+-                                policy_key = "observation.images.cam_low"
+-                            elif "observation.images.angle" in image_feature_keys:
+-                                policy_key = "observation.images.angle"
+-
+-                        # Map wrist cameras
+-                        elif key == 'camera_wrist_left':
+-                            if "observation.images.cam_left_wrist" in image_feature_keys:
+-                                policy_key = "observation.images.cam_left_wrist"
+-                            elif "observation.images.left_wrist" in image_feature_keys:
+-                                policy_key = "observation.images.left_wrist"
+-
+-                        elif key == 'camera_wrist_right':
+-                            if "observation.images.cam_right_wrist" in image_feature_keys:
+-                                policy_key = "observation.images.cam_right_wrist"
+-                            elif "observation.images.right_wrist" in image_feature_keys:
+-                                policy_key = "observation.images.right_wrist"
+-
+-                        # As a very last resort, if we have image features but no specific match,
+-                        # map this camera to the first available feature to avoid an empty batch.
+-                        if policy_key is None and image_feature_keys:
+-                            # Choose deterministically to avoid nondeterministic set iteration order
+-                            policy_key = sorted(image_feature_keys)[0]
+-
+-                        if policy_key is not None:
+-                            if img.strides[0] < 0 or img.strides[1] < 0 or img.strides[2] < 0:
+-                                img = img.copy()
+-                            # Preprocessors usually expect float [0,1] tensors on device
+-                            img_tensor = torch.from_numpy(img).float() / 255.0
+-                            img_tensor = img_tensor.permute(2, 0, 1).unsqueeze(0).to(device)  # [B, C, H, W]
+-                            batch[policy_key] = img_tensor
+-
+-                # State Mapping
+-                if 'qpos' in real_obs:
+-                     qpos = real_obs['qpos']
+-                     state_tensor = torch.from_numpy(qpos).float().unsqueeze(0).to(device) # [B, D]
+-                     batch["observation.state"] = state_tensor
+-                
+-                # Task Mapping
+-                batch["task"] = [task_description]
++        for ep in range(num_episodes):
++            # Wait for actor to complete reset and signal ready.
++            # On ep=0 this blocks until the first reset finishes.
++            # On ep>0 the wait was already done at end of previous iteration.
++            if ep == 0:
++                ready_event.wait()
++            if shutdown_event.is_set():
++                break
+ 
+-                # Run Preprocessor
+-                if preprocessor:
+-                    batch = preprocessor(batch)
++            last_rtc_enabled = rtc_enabled_ref[0]
++
++            while not shutdown_event.is_set() and not (episode_end_event and episode_end_event.is_set()):
++                # Pause support: wait while paused
++                if execution_paused_event and execution_paused_event.is_set():
++                    time.sleep(0.05)
++                    continue
++
++                action_queue = action_queue_ref[0]
++                log_data = log_data_ref[0] if log_data_ref else None
++
++                # Re-read each iteration so keyboard toggle takes effect immediately
++                rtc_enabled = rtc_enabled_ref[0]
++                get_actions_threshold = min_queue_size_before_refill if rtc_enabled else 0
++
++                # Detect RTC toggle — flush queue so a fresh inference with the new
++                # mode starts immediately, avoiding stale-action jitter.
++                if rtc_enabled != last_rtc_enabled:
++                    logger.info(f"[GET_ACTIONS] RTC toggled to {'ENABLED' if rtc_enabled else 'DISABLED'}, flushing action queue")
++                    with action_queue.lock:
++                        action_queue.queue = None
++                        action_queue.original_queue = None
++                        action_queue.last_index = 0
++                    last_rtc_enabled = rtc_enabled
++
++                if action_queue.qsize() <= get_actions_threshold:
++                    # 1. Prepare for inference
++                    current_time = time.perf_counter()
++                    action_index_before_inference = action_queue.get_action_index()
++                    action_qsize_before_inference = action_queue.qsize()
++                    prev_actions = action_queue.get_left_over()
++                    prev_actions = prev_actions.unsqueeze(0) if prev_actions is not None else None
+ 
+-                # 4. Run Inference
+-                with torch.no_grad():
+-                    inference_start_time = time.perf_counter()
+                     if rtc_enabled:
+-                        execution_horizon = min(policy.config.rtc_config.execution_horizon, action_qsize_before_inference)
+-                        # Apply prev_chunk_left_over correction
+-                        actions = policy.predict_action_chunk(batch, prev_chunk_left_over=prev_actions, inference_delay=inference_delay, execution_horizon=execution_horizon)
++                        inference_latency = latency_tracker.max()
++                        inference_delay = math.ceil(inference_latency / time_per_action)
++                        if inference_delay == 0 and start_execution_event.is_set():
++                            inference_delay = 20  # Ensure at least 20 chunk delay
+                     else:
+-                        actions = policy.predict_action_chunk(batch)
+-                    dt = time.perf_counter() - inference_start_time
+-                    latency_tracker.add(dt)
+-                    logger.debug(f"Inference time: {dt*1000:.2f} ms")
++                        inference_delay = 0
++
++                    # 2. Capture Observation
++                    real_obs = robot.get_observation(render_image=True)
++
++                    # 3. Process Observation (Using preprocessor)
++                    batch = {}
++
++                    # Image Mapping
++                    if 'images' in real_obs:
++                        cfg = getattr(policy, "config", None)
++                        image_feature_keys = set(getattr(cfg, "image_features", {}).keys()) if cfg is not None else set()
++
++                        for key, img in real_obs['images'].items():
++                            policy_key = None
++
++                            if key == 'camera_high':
++                                if "observation.images.cam_high" in image_feature_keys:
++                                    policy_key = "observation.images.cam_high"
++                                elif "observation.images.top" in image_feature_keys:
++                                    policy_key = "observation.images.top"
++                            elif key == 'camera_low':
++                                if "observation.images.cam_low" in image_feature_keys:
++                                    policy_key = "observation.images.cam_low"
++                                elif "observation.images.angle" in image_feature_keys:
++                                    policy_key = "observation.images.angle"
++                            elif key == 'camera_wrist_left':
++                                if "observation.images.cam_left_wrist" in image_feature_keys:
++                                    policy_key = "observation.images.cam_left_wrist"
++                                elif "observation.images.left_wrist" in image_feature_keys:
++                                    policy_key = "observation.images.left_wrist"
++                            elif key == 'camera_wrist_right':
++                                if "observation.images.cam_right_wrist" in image_feature_keys:
++                                    policy_key = "observation.images.cam_right_wrist"
++                                elif "observation.images.right_wrist" in image_feature_keys:
++                                    policy_key = "observation.images.right_wrist"
++
++                            if policy_key is None and image_feature_keys:
++                                policy_key = sorted(image_feature_keys)[0]
++
++                            if policy_key is not None and img is not None:
++                                if img.strides[0] < 0 or img.strides[1] < 0 or img.strides[2] < 0:
++                                    img = img.copy()
++                                img_tensor = torch.from_numpy(img).float() / 255.0
++                                img_tensor = img_tensor.permute(2, 0, 1).unsqueeze(0).to(device)
++                                batch[policy_key] = img_tensor
++
++                    # State Mapping
++                    if 'qpos' in real_obs:
++                         qpos = real_obs['qpos']
++                         state_tensor = torch.from_numpy(qpos).float().unsqueeze(0).to(device)
++                         batch["observation.state"] = state_tensor
++
++                    # Task Mapping
++                    batch["task"] = [task_description]
++
++                    # Run Preprocessor
++                    if preprocessor:
++                        batch = preprocessor(batch)
++
++                    # 4. Run Inference
++                    with torch.no_grad():
++                        inference_start_time = time.perf_counter()
++                        if rtc_enabled:
++                            execution_horizon = min(policy.config.rtc_config.execution_horizon, action_qsize_before_inference)
++                            actions = policy.predict_action_chunk(batch, prev_chunk_left_over=prev_actions, inference_delay=inference_delay, execution_horizon=execution_horizon)
++                        else:
++                            actions = policy.predict_action_chunk(batch)
++                        dt = time.perf_counter() - inference_start_time
++                        logger.debug(f"Inference time: {dt*1000:.2f} ms")
+ 
+-                # Capture raw actions for RTC loop (Normalized)
+-                original_actions = actions.clone()
++                    # Discard stale inference if episode ended during it
++                    if episode_end_event and episode_end_event.is_set():
++                        break
+ 
+-                # Run Postprocessor
+-                if postprocessor:
+-                    actions = postprocessor(actions)
++                    # Capture raw actions for RTC loop (Normalized)
++                    original_actions = actions.clone()
++
++                    # Run Postprocessor
++                    if postprocessor:
++                        actions = postprocessor(actions)
++
++                    processed_actions = actions
++
++                    # Squeeze batch dimension if present (assuming BS=1)
++                    if original_actions.ndim == 3 and original_actions.shape[0] == 1:
++                        original_actions = original_actions.squeeze(0)
++                    if processed_actions.ndim == 3 and processed_actions.shape[0] == 1:
++                        processed_actions = processed_actions.squeeze(0)
++
++                    if log_data is not None:
++                        log_data['chunks'].append({
++                            'time': time.time(),
++                            'action': processed_actions.cpu().numpy(),
++                            'latency': dt
++                        })
++
++                    # Total delay = observation capture + inference (not just inference)
++                    total_dt = time.perf_counter() - current_time
++                    latency_tracker.add(total_dt)
++
++                    is_first_inference = not start_execution_event.is_set()
++
++                    if is_first_inference:
++                        real_delay = 0
++                        action_queue.merge(original_actions, processed_actions, real_delay, action_index_before_inference)
++                    elif action_queue.empty():
++                        real_delay = action_qsize_before_inference
++                        action_queue.merge(original_actions, processed_actions, real_delay, action_index_before_inference)
++                    else:
++                        real_delay = math.ceil(total_dt / time_per_action)
++                        action_queue.merge(original_actions, processed_actions, real_delay, action_index_before_inference)
++
++                    if is_first_inference:
++                        start_execution_event.set()
++                        latency_tracker.reset()
+ 
+-                # 5. Post-process Actions
+-                # The postprocessor should handle unnormalization.
+-                # 'actions' is now in the original action space but might still have batch dim [B, T, D]
+-                
+-                processed_actions = actions
+-                
+-                # Squeeze batch dimension if present (assuming BS=1)
+-                if original_actions.ndim == 3 and original_actions.shape[0] == 1:
+-                    original_actions = original_actions.squeeze(0)
+-                if processed_actions.ndim == 3 and processed_actions.shape[0] == 1:
+-                    processed_actions = processed_actions.squeeze(0)
+-                
+-                if log_data is not None:
+-                    log_data['chunks'].append({
+-                        'time': time.time(),
+-                        # processed_actions is already squeezed and on device, move to cpu numpy
+-                        'action': processed_actions.cpu().numpy(),
+-                        'latency': dt
+-                    })
+-
+-                if not start_execution_event.is_set():
+-                    action_queue.merge(original_actions, processed_actions, 0, action_index_before_inference)
+-                elif action_queue.empty():
+-                    action_queue.merge(original_actions, processed_actions, action_qsize_before_inference, action_index_before_inference)
+                 else:
+-                    action_queue.merge(original_actions, processed_actions, math.ceil(dt / time_per_action), action_index_before_inference)
+-                
+-                if not start_execution_event.is_set():
+-                    start_execution_event.set()
+-                    # Reset tracker to avoid using compilation time as latency for next steps
+-                    latency_tracker.reset()
++                     time.sleep(0.001)
+ 
+-            else:
+-                 time.sleep(0.001)
++            # Episode done — clear episode_end_event (we acknowledged it) and wait for next
++            if episode_end_event:
++                episode_end_event.clear()
++
++            if ep >= num_episodes - 1:
++                break  # last episode
++
++            # Wait for main to clear ready_event (signals transition in progress),
++            # then wait for actor to set it again (signals reset is done).
++            while ready_event.is_set() and not shutdown_event.is_set():
++                time.sleep(0.02)
++            if shutdown_event.is_set():
++                break
++            if not ready_event.wait(timeout=30.0):
++                logger.error("[GET_ACTIONS] Timed out waiting for ready_event (30s)! Breaking.")
++                break
+ 
+-        logger.info("[GET_ACTIONS] Thread shutting down")
+-        
+     except Exception as e:
+         logger.error(f"[GET_ACTIONS] Exception: {e}")
+         traceback.print_exc()
+         shutdown_event.set()
+     finally:
+-        # Ensure the MuJoCo/EGL context is released from the same thread that
+-        # performed rendering. Wait for actor to stop stepping before closing.
+         try:
+             actor_done_event.wait(timeout=2.0)
+         except Exception:
+             pass
+-        try:
+-            robot.close()
+-        except Exception:
+-            logger.exception("[GET_ACTIONS] Failed to close env during shutdown")
+ 
+ def actor_control(
+     robot: RobotWrapper,
+-    action_queue: ActionQueue,
++    action_queue_ref: list,
+     shutdown_event: Event,
+     fps: float,
+     ready_event: Event,
+     start_execution_event: Event,
+     actor_done_event: Event,
+-    episode_results: list = None,
+-    log_data: dict = None,
+-    max_steps: int = 400
++    episode_end_event: Event,
++    execution_paused_event: Event,
++    episode_results_ref: list,
++    log_data_ref: list,
++    max_steps: int = 400,
++    num_episodes: int = 1,
+ ):
++    """Persistent actor thread that runs multiple episodes without thread restart.
++
++    Keeps the GL/EGL context bound to this single thread for the entire run,
++    avoiding 'context already current on another thread' errors between episodes.
++    """
+     try:
+-        robot.reset()
+-        ready_event.set()
+-        
+-        start_execution_event.wait()
+-        
+-        action_interval = 1.0 / fps
+-        max_reward = 0
+-        steps_executed = 0
+-        
+-        while not shutdown_event.is_set():
+-            start_time = time.perf_counter()
+-            
+-            action = action_queue.get()
+-            
+-            if action is not None:
+-                if log_data is not None:
+-                    # Capture state for logging
+-                    try:
+-                        obs = robot.get_observation(render_image=False)
+-                        if 'qpos' in obs:
+-                            action_to_log = action
+-                            if isinstance(action_to_log, torch.Tensor):
+-                                action_to_log = action_to_log.detach().cpu().numpy()
+-                            log_data['steps'].append({
+-                                'time': time.time(),
+-                                'state': obs['qpos'],
+-                                'action': action_to_log
+-                            })
+-                    except Exception as e:
+-                        pass # Don't crash control loop for logging
+-
+-                reward = robot.send_action(action.float())
+-                if reward is not None:
+-                    max_reward = max(max_reward, reward)
+-                    steps_executed += 1
+-                    if steps_executed >= max_steps:
+-                        logger.info(f"[ACTOR] Max steps {max_steps} reached.")
+-                        shutdown_event.set()
+-                        break
+-            
+-            dt_s = time.perf_counter() - start_time
+-            time.sleep(max(0, (action_interval - dt_s) - 0.001))
+-            
+-        if episode_results is not None:
+-            episode_results.append(max_reward)
++        for ep in range(num_episodes):
++            if shutdown_event.is_set():
++                break
++
++            # Reset robot (creates/recreates env; EGL context stays on this thread)
++            robot.reset()
++            ready_event.set()
++
++            start_execution_event.wait()
++            if shutdown_event.is_set():
++                break
++
++            logger.info("[ACTOR] Robot ready. Press [Space] to start execution.")
++
++            action_interval = 1.0 / fps
++            max_reward = 0
++            steps_executed = 0
+ 
+-        logger.info("[ACTOR] Thread shutting down")
++            action_queue = action_queue_ref[0]
++            log_data = log_data_ref[0] if log_data_ref else None
++
++            while not shutdown_event.is_set():
++                # Pause support
++                while execution_paused_event.is_set() and not shutdown_event.is_set():
++                    time.sleep(0.05)
++                if shutdown_event.is_set():
++                    break
++
++                start_time = time.perf_counter()
++
++                action = action_queue.get()
++
++                if action is not None:
++                    if log_data is not None:
++                        try:
++                            obs = robot.get_observation(render_image=False)
++                            if 'qpos' in obs:
++                                action_to_log = action
++                                if isinstance(action_to_log, torch.Tensor):
++                                    action_to_log = action_to_log.detach().cpu().numpy()
++                                log_data['steps'].append({
++                                    'time': time.time(),
++                                    'state': obs['qpos'],
++                                    'action': action_to_log
++                                })
++                        except Exception:
++                            pass
++
++                    reward = robot.send_action(action.float())
++                    if reward is not None:
++                        max_reward = max(max_reward, reward)
++                        steps_executed += 1
++
++                        if steps_executed >= max_steps:
++                            logger.info(f"[ACTOR] Max steps {max_steps} reached.")
++                            break
++
++                dt_s = time.perf_counter() - start_time
++                time.sleep(max(0, (action_interval - dt_s)))
++
++            episode_results_ref.append(max_reward)
++            logger.info(f"[ACTOR] Episode {ep+1} done, max_reward={max_reward}")
++
++            # Signal episode end to get_actions (stays set until get_actions clears it).
++            # Do NOT set shutdown_event — that means "stop the whole process" and
++            # would cause get_actions to exit its outer for-loop instead of moving
++            # to the next episode.
++            episode_end_event.set()
++            # Signal episode done to main
++            actor_done_event.set()
++
++            if ep >= num_episodes - 1:
++                break  # last episode, exit cleanly
++
++            # Wait for main to clear actor_done_event (signals next episode is ready)
++            while actor_done_event.is_set():
++                time.sleep(0.02)
++            # shutdown_event is cleared by main before unblocking us
++
++        logger.info("[ACTOR] All episodes complete, thread shutting down")
+     except Exception as e:
+         logger.error(f"[ACTOR] Exception: {e}")
++        import traceback; traceback.print_exc()
+         shutdown_event.set()
+     finally:
+-        # Signal that stepping is finished; env teardown happens in get_actions.
++        try:
++            robot.close_env()
++        except Exception:
++            logger.exception("[ACTOR] Failed to close env during shutdown")
+         try:
+             actor_done_event.set()
+         except Exception:
+@@ -345,18 +494,77 @@ def save_trajectory_plots(log_data, path, episode_idx, fps=50.0, rtc_enabled=Fal
+             os.remove(path)
+ 
+         os.makedirs(path, exist_ok=True)
+-        
++
++        # Save raw action data
+         steps = log_data['steps']
+         chunks = log_data.get('chunks', [])
+ 
+-        # Convert to numpy
+-        times = np.array([s['time'] for s in steps])
++        # Save as numpy file for efficient storage
++        actions_array = np.array([s['action'] for s in steps])
++        states_array = np.array([s['state'] for s in steps])
++        times_array = np.array([s['time'] for s in steps])
++
++        data_file_npy = os.path.join(path, f'episode_{episode_idx}_data.npz')
++        np.savez(
++            data_file_npy,
++            actions=actions_array,
++            states=states_array,
++            times=times_array,
++            fps=fps
++        )
++        logger.info(f"Saved raw action data to {data_file_npy}")
++
++        # Also save chunks data if available
++        if chunks:
++            chunk_actions = [c['action'] for c in chunks]
++            chunk_times = [c['time'] for c in chunks]
++            chunk_latencies = [c['latency'] for c in chunks]
++
++            chunks_file_npy = os.path.join(path, f'episode_{episode_idx}_chunks.npz')
++            np.savez(
++                chunks_file_npy,
++                chunk_actions=chunk_actions,
++                chunk_times=chunk_times,
++                chunk_latencies=chunk_latencies
++            )
++            logger.info(f"Saved chunk data to {chunks_file_npy}")
++
++        # Save as JSON for human readability
++        json_data = {
++            'episode': episode_idx,
++            'fps': fps,
++            'rtc_enabled': rtc_enabled,
++            'steps': [
++                {
++                    'time': float(s['time']),
++                    'state': s['state'].tolist() if isinstance(s['state'], np.ndarray) else s['state'],
++                    'action': s['action'].tolist() if isinstance(s['action'], np.ndarray) else s['action']
++                }
++                for s in steps
++            ],
++            'chunks': [
++                {
++                    'time': float(c['time']),
++                    'latency': float(c['latency']),
++                    'action': c['action'].tolist() if isinstance(c['action'], np.ndarray) else c['action']
++                }
++                for c in chunks
++            ]
++        }
++
++        json_file = os.path.join(path, f'episode_{episode_idx}_data.json')
++        with open(json_file, 'w') as f:
++            json.dump(json_data, f, indent=2)
++        logger.info(f"Saved trajectory data to {json_file}")
++
++        # Convert to numpy for plotting
++        times = times_array.copy()
+         if len(times) == 0: return
+         start_time = times[0]
+         times = times - start_time
+-        
+-        states = np.array([s['state'] for s in steps])
+-        actions = np.array([s['action'] for s in steps])
++
++        states = states_array
++        actions = actions_array
+         
+         # Determine dimensions
+         action_dim = actions.shape[1]
+@@ -413,6 +621,95 @@ def save_trajectory_plots(log_data, path, episode_idx, fps=50.0, rtc_enabled=Fal
+         logger.error(f"Failed to plot trajectory: {e}")
+         traceback.print_exc()
+ 
++class _VizProcess:
++    """Visualization in a child process. Main writes the latest BGR frame to a
++    shared-memory buffer; the child reads it and calls cv2.imshow + waitKey,
++    completely off the main process's GIL/event loop."""
++
++    def __init__(self, height: int, width: int):
++        from multiprocessing import Process, Event as MPEvent
++        from multiprocessing.shared_memory import SharedMemory
++        self._h = height
++        self._w = width
++        self._shape = (height, width, 3)
++        self._dtype = np.uint8
++        self._nbytes = int(np.prod(self._shape)) * np.dtype(self._dtype).itemsize
++        self._shm = SharedMemory(create=True, size=self._nbytes + 8)
++        # First 8 bytes: uint64 frame counter; rest: image data.
++        shm_buf = self._shm.buf
++        assert shm_buf is not None
++        self._counter = np.ndarray((1,), dtype=np.uint64, buffer=shm_buf[:8])
++        self._counter[0] = 0
++        self._frame = np.ndarray(self._shape, dtype=self._dtype, buffer=shm_buf[8:])
++        self._stop = MPEvent()
++        self._proc = Process(
++            target=_viz_child_main,
++            args=(self._shm.name, self._shape, self._stop),
++            daemon=True,
++        )
++        self._proc.start()
++
++    def write(self, rgb_img: np.ndarray) -> None:
++        # Convert RGB → BGR for cv2; copy into shm and bump counter atomically-enough
++        # (single writer, single reader using counter as monotonic newness flag).
++        if rgb_img.shape != self._shape:
++            import cv2
++            rgb_img = cv2.resize(rgb_img, (self._w, self._h))
++        if rgb_img.strides[0] < 0 or rgb_img.strides[1] < 0:
++            rgb_img = rgb_img.copy()
++        self._frame[:] = rgb_img[..., ::-1]  # RGB → BGR
++        self._counter[0] = self._counter[0] + 1
++
++    def close(self) -> None:
++        self._stop.set()
++        try:
++            self._proc.join(timeout=2.0)
++        except Exception:
++            pass
++        try:
++            self._shm.close()
++            self._shm.unlink()
++        except Exception:
++            pass
++
++
++def _viz_child_main(shm_name: str, shape: tuple, stop_event) -> None:
++    """Runs in the child process — owns the cv2 window, no GIL contention with main."""
++    import cv2
++    from multiprocessing.shared_memory import SharedMemory
++    shm = SharedMemory(name=shm_name)
++    shm_buf = shm.buf
++    assert shm_buf is not None
++    counter = np.ndarray((1,), dtype=np.uint64, buffer=shm_buf[:8])
++    frame = np.ndarray(shape, dtype=np.uint8, buffer=shm_buf[8:])
++    win = "aloha_eval"
++    cv2.namedWindow(win, cv2.WINDOW_NORMAL)
++    cv2.resizeWindow(win, shape[1], shape[0])
++    last_seen = -1
++    while not stop_event.is_set():
++        cur = int(counter[0])
++        if cur != last_seen:
++            cv2.imshow(win, frame)
++            last_seen = cur
++        # waitKey processes GUI events; 16ms ≈ 60Hz event polling
++        cv2.waitKey(16)
++    try:
++        cv2.destroyAllWindows()
++    except Exception:
++        pass
++    shm.close()
++
++
++def _start_viz_process(plot_enabled: bool, height: int, width: int):
++    if not plot_enabled:
++        return None
++    try:
++        return _VizProcess(height=height, width=width)
++    except Exception as e:
++        logger.warning(f"Failed to start viz process, disabling --plot: {e}")
++        return None
++
++
+ def main():
+     parser = argparse.ArgumentParser(description="Eval Aloha Pipeline with RTC support")
+     parser.add_argument("--pretrained_model_path", type=str, default="lerobot/pi05_base", help="Path to the pretrained model")
+@@ -424,7 +721,7 @@ def main():
+     parser.add_argument("--task", type=str, default="sim_transfer_cube", help="Task name (e.g. sim_transfer_cube, sim_insertion)")
+     
+     # RTC Args
+-    parser.add_argument("--rtc_enabled", action="store_true", help="Enable Real-Time Chunking")
++    parser.add_argument("--rtc_enabled", action=argparse.BooleanOptionalAction, default=False, help="Enable Real-Time Chunking (default: False); use --no-rtc_enabled to force-disable")
+     parser.add_argument("--rtc_horizon", type=int, default=45, help="RTC Execution Horizon")
+     parser.add_argument("--plot", action="store_true", help="Enable visualization")
+     parser.add_argument("--fps", type=float, default=50.0, help="Control Frequency (Hz)")
+@@ -434,7 +731,12 @@ def main():
+     parser.add_argument("--use_ov", action="store_true", help="Use OpenVINO model for inference")
+     parser.add_argument("--ov_model_path", type=str, default="pi05_lerobot_ov_ir_INT8", help="Path to OpenVINO model")
+     parser.add_argument("--ov_device", type=str, default="GPU.0", help="Device to use for OpenVINO inference (e.g. CPU, GPU)")
+-    
++    parser.add_argument("--swap_arms", action="store_true",
++                        help="Swap left/right arms between hardware order [right,left] and policy order [left,right]. "
++                             "Enable this when the training dataset was collected in standard lerobot [left,right] order "
++                             "(e.g. transfer cube). Disable (default) when the dataset was saved in raw hardware order "
++                             "(e.g. folding).")
++
+     args = parser.parse_args()
+     
+     logger.info("Arguments parsed successfully.")
+@@ -562,6 +864,8 @@ def main():
+             task_description = "Pick up the cube with the right arm and transfer it to the left arm."
+         elif "insertion" in args.task.lower():
+             task_description = "Pick up the yellow marker with the left arm, pick up the lid with the right arm, insert the marker into the lid."
++        elif "fold" in args.task.lower():
++            task_description = "Use right arm to pick up the topmost piece of clothing from the basket on the upper right, flatten it on the middle table, fold it neatly with both hands, and use left arm to put the clothing into the basket on the upper left."
+         else:
+              task_description = args.task.replace('_', ' ').capitalize()
+         logger.info(f"Task description using fallback: '{task_description}'")
+@@ -571,10 +875,10 @@ def main():
+     # Setup Robot
+     if args.robot_type == "real_aloha":
+         logger.info("Initializing Real Aloha Robot...")
+-        real_robot = AlohaRobot()
++        real_robot = AlohaRobot(swap_arms=args.swap_arms)
+     elif args.robot_type == "mujoco_aloha":
+         logger.info(f"Initializing Mujoco Aloha Robot (Task: {args.task})...")
+-        real_robot = MujocoAlohaRobot(args.task)
++        real_robot = MujocoAlohaRobot(args.task, fps=args.fps)
+     else:
+         raise ValueError(
+             f"Unsupported robot_type '{args.robot_type}'. "
+@@ -583,170 +887,197 @@ def main():
+ 
+     robot = RobotWrapper(real_robot)
+ 
+-    action_queue = ActionQueue(rtc_config)
+     shutdown_event = Event()
+     ready_event = Event()
+     start_execution_event = Event()
+     actor_done_event = Event()
+-    
++    execution_paused_event = Event()  # set = paused, clear = running
++    # episode_end_event: set by actor at end of each episode, cleared ONLY by get_actions
++    # after it exits its inner loop.  This avoids the race where shutdown_event is
++    # cleared by main before get_actions can see it (long inference).
++    episode_end_event = Event()
++    rtc_enabled_ref = [args.rtc_enabled]  # mutable ref; keyboard toggle updates both this and rtc_config.enabled
++    keyboard_shutdown_event = Event()     # only set when the whole process exits, NOT between episodes
++    episode_started_ref = [False]         # reset each episode so first Space prints "Execution started"
++
+     all_rewards = []
+ 
+-    # Visualization setup
+-    image_plot = None
+-    if args.plot:
+-        plt.ion()
+-        fig, ax = plt.subplots()
+-        # Initialize with a dummy black image usually (480, 640, 3)
+-        dummy_img = np.zeros((480, 640, 3), dtype=np.uint8)
+-        image_plot = ax.imshow(dummy_img)
+-        plt.show(block=False)
++    # Mutable refs shared with persistent threads — updated each episode
++    action_queue_ref = [ActionQueue(rtc_config)]
++    log_data_ref: list = [None]
++    episode_results_ref = []  # actor appends max_reward after each episode
++
++    # Visualization runs in a separate process to keep the main process's
++    # GIL/CPU/iGPU free for inference and the action loop. The main process
++    # only writes the latest angle frame into shared memory; the child
++    # process does cv2.imshow + waitKey.
++    viz = _start_viz_process(args.plot, height=480, width=640)
+ 
+     try:
+-        t_get_action = None
+-        t_actor = None
++        t_keyboard = Thread(
++            target=keyboard_listener,
++            name="keyboard_listener",
++            args=(execution_paused_event, rtc_enabled_ref, rtc_config,
++                  keyboard_shutdown_event, episode_started_ref),
++            daemon=True,
++        )
++        t_keyboard.start()
++
++        # Start persistent threads ONCE — they loop over episodes internally
++        t_get_action = Thread(
++            target=get_actions,
++            name="get_actions",
++            args=(
++                policy,
++                robot,
++                action_queue_ref,
++                shutdown_event,
++                args.fps,
++                rtc_enabled_ref,
++                preprocessor,
++                postprocessor,
++                ready_event,
++                start_execution_event,
++                actor_done_event,
++                episode_end_event,
++            ),
++            kwargs=dict(
++                min_queue_size_before_refill=args.rtc_horizon,
++                device=device,
++                task_description=task_description,
++                log_data_ref=log_data_ref,
++                execution_paused_event=execution_paused_event,
++                num_episodes=args.num_episodes,
++            ),
++        )
++        t_actor = Thread(
++            target=actor_control,
++            name="actor_control",
++            args=(
++                robot,
++                action_queue_ref,
++                shutdown_event,
++                args.fps,
++                ready_event,
++                start_execution_event,
++                actor_done_event,
++                episode_end_event,
++                execution_paused_event,
++                episode_results_ref,
++                log_data_ref,
++                args.max_steps,
++                args.num_episodes,
++            )
++        )
++
++        t_get_action.start()
++        t_actor.start()
++
++        render_dt = 1.0 / 20.0
++        last_render_time = time.time()
++
++        # Prepare initial episode state before threads start using it
++        action_queue_ref[0] = ActionQueue(rtc_config)
++        log_data_ref[0] = {'chunks': [], 'steps': []} if args.save_traj else None
++
+         for episode in range(args.num_episodes):
+             logger.info(f"Starting Episode {episode + 1}")
+-            ready_event.clear()
+-            start_execution_event.clear()
+-            actor_done_event.clear()
+-            
+-            episode_results = []
+-            log_data = {'chunks': [], 'steps': []} if args.save_traj else None
+-            
+-            action_queue = ActionQueue(rtc_config) 
+-            
+-            # Start Threads
+-            t_get_action = Thread(
+-                target=get_actions,
+-                name="get_actions",
+-                args=(
+-                    policy,
+-                    robot,
+-                    action_queue,
+-                    shutdown_event,
+-                    args.fps,
+-                    args.rtc_enabled,
+-                    preprocessor,
+-                    postprocessor,
+-                    ready_event,
+-                    start_execution_event,
+-                    actor_done_event,
+-                ),
+-                kwargs=dict(
+-                    min_queue_size_before_refill=args.rtc_horizon,
+-                    device=device,
+-                    task_description=task_description,
+-                    log_data=log_data,
+-                ),
+-            )
+-            t_actor = Thread(
+-                target=actor_control,
+-                name="actor_control",
+-                args=(
+-                    robot,
+-                    action_queue,
+-                    shutdown_event,
+-                    args.fps,
+-                    ready_event,
+-                    start_execution_event,
+-                    actor_done_event,
+-                    episode_results,
+-                    log_data,
+-                    args.max_steps)
+-            )
+-            
+-            t_get_action.start()
+-            t_actor.start()
++            episode_started_ref[0] = False  # first Space prints "Execution started"
+ 
+-            logger.info("Waiting for execution start...")
+-            start_execution_event.wait()
+-            logger.info("Execution started!")
++            logger.info("Waiting for robot ready...")
+ 
+-            start_time = time.time()
+-            render_dt = 1.0 / 20.0 # Limit rendering to 20 FPS to save resources
+-            last_render_time = time.time()
+-            
+-            while not shutdown_event.is_set():
++            # Main loop: wait for episode to finish while updating visualization
++            while not shutdown_event.is_set() and not actor_done_event.is_set():
+                 if not ready_event.is_set():
+-                     time.sleep(0.1)
+-                     # Check if threads died while waiting
+-                     if not t_actor.is_alive() or not t_get_action.is_alive():
+-                         logger.error("Threads died during init!")
+-                         shutdown_event.set()
+-                     continue
+-
+-                if not t_get_action.is_alive():
+-                    logger.error("Get Actions thread died!")
+-                    shutdown_event.set()
+-                if not t_actor.is_alive():
+-                    logger.error("Actor thread died!")
+-                    shutdown_event.set()
+-                    
+-                if args.robot_type == "mujoco_aloha" and args.plot:
+-                    try:
+-                        now = time.time()
+-                        if now - last_render_time > render_dt:
+-                            cache_images = getattr(robot.robot, "cache_images", None) or {}
+-                            render_img = cache_images.get("angle", None)
+-
+-                            if render_img is not None:
+-                                # Ensure compatible format
+-                                if isinstance(render_img, torch.Tensor):
+-                                    render_img = render_img.cpu().numpy()
+-                                if render_img.shape[0] == 3: # C, H, W -> H, W, C
+-                                    render_img = np.transpose(render_img, (1, 2, 0))
+-                                
+-                                # Handle potential stride issues
+-                                if render_img.strides[0] < 0 or render_img.strides[1] < 0:
+-                                    render_img = render_img.copy()
+-
+-                                image_plot.set_data(render_img)
+-                                plt.pause(render_dt) 
+-                            last_render_time = now
+-                        else:
+-                            time.sleep(0.01)
+-                    except Exception as e:
+-                        logger.error(f"Error in plot loop: {e}")
++                    if not t_actor.is_alive() or not t_get_action.is_alive():
++                        logger.error(f"Threads died during init! "
++                                     f"actor={t_actor.is_alive()}, get_actions={t_get_action.is_alive()}")
++                        shutdown_event.set()
++                        break
+                 else:
+-                    time.sleep(1)
+-                
+-            # Stop episode
+-            logger.info("Episode loop ended.")
+-            if shutdown_event.is_set():
+-                logger.warning("Shutdown event was set!")
+-            
+-            shutdown_event.set()
+-            # if args.plot:
+-            #     plt.close('all')
+-            t_get_action.join()
+-            t_actor.join()
+-            
+-            if episode_results:
+-                max_r = episode_results[0]
+-                if max_r == -np.inf: max_r = 0.0
++                    if not t_get_action.is_alive():
++                        logger.error("Get Actions thread died!")
++                        shutdown_event.set()
++                    if not t_actor.is_alive():
++                        logger.error("Actor thread died!")
++                        shutdown_event.set()
++
++                if args.robot_type == "mujoco_aloha" and viz is not None:
++                    now = time.time()
++                    if now - last_render_time > render_dt:
++                        cache_images = getattr(robot.robot, "cache_images", None) or {}
++                        render_img = cache_images.get("angle", None)
++                        if render_img is not None:
++                            if isinstance(render_img, torch.Tensor):
++                                render_img = render_img.cpu().numpy()
++                            if render_img.shape[0] == 3:
++                                render_img = np.transpose(render_img, (1, 2, 0))
++                            try:
++                                viz.write(render_img)
++                            except Exception as e:
++                                logger.error(f"Error sending frame to viz process: {e}")
++                        last_render_time = now
++                    else:
++                        time.sleep(0.01)
++                else:
++                    time.sleep(0.1)
++
++            # Episode finished (actor set actor_done_event or shutdown)
++            logger.info(f"Episode {episode + 1} loop ended.")
++
++            # Collect reward
++            if len(episode_results_ref) > episode:
++                max_r = episode_results_ref[episode]
++                if max_r == -np.inf:
++                    max_r = 0.0
+                 all_rewards.append(max_r)
+                 logger.info(f"Episode {episode+1} Max Reward: {max_r}")
+ 
+-            if args.save_traj and log_data:
+-                save_trajectory_plots(log_data, args.save_traj_path, episode+1, fps=args.fps, rtc_enabled=args.rtc_enabled)
++            if args.save_traj and log_data_ref[0]:
++                save_trajectory_plots(log_data_ref[0], args.save_traj_path, episode+1, fps=args.fps, rtc_enabled=args.rtc_enabled)
++
++            # Transition to next episode:
++            # Actor is blocked at: while actor_done_event.is_set(): sleep
++            # Get_actions exited its inner while loop (shutdown_event was set) and
++            #   is now waiting at: ready_event.wait(timeout=30)
++
++            # Prepare shared state for next episode BEFORE unblocking actor
++            action_queue_ref[0] = ActionQueue(rtc_config)
++            log_data_ref[0] = {'chunks': [], 'steps': []} if args.save_traj else None
++            ready_event.clear()
++            start_execution_event.clear()
++            shutdown_event.clear()
++            # Unblock actor → it will call robot.reset(), then set ready_event
++            actor_done_event.clear()
++
++        # All episodes done — final shutdown
++        shutdown_event.set()
++        t_get_action.join(timeout=5)
++        t_actor.join(timeout=5)
+ 
+-            shutdown_event.clear() # Reset for next episode
+-            
+     finally:
+         shutdown_event.set()
+ 
+-        # If we exit early due to an exception, ensure worker threads are stopped
+-        # before closing the environment to avoid EGL context ownership issues.
+         try:
+             if t_get_action is not None and t_get_action.is_alive():
+                 t_get_action.join(timeout=5)
+             if t_actor is not None and t_actor.is_alive():
+                 t_actor.join(timeout=5)
++        except (NameError, UnboundLocalError):
++            pass
+         except Exception:
+             logger.exception("Failed while joining threads during shutdown; continuing cleanup.")
+ 
++        keyboard_shutdown_event.set()
++
++        if viz is not None:
++            try:
++                viz.close()
++            except Exception:
++                pass
++
+         robot.close()
+-        
++
+         if all_rewards:
+             all_rewards_np = np.array(all_rewards)
+             success_rate = np.mean(all_rewards_np >= 4)
+diff --git a/examples/aloha/robot_interfaces.py b/examples/aloha/robot_interfaces.py
+index bed28cd..da6189e 100644
+--- a/examples/aloha/robot_interfaces.py
++++ b/examples/aloha/robot_interfaces.py
+@@ -2,6 +2,7 @@ from __future__ import annotations
+ 
+ import logging
+ from pathlib import Path
++from threading import Event, Lock
+ 
+ import numpy as np
+ import torch
+@@ -10,7 +11,7 @@ logger = logging.getLogger(__name__)
+ 
+ 
+ class AlohaRobot:
+-    def __init__(self):
++    def __init__(self, swap_arms: bool = True):
+         try:
+             from aloha.robot_utils import load_yaml_file
+             from aloha.real_env import make_real_env
+@@ -52,35 +53,39 @@ class AlohaRobot:
+         except InterbotixException:
+             pass
+ 
++        # Whether to swap left/right arms between hardware order [right,left]
++        # and policy order [left,right].  Needed when the training dataset was
++        # collected in standard lerobot [left,right] order (e.g. transfer cube).
++        # Not needed when the dataset was saved in raw hardware order (e.g. folding).
++        self._swap_arms = swap_arms
++
+     def reset(self):
+         self.env.reset()
+ 
+     def capture_observation(self, **kwargs):
+         obs = self.env.get_observation()
+ 
+-        # The real Aloha env exposes qpos as [right 7, left 7].
+-        # The policy was trained on [left 7, right 7], so we
+-        # reorder qpos into policy order before passing it on.
+-        if isinstance(obs, dict) and "qpos" in obs:
++        # Hardware qpos order: [right(7), left(7)] (follower_right first in YAML).
++        # When swap_arms=True, convert to policy order [left(7), right(7)].
++        # When swap_arms=False, pass through as-is (dataset collected in hw order).
++        if self._swap_arms and isinstance(obs, dict) and "qpos" in obs:
+             qpos = np.asarray(obs["qpos"], dtype=float).reshape(-1)
+             if qpos.shape[0] == 14:
+                 right = qpos[:7].copy()
+                 left = qpos[7:14].copy()
+-                # Policy expects [left (7), right (7)]
+                 obs["qpos"] = np.concatenate([left, right], axis=0)
+ 
+         return obs
+ 
+     def send_action(self, action):
+-        # action: [14]
+         if isinstance(action, torch.Tensor):
+             action = action.detach().cpu().numpy()
+ 
+-        # Convert to 1D numpy array in policy order [left(7), right(7)]
+         action_np = np.asarray(action, dtype=float).reshape(-1)
+ 
+-        # For real Aloha, the low-level env and hardware expect [right 7, left 7].
+-        if action_np.shape[0] == 14:
++        # When swap_arms=True, convert policy [left,right] → hardware [right,left].
++        # When swap_arms=False, pass through as-is (model already outputs hw order).
++        if self._swap_arms and action_np.shape[0] == 14:
+             left = action_np[:7].copy()
+             right = action_np[7:14].copy()
+             env_cmd_np = np.concatenate([right, left], axis=0)
+@@ -99,8 +104,12 @@ class AlohaRobot:
+ 
+ 
+ class MujocoAlohaRobot:
+-    def __init__(self, task):
++    # Joint names for wx250s arm (6 DOF, no gripper) — must match URDF/controller
++    _ARM_JOINT_NAMES = ['waist', 'shoulder', 'elbow', 'forearm_roll', 'wrist_angle', 'wrist_rotate']
++
++    def __init__(self, task, fps: float = 50.0):
+         self.task = task
++        self._fps = fps
+ 
+         # Defer env creation to reset() to handle threading contexts
+         self.env = None
+@@ -109,25 +118,35 @@ class MujocoAlohaRobot:
+         # reward threshold used for success statistics downstream
+         self.success_reward_threshold = 4
+ 
+-        # Rendering options: render on-demand in capture_observation (not in env.step)
++        # Rendering options
+         self._camera_ids = ("top", "angle", "left_wrist", "right_wrist")
+         self._render_height = 480
+         self._render_width = 640
+ 
+         self.cache_images = None
+ 
+-    def reset(self):
+-        # Re-create env to ensure fresh OpenGL context for the new thread
+-        if self.env is not None:
+-            try:
+-                self.env.close()
+-            except Exception:
+-                pass
++        # Thread-safe observation cache
++        self._obs_cache: dict = {}
++        self._obs_cache_lock = Lock()
++
++        # Lock to protect physics.data between env.step (write) and
++        # renderer.update_scene (read).  Both hold it for <1ms.
++        self._physics_lock = Lock()
++
++        # Event-based render coordination:
++        # get_actions sets _render_request + clears _render_done, then waits.
++        # Render thread picks it up, renders all 4 cameras, signals _render_done.
++        self._render_request: bool = False
++        self._render_done: Event = Event()
++        self._render_done.set()
++
++        # Separate render thread state (initialized in _start_render_thread)
++        self._render_thread = None
++        self._render_shutdown = Event()
+ 
+-        # Local dm_control sim: keep the repo's environment API/observations.
+-        # Note: the sim loader may still reuse gym_aloha STL meshes via
+-        # `ALOHA_MESH_ASSETS_DIR` or `gym_aloha.constants.ASSETS_DIR` (see sim/sim_env.py).
++    def reset(self):
+         import sys
++        import dm_env
+ 
+         curr_dir = Path(__file__).parent
+         if str(curr_dir) not in sys.path:
+@@ -135,6 +154,7 @@ class MujocoAlohaRobot:
+ 
+         from sim.sim_env import BOX_POSE, make_sim_env
+         from sim.utils import sample_box_pose, sample_insertion_pose
++        from sim.constants import START_ARM_POSE, PUPPET_GRIPPER_POSITION_NORMALIZE_FN
+ 
+         task_name = self.task
+         if "transfer" in (task_name or "").lower():
+@@ -142,45 +162,268 @@ class MujocoAlohaRobot:
+         elif "insertion" in (task_name or "").lower():
+             task_name = "sim_insertion_scripted"
+ 
+-        logger.info("Creating local dm_control simulation environment: %s", task_name)
+-        self.env = make_sim_env(
+-            task_name,
+-            render_images=False,
++        if self.env is None:
++            # First episode: create env from scratch
++            self.env = make_sim_env(task_name, render_images=False)
++
++            if "sim_transfer_cube" in task_name:
++                BOX_POSE[0] = sample_box_pose()
++            elif "sim_insertion" in task_name:
++                BOX_POSE[0] = np.concatenate(sample_insertion_pose())
++
++            self.time_step = self.env.reset()
++
++            # First episode: synchronous render then start render thread
++            self._render_request = False
++            self._render_done.set()
++            self._do_full_render()
++            self._start_render_thread()
++        else:
++            # Subsequent episodes: reuse env (keeps GL context on this thread).
++            # Hold _physics_lock during env.reset to prevent render thread from
++            # reading inconsistent physics data.
++            self._in_reset = True
++            prev_qpos = self.env.physics.data.qpos[:16].copy()
++
++            # Randomize object position
++            if "sim_transfer_cube" in task_name:
++                BOX_POSE[0] = sample_box_pose()
++            elif "sim_insertion" in task_name:
++                BOX_POSE[0] = np.concatenate(sample_insertion_pose())
++
++            with self._physics_lock:
++                # env.reset() calls initialize_episode which sets START_ARM_POSE + BOX_POSE
++                self.time_step = self.env.reset()
++
++                # Restore previous arm state for smooth interpolation.
++                # Do NOT use physics.reset_context() here — it calls physics.reset()
++                # internally and would wipe out the cube position we just set.
++                self.env.physics.data.qpos[:16] = prev_qpos
++                self.env.physics.data.qvel[:] = 0
++                self.env.physics.forward()
++
++            obs = self.env._task.get_observation(self.env.physics)
++            self.time_step = dm_env.TimeStep(
++                step_type=dm_env.StepType.FIRST,
++                reward=None, discount=None, observation=obs,
++            )
++
++            # Smooth interpolation to start pose
++            self._reset_joints(START_ARM_POSE, PUPPET_GRIPPER_POSITION_NORMALIZE_FN)
++
++            # Zero velocities and stabilize
++            with self._physics_lock:
++                self.env.physics.data.qvel[:] = 0
++                self.env.physics.forward()
++
++            obs = self.env._task.get_observation(self.env.physics)
++            self.time_step = dm_env.TimeStep(
++                step_type=dm_env.StepType.FIRST,
++                reward=None, discount=None, observation=obs,
++            )
++
++            # Use render thread for full render (don't create a second EGL context
++            # on actor thread — that causes intermittent crashes).
++            self._render_request = False
++            self._render_done.clear()
++            self._render_request = True
++            if not self._render_done.wait(timeout=1.0):
++                logger.warning("[RENDER] reset: render timed out, using stale cache")
++        self._in_reset = False
++
++    def _reset_joints(self, start_arm_pose, gripper_normalize_fn, moving_time=2.0):
++        """Move arms to start pose by interpolating commands."""
++        import time as _time
++
++        action_interval = 1.0 / self._fps
++        num_steps = int(moving_time / action_interval)
++
++        # Get current qpos: [left_arm(6), left_gripper(1), right_arm(6), right_gripper(1)]
++        current_qpos = self.env._task.get_qpos(self.env.physics)
++        current_left_arm = current_qpos[0:6]
++        current_right_arm = current_qpos[7:13]
++
++        # Target arm positions from START_ARM_POSE (raw 16-dim)
++        target_left_arm = np.array(start_arm_pose[0:6])
++        target_right_arm = np.array(start_arm_pose[8:14])
++
++        # Target gripper (normalized): START_ARM_POSE[6] is raw gripper pos
++        target_left_gripper = gripper_normalize_fn(start_arm_pose[6])
++        target_right_gripper = gripper_normalize_fn(start_arm_pose[14])
++
++        # Interpolate
++        left_traj = np.linspace(current_left_arm, target_left_arm, num_steps)
++        right_traj = np.linspace(current_right_arm, target_right_arm, num_steps)
++
++        # Build full reset trajectory [num_steps, 14]
++        reset_traj = np.zeros((num_steps, 14))
++        for t in range(num_steps):
++            reset_traj[t, 0:6] = left_traj[t]
++            reset_traj[t, 6] = target_left_gripper
++            reset_traj[t, 7:13] = right_traj[t]
++            reset_traj[t, 13] = target_right_gripper
++
++        # Execute step by step (render thread handles visualization independently)
++        for t in range(num_steps):
++            start_time = _time.perf_counter()
++            self.send_action(reset_traj[t])
++            dt_s = _time.perf_counter() - start_time
++            _time.sleep(max(0, action_interval - dt_s))
++
++    # ─── Render thread infrastructure ───────────────────────────────────────────
++
++    def _start_render_thread(self):
++        """Start a dedicated render thread with its own EGL context via mujoco.Renderer."""
++        import threading
++        if self._render_thread is not None:
++            return  # already running
++
++        self._render_shutdown.clear()
++        self._render_thread = threading.Thread(
++            target=self._render_loop,
++            name="mujoco_render",
++            daemon=True,
+         )
++        self._render_thread.start()
++
++    def _render_loop(self):
++        """Render thread main loop.  Creates its own mujoco.Renderer (own EGL context).
++
++        Two modes:
++          - Visualization: renders "angle" camera at ~24fps, updates cache_images.
++          - Inference: on _render_request, renders all 4 cameras, updates _obs_cache.
++        """
++        import mujoco as mj
++        import time as _time
+ 
+-        if "sim_transfer_cube" in task_name:
+-            BOX_POSE[0] = sample_box_pose()
+-        elif "sim_insertion" in task_name:
+-            BOX_POSE[0] = np.concatenate(sample_insertion_pose())
++        model = self.env.physics.model.ptr
+ 
+-        self.time_step = self.env.reset()
++        # Create per-camera renderers (each gets its own EGL context internally)
++        renderers = {}
++        for cam_id in self._camera_ids:
++            renderers[cam_id] = mj.Renderer(model, self._render_height, self._render_width)
++
++        viz_interval = 1.0 / 24.0  # 24 FPS for visualization
++        last_viz_time = 0.0
++
++        logger.info("[RENDER] Render thread started (24fps viz, on-demand inference)")
++
++        try:
++            while not self._render_shutdown.is_set():
++                now = _time.perf_counter()
++
++                if self._render_request:
++                    # Full 4-camera render for inference. Re-fetch data ptr each
++                    # call so mujoco re-syncs derived state (xpos etc.) after a
++                    # reset_context() write — without this the rendered cube
++                    # position can lag the physics qpos.
++                    rendered = {}
++                    with self._physics_lock:
++                        data = self.env.physics.data.ptr
++                        for cam_id in self._camera_ids:
++                            renderers[cam_id].update_scene(data, camera=cam_id)
++                    for cam_id in self._camera_ids:
++                        rendered[cam_id] = renderers[cam_id].render().copy()
++
++                    images = {}
++                    if "top" in rendered:
++                        images["camera_high"] = rendered["top"]
++                    if "angle" in rendered:
++                        images["camera_low"] = rendered["angle"]
++                    if "left_wrist" in rendered:
++                        images["camera_wrist_left"] = rendered["left_wrist"]
++                    if "right_wrist" in rendered:
++                        images["camera_wrist_right"] = rendered["right_wrist"]
++
++                    self.cache_images = rendered
++
++                    snapshot = {
++                        "images": images,
++                        "qpos": self.time_step.observation.get("qpos") if self.time_step else None,
++                    }
++                    with self._obs_cache_lock:
++                        self._obs_cache = snapshot
++
++                    self._render_request = False
++                    self._render_done.set()
++                    last_viz_time = _time.perf_counter()
++
++                elif now - last_viz_time >= viz_interval:
++                    # Visualization: single "angle" camera
++                    with self._physics_lock:
++                        data = self.env.physics.data.ptr
++                        renderers["angle"].update_scene(data, camera="angle")
++                    rendered_angle = renderers["angle"].render().copy()
++
++                    if self.cache_images is None:
++                        self.cache_images = {}
++                    self.cache_images["angle"] = rendered_angle
++                    last_viz_time = _time.perf_counter()
++                else:
++                    # Sleep briefly to avoid busy-waiting
++                    _time.sleep(0.002)
++
++        except Exception as e:
++            logger.error(f"[RENDER] Exception: {e}")
++            import traceback; traceback.print_exc()
++        finally:
++            for r in renderers.values():
++                try:
++                    r.close()
++                except Exception:
++                    pass
++            logger.info("[RENDER] Render thread stopped")
++
++    def _do_full_render(self):
++        """Synchronous full render (used during reset before render thread is active).
++
++        Falls back to dm_control's physics.render() on the calling thread."""
++        if self.env is None:
++            return
++        physics = self.env.physics
++        rendered = {}
++        for cam_id in self._camera_ids:
++            rendered[cam_id] = physics.render(
++                height=self._render_height, width=self._render_width, camera_id=cam_id
++            )
++
++        images = {}
++        if "top" in rendered:
++            images["camera_high"] = rendered["top"]
++        if "angle" in rendered:
++            images["camera_low"] = rendered["angle"]
++        if "left_wrist" in rendered:
++            images["camera_wrist_left"] = rendered["left_wrist"]
++        if "right_wrist" in rendered:
++            images["camera_wrist_right"] = rendered["right_wrist"]
++
++        self.cache_images = rendered
++
++        snapshot = {
++            "images": images,
++            "qpos": self.time_step.observation.get("qpos") if self.time_step else None,
++        }
++        with self._obs_cache_lock:
++            self._obs_cache = snapshot
+ 
+     def capture_observation(self, render_image: bool = False):
+         obs = self.time_step.observation
+         mapped_obs = {"images": {}}
+ 
+         if render_image:
+-            physics = self.env.physics
+-            rendered = {}
+-            for cam_id in self._camera_ids:
+-                rendered[cam_id] = physics.render(
+-                    height=self._render_height,
+-                    width=self._render_width,
+-                    camera_id=cam_id,
+-                )
+-
+-            images = {}
+-            if "top" in rendered:
+-                images["camera_high"] = rendered["top"]
+-            if "angle" in rendered:
+-                images["camera_low"] = rendered["angle"]
+-            if "left_wrist" in rendered:
+-                images["camera_wrist_left"] = rendered["left_wrist"]
+-            if "right_wrist" in rendered:
+-                images["camera_wrist_right"] = rendered["right_wrist"]
+-
+-            mapped_obs["images"] = images
+-            self.cache_images = rendered
++            # Request render thread to do a full 4-camera render.
++            self._render_done.clear()
++            self._render_request = True
++            # Wait for render thread to complete (typically <200ms for 4 cameras).
++            if not self._render_done.wait(timeout=0.5):
++                logger.warning("[RENDER] capture_observation: render timed out, using stale cache")
++            with self._obs_cache_lock:
++                cache = self._obs_cache
++            mapped_obs["images"] = cache.get("images", {})
++            cached_qpos = cache.get("qpos")
++            if cached_qpos is not None:
++                mapped_obs["qpos"] = cached_qpos
++            return mapped_obs
+ 
+         if "qpos" in obs:
+             mapped_obs["qpos"] = obs["qpos"]
+@@ -188,12 +431,42 @@ class MujocoAlohaRobot:
+         return mapped_obs
+ 
+     def send_action(self, action):
++        """Step physics. Rendering is handled entirely by the render thread."""
++        if self.env is None:
++            return None
+         if isinstance(action, torch.Tensor):
+             action = action.cpu().numpy()
+-        self.time_step = self.env.step(action)
++
++        with self._physics_lock:
++            self.time_step = self.env.step(action)
++
+         return self.time_step.reward
+ 
+     def close_env(self):
++        # Don't destroy env here — reset() saves qpos before recreating.
++        # Just let the EGL context die with the thread; reset() handles it.
++        pass
++
++    def close(self):
++        # Stop render thread first
++        self._render_shutdown.set()
++        if self._render_thread is not None:
++            self._render_thread.join(timeout=3.0)
++            self._render_thread = None
++
++        # dm_control's MjrContext / EGLContext finalizers try to call
++        # eglMakeCurrent on the main thread during interpreter shutdown, but
++        # the context is owned by the (already-stopped) actor thread, which
++        # raises EGL_BAD_ACCESS and dumps a stack trace. The process is about
++        # to exit anyway, so disable those finalizers to keep the log clean.
++        try:
++            from dm_control.mujoco.wrapper.core import MjrContext
++            from dm_control._render.base import ContextBase
++            MjrContext.__del__ = lambda self: None
++            ContextBase.__del__ = lambda self: None
++        except Exception:
++            pass
++
+         if self.env is not None:
+             try:
+                 self.env.close()
+@@ -201,14 +474,9 @@ class MujocoAlohaRobot:
+                 pass
+             self.env = None
+ 
+-    def close(self):
+-        self.close_env()
+-
+ 
+ class RobotWrapper:
+     def __init__(self, robot):
+-        from threading import Lock
+-
+         self.robot = robot
+         self.lock = Lock()
+ 
+@@ -217,6 +485,12 @@ class RobotWrapper:
+             self.robot.reset()
+ 
+     def get_observation(self, render_image: bool = False):
++        if render_image and isinstance(self.robot, MujocoAlohaRobot):
++            # Bypass RobotWrapper.lock here: capture_observation signals the
++            # dedicated render thread and waits on _render_done. Holding the
++            # lock would block send_action and prevent the render thread from
++            # reading consistent physics — leading to deadlock.
++            return self.robot.capture_observation(render_image=True)
+         with self.lock:
+             return self.robot.capture_observation(render_image=render_image)
+ 
+diff --git a/pyproject.toml b/pyproject.toml
+index 3c50396..9e04f51 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -29,7 +29,7 @@ version = "0.4.3"
+ description = "🤗 LeRobot: State-of-the-art Machine Learning for Real-World Robotics in Pytorch"
+ dynamic = ["readme"]
+ license = { text = "Apache-2.0" }
+-requires-python = ">=3.10,<3.11"
++requires-python = ">=3.12,<3.13"
+ authors = [
+     { name = "Rémi Cadène", email = "re.cadene@gmail.com" },
+     { name = "Simon Alibert", email = "alibert.sim@gmail.com" },
+@@ -50,7 +50,7 @@ classifiers = [
+     "Intended Audience :: Education",
+     "Intended Audience :: Science/Research",
+     "License :: OSI Approved :: Apache Software License",
+-    "Programming Language :: Python :: 3.10",
++    "Programming Language :: Python :: 3.12",
+     "Topic :: Software Development :: Build Tools",
+     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+ ]
+@@ -68,7 +68,7 @@ dependencies = [
+     "setuptools>=71.0.0,<81.0.0",
+     "cmake>=3.29.0.1,<4.2.0",
+     "einops>=0.8.0,<0.9.0",
+-    "opencv-python-headless>=4.9.0,<4.13.0",
++    "opencv-python>=4.9.0,<4.13.0",
+     "av>=15.0.0,<16.0.0",
+     "jsonlines>=4.0.0,<5.0.0",
+     "packaging>=24.2,<26.0",
+@@ -151,7 +151,7 @@ groot = [
+     "Pillow>=10.0.0,<13.0.0",
+     "decord>=0.6.0,<1.0.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64')",
+     "ninja>=1.11.1,<2.0.0",
+-    "flash-attn>=2.5.9,<3.0.0 ; sys_platform != 'darwin'"
++    # "flash-attn>=2.5.9,<3.0.0 ; sys_platform != 'darwin'"
+ ]
+ sarm = ["lerobot[transformers-dep]", "faker>=33.0.0,<35.0.0", "matplotlib>=3.10.3,<4.0.0", "qwen-vl-utils>=0.0.14,<0.1.0"]
+ xvla = ["lerobot[transformers-dep]"]
+@@ -222,7 +222,7 @@ lerobot-edit-dataset="lerobot.scripts.lerobot_edit_dataset:main"
+ where = ["src"]
+ 
+ [tool.ruff]
+-target-version = "py310"
++target-version = "py312"
+ line-length = 110
+ exclude = ["tests/artifacts/**/*.safetensors", "*_pb2.py", "*_pb2_grpc.py"]
+ 
+@@ -313,7 +313,7 @@ default.extend-ignore-identifiers-re = [
+ # Uncomment [tool.mypy] first, then uncomment individual module overrides as they get proper type annotations
+ 
+ [tool.mypy]
+-python_version = "3.10"
++python_version = "3.12"
+ ignore_missing_imports = true
+ follow_imports = "skip"
+ # warn_return_any = true
+diff --git a/src/lerobot/policies/rtc/action_queue.py b/src/lerobot/policies/rtc/action_queue.py
+index 3f253ff..f202921 100644
+--- a/src/lerobot/policies/rtc/action_queue.py
++++ b/src/lerobot/policies/rtc/action_queue.py
+@@ -210,9 +210,11 @@ class ActionQueue:
+             return
+ 
+         indexes_diff = self.last_index - action_index_before_inference
+-        if indexes_diff != real_delay:
+-            # Let's check that action index difference (real delay calculated based on action queue)
+-            # is the same as delay calculated based on inference latency
++        # A 1-step gap is expected: real_delay uses ceil(total_dt/step) so it
++        # rounds up by ~1 step versus what the actor actually consumed during
++        # inference. Only warn when the gap is larger, which suggests a real
++        # mismatch (e.g. actor stalled, latency tracker stale).
++        if abs(indexes_diff - real_delay) > 1:
+             logger.warning(
+                 f"[ACTION_QUEUE] Indexes diff is not equal to real delay. "
+                 f"Indexes diff: {indexes_diff}, real delay: {real_delay}"
+-- 
+2.34.1
+
