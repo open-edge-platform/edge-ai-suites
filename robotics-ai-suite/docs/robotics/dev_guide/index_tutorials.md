@@ -8,7 +8,6 @@ these tutorials provide a learning path for developers to use and configure the 
 <!--hide_directive
 :::{toctree}
 :maxdepth: 1
-:hidden:
 
 tutorials_amr/developer_kit/index
 tutorials_amr/perception/index

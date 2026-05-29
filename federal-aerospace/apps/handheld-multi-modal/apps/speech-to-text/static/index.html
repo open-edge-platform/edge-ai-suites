@@ -1,0 +1,556 @@
+<!-- SPDX-FileCopyrightText: (C) 2026 Intel Corporation -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whisper — Speech to Text</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0c0c0e;
+    --surface: #141416;
+    --surface2: #1c1c20;
+    --border: #2a2a30;
+    --accent: #e8d5a3;
+    --accent2: #c4a96a;
+    --text: #f0ede6;
+    --text-muted: #7a7870;
+    --red: #c0392b;
+    --green: #27ae60;
+    --radius: 12px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  header h1 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  header p {
+    margin-top: 16px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  header img {
+    max-height: 40px;
+    opacity: 0.8;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    width: 100%;
+    max-width: 720px;
+    margin-bottom: 20px;
+  }
+
+  .card-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 18px;
+  }
+
+  /* ── Record button ── */
+  .record-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  #recordBtn {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    position: relative;
+    outline: none;
+  }
+
+  #recordBtn:hover { border-color: var(--accent2); transform: scale(1.04); }
+
+  #recordBtn .dot {
+    width: 26px; height: 26px;
+    background: var(--accent);
+    border-radius: 50%;
+    transition: border-radius 0.25s, background 0.2s, transform 0.25s;
+  }
+
+  #recordBtn.recording {
+    border-color: var(--red);
+    box-shadow: 0 0 0 6px rgba(192,57,43,0.15);
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  #recordBtn.recording .dot {
+    background: var(--red);
+    border-radius: 4px;
+    transform: scale(1.15);
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 6px rgba(192,57,43,0.15); }
+    50% { box-shadow: 0 0 0 14px rgba(192,57,43,0.05); }
+  }
+
+  #statusText {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    height: 18px;
+    transition: color 0.2s;
+  }
+
+  #statusText.active { color: var(--accent); }
+  #statusText.error { color: var(--red); }
+
+  /* ── Upload ── */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 24px 0;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .upload-area {
+    border: 1.5px dashed var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .upload-area:hover { border-color: var(--accent2); background: rgba(232,213,163,0.03); }
+  .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-area span { font-size: 0.78rem; color: var(--text-muted); }
+  .upload-area .file-name { font-size: 0.78rem; color: var(--accent); margin-top: 6px; }
+
+  /* ── Transcribe button ── */
+  #transcribeBtn {
+    width: 100%;
+    padding: 14px;
+    margin-top: 20px;
+    background: var(--accent);
+    color: #0c0c0e;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+  #transcribeBtn:hover { background: var(--accent2); }
+  #transcribeBtn:active { transform: scale(0.99); }
+  #transcribeBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* ── Result ── */
+  .result-card { display: none; }
+  .result-card.visible { display: block; }
+
+  .result-meta {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+  .badge span { color: var(--accent); }
+
+  #transcriptText {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1.3rem;
+    line-height: 1.7;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .copy-btn {
+    margin-top: 20px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .copy-btn:hover { border-color: var(--accent2); color: var(--accent); }
+
+  /* ── Segments ── */
+  .segments-toggle {
+    margin-top: 24px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+  .segments-toggle:hover { color: var(--accent); }
+
+  #segmentsList { display: none; margin-top: 16px; }
+  #segmentsList.open { display: block; }
+
+  .segment {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+  .segment:last-child { border-bottom: none; }
+  .seg-time { color: var(--text-muted); white-space: nowrap; }
+  .seg-text { color: var(--text); }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid rgba(12,12,14,0.3);
+    border-top-color: #0c0c0e;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Model selector ── */
+  .model-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .model-row label { font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.06em; }
+  #modelInfo {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 4px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  #modelInfo span { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Whisper <em>Transcription</em></h1>
+</header>
+
+<div class="card">
+  <div class="card-label">Input</div>
+
+  <div id="modelInfo">Model: <span id="modelName">…</span></div>
+
+  <div style="height:24px"></div>
+
+  <div class="record-zone">
+    <button id="recordBtn" title="Click to record">
+      <div class="dot"></div>
+    </button>
+    <div id="statusText">Click to record</div>
+  </div>
+
+  <div class="divider">or upload a file</div>
+
+  <div class="upload-area" id="uploadArea">
+    <input type="file" id="fileInput" accept="audio/*,video/*">
+    <span>Drop an audio / video file here<br><small style="opacity:0.6">mp3 · wav · ogg · webm · mp4 · m4a · flac</small></span>
+    <div class="file-name" id="fileName"></div>
+  </div>
+
+  <button id="transcribeBtn" disabled>Transcribe</button>
+</div>
+
+<div class="card result-card" id="resultCard">
+  <div class="card-label">Transcript</div>
+  <div class="result-meta">
+    <div class="badge">Language: <span id="langBadge">—</span></div>
+    <div class="badge">Words: <span id="wordsBadge">—</span></div>
+    <div class="badge">Time: <span id="timeBadge">—</span>s</div>
+  </div>
+  <div id="transcriptText"></div>
+  <button class="copy-btn" id="copyBtn">Copy to clipboard</button>
+  <br>
+  <button class="segments-toggle" id="segmentsToggle">Show timestamps ↓</button>
+  <div id="segmentsList"></div>
+</div>
+
+<script>
+const recordBtn = document.getElementById('recordBtn');
+const statusText = document.getElementById('statusText');
+const fileInput = document.getElementById('fileInput');
+const fileName = document.getElementById('fileName');
+const transcribeBtn = document.getElementById('transcribeBtn');
+const resultCard = document.getElementById('resultCard');
+const transcriptText = document.getElementById('transcriptText');
+const langBadge = document.getElementById('langBadge');
+const wordsBadge = document.getElementById('wordsBadge');
+const copyBtn = document.getElementById('copyBtn');
+const segmentsToggle = document.getElementById('segmentsToggle');
+const segmentsList = document.getElementById('segmentsList');
+const modelName = document.getElementById('modelName');
+
+let mediaRecorder = null;
+let audioChunks = [];
+let recordedBlob = null;
+let uploadedFile = null;
+let segmentsData = [];
+
+// Fetch model info
+fetch('/health').then(r => r.json()).then(d => { modelName.textContent = d.model; });
+
+// ── Recording ──
+recordBtn.addEventListener('click', async () => {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      uploadedFile = null;
+      fileName.textContent = '';
+      fileInput.value = '';
+      recordBtn.classList.remove('recording');
+      statusText.textContent = `Recording ready (${(recordedBlob.size / 1024).toFixed(0)} KB)`;
+      statusText.className = 'active';
+      transcribeBtn.disabled = false;
+    };
+    mediaRecorder.start();
+    recordBtn.classList.add('recording');
+    statusText.textContent = 'Recording… click to stop';
+    statusText.className = 'active';
+    transcribeBtn.disabled = true;
+  } catch(e) {
+    statusText.textContent = 'Microphone access denied';
+    statusText.className = 'error';
+  }
+});
+
+// ── File upload ──
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) {
+    uploadedFile = fileInput.files[0];
+    recordedBlob = null;
+    fileName.textContent = uploadedFile.name;
+    statusText.textContent = 'File ready';
+    statusText.className = 'active';
+    transcribeBtn.disabled = false;
+  }
+});
+
+// Drag & drop
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--accent2)'; });
+uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+uploadArea.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadArea.style.borderColor = '';
+  const file = e.dataTransfer.files[0];
+  if (file) { uploadedFile = file; recordedBlob = null; fileName.textContent = file.name; statusText.textContent = 'File ready'; statusText.className = 'active'; transcribeBtn.disabled = false; }
+});
+
+// ── Transcribe ──
+transcribeBtn.addEventListener('click', async () => {
+  const blob = recordedBlob || uploadedFile;
+  if (!blob) return;
+
+  transcribeBtn.disabled = true;
+  transcribeBtn.innerHTML = '<span class="spinner"></span>Transcribing…';
+  resultCard.classList.remove('visible');
+
+  const form = new FormData();
+  form.append('audio', blob, recordedBlob ? 'recording.webm' : uploadedFile.name);
+
+  try {
+    const startTime = Date.now();
+    const useStreaming = true; // Enable streaming by default
+    const url = `/transcribe${useStreaming ? '?stream=true' : ''}`;
+
+    const res = await fetch(url, { method: 'POST', body: form });
+
+    if (useStreaming) {
+      // Handle streaming NDJSON response
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let allSegments = [];
+      let fullText = '';
+
+      resultCard.classList.add('visible');
+      transcriptText.textContent = '(transcribing in real-time...)';
+      let accumulatedText = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (!line) continue;
+
+          try {
+            const chunk = JSON.parse(line);
+
+            if (chunk.type === 'chunk') {
+              // Accumulate text from each chunk
+              const chunkText = chunk.segments.map(s => s.text).join(' ').trim();
+              if (chunkText) {
+                accumulatedText = accumulatedText ? accumulatedText + ' ' + chunkText : chunkText;
+              }
+              transcriptText.textContent = accumulatedText || '(processing...)';
+              allSegments = [...allSegments, ...chunk.segments];
+            }
+            else if (chunk.type === 'complete') {
+              // Final result
+              fullText = chunk.text;
+              allSegments = chunk.all_segments;
+              const processingTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+              transcriptText.textContent = fullText || '(no speech detected)';
+              langBadge.textContent = chunk.language || '—';
+              wordsBadge.textContent = fullText ? fullText.split(/\s+/).filter(Boolean).length : 0;
+              document.getElementById('timeBadge').textContent = processingTime;
+
+              segmentsData = allSegments;
+              renderSegments();
+            }
+          } catch (e) {
+            console.error('Error parsing chunk:', e);
+          }
+        }
+      }
+    } else {
+      // Original non-streaming mode
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      transcriptText.textContent = data.text || '(no speech detected)';
+      langBadge.textContent = data.language || '—';
+      wordsBadge.textContent = data.text ? data.text.split(/\s+/).filter(Boolean).length : 0;
+      document.getElementById('timeBadge').textContent = data.processing_time_seconds;
+
+      segmentsData = data.segments || [];
+      renderSegments();
+      resultCard.classList.add('visible');
+    }
+
+    resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch(e) {
+    statusText.textContent = 'Error: ' + e.message;
+    statusText.className = 'error';
+  } finally {
+    transcribeBtn.disabled = false;
+    transcribeBtn.textContent = 'Transcribe';
+  }
+});
+
+// ── Segments ──
+function renderSegments() {
+  segmentsList.innerHTML = segmentsData.map(s =>
+    `<div class="segment"><span class="seg-time">${fmt(s.start)} → ${fmt(s.end)}</span><span class="seg-text">${s.text}</span></div>`
+  ).join('');
+}
+function fmt(sec) {
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+segmentsToggle.addEventListener('click', () => {
+  const open = segmentsList.classList.toggle('open');
+  segmentsToggle.textContent = open ? 'Hide timestamps ↑' : 'Show timestamps ↓';
+});
+
+// ── Copy ──
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(transcriptText.textContent).then(() => {
+    copyBtn.textContent = 'Copied ✓';
+    setTimeout(() => { copyBtn.textContent = 'Copy to clipboard'; }, 2000);
+  });
+});
+</script>
+</body>
+</html>

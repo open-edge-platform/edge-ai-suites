@@ -3,6 +3,8 @@ import type { ActionData } from '../../types/nicu';
 
 interface ActionCardProps {
   action: ActionData;
+  systemStatus?: string;
+  patientDetected?: boolean;
 }
 
 const MOTION_COLORS: Record<string, string> = {
@@ -16,9 +18,11 @@ const MOTION_COLORS: Record<string, string> = {
 // Hold movement state for this many ms so the user can read it
 const STICKY_HOLD_MS = 2000;
 
-const ActionCard: React.FC<ActionCardProps> = ({ action }) => {
+const ActionCard: React.FC<ActionCardProps> = ({ action, systemStatus, patientDetected }) => {
+  const pipelineRunning = systemStatus === 'running' || systemStatus === 'starting';
   const isValid = action.status === 'valid';
   const isError = action.status === 'error';
+  const isWarmingUp = action.status === 'warming_up' && !pipelineRunning;
   const motionLevel = action.motion_level || 'unknown';
   const topActivity = action.top_activity || 'Unknown';
   const isModelStill = topActivity === 'Resting / Still';
@@ -57,6 +61,20 @@ const ActionCard: React.FC<ActionCardProps> = ({ action }) => {
     pillMod = 'nicu-det-pill--off';
     pillText = '✗ ERR';
     subText = 'Error';
+    confColor = '#999';
+    confValue = 0;
+  } else if (isWarmingUp) {
+    cardMod = 'nicu-det-card--off';
+    pillMod = 'nicu-det-pill--off';
+    pillText = '⏳ WAITING';
+    subText = 'Waiting for pipeline';
+    confColor = '#999';
+    confValue = 0;
+  } else if (!isValid && pipelineRunning && !patientDetected) {
+    cardMod = 'nicu-det-card--off';
+    pillMod = 'nicu-det-pill--off';
+    pillText = 'IDLE';
+    subText = 'No patient detected';
     confColor = '#999';
     confValue = 0;
   } else if (!isValid || isStill) {

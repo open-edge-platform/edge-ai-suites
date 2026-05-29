@@ -11,7 +11,7 @@ image:
   # Type: string
   repository: intel/dlstreamer-pipeline-server
   # Type: string
-  tag: "2026.0.0-ubuntu24"
+  tag: "2026.1.0-ubuntu24-rc1"
   # Type: string
   pullPolicy: IfNotPresent
 

@@ -80,7 +80,7 @@ cd smart-nvr
 Clone the repository containing the Helm chart:
 
 ```bash
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 ```
 
 ##### Step 2: Change to the Chart Directory
@@ -113,7 +113,7 @@ Update or edit the values in YAML file as follows:
 | `nvr-event-router.env.VSS_SEARCH_PORT` | VSS Search port | `<your-vss-search-port>` |
 | `nvr-event-router.env.VSS_SUMMARY_IP` | VSS summary IP | `http://<your-vss-summary-ip>` |
 | `nvr-event-router.env.VSS_SUMMARY_PORT` | VSS summary port | `<your-vss-summary-port>` |
-| `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR  | `true/false` |
+| `nvr-event-router-ui.NVR_GENAI` | Flag to enable GENAI on Frigate NVR | `true/false` |
 
 ### 3. Build Helm Dependencies
 

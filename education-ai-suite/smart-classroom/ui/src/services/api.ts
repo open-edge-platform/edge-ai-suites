@@ -61,6 +61,13 @@ export function getContentSearchFileUrl(filePath: string): string {
   return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`;
 }
 
+/**
+ * Returns the download URL for an OCR text file (triggers download, not inline display).
+ */
+export function getOcrDownloadUrl(fileKey: string): string {
+  return `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}`;
+}
+
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     promise,
@@ -785,7 +792,7 @@ export async function csUploadIngest(
     });
     if (!res.ok) {
       const json = await res.json().catch(() => ({}));
-      throw new Error(json.message || `Upload-ingest failed (${res.status})`);
+      throw new Error(json.detail || json.message || `Upload-ingest failed (${res.status})`);
     }
     const data = await res.json();
     // code 40901 = file already exists; backend returns task_id for cleanup
@@ -854,6 +861,46 @@ export async function csCleanupTask(
       status: data.data?.status ?? 'COMPLETED',
       message: data.message ?? '',
     };
+  });
+}
+
+export async function getCsSystemConfig(): Promise<{
+  vlm_model: string;
+  visual_embedding_model: string;
+  doc_embedding_model: string;
+  reranker_model: string;
+  vector_db: string;
+  video_summarization_enabled: boolean;
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/config`);
+    if (!res.ok) throw new Error(`System config failed (${res.status})`);
+    return res.json();
+  });
+}
+
+export interface CsHealthStatus {
+  status: 'ok' | 'degraded';
+  timestamp: number;
+  video_summarization_enabled: boolean;
+  services: Record<string, string>;
+}
+
+export async function getCsHealth(): Promise<CsHealthStatus> {
+  const res = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/system/health`);
+  if (!res.ok) throw new Error(`Health check failed: ${res.status}`);
+  return res.json();
+}
+
+export async function csDownloadText(fileKey: string): Promise<string> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/download?file_key=${encodeURIComponent(fileKey)}&inline=true`
+    );
+    if (!res.ok) {
+      throw new Error(`Download failed (${res.status})`);
+    }
+    return await res.text();
   });
 }
 
@@ -1048,27 +1095,27 @@ export async function searchContent(sessionId: string, query: string, topK: numb
 
 // Content Search API - search for objects
 export async function csSearch(params: CsSearchParams): Promise<CsSearchResult[]> {
+  let response: Response;
   try {
-    const response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
+    response = await fetch(`${CONTENT_SEARCH_API_URL}/api/v1/object/search`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(params),
     });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Content search failed: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-    // API returns { code, data: { results: [...] }, message, timestamp }
-    return Array.isArray(data?.data?.results) ? data.data.results : [];
   } catch (error) {
-    console.error('csSearch error:', error);
-    return [];
+    throw new Error('BACKEND_UNAVAILABLE');
   }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Content search failed: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  // API returns { code, data: { results: [...] }, message, timestamp }
+  return Array.isArray(data?.data?.results) ? data.data.results : [];
 }
 
 // ── Q&A types ──────────────────────────────────────────────────────────────
@@ -1120,4 +1167,88 @@ export async function csQaAsk(params: QAAskParams): Promise<QAAskResult> {
     answer: data.data?.answer ?? '',
     sources: Array.isArray(data.data?.sources) ? data.data.sources : [],
   };
+}
+
+// Content Search API - Get all unique tags from uploaded files
+export async function csGetTags(): Promise<string[]> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/tags`,
+      { method: 'GET' }
+    );
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Tags fetch failed (${res.status})`);
+    }
+    const data = await res.json();
+    return Array.isArray(data?.data) ? data.data : [];
+  });
+}
+
+/** Map a MIME type string to a short, display-friendly extension label (e.g. "DOCX"). */
+export function mimeToShortType(mimeType: string): string {
+  const MIME_MAP: Record<string, string> = {
+    // Documents
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'DOCX',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'XLSX',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'PPTX',
+    'application/msword': 'DOC',
+    'application/vnd.ms-excel': 'XLS',
+    'application/vnd.ms-powerpoint': 'PPT',
+    'application/pdf': 'PDF',
+    'text/plain': 'TXT',
+    'text/csv': 'CSV',
+    'application/json': 'JSON',
+    // Images
+    'image/jpeg': 'JPEG',
+    'image/png': 'PNG',
+    'image/gif': 'GIF',
+    'image/webp': 'WEBP',
+    'image/svg+xml': 'SVG',
+    // Video
+    'video/mp4': 'MP4',
+    'video/webm': 'WEBM',
+    'video/ogg': 'OGG',
+    'video/quicktime': 'MOV',
+    // Audio
+    'audio/mpeg': 'MP3',
+    'audio/wav': 'WAV',
+    'audio/ogg': 'OGG',
+    'audio/mp4': 'M4A',
+  };
+  if (MIME_MAP[mimeType]) return MIME_MAP[mimeType];
+  // Fallback: take the subtype part and uppercase it
+  const sub = mimeType.split('/')[1] ?? mimeType;
+  // Strip vnd.* and x.* prefixes for unknown types
+  return sub.replace(/^(vnd\.|x-)/, '').split('.').pop()!.toUpperCase();
+}
+
+// Content Search API - Get list of uploaded files
+export async function csGetFilesList(): Promise<{
+  code: number;
+  data: {
+    total: number;
+    files: Array<{
+      file_hash: string;
+      file_name: string;
+      content_type: string;
+      size_bytes: number;
+      meta: Record<string, unknown>;
+      created_at: string;
+      task_id?: string;
+    }>;
+  };
+  message: string;
+}> {
+  return safeApiCall(async () => {
+    const res = await fetch(
+      `${CONTENT_SEARCH_API_URL}/api/v1/object/files/list`,
+      { method: 'GET' }
+    );
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}));
+      throw new Error(json.message || `Files list failed (${res.status})`);
+    }
+    return await res.json();
+  });
 }

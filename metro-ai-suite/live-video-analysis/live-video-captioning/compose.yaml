@@ -23,7 +23,7 @@ services:
       - app_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.0.0-ubuntu24
+    image: intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -125,7 +125,7 @@ services:
       - app_network
 
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.12
     container_name: coturn
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}

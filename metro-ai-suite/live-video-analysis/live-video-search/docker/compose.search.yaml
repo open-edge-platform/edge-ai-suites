@@ -238,6 +238,11 @@ services:
       ALLOW_ORIGINS: ${ALLOW_ORIGINS:-*}
       ALLOW_METHODS: ${ALLOW_METHODS:-*}
       ALLOW_HEADERS: ${ALLOW_HEADERS:-*}
+    ulimits:
+        nofile:
+            soft: 32768
+            hard: 65535
+    ipc: host
     ports:
       - "${VDMS_DATAPREP_HOST_PORT}:8000"
     depends_on:
@@ -263,7 +268,7 @@ services:
       - ov_models:/home/appuser/.cache/huggingface
       - ov_models:${OV_MODELS_DIR:-/app/ov_models}
     devices:
-      - /dev/dri:/dev/dri
+      - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
     group_add:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}
@@ -291,7 +296,7 @@ services:
       DEFAULT_NUM_FRAMES: ${DEFAULT_NUM_FRAMES}
       OV_PERFORMANCE_MODE: ${OV_PERFORMANCE_MODE:-THROUGHPUT}
     devices:
-      - /dev/dri:/dev/dri
+      - ${DRI_MOUNT_PATH:-/dev/null}:/dev/dri
     group_add:
       - ${USER_GROUP_ID:-1000}
       - ${VIDEO_GROUP_ID:-44}

@@ -1,5 +1,17 @@
 # Release Notes
 
+## Version 1.5.0
+
+**New**
+
+- Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
+- Deprecated EMF deployment packages.
+
+**Improved**
+
+- Optimized the latency for GPU and NPU workloads. 
+- DL Streamer and DL Streamer Pipeline Server versions upgraded to 2026.1.0 
+
 ## v1.4.0
 
 **New**

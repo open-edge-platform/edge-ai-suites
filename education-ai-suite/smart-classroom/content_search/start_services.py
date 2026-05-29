@@ -52,6 +52,8 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         storage = cs.get("storage", {})
         _set("STORAGE_DATA_DIR", storage.get("data_dir", "./data/local_storage"))
         _set("STORAGE_BUCKET", storage.get("bucket", "content-search"))
+        _set("DOCUMENT_MAX_MB", storage.get("document_max_mb", 100))
+        _set("VIDEO_MAX_MB", storage.get("video_max_mb", 1024))
 
         # VLM
         vlm = cs.get("vlm", {})
@@ -70,8 +72,11 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("INGEST_HOST", ingest.get("host_addr", "127.0.0.1"))
         _set("INGEST_PORT", ingest.get("port", "9990"))
         _set("FRAME_EXTRACT_INTERVAL", str(ingest.get("frame_extract_interval", 15)))
+        _set("FRAME_EXTRACT_INTERVAL_SPARSE", str(ingest.get("frame_extract_interval_sparse", 90)))
         _set("DO_DETECT_AND_CROP", str(ingest.get("do_detect_and_crop", False)).lower())
         _set("INGEST_DEVICE", ingest.get("doc_embedding_device", "CPU"))
+        _set("VISUAL_EMBEDDING_MODEL", ingest.get("visual_embedding_model", "CLIP/clip-xlm-roberta-base-vit-b-32"))
+        _set("DOC_EMBEDDING_MODEL", ingest.get("doc_embedding_model", "intfloat/multilingual-e5-small"))
 
         # Document Parser
         doc_parser = ingest.get("document_parser", {})
@@ -84,7 +89,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         # Reranker
         reranker = ingest.get("reranker", {})
-        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-large"))
+        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-base"))
         _set("RERANKER_DEVICE", reranker.get("device", "CPU"))
         _set("RERANKER_DEDUP_TIME_THRESHOLD", str(reranker.get("dedup_time_threshold", 5)))
         _set("RERANKER_OVERFETCH_MULTIPLIER", str(reranker.get("overfetch_multiplier", 3)))
@@ -98,6 +103,11 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
         _set("QA_MAX_TOKENS", str(qa.get("max_tokens", 1024)))
         _set("QA_MAX_HISTORY_TURNS", str(qa.get("max_history_turns", 3)))
         _set("VLM_CONTEXT_WINDOW", str(qa.get("context_window", 16384)))
+        _set("QA_RETRIEVAL_SCORE_THRESHOLD", str(qa.get("retrieval_score_threshold", 85)))
+
+        # App-level language (en or zh)
+        app = data.get("app", {})
+        _set("APP_LANGUAGE", app.get("language", "en"))
 
         # Main App Portal
         _set("CS_HOST", cs.get("host_addr", "127.0.0.1"))

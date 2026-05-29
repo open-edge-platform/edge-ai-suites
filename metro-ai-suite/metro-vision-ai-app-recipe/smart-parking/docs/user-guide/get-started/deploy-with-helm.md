@@ -28,7 +28,7 @@ Before you can deploy with Helm, you must clone the repository and download the 
 
 ```bash
 # Clone the repository
-git clone https://github.com/open-edge-platform/edge-ai-suites.git
+git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
 
 # Navigate to the Metro AI Suite directory
 cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
@@ -45,10 +45,10 @@ Optional: Pull the Helm chart and replace the existing `helm-chart` folder with 
 cd smart-parking
 
 #Download helm chart with the following command
-helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.4.0
+helm pull oci://registry-1.docker.io/intel/smart-parking --version 1.5.0-rc1
 
 #unzip the package using the following command
-tar -xvf smart-parking-1.4.0.tgz
+tar -xvf smart-parking-1.5.0-rc1.tgz
 
 #Replace the helm directory
 rm -rf helm-chart && mv smart-parking helm-chart

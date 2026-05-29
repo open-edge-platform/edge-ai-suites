@@ -4,7 +4,7 @@ Live Video Search is a Metro AI Suite sample that adapts the VSS pipeline for se
 
 ## Prerequisites
 
-- Verify that your system meets the [minimum requirements](./system-requirements.md).
+- Verify that your system meets the [minimum requirements](./get-started/system-requirements.md).
 - Install Docker tool: [Installation Guide](https://docs.docker.com/get-docker/).
 - Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
 
@@ -286,16 +286,20 @@ For RTSP test mode, start again with:
 
 - `source setup.sh --start-rtsp-test`
 
+### Accuracy of search results
+The accuracy of search results vary based on multiple factors as listed in the VSS troubleshooting guide. The same considerations hold true for Live Video Search too as the same VSS backend is used. If the user is using the RTSP test mode (`--start-rtsp-test`), the same video content is played in a loop and added to the embedding space. So, irrespective of the query, the same search results will be returned. It is advised that the user not use the RTSP test mode to check accuracy of the search results. Live camera feed is advised. Alternatively, accuracy aspects can be delegated to VSS since the backend is the same and Live Video Search used exclusively to note the performance on given hardware platform.
+
 ## References
 
 - [Smart NVR docs](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/smart-nvr/get-started.html)
-- [VSS API (public)](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/sample-applications/video-search-and-summarization/docs/user-guide)
+- [VSS API](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/video-search-and-summarization/api-reference.html)
 
 <!--hide_directive
 :::{toctree}
 :hidden:
 
 get-started/system-requirements.md
+get-started/build-from-source.md
 get-started/deploy-with-helm.md
 
 :::

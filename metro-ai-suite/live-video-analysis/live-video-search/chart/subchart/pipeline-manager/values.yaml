@@ -1,7 +1,7 @@
 global:
   env:
     dataprepTelemetryUrl: http://vdms-dataprep:8000/v1/dataprep/telemetry?limit=1
-    searchDataprepTimeoutMs: '90000'
+    searchDataprepTimeoutMs: '600000'
     minioBucket: video-summary
     postgresDb: video_summary_db
     searchFeature: FEATURE_ON

@@ -55,7 +55,6 @@ data:
 
     MODEL_DOWNLOAD_BASE_URL="http://${MODEL_DOWNLOAD_HOST}:${MODEL_DOWNLOAD_PORT}/api/v1/"
     MODEL_DOWNLOAD_API_URL="${MODEL_DOWNLOAD_BASE_URL}models/download"
-    DOWNLOAD_MODEL_DIR="downloaded_models/"
     WEIGHT_FORMAT="$weight_format"
 
     # Source shared download function

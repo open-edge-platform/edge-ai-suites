@@ -11,7 +11,7 @@ To configure Docker:
    [Manage Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
 2. **Configure Proxy (if required)**:
    - Set up proxy settings for Docker client and containers as described in
-     [Docker Proxy Configuration](https://docs.docker.com/network/proxy/).
+     [Docker Proxy Configuration](https://docs.docker.com/engine/cli/proxy/).
    - Example `~/.docker/config.json`:
 
      ```json
@@ -110,6 +110,57 @@ cd manufacturing-ai-suite/industrial-edge-insights-multimodal
    cd <PATH_TO_REPO>/edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal
    make status
    ```
+
+### Running Time Series Analytics Microservice User Defined Function(UDF) inference on GPU
+
+By default, UDF for Time Series Analytics Microservice is configured to run on `CPU`.
+
+To trigger the UDF inference on `GPU` in Time Series Analytics Microservice, run the following command:
+
+```sh
+ curl -k -X 'POST' \
+ 'https://<HOST_IP>:3000/ts-api/config' \
+ -H 'accept: application/json' \
+ -H 'Content-Type: application/json' \
+ -d '<Add contents of edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/time-series-analytics-microservice/config.json with device
+     value updated to gpu from cpu>'
+```
+
+### Running DL Streamer Pipeline Server model inference on GPU or NPU
+
+By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
+To trigger the model inference on `GPU` or `NPU` in DL Streamer Pipeline Server, run the following command:
+
+> **Note:**
+> Replace `GPU` with `NPU` to run inference on `NPU`.
+
+```sh
+curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification -X POST -H 'Content-Type: application/json' -d '{
+    "destination": {
+        "metadata": {
+            "type": "mqtt",
+            "topic": "vision_weld_defect_classification"
+        },
+        "frame": [{
+                            "type": "webrtc",
+                            "peer-id": "samplestream",
+                            "overlay": false
+                        },
+                        {
+                            "type": "s3_write",
+                            "bucket": "dlstreamer-pipeline-results",
+                            "folder_prefix": "weld-defect-classification",
+                            "block": false
+                        }]
+    },
+    "parameters": {
+        "classification-properties": {
+            "model": "/home/pipeline-server/resources/models/weld-defect-classification-f16-DeiT/deployment/Classification/model/model.xml",
+            "device": "GPU"
+        }
+    }
+}'
+```
 
 ## Verify the Multimodal Weld Defect Detection Results
 

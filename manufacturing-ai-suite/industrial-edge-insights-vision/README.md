@@ -1,5 +1,6 @@
-# Overview
-The industrial edge insights for vision is a template for users to create sample applications intended for industrial use cases on the edge.
+# Industrial Edge Insights for Vision
+
+The Industrial Edge Insights for Vision is a template for users to create sample applications intended for industrial use cases on the edge.
 Users can refer to one of many samples built from the template as a reference.
 
 By adding minimal application specific pre-requisites, the boiler plate code this template provides can help you successfully deploy your application on the edge.
@@ -9,7 +10,9 @@ Both compose based as well as helm based deployments are supported by this appli
 ## Description
 
 ### Architecture
+
 It consists of the following microservices:
+
 - DL Streamer Pipeline Server
 - Model Download*
 - MediaMTX server, Coturn server
@@ -18,16 +21,15 @@ It consists of the following microservices:
 - Postgres
 - Minio.
 
-
 <div style="text-align: center;">
     <img src=industrial-edge-insights-vision-architecture.drawio.svg width=800>
 </div>
 
-**Although not part of the application configuration files such as docker compose or helm templates, Model Download microservice helps downloading OpenVINO and Geti trained models that is used by DLStreamer Pipeline Server to demonstrate MLOps flow.*
+**Although not part of the application configuration files such as docker compose or helm templates, Model Download microservice helps downloading OpenVINO and Geti trained models that are used by DL Streamer Pipeline Server to demonstrate MLOps flow.*
+
 ### Directory structure
 
 Following directory structure consisting of generic deployment code as well as pre-baked sample applications are provided.
-
 
 <br>
 
@@ -65,11 +67,11 @@ Following directory structure consisting of generic deployment code as well as p
  - **apps**: containing application specific pre-requisite installers, configurations and runtime data. Users can follow the same structure to create their own application. The data from here is used for docker based deployments.
 
     - *configs/*:
-            associated container configurations such as DLStreamer Pipeline Server configuration, etc.
+            associated container configurations such as DL Streamer Pipeline Server configuration, etc.
     - *setup.sh*:
             pre-requisite installer to setup envs, download artificats such as models/videos to `resources/` directory. It also sets executable permissions for scripts.
     - *payload.json*:
-            A JSON array file containing one or more request(s) to be sent to DLStreamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
+            A JSON array file containing one or more request(s) to be sent to DL Streamer Pipeline Server to launch GStreamer pipeline(s). The payload data is associated with the *configs/pipeline-server-config.json* provided for that application. Each JSON inside the array has two keys- `pipeline` and `payload` that refers to the pipeline it belongs to and the payload used to launch an instance of the pipeline.
 
  - **helm**: contains helm charts and application specific pre-requisite installers, configurations and runtime data. The configs and data within it are similar to **apps** but are kept here for easy packaging.
 
@@ -89,7 +91,7 @@ Following directory structure consisting of generic deployment code as well as p
 | `./sample_list.sh`     | List loaded pipelines                   | *(none)*                      |
 | `./sample_status.sh –i 89ab898e090a90b0c897d3ea7` | Get pipeline status of all/specific instance | `--all` (default) <br> `--id` or `-i`    |
 
-The shell scripts starting with `sample_*.sh` eases interaction with DLStreamer Pipeline Server REST APIs.
+The shell scripts starting with `sample_*.sh` eases interaction with DL Streamer Pipeline Server REST APIs.
 
 ## Prerequisites
 
@@ -104,16 +106,15 @@ General instructions for docker based deployment is as follows.
 1. Prepare the `.env` file for compose to source during deployment. This chosen env file defines the application you would be running.
 2. Run `setup.sh` to setup pre-requisites, download artifacts, etc.
 3. Bring the services up with `docker compose up`.
-4. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DLStreamer Pipeline Server.
+4. Run `sample_start.sh` to start pipeline. This sends curl request with pre-defined payload to the running DL Streamer Pipeline Server.
 5. Run `sample_status.sh` or `sample_list.sh` to monitor pipeline status or list available pipelines.
 6. Run `sample_stop.sh` to abort any running pipeline(s).
 7. Bring the services down by `docker compose down`.
 
-
-Using the template above, several industrial recipies have been provided for users to deploy using docker compose.
+Using the template above, several industrial recipes have been provided for users to deploy using docker compose.
 Click on the applications below to get started.
 
-* [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
-* [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
-* [Weld Porosity Classfication](./docs/user-guide/weld-porosity/get-started.md)
-* [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)
+- [Pallet Defect Detection](./docs/user-guide/pallet-defect-detection/get-started.md)
+- [PCB Anomaly Detection](./docs/user-guide/pcb-anomaly-detection/get-started.md)
+- [Weld Porosity Classification](./docs/user-guide/weld-porosity/get-started.md)
+- [Worker Safety Gear Detection](./docs/user-guide/worker-safety-gear-detection/get-started.md)

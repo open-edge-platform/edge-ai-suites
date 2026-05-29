@@ -1,0 +1,32 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+image:
+  registry: ""
+  repository: openvino/model_server
+  tag: "2026.1-gpu"
+
+sourceModel: "OpenVINO/Phi-4-mini-instruct-int4-ov"
+task: "text_generation"
+runAsUser: 5000
+
+modelStorage:
+  storageClassName: ""
+  size: "6Gi"
+
+healthcheck:
+  startupFailureThreshold: 60
+  startupPeriodSeconds: 10
+  startupTimeoutSeconds: 5
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+
+nodeSelector: {}
+affinity: {}
+tolerations: []

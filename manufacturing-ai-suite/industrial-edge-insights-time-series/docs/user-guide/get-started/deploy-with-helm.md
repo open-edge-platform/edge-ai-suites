@@ -25,16 +25,13 @@ Choose **one** of the following approaches to get the Helm charts:
 1. Download Helm chart:
 
    ```bash
-   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.1.0-<date>-weekly
+   helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.1.0-rc1
     ```
-
-    Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
-    `helm pull oci://registry-1.docker.io/intel/wind-turbine-anomaly-detection-sample-app --version 2026.1.0-20260120-weekly`
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.1.0-<date>-weekly.tgz
+   tar -xvzf wind-turbine-anomaly-detection-sample-app-2026.1.0-rc1.tgz
    cd wind-turbine-anomaly-detection-sample-app
    ```
 
@@ -64,16 +61,13 @@ Choose **one** of the following approaches to get the Helm charts:
 1. Download Helm chart:
 
    ```bash
-   helm pull oci://registry-1.docker.io/intel/weld-defect-detection-sample-app --version 2026.1.0-<date>-weekly
+   helm pull oci://registry-1.docker.io/intel/weld-defect-detection-sample-app --version 2026.1.0-rc1
    ```
-
-   Replace `<date>` with the actual patch version date (e.g., `20260120` for January 20th, 2026).
-    `helm pull oci://registry-1.docker.io/intel/weld-defect-detection-sample-app --version 2026.1.0-20260120-weekly`
 
 2. Extract the Helm chart:
 
    ```bash
-   tar -xvzf weld-defect-detection-sample-app-2026.1.0-<date>-weekly.tgz
+   tar -xvzf weld-defect-detection-sample-app-2026.1.0-rc1.tgz
    cd weld-defect-detection-sample-app
    ```
 
