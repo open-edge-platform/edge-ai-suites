@@ -18,4 +18,4 @@ The suite has the following features:
 
 **Known issues**
 
-- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The virtual function works correctly when the physical function is used.
+- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
