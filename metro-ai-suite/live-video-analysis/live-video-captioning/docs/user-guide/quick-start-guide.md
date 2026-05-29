@@ -1,12 +1,12 @@
 # Quick Start: Live Video Captioning
 
-Get the application up and running with USB/webcam in 5 steps! 
+Get the application up and running with USB/webcam in 5 steps!
 
 Live Video Captioning uses VLM to automatically describe what is happening in a live video stream — from a camera or an RTSP feed — and displays those descriptions in real time on a web dashboard.
 
 Note:
 1. The time taken is a function of network bandwidth. Model and image download time will determine how fast the user is up and running with the application.
-2. If there is no USB/webcam device attached, user can configure a test RTSP stream following [these]() instructions.
+2. If there is no USB/webcam device attached, user can configure a test RTSP stream following [these](./get-started/simulated-rtsp-stream-guide.md) instructions.
 
 ---
 

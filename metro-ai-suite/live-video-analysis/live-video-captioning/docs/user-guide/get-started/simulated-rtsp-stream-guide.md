@@ -64,7 +64,9 @@ rtsp://127.0.0.1:8554/stream1
 
 ### Multiple Inputs in One Run
 
-Use `-i` multiple times to publish multiple streams from one script instance.
+Use `-i` multiple times to stream multiple input videos in a single script run.
+
+Each input video is published to its own RTSP endpoint in this mode (one-to-one mapping), not to a shared endpoint.
 
 ```bash
 ./setup_proxy_rtsp.sh -i video1.mp4 -i video2.mp4 -i video3.mp4
@@ -72,9 +74,9 @@ Use `-i` multiple times to publish multiple streams from one script instance.
 
 👉 Auto-generated default stream URLs:
 ```text
-rtsp://127.0.0.1:8554/stream1
-rtsp://127.0.0.1:8554/stream2
-rtsp://127.0.0.1:8554/stream3
+rtsp://127.0.0.1:8554/stream1  # video1.mp4
+rtsp://127.0.0.1:8554/stream2  # video2.mp4
+rtsp://127.0.0.1:8554/stream3  # video3.mp4
 ```
 
 ### Custom RTSP Endpoint
@@ -98,6 +100,50 @@ Use `-o` multiple times to map each input video to a specific output URL.
 	-o rtsp://127.0.0.1:8554/cam1 \
 	-o rtsp://127.0.0.1:8554/cam2
 ```
+
+### Config File Input (JSON)
+
+For multiple streams, you can provide all input/output mappings in a JSON file.
+
+1. Create a JSON config file.
+
+Example with custom outputs:
+
+```json
+{
+	"inputs": [
+		"video1.mp4",
+		"video2.mp4"
+	],
+	"outputs": [
+		"rtsp://127.0.0.1:8554/cam1",
+		"rtsp://127.0.0.1:8554/cam2"
+	]
+}
+```
+
+Example without outputs (auto-generates `stream1`, `stream2`, ...):
+
+```json
+{
+	"inputs": [
+		"video1.mp4",
+		"video2.mp4"
+	]
+}
+```
+
+2. Run the script with the config file.
+
+```bash
+./setup_proxy_rtsp.sh -c <your-config-file>.json
+```
+
+Notes:
+
+- Use either `-c` or `-i`/`-o` in a single run (do not mix them).
+- Relative input paths in JSON are resolved relative to the JSON file location.
+- `-c` mode uses `jq`, and the script installs it automatically if missing.
 
 Important:
 

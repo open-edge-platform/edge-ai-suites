@@ -18,34 +18,100 @@ fi
 declare -a VIDEO_FILES=()
 declare -a STREAM_URLS=()
 DEFAULT_STREAM_BASE="rtsp://127.0.0.1:8554/stream"
+CONFIG_FILE=""
 
 # ✅ Usage function
 usage() {
     echo "Usage: $0 -i <video_file> [-i <video_file> ...] [-o <rtsp_url> ...]"
+    echo "   or: $0 -c <config.json>"
     echo ""
     echo "Example:"
     echo "  $0 -i video1.mp4"
     echo "  $0 -i video1.mp4 -i video2.mp4"
     echo "  $0 -i video1.mp4 -o rtsp://127.0.0.1:8554/cam1"
     echo "  $0 -i video1.mp4 -i video2.mp4 -o rtsp://127.0.0.1:8554/cam1 -o rtsp://127.0.0.1:8554/cam2"
+    echo "  $0 -c streams.json"
     echo ""
     echo "Notes:"
     echo "  - Use -i multiple times for multiple input videos."
+    echo "  - Use -c to load inputs/outputs from a JSON file."
+    echo "  - jq is required for -c mode (auto-installed if missing)."
     echo "  - If -o is omitted, output URLs default to:"
     echo "      rtsp://127.0.0.1:8554/stream1, stream2, ..."
     echo "  - If -o is provided, count must match number of -i arguments."
+    echo "  - JSON format for -c:"
+    echo "      {\"inputs\": [\"video1.mp4\", \"video2.mp4\"],"
+    echo "       \"outputs\": [\"rtsp://127.0.0.1:8554/cam1\", \"rtsp://127.0.0.1:8554/cam2\"]}"
+    echo "    (\"outputs\" is optional)"
     exit 1
 }
 
 # ✅ Parse arguments
-while getopts "i:o:h" opt; do
+while getopts "i:o:c:h" opt; do
   case $opt in
     i) VIDEO_FILES+=("$OPTARG") ;;
     o) STREAM_URLS+=("$OPTARG") ;;
+    c) CONFIG_FILE="$OPTARG" ;;
     h) usage ;;
     *) usage ;;
   esac
 done
+
+# Validate argument mode combinations.
+if [ -n "$CONFIG_FILE" ] && { [ ${#VIDEO_FILES[@]} -gt 0 ] || [ ${#STREAM_URLS[@]} -gt 0 ]; }; then
+    echo "[ERROR] Use either -c <config.json> or -i/-o arguments, not both"
+    usage
+fi
+
+# Load configuration from JSON file when -c is used.
+if [ -n "$CONFIG_FILE" ]; then
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "[ERROR] Config file does not exist: $CONFIG_FILE"
+        exit 1
+    fi
+
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "[INFO] jq not found. Installing..."
+        sudo apt update
+        sudo apt install -y jq
+    fi
+
+    if ! jq -e 'type == "object"' "$CONFIG_FILE" >/dev/null; then
+        echo "[ERROR] Config root must be a JSON object"
+        exit 1
+    fi
+
+    if ! jq -e '.inputs | type == "array" and length > 0 and all(.[]; type == "string" and length > 0)' "$CONFIG_FILE" >/dev/null; then
+        echo "[ERROR] \"inputs\" must be a non-empty array of non-empty strings"
+        exit 1
+    fi
+
+    if ! jq -e 'if has("outputs") then (.outputs | type == "array" and all(.[]; type == "string" and length > 0)) else true end' "$CONFIG_FILE" >/dev/null; then
+        echo "[ERROR] \"outputs\" must be an array of non-empty strings when provided"
+        exit 1
+    fi
+
+    CONFIG_DIR="$(cd "$(dirname "$CONFIG_FILE")" && pwd)"
+
+    while IFS= read -r input_file; do
+        if [[ "$input_file" = /* ]]; then
+            VIDEO_FILES+=("$input_file")
+        else
+            VIDEO_FILES+=("$CONFIG_DIR/$input_file")
+        fi
+    done < <(jq -r '.inputs[]' "$CONFIG_FILE")
+
+    if jq -e 'has("outputs")' "$CONFIG_FILE" >/dev/null; then
+        while IFS= read -r output_url; do
+            STREAM_URLS+=("$output_url")
+        done < <(jq -r '.outputs[]' "$CONFIG_FILE")
+    fi
+
+    if [ ${#VIDEO_FILES[@]} -eq 0 ]; then
+        echo "[ERROR] Config file did not produce any input entries"
+        exit 1
+    fi
+fi
 
 # ✅ Validate input
 if [ ${#VIDEO_FILES[@]} -eq 0 ]; then
