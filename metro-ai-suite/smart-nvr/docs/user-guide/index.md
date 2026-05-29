@@ -88,8 +88,8 @@ support the features.
 
 get-started
 how-to-use-application
-scenescape-integration
 development-guide
+Integrate SceneScape with Smart NVR <scenescape-integration.md>
 api-reference
 troubleshooting
 release-notes
