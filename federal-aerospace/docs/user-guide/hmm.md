@@ -79,7 +79,7 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 ```
 
-Verify the Docker Developer system's proxy configurations:
+Verify the Docker daemon's proxy configurations:
 ```bash
 ╰$ docker info|grep -i PROX
  HTTP Proxy: http://proxy-example:123
