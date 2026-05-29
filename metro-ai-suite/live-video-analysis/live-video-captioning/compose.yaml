@@ -125,7 +125,7 @@ services:
       - app_network
 
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.12
     container_name: coturn
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}
