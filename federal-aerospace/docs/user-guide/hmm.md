@@ -43,7 +43,7 @@ EOF
 source /etc/environment
 ```
 
-Configure the proxy for the Docker Developer system:
+Configure the proxy for the Docker client:
 
 ```bash
 mkdir -p ~/.docker
