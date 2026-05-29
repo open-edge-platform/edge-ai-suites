@@ -7,7 +7,8 @@ Collector Deployment.
 Kubernetes equivalents of docker-compose.yaml configuration:
   pid: host                -> hostPID: true
   privileged: true         -> securityContext.privileged: true
-  devices /sys /dev /run /proc -> hostPath volumes
+  /proc, /sys, /dev are NOT bind-mounted; hostPID: true + privileged: true
+  already expose host PID namespace and full hardware access via kernel pseudo-fs
   telegraf.conf            -> ConfigMap mount
   WEBSOCKET_URL            -> env var referencing live-metrics-service
 */}}
@@ -59,15 +60,7 @@ spec:
               readOnly: true
             - name: collector-signals
               mountPath: /app/.collector-signals
-            - name: host-sys
-              mountPath: /sys
-              readOnly: true
-            - name: host-dev
-              mountPath: /dev
-              readOnly: true
-            - name: host-proc
-              mountPath: /proc
-              readOnly: true
+
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           securityContext:
@@ -78,12 +71,4 @@ spec:
             name: {{ include "collector.fullname" . }}-telegraf-config
         - name: collector-signals
           emptyDir: {}
-        - name: host-sys
-          hostPath:
-            path: /sys
-        - name: host-dev
-          hostPath:
-            path: /dev
-        - name: host-proc
-          hostPath:
-            path: /proc
+

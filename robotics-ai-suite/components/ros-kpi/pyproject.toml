@@ -5,7 +5,7 @@
 # Intel-operated generative artificial intelligence solutions.
 [project]
 name = "ros2-kpi"
-version = "0.1.7"
+version = "0.1.16"
 description = "ROS2 Monitoring Stack for KPI Analysis"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -46,7 +46,8 @@ include = [
 
 [dependency-groups]
 dev = [
-    "pytest>=7.0.0",
+    "pytest>=9.0.3",
+    "pygments>=2.20.0",
     "black>=26.3.1",
     "ruff>=0.1.0",
     "autopep8>=2.3.1",
