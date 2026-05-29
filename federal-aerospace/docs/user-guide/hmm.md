@@ -1,0 +1,129 @@
+# Handheld Multi-Modal
+
+## Applications
+
+Full-stack AI inference and observability platform for handheld scenarios. Combines LLM inference (OpenVINO Model Server), speech-to-text (Whisper), a chat UI (Open WebUI), and metrics dashboards (Grafana), running alongside the [Visual Pipeline and Platform Evaluation Tool (vippet)](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
+
+### VIPPET
+
+The Visual Pipeline and Platform Evaluation Tool simplifies hardware selection for AI workloads by enabling
+configuration of workload parameters, performance benchmarking, and analysis of key metrics such as throughput,
+CPU usage, and GPU usage. With its intuitive interface, the tool provides actionable insights that support
+optimized hardware selection and performance tuning.
+
+For more information refer to [documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/tools/visual-pipeline-and-platform-evaluation-tool/README.md)
+
+### Whisper
+
+Whisper is a general-purpose speech recognition model. It is trained on a large dataset of diverse audio and is also a multitasking model that can perform multilingual speech recognition, speech translation, and language identification.
+
+For more information refer to [documentation](https://github.com/openai/whisper)
+
+### Web UI
+
+**Open WebUI is an [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
+
+For more information refer to [documentation](https://github.com/open-webui/open-webui)
+
+## Deployment
+
+### (OPTIONAL) Proxy configuration
+
+Depending on network configuration of the system, additional configuration of proxy might be needed.
+Ensure that `/etc/environment` contains proxy variables, replacing `proxy-example:123` with a valid proxy for the local environment.
+
+```bash
+sudo tee -a /etc/environment > /dev/null <<EOF
+export http_proxy="http://proxy-example:123"
+export https_proxy="http://proxy-example:123"
+export ftp_proxy="http://proxy-example:123"
+export no_proxy="localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+EOF
+
+source /etc/environment
+```
+
+Configure proxy for Docker
+
+```bash
+mkdir -p ~/.docker
+tee -a ~/.docker/config.json > /dev/null <<EOF
+{
+    "proxies": {
+        "default": {
+            "httpProxy":  "http://proxy-example:123",
+            "httpsProxy": "http://proxy-example:123",
+            "noProxy":    "localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+        }
+    }
+}
+EOF
+```
+
+Configure proxy for Docker containers
+
+```bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+sudo tee /etc/systemd/system/docker.service.d/http-proxy.conf > /dev/null <<EOF
+[Service]
+Environment="HTTP_PROXY=http://proxy-example:123"
+Environment="HTTPS_PROXY=http://proxy-example:123"
+Environment="NO_PROXY=localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager"
+EOF
+```
+
+Restart docker
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+
+Verify that Docker uses configured proxies
+```bash
+╰$ docker info|grep -i PROX
+ HTTP Proxy: http://proxy-example:123
+ HTTPS Proxy: http://proxy-example:123
+ No Proxy: localhost,127.0.0.1,10.0.0.0/8,192.0.0.0/8,fedaero.intel.com,vippet,grafana,metrics-manager
+```
+
+### Deploying the applications
+
+Download ZIP file with code:
+
+```bash
+curl -OjL https://github.com/open-edge-platform/edge-ai-suites/releases/download/fedaero-latest/handheld-multi-modal.zip
+```
+
+Unzip downloaded files
+
+```bash
+unzip handheld-multi-modal.zip
+```
+
+Run script that installs all dependencies, downloads models and starts applications. Depending on network bandwidth, it usually takes around 10-15 minutes. If an error occurs during installation, refer to [proxy configuration step](#optional-proxy-configuration)
+
+```bash
+cd handheld-multi-modal
+./run up
+```
+
+After script finishes, check that containers are running by executing following command
+
+```bash
+╰$ docker ps
+CONTAINER ID   IMAGE                                                   COMMAND                  CREATED          STATUS                             PORTS                                                                                                                                   NAMES
+45aeb6ad8884   nginx:alpine                                            "/docker-entrypoint.…"   27 seconds ago   Up 25 seconds                      127.0.0.1:443->443/tcp, 127.0.0.1:5443->5443/tcp, 127.0.0.1:7443->7443/tcp, 80/tcp, 127.0.0.1:8443->8443/tcp                            nginx-https
+1cf974e6c425   ghcr.io/open-webui/open-webui:v0.9.5-slim               "bash start.sh"          27 seconds ago   Up 25 seconds (health: starting)   8080/tcp                                                                                                                                open-webui
+90c0db070f36   whisper-stt:latest                                      "/entrypoint.sh pyth…"   27 seconds ago   Up 26 seconds                      5000/tcp                                                                                                                                whisper-stt
+ee1cef103480   grafana/grafana:13.1.0-25893932881                      "/run.sh"                27 seconds ago   Up 26 seconds                      3000/tcp                                                                                                                                grafana
+231fd29c88d8   openvino/model_server:latest-gpu                        "/ovms/bin/ovms --re…"   27 seconds ago   Up 26 seconds                                                                                                                                                              ovms
+3dc8dfefa60e   intel/vippet-ui:2026.1.0-20260512-weekly                "/docker-entrypoint.…"   34 seconds ago   Up 27 seconds                      0.0.0.0:80->80/tcp, [::]:80->80/tcp                                                                                                     ui
+d1ec3f394245   intel/vippet-app:2026.1.0-20260512-weekly               "./entrypoint.sh"        34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:7860->7860/tcp, [::]:7860->7860/tcp                                                                                             vippet
+9fa7733f0cc4   bluenviron/mediamtx:1.15.6                              "/mediamtx"              34 seconds ago   Up 33 seconds                      0.0.0.0:8554->8554/tcp, [::]:8554->8554/tcp, 0.0.0.0:8189->8189/udp, [::]:8189->8189/udp, 0.0.0.0:8889->8889/tcp, [::]:8889->8889/tcp   mediamtx
+76d9c62a039b   intel/vippet-onvif-discovery:2026.1.0-20260512-weekly   "/bin/sh -c 'python …"   34 seconds ago   Up 33 seconds                                                                                                                                                              onvif-discovery
+f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypoint.sh"         34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp, 8186/tcp, 0.0.0.0:9273->9273/tcp, [::]:9273->9273/tcp                                      metrics-manager
+c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp  
+```
+
+After applications are deployed, refer to [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. Since none of the applications provide authentication/authorization, all applications are available only on `localhost` and not exposed under any external IP address.
