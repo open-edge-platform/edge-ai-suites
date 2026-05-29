@@ -17,7 +17,7 @@ improvements.
 - **Weld Defect Detection Training Scripts**: Classification training and inference
   scripts using a scikit-learn (Intel-accelerated) pipeline have been added for the
   Weld Defect Detection sample app.
-- **Functional Tests** — Comprehensive functional tests for Docker Compose and Helm deployments have been added.
+- **Functional Tests**: Comprehensive functional tests for Docker Compose and Helm deployments have been added.
 - **GPU Support for Weld Defect Detection**: Docker Compose and Helm deployments now support
   GPU acceleration for weld defect detection on the Time Series Analytics microservice image, with
   updated configuration and user guides for running inference on GPU.
