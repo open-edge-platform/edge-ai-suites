@@ -4,7 +4,7 @@
 **May 13, 2026**
 
 - **Google ADK agentic dispatch.** Alert actions are now driven by a
-  [Google ADK](https://google.github.io/adk-docs/) `LlmAgent` that reasons over
+  [Google ADK](https://adk.dev/) `LlmAgent` that reasons over
   the available tools and selects the right ones at runtime.
 - **Model Context Protocol (MCP) integration.** The agent can now connect to
   external MCP servers and expose their tools alongside built-in tools.

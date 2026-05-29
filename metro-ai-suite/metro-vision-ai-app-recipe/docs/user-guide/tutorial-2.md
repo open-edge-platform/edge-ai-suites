@@ -1,16 +1,12 @@
 # Customizing Node-RED Flows for Metro Vision AI Applications
 
-<!--
-**Sample Description**: This tutorial demonstrates how to customize Node-RED flows to process and enhance AI inference data from metro vision applications, enabling real-time data manipulation and custom business logic implementation.
--->
-
-This tutorial guides you through customizing Node-RED flows to process AI inference data from metro vision applications. You'll learn how to connect to MQTT data streams, manipulate inference results, add custom business logic, and create enhanced data outputs for downstream systems.
-
-<!--
-**What You Can Do**: This guide covers the complete workflow for customizing Node-RED flows in metro vision AI applications.
--->
+This tutorial guides you through customizing Node-RED flows to process AI inference data from
+metro vision applications. You will learn how to connect to MQTT data streams, manipulate
+inference results, add custom business logic, and create enhanced data outputs for downstream
+systems.
 
 By following this guide, you will learn how to:
+
 - **Access and Launch Node-RED**: Connect to the Node-RED interface and understand the flow-based programming environment
 - **Clear and Reset Flows**: Remove existing flows and start with a clean workspace for custom development
 - **Connect to MQTT Data Streams**: Establish connections to receive real-time AI inference data from metro vision applications
@@ -27,8 +23,8 @@ By following this guide, you will learn how to:
 
 ## Node-RED Flow Architecture Overview
 
-
 The custom Node-RED flow consists of:
+
 - **MQTT Input Node**: Subscribes to AI inference data topics
 - **Function Nodes**: Processes and enhances the incoming data with custom logic
 - **Debug Nodes**: Provides real-time monitoring of data flow
@@ -46,6 +42,7 @@ hostname -I | awk '{print $1}'
 ```
 
 Open your web browser and navigate to the Node-RED interface:
+
 ```
 https://<HOST_IP>/nodered/
 ```
@@ -58,10 +55,13 @@ Troubleshooting Node-RED Access
 </summary>
 
 If you cannot access Node-RED:
+
 1. Verify the metro vision AI application is running:
+
    ```bash
    docker ps | grep node-red
    ```
+
 2. Check that port 1880 is exposed and accessible
 3. Ensure no firewall is blocking the connection
 4. Try accessing via localhost if running on the same machine: `https://localhost/nodered/`
@@ -78,7 +78,7 @@ Remove any existing flows to start with a clean workspace:
 
 - Go to the URL https://<HOST_IP>/nodered/.
 - Select everything inside the flow and delete it.
-- This clears the your node red flow.
+- This clears your Node-RED flow.
 
 ### 3. **Create MQTT Input Connection**
 
@@ -97,7 +97,6 @@ Set up an MQTT subscriber node to receive AI inference data:
 3. **Set Node Properties**:
    - **Name**: `AI Inference Input`
    - Click **Done** to save the configuration
-
 
 ### 4. **Add Debug Output for Monitoring**
 
@@ -145,7 +144,6 @@ Create a debug node to monitor incoming data:
    ```
 
    After running this command, you should see AI inference data appearing in the Node-RED debug panel.
-
 
 ### 5. **Implement Custom Data Processing Function**
 
@@ -218,7 +216,6 @@ msg.payload = extractedData;
 return msg;
 ```
 
-
 ### 6. **Configure MQTT Output for Enhanced Data**
 
 Set up an MQTT publisher to send the enhanced data:
@@ -250,10 +247,9 @@ Test your custom Node-RED flow:
    - Verify that both raw and enhanced data are flowing through the system
    - Check timestamps and custom metadata are being added correctly
 
-
 ## Expected Results
 
-![Node Red Flow](_images/node-red-flow.png)
+![Node-RED Flow](./_images/node-red-flow.png "node-red flow")
 
 After completing this tutorial, you should have:
 
@@ -264,15 +260,17 @@ After completing this tutorial, you should have:
 
 ## Next Steps
 
-After successfully setting up the AI Tolling system with Node Red, consider these enhancements:
+After successfully setting up the AI Tolling system with Node-RED, consider these enhancements:
 
 [**Integration with Grafana for Visualization**](./tutorial-3.md)
 
 ## Troubleshooting
 
 ### **Node-RED Interface Not Accessible**
+
 - **Problem**: Cannot access Node-RED at the specified URL
 - **Solution**:
+
   ```bash
   # Check if Node-RED container is running
   docker ps | grep node-red
@@ -281,6 +279,7 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
   ```
 
 ### **No Data in Debug Panel**
+
 - **Problem**: Debug nodes show no incoming data
 - **Solution**:
   - Verify the AI application is running and generating inference data
@@ -288,6 +287,7 @@ After successfully setting up the AI Tolling system with Node Red, consider thes
   - Ensure proper JSON parsing in function nodes
 
 ### **Function Node Errors**
+
 - **Problem**: Function node shows errors in the debug panel
 - **Solution**:
   - Add try-catch blocks around JSON parsing
