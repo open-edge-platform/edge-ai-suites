@@ -176,13 +176,43 @@ class TestStartRun:
         ) as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
-                json={"rtspUrl": "/dev/video0"},
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "GenAI_Camera_Pipeline_on_CPU",
+                },
             )
 
         assert resp.status_code == 200
         payload = mock_http.call_args.kwargs["payload"]
         assert payload["source"]["device"] == "/dev/video0"
         assert payload["source"]["type"] == "webcam"
+
+    def test_start_run_rejects_usb_camera_without_camera_pipeline(self, client):
+        """A webcam source must not use a non-camera default pipeline name."""
+        with patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={"rtspUrl": "/dev/video0"},
+            )
+
+        assert resp.status_code == 400
+        assert "camera-compatible pipelineName" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
+
+    def test_start_run_rejects_usb_camera_with_non_camera_pipeline(self, client):
+        """A webcam source with an explicit non-camera pipeline is rejected."""
+        with patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "genai_pipeline",
+                },
+            )
+
+        assert resp.status_code == 400
+        assert "is not camera-compatible" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
 
     def test_start_run_rejects_duplicate_usb_camera_source(self, client):
         """Starting a second run on the same camera device returns 409."""
@@ -198,7 +228,10 @@ class TestStartRun:
         with patch("backend.routes.runs.http_json") as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
-                json={"rtspUrl": "/dev/video0"},
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "GenAI_Camera_Pipeline_on_CPU",
+                },
             )
 
         assert resp.status_code == 409
