@@ -215,10 +215,16 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 
 **Visualization/Logging:**
 
-- `--plot`: Enable visualization (typically used with MuJoCo).
-> **Note**: If visualization windows do not appear when using `--plot`, install python3-tk to enable the Matplotlib interactive backend: `sudo apt install python3-tk`.
+- `--plot`: Enable visualization (MuJoCo only). Renders the simulation in a separate subprocess using OpenCV shared memory.
 - `--save_traj`: Save trajectory data and plots.
 - `--save_traj_path`: Output directory for saved trajectories/plots. Default: `trajectory_plots`.
+
+**Keyboard controls (during evaluation):**
+
+| Key     | Action                          |
+|---------|---------------------------------|
+| `Space` | Pause / resume execution        |
+| `r`     | Toggle RTC on/off at runtime    |
 
 ### Simulation Pipeline
 
@@ -227,7 +233,7 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \
@@ -235,10 +241,12 @@ MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --ov_model_path <path_to_ov_model>
 ```
 
+> **Note**: `MUJOCO_GL=egl` is set automatically inside the script for headless EGL rendering on Intel iGPU. You do not need to set it manually.
+
 #### Run `sim_transfer_cube` in MuJoCo using an OpenVINO model with RTC
 
 ```bash
-MUJOCO_GL=egl uv run --extra pi-ov examples/aloha/eval_aloha.py \
+uv run --extra pi-ov examples/aloha/eval_aloha.py \
     --robot_type mujoco_aloha \
     --task sim_transfer_cube \
     --pretrained_model_path <path_to_pretrained_model> \
