@@ -4,7 +4,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 # Speech-to-Text Service through Whisper System
 
-The private speech-to-text service powered by the OpenAI Whisper system runs locally, and do not need an API key. There will be no data leaving your machine.
+The private speech-to-text service powered by the OpenAI Whisper system runs locally, and does not need an API key. There will be no data leaving your machine.
 
 The service is defined in the root [`docker-compose.yml`](../../docker-compose.yml) and joins the `fedaero` network.
 
