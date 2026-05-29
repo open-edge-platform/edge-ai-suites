@@ -718,12 +718,13 @@ def _load_resource_thermal(session_dir: Path) -> dict:
                        None when npu_usage.log is absent
     """
     result: dict = {
-        'cpu_temp_c':    None,
-        'gpu_temp_c':    None,
-        'npu_temp_c':    None,
-        'cpu_throttled': None,
-        'gpu_throttled': None,
-        'npu_throttled': None,
+        'cpu_temp_c':      None,
+        'gpu_temp_c':      None,
+        'npu_temp_c':      None,
+        'cpu_throttled':   None,
+        'gpu_throttled':   None,
+        'npu_throttled':   None,
+        'cpu_pkg_power_w': None,
     }
 
     # ── GPU: read gpu_usage.log ──────────────────────────────────────────────
@@ -779,13 +780,46 @@ def _load_resource_thermal(session_dir: Path) -> dict:
         if npu_temps or npu_throttled_any:
             result['npu_throttled'] = npu_throttled_any
 
-    # ── CPU: live sysfs read ─────────────────────────────────────────────────
-    try:
-        cpu_thermal = _read_cpu_thermal_sysfs()
-        result['cpu_temp_c']    = cpu_thermal.get('temp_c')
-        result['cpu_throttled'] = cpu_thermal.get('throttled')
-    except Exception:
-        pass
+    # ── CPU: read cpu_power.log (recorded during the session) ───────────────
+    # This is accurate: throttle status was sampled live during the run.
+    # Fall back to a live sysfs snapshot only when the log is absent.
+    cpu_power_log = session_dir / 'cpu_power.log'
+    if cpu_power_log.exists():
+        power_samples: List[float] = []
+        cpu_throttled_any = False
+        cpu_temps_log: List[float] = []
+        try:
+            for raw in cpu_power_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('power_w') is not None:
+                    power_samples.append(float(rec['power_w']))
+                if rec.get('temp_c') is not None:
+                    cpu_temps_log.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    cpu_throttled_any = True
+        except OSError:
+            pass
+        if power_samples:
+            result['cpu_pkg_power_w'] = round(statistics.mean(power_samples), 2)
+        if cpu_temps_log:
+            result['cpu_temp_c'] = round(statistics.mean(cpu_temps_log), 1)
+        result['cpu_throttled'] = cpu_throttled_any
+    else:
+        # Fallback: live sysfs snapshot (less accurate — post-run state)
+        try:
+            cpu_thermal = _read_cpu_thermal_sysfs()
+            result['cpu_temp_c']    = cpu_thermal.get('temp_c')
+            result['cpu_throttled'] = cpu_thermal.get('throttled')
+        except Exception:
+            pass
 
     return result
 
