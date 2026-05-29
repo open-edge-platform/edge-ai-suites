@@ -115,7 +115,7 @@ docker compose down
 | No captions appear | Check that the RTSP URL is reachable from this machine |
 | Stream behind a proxy | Add the camera's IP to `no_proxy` in your shell environment |
 | "permission denied" with Docker | Run `sudo usermod -aG docker $USER`, then log out and back in |
-| "failed to resolve reference docker.io" with Docker | Docker daemon cannot reach Docker Hub over the network to download the microservices. This could be due to missing organization prxy configuration in docker setup. Follow [this](https://docs.docker.com/engine/daemon/proxy/) instruction to set it up. |
+| "failed to resolve reference docker.io" with Docker | Docker daemon cannot reach Docker Hub over the network to download the microservices. This could be due to missing organization proxy configuration in docker setup. Follow [this](https://docs.docker.com/engine/daemon/proxy/) instruction to set it up. |
 
 ---
 
