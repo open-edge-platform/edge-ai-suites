@@ -21,7 +21,7 @@ keywords:
   - mqtt
 home: https://github.com/open-edge-platform/edge-ai-suites
 sources:
-  - https://github.com/open-edge-platform/edge-ai-suites/tree/main/metro-ai-suite/live-video-analysis/live-video-captioning
+  - https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/metro-ai-suite/live-video-analysis/live-video-captioning
 maintainers:
   - name: Intel Corporation
 kubeVersion: ">=1.24.0-0"

@@ -19,7 +19,7 @@ If not available, you can simulate this by downloading the sample model from edg
 > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
-1.  Set up the sample application to start a pipeline. A pipeline named `worker_safety_gear_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Worker Safety Gear Detection sample app.
+1. Set up the sample application to start a pipeline. A pipeline named `worker_safety_gear_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Worker Safety Gear Detection sample app.
 
     > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the model-instance-id.
 
@@ -99,11 +99,7 @@ If not available, you can simulate this by downloading the sample model from edg
 
     #### Downloading a Model with Model Download
 
-<<<<<<< HEAD
-    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html).
-=======
-    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
->>>>>>> 3177769c (DL Streamer name alignment (part 1), Model Download website links, formatting and lang review (pass 1), additional cross-linking)
+    At this point, restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti™ models from a running Geti™ server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html).
 
    For our demonstration, we assume that:
    - the Worker Safety Gear Detection model has been retrained and is available for download from a Geti server using the Model Download service.
@@ -155,11 +151,7 @@ If not available, you can simulate this by downloading the sample model from edg
 ## Additional resources
 
 ### Downloading models from Geti Server
-<<<<<<< HEAD
-To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command)
-=======
->>>>>>> 3177769c (DL Streamer name alignment (part 1), Model Download website links, formatting and lang review (pass 1), additional cross-linking)
 
-To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
+To learn how to download models from a running Geti™ server, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command)
 
 > **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.

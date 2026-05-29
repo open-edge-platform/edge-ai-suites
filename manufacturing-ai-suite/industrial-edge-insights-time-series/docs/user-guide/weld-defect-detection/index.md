@@ -43,7 +43,7 @@ Simulation data in CSV format from `edge-ai-suites/manufacturing-ai-suite/indust
 
 #### **Data Processing**
 
-**Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package (TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available in the [Time Series Analytics Microservice Configuration directory for Time Series Insights](https://github.com/open-edge-platform/edge-ai-suites/tree/main/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config).
+**Time Series Analytics Microservice** uses the User Defined Function (UDF) deployment package (TICK Scripts, UDFs, Models) coming from the sample apps. The UDF deployment package for `Weld Defect Detection` sample app is available in the [Time Series Analytics Microservice Configuration directory for Time Series Insights](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/manufacturing-ai-suite/industrial-edge-insights-time-series/apps/weld-defect-detection/time-series-analytics-config).
 
 Details of the directory are as below:
 
