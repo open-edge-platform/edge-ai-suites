@@ -13,48 +13,19 @@ preparation:
   pipeline_template: ./pipelines/nicu_shared_pipeline.template.json
   resolved_pipeline: ./pipelines/nicu_shared_pipeline.resolved.json
 
-# --- Model download sections (used by scripts/download_models.py) ---
-detection-models:
-  description: "Custom detection models (person, patient, latch) — pre-converted OpenVINO IR"
-  target_dir: /models
-  models:
-    - name: person-detect-fp32
-      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/person-detect-fp32.xml
-      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/person-detect-fp32.bin
-
-    - name: patient-detect-fp32
-      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/patient-detect-fp32.xml
-      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/patient-detect-fp32.bin
-
-    - name: latch-detect-fp32
-      xml_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/latch-detect-fp32.xml
-      bin_url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/latch-detect-fp32.bin
-
-action-recognition:
-  description: "Open Model Zoo action recognition (encoder + decoder) — FP32 IR"
-  target_dir: /models/action/FP32
-  models:
-    - name: action-recognition-0001-encoder
-      xml_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-encoder/FP32/action-recognition-0001-encoder.xml
-      bin_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-encoder/FP32/action-recognition-0001-encoder.bin
-
-    - name: action-recognition-0001-decoder
-      xml_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-decoder/FP32/action-recognition-0001-decoder.xml
-      bin_url: https://storage.openvinotoolkit.org/repositories/open_model_zoo/2022.1/models_bin/3/action-recognition-0001-decoder/FP32/action-recognition-0001-decoder.bin
-
-rppg:
-  description: "MTTS-CAN rPPG model — download HDF5 and convert to OpenVINO IR"
-  target_dir: /models/rppg
-  models:
-    - name: mtts_can
-      hdf5_url: https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5
-
-video:
-  description: "Default test video for NICU Warmer pipeline"
-  target_dir: /data
-  models:
-    - name: Warmer_Testbed_YTHD
-      url: https://github.com/sakshijha11/edge-ai-suites/releases/download/nicu-models-v1/Warmer_Testbed_YTHD.mp4
+# --- Offline asset manifest ---
+# All models and videos are delivered as offline assets (zip).
+# No external download URLs are required at runtime.
+# See README.md for offline asset setup instructions.
+#
+# Asset inventory (provided in the offline package):
+#   /models/person-detect-fp32.{xml,bin}       — person detection (custom, FP32)
+#   /models/patient-detect-fp32.{xml,bin}       — patient detection (custom, FP32)
+#   /models/latch-detect-fp32.{xml,bin}         — latch detection (custom, FP32)
+#   /models/action/FP32/action-recognition-0001-encoder.{xml,bin}  — action recognition encoder (OMZ)
+#   /models/action/FP32/action-recognition-0001-decoder.{xml,bin}  — action recognition decoder (OMZ)
+#   /models/rppg/mtts_can.{xml,bin}             — rPPG MTTS-CAN (converted from HDF5)
+#   /data/Warmer_Testbed_YTHD.mp4               — test video
 
 metrics_collector:
   base_url: http://nicu-metrics-collector:9000   # docker-compose service DNS
