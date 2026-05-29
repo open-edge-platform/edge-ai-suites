@@ -36,7 +36,7 @@ cd lerobot
 ```
 Apply the patches:
 ```bash
-git am ../patches/*.patch
+git am --whitespace=fix ../patches/*.patch
 ```
 
 ### Setup Python Environment
@@ -180,6 +180,9 @@ uv run --extra pi-ov scripts/benchmark_pi05_ov_rtc.py \
 - `--run_torch`: (Optional) Run the original PyTorch model for output comparison.
 - `--torch_dir`: (Optional) Path to the PyTorch model directory for comparison if `--run_torch` is set. Default: "lerobot/pi05_base".
 - `--disable_rtc`: (Optional) Disable the RTC functionality when loading a model with RTC. It is invalid when loading a model without the RTC support.
+
+> **Note**: If you see `WARNING - No accelerated backend detected. Using default cpu, this will be slow.`, this is a log message from PyTorch and does **not** indicate that the model is running on CPU. Our model inference is powered by OpenVINO, which handles hardware acceleration independently of PyTorch backends.
+
 
 ### Evaluation Script Overview
 
