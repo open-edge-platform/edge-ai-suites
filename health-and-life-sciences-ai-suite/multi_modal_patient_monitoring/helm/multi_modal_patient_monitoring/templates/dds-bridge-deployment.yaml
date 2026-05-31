@@ -12,6 +12,8 @@ spec:
       labels:
         app: dds-bridge
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: dds-bridge
           image: "{{ .Values.ddsBridge.image.repository }}/{{ .Values.ddsBridge.image.name }}:{{ .Values.ddsBridge.image.tag }}"
