@@ -7,7 +7,7 @@ This guide covers two workflows:
 
 ## 1. Recommended Quick Run In Docker
 
-Follow the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
+Follow the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
 
 ```bash
 docker pull intel/tfcc:bevfusion
@@ -229,4 +229,4 @@ Encoded `.bin` image files are decoded through OpenCV. If decoding fails, verify
 
 ## 10. More Detail
 
-Use the [Executable Reference Guide](./Testing.md) for the full executable reference and sample output patterns. Use the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) for the container workflow.
+Use the [Executable Reference Guide](./Testing.md) for the full executable reference and sample output patterns. Use the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) for the container workflow.

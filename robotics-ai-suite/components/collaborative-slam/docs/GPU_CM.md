@@ -73,7 +73,7 @@ Number of devices                                 1
 
 Third, you need to download the [C-for-Metal](https://www.intel.com/content/www/us/en/developer/tools/open/c-for-metal-sdk/overview.html) package and the latest orb-extractor library.
 In most of the cases, orb-extractor package is enough for Collaborative SLAM to run.
-But if you want to compile orb-extractor library from source, please follow instructions provided in the [orb-extractor repo](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/libraries/robotics-ai-libraries/orb-extractor).
+But if you want to compile orb-extractor library from source, please follow instructions provided in the [orb-extractor repo](https://github.com/open-edge-platform/edge-ai-libraries/tree/release-2026.1.0/libraries/robotics-ai-libraries/orb-extractor).
 You can specify custom install directory by using `CMAKE_INSTALL_PREFIX`.
 
 ### Troubleshooting
