@@ -37,11 +37,11 @@ License-Identifier: 2-clause BSD-like
 
 License-Identifier: Apache 2.0
 - intel/dlstreamer-pipeline-server:2026.1.0-20260505-weekly-ubuntu24
-- chrislusf/seaweedfs:4.28
+- chrislusf/seaweedfs:4.30
 ----------------------------------------------------------------------
 
 License-Identifier: BSD 3-Clause License (also known as the "New BSD License" or "Modified BSD License").
-- coturn/coturn:4.11.0
+- coturn/coturn:4.12.0
 
 ---------------------------------------------------------------------------------------------------------------------------
 
