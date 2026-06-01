@@ -41,7 +41,7 @@ docker compose build
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
 
-If you want to stop the program, press Ctrl+C repeatedly
+If you want to stop the program, press Ctrl+C 
 ## Uninstall docker image
 1. Run `docker rmi -f $(docker images --format "{{.Repository}}:{{.Tag}}" | grep 'vppsample')` remove all vppsample docker images
 
