@@ -264,5 +264,13 @@ FilesAnalyzed: false
 Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-vippet
 
 ##############################################################################
+# AI models at runtime
+##############################################################################
+
+Models loaded by Open WebUI / Whisper / OVMS at runtime carry their own licenses
+and operator is responsible for revieweing license and making sure that they
+are matching operator's use-case(s).
+
+##############################################################################
 # End of document
 ##############################################################################
