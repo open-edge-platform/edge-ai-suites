@@ -5,6 +5,7 @@ This guide explains how to run the Weld Porosity application in an environment w
 ## Prerequisites
 
 - Complete all steps in the **Set up the application** section of [Get Started](../get-started.md) while connected to the internet. This ensures all required models and videos are pre-downloaded before running in offline mode.
+- Ensure all required Docker images are pre-pulled while connected to the internet, as they cannot be downloaded in offline mode.
 
 ## Configure for Offline Mode
 
