@@ -22,7 +22,7 @@ To exit the program, you need to open another terminal window and stop the conta
 
 ## Run docker compose 
 
-If you want to build the image.
+If you want to build the image.Using the provided script to build the image is highly recommended.
 
 ```
 #Set up environment variables for the model
