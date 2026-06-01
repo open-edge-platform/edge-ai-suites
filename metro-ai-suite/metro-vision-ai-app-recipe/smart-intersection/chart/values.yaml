@@ -31,13 +31,13 @@ externalUrls:
 images:
   alpine:
     repository: alpine
-    tag: latest
+    tag: 3.23.4
   curl:
     repository: curlimages/curl
-    tag: latest
+    tag: 8.20.0
   busybox:
     repository: busybox
-    tag: latest
+    tag: 1.38.0
 
 ntpserver:
   repository: docker.io/dockurr/chrony
@@ -45,14 +45,14 @@ ntpserver:
 
 nodered:
   repository: docker.io/nodered/node-red
-  tag: "latest"
+  tag: "4.1"
   # Overrides the storage class name
   storageClassName: "standard"
   storageSize: "1Gi"
 
 broker:
   repository: eclipse-mosquitto
-  tag: 2.0.21
+  tag: 2.0.22
 
   # UID:GID to run container as (defaulting to 1000:1000 unless overridden)
   uid: 1000

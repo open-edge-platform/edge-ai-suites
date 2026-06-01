@@ -90,14 +90,14 @@ services:
     - industrial-edge-vision
 
   coturn:
-    image: coturn/coturn:latest
+    image: coturn/coturn:4.12.0
     ports:
       - "${COTURN_UDP_PORT}:3478/udp"
     networks:
       - industrial-edge-vision
 
   mqtt-broker:
-    image: eclipse-mosquitto
+    image: eclipse-mosquitto:2.0.22
     networks:
       - industrial-edge-vision
     volumes:
@@ -149,7 +149,7 @@ services:
     command: server --address ":8000" --certs-dir /certs /data
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.12.0
     environment:
       - HTTP_PROXY=${http_proxy}
       - HTTPS_PROXY=${https_proxy}
