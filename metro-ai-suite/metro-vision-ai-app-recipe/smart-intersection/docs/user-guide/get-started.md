@@ -170,6 +170,67 @@ instead of `localhost` for external access:
     docker compose down
     ```
 
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://docs.openedgeplatform.intel.com/trusted-compute/baremetal-installation) to install Trusted Compute runtime version 1.5.0 on your host system. Complete the following sections:
+
+- Prerequisites
+- Download the Trusted Compute Package
+- Docker Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+> **Note:** Trusted Compute 1.5.0 is not compatible with Docker version 29.5 or later. Docker version 29.4.x is required (tested with 29.4.3).
+
+### 2. Deploy the Smart Intersection Sample Application with Trusted Compute
+
+**Configure Network Settings**
+
+By default, Trusted Compute uses the subnet `172.20.0.0/16` for isolated container networking. If this subnet conflicts with your existing networks, you can customize it before deployment.
+
+Requirements:
+
+- Subnet format must be exactly `172.X.0.0/16` where `X` is between 18–31 (RFC 1918 private IP range)
+- The subnet must not conflict with existing Docker networks on your system
+- DNS relay service will be automatically configured at `172.X.0.200`
+
+Example:
+
+```bash
+# Optional: Customize the subnet if needed (default is 172.20.0.0/16)
+export TC_SUBNET=172.25.0.0/16  # DNS relay will be at 172.25.0.200
+```
+
+**Deploy with Trusted Compute**
+
+```bash
+export ENABLE_TC=true
+./install.sh smart-intersection
+```
+
+The DL Streamer Pipeline Server containers will run inside hardware-isolated TC VMs, protecting inference workloads and video data from untrusted co-tenants on the same host.
+
+**Start the Application**
+
+```bash
+docker compose up -d
+```
+
+Once the application is running, follow the [Access the Application and Components](#access-the-application-and-components) section to access the UI and services.
+
+**Stop the Application**
+
+```bash
+docker compose down
+```
+To uninstall Trusted Compute from the host, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
+
 ## Other Deployment Options
 
 Choose one of the following methods to deploy the Smart Intersection Sample Application:
