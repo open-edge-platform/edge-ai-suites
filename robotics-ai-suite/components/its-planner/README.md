@@ -190,7 +190,7 @@ After launching the ROS2 navigation and the ITS planner plugin, look at where th
 
 Now a path will be generated and the robot will start following the path to navigate toward the goal position.
 
-For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://navigation.ros.org/getting_started/index.html#navigating)
+For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://docs.nav2.org/getting_started/index.html#navigating)
 
 ### Ackermann Steering Support
 
