@@ -47,11 +47,11 @@ Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patche
 
 ## Key References
 
-- **MOXA TSN-G5000:** [PTP Grandmaster, VLAN segmentation, IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/en-50155-switches/tsn-g5004-series)
+- **MOXA TSN-G5000:** [PTP Grandmaster, VLAN segmentation, IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5004-series)
 - **Intel i226 NIC:** TSN-capable Ethernet controller for Arrow Lake hosts
 - **IEEE 802.1Qbv:** Time-Aware Scheduler for traffic isolation
 - **Intel® SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
-- **DL Streamer:** [Intel's video processing and AI inference pipeline](https://github.com/openvinotoolkit/dlstreamer)
+- **DL Streamer:** [Intel's video processing and AI inference pipeline](https://github.com/open-edge-platform/dlstreamer)
 
 <!--hide_directive
 :::{toctree}

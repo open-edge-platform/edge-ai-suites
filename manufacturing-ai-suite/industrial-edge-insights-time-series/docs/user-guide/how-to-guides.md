@@ -21,6 +21,8 @@ This section collects guides for Time Series Analytics microservice and associat
 ./how-to-guides/update-config
 ./how-to-guides/create-a-new-sample-app
 ./how-to-guides/write-user-defined-function
+./how-to-guides/benchmarking
+./how-to-guides/multi-stream-ingestion
 
 :::
 hide_directive-->

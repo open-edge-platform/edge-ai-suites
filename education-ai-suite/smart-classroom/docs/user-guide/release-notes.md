@@ -35,7 +35,7 @@ The Education AI Suite now also includes built-in telemetry hooks and benchmarki
 
 ## Documentation and Source Code
 
-- [GitHub](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.0.0/education-ai-suite)
+- [GitHub](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/education-ai-suite/smart-classroom)
 
 ## Previous releases
 

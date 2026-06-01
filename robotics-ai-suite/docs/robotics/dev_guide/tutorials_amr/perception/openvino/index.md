@@ -4,7 +4,7 @@ This chapter provides a list of OpenVINO™ tutorials.
 
 Before you can run these tutorials, you have to ensure that OpenVINO™ is properly installed.
 
-Follow the instructions on [Getting Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html), to install OpenVINO™ and to troubleshoot potential issues with the OpenVINO™ installation.
+Follow the instructions on [Getting Started Guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html), to install OpenVINO™ and to troubleshoot potential issues with the OpenVINO™ installation.
 
 <!--hide_directive
 :::{toctree}

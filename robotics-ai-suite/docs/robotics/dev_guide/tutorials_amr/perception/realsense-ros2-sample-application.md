@@ -12,8 +12,7 @@ This Intel® RealSense™ with ROS 2 Sample Application can be run using two
 different types of Intel® RealSense™ cameras. The next section explains how to
 run this sample application using an Intel® RealSense™ camera connected through
 USB (for example, Intel® RealSense™ camera D435i). The subsequent section focuses
-on an [Intel® RealSense™ Depth Camera D457](https://www.intelrealsense.com/depth-camera-d457)
-in MIPI mode, which is connected to an
+on an [Intel® RealSense™ Depth Camera D457](https://www.intel.com/content/www/us/en/products/sku/230571/intel-realsense-depth-camera-d457/specifications.html) in MIPI mode, which is connected to an
 [Axiomtek Robox500 ROS 2 AMR Controller](https://www.axiomtek.com/Default.aspx?MenuId=Products&FunctionId=ProductView&ItemId=27392&C=ROBOX500&upcat=408).
 
 ## Prerequisites

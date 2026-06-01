@@ -10,14 +10,14 @@ With this feature, during runtime, you can download a new model using the micros
 ### Pre-requisites
 
 We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`.
-To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#quick-start-with-setup-script)
+To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#start-with-setup-script)
 
-If not available, you can simulate this by downloading the sample model from edge-ai-resources repository [here](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/INT8/pallet_defect_detection.zip). Once downloaded, extract to `/tmp/models` directory.
+If not available, you can simulate this by downloading the sample model from the [`edge-ai-resources` repository](https://github.com/open-edge-platform/edge-ai-resources/blob/main/models/INT8/pallet_defect_detection.zip). Once downloaded, extract to `/tmp/models` directory.
 
 ### Steps
 
-> Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-> If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 1. Set up the sample application to start a pipeline. A pipeline named `pallet_defect_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the pallet defect detection sample app.
 
@@ -32,7 +32,7 @@ If not available, you can simulate this by downloading the sample model from edg
 2. Update the following variables in `.env` file.
 
    ```sh
-   HOST_IP= # <IP Adress of the host machine>
+   HOST_IP= # <IP Address of the host machine>
 
    MINIO_ACCESS_KEY=   # MinIO service & client access key e.g. intel1234
    MINIO_SECRET_KEY=   # MinIO service & client secret key e.g. intel1234
@@ -99,11 +99,14 @@ If not available, you can simulate this by downloading the sample model from edg
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
-   ### Downloading model with Model Download
+   #### Downloading a Model with Model Download
 
    At this point, user would like to restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use the [Model Download](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti models from a running Geti server. To learn more about the microservice, see how to [get started with it](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html).
 
-   For our demonstration, we will assume the pallet defect detection model has been retrained and is available for downloaded from a Geti server using the Model Download service. Also, the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/models`. The `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server service in docker-compose file.
+   For our demonstration, we assume that:
+   - the Pallet Defect Detection model has been retrained and is available for download from a Geti server using the Model Download service.
+   - the downloaded location is accessible by the DL Streamer Pipeline Server. In our example, it is `/tmp/models`.
+   - the `/tmp` directory is already accessible by the sample application. If not, add it to the `volumes` section of `dlstreamer-pipeline-server` service in the docker-compose file.
 
 9. Stop the running pipeline by using the pipeline instance "id".
 
@@ -138,7 +141,9 @@ If not available, you can simulate this by downloading the sample model from edg
       }
     ]
     ```
+
     Run the following.
+
     ```bash
     ./sample_start.sh -p pallet_defect_detection_mlops
     ```
@@ -149,6 +154,6 @@ If not available, you can simulate this by downloading the sample model from edg
 
 ### Downloading models from Geti Server
 
-To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command)
+To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 
-> **Note:** The downloaded model(s) must be accessible to the DL Streamer pipeline server container. If not, please add it to volumes section of dltreamer-pipeline-server in compose file, and restart the DLSPS service.
+> **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.

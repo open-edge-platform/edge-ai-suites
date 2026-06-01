@@ -74,6 +74,10 @@ spec:
               value: "aggregator,localhost,127.0.0.1"
             - name: no_proxy
               value: "aggregator,localhost,127.0.0.1"
+            {{- if eq .Values.devices.POSE_3D_DEVICE "NPU" }}
+            - name: ZE_ENABLE_ALT_DRIVERS
+              value: "libze_intel_npu.so"
+            {{- end }}
           volumeMounts:
             - name: models
               mountPath: /models

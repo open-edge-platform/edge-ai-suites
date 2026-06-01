@@ -57,13 +57,13 @@ When installing Ubuntu Deb Packages for:
 :::{tab-item}hide_directive--> **Jazzy**
 <!--hide_directive:sync: jazzyhide_directive-->
 
-[Deb packages for ROS 2](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[Deb packages for ROS 2](https://docs.ros.org/en/jazzy/Installation/Ubuntu-Install-Debs.html)
 
 <!--hide_directive:::
 :::{tab-item}hide_directive-->  **Humble**
 <!--hide_directive:sync: humblehide_directive-->
 
-[Deb packages for ROS 2](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html#ubuntu-debian-packages)
+[Deb packages for ROS 2](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 
 <!--hide_directive:::
 ::::hide_directive-->

@@ -15,4 +15,4 @@ hide_directive-->
 
 ## Source Code
 
-The source code of this component can be found here: [Simulations](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/components/simulations)
+The source code of this component can be found here: [Simulations](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0//robotics-ai-suite/components/simulations)

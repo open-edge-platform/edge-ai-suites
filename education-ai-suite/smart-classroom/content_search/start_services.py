@@ -89,7 +89,7 @@ def _load_config_to_env(config_path: str = "config.yaml") -> None:
 
         # Reranker
         reranker = ingest.get("reranker", {})
-        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-large"))
+        _set("RERANKER_MODEL", reranker.get("model", "BAAI/bge-reranker-base"))
         _set("RERANKER_DEVICE", reranker.get("device", "CPU"))
         _set("RERANKER_DEDUP_TIME_THRESHOLD", str(reranker.get("dedup_time_threshold", 5)))
         _set("RERANKER_OVERFETCH_MULTIPLIER", str(reranker.get("overfetch_multiplier", 3)))

@@ -27,7 +27,7 @@ Depending on your processor type, select one of the following Canonical Ubuntu 2
 
 |Processor type|Canonical Ubuntu 24.04 LTS variant|ROS2 Compatibility|
 |-|-|-|
-|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/24.04) Desktop image|Jazzy|
+|Intel® Core™ Ultra Processors|[Ubuntu OS version 24.04 LTS (Noble Numbat)](https://releases.ubuntu.com/noble/) Desktop image|Jazzy|
 
 :::
 :::{tab-item}  **Ubuntu 22.04**
