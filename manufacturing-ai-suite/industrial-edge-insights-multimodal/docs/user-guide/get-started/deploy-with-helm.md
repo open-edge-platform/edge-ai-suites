@@ -6,7 +6,7 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
 
 - [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
- Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+ Refer to online tutorials (such as <https://adamtheautomator.com/installing-kubernetes-on-ubuntu/>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**

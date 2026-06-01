@@ -87,9 +87,33 @@ Set via CLI if needed:
 
 ```bash
 --set assets.proxy.enabled=true \
---set assets.proxy.httpProxy=http://your-proxy-server:port\
---set assets.proxy.httpsProxy=http://your-proxy-server:port\
---set assets.proxy.noProxy=localhost,127.0.0.1,.svc,.cluster.local
+--set assets.proxy.httpProxy=http://your-proxy-server:port \
+--set assets.proxy.httpsProxy=http://your-proxy-server:port \
+--set assets.proxy.noProxy='localhost\,127.0.0.1\,.svc\,.cluster.local'
+```
+
+## Optional: Device configuration (CPU / GPU / NPU)
+
+Each inference service can target a specific device. Configure this in `values.yaml` under the `devices` section:
+
+```yaml
+# Devices
+devices:
+  ECG_DEVICE: "GPU"
+  RPPG_DEVICE: "GPU"
+  MDPNP_DEVICE: "CPU"
+  POSE_3D_DEVICE: "GPU"
+```
+
+Supported values are `CPU`, `GPU`, and `NPU`. Change the value for each service depending on the hardware available on your cluster nodes.
+
+Set via CLI if needed:
+
+```bash
+--set devices.ECG_DEVICE=CPU \
+--set devices.RPPG_DEVICE=NPU \
+--set devices.MDPNP_DEVICE=CPU \
+--set devices.POSE_3D_DEVICE=GPU
 ```
 
 ## Setup Storage Provisioner (For Single-Node Clusters)

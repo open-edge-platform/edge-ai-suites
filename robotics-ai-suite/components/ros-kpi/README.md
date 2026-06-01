@@ -541,6 +541,62 @@ found — NPU monitoring skipped.` and continues normally.
 
 ---
 
+## ⚡ Intel RAPL CPU Package Power Monitoring
+
+CPU package power is sampled in the background via the Linux **powercap RAPL**
+sysfs interface — **no root, no special capabilities required**.  Available on
+Intel bare-metal systems running kernel ≥ 3.13 with `CONFIG_INTEL_RAPL`.
+Returns `null` on WSL2 and ARM.
+
+### RAPL quick start
+
+```bash
+# Standalone — CPU power only
+uv run python src/monitor_resources.py --power
+
+# Combined with CPU/memory/NPU resource monitoring
+uv run python src/monitor_resources.py --memory --npu --power
+
+# Check whether RAPL is available on this machine
+uv run python src/monitor_resources.py --check-hw
+```
+
+`monitor_stack.py` **auto-enables** RAPL power monitoring when the sysfs path
+is readable — no flag needed for normal benchmark sessions.
+
+### How RAPL works
+
+`monitor_resources.py --power` launches a daemon thread that:
+
+1. Reads `/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj` (µJ counter).
+2. Computes `power_w = Δenergy_µJ / Δtime_s / 1_000_000`, handling counter
+   wraparound using `max_energy_range_uj`.
+3. Appends a JSON-line `{"ts": <epoch>, "power_w": <float>}` to `cpu_power.log`
+   each interval.
+
+### RAPL logged fields
+
+`cpu_power.log` (JSON-lines) in each session directory:
+
+| Field | Description |
+|-------|-------------|
+| `ts` | Unix timestamp of the sample |
+| `power_w` | CPU package power in watts |
+
+`analyze_trigger_latency.py` reads `cpu_power.log` and stores the **mean** as
+`cpu_pkg_power_w` in the Level 1 KPI `thermal` section.
+
+### Verifying RAPL availability
+
+```bash
+uv run python src/monitor_resources.py --check-hw
+# [PWR] RAPL path     : /sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj
+# [PWR] Status        : ✅ AVAILABLE
+# [PWR] Detail        : Intel RAPL accessible at /sys/class/...
+```
+
+---
+
 ## 📤 KPI Export: CSV & Excel
 
 All benchmark scripts support exporting results to **CSV** and optionally **Excel (`.xlsx`)** for analysis in spreadsheet tools.
