@@ -46,7 +46,7 @@ The robot base should feature a ROS 2 node with the ability to:
 - When using multiple robots, the ability to change these names for
   each robot like ``robot1_odom`` and ``robot1_base_link`` (more information
   can be found `here
-  <https://navigation.ros.org/setup_guides/transformation/setup_transforms.html>`__).
+  <https://docs.nav2.org/setup_guides/transformation/setup_transforms.html>`__).
 
 > **Note**: This ROS 2 node runs on the compute system and retrieving information from the
 > motor robot's controller via a wired connection, usually a USB connection.
@@ -86,7 +86,7 @@ The Autonomous Mobile Robot pipeline assumes that the robot base ROS 2 node:
   - ``odom`` is used by the Navigation 2 package and others to get information
     from sensors, especially the wheel encoders. For more information refer to `Navigation 2
     tutorial on Odometry
-    <https://navigation.ros.org/setup_guides/odom/setup_odom.html>`__.
+    <https://docs.nav2.org/setup_guides/odom/setup_odom_gz.html>`__.
 
   - ``base_link`` represents the center of the robot to which all other links
     are connected.
@@ -263,13 +263,13 @@ You can check the following:
 #### Introduction to the ROS 2 Navigation Parameter File
 
 The Autonomous Mobile Robot pipeline for AMRs uses the
-[Navigation 2 package](https://navigation.ros.org) from ROS 2. Setting parameters specific to the
+[Navigation 2 package](https://docs.nav2.org) from ROS 2. Setting parameters specific to the
 robot and the mapping area is essential for the Navigation 2 packages to function properly.
 
 #### Robot Navigation Parameter File
 
 To help understand the options in this parameter file, see ROS 2
-[Navigation 2 Packages Configuration Guide](https://navigation.ros.org/configuration/index.html).
+[Navigation 2 Packages Configuration Guide](https://docs.nav2.org/configuration/index.html).
 
 With numerous parameters to configure, Intel® recommends referring to
 Navigation 2 documentation for a comprehensive understanding of the setup.
