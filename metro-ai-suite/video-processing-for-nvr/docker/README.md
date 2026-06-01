@@ -37,6 +37,8 @@ eg:yolov8n_with_preprocess.xml
 
 docker compose build
 ```
+Upon successful execution, the following logs will be displayed:
+```
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 327] [info]: [decode.cpp:releaseFrame@Line1492] decode release frame
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 337] [info]: [decode.cpp:getFrame@Line1434] decode get frame
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 329] [info]: [decode.cpp:getFrame@Line1434] decode get frame
