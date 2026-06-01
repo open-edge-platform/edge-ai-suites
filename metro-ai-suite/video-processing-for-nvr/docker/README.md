@@ -37,6 +37,12 @@ eg:yolov8n_with_preprocess.xml
 
 docker compose build
 ```
+
+1. Run `sudo init 3` switch to non-GUI mode
+2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
+
+If you want to stop the program, press Ctrl+C 
+
 Upon successful execution, the following logs will be displayed:
 ```
 vppsample-1  | [2026-06-01 21:25:14.085] [thread 327] [info]: [decode.cpp:releaseFrame@Line1492] decode release frame
@@ -84,14 +90,6 @@ vppsample-1  | [2026-06-01 21:25:14.094] [thread 330] [info]: [decode.cpp:releas
 
 vppsample-1 exited with code 0
 vppsample-1  | [2026-06-01 21:25:14.097] [thread 328] [info]: [decode.cpp:releaseFrame@Line1492] decode release frame
-```
-
-1. Run `sudo init 3` switch to non-GUI mode
-2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
-
-If you want to stop the program, press Ctrl+C 
-
-Upon successful execution, the following logs will be displayed:
 ```
 
 ## Uninstall docker image
