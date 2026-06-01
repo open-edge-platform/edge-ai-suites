@@ -21,17 +21,22 @@ Make sure docker is corrently installed and configured.
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run docker compose 
-Set up environment variables for the model
 
-`export MODEL_DIR=your_model_dir` 
+If you want to build the image.
+
+`
+#Set up environment variables for the model
+
+export MODEL_DIR=your_model_dir
 
 eg:/home/vpp/yolov8n_int8
 
-`export MODEL_FILE=your_model_file`
+export MODEL_FILE=your_model_file
 
 eg:yolov8n_with_preprocess.xml
 
-run `docker compose build` If you want to build the image.
+docker compose build
+` 
 
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
