@@ -46,6 +46,7 @@ install(PROGRAMS ${SCRIPT_FILES} DESTINATION lib/${PROJECT_NAME}/robots)
 
 
 install(DIRECTORY launch params urdf worlds maps rviz DESTINATION share/${PROJECT_NAME})
+install(FILES cyclonedds.xml DESTINATION share/${PROJECT_NAME})
 
 ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/picknplace.dsv.in")
 

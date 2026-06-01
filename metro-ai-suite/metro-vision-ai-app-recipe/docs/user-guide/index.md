@@ -9,8 +9,8 @@ This documentation serves as a guide for users to understand the features, insta
 usage of the Metro Vision AI App Recipe suite. It includes detailed instructions on how to
 set up the applications, system requirements, and best practices for deployment.
 
-
 **Available Sample Applications:**
+
 - **Smart Intersection Management** (includes optional Intel® SceneScape components) - AI-driven traffic flow optimization and intersection monitoring
 - **Loitering Detection** - Real-time detection of loitering behavior in transportation hubs
 - **Smart Parking** - Automated parking space monitoring and management
@@ -34,7 +34,7 @@ safety & security scenarios. The system processes real-time video feeds from tra
 applies deep learning models for object detection and classification, and generates actionable
 insights for traffic management.
 
-![Architecture Diagram](_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
+![Architecture Diagram](./_images/metro-vision-ai-app-recipe-architecture.drawio.svg)
 
 ### Core Workflow
 
@@ -60,7 +60,6 @@ insights for traffic management.
 - **Intel® SceneScape Controller:** The backend service that manages scene configurations, processes spatial analytics, and coordinates between the Management UI and the video analytics pipeline. Handles complex scene understanding and geometric transformations.
 - **Intel® SceneScape Database (PostgreSQL):** A robust relational database that stores scene configurations, camera metadata, calibration parameters, and historical analytics data. Ensures data persistence and enables complex queries for reporting and analysis.
 - **InfluxDB:** A time-series database optimized for storing and querying high-frequency transportation metrics such as vehicle counts, traffic flow rates, speed measurements, and system performance data. Enables efficient historical analysis and trend monitoring.
-
 
 <!--hide_directive
 :::{toctree}

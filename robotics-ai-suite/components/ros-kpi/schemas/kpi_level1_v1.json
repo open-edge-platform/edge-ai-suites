@@ -67,6 +67,42 @@
       "maximum": 100,
       "description": "Peak CPU utilization percentage. Null when not collected."
     },
+    "thermal": {
+      "type": ["object", "null"],
+      "description": "Session-level thermal summary: temperatures and throttle flags. Null when resource monitoring was not active.",
+      "additionalProperties": false,
+      "properties": {
+        "cpu_temp_c": {
+          "type": ["number", "null"],
+          "description": "Mean CPU package temperature in °C sampled at analysis time from sysfs x86_pkg_temp zone. Null when unavailable."
+        },
+        "gpu_temp_c": {
+          "type": ["number", "null"],
+          "description": "Mean GPU temperature in °C over the session, sourced from qmassa (xe) or hwmon sysfs (i915). Null when GPU monitoring was not active."
+        },
+        "npu_temp_c": {
+          "type": ["number", "null"],
+          "description": "Mean NPU junction temperature in °C over the session, sourced from Intel PMT telemetry. Null when PMT is unavailable."
+        },
+        "cpu_throttled": {
+          "type": ["boolean", "null"],
+          "description": "True when CPU frequency dropped below 95 % of cpuinfo_max_freq at analysis time. Null when sysfs is unavailable."
+        },
+        "gpu_throttled": {
+          "type": ["boolean", "null"],
+          "description": "True if GPU thermal throttling was active in any sample during the session. Null when GPU monitoring is not active."
+        },
+        "npu_throttled": {
+          "type": ["boolean", "null"],
+          "description": "True if NPU throttling was observed during the session. Null when not monitorable."
+        },
+        "cpu_pkg_power_w": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Mean CPU package power in watts over the session, sampled via Intel RAPL powercap sysfs. Null when RAPL is unavailable (e.g. WSL2)."
+        }
+      }
+    },
     "per_node": {
       "type": "object",
       "description": "Per-node performance summary keyed by fully-qualified node name.",
@@ -214,6 +250,11 @@
             "type": "number",
             "minimum": 0,
             "description": "Maximum inter-message jitter in milliseconds."
+          },
+          "pipeline_stage": {
+            "type": "string",
+            "enum": ["Sensor", "Perception", "Planning", "Control", "Other"],
+            "description": "Pipeline stage classification for this node pair."
           }
         }
       }
