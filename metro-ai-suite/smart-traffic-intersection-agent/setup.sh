@@ -377,7 +377,8 @@ export_model_for_ovms() {
         --is-ovms \
         --precision "$weight_format" \
         --device "$target_device" \
-        --model-path "${OVMS_CONFIG_DIR}/models" || return 1
+        --model-path "${OVMS_CONFIG_DIR}/models" \
+        --plugins "${hub}" || return 1
 
     echo "$storage_model_name"
 }
