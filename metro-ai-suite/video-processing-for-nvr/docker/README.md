@@ -21,6 +21,7 @@ Make sure docker is corrently installed and configured.
 To exit the program, you need to open another terminal window and stop the container using docker stop.
 
 ## Run docker compose 
+run `docker compose build` If you want to build the image.
 1. Run `sudo init 3` switch to non-GUI mode
 2. Run `bash ./startup.sh yolov8n_with_preprocess.xml`
 
