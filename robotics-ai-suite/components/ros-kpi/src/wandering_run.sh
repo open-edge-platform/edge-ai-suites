@@ -290,3 +290,11 @@ else
   echo "  ⚠ Monitor data missing (graph_timing.csv or graph_topology.json not found)"
   echo "    Session dir: $SESSION_DIR"
 fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Results ready — view KPI charts + HTML report:"
+echo ""
+echo "    make results SESSION=$SESSION_DIR"
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

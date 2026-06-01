@@ -32,6 +32,11 @@ spec:
           imagePullPolicy: {{ .Values.aiEcg.image.pullPolicy }}
           securityContext:
             privileged: true
+          env:
+            {{- if eq .Values.devices.ECG_DEVICE "NPU" }}
+            - name: ZE_ENABLE_ALT_DRIVERS
+              value: "libze_intel_npu.so"
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: device-config
