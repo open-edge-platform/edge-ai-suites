@@ -59,7 +59,7 @@ Download a sample video file containing vehicle traffic for testing the AI tolli
 ```bash
 mkdir -p ./ai-tolling/src/dlstreamer-pipeline-server/videos/
 wget -O ./ai-tolling/src/dlstreamer-pipeline-server/videos/cars_extended.mp4 \
-  https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/release-2026.1.0/videos/cars_extended.mp4
+  https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/cars_extended.mp4
 ```
 
 <details>
