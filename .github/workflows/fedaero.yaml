@@ -8,8 +8,7 @@
 #
 # What this workflow does, in plain terms:
 #
-#   It builds three zip artifacts from the `federal-aerospace/` directory:
-#     - federal-aerospace.zip            (the full solution)
+#   It builds two zip artifacts from the `federal-aerospace/` directory:
 #     - handheld-multi-modal.zip         (one app)
 #     - deterministic-threat-detection.zip (the other app)
 #
@@ -22,11 +21,11 @@
 #        - Does not touch any release.
 #
 #   2. Push to main
-#        - Forces a rebuild of all three components (so they stay in sync).
+#        - Forces a rebuild of all two components (so they stay in sync).
 #        - Uploads Actions artifacts (same as PRs).
 #        - Updates the rolling release `fedaero-latest`:
 #            * tag is force-moved to the new commit
-#            * all three zips on the release are replaced
+#            * all two zips on the release are replaced
 #            * marked as a prerelease (this repo ships multiple products,
 #              so neither this release nor the versioned one claims the
 #              repo-wide "Latest release" badge).
@@ -35,7 +34,7 @@
 #        - Only allowed from `release-*` branches or any tag. Dispatching
 #          from any other ref fails fast with a clear error (the dispatch
 #          UI shows all branches; the guard step is what enforces this).
-#        - Always builds all three components (no per-component selection).
+#        - Always builds all two components (no per-component selection).
 #        - Uploads Actions artifacts.
 #        - Updates `fedaero-latest`.
 #        - If `publish_versioned_release` is ticked:
@@ -102,7 +101,6 @@ jobs:
     outputs:
       handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
       deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
-      solution: ${{ steps.force.outputs.solution || steps.filter.outputs.solution }}
     steps:
       # Guard for manual dispatches: only allow runs from a release-* branch
       # or a tag. The Actions UI shows every branch in its ref dropdown, so
@@ -136,7 +134,6 @@ jobs:
         run: |
           echo "handheld-multi-modal=true"           >> "$GITHUB_OUTPUT"
           echo "deterministic-threat-detection=true" >> "$GITHUB_OUTPUT"
-          echo "solution=true"                       >> "$GITHUB_OUTPUT"
 
       - id: filter
         if: github.event_name != 'workflow_dispatch'
@@ -150,9 +147,6 @@ jobs:
             deterministic-threat-detection:
               - 'federal-aerospace/apps/deterministic-threat-detection/**'
               - 'federal-aerospace/Makefile'
-              - '.github/workflows/fedaero.yaml'
-            solution:
-              - 'federal-aerospace/**'
               - '.github/workflows/fedaero.yaml'
 
   handheld-multi-modal:
@@ -200,33 +194,6 @@ jobs:
           path: federal-aerospace/dist/deterministic-threat-detection.zip
           if-no-files-found: error
 
-  federal-aerospace:
-    name: Build federal-aerospace (full solution)
-    needs: changes
-    if: needs.changes.outputs.solution == 'true'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
-        with:
-          persist-credentials: false
-      - name: Build
-        env:
-          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
-        run: |
-          if [[ -n "$VIPPET_REF" ]]; then
-            make -C federal-aerospace federal-aerospace VIPPET_REF="$VIPPET_REF"
-          else
-            unset VIPPET_REF
-            make -C federal-aerospace federal-aerospace
-          fi
-      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        with:
-          name: federal-aerospace
-          path: federal-aerospace/dist/federal-aerospace.zip
-          if-no-files-found: error
-
   release:
     name: Publish rolling release (fedaero-latest)
     # Skip on PRs, and skip if no component was actually built this run
@@ -234,13 +201,11 @@ jobs:
     if: >-
       github.event_name != 'pull_request' &&
       (needs.changes.outputs.handheld-multi-modal == 'true' ||
-       needs.changes.outputs.deterministic-threat-detection == 'true' ||
-       needs.changes.outputs.solution == 'true')
+       needs.changes.outputs.deterministic-threat-detection == 'true')
     needs:
       - changes
       - handheld-multi-modal
       - deterministic-threat-detection
-      - federal-aerospace
     runs-on: ubuntu-latest
     permissions:
       # contents: write is required to create/update releases and move the tag.
@@ -260,13 +225,6 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: deterministic-threat-detection
-          path: assets
-
-      - name: Download federal-aerospace artifact
-        if: needs.changes.outputs.solution == 'true'
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: federal-aerospace
           path: assets
 
       # Sanity-check which zips landed before we touch the release.
@@ -368,7 +326,6 @@ jobs:
             Immutable versioned release built from `${{ github.sha }}`.
 
             Contains:
-            - `federal-aerospace.zip` — full solution
             - `handheld-multi-modal.zip` — handheld multi-modal app
             - `deterministic-threat-detection.zip` — deterministic threat detection app
           # Auto-generate changelog from PRs / commits since the previous tag.
