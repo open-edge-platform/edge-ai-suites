@@ -30,6 +30,8 @@ You can only access the Open WebUI chat UI through  the NGINX TLS reverse proxy.
 Edit the `--source_model` argument on the `ovms` service in the root `docker-compose.yml`.
 Models are downloaded from the HuggingFace hub on first start and persisted in the `ovms_models` Docker volume.
 
+> **NOTE** Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).
+
 Because downloading happens on first start, OpenVINO model server accepts connections before the model is actually ready to serve requests. After changing the model, or on a fresh start, check readiness before sending inference requests.
 
 ```bash
