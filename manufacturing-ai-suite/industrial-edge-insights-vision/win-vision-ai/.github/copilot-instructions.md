@@ -360,7 +360,7 @@ Viewer URLs are logged after each pipeline launches:
 | `src/config_loader.py` | All dataclasses + YAML parsing. **Source of truth.** Validates input types, metadata output types, and cross-references between pipelines and models. |
 | `src/app_runner.py` | `AppRunner` mixin inherited by `App`: `_wait_for_completion` (uses `threading.Event` for instant Ctrl-C wake), `_install_signal_handlers` (two-phase: 1st Ctrl-C = graceful, 2nd Ctrl-C = force-abort), `_on_state_change`, `_on_completed`, `_on_error` |
 | `src/download_models.py` | CLI helper: download an Ultralytics YOLO model and export it to OpenVINO format. Adapted from [dlstreamer](https://github.com/open-edge-platform/dlstreamer/blob/master/scripts/download_models/download_ultralytics_models.py). |
-| `src/setup_genicam_runtime.ps1` | PowerShell script: (1) downloads `gstgencamsrc.dll` from the Edge AI Libraries GitHub release (`dlstreamer-pipeline-server.zip`) into `bin\`; (2) downloads EMVA GenICam Package 2018.06 and extracts the Win64 VC120 runtime DLLs into `bin\Win64_x64\`. Run once before using camera input. |
+| `src/setup_genicam_runtime.ps1` | PowerShell script: (1) downloads `gstgencamsrc.dll` from the Edge AI Libraries GitHub release (`gstgencamsrc-plugin.zip`) into `bin\`; (2) downloads EMVA GenICam Package 2018.06 and extracts the Win64 VC120 runtime DLLs into `bin\Win64_x64\`. Run once before using camera input. |
 | `src/log.py` | `setup_logging(LogConfig)` — console + optional rotating file handler |
 | `src/media_service.py` | `MediaService` — downloads, configures, starts/stops `mediamtx.exe` |
 

@@ -4,7 +4,7 @@
 # Sets up the full binary dependencies for the gstgencamsrc GStreamer plugin:
 #
 #   1. Downloads gstgencamsrc.dll from the "Edge AI Libraries" GitHub release
-#      (dlstreamer-pipeline-server.zip) and places it in bin\
+#      (gstgencamsrc-plugin.zip) and places it in bin\
 #
 #   2. Downloads the EMVA GenICam Package 2018.06 and extracts the Win64 VC120
 #      runtime DLLs into bin\Win64_x64\
@@ -19,7 +19,7 @@
 #
 # Parameters
 #   -ReleaseTag  GitHub release tag for edge-ai-libraries containing
-#                dlstreamer-pipeline-server.zip with gstgencamsrc.dll.
+#                gstgencamsrc-plugin.zip with gstgencamsrc.dll.
 #                Default: 2026.1
 #   -BinDir   Destination folder for gstgencamsrc.dll.
 #             Default: <repo-root>\bin  (relative to this script's location)
@@ -42,8 +42,8 @@ if (-Not $OutDir) { $OutDir = "$BinDir\Win64_x64" }
 $ErrorActionPreference = "Stop"
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-$DLSTREAMER_ZIP_URL   = "https://github.com/open-edge-platform/edge-ai-libraries/releases/download/$ReleaseTag/dlstreamer-pipeline-server.zip"
-$DLSTREAMER_ZIP       = "$env:TEMP\dlstreamer-pipeline-server.zip"
+$DLSTREAMER_ZIP_URL   = "https://github.com/open-edge-platform/edge-ai-libraries/releases/download/$ReleaseTag/gstgencamsrc-plugin.zip"
+$DLSTREAMER_ZIP       = "$env:TEMP\gstgencamsrc-plugin.zip"
 $GENICAM_DOWNLOAD_URL = "https://www.emva.org/wp-content/uploads/GenICam_Package_2018.06.zip"
 $GENICAM_ZIP          = "$env:TEMP\GenICam_Package_2018.06.zip"
 
@@ -68,7 +68,7 @@ Write-Host "      URL: $DLSTREAMER_ZIP_URL"
 try {
     Invoke-WebRequest -Uri $DLSTREAMER_ZIP_URL -OutFile $DLSTREAMER_ZIP -UseBasicParsing
 } catch {
-    Write-Error "Failed to download dlstreamer-pipeline-server.zip: $_"
+    Write-Error "Failed to download gstgencamsrc-plugin.zip: $_"
     exit 1
 }
 
@@ -82,7 +82,7 @@ try {
     if (-Not $gstDll) {
         Write-Host "Contents of extracted zip:"
         Get-ChildItem $DLSTREAMER_EXTRACT_DIR -Recurse | ForEach-Object { Write-Host "  $($_.FullName)" }
-        throw "gstgencamsrc.dll not found in dlstreamer-pipeline-server.zip."
+        throw "gstgencamsrc.dll not found in gstgencamsrc-plugin.zip."
     }
     Copy-Item -Path $gstDll.FullName -Destination "$BinDir\gstgencamsrc.dll" -Force
     Write-Host "      -> $BinDir\gstgencamsrc.dll"
