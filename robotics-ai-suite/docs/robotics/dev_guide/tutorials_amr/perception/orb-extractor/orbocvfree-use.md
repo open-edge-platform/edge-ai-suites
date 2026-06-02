@@ -11,7 +11,7 @@ The GPU orb-extractor feature OpenCV-free library provides similar features, exc
    cd /opt/intel/orb_lze/samples/
    ```
 
-2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0//robotics-ai-suite/docs/robotics/sources/sample/main.cpp) to read the comments for the code.
+2. `main.cpp` should be in the directory. [View it on GitHub](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/robotics-ai-suite/docs/robotics/sources/sample/main.cpp) to read the comments for the code.
 
    > **Note:** Refer to the explanations in the [Use the GPU ORB Extractor](./api-use.md) tutorial for details on how to use the orb-extractor feature library API.
 

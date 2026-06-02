@@ -56,7 +56,7 @@ Download and execute the convenience script. Note: This script may take anywhere
 > ``*oneapi*`` ``ros-*`` ``intel-igc*`` ``*openvino*`` ``*gazebo*`` ``*realsense*`` ``*level-zero*`` ``libze1``
 
 ```bash
-wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
+wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.1.0/robotics-ai-suite/scripts/setup-robotics-jazzy.sh
 chmod +x setup-robotics-jazzy.sh
 export USE_PROXY=0
 ./setup-robotics-jazzy.sh
@@ -70,7 +70,7 @@ export USE_PROXY=0
 > ``*oneapi*`` ``ros-*`` ``*openvino*`` ``*gazebo*`` ``*realsense*``
 
 ```bash
-wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/main/robotics-ai-suite/scripts/setup-robotics-humble.sh
+wget https://raw.githubusercontent.com/open-edge-platform/edge-ai-suites/refs/heads/release-2026.1.0/robotics-ai-suite/scripts/setup-robotics-humble.sh
 chmod +x setup-robotics-humble.sh
 export USE_PROXY=0
 ./setup-robotics-humble.sh

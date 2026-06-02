@@ -149,7 +149,42 @@ Run video decode + detection with yolo detection model
 ```
 ./dec_det yolov8n_with_preprocess.xml
 ```
+Upon successful execution, the following logs will be displayed:
+```
+[FPS counter] Tue Jun  2 06:27:28 2026
 
+Decode node stream 4, fps is 60.000000
+Decode node stream 3, fps is 56.000000
+Decode node stream 11, fps is 67.000000
+Decode node stream 12, fps is 60.000000
+Decode node stream 6, fps is 60.000000
+Decode node stream 1, fps is 55.000000
+Decode node stream 14, fps is 63.000000
+Decode node stream 15, fps is 56.000000
+Decode node stream 2, fps is 59.000000
+Decode node stream 0, fps is 62.000000
+Decode node stream 13, fps is 59.000000
+Decode node stream 10, fps is 60.000000
+Decode node stream 8, fps is 57.000000
+Decode node stream 9, fps is 60.000000
+Decode node stream 5, fps is 59.000000
+Decode node stream 7, fps is 59.000000
+Decode node total fps is 952.000000, total stream number is 16, average stream fps is 59.500000
+[2026-06-02 06:27:28.494] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.503] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.513] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.522] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.531] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.541] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.551] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.559] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.568] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.577] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.586] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+[2026-06-02 06:27:28.594] [thread 134686] [info]: [decode.cpp:destroy@Line110] decode destroy
+Decode and detection finished.
+
+```
 ## Uninstall
 
 ### Uninstall application

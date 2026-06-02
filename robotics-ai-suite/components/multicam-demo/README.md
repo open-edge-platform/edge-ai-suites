@@ -220,7 +220,7 @@ clinfo | grep -i "Device Name"
 Follow the below steps only in case the above iGPU driver is not installed.
 
 1. The steps to install iGPU driver on 12th Gen Intel® Core™ i7 processor is described here:
-[Configurations for Intel® Processor Graphics (GPU) with OpenVINO™](https://docs.openvino.ai/nightly/openvino_docs_install_guides_configurations_for_intel_gpu.html#)
+[Configurations for Intel® Processor Graphics (GPU) with OpenVINO™](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html)
 
 2. Reboot the target after installation.
 
