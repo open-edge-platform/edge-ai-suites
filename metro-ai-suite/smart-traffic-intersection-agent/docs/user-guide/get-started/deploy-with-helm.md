@@ -406,6 +406,56 @@ helm install stia . -n traffic -f values-override.yaml \
 
 ---
 
+## Deploy with Trusted Compute
+
+Intel Trusted Compute runs workloads inside a hardware-isolated virtual machine, providing an additional layer of security for sensitive AI workloads.
+
+> **Note:** GPU acceleration is currently not supported when deploying with Trusted Compute.
+
+### 1. Install Trusted Compute
+
+Follow the [Trusted Compute baremetal installation guide](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md) to install Trusted Compute runtime version 1.5.0 on your Kubernetes nodes. Complete the following sections:
+1. Prerequisites
+2. Download the Trusted Compute Package
+3. Kubernetes Option
+
+> **Note:** Trusted Compute version 1.5.0 is required for this deployment.
+
+### 2. Deploy with Trusted Compute
+
+Deploy the Smart Traffic Intersection Agent with Trusted Compute enabled by adding the `--set vlmServing.trustedCompute.enabled=true` and `--set vlmServing.gpu.enabled=false` flags to the helm command:
+
+```bash
+helm install stia . -n <your-namespace> --create-namespace \
+  --set vlmServing.trustedCompute.enabled=true \
+  --set vlmServing.gpu.enabled=false
+```
+
+The OVMS VLM serving pods will run inside hardware-isolated Trusted Compute VMs, protecting inference workloads and model data from untrusted co-tenants on the same host.
+
+> **Note:** When Trusted Compute is enabled, the OVMS VLM serving service type is automatically set to `ClusterIP` instead of the default `NodePort`. This restricts the model server to in-cluster access only, ensuring the inference endpoint is not externally exposed. To access the OVMS service for debugging, use `kubectl port-forward`.
+
+> **Note:** All other setup and configuration steps remain the same as described in the [Steps to Deploy with Helm](#steps-to-deploy-with-helm) section above.
+
+### 3. Verify Trusted Compute Deployment
+
+Verify that the pods are running with the Trusted Compute runtime:
+
+```bash
+# Check that OVMS pods are using the trusted compute runtime class
+kubectl get pods -n <your-namespace> -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.runtimeClassName}{"\n"}{end}' | grep ovms
+
+# Verify the pods are running
+kubectl get pods -n <your-namespace>
+
+# Check OVMS pod logs to ensure containers started successfully
+kubectl logs -n <your-namespace> -l app=stia-ovms-service
+```
+
+You should see the OVMS VLM serving pods running with the Trusted Compute runtime class.
+
+---
+
 ## Verification
 
 - Ensure that all pods are running and the services are accessible.
@@ -457,6 +507,10 @@ helm install stia . -n traffic -f values-override.yaml \
   # Delete the required PVC from the namespace
   kubectl delete pvc <pvc-name> -n <your-namespace>
   ```
+
+## Clean Up the Trusted Compute Deployment
+
+To uninstall Trusted Compute from the Kubernetes nodes after you have removed the application, refer to the [Trusted Compute documentation](https://github.com/open-edge-platform/trusted-compute/blob/main/docs/trusted_compute_baremetal.md).
 
 ## Related Links
 
