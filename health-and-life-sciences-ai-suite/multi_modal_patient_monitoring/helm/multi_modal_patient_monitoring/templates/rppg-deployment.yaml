@@ -72,6 +72,10 @@ spec:
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
+            {{- if eq .Values.devices.RPPG_DEVICE "NPU" }}
+            - name: accel
+              mountPath: /dev/accel
+            {{- end }}
       volumes:
         - name: models
           persistentVolumeClaim:
@@ -85,3 +89,8 @@ spec:
         - name: dev
           hostPath:
             path: /dev
+        {{- if eq .Values.devices.RPPG_DEVICE "NPU" }}
+        - name: accel
+          hostPath:
+            path: /dev/accel
+        {{- end }}

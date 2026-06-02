@@ -3,7 +3,7 @@ import time
 from typing import Dict, Any
 
 import numpy as np
-from openvino import Core
+from openvino import Core, PartialShape
 
 import load
 
@@ -34,7 +34,17 @@ class HubertECGInferenceEngine:
                 "Ensure patient-monitoring-assets has generated it into /models/ai-ecg."
             )
 
-        self.compiled = self.core.compile_model(self.core.read_model(self.model_path), self.device)
+        ov_model = self.core.read_model(self.model_path)
+
+        # NPU requires static shapes — reshape dynamic dims to fixed input size
+        if self.device.upper() == "NPU":
+            try:
+                ov_model.reshape({ov_model.input(0): PartialShape([1, 5000])})
+                print("[INFO] ECG model reshaped to static [1, 5000] for NPU")
+            except Exception as e:
+                print(f"[WARNING] Failed to reshape ECG model for NPU: {e}")
+
+        self.compiled = self.core.compile_model(ov_model, self.device)
         self.output_port = self.compiled.output(0)
 
     def _prepare_input(self, ecg: np.ndarray, target_len: int = 5000) -> np.ndarray:
