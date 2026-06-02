@@ -152,6 +152,13 @@ python src/download_models.py --model yolo11n --outdir C:/Users/<username>/model
 
 Use the exported `.xml` path in `config.yaml`.
 
+> **Note:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
+> ```powershell
+> wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip" ; Expand-Archive -Path "pallet_defect_detection.zip" -DestinationPath "models"
+> wget -O warehouse.avi "https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/warehouse.avi"
+> ```
+> Update the model and video paths in `config.yaml` accordingly.
+
 ---
 
 ### Configure `config.yaml`
@@ -222,7 +229,7 @@ metrics:
 models:
   inst0:
     type: detection # detection | classification
-    model: "C:/Users/path/to/model.xml"
+    model: "C:/Users/path/to/model.xml"  # replace with your downloaded/own model path
     device: CPU # CPU | GPU | NPU
     properties:
       batch_size: 1
@@ -238,7 +245,7 @@ models:
 ```yaml
 input:
   type: file # file | rtsp | camera
-  url: "C:/Users/path/to/video"
+  url: "C:/Users/path/to/video.avi"  # replace with your downloaded/own video path
 ```
 
 <!--hide_directive:::
@@ -379,7 +386,7 @@ metrics:
 models:
   inst0:
     type: detection
-    model: "C:/Users/path/to/model.xml"
+    model: "C:/Users/path/to/model.xml"  # replace with your downloaded/own model path
     device: CPU
     properties:
       batch_size: 1
@@ -389,7 +396,7 @@ pipelines:
   front:
     input:
       type: file
-      url: "C:/Users/path/to/video.avi"
+      url: "C:/Users/path/to/video.avi"  # replace with your downloaded/own video path
     inference:
       model_id: inst0
     output:
@@ -403,7 +410,7 @@ pipelines:
   back:
     input:
       type: file
-      url: "C:/Users/path/to/video.avi"
+      url: "C:/Users/path/to/video.avi"  # replace with your downloaded/own video path
     inference:
       model_id: inst0
     output:
@@ -477,7 +484,8 @@ Pass complete GStreamer strings directly — `models` and `pipelines` sections a
 
 ```yaml
 raw_pipelines:
-  front: "filesrc location=\"C:/Users/path/to/video\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! d3d11videosink name=sink"
+  # Replace C:/Users/path/to/video.avi and C:/Users/path/to/detection/model.xml with your downloaded/own paths
+  front: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! d3d11videosink name=sink"
   back: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter  ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! rtspclientsink location=rtsp://localhost:8554/back"
   right: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! identity name=sink ! mfh264enc bitrate=2000 gop-size=15 ! h264parse ! whipclientsink signaller::whip-endpoint=http://localhost:8889/front/whip"
   left: "filesrc location=\"C:/Users/path/to/video.avi\" ! decodebin3 name=src ! gvadetect model=\"C:/Users/path/to/detection/model.xml\" device=GPU pre-process-backend=d3d11 name=detection model-instance-id=inst0 threshold=0.4 batch-size=1 ! queue ! gvametaconvert add-empty-results=true ! gvametapublish method=mqtt topic=inference/back address=tcp://localhost:1883 ! queue ! gvawatermark ! d3d11convert ! gvafpscounter ! d3d11videosink name=sink"
