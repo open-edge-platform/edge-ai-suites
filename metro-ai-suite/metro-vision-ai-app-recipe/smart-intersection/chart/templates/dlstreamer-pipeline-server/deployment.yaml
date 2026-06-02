@@ -1,3 +1,6 @@
+{{- if and .Values.trustedCompute.enabled .Values.dlstreamerPipelineServer.gpu.enabled -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and dlstreamerPipelineServer.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,6 +17,9 @@ spec:
       labels:
         app: {{ .Release.Name }}-dlstreamer-pipeline-server
     spec:
+      {{- if .Values.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
       securityContext:
         supplementalGroups: [109,110,992]
       volumes:
@@ -100,6 +106,15 @@ spec:
           value: "libze_intel_npu.so"
         image: {{ .Values.dlstreamerPipelineServer.repository }}:{{ .Values.dlstreamerPipelineServer.tag }}
         name: {{ .Release.Name }}-dlstreamer-pipeline-server
+        {{- if or (.Values.resources.requests) (.Values.resources.limits) .Values.trustedCompute.enabled }}
+        resources:
+          requests:
+             memory: {{ (.Values.resources.requests).memory | default "12Gi" | quote }}
+             cpu: {{ (.Values.resources.requests).cpu | default "4" | quote }}
+          limits:
+             memory: {{ (.Values.resources.limits).memory | default "16Gi" | quote }}
+             cpu: {{ (.Values.resources.limits).cpu | default "6" | quote }}
+        {{- end }}
         imagePullPolicy: {{ .Values.imagePullPolicy }}
         securityContext:
           runAsUser: 0

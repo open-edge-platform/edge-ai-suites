@@ -9,9 +9,9 @@
 
 ## Overview
 
-This tutorial demonstrates how to simultaneously deploy and manage multiple industrial edge AI vision applications using Docker Compose. You'll learn to configure and run multiple instances of the same application or different applications in parallel, with each instance operating its own isolated DLStreamer Pipeline Server and associated services, all accessible through dedicated NGINX proxy configurations.
+This tutorial demonstrates how to simultaneously deploy and manage multiple industrial edge AI vision applications using Docker Compose. You will learn to configure and run multiple instances of the same application or different applications in parallel, with each instance operating its own isolated DL Streamer Pipeline Server and associated services, all accessible through dedicated NGINX proxy configurations.
 
-**What you'll learn:**
+**What you will learn:**
 
 - How to configure multiple application instances with unique port assignments
 - How to independently deploy, start, stop, and monitor multiple running applications
@@ -53,9 +53,9 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    > **Note:** A sample configuration file `sample_config.yml` is provided to help users understand the multi-instance setup and get started. This configuration defines three example instances with identifiers: pdd1, pdd2, and weld1. The accompanying sample scripts utilize these identifiers to perform operations on individual application instances.
 
-3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in config.yml.
+3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
-   For the example above, modify the envs for weld-porosity and pallet-defect-detection i.e. env_weld-porosity and .env_pallet-defect-detection
+   For the example above, modify the envs for weld-porosity and pallet-defect-detection i.e. `.env_weld-porosity` and `.env_pallet-defect-detection`
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -75,17 +75,17 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
    This does the following:
 
-   - Parses through the config.yml
+   - Parses through the `config.yml`
    - Downloads resources for each instance
-   - Creates a folder temp_apps/<SAMPLE_APP>/<INSTANCE_NAME> that contains configs folder, .env file and payload.json
-   - Updates and adds the ports mentioned in config.yml to the respective .env file
+   - Creates a folder `temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>` that contains `configs` folder, `.env` file and `payload.json`
+   - Updates and adds the ports mentioned in `config.yml` to the respective `.env` file
    - Sets executable permissions for scripts
 
 ## Deploy the Applications
 
 ### Deploy all the application instances
 
-1. Deploy all the instances given in config.yml:
+1. Deploy all the instances given in `config.yml`:
 
    ```bash
    ./run.sh up
@@ -184,7 +184,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Start pipeline for all instances in config.yml:
+2. Start pipeline for all instances in `config.yml`:
 
    ```bash
    ./sample_start.sh
@@ -481,7 +481,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    ]
    ```
 
-2. Check status of only a particular instance. You may refer to the config.yml for the instance names
+2. Check status of only a particular instance. You may refer to the `config.yml` for the instance names
 
    ```bash
    ./sample_status.sh -i <INSTANCE_NAME>

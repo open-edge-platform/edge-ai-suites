@@ -26,6 +26,8 @@ if [[ "${ECG_DEVICE:-}" == "NPU" ]]; then
     devices:
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
+    group_add:
+      - render
 EOF
 fi
 
@@ -38,6 +40,8 @@ if [[ "${POSE_3D_DEVICE:-}" == "NPU" ]]; then
     devices:
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
+    group_add:
+      - render
 EOF
 fi
 
@@ -50,6 +54,8 @@ if [[ "${RPPG_DEVICE:-}" == "NPU" ]]; then
     devices:
       - "/dev/dri:/dev/dri"
       - "/dev/accel/accel0:/dev/accel/accel0"
+    group_add:
+      - render
 EOF
 fi
 

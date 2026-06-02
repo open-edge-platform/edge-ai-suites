@@ -1,0 +1,71 @@
+{{- if .Values.assets.loadJob.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nicu-load-assets
+  labels:
+    {{- include "nicu-warmer.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    metadata:
+      labels:
+        app: nicu-load-assets
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: load-assets
+          image: busybox:1.36
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              echo "=== Loading NICU Warmer assets from offline bundle ==="
+
+              # Models
+              echo "Copying detection models..."
+              cp /assets/models/person-detect-fp32.* /models/
+              cp /assets/models/patient-detect-fp32.* /models/
+              cp /assets/models/latch-detect-fp32.* /models/
+
+              echo "Copying rPPG models..."
+              mkdir -p /models/rppg
+              cp /assets/models/rppg/mtts_can.* /models/rppg/
+
+              echo "Copying action recognition models..."
+              mkdir -p /models/action/FP32
+              cp /assets/models/action/FP32/action-recognition-0001-encoder.* /models/action/FP32/
+              cp /assets/models/action/FP32/action-recognition-0001-decoder.* /models/action/FP32/
+              cp /assets/models/action/kinetics.txt /models/action/
+
+              # Video
+              echo "Copying video assets..."
+              cp /assets/videos/*.mp4 /uploads/
+
+              echo "=== All assets loaded successfully ==="
+              ls -lhR /models/
+              ls -lh /uploads/
+          volumeMounts:
+            - name: assets-source
+              mountPath: /assets
+              readOnly: true
+            - name: models
+              mountPath: /models
+            - name: uploads
+              mountPath: /uploads
+      volumes:
+        - name: assets-source
+          hostPath:
+            path: {{ .Values.assets.loadJob.hostPath }}
+            type: Directory
+        - name: models
+          persistentVolumeClaim:
+            claimName: {{ .Values.models.claimName }}
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: {{ .Values.uploads.claimName }}
+{{- end }}

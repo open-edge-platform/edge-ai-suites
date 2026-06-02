@@ -14,6 +14,7 @@ on an HTTP endpoint for Prometheus to scrape.
 
 import argparse
 import csv
+import json
 import time
 import sys
 from pathlib import Path
@@ -163,6 +164,11 @@ class ROS2MetricsCollector:
             'ros2_process_io_write_kb_per_sec',
             'I/O write rate in KB/s',
             ['process', 'pid']
+        )
+
+        self.cpu_package_power = Gauge(
+            'ros2_cpu_package_power_watts',
+            'Mean CPU package power in watts sampled via Intel RAPL powercap sysfs'
         )
 
         # System info
@@ -409,6 +415,29 @@ class ROS2MetricsCollector:
 
         except Exception as e:
             print(f"Error reading resource log: {e}")
+
+        # ── CPU package power from cpu_power.log ─────────────────────────────
+        if self.session_dir:
+            cpu_power_log = self.session_dir / 'cpu_power.log'
+            if cpu_power_log.exists():
+                try:
+                    samples = []
+                    for raw in cpu_power_log.read_text().splitlines():
+                        raw = raw.strip()
+                        if not raw:
+                            continue
+                        try:
+                            rec = json.loads(raw)
+                        except json.JSONDecodeError:
+                            continue
+                        if rec.get('event'):
+                            continue
+                        if rec.get('power_w') is not None:
+                            samples.append(float(rec['power_w']))
+                    if samples:
+                        self.cpu_package_power.set(samples[-1])  # latest sample
+                except Exception as e:
+                    print(f"Error reading cpu_power.log: {e}")
 
     def start_live_monitoring(self, interval: int = 5):
         """
