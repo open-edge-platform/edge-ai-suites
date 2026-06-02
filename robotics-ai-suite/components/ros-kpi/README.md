@@ -272,20 +272,19 @@ uv run python src/analyze_rosbag.py path/to/bag.db3
 
 ### picknplace_run.sh — Pick-and-Place Benchmark Runner
 
-Automates a full pick-and-place experiment: launches the `picknplace warehouse` simulation, waits for it to stabilize, captures GPU+resource metrics for 120 seconds, then cleanly stops the simulation.
+Thin wrapper around `benchmark_runner.sh` for the pick-and-place scenario.
+All scenario behaviour (launch command, stop condition, bag topics, cleanup)
+is defined in [`config/picknplace_run.yaml`](config/picknplace_run.yaml).
 
 ```bash
-./src/picknplace_run.sh
+bash src/picknplace_run.sh [--timeout SECS] [--record] [--plot]
+
+# Override the run profile (e.g. custom launch args or topic list)
+bash src/picknplace_run.sh --run-config config/picknplace_run.yaml
+make picknplace-run RUN_CONFIG=config/my_picknplace.yaml
 ```
 
-**What it does:**
-
-1. Launches `ros2 launch picknplace warehouse.launch.py` in the background.
-2. Waits **30 seconds** for the simulation to stabilize.
-3. Starts `uv run python src/monitor_stack.py --gpu --duration 120` to capture GPU and resource metrics.
-4. After 120 seconds, sends `SIGINT` to the simulation process (equivalent to Ctrl-C) and waits for both processes to exit cleanly.
-
-Results land in the latest `monitoring_sessions/` directory and can be visualized directly:
+Results land in `monitoring_sessions/picknplace/<timestamp>/` and can be visualized:
 
 ```bash
 uv run python src/visualize_timing.py <session>/graph_timing.csv --delays --frequencies --show
@@ -325,25 +324,27 @@ Outputs per session: `kpi.json` (Level 1), `kpi_level2.json` (Level 2, chained).
 
 ### fastmapping_run.sh — fast_mapping RGB-D Benchmark
 
-Launches `fast_mapping_node` and replays the bundled Intel spinning RGB-D bag
-(`/opt/ros/jazzy/share/bagfiles/spinning`, ~12 s, 175 depth frames).
-Collects node timing metrics alongside the standard monitor stack KPIs.
+Thin wrapper around `benchmark_runner.sh` for the fast-mapping scenario.
+Launches `ros2 launch fast_mapping fast_mapping.launch.py`, which starts
+`fast_mapping_node`, `rviz2`, and replays the bundled Intel spinning RGB-D bag
+(`/opt/ros/<distro>/share/bagfiles/spinning`, ~12 s, 175 depth frames).
+All scenario behaviour is defined in [`config/fastmapping_run.yaml`](config/fastmapping_run.yaml).
 
 ```bash
-# Single run with bundled bag
+# Single run
 make fastmapping
-
-# Custom bag or faster replay
-make fastmapping BAG=/path/to/bag RATE=2.0
 
 # 10-run benchmark
 make fastmapping-benchmark RUNS=10
 
 # Generate trigger-timeline plots
 make fastmapping-plot
+
+# Override the run profile
+make fastmapping RUN_CONFIG=config/fastmapping_run.yaml
 ```
 
-After replay, `analyze_fastmapping_log.py` parses the node's shutdown timing
+After the run, `analyze_fastmapping_log.py` parses the node's shutdown timing
 table and patches `kpi.json` with:
 
 | KPI | Typical value | Description |

@@ -1,0 +1,104 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Run profile for the wandering benchmark scenario.
+# The scenario name is derived automatically from the ROS package in launch.cmd.
+#
+# Load with:
+#   uv run python src/benchmark_profiler.py --config config/wandering_run.yaml --show
+#
+# Use in bash run scripts:
+#   TOPICS=$(uv run python src/benchmark_profiler.py --config config/wandering_run.yaml --topics)
+#   LAUNCH=$(uv run python src/benchmark_profiler.py --config config/wandering_run.yaml --launch-cmd)
+#   SLEEP=$(uv run python src/benchmark_profiler.py  --config config/wandering_run.yaml --init-sleep)
+
+---
+launch:
+  # Full ros2 launch invocation.  Replace with your own package + launch file
+  # to run the framework against a custom application.
+  cmd: "ros2 launch wandering_gazebo_tutorial wandering_gazebo.launch.py"
+
+  # Optional extra arguments appended to cmd (e.g. ["use_sim_time:=true"])
+  args: []
+
+  # Seconds to wait after launch before starting the benchmark.
+  # Increase if your simulation takes longer to initialise.
+  init_sleep: 12
+
+stop:
+  # grep pattern counted in the launch log to track goals.
+  goal_pattern: "Goal was reached"
+  # Stop after this many goals (0 = run until --timeout or Ctrl-C).
+  goal_count: 0
+  # Hard stop after N seconds (0 = off). CLI --timeout overrides this.
+  timeout: 0
+  # Stop immediately when this literal string appears in the launch log.
+  # Leave empty for goal/timeout/Ctrl-C based stopping.
+  done_pattern: ""
+  # Additional pattern counted for the run summary (informational only).
+  task_pattern: ""
+
+monitor:
+  # Set true to pass --graph-only to monitor_stack.py (skip resource monitors).
+  graph_only: false
+
+gazebo:
+  # Set true to send a gz WorldControl pause:false service call after init_sleep.
+  press_play: false
+
+cleanup:
+  # pkill -f pattern used to sweep leftover processes before and after a run.
+  sweep: "ros2 |gz sim|gz_server|gz server|gazebo|rtabmap|nav2|turtlebot|wandering_gazebo|rviz2"
+
+session:
+  # Subdirectory under monitoring_sessions/ where sessions are stored.
+  output_subdir: "wandering"
+  # Prefix for launch log and bag record log filenames.
+  log_prefix: "wandering"
+  # Path for the ros2 bag record stderr log.
+  record_log: "/tmp/wandering_record.log"
+
+bag:
+  # Topics recorded by `ros2 bag record` when --record is passed.
+  # Add, remove, or reorder topics here without editing the run script.
+  topics:
+    # ── Sensor inputs ────────────────────────────────────────────────────────
+    - /scan
+    - /imu
+    - /odom
+    - /tf
+    - /tf_static
+
+    # ── Maps ─────────────────────────────────────────────────────────────────
+    - /map
+    - /map_updates
+
+    # ── Costmaps ─────────────────────────────────────────────────────────────
+    - /local_costmap/costmap_raw
+    - /local_costmap/published_footprint
+    - /global_costmap/costmap_raw
+    - /global_costmap/published_footprint
+
+    # ── Navigation commands ───────────────────────────────────────────────────
+    - /cmd_vel_nav
+    - /cmd_vel_smoothed
+    - /cmd_vel
+
+    # ── Planning ─────────────────────────────────────────────────────────────
+    - /plan
+    - /plan_smoothed
+    - /optimal_trajectory
+    - /transformed_global_plan
+
+    # ── Localization & goals ─────────────────────────────────────────────────
+    - /localization_pose
+    - /goal_pose
+    - /goal_reached
+
+    # ── Safety & behaviour ────────────────────────────────────────────────────
+    - /speed_limit
+    - /collision_monitor_state
+    - /behavior_tree_log
+
+    # ── Joint states (used for graph monitor / Level 1 KPI) ──────────────────
+    - /joint_states

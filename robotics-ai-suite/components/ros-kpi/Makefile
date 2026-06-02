@@ -5,6 +5,7 @@
 # Intel-operated generative artificial intelligence solutions.
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROS_DISTRO ?= humble
+RUN_CONFIG ?=   # Optional: path to a YAML run profile (e.g. config/wandering_run.yaml)
 
 ifeq ($(ROS_DISTRO),humble)
 	UBUNTU_CODENAME := jammy
@@ -68,6 +69,7 @@ help:
 	@echo "SIMULATIONS:"
 	@echo "  bash src/wandering_run.sh --help"
 	@echo "  bash src/picknplace_run.sh --help"
+	@echo "  make wandering [RUN_CONFIG=config/wandering_run.yaml] - Override run profile YAML"
 	@echo ""
 	@echo "BAG REPLAY (offline / CI benchmarking):"
 	@echo "  make bag-replay BAG=<bag_dir> [RATE=1.0]  - Single replay + KPI collection"
@@ -649,20 +651,22 @@ monitor-remote-repeat:
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking
 #
-# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE
+# Optional params: RUNS TIMEOUT PN_TIMEOUT PAUSE BENCH NODE RUN_CONFIG
+#   RUN_CONFIG : path to YAML run profile (default: config/<scenario>_run.yaml)
+#                Example: make wandering RUN_CONFIG=config/my_custom_run.yaml
 # ─────────────────────────────────────────────────────────────────────────────
 
 wandering:
-	bash src/wandering_run.sh $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record:
-	bash src/wandering_run.sh --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-plot:
-	bash src/wandering_run.sh --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record-plot:
-	bash src/wandering_run.sh --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
@@ -686,7 +690,7 @@ wandering-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/wandering_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR" \
+		bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR" \
 			$(if $(GOALS), --goals $$GOALS); \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
@@ -696,16 +700,16 @@ wandering-benchmark:
 	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
 
 picknplace-run:
-	bash src/picknplace_run.sh $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-record:
-	bash src/picknplace_run.sh --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-plot:
-	bash src/picknplace_run.sh --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-record-plot:
-	bash src/picknplace_run.sh --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
 
 picknplace-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
@@ -726,7 +730,7 @@ picknplace-benchmark:
 	fi; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/picknplace_run.sh --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
+		bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
 	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
@@ -790,44 +794,37 @@ bag-replay-benchmark:
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fast Mapping benchmarking
-# Launches fast_mapping_node alongside a ROS 2 bag replay of RGB-D sensor data.
-# Defaults to the bundled spinning bag shipped with fast_mapping.
+# Uses: ros2 launch fast_mapping fast_mapping.launch.py
+# (starts fast_mapping_node + rviz2 + bundled spinning bag replay)
 #
-# Optional: BAG=<path>   — override the bag directory (default: bundled spinning)
-#           RATE=1.0     — replay speed multiplier
-#           LOOP=1        — replay passes per run
-#           RUNS=10       — independent benchmark runs (fastmapping-benchmark)
-#           PAUSE=10      — seconds between runs (fastmapping-benchmark)
+# Optional: RUNS=10  — independent benchmark runs (fastmapping-benchmark)
+#           PAUSE=10 — seconds between runs (fastmapping-benchmark)
+#           RUN_CONFIG — path to YAML run profile (default: config/fastmapping_run.yaml)
 # ─────────────────────────────────────────────────────────────────────────────
-FASTMAPPING_BAG ?= /opt/ros/jazzy/share/bagfiles/spinning
 
 fastmapping:
-	bash src/fastmapping_run.sh \
-		$(if $(BAG),--bag $(BAG),--bag $(FASTMAPPING_BAG)) \
-		$(if $(RATE),--rate $(RATE)) \
-		$(if $(LOOP),--loop $(LOOP))
+	bash src/fastmapping_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
 
 fastmapping-plot:
-	bash src/fastmapping_run.sh --plot \
-		$(if $(BAG),--bag $(BAG),--bag $(FASTMAPPING_BAG)) \
-		$(if $(RATE),--rate $(RATE)) \
-		$(if $(LOOP),--loop $(LOOP))
+	bash src/fastmapping_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
 
 fastmapping-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),10); \
-	RATE=$(if $(RATE),$(RATE),1.0); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),10); \
-	BAG_PATH=$(if $(BAG),$(BAG),$(FASTMAPPING_BAG)); \
 	BENCH_DIR=monitoring_sessions/fastmapping/bench_$$(date +%Y%m%d_%H%M%S); \
 	mkdir -p "$$BENCH_DIR"; \
 	echo "▶  Fast Mapping benchmark: $$RUNS runs  →  $$BENCH_DIR"; \
-	echo "   Bag  : $$BAG_PATH"; \
-	echo "   Rate : $${RATE}x"; \
 	for i in $$(seq 1 $$RUNS); do \
 		echo "--- Run $$i / $$RUNS ---"; \
-		bash src/fastmapping_run.sh --bag "$$BAG_PATH" --rate "$$RATE" \
+		bash src/fastmapping_run.sh \
+			$(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) \
 			--output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
+	done; \
+	echo ""; \
+	echo "▶  Analysing fast_mapping_node logs..."; \
+	for sess in "$$BENCH_DIR"/*/; do \
+		[ -d "$$sess" ] && uv run python src/analyze_fastmapping_log.py --session "$$sess" || true; \
 	done; \
 	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
 

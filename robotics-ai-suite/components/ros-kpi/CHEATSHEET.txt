@@ -38,13 +38,21 @@ Wandering:
   bash src/wandering_run.sh --goals 3 --timeout 120
   bash src/wandering_run.sh --goals 3 --timeout 120 --record
   bash src/wandering_run.sh --goals 3 --timeout 120 --record --plot
+  bash src/wandering_run.sh --run-config config/wandering_run.yaml  # custom profile
   (use ./quickstart for multi-run benchmark mode)
 
 Pick-n-Place:
   bash src/picknplace_run.sh --timeout 300
   bash src/picknplace_run.sh --timeout 300 --record
   bash src/picknplace_run.sh --timeout 300 --record --plot
+  bash src/picknplace_run.sh --run-config config/picknplace_run.yaml  # custom profile
   (use ./quickstart for multi-run benchmark mode)
+
+Fast Mapping (ros2 launch fast_mapping fast_mapping.launch.py):
+  make fastmapping                         Single run
+  make fastmapping-plot                    Single run + trigger-timeline plots
+  make fastmapping-benchmark RUNS=10       10-run benchmark → aggregate KPI
+  make fastmapping RUN_CONFIG=config/fastmapping_run.yaml  # custom profile
 
 Analyze:
   uv run python src/analyze_rosbag.py <path/to/bag.db3>
