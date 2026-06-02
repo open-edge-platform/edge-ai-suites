@@ -1,6 +1,6 @@
 # Use NPU for Inference
 
-## Pre-requisites
+## Prerequisites
 
 In order to benefit from hardware acceleration, pipelines can be constructed in a manner that
 different stages such as decoding, inference, etc., can make use of these devices.
@@ -9,7 +9,7 @@ provide NPU device(s) access to the container user.
 
 ### Provide NPU access to the container
 
-This can be done by making the following changes to the docker compose file.
+This can be done by making the following changes to the Docker Compose file.
 
 ```yaml
 services:
@@ -32,9 +32,9 @@ devices.
 Unlike the changes done for the container above, the following requires a modification to the
 media pipeline itself.
 
-Gstreamer has a variety of hardware specific encoders and decoders elements such as Intel
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel®
 specific VA-API elements that you can benefit from by adding them into your media pipeline.
-Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, `vajpegdec`, etc.
+Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
 ## Tutorial on how to use NPU specific pipelines
 

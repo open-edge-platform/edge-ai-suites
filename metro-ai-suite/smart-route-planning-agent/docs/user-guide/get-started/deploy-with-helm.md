@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide explains a simple Helm deployment for Smart Route Planning Agent.
 
