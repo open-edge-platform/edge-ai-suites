@@ -26,7 +26,7 @@ Currently, the ITS plugin does not support continuous replanning. To use this pl
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -190,7 +190,7 @@ After launching the ROS2 navigation and the ITS planner plugin, look at where th
 
 Now a path will be generated and the robot will start following the path to navigate toward the goal position.
 
-For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://navigation.ros.org/getting_started/index.html#navigating)
+For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://docs.nav2.org/getting_started/index.html#navigating)
 
 ### Ackermann Steering Support
 
@@ -234,7 +234,7 @@ The Ackermann steering version of this plugin utilizes some additional parameter
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html).
 
 ## License
 

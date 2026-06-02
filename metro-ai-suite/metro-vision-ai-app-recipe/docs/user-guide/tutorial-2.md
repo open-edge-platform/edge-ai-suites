@@ -1,14 +1,9 @@
 # Customizing Node-RED Flows for Metro Vision AI Applications
 
-<!--
-**Sample Description**: This tutorial demonstrates how to customize Node-RED flows to process and enhance AI inference data from metro vision applications, enabling real-time data manipulation and custom business logic implementation.
--->
-
-This tutorial guides you through customizing Node-RED flows to process AI inference data from metro vision applications. You'll learn how to connect to MQTT data streams, manipulate inference results, add custom business logic, and create enhanced data outputs for downstream systems.
-
-<!--
-**What You Can Do**: This guide covers the complete workflow for customizing Node-RED flows in metro vision AI applications.
--->
+This tutorial guides you through customizing Node-RED flows to process AI inference data from
+metro vision applications. You will learn how to connect to MQTT data streams, manipulate
+inference results, add custom business logic, and create enhanced data outputs for downstream
+systems.
 
 By following this guide, you will learn how to:
 
@@ -254,7 +249,7 @@ Test your custom Node-RED flow:
 
 ## Expected Results
 
-![Node Red Flow](_images/node-red-flow.png)
+![Node-RED Flow](./_images/node-red-flow.png "node-red flow")
 
 After completing this tutorial, you should have:
 
@@ -265,7 +260,7 @@ After completing this tutorial, you should have:
 
 ## Next Steps
 
-After successfully setting up the AI Tolling system with Node Red, consider these enhancements:
+After successfully setting up the AI Tolling system with Node-RED, consider these enhancements:
 
 [**Integration with Grafana for Visualization**](./tutorial-3.md)
 

@@ -66,6 +66,8 @@ struct Args {
     bool use_int8_head = true;
     std::vector<int> filter_labels{7, 8};
     bool model_dir_set = false;
+    bool bbox_score_set = false;
+    float bbox_score_threshold = 0.0f;
     CalibResyncMode calib_resync = CalibResyncMode::Auto;
 
     bool any_int8() const
@@ -110,8 +112,8 @@ void print_usage(const char* argv0)
               << "[--model-dir DIR] [--device DEVICE] [--num-samples N] [--repeat N] "
               << "[--vis] [--save-image] [--save-video] [--display] [--util] "
               << "[--dump-pred] [--pred-dir DIR] [--vis-dir DIR] "
-              << "[--int8] [--fp32] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] "
-              << "[--filter-labels NAME,...] [--no-filter] "
+              << "[--int8] [--fp16] [--int8-camera] [--int8-pfe] [--int8-fuser] [--int8-head] "
+              << "[--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter] "
               << "[--calib-resync auto|always|off]\n";
 }
 
@@ -176,11 +178,13 @@ Args parse(int argc, char** argv)
             args.use_int8_pfe = true;
             args.use_int8_fuser = true;
             args.use_int8_head = true;
-        } else if (key == "--fp32") {
+        } else if (key == "--fp16") {
             args.use_int8_camera = false;
             args.use_int8_pfe = false;
             args.use_int8_fuser = false;
             args.use_int8_head = false;
+        } else if (key == "--fp32") {
+            throw std::runtime_error("--fp32 was renamed to --fp16 for bevfusion");
         } else if (key == "--int8-camera") {
             args.use_int8_camera = true;
         } else if (key == "--int8-pfe") {
@@ -189,6 +193,9 @@ Args parse(int argc, char** argv)
             args.use_int8_fuser = true;
         } else if (key == "--int8-head") {
             args.use_int8_head = true;
+        } else if (key == "--bbox-score") {
+            args.bbox_score_threshold = std::stof(next());
+            args.bbox_score_set = true;
         } else if (key == "--filter-labels") {
             args.filter_labels = parse_label_list(next());
         } else if (key == "--no-filter") {
@@ -352,11 +359,14 @@ int main(int argc, char** argv)
         std::cout << "[info] calib_resync=" << mode_str << std::endl;
     }
     print_filter(args.filter_labels);
+    if (args.bbox_score_set) {
+        std::cout << "[info] BBox score threshold (override): " << args.bbox_score_threshold << std::endl;
+    }
 
     sycl::queue queue = create_opencl_queue();
     auto& ctx = GPUContextManager::getInstance();
     if (!ctx.isInitialized()) {
-        if (!ctx.initialize(queue, !args.any_int8())) {
+        if (!ctx.initialize(queue)) {
             std::cerr << "Failed to initialize GPUContextManager" << std::endl;
             return 1;
         }
@@ -402,6 +412,9 @@ int main(int argc, char** argv)
                   << "for the known INT8 fuser issue" << std::endl;
     }
     PipelineConfig cfg = cfg_build.config;
+    if (args.bbox_score_set) {
+        cfg.fusion.post_params.score_threshold = args.bbox_score_threshold;
+    }
 
     BEVFusionPipeline pipeline(cfg, queue);
 

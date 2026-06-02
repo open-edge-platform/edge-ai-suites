@@ -30,12 +30,11 @@ public:
     }
     
     // Initialize global GPU context.
-    // use_fp32=true  : force GPU inference precision to fp32 for all compiled models
-    //                  (required when running non-quantized fp32 ONNX/IR models —
-    //                   the GPU plugin defaults to fp16, which causes Inf/NaN propagation
-    //                   through the deep BEV pipeline and collapses all detections).
-    // use_fp32=false : let the GPU plugin choose its default precision (fp16),
-    //                  which is correct and faster for quantized/int8 models.
+    // use_fp32=true  : force GPU inference precision to fp32 for all compiled models.
+    //                  Keep this for validation or debugging flows that need
+    //                  full-precision execution.
+    // use_fp32=false : let the GPU plugin choose its default precision.
+    //                  This is the normal runtime path for int8 and fp16 runs.
     // enable_model_cache=false : skip OV compiled-model cache setup for call sites
     //                            that hit incorrect cached GPU blobs.
     bool initialize(sycl::queue& queue, bool use_fp32 = false, bool enable_model_cache = true) {
@@ -108,8 +107,8 @@ public:
     }
     
     // Returns compile-time properties for compile_model() calls.
-    // Precision is already governed globally by the use_fp32 flag passed to initialize(),
-    // so this only needs to carry performance_mode.
+    // Precision is already governed globally by initialize(), so this only
+    // needs to carry performance_mode.
     ov::AnyMap getCompileConfig() const {
         ov::AnyMap config;
         config[ov::hint::performance_mode.name()] = ov::hint::PerformanceMode::LATENCY;

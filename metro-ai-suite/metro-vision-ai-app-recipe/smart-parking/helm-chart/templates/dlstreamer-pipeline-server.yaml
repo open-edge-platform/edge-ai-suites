@@ -42,7 +42,7 @@ spec:
       # hostNetwork: true
       initContainers:
       - name: video-downloader
-        image: curlimages/curl:latest
+        image: curlimages/curl:8.20.0
         securityContext:
           allowPrivilegeEscalation: false
           readOnlyRootFilesystem: true

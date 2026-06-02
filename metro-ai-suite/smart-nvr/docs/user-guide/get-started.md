@@ -154,49 +154,6 @@ To enable Smart NVR's GenAI capabilities for intelligent event descriptions:
    >   its capabilities are prioritized over Frigate, with Frigate used in "dumb" mode.
    > - If NVR_SCENESCAPE=true. then NVR_GENAI must be set to false. Otherwise, an error is thrown.
 
-### Running Tests and Generating Coverage Report
-
-To ensure the functionality of the microservice and measure test coverage, follow these steps:
-
-1. **Install Dependencies**
-   Install the required dependencies, including development dependencies, using:
-
-   ```bash
-   poetry install --with test
-   ```
-
-2. **Run Tests with Poetry**
-   Use the following command to run all tests:
-
-   ```bash
-   poetry run pytest
-   ```
-
-3. **Run Tests with Coverage**
-   To collect coverage data while running tests, use:
-
-   ```bash
-   poetry run pytest --cov=src --cov=ui --cov-report=term-missing:skip-covered
-   ```
-
-4. **Generate Coverage Report**
-   After running the tests, generate a coverage report:
-
-   ```bash
-   poetry run coverage report -m
-   ```
-
-5. **Generate HTML Coverage Report (Optional)**
-   For a detailed view, generate an HTML report:
-
-   ```bash
-   poetry run coverage html
-   ```
-
-   Open the `htmlcov/index.html` file in your browser to view the report.
-
-These steps will help you verify the functionality of the microservice and ensure adequate test coverage.
-
 ### Intel® SceneScape Integration
 
 For traffic analytics capabilities with Intel® SceneScape (vehicle counting, traffic flow analysis), see the **[Intel® SceneScape Integration Guide](./scenescape-integration.md)**.

@@ -15,10 +15,10 @@ gitSource:
   
 mqtt_broker:
   image: eclipse-mosquitto
-  imageTag: 2.0.21
+  imageTag: 2.0.22
 coturn:
   image: coturn/coturn
-  imageTag: 4.7
+  imageTag: 4.12.0
 mediamtx:
   image: bluenviron/mediamtx
   imageTag: 1.11.3
@@ -30,10 +30,10 @@ grafana:
   imageTag: 11.5.4
 node_red:
   image: nodered/node-red
-  imageTag: 3.1
+  imageTag: 4.1
 nginx:
   image: nginx
-  imageTag: 1.27-alpine
+  imageTag: 1.30.2-alpine
 metrics_service:
   image: intel/metrics-manager
   imageTag: 2026.1.0-20260508-weekly

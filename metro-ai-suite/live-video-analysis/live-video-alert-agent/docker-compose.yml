@@ -164,9 +164,6 @@ services:
     depends_on:
       ovms-vlm:
         condition: service_healthy
-      ovms-llm:
-        condition: service_healthy
-        required: ${USE_ADK:-true}
     networks:
       - app_network
 

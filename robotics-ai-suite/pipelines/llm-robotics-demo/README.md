@@ -14,13 +14,13 @@ using an LLM. The picture below shows the architecture of the demo:
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/imitation_learning_act.html)
 
 ## Prerequisites
 
 > [!IMPORTANT]
 > Please make sure you have all the prerequisites and installation in
-> [Installation & Setup](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
+> [Installation & Setup](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/get_started.html)
 > and also ensure you have the following list-table prerequisites:
 
   -----------------------------------------------------------------------
@@ -285,10 +285,10 @@ Ultra IPC.
   Item     Explanation                      LINK
   -------- -------------------------------- -----------------------------------------------------
   Camera   Intel® RealSense™ Depth Camera   <https://www.intelrealsense.com/depth-camera-d435/>
-           D435                             
+           D435
 
   USB Mic  Audio input device of FunASR,    UGREEN CM564
-           16k sampling rate                
+           16k sampling rate
   -----------------------------------------------------------------------------------------------
 
 ### Launch LLM Robotic Demo
@@ -303,14 +303,14 @@ ROS2 component, and non-real-time LLM component.
 
 1.  Launch the OpenVINO FunASR server:
 
-    
+
     source /opt/funasr/venv-asr/bin/activate
     python3 /opt/funasr/FunASR/runtime/python/websocket/funasr_wss_server.py --port 10095 --certfile "" --keyfile "" --asr_model /opt/llm-robotics/asr-openvino-demo/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/
     ```
 
 2.  Launch the real-time application:
 
-    
+
     # affinity real time application to core 3
     sudo taskset -c 3 plc_rt_pos_rtmotion
     ```
@@ -318,7 +318,7 @@ ROS2 component, and non-real-time LLM component.
     If the real-time application launches successfully, the terminal
     will show the following:
 
-    
+
     Axis 0 initialized.
     Axis 1 initialized.
     Axis 2 initialized.
@@ -333,7 +333,7 @@ ROS2 component, and non-real-time LLM component.
     > [!IMPORTANT]
     > Execute the following commands as privileged user (`root`).
 
-    
+
     source ~/ws_jaka/install/setup.bash
     ros2 launch jaka_moveit_py jaka_motion_planning.launch.py
     ```
@@ -344,7 +344,7 @@ ROS2 component, and non-real-time LLM component.
 
 4.  Launch the LLM application:
 
-    
+
     source /opt/intel/oneapi/setvars.sh
     cd /opt/llm-robotics/LLM/
     source venv-llm/bin/activate

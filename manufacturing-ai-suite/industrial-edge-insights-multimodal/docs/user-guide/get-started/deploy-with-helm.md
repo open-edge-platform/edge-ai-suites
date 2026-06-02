@@ -6,8 +6,8 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
 
 - [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
- Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to set up Kubernetes cluster on the web with host OS as Ubuntu 24.04.
-- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
+ Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
@@ -162,29 +162,55 @@ following cURL command.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
 > - To run model inference on `GPU` or `NPU`, substitute the device using the sed commands shown below.
 
-```bash
-cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
-  -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
-```
 
-> To run on `GPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
-> ```
->
-> To run on `NPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
-> ```
+- To run inference on `CPU` (Default), 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
+  ```
+
+- To run inference on `GPU`, 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+
+
+- To run inference on `GPU`, 
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
 
 **Time Series Analytics Microservice**
 

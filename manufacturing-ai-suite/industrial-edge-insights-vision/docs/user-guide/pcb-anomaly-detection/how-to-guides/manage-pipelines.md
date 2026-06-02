@@ -4,7 +4,7 @@ This section describes how to create custom AI pipelines for the sample applicat
 
 ## Create Pipelines
 
-The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for docker compose deployment) and similarly inside the helm directory (for helm based deployment).
+The AI pipelines are defined by the `pipeline-server-config.json` file present under the configs subdirectory of a particular application directory (for Docker Compose deployment) and similarly inside the Helm directory (for Helm based deployment).
 
 The following is an example of the PCB anomaly detection pipeline, which is included in the `pipeline-server-config.json` file.
 
@@ -38,8 +38,8 @@ Customize the pipeline according to your needs. For details, see the following D
 
 ## Start the Pipeline
 
-> Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-> If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 Follow this procedure to start the pipeline.
 
@@ -123,4 +123,4 @@ To enable this, configure the pipeline’s inference element to support batching
 
 In this configuration, if 4 instances (or any multiple of 4) of the pipeline are launched (for example, using the curl commands described in the previous section), their frames will be grouped into batches of four and processed in a single inference call.
 
-For more details about batching in DLStreamer, refer [this documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).
+For more details about batching in DL Streamer, refer to the relevant section of the [Performance Guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/performance_guide.html#multi-stream-pipelines-with-single-ai-stage).

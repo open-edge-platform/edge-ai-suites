@@ -295,7 +295,7 @@
     "back": "Back",
     "loading": "Files Loading...",
     "retry": "Retry",
-    "noFiles": "No files uploaded yet.",
+    "noFiles": "No files uploaded.",
     "fileName": "File Name",
     "type": "Type",
     "filterByType": "Filter by Type",

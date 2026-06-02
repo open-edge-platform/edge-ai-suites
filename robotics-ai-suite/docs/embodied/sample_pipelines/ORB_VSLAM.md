@@ -14,7 +14,7 @@ ORB-SLAM3 is one of popular real-time feature-based SLAM libraries able to perfo
 
 ## Source Code
 
-The source code of this component can be found here: [ORB-SLAM3-Sample](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/orb-slam3-sample)
+The source code of this component can be found here: [ORB-SLAM3-Sample](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0//robotics-ai-suite/pipelines/orb-slam3-sample)
 
 ## Prerequisites
 

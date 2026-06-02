@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 
 
 DEFAULT_IMAGE_URL = (
-    "https://github.com/open-edge-platform/edge-ai-libraries/blob/main/"
+    "https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/"
     "microservices/dlstreamer-pipeline-server/resources/images/classroom.jpg?raw=1"
 )
 DEFAULT_EMBEDDINGS_URL = "http://localhost:4172/api/embeddings"
