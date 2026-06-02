@@ -19,6 +19,7 @@ This section collects guides for Worker Safety Gear Detection sample application
 - [Benchmarks](./how-to-guides/benchmark.md)
 - [View Open Telemetry data](./how-to-guides/view-telemetry-data.md)
 - [Launching Multiple Instances of Apps](./how-to-guides/run-multiple-apps.md)
+- [Run in Air-Gapped System](./how-to-guides/run-in-air-gapped-system.md)
 
 <!--hide_directive
 :::{toctree}
@@ -41,6 +42,7 @@ Integrate pylon SDK <./how-to-guides/integrate-pylon-sdk>
 ./how-to-guides/start-mqtt-publisher
 ./how-to-guides/benchmark
 ./how-to-guides/view-telemetry-data
+./how-to-guides/run-in-air-gapped-system
 
 :::
 hide_directive-->
