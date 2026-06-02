@@ -10,7 +10,11 @@ metadata:
     {{- include "stia.labels" . | nindent 4 }}
     app.kubernetes.io/component: vlm-serving
 spec:
+  {{- if .Values.vlmServing.trustedCompute.enabled }}
+  type: ClusterIP
+  {{- else }}
   type: {{ .Values.vlmServing.service.type }}
+  {{- end }}
   ports:
     - name: http
       port: {{ .Values.vlmServing.service.port }}

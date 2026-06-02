@@ -294,7 +294,23 @@ def derive_traced(
     with open(kpi1_path) as f:
         kpi1 = json.load(f)
 
-    entry_topic, exit_topic = _pick_entry_exit_topics(kpi1)
+    # Derive stage breakdown first so we use the same consistent topic selection
+    # as the per-stage table (representative_input/output, not primary_input/output).
+    # This avoids the bug where primary_output for a Control node (e.g.
+    # velocity_smoother) resolves to the same topic as the Sensor entry topic,
+    # producing a degenerate /cmd_vel → /cmd_vel pipeline with 0 ms latency.
+    from analyze_pipeline_latency import derive_level2  # noqa: PLC0415
+    kpi2_chained = derive_level2(kpi1_path)
+
+    entry_topic = kpi2_chained['pipeline']['input_topic']
+    exit_topic  = kpi2_chained['pipeline']['output_topic']
+
+    if entry_topic == exit_topic:
+        raise ValueError(
+            f'Pipeline entry and exit resolved to the same topic ({entry_topic!r}). '
+            'The Level 1 KPI has an ambiguous stage topology; '
+            'cannot compute a meaningful end-to-end latency.'
+        )
 
     # Load timestamps from bag.
     tol_ns = int(tol_ms * 1_000_000)
@@ -325,10 +341,6 @@ def derive_traced(
         span_s = (exit_ts[-1] - exit_ts[0]) / _NS_PER_S
         if span_s > 0:
             throughput_hz = round((len(exit_ts) - 1) / span_s, 3)
-
-    # Inherit stage breakdown + CPU from Level 1 (chained provides per-stage data).
-    from analyze_pipeline_latency import derive_level2  # noqa: PLC0415
-    kpi2_chained = derive_level2(kpi1_path)
 
     session_dir = kpi1_path.parent
     present_stages = [s for s in STAGE_ORDER if s in kpi2_chained.get('stage_latency_ms', {})]

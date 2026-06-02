@@ -26,7 +26,7 @@ import paho.mqtt.client as mqtt
 def parse_args() -> argparse.Namespace:
   p = argparse.ArgumentParser(description=__doc__,
                               formatter_class=argparse.RawDescriptionHelpFormatter)
-  p.add_argument("--broker", default="10.106.147.105",
+  p.add_argument("--broker", default="127.0.0.1",
                  help="MQTT broker host (default: %(default)s)")
   p.add_argument("--port", type=int, default=1883,
                  help="MQTT broker port (default: %(default)s)")

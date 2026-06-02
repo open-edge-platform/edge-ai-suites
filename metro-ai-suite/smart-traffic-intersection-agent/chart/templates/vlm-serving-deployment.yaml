@@ -3,6 +3,9 @@ Copyright (C) 2025 Intel Corporation
 SPDX-License-Identifier: Apache-2.0
 */}}
 
+{{- if and .Values.vlmServing.trustedCompute.enabled .Values.vlmServing.gpu.enabled -}}
+{{- fail "Invalid configuration: vlmServing.trustedCompute.enabled and vlmServing.gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- end -}}
 {{- $targetDevice := ternary "GPU" .Values.vlmServing.env.targetDevice .Values.vlmServing.gpu.enabled -}}
 {{- $needsGpu := contains "GPU" $targetDevice -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}
@@ -29,6 +32,9 @@ spec:
         {{- include "stia.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: vlm-serving
     spec:
+      {{- if .Values.vlmServing.trustedCompute.enabled }}
+      runtimeClassName: kata-qemu
+      {{- end }}
       {{- if $needsGpu }}
       securityContext:
         supplementalGroups:
@@ -90,6 +96,18 @@ spec:
               value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"
+          {{- if .Values.vlmServing.trustedCompute.enabled }}
+          resources:
+            limits:
+              cpu: {{ (.Values.vlmServing.resources.limits).cpu | default "6" | quote }}
+              memory: {{ (.Values.vlmServing.resources.limits).memory | default "20Gi" | quote }}
+            requests:
+              cpu: {{ (.Values.vlmServing.resources.requests).cpu | default "4" | quote }}
+              memory: {{ (.Values.vlmServing.resources.requests).memory | default "12Gi" | quote }}
+          {{- else if or (.Values.vlmServing.resources.requests) (.Values.vlmServing.resources.limits) }}
+          resources:
+            {{- toYaml .Values.vlmServing.resources | nindent 12 }}
+          {{- end }}
           volumeMounts:
             - name: ov-models
               mountPath: /models
@@ -146,13 +164,18 @@ spec:
             timeoutSeconds: {{ .Values.vlmServing.healthcheck.timeoutSeconds }}
             failureThreshold: {{ .Values.vlmServing.healthcheck.failureThreshold }}
           resources:
+            {{- $res := deepCopy .Values.vlmServing.resources }}
+            {{- if .Values.vlmServing.trustedCompute.enabled }}
+            {{- $_ := set $res "requests" (merge (default dict (get $res "requests")) (dict "cpu" "4")) }}
+            {{- $_ = set $res "limits" (merge (default dict (get $res "limits")) (dict "cpu" "6")) }}
+            {{- end }}
             {{- if $needsGpu }}
             {{- $res := deepCopy .Values.vlmServing.resources }}
             {{- $gpuLimits := dict .Values.vlmServing.gpu.resourceName (.Values.vlmServing.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
             {{- toYaml $res | nindent 12 }}
             {{- else }}
-            {{- toYaml .Values.vlmServing.resources | nindent 12 }}
+            {{- toYaml $res | nindent 12 }}
             {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
