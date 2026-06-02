@@ -9,26 +9,41 @@ This Helm chart deploys the **NICU Warmer Patient Monitoring** application on Ku
 - `kubectl`
 - `helm` (v3+)
 - A working PersistentVolume provisioner (required for PVC binding)
-- **NGINX Ingress Controller** (required when `ingress.enabled: true`, which is the default)
+- An actively-maintained **Ingress Controller** (required when `ingress.enabled: true`, which is the default)
 - Intel GPU + NPU hardware (Meteor Lake / Arrow Lake) for accelerated inference
 
 ### Ingress Controller prerequisite (required for default configuration)
 
-This chart creates Ingress resources that use `ingressClassName: nginx`. You must have the
-NGINX Ingress Controller running in your cluster before installing the chart with ingress enabled.
+> **Important:** The community `kubernetes/ingress-nginx` controller was **retired in
+> March 2026** and no longer receives bug fixes or security updates. It must **not** be
+> used. See the [retirement notice](https://github.com/kubernetes/ingress-nginx#retiring).
+
+This chart is **ingress-controller-agnostic**: it routes all traffic to the `nicu-ui`
+service, whose internal reverse proxy forwards `/api/*` requests to the backend. Because
+of this, the chart requires **no controller-specific rewrite annotations** and works with
+any actively-maintained ingress controller.
+
+The chart defaults to **Traefik** (`ingressClassName: traefik`) — an actively maintained,
+CNCF-graduated controller that ships **by default with K3s**, so no extra installation is
+needed there. For other distributions, install a supported controller and set
+`ingress.className` to match its IngressClass (or set it to `""` to use the cluster default).
 
 ```bash
-# Install NGINX Ingress Controller via Helm
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+# Example: install Traefik on a non-K3s cluster
+helm repo add traefik https://traefik.github.io/charts
 helm repo update
-helm install ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+helm install traefik traefik/traefik \
+  --namespace traefik --create-namespace
 
-# Wait for the controller to be ready
-kubectl wait --namespace ingress-nginx \
-  --for=condition=ready pod \
-  --selector=app.kubernetes.io/component=controller \
-  --timeout=120s
+# Verify the IngressClass is available
+kubectl get ingressclass
+```
+
+To use a different controller, override the class at install time, for example:
+
+```bash
+helm install nicu-warmer . -n nicu --create-namespace \
+  --set ingress.className=haproxy   # or contour, etc.
 ```
 
 If you do not have an ingress controller and do not wish to install one, set
