@@ -4,10 +4,12 @@ SPDX-License-Identifier: Apache-2.0
 */}}
 
 {{- if and .Values.trustedCompute.enabled .Values.gpu.enabled -}}
-{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. GPU is unsupported with Trusted Compute." -}}
+{{- fail "Invalid configuration: trustedCompute.enabled and gpu.enabled cannot both be true. Use trustedCompute.tc_gpu_enabled for GPU support with Trusted Compute instead of the Intel device plugin." -}}
 {{- end -}}
-{{- $targetDevice := ternary "GPU" .Values.env.targetDevice .Values.gpu.enabled -}}
-{{- $needsGpu := contains "GPU" $targetDevice -}}
+{{- $tcGpu := and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled -}}
+{{- $targetDevice := ternary "GPU" .Values.env.targetDevice (or .Values.gpu.enabled $tcGpu) -}}
+{{- /* $needsGpu is true only for the non-TC Intel device plugin GPU path */ -}}
+{{- $needsGpu := and .Values.gpu.enabled (not .Values.trustedCompute.enabled) -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.env.weightFormat -}}
 {{- $sanitized := .Values.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
 {{- $isOpenvino := hasPrefix "OpenVINO/" .Values.env.modelName -}}
@@ -31,6 +33,21 @@ spec:
         app: {{ include "ovms.fullname" . }}
         {{- include "ovms.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: ovms
+      {{- if and .Values.trustedCompute.enabled .Values.trustedCompute.tc_gpu_enabled }}
+      annotations:
+        io.katacontainers.config.hypervisor.default_memory: "4096"
+        io.katacontainers.config.hypervisor.pcie_root_port: "1"
+        io.katacontainers.config.hypervisor.hot_plug_vfio: "root-port"
+        io.katacontainers.config.hypervisor.enable_virtio_mem: "true"
+        devices.noderesource.dev/container.ovms: |
+          {{ range .Values.trustedCompute.devices -}}
+          - path: {{ .path }}
+            type: {{ .type }}
+            major: {{ .major }}
+            minor: {{ .minor }}
+            file_mode: {{ .file_mode }}
+          {{ end -}}
+      {{- end }}
     spec:
       {{- if .Values.trustedCompute.enabled }}
       runtimeClassName: kata-qemu
@@ -81,6 +98,12 @@ spec:
 
               if [ "$needs_init" = true ]; then
                 . /config/ovms-init.sh
+              else
+                # Remove any stale models for other devices from config.json
+                # (e.g. CPU model left over from a previous non-GPU deployment)
+                if [ -f /models/config.json ]; then
+                  python3 -c "import json; f=open('/models/config.json'); cfg=json.load(f); f.close(); cfg['model_config_list']=[m for m in cfg.get('model_config_list',[]) if m['config']['name']=='${vlm_storage_name}']; f=open('/models/config.json','w'); json.dump(cfg,f,indent=4); f.close()" && echo "Pruned config.json to only include ${vlm_storage_name}."
+                fi
               fi
           args:
             - {{ .Values.env.modelName | quote }}
@@ -116,9 +139,25 @@ spec:
               readOnly: true
       containers:
         - name: ovms
-          image: {{ include "ovms.image" . | quote }}
+          image: "{{- if (or $needsGpu $tcGpu) -}}{{ .Values.image.repository }}:{{ .Values.image.gpuTag }}{{- else -}}{{ .Values.image.repository }}:{{ .Values.image.tag }}{{- end -}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- if $tcGpu }}
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting {{ .Values.trustedCompute.gpuStabilizeSecs | default 10 }}s for GPU PCIe passthrough to initialize in kata VM..."
+              sleep {{ .Values.trustedCompute.gpuStabilizeSecs | default 10 }}
+              echo "Starting OVMS..."
+              exec /ovms/bin/ovms \
+                --port 9000 \
+                --rest_port 8000 \
+                --config_path /models/config.json \
+                --log_level {{ .Values.env.logLevel | quote }} \
+                --metrics_enable
+          {{- end }}
           args:
+            {{- if not $tcGpu }}
             - "--port"
             - "9000"
             - "--rest_port"
@@ -128,6 +167,7 @@ spec:
             - "--log_level"
             - {{ .Values.env.logLevel | quote }}
             - "--metrics_enable"
+            {{- end }}
           ports:
             - name: http
               containerPort: 8000
@@ -139,6 +179,10 @@ spec:
               value: {{ .Values.global.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.httpsProxy | quote }}
+            {{- if or $needsGpu $tcGpu }}
+            - name: ZES_ENABLE_SYSMAN
+              value: "1"
+            {{- end }}
           volumeMounts:
             - name: ov-models
               mountPath: /models
@@ -172,10 +216,8 @@ spec:
             {{- if $needsGpu }}
             {{- $gpuLimits := dict .Values.gpu.resourceName (.Values.gpu.resourceLimit | int) }}
             {{- $_ := set $res "limits" (merge (default dict (get $res "limits")) $gpuLimits) }}
-            {{- toYaml $res | nindent 12 }}
-            {{- else }}
-            {{- toYaml $res | nindent 12 }}
             {{- end }}
+            {{- toYaml $res | nindent 12 }}
           securityContext:
             allowPrivilegeEscalation: false
       volumes:

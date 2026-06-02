@@ -84,7 +84,7 @@ spec:
             - name: VLM_MODEL_NAME
               value: {{ .Values.ovms.env.modelName | quote }}
             - name: VLM_TARGET_DEVICE
-              value: {{ if .Values.ovms.gpu.enabled }}"GPU"{{ else }}{{ .Values.ovms.env.targetDevice | quote }}{{ end }}
+              value: {{ if or .Values.ovms.gpu.enabled (and .Values.ovms.trustedCompute.enabled .Values.ovms.trustedCompute.tc_gpu_enabled) }}"GPU"{{ else }}{{ .Values.ovms.env.targetDevice | quote }}{{ end }}
             - name: VLM_WEIGHT_FORMAT
               value: {{ .Values.ovms.env.weightFormat | quote }}
             - name: VLM_MAX_COMPLETION_TOKENS
