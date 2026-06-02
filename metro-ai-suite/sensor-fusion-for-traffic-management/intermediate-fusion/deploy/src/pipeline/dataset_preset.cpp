@@ -22,6 +22,7 @@ const DatasetPresetGeometry kV2X = {
     4.0f,
     {0.0f, -51.2f, -5.0f},
     {102.4f, 51.2f, 3.0f},
+    0.1f,
 };
 
 const DatasetPresetGeometry kKITTI = {
@@ -40,6 +41,7 @@ const DatasetPresetGeometry kKITTI = {
     8.0f,
     {0.0f, -45.0f, -5.0f},
     {85.0f, 45.0f, 3.0f},
+    0.5f,
 };
 
 }  // namespace

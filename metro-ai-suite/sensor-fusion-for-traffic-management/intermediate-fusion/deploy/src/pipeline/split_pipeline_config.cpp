@@ -186,6 +186,7 @@ SplitPipelineConfigBuild make_split_pipeline_config(const SplitPipelineConfigOpt
     cfg.fusion.post_params.post_center_limit_range[4] = dims.post_center_max[1];
     cfg.fusion.post_params.post_center_limit_range[5] = dims.post_center_max[2];
     cfg.fusion.post_params.pre_max_size = 200;
+    cfg.fusion.post_params.score_threshold = dims.default_score_threshold;
     return build;
 }
 

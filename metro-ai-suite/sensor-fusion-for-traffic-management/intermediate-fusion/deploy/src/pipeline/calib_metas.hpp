@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <stdexcept>
@@ -160,12 +161,46 @@ inline cv::Vec3f transform_point(const std::array<float, 16>& T, const cv::Vec3f
     return cv::Vec3f(x, y, z);
 }
 
+struct ImageResizeCrop
+{
+    double resize{1.0};
+    int resized_width{0};
+    int resized_height{0};
+    int crop_x{0};
+    int crop_y{0};
+};
+
+inline ImageResizeCrop compute_image_resize_crop(const cv::Size& raw_image_size,
+                                                 int target_w,
+                                                 int target_h)
+{
+    if (raw_image_size.width <= 0 || raw_image_size.height <= 0) {
+        throw std::runtime_error("Invalid raw image size");
+    }
+    if (target_w <= 0 || target_h <= 0) {
+        throw std::runtime_error("Invalid target image size");
+    }
+
+    const double resize = std::max(static_cast<double>(target_h) / raw_image_size.height,
+                                   static_cast<double>(target_w) / raw_image_size.width);
+    const int resized_width = static_cast<int>(static_cast<double>(raw_image_size.width) * resize);
+    const int resized_height = static_cast<int>(static_cast<double>(raw_image_size.height) * resize);
+    const int crop_x = std::max(0, resized_width - target_w) / 2;
+    const int crop_y = resized_height - target_h;
+
+    if (resized_width <= 0 || resized_height <= 0) {
+        throw std::runtime_error("Invalid resize geometry for image augmentation");
+    }
+
+    return ImageResizeCrop{resize, resized_width, resized_height, crop_x, crop_y};
+}
+
 }  // namespace detail
 
 // Build the 4 matrices used by CameraBEVBackbone::run() directly from KITTI-style calib.
 //
-// Assumptions (matches current deploy pipeline behavior):
-// - Image is resized to (target_w, target_h) before inference (no crop/flip/rotate).
+// Assumptions (matches the Python standalone validation transform):
+// - Image is scaled by max(target_h/raw_h, target_w/raw_w), then bottom/center cropped.
 // - camera2lidar is computed in rectified camera frame: camera_rect -> lidar.
 // - denorms provides only the plane normal (a,b,c), consistent with current SYCL ray impl.
 //
@@ -204,15 +239,12 @@ inline CameraMetas compute_camera_metas_from_kitti_calib(const CalibField_t& cal
     const auto lidar_to_cam_rect = detail::mat4_mul(cam0_to_cam, detail::mat4_mul(R0, Tr));
     const auto cam_rect_to_lidar = detail::mat4_inverse_rigid(lidar_to_cam_rect);
 
-    // img_aug_matrix for pure resize: pixel_raw -> pixel_resized.
-    if (raw_image_size.width <= 0 || raw_image_size.height <= 0) {
-        throw std::runtime_error("Invalid raw image size");
-    }
-    const float sx = static_cast<float>(target_w) / static_cast<float>(raw_image_size.width);
-    const float sy = static_cast<float>(target_h) / static_cast<float>(raw_image_size.height);
+    const auto resize_crop = detail::compute_image_resize_crop(raw_image_size, target_w, target_h);
     auto ida = detail::mat4_identity();
-    ida[0] = sx;
-    ida[5] = sy;
+    ida[0] = static_cast<float>(resize_crop.resize);
+    ida[5] = static_cast<float>(resize_crop.resize);
+    ida[3] = -static_cast<float>(resize_crop.crop_x);
+    ida[7] = -static_cast<float>(resize_crop.crop_y);
 
     // denorms: derive plane normal in camera frame from 3 points on lidar ground plane.
     // Match Python's get_denorm: pick 3 ground points, transform by ego->cam, then denorm = -plane.
