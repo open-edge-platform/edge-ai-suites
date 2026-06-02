@@ -74,7 +74,7 @@ From `build/`:
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
     [--vis-dir DIR] [--device DEVICE] \
-    [--filter-labels NAME,...] [--no-filter]
+    [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Important options:
@@ -88,6 +88,7 @@ Important options:
 - `--int8`: explicitly use all available INT8 component models.
 - `--repeat N`: run the dataset multiple times.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI). Only boxes with `score >= SCORE` are output.
 - `--dump-pred --pred-dir DIR`: export KITTI-format predictions.
 - `--save-image`, `--save-video`, `--display`: enable visualization outputs.
 
@@ -116,7 +117,7 @@ From `build/`:
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
     [--vis-dir DIR] [--recompute-camera-metas] [--cache-camera-metas] \
-    [--filter-labels NAME,...] [--no-filter]
+    [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Important options:
@@ -128,6 +129,7 @@ Important options:
 - `--model PATH`: override the default model path. `--onnx PATH` remains accepted as a compatibility alias.
 - `--recompute-camera-metas`: recompute camera geometry for every frame.
 - `--cache-camera-metas`: compute camera geometry once and reuse it. This is the V2X default; KITTI defaults to per-frame recompute.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI). Only boxes with `score >= SCORE` are output.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
 - `--repeat N`: repeat the selected samples.
 - `--dump-pred --pred-dir DIR`: export KITTI-format predictions.
