@@ -30,6 +30,27 @@ externalUrls:
 # Trusted Compute configuration for secure workload execution
 trustedCompute:
   enabled: false
+  tc_gpu_enabled: false
+  devices:
+    - path: /dev/vfio/vfio
+      type: c
+      major: 10
+      minor: 196
+      file_mode: 0666
+    - path: /dev/vfio/1
+      type: c
+      major: 510
+      minor: 0
+      file_mode: 0666
+    - path: /dev/dri/card0
+      type: c
+      major: 226
+      minor: 0
+      file_mode: 0666
+    - path: /dev/dri/renderD128
+      type: c
+      major: 226
+      minor: 128
 
 # Container images for utilities and init containers
 images:
