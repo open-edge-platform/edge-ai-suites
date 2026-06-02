@@ -19,9 +19,8 @@ This guide explains how to run the PCB Anomaly Detection application in an envir
 
    ```yaml
    dlstreamer-pipeline-server:
-   .
       extra_hosts:
-     - "stun.l.google.com:127.0.0.1"
+      - "stun.l.google.com:127.0.0.1"
    ```
 
 ## Start the Application

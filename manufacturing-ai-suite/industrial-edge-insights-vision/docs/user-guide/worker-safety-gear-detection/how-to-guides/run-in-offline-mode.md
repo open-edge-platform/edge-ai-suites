@@ -19,9 +19,8 @@ This guide explains how to run the Worker Safety Gear Detection application in a
 
    ```yaml
    dlstreamer-pipeline-server:
-   .
       extra_hosts:
-     - "stun.l.google.com:127.0.0.1"
+      - "stun.l.google.com:127.0.0.1"
    ```
 
 ## Start the Application
