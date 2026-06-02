@@ -26,27 +26,30 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/chunked-transfer-encoding: "on"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  # NOTE: The community kubernetes/ingress-nginx controller was RETIRED in March 2026
+  # (no further bug fixes or security updates) and must NOT be used. See:
+  # https://github.com/kubernetes/ingress-nginx#retiring
+  #
+  # This chart is intentionally ingress-controller-agnostic. All traffic (UI and /api)
+  # is routed to the nicu-ui service, whose internal reverse proxy forwards /api/*
+  # requests to the backend (stripping the /api prefix). Because of this, NO
+  # controller-specific rewrite/regex annotations are required and the chart works with
+  # any actively-maintained ingress controller (Traefik, HAProxy, Contour, etc.).
+  #
+  # `className` defaults to Traefik — an actively maintained, CNCF-graduated controller
+  # that ships by default with K3s. Override it to match your cluster's IngressClass,
+  # set it to "" to use the cluster's default IngressClass, or set `ingress.enabled:
+  # false` to use port-forwarding instead.
+  className: traefik
+  # Add any controller-specific annotations here if your environment needs them.
+  annotations: {}
   hosts:
     - host: nicu-warmer.local
       paths:
-        # Backend API
-        - path: /api(/|$)(.*)
-          pathType: ImplementationSpecific
-          service: nicu-backend
-          port: 80
-        # Frontend UI (catch-all)
-        - path: /()(.*)
-          pathType: ImplementationSpecific
+        # Single route: the UI service serves the frontend and reverse-proxies /api/*
+        # to the backend, so no path-rewrite annotations are needed.
+        - path: /
+          pathType: Prefix
           service: nicu-ui
           port: 80
   tls: []
