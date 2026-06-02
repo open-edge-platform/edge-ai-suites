@@ -152,9 +152,9 @@ python src/download_models.py --model yolo11n --outdir C:/Users/<username>/model
 
 Use the exported `.xml` path in `config.yaml`.
 
-> **NOTE:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download them with:
+> **NOTE:** You can use your own model and video of your choice. To use the example pallet defect detection model and warehouse video, download and extract them with:
 > ```powershell
-> wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip"
+> wget -O pallet_defect_detection.zip "https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip" ; Expand-Archive -Path "pallet_defect_detection.zip" -DestinationPath "models"
 > wget -O warehouse.avi "https://github.com/open-edge-platform/edge-ai-resources/raw/c13b8dbf23d514c2667d39b66615bd1400cb889d/videos/warehouse.avi"
 > ```
 > Update the model and video paths in `config.yaml` accordingly.
