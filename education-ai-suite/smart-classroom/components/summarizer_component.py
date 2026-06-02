@@ -138,16 +138,6 @@ class SummarizerComponent(PipelineComponent):
             decode_time = (summarization_time - ttft) if ttft > 0 else summarization_time
             tps = ((total_tokens - 1) / decode_time) if decode_time > 0 and total_tokens > 1 else -1
 
-            performance_data = StorageManager.read_performance_metrics(
-                project_config.get("location"),
-                project_config.get("name"),
-                self.session_id
-            )
-
-            performance_metrics = performance_data.get("performance", {})
-            asr_time = performance_metrics.get("transcription_time", 0)
-            end_to_end_time = asr_time + summarization_time
-
             StorageManager.update_csv(
                 path=os.path.join(project_path, "performance_metrics.csv"),
                 new_data={
@@ -156,6 +146,6 @@ class SummarizerComponent(PipelineComponent):
                     "performance.ttft": f"{round(ttft, 4)}s",
                     "performance.tps": round(tps, 4),
                     "performance.total_tokens": total_tokens,
-                    "performance.end_to_end_time": f"{round(end_to_end_time, 4)}s",
+                    "performance.summarization_time": f"{round(summarization_time, 4)}s",
                 }
             )
