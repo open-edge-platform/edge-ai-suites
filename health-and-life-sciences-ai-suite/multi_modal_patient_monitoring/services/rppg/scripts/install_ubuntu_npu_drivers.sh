@@ -64,5 +64,11 @@ fi
 # Ensure render group exists in container (for device access)
 groupadd -f render 2>/dev/null || true
 
+# Create Level Zero ICD registration so the loader discovers the NPU driver.
+# Some linux-npu-driver packages omit this; create it unconditionally.
+NPU_ICD_DIR="/usr/lib/x86_64-linux-gnu/ze_intel_npu/vendors"
+mkdir -p "${NPU_ICD_DIR}"
+echo "/usr/lib/x86_64-linux-gnu/libze_intel_npu.so.1" > "${NPU_ICD_DIR}/libze_intel_npu.icd"
+
 apt-get clean && rm -rf /var/lib/apt/lists/*
 rm -rf /tmp/npu_deps
