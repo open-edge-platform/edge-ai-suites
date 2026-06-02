@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide provides step-by-step instructions for deploying the Smart Traffic Intersection Agent application using Helm.
 
@@ -143,7 +143,6 @@ helm install stia . -n <your-namespace> --create-namespace \
 | --- | --- | --- |
 | `OpenVINO/Phi-3.5-vision-instruct-int8-ov` | Good | Default. Pre-converted OpenVINO model; avoids on-cluster Hugging Face export flow. |
 | `OpenVINO/InternVL2-1B-int4-ov` | Good | Pre-converted OpenVINO alternative model; avoids on-cluster Hugging Face export flow. |
-
 
 > **Note:** The OVMS init container downloads and converts the selected model on first startup. Changing the model name requires deleting the existing model cache PVC so the init container re-downloads the new model.
 
@@ -492,6 +491,7 @@ You should see the OVMS VLM serving pods running with the Trusted Compute runtim
   If no GPU resource is listed, install the [Intel GPU device plugin for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes/blob/main/cmd/gpu_plugin/README.md). Also verify that `vlmServing.gpu.resourceName` matches the resource key reported by the device plugin (`gpu.intel.com/i915` for integrated/Arc, `gpu.intel.com/xe` for Data Center GPUs).
 
 - **GPU permission denied (`/dev/dri` access):** The chart includes all common render group GIDs (44, 109, 992) by default. If your distro uses a different GID, find it with `getent group render` on the node and override:
+
   ```bash
   helm install stia . --set-json 'vlmServing.gpu.renderGroupIds=[<your-gid>]'
   ```

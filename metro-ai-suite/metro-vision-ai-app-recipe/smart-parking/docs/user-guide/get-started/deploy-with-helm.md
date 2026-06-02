@@ -11,8 +11,8 @@ Complete this section to confirm that your setup is working correctly and try ou
 ## Prerequisites
 
 - [System Requirements](./system-requirements.md)
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+  Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>) to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 - **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
 
@@ -60,9 +60,11 @@ Complete this section to confirm that your setup is working correctly and try ou
   ```
 
   Verify the GPU and NPU resources are advertised on nodes:
+
   ```bash
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
+
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 > **Note:**
@@ -74,7 +76,7 @@ Follow this procedure on the target system to download the package.
 
 > **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
 
-Before you can deploy with Helm, you must clone the repository and download the helm chart:
+Before you can deploy with Helm, you must clone the repository and download the Helm chart:
 
 ```bash
 # Clone the repository
@@ -130,7 +132,7 @@ cd ..
 
 Follow this procedure to run the sample application. In a typical deployment, multiple cameras deliver video streams that are connected to AI pipelines to improve the classification and recognition accuracy. The following demonstrates running multiple AI pipelines and visualization in the Grafana.
 
-1. Deploy Helm chart
+1. Deploy the Helm chart
 
     ```sh
     helm install smart-parking ./smart-parking/helm-chart -n sp  --create-namespace --set timezone=$(cat /etc/timezone)
@@ -144,98 +146,98 @@ Follow this procedure to run the sample application. In a typical deployment, mu
 
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with the Node IP. (Total 8 places)
 
-``` sh
-#!/bin/bash
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/new_video_1.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_detection_1",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_detection_1"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   ``` sh
+   #!/bin/bash
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/new_video_1.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_detection_1",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_detection_1"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/new_video_2.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_detection_2",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_detection_2"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/new_video_2.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_detection_2",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_detection_2"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/new_video_3.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_detection_3",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_detection_3"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/new_video_3.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_detection_3",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_detection_3"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/new_video_4.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_detection_4",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_detection_4"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
-```
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/yolov11s -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/new_video_4.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_detection_4",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_detection_4"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
+   ```
 
-> **Note:** To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
+   > **Note:** To run the pipeline on GPU replace `yolov11s`  with `yolov11s_gpu` and change value of  `detection-device` to `GPU` for all the above pipelines. Simimlarly, to run the pipeline on NPU replace `yolov11s`  with `yolov11s_npu` and change value of  `detection-device` to `NPU` for all the above pipelines.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
@@ -267,7 +269,9 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 View the container logs using the following command:
 
-         kubectl logs -f <pod_name> -n sp
+```
+kubectl logs -f <pod_name> -n sp
+```
 
 ## Troubleshooting
 

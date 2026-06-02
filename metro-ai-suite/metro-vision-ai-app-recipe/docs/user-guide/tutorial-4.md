@@ -29,7 +29,7 @@ The below aspects need to be updated accordingly, in order to leverage an existi
 - **AI model:** This is the new AI model that serves the inference purposes of the new application.
 - **Video file:** This is the new video source that serves as input to the new application.
 - **Vision Analytics Pipeline:** This is the AI processing DL Streamer pipeline that needs to be modified appropriately, considering the new AI model and new video source input.
-- **Node-RED Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which would be provided as insights in the Grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the GitHub Copilot offering.
+- **Node-RED Business Logic:** This is the business logic that runs on the vision analytics pipeline output. This decides what post-processing happens on the vision analytics pipeline output, the result of which is provided as insights in the Grafana dashboard. This is where 'vibe coding' comes into play. We will interact with Claude Sonnet 4.5 in the GitHub Copilot offering.
 - **Configuration updates:** This is the application configuration such as self signed certificates, Docker Compose, Node-RED, Grafana, etc.
 
 Note: The underlying application architecture remains the same.
@@ -229,7 +229,7 @@ Here are the example prompts that we used:
   ```text
   - Based on the output of the previous function node, compute hotspots of vehicles. Include configurable parameters for the below in the code:
     - Maximum distance (pixels) to consider vehicles part of same hotspot
-    - Distance calculation method: "euclidean", "manhattan", "horizontal", "vertical" etc.,
+    - Distance calculation method: "euclidean", "manhattan", "horizontal", "vertical", etc.,
     - Minimum number of parked vehicles to form a hotspot
     - Maximum movement (pixels) to consider a vehicle stationary
     - Frames vehicle must stay stationary to be marked as parked
