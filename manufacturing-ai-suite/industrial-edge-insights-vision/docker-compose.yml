@@ -4,6 +4,8 @@ services:
     hostname: dlstreamer-pipeline-server
     networks:
     - industrial-edge-vision
+    # extra_hosts:
+    # - "stun.l.google.com:127.0.0.1"
     restart: unless-stopped
     security_opt:
     - no-new-privileges
