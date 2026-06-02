@@ -52,7 +52,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
    ./setup.sh
    ```
 
-   This script sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
+   This script sets up application pre-requisites, download artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
 
 ## Deploy the Application
 
@@ -64,7 +64,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
    sudo systemctl start docker
    ```
 
-    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
+    > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -142,9 +142,9 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
    ```
 
-   > **NOTE:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
-   >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
-   >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
+   > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 4. Get the status of running pipeline instance(s):
 
@@ -207,7 +207,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 6. Stop the Docker application.
 
-    >If you're running multiple instances of app, stop the services using `./run.sh down` instead.
+    > **Note:** If you are running multiple instances of app, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v

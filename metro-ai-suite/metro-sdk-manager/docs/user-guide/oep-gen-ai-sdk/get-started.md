@@ -99,12 +99,12 @@ http://localhost:8101
 
 ### Technical Documentation
 
-- [Chat Q&A](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/chat-question-and-answer/index.html)
-- [Audio Analyzer](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/audio-analyzer/index.html)
+- [Chat Q&A](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/chat-question-and-answer/index.html)
+- [Audio Analyzer](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/audio-analyzer/index.html)
   \- Comprehensive documentation for multimodal audio processing capabilities
-- [Document Ingestion - pgvector](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/document-ingestion/pgvector/docs/user-guide/get-started.md)
+- [Document Ingestion - pgvector](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/pgvector/index.html)
   \- Vector database integration and document processing workflows
-- [Multimodal Embedding Serving](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/multimodal-embedding-serving/docs/user-guide/index.md)
+- [Multimodal Embedding Serving](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/multimodal-embedding-serving/index.html)
   \- Embedding generation service architecture and API documentation
 - [Visual Data Preparation For Retrieval](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/visual-data-preparation-for-retrieval/vdms/docs/user-guide/Overview.md)
   \- VDMS integration and visual data management workflows

@@ -130,11 +130,11 @@ echo "OEP Vision AI pipeline started with PID: $PIPELINE_PID"
 echo "Use 'kill $PIPELINE_PID' to stop the pipeline when done profiling"
 ```
 
-**Note**: This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
+> **Note:** This creates a continuously running Docker-based DL Streamer pipeline that processes real video using the YOLOv10s object detection model, providing a realistic AI workload for performance profiling. The pipeline runs in a Docker container with access to Intel GPU hardware.
 
 **Expected Console Output:**
 
-![Tutorial 5 Output](images/tutorial-5-dlstreamer-output.png)
+![Tutorial 5 Output](./images/tutorial-5-dlstreamer-output.png)
 
 ## Step 4: Monitor Overall System Performance with htop
 
@@ -160,11 +160,11 @@ htop
 
 **Expected Console Output:**
 
-![Tutorial 5 Top Output](images/tutorial-5-top.png)
+![Tutorial 5 Top Output](./images/tutorial-5-top.png)
 
 ## Step 5: Monitor Intel GPU Performance
 
-Use intel_gpu_top to monitor GPU usage during AI inference:
+Use `intel_gpu_top` to monitor GPU usage during AI inference:
 
 ```bash
 # Start Intel GPU monitoring
@@ -180,24 +180,24 @@ sudo intel_gpu_top
 
 **Expected Console Output:**
 
-![Tutorial 5 GPU Top Output](images/tutorial-5-gpu-top.png)
+![Tutorial 5 GPU Top Output](./images/tutorial-5-gpu-top.png)
 
 ## Step 6: Stop the Running Pipeline
 
-When you're done profiling, stop the background pipeline:
+When you are done profiling, stop the background pipeline:
 
 ```bash
 # Stop the background DL Streamer pipeline
 sudo pkill -9 -f oep_vision_pipeline.sh
 ```
 
-## Next Steps: Visual Pipeline and Platform Evaluation Tool (Vippet)
+## Next Steps: Visual Pipeline and Platform Evaluation Tool (ViPPET)
 
-Now that you've learned to monitor AI workloads with command-line tools, take your performance analysis to the next level with **Vippet** - a visual tool for evaluating and optimizing AI pipelines.
+Now that you have learned to monitor AI workloads with command-line tools, take your performance analysis to the next level with **ViPPET** - a visual tool for evaluating and optimizing AI pipelines.
 
-### What is Vippet?
+### What is ViPPET?
 
-Vippet (Visual Pipeline and Platform Evaluation Tool) is an interactive web-based application that helps you:
+ViPPET (Visual Pipeline and Platform Evaluation Tool) is an interactive web-based application that helps you:
 
 - **Visualize Pipeline Performance**: See real-time metrics and graphs of your AI pipeline performance
 - **Compare Configurations**: Test different hardware devices (CPU, GPU, NPU) and model configurations
@@ -205,11 +205,11 @@ Vippet (Visual Pipeline and Platform Evaluation Tool) is an interactive web-base
 - **Optimize Pipelines**: Identify bottlenecks and tune parameters for better performance
 - **Generate Reports**: Create detailed performance reports for analysis and documentation
 
-### Getting Started with Vippet
+### Getting Started with ViPPET
 
-To learn more and get started with Vippet, visit the official documentation:
+To learn more and get started with ViPPET, visit the official documentation:
 
-**📚 [Vippet Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
+**[ViPPET Documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/visual-pipeline-and-platform-evaluation-tool/index.html)**
 
 The documentation includes:
 
@@ -219,9 +219,9 @@ The documentation includes:
 - Pipeline configuration examples
 - Performance tuning best practices
 
-### Why Use Vippet After This Tutorial?
+### Why Use ViPPET After This Tutorial?
 
-After using `htop` and `intel_gpu_top` for basic monitoring, Vippet provides:
+After using `htop` and `intel_gpu_top` for basic monitoring, ViPPET provides:
 
 1. **Visual Analysis**: Interactive charts instead of terminal output
 2. **Automated Testing**: Run multiple benchmark scenarios automatically
@@ -229,13 +229,13 @@ After using `htop` and `intel_gpu_top` for basic monitoring, Vippet provides:
 4. **Historical Data**: Track performance trends over time
 5. **Export Capabilities**: Generate professional reports for stakeholders
 
-Vippet complements the command-line monitoring skills you've learned in this tutorial by providing a comprehensive visual interface for deeper performance analysis and optimization.
+ViPPET complements the command-line monitoring skills you have learned in this tutorial by providing a comprehensive visual interface for deeper performance analysis and optimization.
 
 ## Summary
 
 This tutorial provides a practical approach to profiling OEP Vision AI workloads using command-line tools:
 
-### **What You've Learned:**
+### **What You have Learned:**
 
 1. **Installing Tools**: Set up `htop` and `intel_gpu_top` for system monitoring
 2. **System Monitoring**: Use `htop` for real-time CPU and memory monitoring

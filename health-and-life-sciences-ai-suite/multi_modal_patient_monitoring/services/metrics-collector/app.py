@@ -68,8 +68,8 @@ def parse_npu_usage() -> Optional[Dict[str, Any]]:
 
 
 def parse_gpu_metrics() -> Optional[Dict[str, Any]]:
-    # Files like qmassa1-*-tool-generated.json created by qmassa
-    pattern = str(METRICS_DIR / "qmassa1-*-tool-generated.json")
+    # Files like qmassa<N>-*-tool-generated.json created by qmassa
+    pattern = str(METRICS_DIR / "qmassa*-*-tool-generated.json")
     candidates = glob.glob(pattern)
     if not candidates:
         return None
@@ -261,7 +261,7 @@ def build_memory_series() -> List[List[float]]:
 def build_gpu_series() -> List[List[float]]:
     """Build a time series for GPU utilization.
     Data source: qmassa JSON files named
-    "qmassa1-*-tool-generated.json" under METRICS_DIR. Each file has
+    "qmassa<N>-*-tool-generated.json" under METRICS_DIR. Each file has
     a top-level structure like:
 
         {
@@ -293,7 +293,7 @@ def build_gpu_series() -> List[List[float]]:
     how CPU and memory series are built.
     """
 
-    pattern = str(METRICS_DIR / "qmassa1-*-tool-generated.json")
+    pattern = str(METRICS_DIR / "qmassa*-*-tool-generated.json")
     candidates = glob.glob(pattern)
     if not candidates:
         return []

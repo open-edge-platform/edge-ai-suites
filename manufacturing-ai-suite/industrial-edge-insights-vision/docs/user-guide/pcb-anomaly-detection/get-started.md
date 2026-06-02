@@ -213,7 +213,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 ## Further Reading
 
-- [Deploy with Helm](./get-started/deploy-multiple-instances-with-helm.md)
+- [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
 - [Run multiple AI pipelines](./how-to-guides/run-multiple-ai-pipelines.md)

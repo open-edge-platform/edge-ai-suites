@@ -2,12 +2,12 @@ version: '3.8'
 
 services:
   vppsample:
-    # build:
-    #   context: ..
-    #   dockerfile: docker/Dockerfile.sample
-    #   args:
-    #     http_proxy: ${http_proxy}
-    #     https_proxy: ${https_proxy}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.sample
+      args:
+        http_proxy: ${http_proxy}
+        https_proxy: ${https_proxy}
     image: intel/vppsample:2026.1.0
     network_mode: host
     environment:
