@@ -127,8 +127,16 @@ class SummarizerComponent(PipelineComponent):
             end = time.perf_counter()
             total_tokens = streamer.total_tokens if streamer else -1
             summarization_time = end - start
-            ttft = (first_token_time - start) if first_token_time else -1
-            tps = (total_tokens / summarization_time) if summarization_time > 0 else -1
+
+            ttft_baseline = (
+                streamer.generation_start_time
+                if streamer and getattr(streamer, 'generation_start_time', None)
+                else start
+            )
+            ttft = (first_token_time - ttft_baseline) if first_token_time else -1
+
+            decode_time = (summarization_time - ttft) if ttft > 0 else summarization_time
+            tps = ((total_tokens - 1) / decode_time) if decode_time > 0 and total_tokens > 1 else -1
 
             performance_data = StorageManager.read_performance_metrics(
                 project_config.get("location"),
