@@ -5,7 +5,7 @@
 - Ensure you meet the [System Requirements](./system-requirements.md) for this application.
 - K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 - **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
 
   ```bash
@@ -56,7 +56,6 @@
   kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
   ```
   > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
-- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 ## Setup the application
 
