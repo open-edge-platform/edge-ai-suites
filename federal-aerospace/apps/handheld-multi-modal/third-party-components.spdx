@@ -57,7 +57,7 @@ Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-ov
 
 PackageName: open-webui
 SPDXID: SPDXRef-Package-open-webui
-PackageVersion: v0.9.5-slim
+PackageVersion: v0.9.6-slim
 PackageSupplier: Organization: Open WebUI Contributors
 PackageDownloadLocation: https://ghcr.io/open-webui/open-webui
 PackageHomePage: https://github.com/open-webui/open-webui
