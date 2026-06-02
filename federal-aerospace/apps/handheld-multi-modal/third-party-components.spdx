@@ -2,9 +2,41 @@ SPDXVersion: SPDX-2.3
 DataLicense: CC0-1.0
 SPDXID: SPDXRef-DOCUMENT
 DocumentName: handheld-multi-modal
+DocumentNamespace: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
 Creator: Organization: Intel Corporation
 Creator: Tool: manual-curation
 Created: 2026-05-27T00:00:00Z
+CreatorComment: <text>
+SPDX SBOM for the handheld-multi-modal application
+(federal-aerospace/apps/handheld-multi-modal).
+
+Scope: third-party open-source components consumed by the application —
+container base images, Python pip dependencies of the locally built
+whisper-stt service, OS packages installed in those images, and the
+external VIPPET tool the deployment integrates with.
+
+Intel-authored sources in this repository are NOT enumerated as packages;
+only third-party dependencies are listed, per the SBOM request.
+</text>
+
+##############################################################################
+# Top-level package describing the application itself
+##############################################################################
+
+PackageName: handheld-multi-modal
+SPDXID: SPDXRef-Package-handheld-multi-modal
+PackageVersion: 2026.1
+PackageSupplier: Organization: Intel Corporation
+PackageDownloadLocation: https://github.com/open-edge-platform/edge-ai-suites
+PackageHomePage: https://github.com/open-edge-platform/edge-ai-suites/tree/main/federal-aerospace/apps/handheld-multi-modal
+FilesAnalyzed: false
+PackageLicenseConcluded: Apache-2.0
+PackageLicenseDeclared: Apache-2.0
+PackageCopyrightText: <text>Copyright (C) 2026 Intel Corporation</text>
+PackageSummary: <text>Full-stack edge AI inference and observability platform combining an OpenVINO-based LLM server, a Whisper speech-to-text service, a chat UI, and a Grafana metrics stack, packaged as a Docker Compose deployment.</text>
+
+Relationship: SPDXRef-DOCUMENT DESCRIBES SPDXRef-Package-handheld-multi-modal
+
 
 ##############################################################################
 # Container images (pulled from registries)
@@ -262,14 +294,6 @@ ExternalRef: PACKAGE-MANAGER purl pkg:github/open-edge-platform/edge-ai-librarie
 FilesAnalyzed: false
 
 Relationship: SPDXRef-Package-handheld-multi-modal DEPENDS_ON SPDXRef-Package-vippet
-
-##############################################################################
-# AI models at runtime
-##############################################################################
-
-Models loaded by Open WebUI / Whisper / OVMS at runtime carry their own licenses
-and operator is responsible for reviewing licenses and making sure that they
-are matching operator's use-case(s).
 
 ##############################################################################
 # End of document
