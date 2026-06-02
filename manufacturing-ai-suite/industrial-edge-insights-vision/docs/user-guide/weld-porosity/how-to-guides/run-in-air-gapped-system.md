@@ -1,13 +1,13 @@
-# Run in Offline Mode
+# Run in Air-Gapped System
 
 This guide explains how to run the Weld Porosity application in an environment without internet access.
 
 ## Prerequisites
 
-- Complete all steps in the **Set up the application** section of [Get Started](../get-started.md) while connected to the internet. This ensures all required models and videos are pre-downloaded before running in offline mode.
-- Ensure all required Docker images are pre-pulled while connected to the internet, as they cannot be downloaded in offline mode.
+- Complete all steps in the **Set up the application** section of [Get Started](../get-started.md) while connected to the internet. This ensures all required models and videos are pre-downloaded before running in an air-gapped system.
+- Ensure all required Docker images are pre-pulled while connected to the internet, as they cannot be downloaded in an air-gapped system.
 
-## Configure for Offline Mode
+## Configure for Air-Gapped System
 
 1. **Set `HOST_IP` to `127.0.0.1`** in the `.env` file:
 
