@@ -3,7 +3,8 @@ import time
 from typing import Dict, Any
 
 import numpy as np
-from openvino import Core, PartialShape, Type, opset13 as opset
+from openvino import Core, PartialShape, Type, save_model
+from openvino import opset13 as opset
 
 import load
 
@@ -44,19 +45,27 @@ class HubertECGInferenceEngine:
             except Exception as e:
                 print(f"[WARNING] Failed to reshape ECG model for NPU: {e}")
 
-            # NPU SDPA requires attention mask as float, not int8.
-            # Walk the graph and insert Convert(i8 -> f16) before SDPA inputs.
+            # NPU SDPA requires all inputs to be the same float type.
+            # Convert attention mask (input[3]) from char/i8 to f32 to match other inputs.
             try:
-                for op in ov_model.get_ordered_ops():
-                    if op.get_type_name() == "ScaledDotProductAttention":
-                        for i in range(op.get_input_size()):
-                            input_type = op.input(i).get_element_type()
-                            if input_type == Type.i8:
-                                source_output = op.input(i).get_source_output()
-                                convert = opset.convert(source_output, Type.f16)
-                                op.input(i).replace_source_output(convert.output(0))
-                                print(f"[INFO] Converted SDPA input {i} from i8 to f16 for NPU")
-                print("[INFO] ECG model SDPA attention mask fixed for NPU")
+                fixed_count = 0
+                for node in ov_model.get_ordered_ops():
+                    if node.get_type_name() == "ScaledDotProductAttention":
+                        mask_input = node.input(3)
+                        mask_type = mask_input.get_element_type()
+                        if mask_type != Type.f32:
+                            source_output = mask_input.get_source_output()
+                            convert = opset.convert(source_output, Type.f32)
+                            mask_input.replace_source_output(convert.output(0))
+                            fixed_count += 1
+                if fixed_count > 0:
+                    # Serialize and reload to materialize graph changes
+                    tmp_xml = "/tmp/ecg_npu_fixed.xml"
+                    save_model(ov_model, tmp_xml)
+                    ov_model = self.core.read_model(tmp_xml)
+                    print(f"[INFO] Converted {fixed_count} SDPA attention masks to f32 for NPU")
+                else:
+                    print("[INFO] No SDPA attention mask conversion needed")
             except Exception as e:
                 print(f"[WARNING] Failed to fix SDPA attention mask: {e}")
 
