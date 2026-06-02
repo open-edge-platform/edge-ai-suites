@@ -28,7 +28,7 @@ The changes above adds the container user to the `render` group and provides acc
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`,  etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
 Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® GPUs (integrated and discrete).
 

@@ -25,7 +25,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    cd manufacturing-ai-suite/industrial-edge-insights-vision
    ```
 
-2. Set app-specific environment variable file
+2. Set the app-specific environment variable file
 
    ```bash
    cp .env_pallet-defect-detection .env

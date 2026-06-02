@@ -14,10 +14,10 @@ in the sample application.
 
 - [System Requirements](./system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the
-following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and
+following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and
 `kubelet` packages on single and multi nodes with `v1.30.2`.
 Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>)
-to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to the [Helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**

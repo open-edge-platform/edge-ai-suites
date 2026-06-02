@@ -160,7 +160,7 @@
    Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "895130405c8e11f08b78029627ef9c6b"
    ```
 
-   > **Note:** This will start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/weld/`
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/weld/`
    > If you are running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ### Starting GPU and NPU based pipelines
