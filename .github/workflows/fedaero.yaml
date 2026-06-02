@@ -262,7 +262,6 @@ jobs:
     needs:
       - handheld-multi-modal
       - deterministic-threat-detection
-      - federal-aerospace
     runs-on: ubuntu-latest
     permissions:
       # contents: write is required to create the release and tag.
