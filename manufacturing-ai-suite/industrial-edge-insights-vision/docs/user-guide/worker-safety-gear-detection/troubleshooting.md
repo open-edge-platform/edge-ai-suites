@@ -82,14 +82,6 @@ gpu:
    count: 1
 ```
 
-## Deploying without Intel GPU K8S Extension
-
-If you're deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-
-```sh
-privileged_access_required: true
-```
-
 ## Inferencing on NPU
 
 To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required pre-requisites. Refer to

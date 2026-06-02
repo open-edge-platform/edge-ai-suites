@@ -127,16 +127,5 @@ gpu:
   count: 1
 ```
 
-2. Deploying without Intel GPU K8S Extension
-
-If you're deploying a GPU based pipeline (example: with VA-API elements like `vapostproc`,
-`vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `config.json`) without Intel GPU
-k8s Extension, ensure to set the following details in the file `helm/values.yaml` appropriately
-in order to utilize the underlying GPU.
-
-```sh
-privileged_access_required: true
-```
-
 ---
 > *Intel, the Intel logo and Intel Tiber are trademarks of Intel Corporation or its subsidiaries.*
