@@ -1695,16 +1695,10 @@ def get_pod_names(namespace):
 def check_pod_logs_for_errors(namespace, pod_name):
     """Check pod logs for errors."""
     try:
-        # === [GH_RUNNER_FIX BEGIN] widen log window only ===
-        # --tail=5 was too narrow: startup errors (e.g. kapacitor "UDF not
-        # found") scroll past within ~30s of runtime, causing TC_009 to
-        # falsely report "clean" logs before UDF activation. Widen to 500
-        # so genuine startup errors remain visible across the wait_time.
         result = subprocess.run(
-            ["kubectl", "logs", pod_name, "-n", namespace, "--tail=500"],
+            ["kubectl", "logs", pod_name, "-n", namespace, "--tail=5"],
             capture_output=True, text=True, check=True
         )
-        # === [GH_RUNNER_FIX END] ===
         logs = result.stdout.strip()
        
         # Filter out benign warnings that should not be treated as errors
@@ -1715,12 +1709,6 @@ def check_pod_logs_for_errors(namespace, pod_name):
             "The directory '/.cache/pip' or its parent directory is not owned",  # pip cache warning
             "error while sending usage report",  # Kapacitor telemetry timeout (benign)
             "usage.influxdata.com",  # InfluxData usage reporting endpoint timeout
-            # === [GH_RUNNER_FIX BEGIN] benign startup-noise patterns ===
-            # Pydantic v2 deprecation warning embeds a doc URL containing the
-            # substring "errors" (e.g. "errors.pydantic.dev/2.13/migration/"),
-            # which falsely trips the naive case-insensitive "error" search.
-            "errors.pydantic.dev",
-            # === [GH_RUNNER_FIX END] ===
         ]
         
         # Check if "error" exists in logs (case-insensitive)
