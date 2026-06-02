@@ -10,7 +10,6 @@ Steps to serve the intersection `.ts` video files over RTSP using mediamtx and f
 ## 1. Download mediamtx
 
 ```bash
-cd /home/intel
 wget https://github.com/bluenviron/mediamtx/releases/download/v1.9.0/mediamtx_v1.9.0_linux_amd64.tar.gz
 tar xzf mediamtx_v1.9.0_linux_amd64.tar.gz
 ```
@@ -20,7 +19,7 @@ This extracts `mediamtx` binary and `mediamtx.yml` config.
 ## 2. Start mediamtx RTSP server
 
 ```bash
-./mediamtx &
+nohup ./mediamtx &
 ```
 
 By default it listens on `:8554` (all interfaces).
@@ -34,7 +33,7 @@ sudo apt-get install -y ffmpeg
 ## 4. Download the video file
 
 ```bash
-curl -k -L -o /home/intel/1122north_h264.ts \
+curl -k -L -o 1122north_h264.ts \
   "https://github.com/open-edge-platform/edge-ai-resources/raw/refs/heads/main/videos/1122north_h264.ts"
 ```
 
@@ -46,12 +45,12 @@ Other available videos:
 ## 5. Publish the stream
 
 ```bash
-ffmpeg -stream_loop -1 -re -i /home/intel/1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north
+ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north
 ```
 
 To run in background:
 ```bash
-nohup ffmpeg -stream_loop -1 -re -i /home/intel/1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north > /tmp/ffmpeg_rtsp.log 2>&1 &
+nohup ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north > /tmp/ffmpeg_rtsp.log 2>&1 &
 ```
 
 ## 6. Verify the stream
@@ -71,10 +70,10 @@ Expected output: H.264 High profile, 1280x720, 30fps.
 
 To serve all four cameras:
 ```bash
-ffmpeg -stream_loop -1 -re -i /home/intel/1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north &
-ffmpeg -stream_loop -1 -re -i /home/intel/1122south_h264.ts -c copy -f rtsp rtsp://localhost:8554/south &
-ffmpeg -stream_loop -1 -re -i /home/intel/1122east_h264.ts  -c copy -f rtsp rtsp://localhost:8554/east &
-ffmpeg -stream_loop -1 -re -i /home/intel/1122west_h264.ts  -c copy -f rtsp rtsp://localhost:8554/west &
+ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north &
+ffmpeg -stream_loop -1 -re -i 1122south_h264.ts -c copy -f rtsp rtsp://localhost:8554/south &
+ffmpeg -stream_loop -1 -re -i 1122east_h264.ts  -c copy -f rtsp rtsp://localhost:8554/east &
+ffmpeg -stream_loop -1 -re -i 1122west_h264.ts  -c copy -f rtsp rtsp://localhost:8554/west &
 ```
 
 ## 7. Configure the DL Streamer pipeline
