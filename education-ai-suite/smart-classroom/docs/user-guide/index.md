@@ -48,8 +48,8 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
-./quick-start
 ./get-started
+./advance-setup-guide
 ./how-it-works
 ./application-flow
 Release Notes <./release-notes>
