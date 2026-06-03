@@ -52,20 +52,20 @@ Choose the workflow that matches your goal:
 Pull the published image and run the container smoke test:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To work interactively inside the published image instead:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 ```
 
 If this container workflow is enough for your use case, you can skip the native build steps in [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md) and the [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md).
@@ -92,15 +92,15 @@ source /opt/intel/openvino/setupvars.sh
 For a containerized smoke test of a published or prebuilt image, use:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
+If you retagged the published image to `tfcc:2026.1.0-ubuntu24`, or built a local image with that tag, you can omit `--image`.
 
 To copy a host dataset into the container for the run, pass:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 --dataset-path /path/to/kitti_dataset
 ```
 
 To run the native host binaries in one shot and get pass/fail counts plus the final performance lines for `bevfusion` and `bevfusion_unified`, use:

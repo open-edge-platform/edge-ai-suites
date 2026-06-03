@@ -1,6 +1,6 @@
 set -euo pipefail
 
-DOCKER_IMAGE=${1:-tfcc:bevfusion}
+DOCKER_IMAGE=${1:-tfcc:2026.1.0-ubuntu24}
 
 EXTRA_PARAMS=""
 
