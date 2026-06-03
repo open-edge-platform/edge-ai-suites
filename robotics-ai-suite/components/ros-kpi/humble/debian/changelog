@@ -1,3 +1,23 @@
+ros-humble-benchmark-framework (0.2.0) UNRELEASED; urgency=low
+
+  * YAML-driven run profiles and generic benchmark orchestrator.
+    - src/benchmark_profiler.py: new Python YAML loader/validator for run
+      profiles; exports all scenario settings as CONF_* shell variables via
+      --export-bash; also usable as a Python module.
+    - src/benchmark_runner.sh: new generic scenario-agnostic orchestrator;
+      replaces per-scenario monolithic scripts; driven entirely by YAML config.
+    - config/wandering_run.yaml: run profile for wandering scenario.
+    - config/picknplace_run.yaml: run profile for pick-and-place scenario.
+    - config/fastmapping_run.yaml: run profile for fast-mapping scenario;
+      uses ros2 launch fast_mapping fast_mapping.launch.py (docs approach).
+    - src/wandering_run.sh: replaced 300-line script with 22-line exec wrapper.
+    - src/picknplace_run.sh: replaced 270-line script with 22-line exec wrapper.
+    - src/fastmapping_run.sh: replaced 300-line script with 25-line exec wrapper.
+    - Makefile: add RUN_CONFIG passthrough to all wandering-*, picknplace-*,
+      and fastmapping-* targets.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Fri, 29 May 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.1.19) UNRELEASED; urgency=low
 
   * Thermal visualizer, session browser, and benchmarking bug fixes.
