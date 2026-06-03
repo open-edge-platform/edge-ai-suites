@@ -107,7 +107,7 @@ By default the model is converted on CPU. To explicitly set the device:
 
 #### Optional: Download an object-detection model
 
-Required only if you plan to enable the object-detection pipeline (see [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md)):
+Only required if you plan to enable the object-detection pipeline (see [Enable Object Detection](#enable-object-detection)):
 
 ```bash
 ./model_download_scripts/download_models.sh --model yolov8s --type vision
@@ -115,7 +115,19 @@ Required only if you plan to enable the object-detection pipeline (see [Configur
 
 This places the model under `ov_detection_models/`.
 
-For more information about RAG/LLM model setup, see [Model Preparation](./get-started/model-preparation.md).
+#### Optional: Download an LLM model
+
+Only required if you plan to enable RAG embedding (see [Enable RAG/Embedding](#enable-rag--embedding)):
+
+```bash
+./model_download_scripts/download_models.sh \
+  --model Qwen/Qwen2.5-3B-Instruct \
+  --type llm \
+  --device CPU \
+  --weight-format int8
+```
+
+This places the model under `llm_models/`.
 
 ### 4. Customize your deployment
 
