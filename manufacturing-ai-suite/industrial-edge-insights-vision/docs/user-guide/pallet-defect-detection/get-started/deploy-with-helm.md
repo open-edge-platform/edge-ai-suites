@@ -3,13 +3,13 @@
 ## Prerequisites
 
 - [System Requirements](../get-started/system-requirements.md)
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+  Refer to tutorials online to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04 and/or Ubuntu 24.04.
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 ## Setup the application
 
-> **Note:**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
+> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -23,7 +23,8 @@
    ```sh
    cp helm/values_pallet-defect-detection.yaml helm/values.yaml
    ```
-      > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
+
+   > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values.yaml` file to enable access to host hardware devices.
 
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
@@ -63,13 +64,13 @@
        password: <password>
    ```
 
-5. Install pre-requisites. Run with sudo if needed.
+5. Install prerequisites. Run with sudo if needed.
 
    ```sh
    ./setup.sh helm
    ```
 
-   This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc. Downloaded resource directories.
+   This sets up application prerequisites, download artifacts, sets executable permissions for scripts, etc. Downloaded resource directories.
 
 ## Deploy the application
 
@@ -149,7 +150,7 @@
    ./sample_start.sh helm -p pallet_defect_detection
    ```
 
-   This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different options available.
+   This command looks for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launches a pipeline instance in DL Streamer Pipeline Server. Refer to the table to learn about different options available.
 
    Output:
 
@@ -170,24 +171,25 @@
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
    ```
 
-   > **Note:**- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/pdd/ for Pallet Defect Detection. If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/pdd/ for Pallet Defect Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
-   ### Starting GPU and NPU based pipelines
-   For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
+### Starting GPU and NPU based pipelines
 
-      **For GPU-based pipelines:**
+For GPU and NPU based pipelines, ensure you have done the necessary [setup](../how-to-guides/use-gpu-for-inference.md#deploying-with-helm) from here, and start the respective pipelines as following.
 
-      ```sh
-      ./sample_start.sh helm -p pallet_defect_detection_gpu
-      ```
+**For GPU-based pipelines:**
 
-      **For NPU-based pipelines:**
+```sh
+./sample_start.sh helm -p pallet_defect_detection_gpu
+```
 
-      ```sh
-      ./sample_start.sh helm -p pallet_defect_detection_npu
-      ```
+**For NPU-based pipelines:**
 
-5. Get status of pipeline instance(s) running.
+```sh
+./sample_start.sh helm -p pallet_defect_detection_npu
+```
+
+1. Get status of pipeline instance(s) running.
 
    ```sh
    ./sample_status.sh helm
@@ -213,7 +215,7 @@
    ]
    ```
 
-6. Stop pipeline instance.
+2. Stop pipeline instance.
 
    ```sh
    ./sample_stop.sh helm
@@ -246,20 +248,19 @@
    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.
    For example, `./sample_stop.sh helm --id 99ac50d852b511f09f7c2242868ff651`
 
-7. Uninstall the helm chart.
+3. Uninstall the Helm chart.
 
    ```sh
    helm uninstall app-deploy -n apps
    ```
 
-
 ## Storing frames to S3 storage
 
-Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart.
+2. Install the Helm chart.
 
    ```sh
    helm install app-deploy helm -n apps --create-namespace
@@ -300,9 +301,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-5. Create a S3 bucket using the following script.
+5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and credentials with that of the running MinIO server. Name the file as `create_bucket.py`.
+   Update the `HOST_IP` and credentials with that of the running MinIO server. Use `create_bucket.py` as the file name.
 
    ```python
    import boto3
@@ -329,7 +330,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 6. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
->Note: If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
+   > **Note:** If you are running helm using an NGINX_HTTPS_PORT other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ```sh
    curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/pallet_defect_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
@@ -353,7 +355,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 7. Go to MinIO console on `https://<HOST_IP>:30443/minio/` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `helm/values.yaml` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
->Note: If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+
+   > **Note:** If you are running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)
 
@@ -365,9 +368,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 ## MLOps using Model Download
 
-1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
+1. Run all the steps mentioned in the above [section](#setup-the-application) to setup the application.
 
-2. Install the helm chart
+2. Install the Helm chart
 
    ```sh
    helm install app-deploy helm -n apps --create-namespace
@@ -385,7 +388,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n apps
    ```
 
-4. Modify the payload in `helm/apps/pallet-defect-detection/payload.json` to launch an instance for the mlops pipeline
+4. Modify the payload in `helm/apps/pallet-defect-detection/payload.json` to launch an instance for the MLOps pipeline.
 
    ```json
    [
@@ -418,10 +421,12 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```sh
    ./sample_start.sh helm -p pallet_defect_detection_mlops
    ```
+
    Note the instance-id.
 
 6. Download and prepare the model.
-   >NOTE- For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
+
+   > **Note:** For sake of simplicity, we assume that the new model has already been downloaded by Model Download microservice. The following curl command is only a simulation that just downloads the model. In production, however, they will be downloaded by the Model Download service.
 
    ```sh
    export MODEL_URL='https://github.com/open-edge-platform/edge-ai-resources/raw/06bb0d621cb14a1791672552a538beddddcc4066/models/INT8/pallet_defect_detection.zip'
@@ -441,12 +446,14 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ```
 
 8. Stop the existing pipeline before restarting it with a new model. Use the instance-id generated from step 5.
->Note: If you're running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+
+   > **Note:** If you are running helm using an NGINX_HTTPS_PORT other than the default 30443, replace 30443 with <NGINX_HTTPS_PORT>.
+
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>:30443/api/pipelines/{instance_id}
    ```
 
-9. Modify the payload in `helm/apps/pallet-defect-detection/payload.json` to launch an instance for the mlops pipeline with this new model
+9. Modify the payload in `helm/apps/pallet-defect-detection/payload.json` to launch an instance for the MLOps pipeline with this new model
 
    ```json
    [
@@ -474,7 +481,8 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    ]
 
 10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
->Note: If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+
+   > **Note:** If you are running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 

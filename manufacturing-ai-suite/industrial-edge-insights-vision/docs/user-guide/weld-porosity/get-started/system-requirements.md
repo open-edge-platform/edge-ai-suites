@@ -13,13 +13,13 @@ This page provides detailed hardware, software, and platform requirements to hel
 
 - 12th Generation Intel® Core™ processor or above with Intel® HD Graphics, or Intel® Xeon® processor
 
-## Minimum Requirements
+## Hardware Requirements
 
-| **Component**      | **Minimum Requirement**   | **Recommended**         |
-|--------------------|---------------------------|-------------------------|
-| **Processor**       | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors   | Intel® Core™ Ultra Processors (Series 2) also known as Arrow Lake, 4th Gen Intel® Xeon® Scalable Processors |
-| **Memory**          | 16 GB                     | 16 GB                   |
-| **Disk Space**      | 64 GB                | 128 GB               |
+| **Component**  | **Minimum Requirement**   | **Recommended**         |
+|----------------|---------------------------|-------------------------|
+| **Processor**  | 12th Generation Intel® Core™ processor and above with Intel® HD Graphics, 4th Gen Intel® Xeon® Scalable Processors   | Intel® Core™ Ultra Processors (Series 2) also known as Arrow Lake, 4th Gen Intel® Xeon® Scalable Processors |
+| **Memory**     | 16 GB                     | 16 GB                   |
+| **Disk Space** | 64 GB                     | 128 GB                  |
 
 ### Validated Platforms
 
@@ -30,7 +30,7 @@ The pallet defect detection model for this sample app has been tested to work on
 | Intel® Core™ Ultra Processors (Series 3, 2, 1), Intel® Core™ Processors Series 2, Intel® Core™ Processors (14th/13th/12th Gen)  | ✓         | ✓          | ✓         |  Intel(R) Arc(TM) A770, B580        |
 | 4th Gen Intel® Xeon® Scalable Processors                 | ✓         |            |           | Intel(R) Arc(TM) A770, B580        |
 
-> **Note:** Users can also create apps tailored to their use case using models supported by DL Streamer.
+> **Note:** You can also create apps tailored to your use case using models supported by DL Streamer.
 > Check [the list of supported models](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/supported_models.html) for the latest information.
 
 ## Software Requirements
