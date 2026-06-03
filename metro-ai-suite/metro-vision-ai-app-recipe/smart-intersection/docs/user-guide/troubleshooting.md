@@ -120,6 +120,26 @@ to file new tickets there (after learning about the guidelines for [Contributing
     ```
 
 
+### 9. Accessing the MQTT Broker Externally
+   - **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics.
+   - **Solution**: Expose port 1883 on the broker service by adding a `ports` section in `docker-compose.yml`:
+     ```yaml
+     broker:
+       ports:
+         - "1883:1883"
+     ```
+   - Then restart the broker:
+     ```bash
+     docker compose up -d --force-recreate broker
+     ```
+   - Connect using an MQTT client with TLS and the CA certificate:
+     ```bash
+     mosquitto_sub -h <HOST_IP> -p 1883 \
+       --cafile ./smart-intersection/src/secrets/certs/scenescape-ca.pem \
+       -t '#' -v
+     ```
+   - **Note**: The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
+
 ## Troubleshooting Helm Deployments
 
 ### 1. Helm Chart Not Found:
@@ -179,3 +199,18 @@ to file new tickets there (after learning about the guidelines for [Contributing
    - **Solution**: Ensure the [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes) (NFD + GPU plugin + NPU plugin) are installed on your cluster and that the target node has the required hardware. See the [Prerequisites](./get-started/deploy-with-helm.md#prerequisites) section for installation steps.
 
      > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `gpu.intel.com/xe` in `values.yaml`.
+
+### 5. Accessing the MQTT Broker Externally
+
+   - **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics in a Helm deployment.
+   - **Solution**: Use `kubectl port-forward` to expose the broker service locally:
+     ```bash
+     kubectl port-forward svc/smart-intersection-broker -n smart-intersection 1883:1883
+     ```
+   - Then connect using an MQTT client with TLS:
+     ```bash
+     mosquitto_sub -h localhost -p 1883 \
+       --cafile <path-to-scenescape-ca.pem> \
+       -t '#' -v
+     ```
+   - **Note**: The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
