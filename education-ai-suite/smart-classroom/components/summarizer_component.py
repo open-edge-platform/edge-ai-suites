@@ -135,7 +135,7 @@ class SummarizerComponent(PipelineComponent):
             )
             ttft = (first_token_time - ttft_baseline) if first_token_time else -1
 
-            decode_time = (summarization_time - ttft) if ttft > 0 else summarization_time
+            decode_time = (end - first_token_time) if first_token_time else summarization_time
             tps = ((total_tokens - 1) / decode_time) if decode_time > 0 and total_tokens > 1 else -1
 
             StorageManager.update_csv(
