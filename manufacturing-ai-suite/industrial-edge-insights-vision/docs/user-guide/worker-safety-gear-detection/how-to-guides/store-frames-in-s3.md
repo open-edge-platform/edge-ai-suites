@@ -1,24 +1,24 @@
 # Publish Frames to S3 Storage
 
-Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 ## Steps
 
-> **Note:** For the purpose of this demonstration, we'll be using MinIO as the S3 storage. The necessary compose configuration for MinIO microservice is already part of the docker compose file.
+> **Note:** For the purpose of this demonstration, we will be using MinIO as the S3 storage. The necessary compose configuration for MinIO microservice is already part of the Docker Compose file.
 
-1. Setup the application to use the docker based deployment following this [document](../get-started.md#setup-the-application).
+1. Setup the application to use the docker based deployment following this [document](../get-started.md#set-up-the-application).
 
 2. Bring up the containers.
 
-    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
- 
+   > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+
    ```sh
    docker compose up -d
    ```
 
 3. Install the package `boto3` in your python environment if not installed.
 
-   It is recommended to create a virtual environment and install it there. You can run the following commands to add the necessary dependencies as well as create and activate the environment.
+   It is recommended to create a virtual environment and install it there. You can run the following commands to add the necessary dependencies, as well as create and activate the environment.
 
    ```sh
    sudo apt update && \
@@ -39,9 +39,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-4. Create a S3 bucket using the following script.
+4. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and credentials with that of the running MinIO server. Name the file as `create_bucket.py`.
+   Update the `HOST_IP` and credentials with that of the running MinIO server. Use `create_bucket.py` as the file name.
 
    ```python
    import boto3
@@ -69,10 +69,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
-    >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-    >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
-  
     ```sh
     curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_s3write -X POST -H 'Content-Type: application/json' -d '{
         "source": {
@@ -96,8 +95,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
 6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
-    >Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-    >If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
-
+    > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)

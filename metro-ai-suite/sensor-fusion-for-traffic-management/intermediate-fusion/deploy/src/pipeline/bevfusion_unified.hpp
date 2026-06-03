@@ -110,7 +110,7 @@ inline void apply_unified_dataset_preset(PipelineConfig& cfg, UnifiedDatasetPres
     cfg.post.post_center_limit_range[3] = dims.post_center_max[0];
     cfg.post.post_center_limit_range[4] = dims.post_center_max[1];
     cfg.post.post_center_limit_range[5] = dims.post_center_max[2];
-
+    cfg.post.score_threshold = dims.default_score_threshold;
 }
 
 class BEVFusionUnifiedPipeline {
@@ -307,7 +307,7 @@ private:
                 .resize(ov::preprocess::ResizeAlgorithm::RESIZE_LINEAR,
                         static_cast<size_t>(cfg_.image_height),
                         static_cast<size_t>(cfg_.image_width))
-                .convert_color(ov::preprocess::ColorFormat::RGB)
+                // .convert_color(ov::preprocess::ColorFormat::RGB)
                 .mean({cfg_.mean[0], cfg_.mean[1], cfg_.mean[2]})
                 .scale({cfg_.std[0], cfg_.std[1], cfg_.std[2]});
             model = ppp.build();

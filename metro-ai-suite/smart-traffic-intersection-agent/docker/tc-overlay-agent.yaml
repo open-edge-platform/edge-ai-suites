@@ -1,0 +1,27 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Trusted Compute overlay for Traffic Intersection Agent services
+# Included automatically when deploying with env ENABLE_TC=true
+
+services:
+  ovms-service:
+    runtime: io.containerd.kata.v2
+    healthcheck:
+      start_period: 120s
+    volumes:
+      - ./tc-resolv.conf:/etc/resolv.conf:ro
+    deploy:
+      resources:
+        limits:
+          cpus: '16'
+          memory: 20G
+        reservations:
+          cpus: '12'
+          memory: 16G
+
+networks:
+  scenescape:
+    ipam:
+      config:
+        - subnet: ${TC_SUBNET}
