@@ -70,12 +70,14 @@ on:
   push:
     branches:
       - main
+      - release-*
     paths:
       - 'federal-aerospace/**'
       - '.github/workflows/fedaero.yaml'
   pull_request:
     branches:
       - main
+      - release-*
     paths:
       - 'federal-aerospace/**'
       - '.github/workflows/fedaero.yaml'
