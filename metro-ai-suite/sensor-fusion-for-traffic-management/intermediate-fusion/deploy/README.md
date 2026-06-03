@@ -19,31 +19,31 @@ This deploy tree contains the Intel GPU inference assets for the BEVFusion proje
 
 Choose the workflow that matches your goal:
 
-1. `docker/README_Docker.md`
+1. [Docker README on GH](docker/README_Docker.md)
 
    Recommended first stop for a quick run with the published Docker image.
 
-2. `docs/Prerequisites.md`
+2. [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md)
 
    Prepare the host for a native build and install the project dependencies.
 
-3. `docs/GSG.md`
+3. [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md)
 
    Build and run the native applications, export predictions, and troubleshoot common issues.
 
-4. `docs/Testing.md`
+4. [Executable Reference](../../docs/user-guide/intermediate-fusion/Testing.md)
 
    Review the available executables plus the native and Docker smoke-test flows.
 
-5. `tools/README_eval.md`
+5. [KITTI 3D Object Detection Evaluation](./tools/README_eval.md)
 
    Run KITTI-format evaluation and interpret the generated metrics.
 
-6. `tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md`
+6. [DAIR-V2X-I to KITTI Format Conversion Guide](./tools/how_to_generate_kitti_format_dataset/dair_v2x_guide.md)
 
    Convert DAIR-V2X-I into KITTI format and verify the converted calibration outputs.
 
-7. `tools/how_to_generate_kitti_format_dataset/kitti360_guide.md`
+7. [KITTI-360 Conversion Guide](./tools/how_to_generate_kitti_format_dataset/kitti360_guide.md)
 
    Convert Kitti360 into KITTI format with the bundled helper scripts.
 
@@ -52,23 +52,23 @@ Choose the workflow that matches your goal:
 Pull the published image and run the container smoke test:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To work interactively inside the published image instead:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 ```
 
-If this container workflow is enough for your use case, you can skip the native build steps in `docs/Prerequisites.md` and `docs/GSG.md`.
+If this container workflow is enough for your use case, you can skip the native build steps in [Prerequisites](../../docs/user-guide/intermediate-fusion/Prerequisites.md) and the [Get Started Guide](../../docs/user-guide/intermediate-fusion/GSG.md).
 
 ## Native Host Entry Points
 
@@ -92,15 +92,15 @@ source /opt/intel/openvino/setupvars.sh
 For a containerized smoke test of a published or prebuilt image, use:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
+If you retagged the published image to `tfcc:2026.1.0-ubuntu24`, or built a local image with that tag, you can omit `--image`.
 
 To copy a host dataset into the container for the run, pass:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 --dataset-path /path/to/kitti_dataset
 ```
 
 To run the native host binaries in one shot and get pass/fail counts plus the final performance lines for `bevfusion` and `bevfusion_unified`, use:

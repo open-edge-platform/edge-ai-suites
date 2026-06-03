@@ -8,7 +8,7 @@ For detailed instructions on building from source, visit the [Build from Source 
 
 ### Chat Q&A Core Docker Compose Deployment
 
-For docker compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
+For Docker Compose deployment instructions, visit the [Running Application Container Guide](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/sample-applications/chat-question-and-answer-core/docs/user-guide/build-from-source.md#running-the-application-container).
 
 ## Build File Watcher Service from Source
 

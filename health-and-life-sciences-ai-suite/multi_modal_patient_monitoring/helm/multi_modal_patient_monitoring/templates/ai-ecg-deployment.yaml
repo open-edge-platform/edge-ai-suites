@@ -32,6 +32,11 @@ spec:
           imagePullPolicy: {{ .Values.aiEcg.image.pullPolicy }}
           securityContext:
             privileged: true
+          env:
+            {{- if eq .Values.devices.ECG_DEVICE "NPU" }}
+            - name: ZE_ENABLE_ALT_DRIVERS
+              value: "libze_intel_npu.so"
+            {{- end }}
           envFrom:
             - configMapRef:
                 name: device-config
@@ -65,6 +70,10 @@ spec:
               mountPath: /dev/dri
             - name: dev
               mountPath: /dev
+            {{- if eq .Values.devices.ECG_DEVICE "NPU" }}
+            - name: accel
+              mountPath: /dev/accel
+            {{- end }}
       volumes:
         - name: models
           persistentVolumeClaim:
@@ -78,3 +87,8 @@ spec:
         - name: dev
           hostPath:
             path: /dev
+        {{- if eq .Values.devices.ECG_DEVICE "NPU" }}
+        - name: accel
+          hostPath:
+            path: /dev/accel
+        {{- end }}
