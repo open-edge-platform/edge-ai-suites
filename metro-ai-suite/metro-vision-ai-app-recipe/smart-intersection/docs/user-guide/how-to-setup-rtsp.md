@@ -1,4 +1,4 @@
-# RTSP Stream Setup for Smart Intersection
+# RTSP Stream Setup
 
 Steps to serve the intersection `.ts` video files over RTSP using mediamtx and ffmpeg.
 
@@ -38,6 +38,7 @@ curl -k -L -o 1122north_h264.ts \
 ```
 
 Other available videos:
+
 - `1122east_h264.ts`
 - `1122west_h264.ts`
 - `1122south_h264.ts`
@@ -49,6 +50,7 @@ ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost
 ```
 
 To run in background:
+
 ```bash
 nohup ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north > /tmp/ffmpeg_rtsp.log 2>&1 &
 ```
@@ -69,6 +71,7 @@ Expected output: H.264 High profile, 1280x720, 30fps.
 ## Multiple streams
 
 To serve all four cameras:
+
 ```bash
 ffmpeg -stream_loop -1 -re -i 1122north_h264.ts -c copy -f rtsp rtsp://localhost:8554/north &
 ffmpeg -stream_loop -1 -re -i 1122south_h264.ts -c copy -f rtsp rtsp://localhost:8554/south &
@@ -83,11 +86,13 @@ Edit `smart-intersection/src/dlstreamer-pipeline-server/config.json` to switch a
 Replace the `multifilesrc` source element in the pipeline string:
 
 **Before (local file):**
+
 ```
 multifilesrc loop=true location=/home/pipeline-server/videos/1122north_h264.ts
 ```
 
 **After (RTSP source):**
+
 ```
 urisourcebin uri=rtsp://<rtsp-server-IP>:8554/north
 ```
@@ -96,12 +101,12 @@ Replace `<rtsp-server-IP>` with the IP of the machine running mediamtx.
 
 To use all four RTSP streams, update each camera pipeline accordingly:
 
-| Pipeline | RTSP URI |
-|----------|----------|
+| Pipeline            | RTSP URI                          |
+| ------------------- | --------------------------------- |
 | `intersection-cam1` | `rtsp://<mediamtx-ip>:8554/north` |
-| `intersection-cam2` | `rtsp://<mediamtx-ip>:8554/east` |
+| `intersection-cam2` | `rtsp://<mediamtx-ip>:8554/east`  |
 | `intersection-cam3` | `rtsp://<mediamtx-ip>:8554/south` |
-| `intersection-cam4` | `rtsp://<mediamtx-ip>:8554/west` |
+| `intersection-cam4` | `rtsp://<mediamtx-ip>:8554/west`  |
 
 ## 8. Restart the pipeline server
 
