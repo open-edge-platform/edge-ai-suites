@@ -65,7 +65,7 @@ ocr:
 
 ### F. Install Content Search Dependencies
 
-Run the installation script in PowerShell with Administrator privileges:
+Run the installation script in **PowerShell** with Administrator privileges:
 
 ```PowerShell
 cd smart-classroom\content_search
@@ -133,12 +133,6 @@ content_search:
 
 ## Step 3: Run the Application
 
-Activate the environment before running the application:
-
-```bash
-smartclassroom\Scripts\activate
-```
-
 Run the backend:
 
 ```bash
@@ -165,10 +159,12 @@ Content Search provides multimodal semantic search, AI-driven video summarizatio
 
 ### A. Create Content Search Virtual Environment
 
+Open a new **Powershell** window:
+
 ```PowerShell
 cd smart-classroom\content_search
 python -m venv venv_content_search
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
@@ -176,7 +172,7 @@ python -m pip install -r requirements.txt
 ### B. Launch Content Search Services
 
 ```PowerShell
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python .\start_services.py
 ```
 
@@ -351,9 +347,12 @@ To uninstall the application, follow these steps:
 1. **Delete the Python virtual environment folder:** \
    Navigate to the directory and remove \
    For base environment : *education-ai-suite/smartclassroom*. \
-   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*.
-2. **Remove the models directory:**
+   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
+   For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*.
+2. **Remove the models directory:** \
    Remove the models folder located under *education-ai-suite/smart-classroom*.
+3. **Remove the content search database:** \
+   Remove uploaded files, vector database and upload record at *education-ai-suite/smart-classroom/content_search/data*
 
 <!--hide_directive
 :::{toctree}

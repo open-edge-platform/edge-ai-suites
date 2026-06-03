@@ -18,15 +18,7 @@ This monitoring stack requires:
 
 ## Installation Steps
 
-### 1. Install uv (if not already installed)
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-# Reload your shell or run:
-source $HOME/.cargo/env
-```
-
-### 2. Install Python Dependencies
+### 1. Install Dependencies
 
 From the project root directory:
 
@@ -35,16 +27,18 @@ make install
 ```
 
 This will:
-- Install system dependencies (sysstat for resource monitoring)
-- Create a virtual environment using uv
-- Install Python packages: matplotlib, numpy, psutil
+- Install system packages (`sysstat`, `python3-tk`, `curl`)
+- Download and install **uv** (Astral) automatically via `curl` if not already present
+- Create a virtual environment and install Python packages: `matplotlib`, `numpy`, `psutil`
 - Configure access to system site-packages (for ROS2)
+- Verify Docker and ROS 2 availability
 
-Or manually:
+If you prefer to install uv manually first:
 
 ```bash
-# The uv virtual environment is already created with system-site-packages access
-uv sync
+curl -LsSf https://astral.sh/uv/install.sh | sh
+source ~/.bashrc   # or open a new shell
+make install
 ```
 
 ### 3. Install ROS2 (Required for Graph Monitoring)

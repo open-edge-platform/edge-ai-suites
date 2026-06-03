@@ -1,6 +1,6 @@
-# Deterministic Threat Detection with Time-Sensitive Networking (TSN)
+# Deterministic Threat Detection with Time-Sensitive Networking (TSN) - Preview
 
-Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks.
+Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
 
 ---
 

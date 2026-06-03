@@ -48,6 +48,7 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
+./quick-start
 ./get-started
 ./how-it-works
 ./application-flow
