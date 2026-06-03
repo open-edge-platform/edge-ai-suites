@@ -73,7 +73,7 @@ By following this guide, you will learn how to:
       docker run --rm --user=root \
         -e http_proxy -e https_proxy -e no_proxy \
         -v "$MODELS_PATH:/output" \
-        intel/dlstreamer:2026.1.0-ubuntu24-rc1.1 bash -c "$(cat <<EOF
+        intel/dlstreamer:2026.1.0-ubuntu24-rc2 bash -c "$(cat <<EOF
 
       mkdir -p src/dlstreamer-pipeline-server/models/public
 
