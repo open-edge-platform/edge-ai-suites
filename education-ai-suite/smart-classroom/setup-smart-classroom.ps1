@@ -319,7 +319,7 @@ try {
     $memInfo = Get-CimInstance -ClassName Win32_ComputerSystem
     $totalMemGB = [math]::Round($memInfo.TotalPhysicalMemory / 1GB, 1)
     
-    if ($totalMemGB -ge 32) {
+    if ($totalMemGB -ge 30) {
         Write-Host "  [OK] $totalMemGB GB RAM" -ForegroundColor Green
     } elseif ($totalMemGB -ge 16) {
         Write-Host "  [WARN] $totalMemGB GB RAM (32 GB recommended)" -ForegroundColor Yellow
