@@ -305,7 +305,7 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
         data_dict = target_entry
 
     if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification/Model6"]:
-            vision_classification = str(data_dict["metadata"]["objects"][0]["classification/Model6"]["label"])
+        vision_classification = str(data_dict["metadata"]["objects"][0]["classification/Model6"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
