@@ -1,156 +1,219 @@
 # Get Started
 
-The Live Video Captioning sample application demonstrates real-time video captioning using Deep Learning Streamer (DL Streamer) and OpenVINO™ toolkit. The sample application processes the Real-Time Streaming Protocol (RTSP) video stream, applies video analytics pipelines for efficient decoding and inference, and leverages a Vision-Language Model (VLM) to generate live captions for the video content. In addition to captioning, the application provides performance metrics such as throughput and latency, enabling developers to evaluate and optimize end-to-end system performance for real-time scenarios.
+Live Video Captioning processes RTSP streams or USB camera (including webcam) feeds through a DLStreamer pipeline and uses a Vision-Language Model (VLM) to generate real-time captions. It also reports throughput and latency metrics.
 
 This section shows how to:
 
-- **Set up the sample application**: Use Docker Compose tool to deploy the application quickly in your environment.
+- **Set up the sample application**: Download the models and use Docker Compose tool to deploy the application in your environment. Compared to quick start guide, this documentation allows the user to personalize the application.
 - **Run the application**: Execute the application to see real-time captioning from your video stream.
 - **Modify application parameters**: Customize settings like inference models and VLM parameters to adapt the application to your specific requirements.
 
 ## Prerequisites
 
 - Verify that your system meets the minimum requirements. See [System Requirements](./get-started/system-requirements.md) for details.
-- Install Docker platform: [Installation Guide](https://docs.docker.com/get-docker/).
-- Install Docker Compose tool: [Installation Guide](https://docs.docker.com/compose/install/).
-- RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files.
-- OpenVINO toolkit-compatible VLM in `ov_models/`. See [Model Preparation](./get-started/model-preparation.md) to prepare the model.
-- OpenVINO-compatible Object Detection Models in `ov_detection_models/`. This is only required
-when object detection in the pipeline is enabled. See [Object Detection Pipeline configuration](./how-to-guides/configure-object-detection-pipeline.md) to enable.
+- Install Docker platform: [Installation Guide](https://docs.docker.com/engine/install/). Install the Ubuntu platform version.
+- In case the sample application is used with RTSP streams, setup of the RTSP stream source (live camera or test feed) or simulated RTSP stream source using local video files should be done separately. Reference instructions are provided [here](./get-started/simulated-rtsp-stream-guide.md).
 
 ## Run the Application
 
-1. Clone the suite:
+### 1. Clone the suite:
 
-   Go to the target directory of your choice and clone the suite.
-   If you want to clone a specific release branch, replace `main` with the desired tag.
-   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
-
-   ```bash
-   git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
-   cd edge-ai-suites
-   git sparse-checkout set metro-ai-suite
-   cd metro-ai-suite/live-video-analysis/live-video-captioning
-   ```
-
-2. Configure the image registry and tag:
-
-   If you prefer to use prebuilt images from Docker Hub, export the variables below.
-
-   ```bash
-   export REGISTRY="intel/"
-   export TAG="latest"
-   ```
-
-   If you prefer to build the sample application from source code instead, skip this step and follow the [Build from Source](./get-started/build-from-source.md) guide.
-
-3. Configure the environment:
-
-   Create an `.env` file in the repository root:
-
-   ```bash
-   WHIP_SERVER_IP=mediamtx
-   WHIP_SERVER_PORT=8889
-   WHIP_SERVER_TIMEOUT=30s
-   PROJECT_NAME=live-captioning
-   HOST_IP=<HOST_IP>
-   EVAM_HOST_PORT=8040
-   EVAM_PORT=8080
-   DASHBOARD_PORT=4173
-   WEBRTC_PEER_ID=stream
-   WEBRTC_BITRATE=5000
-   ALERT_MODE=False
-   ENABLE_DETECTION_PIPELINE=False
-   CAPTION_HISTORY=3
-   ```
-
-   Notes:
-   - `HOST_IP` must be reachable by the browser client for WebRTC signaling.
-   - `PIPELINE_SERVER_URL` defaults to `http://dlstreamer-pipeline-server:8080`.
-   - `WEBRTC_BITRATE` controls the video bitrate in kbps for WebRTC streaming (default: 2048).
-   - `CAPTION_HISTORY` controls how many previous captions are shown in the caption timeline. The UI shows the current and `CAPTION_HISTORY` previous entries (`0` means only current). You can also change this value from the UI.
-
-   Follow the steps outlined in the [Model Preparation](./get-started/model-preparation.md) section.
-
-4. Start the Live Video Captioning application:
-
-   From the `live-video-analysis/live-video-captioning` directory, start the application using Docker Compose:
-
-   ```bash
-   docker compose up -d
-   ```
-
-5. Access the application:
-
-   To start processing video with live captioning:
-
-   a. Open the dashboard at `http://<HOST_IP>:4173`.
-   b. Enter an RTSP URL for your video stream.
-   c. Select a VLM model from the dropdown.
-   d. Customize the prompt and maximum tokens as needed.
-   e. Click **Start** to begin captioning.
-
-   > **Note:** If running in a proxy network, add your RTSP stream URLs or IPs to the `no_proxy` environment variable to allow direct connections to the stream source without going through the proxy.
-
-6. Stop the Live Video Captioning sample application services:
-
-   ```bash
-   docker compose down
-   ```
-
-## Additional Features Reference
-
-If you want to use the application with additional features, see:
-
-- [Alert Mode](./how-to-guides/enable-alert-mode.md) - Enable alert-style responses for binary detection scenarios
-- [Enable Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) - Enable object detection for live captioning.
-- [Enable Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) - Enable embedding creation and RAG for live captioning.
-
-## Testing and Coverage
-
-The project uses **pytest** for unit testing. Tests are located in the `tests/` directory
-under the `app/` folder.
-
-### Install Test Dependencies
+Go to the target directory of your choice and clone the suite.
+If you want to clone a specific release branch, replace `main` with the desired tag.
+To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
 ```bash
-cd app
-uv sync --group test
+git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
+cd edge-ai-suites
+git sparse-checkout set metro-ai-suite
+cd metro-ai-suite/live-video-analysis/live-video-captioning
 ```
 
-### Run All Tests
+### 2. Create `.env`
+
+Run the setup helper:
 
 ```bash
-uv run pytest
+bash scripts/setup_env.sh
 ```
 
-### Run a Specific Test File
+The helper creates `.env` from `.env.example`, detects `HOST_IP`, and stores image settings such as `REGISTRY` and `TAG` in the file.
+
+Use `--force` only if you want to overwrite an existing `.env`:
 
 ```bash
-uv run pytest tests/test_routes_runs.py
+bash scripts/setup_env.sh --force
 ```
 
-### Run Tests with Coverage Report
+This script sets these important values:
+
+| Variable | Default | Purpose |
+|----------|---------|--------|
+| `HOST_IP` | *(auto-detected)* | Host address reachable by the browser for WebRTC signaling. |
+| `REGISTRY` | `intel/` | Image registry prefix. |
+| `TAG` | `latest` | Docker image tag. |
+| `DASHBOARD_PORT` | `4173` | Port for the web dashboard. |
+| `EVAM_HOST_PORT` | `8040` | Port for the pipeline management REST API. |
+| `WHIP_SERVER_PORT` | `8889` | Port for WebRTC/WHIP signaling (mediamtx). |
+| `MQTT_PORT` | `1883` | Port for the internal MQTT broker. |
+| `WEBRTC_BITRATE` | `5000` | WebRTC stream bitrate in kbps. Lower values reduce bandwidth. |
+| `ENABLE_DETECTION_PIPELINE` | `false` | Enables optional object-detection pre-filtering when set to `true`. |
+| `ALERT_MODE` | `false` | Enables alert-style visual highlighting based on keyword rules when set to `true`. |
+| `CAPTION_HISTORY` | `3` | Number of previous captions shown in the UI. |
+| `DEFAULT_RTSP_URL` | *(empty)* | Pre-fills the RTSP URL field in the dashboard on load. |
+| `HUGGINGFACEHUB_API_TOKEN` | *(empty)* | Required for downloading gated Hugging Face models. |
+
+
+### 3. Download Models (one-time)
+
+Download the required captioning model:
 
 ```bash
-uv run pytest --cov=backend --cov=main --cov-report=term-missing
+./model_download_scripts/download_models.sh \
+  --model <vlm-model-of-choice-from-huggingface> \
+  --type vlm \
+  --weight-format int8
 ```
 
-### Generate an HTML Coverage Report
+#### Weight format options
+
+The `--weight-format` flag controls the quantization of the downloaded model. Choose based on your accuracy-vs-memory trade-off:
+
+| Format | Memory use | Accuracy | When to use |
+|--------|-----------|----------|-------------|
+| `int4` | Lowest | Lower | Memory-constrained systems |
+| `int8` | Medium | Good | Recommended default |
+| `fp16` | Highest | Best | Maximum accuracy, more RAM required |
+
+#### Gated Hugging Face models
+
+Some models (for example, Gemma-3) require a Hugging Face access token. Set the token in `.env` or export it before running the download script:
 
 ```bash
-uv run pytest --cov=backend --cov=main --cov-report=html
+export HUGGINGFACEHUB_API_TOKEN=<your-token>
 ```
 
-Open `htmlcov/index.html` in a browser to view the detailed coverage report.
+#### Specifying the conversion device
 
-## Learn More
+By default the model is converted on CPU. To explicitly set the device:
 
-- [Docker Compose Documentation](https://docs.docker.com/compose/)
-- [Model Download Microservice Get Started Guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html)
-- [Model Preparation](./get-started/model-preparation.md)
+```bash
+./model_download_scripts/download_models.sh \
+  --model <vlm-model-of-choice-from-huggingface> \
+  --type vlm \
+  --weight-format int8 \
+  --device <CPU|GPU>
+```
+
+### 4. Customize your deployment
+
+Before starting, edit `.env` to enable the features you need. The table below summarises the common customizations:
+
+#### Change exposed ports
+
+If the default ports conflict with other services on your host, override them in `.env`:
+
+```bash
+DASHBOARD_PORT=4200
+EVAM_HOST_PORT=8050
+WHIP_SERVER_PORT=9000
+```
+
+#### Pre-fill the RTSP URL
+
+Set `DEFAULT_RTSP_URL` to have the dashboard automatically populate the stream field on load:
+
+```bash
+DEFAULT_RTSP_URL=rtsp://<RTSP_HOST_IP>:<PORT>/<ROUTE>
+
+# For example:
+DEFAULT_RTSP_URL=rtsp://192.168.1.10:8554/stream
+```
+
+#### Enable Alert Mode
+
+Set `ALERT_MODE=true` to activate alert-style visual highlighting. After starting the application, define keyword rules directly in the **Alert Rules** panel on the dashboard. See [Enable Alert Mode](./how-to-guides/enable-alert-mode.md) for full details.
+
+```bash
+ALERT_MODE=true
+```
+
+#### Enable Object Detection
+
+Set `ENABLE_DETECTION_PIPELINE=true` to pre-filter frames using a YOLO model before sending them to the VLM.
+
+```bash
+ENABLE_DETECTION_PIPELINE=true
+```
+
+Ensure you have downloaded a detection model.
+
+```bash
+./model_download_scripts/download_models.sh --model yolov8s --type vision
+```
+
+This places the model under `ov_detection_models/`.
+
+See [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) for full details.
+
+#### Enable RAG / Embedding
+
+To connect Live Video Captioning to the RAG service for caption-based Q&A, run the provided helper script instead of editing `.env` manually:
+
+```bash
+source scripts/setup_embeddings.sh
+```
+
+This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services.
+
+Download a LLM model for RAG.
+
+```bash
+./model_download_scripts/download_models.sh \
+  --model Qwen/Qwen2.5-3B-Instruct \
+  --type llm \
+  --device CPU \
+  --weight-format int8
+```
+
+This places the model under `llm_models/`.
+
+See [Configure Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) for full details.
+
+### 5. Start the application
+
+```bash
+docker compose up -d
+```
+
+### 6. Use the dashboard
+
+Open:
+
+```text
+http://<HOST_IP>:4173
+```
+
+Then:
+
+1. Enter an RTSP stream URL or select the available USB/webcam camera.
+2. Select a VLM model.
+3. Adjust the prompt and maximum token settings if needed.
+4. Click **Start**.
+
+If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so the stream connection does not go through the proxy.
+
+### 7. Stop the application
+
+```bash
+docker compose down
+```
+
+## Advanced paths
+
 - [Build from Source](./get-started/build-from-source.md)
-- [Deploy with Helm](./get-started/deploy-with-helm.md) - Deploy the application on Kubernetes with the bundled Helm chart.
+- [Deploy with Helm](./get-started/deploy-with-helm.md)
+- [Run Unit Tests](./get-started/run-unit-tests.md)
 - [API Reference](./api-reference.md)
 - [Known Issues](./known-issues.md)
 

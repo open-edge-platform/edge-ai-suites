@@ -7,7 +7,7 @@ With this feature, during runtime, you can download a new model using the micros
 
 ## Contents
 
-### Pre-requisites
+### Prerequisites
 
 We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`.
 To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#start-with-setup-script)
@@ -59,7 +59,7 @@ If not available, you can simulate this by downloading the sample model from the
    ./sample_list.sh
    ```
 
-6. Modify the payload in `apps/weld-porosity/payload.json` to launch an instance for the mlops pipeline.
+6. Modify the payload in `apps/weld-porosity/payload.json` to launch an instance for the MLOps pipeline.
 
    ```json
    [
@@ -93,22 +93,23 @@ If not available, you can simulate this by downloading the sample model from the
 
    ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
-    #### Downloading model with Model Download
+#### Downloading model with Model Download
 
-    At this point, restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use the [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti™ models from a running Geti™ server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
+At this point, restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use the [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti™ models from a running Geti™ server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
 
-    For our demonstration, we will assume that:
-    - Weld Porosity Model has been retrained and is available for downloaded from a Geti™ server using the Model Download service.
-    - the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/models`
-    - the `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server` service in docker-compose file.
+For our demonstration, we will assume that:
 
-9. Stop the running pipeline by using the pipeline instance "id".
+- Weld Porosity Model has been retrained and is available for downloaded from a Geti™ server using the Model Download service.
+- the downloaded location is accessible by the dlstreamer pipeline server. In our example, it is `/tmp/models`
+- the `/tmp`dir is already accessible by the sample application. If not, please add it to the `volumes` section of `dlstreamer-pipeline-server` service in docker-compose file.
+
+1. Stop the running pipeline by using the pipeline instance "id".
 
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
 
-10. Start a new pipeline with this new model. Before that modify the `payload.json` to use this new model in `apps/weld-porosity/payload.json`. Notice the model path in the payload has changed to the new model.
+2. Start a new pipeline with this new model. Before that modify the `payload.json` to use this new model in `apps/weld-porosity/payload.json`. Notice the model path in the payload has changed to the new model.
 
    ```json
    [
@@ -138,7 +139,7 @@ If not available, you can simulate this by downloading the sample model from the
    ./sample_start.sh -p weld_porosity_classification_mlops
    ```
 
-11. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+3. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
 ## Additional resources
 

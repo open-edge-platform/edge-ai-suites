@@ -1,29 +1,5 @@
-# Handheld Multi-Modal Applications and Deployment
+# Handheld Multi-Modal Application Deployment
 
-## Handheld Multi-Modal Applications
-
-The Handheld Multi-Modal application is a full-stack AI inference and observability platform for handheld scenarios. The application combines LLM inference capability served through the OpenVINO Model Server platform, speech-to-text transcription through the Whisper service, a chat UI through the Open WebUI software, and metrics information through the Grafana dashboard; and runs with the [Visual Pipeline and Platform Evaluation Tool](https://github.com/open-edge-platform/edge-ai-libraries/tree/main/tools/visual-pipeline-and-platform-evaluation-tool) for pipeline visualization.
-
-### Visual Pipeline and Platform Evaluation Tool
-
-The Visual Pipeline and Platform Evaluation Tool simplifies hardware selection for AI workloads by enabling
-configuration of workload parameters, performance benchmarking, and analysis of key metrics such as throughput,
-CPU usage, and GPU usage. With its intuitive interface, the tool provides actionable insights that support
-optimized hardware selection and performance tuning.
-
-For more information, see  [documentation](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/tools/visual-pipeline-and-platform-evaluation-tool/README.md).
-
-### Whisper Model
-
-Whisper is a general-purpose speech recognition model. It is trained on a large dataset of diverse audio and is also a multitasking model that can perform multilingual speech recognition, speech translation, and language identification.
-
-For more information, see [documentation](https://github.com/openai/whisper).
-
-### Web UI
-
-**Open WebUI is an [extensible](https://docs.openwebui.com/features/extensibility/plugin), feature-rich, and user-friendly self-hosted AI platform designed to operate entirely offline.** It supports various LLM runners like **Ollama** and **OpenAI-compatible APIs**, with **built-in inference engine** for RAG, making it a **powerful AI deployment solution**.
-
-For more information, see [documentation](https://github.com/open-webui/open-webui).
 
 ## Handheld Multi-Modal Deployment
 
@@ -123,7 +99,7 @@ d1ec3f394245   intel/vippet-app:2026.1.0-20260512-weekly               "./entryp
 9fa7733f0cc4   bluenviron/mediamtx:1.15.6                              "/mediamtx"              34 seconds ago   Up 33 seconds                      0.0.0.0:8554->8554/tcp, [::]:8554->8554/tcp, 0.0.0.0:8189->8189/udp, [::]:8189->8189/udp, 0.0.0.0:8889->8889/tcp, [::]:8889->8889/tcp   mediamtx
 76d9c62a039b   intel/vippet-onvif-discovery:2026.1.0-20260512-weekly   "/bin/sh -c 'python …"   34 seconds ago   Up 33 seconds                                                                                                                                                              onvif-discovery
 f9d9fc705f29   intel/metrics-manager:2026.1.0-20260508-weekly          "/entrypoint.sh"         34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:9090->9090/tcp, [::]:9090->9090/tcp, 8186/tcp, 0.0.0.0:9273->9273/tcp, [::]:9273->9273/tcp                                      metrics-manager
-c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp  
+c7e676f86e1b   intel/model-download:2026.1.0-20260505-weekly           "/opt/entrypoint.sh …"   34 seconds ago   Up 33 seconds (healthy)            0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp
 ```
 
 After applications are deployed, see [Endpoints](../../apps/handheld-multi-modal/README.md#endpoints) to access a specific application. The applications do not provide authentication or authorization, hence are only available on the `localhost` and are not exposed under any external IP address.

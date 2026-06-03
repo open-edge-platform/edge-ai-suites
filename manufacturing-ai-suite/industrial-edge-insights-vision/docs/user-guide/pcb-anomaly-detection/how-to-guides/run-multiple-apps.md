@@ -55,7 +55,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
-   For the example above, modify the envs for pcb-anomaly-detection and weld-porosity i.e. env_pcb-anomaly-detection and .env_weld-porosity
+   For the example above, modify the envs for pcb-anomaly-detection and weld-porosity, i.e. `env_pcb-anomaly-detection` and `env_weld-porosity`
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -67,7 +67,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-4. Install pre-requisites for all the instances:
+4. Install prerequisites for all the instances:
 
    ```bash
    ./setup.sh

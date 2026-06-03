@@ -98,7 +98,7 @@ You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https:
 For example:
 
 ```bash
-docker pull intel/tfcc:latest
+docker pull intel/tfcc:2025.2.0-ubuntu24
 ```
 
 ### Build and run docker image through scripts
@@ -110,14 +110,14 @@ docker pull intel/tfcc:latest
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
+bash build_docker.sh <IMAGE_TAG, default tfcc:2025.2.0-ubuntu24> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04> 
 ```
 
 Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
+bash build_docker.sh tfcc:2025.2.0-ubuntu24 Dockerfile_TFCC.dockerfile
 ```
 
 #### Run docker image
@@ -125,14 +125,14 @@ bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
 Usage:
 
 ```
-bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
+bash run_docker.sh <DOCKER_IMAGE, default tfcc:2025.2.0-ubuntu24> <NPU_ON, default false>
 ```
 
 Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash run_docker.sh tfcc:latest false
+bash run_docker.sh tfcc:2025.2.0-ubuntu24 false
 # After the run is complete, the container ID will be output, or you can view it through docker ps 
 ```
 
@@ -236,7 +236,7 @@ Sample output:
 
 ```bash
 NAME                IMAGE      COMMAND       SERVICE    CREATED         STATUS         PORTS
-docker-tfcc-1    tfcc:latest   "/bin/bash"     tfcc   4 minutes ago   Up 9 seconds
+docker-tfcc-1    tfcc:2025.2.0-ubuntu24   "/bin/bash"     tfcc   4 minutes ago   Up 9 seconds
 ```
 
 copy dataset
@@ -253,7 +253,7 @@ docker cp /path/to/dataset docker-tfcc-1:/path/to/dataset
 
 ### Run automated test in Docker
 
-The project provides a Docker-based automated test entry script that validates prerequisites and runs `test/autotest.sh` inside the `intel/tfcc:latest` container.
+The project provides a Docker-based automated test entry script that validates prerequisites and runs `test/autotest.sh` inside the `intel/tfcc:2025.2.0-ubuntu24` container.
 
 From the Sensor Fusion project directory:
 
@@ -266,7 +266,7 @@ What it does:
 
 1. Checks that Docker is installed and the daemon is reachable.
 2. Checks that Intel GPU device nodes exist on the host (e.g., `/dev/dri/renderD*`).
-3. Pulls the image: `docker pull intel/tfcc:latest`.
+3. Pulls the image: `docker pull intel/tfcc:2025.2.0-ubuntu24`.
 4. Starts a container by calling `docker/run_docker.sh` (same settings as manual docker run), verifies build outputs exist under `build/bin`, then runs `test/autotest.sh` inside the container.
 
 Note: The script adds `video`/`render` access by passing numeric group IDs (`--group-add <gid>`), so it does not depend on the container image having `video` or `render` group names defined.

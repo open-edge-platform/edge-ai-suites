@@ -45,8 +45,8 @@ analysis, along with recommended configurations has not been done and validated 
 version of the sample application.
 
 2. **Deployment Option**: It is possible to deploy the `Chat Q&A Core` both using Helm or with
-docker compose. The former will need Kubevirt based infrastructure which can manage both the
-VM(s) and the containers. The recommendation is to use the docker compose based deployment.
+Docker Compose. The former will need Kubevirt based infrastructure which can manage both the
+VM(s) and the containers. The recommendation is to use the Docker Compose based deployment.
 
 3. **Model configuration**: The model used, especially its parameter count, determines not only
 the accuracy, but also the required compute. As explained in (1), this forms a
@@ -111,7 +111,7 @@ To use the application effectively, make sure that all the steps mentioned in th
 ## Advanced Setup
 
 - [How to Build from Source and Deploy](./get-started/build-from-source.md): Guide to build the
-  sample application services from source and docker compose deployment
+  sample application services from source and Docker Compose deployment
 
 ## Other Documentation
 
