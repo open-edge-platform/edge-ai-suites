@@ -83,7 +83,7 @@ The pipeline `worker_safety_gear_detection_npu` in `pipeline-server-config.json`
 
 ### Intel NPU K8S Extension
 
-If you're deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec` etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel NPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec` etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® NPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
 npu:
