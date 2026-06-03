@@ -9,9 +9,9 @@
 
 ## Overview
 
-This tutorial demonstrates how to simultaneously deploy and manage multiple industrial edge AI vision applications using Docker Compose. You'll learn to configure and run multiple instances of the same application or different applications in parallel, with each instance operating its own isolated DL Streamer Pipeline Server and associated services, all accessible through dedicated NGINX proxy configurations.
+This tutorial demonstrates how to simultaneously deploy and manage multiple industrial edge AI vision applications using Docker Compose. You will learn to configure and run multiple instances of the same application or different applications in parallel, with each instance operating its own isolated DL Streamer Pipeline Server and associated services, all accessible through dedicated NGINX proxy configurations.
 
-**What you'll learn:**
+**What you will learn:**
 
 - How to configure multiple application instances with unique port assignments
 - How to independently deploy, start, stop, and monitor multiple running applications
@@ -55,7 +55,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
 
 3. Edit the environment variables below in `.env_<SAMPLE_APP>` files for all sample apps present in `config.yml`.
 
-   For the example above, modify the envs for pallet-defect-detection and weld-porosity i.e. env_pallet-defect-detection and .env_weld-porosity
+   For the example above, modify the envs for pallet-defect-detection and weld-porosity, i.e. `env_pallet-defect-detection` and `env_weld-porosity`
 
    ```text
    HOST_IP=<HOST_IP>   # IP address of server where DL Streamer Pipeline Server is running.
@@ -67,7 +67,7 @@ This tutorial demonstrates how to simultaneously deploy and manage multiple indu
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-4. Install pre-requisites for all the instances:
+4. Install prerequisites for all the instances:
 
    ```bash
    ./setup.sh
@@ -644,4 +644,5 @@ docker compose -p <INSTANCE_NAME> logs -f dlstreamer-pipeline-server
     ```bash
     docker ps
     ```
-3. Once application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.
+
+3. Once the application has been stopped, remove or rename the `config.yml` file if you do not wish to relaunch these multiple apps next time.

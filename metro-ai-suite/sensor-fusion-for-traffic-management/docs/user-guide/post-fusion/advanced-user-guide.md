@@ -927,7 +927,7 @@ You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https:
 For example:
 
 ```bash
-docker pull intel/tfcc:latest
+docker pull intel/tfcc:2025.2.0-ubuntu24
 ```
 
 ### Build and run docker image through scripts
@@ -939,14 +939,14 @@ docker pull intel/tfcc:latest
 Usage:
 
 ```bash
-bash build_docker.sh <IMAGE_TAG, default tfcc:latest> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04>
+bash build_docker.sh <IMAGE_TAG, default tfcc:2025.2.0-ubuntu24> <DOCKERFILE, default Dockerfile_TFCC.dockerfile>  <BASE, default ubuntu> <BASE_VERSION, default 24.04>
 ```
 
 Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
+bash build_docker.sh tfcc:2025.2.0-ubuntu24 Dockerfile_TFCC.dockerfile
 ```
 
 **Run docker image**:
@@ -954,14 +954,14 @@ bash build_docker.sh tfcc:latest Dockerfile_TFCC.dockerfile
 Usage:
 
 ```bash
-bash run_docker.sh <DOCKER_IMAGE, default tfcc:latest> <NPU_ON, default false>
+bash run_docker.sh <DOCKER_IMAGE, default tfcc:2025.2.0-ubuntu24> <NPU_ON, default false>
 ```
 
 Example:
 
 ```bash
 cd $PROJ_DIR/docker
-bash run_docker.sh tfcc:latest false
+bash run_docker.sh tfcc:2025.2.0-ubuntu24 false
 # After the run is complete, the container ID will be output, or you can view it through docker ps
 ```
 
@@ -1065,7 +1065,7 @@ Sample output:
 
 ```bash
 NAME                IMAGE      COMMAND       SERVICE    CREATED         STATUS         PORTS
-docker-tfcc-1    tfcc:latest   "/bin/bash"     tfcc   4 minutes ago   Up 9 seconds
+docker-tfcc-1    tfcc:2025.2.0-ubuntu24   "/bin/bash"     tfcc   4 minutes ago   Up 9 seconds
 ```
 
 Copy dataset:
