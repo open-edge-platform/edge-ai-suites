@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Simulations
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/simulation/index.html).
+
 ## Overview
 
 A collection of ROS 2 simulation packages and tutorials for robotics applications, including TurtleSim tutorials, RealSense camera simulations, and Pick & Place demonstrations using Gazebo. These simulations provide a comprehensive environment for testing and developing autonomous mobile robot (AMR) applications.
@@ -150,10 +154,6 @@ Complete Pick & Place demonstration in Gazebo simulation environment, including:
 - Pick & Place task implementation
 
 These simulations can be launched individually or combined depending on your testing requirements. Refer to the individual package documentation and launch files for specific usage instructions.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/simulation/index.html).
 
 ## License
 
