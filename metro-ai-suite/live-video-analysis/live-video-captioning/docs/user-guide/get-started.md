@@ -16,7 +16,7 @@ This section shows how to:
 
 ## Run the Application
 
-### 1. Clone the suite:
+### 1. Clone the suite
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
