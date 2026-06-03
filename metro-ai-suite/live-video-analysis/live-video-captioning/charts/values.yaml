@@ -61,7 +61,7 @@ global:
   # ------- Models Download ------------------------------------------------------
   # Model download service location. This service is responsible for downloading and preparing models for use by the caption service and DL Streamer.
   # The chart does not deploy the model download service,
-  # so you must deploy it separately before deploying this chart by referring to https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md
+  # so you must deploy it separately before deploying this chart by referring to https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/model-download/docs/user-guide/get-started/deploy-with-helm-chart.md
 
   modelDownload:
     serviceName: "model-download" # REQUIRED: e.g., model-download (Service name for model-download service which deployed previously using model-download chart)

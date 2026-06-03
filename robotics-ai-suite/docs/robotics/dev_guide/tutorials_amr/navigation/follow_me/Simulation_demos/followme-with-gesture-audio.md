@@ -130,7 +130,7 @@ You will see two panels side-by-side: Gazebo GUI on the left and ROS 2 rviz disp
   [TurtleBot3](https://emanual.robotis.com/docs/en/platform/turtlebot3/simulation/#gazebo-simulation)
   robot, which will follow the guide robot.
 
-  TurtleBot3 robot is equipped with a 2D Lidar and an RealSense™ Depth Camera.
+  TurtleBot3 robot is equipped with a 2D Lidar and a RealSense™ Depth Camera.
   In this demo, the 2D Lidar is selected as the point cloud input.
 
 In this demo, we used a pre-defined trajectory for the guide robot and published

@@ -26,7 +26,7 @@ This tutorial covers:
 
 ## Source Code
 
-The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://github.com/open-edge-platform/edge-ai-suites/tree/main/robotics-ai-suite/pipelines/vla-pi0.5-openvino)
+The source code for this sample can be found here: [VLA-Pi0.5-OpenVINO](https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/robotics-ai-suite/pipelines/vla-pi0.5-openvino)
 
 ## Environment and Model Setup
 

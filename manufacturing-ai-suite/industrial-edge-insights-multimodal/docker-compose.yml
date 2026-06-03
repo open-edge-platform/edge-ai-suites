@@ -521,7 +521,7 @@ services:
       - "vol_temp_seaweed_s3:/tmp"
 
   coturn:
-    image: coturn/coturn:4.11.0
+    image: coturn/coturn:4.12.0
     container_name: coturn
     read_only: true
     security_opt:

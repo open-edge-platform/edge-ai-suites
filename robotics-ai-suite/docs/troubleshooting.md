@@ -128,4 +128,4 @@
 
 3. Robot arm does not go accurately pick up the object?
 
-   Check [Camera pose calibration](rvc/use_cases/dynamic_use_case/system_config.rst#camera_integration)
+   Check [Camera pose calibration](rvc/use_cases/dynamic_use_case/system_config.md#integration)
