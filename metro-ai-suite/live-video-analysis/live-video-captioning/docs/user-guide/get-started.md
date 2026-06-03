@@ -105,30 +105,6 @@ By default the model is converted on CPU. To explicitly set the device:
   --device <CPU|GPU>
 ```
 
-#### Optional: Download an object-detection model
-
-Only required if you plan to enable the object-detection pipeline (see [Enable Object Detection](#enable-object-detection)):
-
-```bash
-./model_download_scripts/download_models.sh --model yolov8s --type vision
-```
-
-This places the model under `ov_detection_models/`.
-
-#### Optional: Download an LLM model
-
-Only required if you plan to enable RAG embedding (see [Enable RAG/Embedding](#enable-rag--embedding)):
-
-```bash
-./model_download_scripts/download_models.sh \
-  --model Qwen/Qwen2.5-3B-Instruct \
-  --type llm \
-  --device CPU \
-  --weight-format int8
-```
-
-This places the model under `llm_models/`.
-
 ### 4. Customize your deployment
 
 Before starting, edit `.env` to enable the features you need. The table below summarises the common customizations:
@@ -148,7 +124,10 @@ WHIP_SERVER_PORT=9000
 Set `DEFAULT_RTSP_URL` to have the dashboard automatically populate the stream field on load:
 
 ```bash
-DEFAULT_RTSP_URL=rtsp://192.168.1.10/stream
+DEFAULT_RTSP_URL=rtsp://<RTSP_HOST_IP>:<PORT>/<ROUTE>
+
+# For example:
+DEFAULT_RTSP_URL=rtsp://192.168.1.10:8554/stream
 ```
 
 #### Enable Alert Mode
@@ -161,11 +140,21 @@ ALERT_MODE=true
 
 #### Enable Object Detection
 
-Set `ENABLE_DETECTION_PIPELINE=true` to pre-filter frames using a YOLO model before sending them to the VLM. Ensure you have downloaded a detection model first (see Step 3). See [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) for full details.
+Set `ENABLE_DETECTION_PIPELINE=true` to pre-filter frames using a YOLO model before sending them to the VLM.
 
 ```bash
 ENABLE_DETECTION_PIPELINE=true
 ```
+
+Ensure you have downloaded a detection model.
+
+```bash
+./model_download_scripts/download_models.sh --model yolov8s --type vision
+```
+
+This places the model under `ov_detection_models/`.
+
+See [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) for full details.
 
 #### Enable RAG / Embedding
 
@@ -175,7 +164,21 @@ To connect Live Video Captioning to the RAG service for caption-based Q&A, run t
 source scripts/setup_embeddings.sh
 ```
 
-This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services. See [Configure Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) for full details.
+This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services.
+
+Download a LLM model for RAG.
+
+```bash
+./model_download_scripts/download_models.sh \
+  --model Qwen/Qwen2.5-3B-Instruct \
+  --type llm \
+  --device CPU \
+  --weight-format int8
+```
+
+This places the model under `llm_models/`.
+
+See [Configure Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) for full details.
 
 ### 5. Start the application
 
@@ -205,14 +208,6 @@ If your network uses a proxy, add your RTSP stream host or IP to `no_proxy` so t
 ```bash
 docker compose down
 ```
-
-## Optional features
-
-| Feature | `.env` key | Guide |
-|---------|-----------|-------|
-| Alert-style visual highlighting based on keyword rules | `ALERT_MODE=true` | [Enable Alert Mode](./how-to-guides/enable-alert-mode.md) |
-| Object-detection pre-filtering (skip empty frames) | `ENABLE_DETECTION_PIPELINE=true` | [Configure Object Detection Pipeline](./how-to-guides/configure-object-detection-pipeline.md) |
-| RAG chat over generated captions | `ENABLE_EMBEDDING=true` + `COMPOSE_PROFILES=EMBEDDING` | [Configure Embedding Creation with RAG](./how-to-guides/configure-embedding-creation-with-rag.md) |
 
 ## Advanced paths
 
