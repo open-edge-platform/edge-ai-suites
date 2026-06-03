@@ -6,8 +6,8 @@ This guide provides step-by-step instructions for deploying the Multimodal Weld 
 
 - [System Requirements](../get-started/system-requirements.md)
 - K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note that the Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
- Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
-- For Helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+ Refer to online tutorials (such as <https://dev.to/korakrit/installing-kubernetes-single-node-setup-on-ubuntu-2404-4f47>) to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**
 > If Ubuntu Desktop is not installed on the target system, follow the instructions from Ubuntu
@@ -100,7 +100,7 @@ Use the following command to verify if all the application resources got install
 kubectl get all -n multimodal-sample-app
 ```
 
-## Step 4: Copy the udf package for helm deployment
+## Step 4: Copy the UDF package for Helm deployment
 
 **DL Streamer Pipeline Server**
 
@@ -158,12 +158,12 @@ You use a Client URL (cURL) command to start the pipeline. Start this pipeline w
 following cURL command.
 
 > **Note:**
+>
 > - By default, model for DL Streamer Pipeline Server is configured to run on `CPU`.
 > - The accepted `device` values for this configuration are `CPU`, `GPU`, and `NPU`.
 > - To run model inference on `GPU` or `NPU`, substitute the device using the sed commands shown below.
 
-
-- To run inference on `CPU` (Default), 
+- To run inference on `CPU` (Default),
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
@@ -178,7 +178,7 @@ following cURL command.
     -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
   ```
 
-- To run inference on `GPU`, 
+- To run inference on `GPU`,
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
@@ -194,9 +194,7 @@ following cURL command.
     -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
   ```
 
-
-
-- To run inference on `GPU`, 
+- To run inference on `GPU`,
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server

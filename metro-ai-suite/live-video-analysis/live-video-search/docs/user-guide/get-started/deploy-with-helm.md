@@ -1,4 +1,4 @@
-# How to deploy with Helm\* Chart
+# Deploy with Helm\* Chart
 
 This section shows how to deploy the Live Video Search sample application using Helm chart.
 
