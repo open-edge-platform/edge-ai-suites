@@ -2,7 +2,6 @@
 
 This Helm chart deploys the **NICU Warmer Patient Monitoring** application on Kubernetes.
 
-
 ## Prerequisites
 
 - Kubernetes cluster (K3s / Minikube / Kind / Bare-metal)
@@ -83,6 +82,7 @@ The chart accepts both the canonical nested layout shown below and the legacy fl
 bundle layout used by some previously shipped asset zips.
 
 Expected directory structure:
+
 ```
 /opt/nicu-warmer-assets/
 ├── models/
@@ -110,31 +110,32 @@ Expected directory structure:
     └── publisher_utils_patched.py
 ```
 
-  Legacy flat bundles are also supported during install, for example:
+Legacy flat bundles are also supported during install, for example:
 
-  ```text
-  /opt/nicu-warmer-assets/
-  ├── person-detect-fp32.xml
-  ├── person-detect-fp32.bin
-  ├── patient-detect-fp32.xml
-  ├── patient-detect-fp32.bin
-  ├── latch-detect-fp32.xml
-  ├── latch-detect-fp32.bin
-  ├── action-recognition-0001-encoder.xml
-  ├── action-recognition-0001-encoder.bin
-  ├── action-recognition-0001-decoder.xml
-  ├── action-recognition-0001-decoder.bin
-  ├── Warmer_Testbed_YTHD.mp4
-  ├── models_rppg/
-  │   ├── mtts_can.xml
-  │   └── mtts_can.bin
-  └── extensions/
-    ├── rppg_gva.py
-    ├── action_gva.py
-    └── publisher_utils_patched.py
-  ```
+```text
+/opt/nicu-warmer-assets/
+├── person-detect-fp32.xml
+├── person-detect-fp32.bin
+├── patient-detect-fp32.xml
+├── patient-detect-fp32.bin
+├── latch-detect-fp32.xml
+├── latch-detect-fp32.bin
+├── action-recognition-0001-encoder.xml
+├── action-recognition-0001-encoder.bin
+├── action-recognition-0001-decoder.xml
+├── action-recognition-0001-decoder.bin
+├── Warmer_Testbed_YTHD.mp4
+├── models_rppg/
+│   ├── mtts_can.xml
+│   └── mtts_can.bin
+└── extensions/
+  ├── rppg_gva.py
+  ├── action_gva.py
+  └── publisher_utils_patched.py
+```
 
 To customize the host path:
+
 ```bash
 --set assets.loadJob.hostPath=/your/custom/path
 ```
@@ -187,12 +188,12 @@ helm install nicu-warmer . -n nicu --create-namespace \
   --set devices.RPPG_DEVICE=NPU
 ```
 
-| Profile | DETECTION_DEVICE | RPPG_DEVICE | ACTION_DEVICE | Expected FPS |
-|---------|-----------------|-------------|---------------|-------------|
-| mixed-optimized (default) | GPU | CPU | NPU | ~15 |
-| all-gpu | GPU | GPU | GPU | ~15 |
-| all-cpu | CPU | CPU | CPU | ~6 |
-| all-npu | NPU | NPU | NPU | ~10 |
+| Profile                   | DETECTION_DEVICE | RPPG_DEVICE | ACTION_DEVICE | Expected FPS |
+| ------------------------- | ---------------- | ----------- | ------------- | ------------ |
+| mixed-optimized (default) | GPU              | CPU         | NPU           | ~15          |
+| all-gpu                   | GPU              | GPU         | GPU           | ~15          |
+| all-cpu                   | CPU              | CPU         | CPU           | ~6           |
+| all-npu                   | NPU              | NPU         | NPU           | ~10          |
 
 > **Limitation:** NPU-optimized (FP16/INT8) models are not yet available; all profiles currently use FP32 models.
 
@@ -205,17 +206,20 @@ helm upgrade nicu-warmer . -n nicu
 ## Verify Deployment
 
 ### Pods
+
 ```bash
 kubectl get pods -n nicu
 ```
 
 All pods should show:
+
 ```
 STATUS: Running
 READY: 1/1
 ```
 
 Expected pods:
+
 - `nicu-backend` — Flask API for inference orchestration
 - `nicu-dlsps` — DL Streamer Pipeline Server (video inference)
 - `nicu-ui` — React frontend served by nginx
@@ -223,11 +227,13 @@ Expected pods:
 - `nicu-mqtt` — MQTT broker for pipeline events
 
 ### Services
+
 ```bash
 kubectl get svc -n nicu
 ```
 
 ### Check Logs
+
 ```bash
 kubectl logs -n nicu deploy/nicu-backend
 kubectl logs -n nicu deploy/nicu-dlsps
@@ -236,6 +242,7 @@ kubectl logs -n nicu deploy/nicu-ui
 ```
 
 ### Start the Pipeline
+
 ```bash
 # Port-forward to backend
 kubectl port-forward -n nicu svc/nicu-backend 5001:5001
@@ -248,6 +255,7 @@ curl http://localhost:5001/metrics
 ```
 
 Expected output when running:
+
 ```json
 {
   "fps": 15.0,
@@ -266,11 +274,12 @@ kubectl get ingress -n nicu
 ```
 
 Add the hostname mapping:
+
 ```bash
 echo "<INGRESS-IP> nicu-warmer.local" | sudo tee -a /etc/hosts
 ```
 
-Open: http://nicu-warmer.local/
+Open: `http://nicu-warmer.local/`
 
 ### Access without Ingress Controller
 
@@ -281,9 +290,10 @@ If deployed with `ingress.enabled: false` or no ingress controller available:
 kubectl port-forward -n nicu svc/nicu-ui 3000:80 --address 0.0.0.0
 ```
 
-Open: http://localhost:3000
+Open: `http://localhost:3000`
 
 From the UI you can:
+
 - View live video feed with person/patient/latch detection bounding boxes
 - Monitor rPPG (remote photoplethysmography) vitals
 - See action recognition (caretaker activity)
@@ -292,33 +302,33 @@ From the UI you can:
 
 ## Architecture
 
-| Service | Description | Port |
-|---------|-------------|------|
-| nicu-backend | Flask API — pipeline orchestration, MQTT consumer | 5001 |
-| nicu-ui | React dashboard served by nginx | 3000 |
-| nicu-metrics-collector | Hardware metrics (GPU/NPU/CPU/Memory) | 9000 |
-| nicu-dlsps | DL Streamer Pipeline Server — GStreamer inference | 8080 |
-| nicu-mqtt | Eclipse Mosquitto MQTT broker | 1883 |
+| Service                | Description                                       | Port |
+| ---------------------- | ------------------------------------------------- | ---- |
+| nicu-backend           | Flask API — pipeline orchestration, MQTT consumer | 5001 |
+| nicu-ui                | React dashboard served by nginx                   | 3000 |
+| nicu-metrics-collector | Hardware metrics (GPU/NPU/CPU/Memory)             | 9000 |
+| nicu-dlsps             | DL Streamer Pipeline Server — GStreamer inference | 8080 |
+| nicu-mqtt              | Eclipse Mosquitto MQTT broker                     | 1883 |
 
 ## Configuration
 
-See [values.yaml](values.yaml) for all configurable parameters.
+See [values.yaml](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/health-and-life-sciences-ai-suite/NICU-Warmer/helm/nicu-warmer/values.yaml) for all configurable parameters.
 
 ### Key Parameters
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `devices.DETECTION_DEVICE` | Device for detection models | `GPU` |
-| `devices.RPPG_DEVICE` | Device for rPPG model | `CPU` |
-| `devices.ACTION_DEVICE` | Device for action recognition | `NPU` |
-| `devices.TARGET_FPS` | Target frame rate | `30` |
-| `backend.image.tag` | Backend image tag | `2026.1.0-rc1` |
-| `ui.image.tag` | UI image tag | `2026.1.0-rc1` |
-| `dlsps.image.tag` | DLSPS image tag | `2026.1.0-ubuntu24-rc1` |
-| `metrics.image.tag` | Metrics collector tag | `2026.0-rc1` |
-| `ingress.enabled` | Enable ingress routing | `true` |
-| `assets.loadJob.hostPath` | Host path for offline assets | `/opt/nicu-warmer-assets` |
-| `persistence.size` | PVC storage size | `20Gi` |
+| Parameter                  | Description                   | Default                   |
+| -------------------------- | ----------------------------- | ------------------------- |
+| `devices.DETECTION_DEVICE` | Device for detection models   | `GPU`                     |
+| `devices.RPPG_DEVICE`      | Device for rPPG model         | `CPU`                     |
+| `devices.ACTION_DEVICE`    | Device for action recognition | `NPU`                     |
+| `devices.TARGET_FPS`       | Target frame rate             | `30`                      |
+| `backend.image.tag`        | Backend image tag             | `2026.1.0-rc1`            |
+| `ui.image.tag`             | UI image tag                  | `2026.1.0-rc1`            |
+| `dlsps.image.tag`          | DLSPS image tag               | `2026.1.0-ubuntu24-rc1`   |
+| `metrics.image.tag`        | Metrics collector tag         | `2026.0-rc1`              |
+| `ingress.enabled`          | Enable ingress routing        | `true`                    |
+| `assets.loadJob.hostPath`  | Host path for offline assets  | `/opt/nicu-warmer-assets` |
+| `persistence.size`         | PVC storage size              | `20Gi`                    |
 
 ## Uninstall
 
