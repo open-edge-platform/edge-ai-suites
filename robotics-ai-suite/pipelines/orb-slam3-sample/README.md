@@ -12,7 +12,7 @@ ORB-SLAM3 is one of popular real-time feature-based SLAM libraries able to perfo
 
 ## Component Documentation
 
-Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/ORB_VSLAM.html)
+Comprehensive documentation on this component is available here: [Link](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/sample_pipelines/ORB_VSLAM.html)
 
 ## Changes to 3rd party source
 
@@ -27,13 +27,13 @@ The following patches are provided to enhance the ORB_SLAM3 source:
 ## Prerequisites
 
 > [!IMPORTANT]
-> Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) before proceeding.
-> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense SDK.
+> Please make sure you have all the prerequisites and installation in [Get Started](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/get_started.html) before proceeding.
+> And follow the guide [Install Realsense SDK](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense SDK.
 
 ## Installation
 
 1. Make sure Realsense SDK installed. If not, follow [Install Realsense SDK](
-https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense packages.
+https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/embodied/get-started/installation/realsense.html) to install Realsense packages.
 
 Here is a minimal installation:
 

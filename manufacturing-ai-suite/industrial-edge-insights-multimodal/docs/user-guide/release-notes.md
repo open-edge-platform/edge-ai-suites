@@ -4,8 +4,8 @@
 
 **June 2026**
 
-This release introduces **GPU/NPU hardware acceleration** support for performing inference on DL Streamer P PS, 
-**new Classifier ML model for weld time series data analysis enabling support on GPU**,various fixes and documentation improvements.
+This release introduces **GPU/NPU hardware acceleration** support for performing inference on DL Streamer Pipeline Server,
+**new Classifier ML model for weld time series data analysis enabling support on GPU**, various fixes and documentation improvements.
 
 **New**
 
@@ -18,18 +18,18 @@ This release introduces **GPU/NPU hardware acceleration** support for performing
   updated configuration and user guides for running inference on GPU.
 - **RTSP Camera Configuration Guide**: A new how-to guide has been added for configuring
   an external RTSP camera as the video source for the multimodal sample app.
-- **Functional Tests**: Comprehensive functional tests for docker compose and helm deployments
+- **Functional Tests**: Comprehensive functional tests for Docker Compose and Helm deployments
   have been added.
 
 **Improved**
 
 - **New Classifier ML Model**: The weld defect detection pipeline on the Time Series Analytics
-  microservice now uses a scikit-learn's (Intel accelerated) RandomForestClassifier model, replacing
+  microservice now uses a scikit-learn's (Intel-accelerated) RandomForestClassifier model, replacing
   the previous CatBoost model, with optional explanation payloads and updated model artifacts.
 - **UDF Package Format**: UDF sample app archives now use tar format instead of zip.
-- **Security**: Upgraded to latest available third-party versions in all applicable manifests
+- **Security**: Upgraded to latest available third-party versions in all applicable manifests.
 - **Documentation**: Time Series vs Multimodal Weld Defect Detection
-  distinction clarified and broken references fixed
+  distinction clarified and broken references fixed.
 
 ---
 

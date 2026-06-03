@@ -3,13 +3,13 @@
 ## Prerequisites
 
 - [System Requirements](../../../docs/user-guide/weld-porosity/get-started/system-requirements.md)
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
-  Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
-- For helm installation, refer to [helm website](https://helm.sh/docs/intro/install/)
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+  Refer to tutorials online to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04 and/or Ubuntu 24.04.
+- For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
 ## Setup the application
 
-> **Note**: The following instructions assume Kubernetes is already running in the host system with helm package manager installed.
+> **Note:** The following instructions assume Kubernetes is already running in the host system with Helm package manager installed.
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
@@ -18,11 +18,12 @@
    cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/
    ```
 
-2. Set app specific values.yaml file.
+2. Set app specific `values.yaml` file.
 
    ```sh
    cp helm/values_weld-porosity.yaml helm/values.yaml
    ```
+
 3. Edit the HOST_IP, proxy and other environment variables in `helm/values.yaml` as follows
 
    ```yaml
@@ -38,17 +39,17 @@
        password: <password>
    ```
 
-4. Install pre-requisites. Run with sudo if needed.
+4. Install prerequisites. Run with sudo if needed.
 
    ```sh
    ./setup.sh helm
    ```
 
-   This sets up application pre-requisites, download artifacts, sets executable permissions for scripts etc.
+   This sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc.
 
 ## Deploy the application
 
-1. Install the helm chart
+1. Install the Helm chart
 
    ```sh
    helm install app-deploy helm -n apps --create-namespace
@@ -124,7 +125,7 @@
    ./sample_start.sh helm -p weld_porosity_classification
    ```
 
-   This command would look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different options available.
+   This command looks for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launches a pipeline instance in DL Streamer Pipeline Server. Refer to the table to learn about different options available.
 
    Output:
 
@@ -145,7 +146,7 @@
    Payload for pipeline 'weld_porosity_classification' posted successfully. Response: "895130405c8e11f08b78029627ef9c6b"
    ```
 
-   > **Note:**- This would start the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/weld/
 
 5. Get status of pipeline instance(s) running.
 
@@ -153,7 +154,7 @@
    ./sample_status.sh helm
    ```
 
-   This command lists status of pipeline instances launched during the lifetime of sample application.
+   This command lists the status of pipeline instances launched during the lifetime of the sample application.
 
    Output:
 
@@ -207,12 +208,11 @@
    If you wish to stop a specific instance, you can provide it with an `--id` argument to the command.
    For example, `./sample_stop.sh helm --id 895130405c8e11f08b78029627ef9c6b`
 
-7. Uninstall the helm chart.
+7. Uninstall the Helm chart.
 
    ```sh
    helm uninstall app-deploy -n apps
    ```
-
 
 ## Troubleshooting
 

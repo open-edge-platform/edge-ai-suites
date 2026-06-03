@@ -83,6 +83,8 @@ vlmServing:
     tag: "3.12-slim"
     pullPolicy: IfNotPresent
   replicas: 1
+  trustedCompute:
+    enabled: false
   service:
     type: NodePort
     port: 8000

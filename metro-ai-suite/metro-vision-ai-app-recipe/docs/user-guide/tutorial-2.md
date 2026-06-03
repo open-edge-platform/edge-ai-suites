@@ -116,7 +116,7 @@ Create a debug node to monitor incoming data:
    - Check the debug panel (bug icon in the right sidebar) for incoming messages
 
 4. **Restart the AI Pipeline** (if needed):
-   If you don't see data in the debug panel, execute the AI pipeline using this curl command:
+   If you do not see data in the debug panel, execute the AI pipeline using this curl command:
 
    ```bash
    # Start the AI tolling pipeline with the sample video

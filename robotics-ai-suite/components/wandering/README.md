@@ -22,7 +22,7 @@ In the diagram above, kobuki robot was used, and its kobuki ROS node is used for
 
 ### System Requirements
 
-Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
+Prepare the target system following the [official documentation](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/gsg_robot/index.html).
 
 ### Build
 
@@ -153,9 +153,9 @@ To see a full list of available Makefile targets:
 
 ```bash
 make help
-```                                                              
+```
 
-```text         
+```text
 Target               Description
 ------               -----------
 license-check        Perform a REUSE license check using docker container https://hub.docker.com/r/fsfe/reuse
@@ -195,7 +195,7 @@ rviz2 -d rviz/config.rviz
 
 ## Documentation
 
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/wandering_app/index.html).
 
 ## License
 

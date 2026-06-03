@@ -424,7 +424,7 @@ if (param_.nx.x <= 0 || param_.nx.y <= 0 || param_.nx.z <= 0) {
         current_queue.parallel_for(sycl::range<1>(n_intervals_local), [=](sycl::id<1> i) {
           types::Int3 val;
           val.x = static_cast<int>(interval_starts_local[i] + remain_ranks_local);
-          val.y = static_cast<int>((i < n_intervals_local - 1) ? (interval_starts_local[i + 1] + remain_ranks_local) : (numel_geometry_local - 1));
+          val.y = static_cast<int>((i < n_intervals_local - 1) ? (interval_starts_local[i + 1] + remain_ranks_local) : numel_geometry_local);
           val.z = static_cast<int>(geometry[indices[interval_starts_local[i] + remain_ranks_local]]);
           intervals[i] = val;
         }).wait();
