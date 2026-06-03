@@ -1,5 +1,5 @@
 from components.llm.base_summarizer import BaseSummarizer
-import logging, threading, gc
+import logging, threading, gc, time
 from transformers import AutoTokenizer, TextIteratorStreamer
 from optimum.intel.openvino import OVModelForCausalLM
 from utils import ensure_model
@@ -60,6 +60,7 @@ class Summarizer(BaseSummarizer):
                         skip_prompt=skip_prompt,
                     )
                     self.total_tokens = 0
+                    self.generation_start_time = None
 
                 def put(self, value):
                     if value is not None:
@@ -77,6 +78,7 @@ class Summarizer(BaseSummarizer):
                 try:
                     with audio_pipeline_lock:
                         model = self._load_model()
+                        streamer.generation_start_time = time.perf_counter()
                         model.generate(
                             input_ids=inputs.input_ids,
                             max_new_tokens=max_new_tokens,

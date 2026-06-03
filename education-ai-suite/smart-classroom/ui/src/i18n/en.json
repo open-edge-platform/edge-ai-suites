@@ -131,6 +131,7 @@
       "totalTokensProcessed": "Total tokens processed",
       "timeToGenerateSummary": "Time taken to generate summary",
       "totalTimeTaken":"Total Time Taken",
+      "summarizationTime":"Summarization Time",
       "loadingConfiguration": "Loading configuration data...",
       "cpuUtilization": "CPU Utilization",
       "gpuUtilization": "GPU Utilization",
