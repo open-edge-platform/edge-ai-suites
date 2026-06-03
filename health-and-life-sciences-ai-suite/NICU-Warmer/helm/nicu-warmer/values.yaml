@@ -118,6 +118,13 @@ assets:
     #   <hostPath>/extensions/rppg_gva.py
     #   <hostPath>/extensions/action_gva.py
     #   <hostPath>/extensions/publisher_utils_patched.py
+    # Legacy flat bundles are also accepted, including:
+    #   <hostPath>/person-detect-fp32.{xml,bin}
+    #   <hostPath>/patient-detect-fp32.{xml,bin}
+    #   <hostPath>/latch-detect-fp32.{xml,bin}
+    #   <hostPath>/action-recognition-0001-{encoder,decoder}.{xml,bin}
+    #   <hostPath>/models_rppg/mtts_can.{xml,bin}
+    #   <hostPath>/Warmer_Testbed_YTHD.mp4
     hostPath: /opt/nicu-warmer-assets
 
 # Device configuration — controls which Intel accelerator each workload uses.

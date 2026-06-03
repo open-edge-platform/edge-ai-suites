@@ -33,7 +33,7 @@ Supported Platforms:
 
 - **SYCL-based high-performance kernels** — Hand-written SYCL kernels for voxelization (PointPillars and Second styles), BEV pooling, pillar scatter, and CenterHead post-processing (heatmap top-k, box decode, rotate-NMS).
 
-- **Docker-based deployment** — Published Docker image `intel/tfcc:bevfusion` with one-command smoke test and interactive container mode.
+- **Docker-based deployment** — Published Docker image `intel/tfcc:2026.1.0-ubuntu24` with one-command smoke test and interactive container mode.
 
 - **Visualization** — Built-in visualization interface with BEV and camera-view overlays (`--save-image`, `--save-video`, `--display`).
 

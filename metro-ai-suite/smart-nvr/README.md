@@ -22,6 +22,9 @@ The Smart NVR is a next-generation network video recorder that integrates GenAI-
 - **Advanced Integrations**
   - [Intel® SceneScape Integration](./docs/user-guide/scenescape-integration.md): Complete guide for integrating with Intel® SceneScape for traffic analytics and vehicle counting.
 
+- **Development**
+  - [Development Guide](./docs/user-guide/development-guide.md): Instructions for running tests and generating code coverage reports.
+
 - **API Reference**
   - [API Reference](./docs/user-guide/api-reference.md): Comprehensive reference for the available REST API endpoints.
 

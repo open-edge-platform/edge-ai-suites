@@ -56,6 +56,20 @@ Checks:
 - Verify `HOST_IP` in `.env` is reachable from the browser client.
 - Confirm firewall rules allow the configured ports.
 
+## Camera not supported (hardware-encoded webcam format)
+
+Symptoms:
+
+- USB/webcam input cannot be started for specific camera devices.
+
+Details:
+
+- Some webcams expose hardware-encoded formats (for example H.264) instead of raw formats expected by this application.
+
+Checks:
+
+- Use a compatible webcam that provides raw video output (for example, YUYV or MJEPG).
+
 ## No models in dropdown
 
 Symptoms:

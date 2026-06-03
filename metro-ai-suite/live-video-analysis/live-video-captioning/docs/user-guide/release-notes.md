@@ -9,8 +9,12 @@
 - [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning-rag/index.html)
   as an additional feature in Live Video Captioning, enabling Retrieval-Augmented Generation (RAG) chat.
 - Integration of model-download service to simplify downloading before preparing the model.
+- Added support for using the host machine's camera as an input source.
+- Dynamically selects the default pipeline based on detected hardware such as GPU.
+- Simplify the setup process of the application.
 - Deployment with Helm chart.
 - Enhancements in UI/UX for the Alert mode.
+- Documentation updates.
 
 **Known Issues**
 
