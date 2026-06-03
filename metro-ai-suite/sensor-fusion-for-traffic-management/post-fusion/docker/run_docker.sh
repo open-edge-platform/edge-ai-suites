@@ -1,4 +1,4 @@
-DOCKER_IMAGE=${1-tfcc:latest}
+DOCKER_IMAGE=${1-tfcc:2025.2.0-ubuntu24}
 NPU_ON=${2-false}
  
 EXTRA_PARAMS=""

@@ -10,20 +10,20 @@ This guide covers two workflows:
 Follow the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To inspect the image or run the binaries interactively:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 docker exec -it <container id> /bin/bash
 
 cd build
