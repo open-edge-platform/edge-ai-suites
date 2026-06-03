@@ -50,6 +50,7 @@ The main features are as follows:
 
 ./quick-start
 ./get-started
+./advance-setup-guide
 ./how-it-works
 ./application-flow
 Release Notes <./release-notes>
