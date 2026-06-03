@@ -102,9 +102,12 @@ README.md          @xwu2intel
 /metro-ai-suite/metro-vision-ai-app-recipe/smart-tolling/README.md         @rrajore @vagheshp @xwu2intel @ajagadi1  @open-edge-platform/open-edge-platform-docs-write
 
 
-/metro-ai-suite/sensor-fusion-for-traffic-management/                      @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
-/metro-ai-suite/sensor-fusion-for-traffic-management/docs/                 @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/sensor-fusion-for-traffic-management/README.md             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/                                  @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel
+/metro-ai-suite/sensor-fusion-for-traffic-management/docs/                             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/README.md                         @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/README.md     @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+/metro-ai-suite/sensor-fusion-for-traffic-management/post-fusion/README.md             @lijiunderstand @chaofanchen-intel @thegreatchaos @xwu2intel  @open-edge-platform/open-edge-platform-docs-write
+
 
 /metro-ai-suite/smart-nvr/                                              @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel
 /metro-ai-suite/smart-nvr/docs/                                         @bharagha @yogeshmpandey @bhardwaj-nakul @xwu2intel  @open-edge-platform/open-edge-platform-docs-write

@@ -85,7 +85,7 @@ const NicuPanel: React.FC<NicuPanelProps> = ({ expanded = false }) => {
                 detail={caretakerDetail}
               />
               <LatchStatusCard latch={nicu.latch} />
-              <ActionCard action={nicu.action} />
+              <ActionCard action={nicu.action} systemStatus={nicu.systemStatus} patientDetected={nicu.patient.detected} />
             </div>
 
             {/* rPPG — always below, never expandable */}
@@ -122,7 +122,7 @@ const NicuPanel: React.FC<NicuPanelProps> = ({ expanded = false }) => {
                 detail={caretakerDetail}
               />
               <LatchStatusCard latch={nicu.latch} />
-              <ActionCard action={nicu.action} />
+              <ActionCard action={nicu.action} systemStatus={nicu.systemStatus} patientDetected={nicu.patient.detected} />
             </div>
 
             <span className="nicu-section-label">Vital Signs</span>

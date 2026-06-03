@@ -38,7 +38,7 @@ The speech-to-text service is only accessible via the NGINX TLS reverse proxy. T
 - Timestamped segment breakdown
 - Copy to clipboard
 
-## Model sizes
+## Model Variants
 
 Set `WHISPER_MODEL` in the root `docker-compose.yml`:
 
@@ -51,3 +51,5 @@ Set `WHISPER_MODEL` in the root `docker-compose.yml`:
 | `large` | ~6 GB | ~1× real-time | Best |
 
 `base` is the default — a good balance for everyday use on a processor.
+
+> **NOTE** Models loaded at runtime carry their own licenses and the operator is responsible for reviewing the licenses and making sure that they are matching operator's use-case(s).

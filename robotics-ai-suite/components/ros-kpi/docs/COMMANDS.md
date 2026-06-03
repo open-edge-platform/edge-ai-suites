@@ -110,6 +110,9 @@ uv run python src/monitor_resources.py --memory --threads         # CPU + memory
 uv run python src/monitor_resources.py --memory --log out.log     # With logging
 uv run python src/monitor_resources.py --list                     # List ROS2 processes
 uv run python src/monitor_resources.py --remote-ip 192.168.1.100 --memory
+uv run python src/monitor_resources.py --power                    # + Intel RAPL CPU package power
+uv run python src/monitor_resources.py --memory --npu --power     # CPU + NPU + power
+uv run python src/monitor_resources.py --check-hw                 # Probe GPU / NPU / RAPL availability
 ```
 
 ### visualize_timing.py
