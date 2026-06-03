@@ -17,7 +17,11 @@ DEFAULT_PROMPT = (
 
 
 class StartRunRequest(BaseModel):
-    rtspUrl: str = Field(..., min_length=1, description="Valid RTSP URL")
+    rtspUrl: str = Field(
+        ...,
+        min_length=1,
+        description="Valid RTSP URL or Linux video device path (for example /dev/video0)",
+    )
     prompt: str = Field(default=DEFAULT_PROMPT)
     detectionModelName: Optional[str] = Field(default="yolov8s")
     detectionThreshold: Optional[float] = Field(default=0.5, ge=0.0, le=1.0)
@@ -33,12 +37,20 @@ class StartRunRequest(BaseModel):
     @field_validator("rtspUrl")
     @classmethod
     def validate_rtsp_url(cls, v: str) -> str:
+        source = (v or "").strip()
+
+        # Allow Linux V4L2 camera devices, e.g. /dev/video0.
+        if source.startswith("/dev/video") and source[len("/dev/video") :].isdigit():
+            return source
+
         try:
             # Basic format check first
-            if not v.lower().startswith(("rtsp://", "rtsps://")):
-                raise ValueError("RTSP URL must start with rtsp:// or rtsps://")
+            if not source.lower().startswith(("rtsp://", "rtsps://")):
+                raise ValueError(
+                    "Source must be an RTSP URL (rtsp:// or rtsps://) or /dev/videoN"
+                )
 
-            parsed = urlparse(v)
+            parsed = urlparse(source)
 
             # Check if hostname is present
             if not parsed.hostname:
@@ -50,7 +62,7 @@ class StartRunRequest(BaseModel):
             try:
                 ipaddress.ip_address(hostname)
                 # Valid IP address
-                return v
+                return source
             except ValueError:
                 pass
 
@@ -65,7 +77,7 @@ class StartRunRequest(BaseModel):
             if hostname.endswith("."):
                 raise ValueError("Hostname cannot end with a dot")
 
-            return v
+            return source
         except ValueError:
             # Re-raise ValueError as-is
             raise

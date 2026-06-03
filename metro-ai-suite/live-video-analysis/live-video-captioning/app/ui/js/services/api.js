@@ -29,6 +29,17 @@ const ApiService = (function () {
         }
     }
 
+    async function fetchCameras() {
+        try {
+            const resp = await fetch('/api/cameras', { method: 'GET' });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            return Array.isArray(data?.cameras) ? data.cameras : [];
+        } catch (_err) {
+            return [];
+        }
+    }
+
     async function fetchPipelines() {
         try {
             const resp = await fetch('/api/pipelines', { method: 'GET' });
@@ -43,10 +54,19 @@ const ApiService = (function () {
                     if (it && typeof it === 'object' && typeof it.pipeline_name === 'string') {
                         const t = it.pipeline_type;
                         const type = (t === 'detection' || t === 'non-detection') ? t : 'non-detection';
-                        return { pipeline_name: it.pipeline_name, pipeline_type: type };
+                        const display = typeof it.pipeline_display_name === 'string' && it.pipeline_display_name.trim()
+                            ? it.pipeline_display_name
+                            : it.pipeline_name;
+                        const isDefault = it.pipeline_default === true;
+                        return {
+                            pipeline_name: it.pipeline_name,
+                            pipeline_display_name: display,
+                            pipeline_type: type,
+                            pipeline_default: isDefault,
+                        };
                     }
                     if (typeof it === 'string') {
-                        return { pipeline_name: it, pipeline_type: 'non-detection' };
+                        return { pipeline_name: it, pipeline_display_name: it, pipeline_type: 'non-detection', pipeline_default: false };
                     }
                     return null;
                 })
@@ -64,7 +84,7 @@ const ApiService = (function () {
 
             pipelineCache = pipelines.length
                 ? pipelines
-                : [{ pipeline_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
+                : [{ pipeline_name: DEFAULT_PIPELINE, pipeline_display_name: DEFAULT_PIPELINE, pipeline_type: 'non-detection' }];
 
             return pipelineCache;
         } catch (err) {
@@ -131,6 +151,7 @@ const ApiService = (function () {
     return {
         fetchModels,
         fetchDetectionModels,
+        fetchCameras,
         fetchPipelines,
         fetchRuns,
         startRun,
