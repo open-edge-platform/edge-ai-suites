@@ -79,6 +79,9 @@ sudo mkdir -p /opt/nicu-warmer-assets
 sudo unzip nicu-warmer-assets.zip -d /opt/nicu-warmer-assets/
 ```
 
+The chart accepts both the canonical nested layout shown below and the legacy flat
+bundle layout used by some previously shipped asset zips.
+
 Expected directory structure:
 ```
 /opt/nicu-warmer-assets/
@@ -106,6 +109,30 @@ Expected directory structure:
     ├── action_gva.py
     └── publisher_utils_patched.py
 ```
+
+  Legacy flat bundles are also supported during install, for example:
+
+  ```text
+  /opt/nicu-warmer-assets/
+  ├── person-detect-fp32.xml
+  ├── person-detect-fp32.bin
+  ├── patient-detect-fp32.xml
+  ├── patient-detect-fp32.bin
+  ├── latch-detect-fp32.xml
+  ├── latch-detect-fp32.bin
+  ├── action-recognition-0001-encoder.xml
+  ├── action-recognition-0001-encoder.bin
+  ├── action-recognition-0001-decoder.xml
+  ├── action-recognition-0001-decoder.bin
+  ├── Warmer_Testbed_YTHD.mp4
+  ├── models_rppg/
+  │   ├── mtts_can.xml
+  │   └── mtts_can.bin
+  └── extensions/
+    ├── rppg_gva.py
+    ├── action_gva.py
+    └── publisher_utils_patched.py
+  ```
 
 To customize the host path:
 ```bash

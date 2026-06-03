@@ -170,9 +170,14 @@ services:
       - "c 209:* rmw"
       - "a 189:* rwm"
     group_add:
+      - "44"
       - "109"
       - "110"
+      - "990"
       - "992"
+      - "993"
+      - "994"
+      - "996"
     depends_on:
       - broker
       - ntpserver
