@@ -291,21 +291,21 @@ def fuse_firstcome(mode: Literal["AND", "OR"] = "AND") -> Optional[Dict[str, Any
     # Extract anomaly decisions from both messages
     if source_queue == "vision":
         # Vision message processed first
-        vision_confidence = source_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
+        vision_confidence = source_entry["metadata"]["objects"][0]["classification/Model6"]["confidence"]
         vision_rtp_time = source_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
         ts_time = target_entry["time"]
         timeseries_anomaly = target_entry["anomaly_status"]
         data_dict = source_entry
     else:
         # Time-series message processed first
-        vision_confidence = target_entry["metadata"]["objects"][0]["classification_layer_name:output1"]["confidence"]
+        vision_confidence = target_entry["metadata"]["objects"][0]["classification/Model6"]["confidence"]
         vision_rtp_time = target_entry["metadata"].get("rtp", {}).get("sender_ntp_unix_timestamp_ns")
         ts_time = source_entry["time"]
         timeseries_anomaly = source_entry["anomaly_status"]
         data_dict = target_entry
 
-    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]:
-            vision_classification = str(data_dict["metadata"]["objects"][0]["classification_layer_name:output1"]["label"])
+    if "metadata" in data_dict and "label" in data_dict["metadata"]["objects"][0]["classification/Model6"]:
+        vision_classification = str(data_dict["metadata"]["objects"][0]["classification/Model6"]["label"])
     
     # Convert vision confidence to binary decision (threshold at 0.5)
     vision_anomaly = 1 if vision_confidence > 0.5 else 0
