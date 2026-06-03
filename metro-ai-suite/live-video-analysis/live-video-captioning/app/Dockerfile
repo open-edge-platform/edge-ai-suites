@@ -4,7 +4,7 @@
 FROM python:3.12-slim AS base
 
 # Install system dependencies needed for building, upgrade to apply security patches
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends curl \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends curl v4l-utils \
     && python -m pip install --upgrade --no-cache-dir pip \
     && rm -rf /var/lib/apt/lists/*
 

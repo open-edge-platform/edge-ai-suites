@@ -9,7 +9,7 @@ services:
     container_name: mqtt-broker
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -23,7 +23,7 @@ services:
       - app_network
 
   dlstreamer-pipeline-server:
-    image: intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1
+    image: intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc2
     hostname: dlstreamer-pipeline-server
     container_name: dlstreamer-pipeline-server
     read_only: false
@@ -42,7 +42,7 @@ services:
       - "8556:8554"
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,host.docker.internal,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -101,7 +101,7 @@ services:
     container_name: mediamtx
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -129,7 +129,7 @@ services:
     container_name: coturn
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -149,7 +149,7 @@ services:
     container_name: video-caption-service
     environment:
       - no_proxy=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,mediamtx,coturn,dlstreamer-pipeline-server,video-caption-service,collector,mqtt-broker,live-metrics-service,vdms-vector-db,multimodal-embedding-serving,live-video-captioning-rag,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -168,7 +168,12 @@ services:
       # Embedding and vectordatabase
       - ENABLE_EMBEDDING=${ENABLE_EMBEDDING:-false}
       - LIVE_VIDEO_RAG_HOST_PORT=${LIVE_VIDEO_RAG_HOST_PORT:-4172}
+    device_cgroup_rules:
+    # Broad access to USB devices is required to support a wide range of USB cameras.
+    - 'c 189:* rmw'
+    - 'a 189:* rwm'
     volumes:
+      - "/dev:/dev"
       - "./ov_models:/app/ov_models:ro"
       - "./ov_detection_models:/app/ov_detection_models:ro"
     ports:
@@ -200,7 +205,7 @@ services:
     container_name: live-metrics-service
     environment:
       - no_proxy=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${no_proxy}
-      - NO_PROXY=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${NO_PROXY}
+      - NO_PROXY=localhost,127.0.0.1,video-caption-service,collector,live-metrics-service,${NO_PROXY:-}
       - http_proxy=$http_proxy
       - HTTP_PROXY=$http_proxy
       - https_proxy=$https_proxy
@@ -325,7 +330,7 @@ services:
       https_proxy: ${https_proxy}
       HTTPS_PROXY: ${https_proxy}
       no_proxy: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${no_proxy}
-      NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${NO_PROXY}
+      NO_PROXY: localhost,127.0.0.1,multimodal-embedding-serving,vdms-vector-db,video-caption-service,live-video-captioning-rag,video-caption-service,${NO_PROXY:-}
       LLM_MODEL_ID: ${LLM_MODEL_ID}
       LLM_DEVICE: ${LLM_DEVICE}
       MAX_TOKENS: ${MAX_TOKENS:-1024}
