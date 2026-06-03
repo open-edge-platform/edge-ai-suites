@@ -25,18 +25,7 @@ This mode is particularly useful for:
 Add or modify the `ALERT_MODE` variable in your `.env` file:
 
 ```bash
-# .env file
-WHIP_SERVER_IP=mediamtx
-WHIP_SERVER_PORT=8889
-WHIP_SERVER_TIMEOUT=30s
-PROJECT_NAME=live-captioning
-HOST_IP=<HOST_IP>
-EVAM_HOST_PORT=8040
-EVAM_PORT=8080
-DASHBOARD_PORT=4173
-WEBRTC_PEER_ID=stream
-ALERT_MODE=True   # Enable Alert Mode
-CAPTION_HISTORY=3
+ALERT_MODE=true
 ```
 
 ## Configuring Alert Rules
