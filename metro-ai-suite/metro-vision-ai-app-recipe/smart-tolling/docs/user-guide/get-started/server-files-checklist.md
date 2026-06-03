@@ -25,7 +25,7 @@ This assumes the root directory on the server matches the `${SAMPLE_APP}` variab
 - [ ] `src/grafana/dashboards.yml`
 - [ ] `src/grafana/datasources.yml`
 
-## 5. Pipeline Server (DLStreamer)
+## 5. Pipeline Server (DL Streamer)
 
 **Configuration & Scripts:**
 
