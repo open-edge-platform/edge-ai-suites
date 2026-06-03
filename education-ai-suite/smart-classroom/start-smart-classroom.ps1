@@ -405,7 +405,7 @@ if ($Restart) {
     Write-Host ""
     Write-Host "  Starting all services..." -ForegroundColor Green
     
-    $deleteVenvs = Read-Host "  Reinstall Python dependencies and virtual environments? (Y/N, default: N)"
+    $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
     if ($deleteVenvs.ToUpper() -eq "Y") {
         Remove-VirtualEnvironments
         Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
