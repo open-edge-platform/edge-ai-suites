@@ -160,6 +160,7 @@ Open `htmlcov/index.html` in a browser to view the detailed coverage report.
 
 ./get-started/system-requirements.md
 ./get-started/build-from-source.md
+./get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

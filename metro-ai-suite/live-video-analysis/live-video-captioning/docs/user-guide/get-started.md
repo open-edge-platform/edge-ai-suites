@@ -221,10 +221,12 @@ docker compose down
 :::{toctree}
 :hidden:
 
-get-started/system-requirements.md
-get-started/model-preparation.md
-get-started/build-from-source.md
-get-started/deploy-with-helm.md
+./get-started/system-requirements.md
+./get-started/model-preparation.md
+./get-started/build-from-source.md
+./get-started/deploy-with-helm.md
+./get-started/simulated-rtsp-stream-guide.md
+./get-started/run-unit-tests.md
 
 :::
 hide_directive-->
