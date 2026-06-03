@@ -2,36 +2,27 @@
 
 The guide provides step-by-step instructions to install and configure the Balluff Impact Acquire software on a Linux system.
 
-## 1. Create Python Virtual Environment
-
-```bash
-python -m venv camera-env
-```
-
-## 2. Install Required Packages
+## 1. Install Required Packages
 
 ```bash
 sudo apt update
-sudo apt-get install -y libwxbase3.0-0v5 \
-                        libwxbase3.0-dev \
-                        libwxgtk3.0-gtk3-0v5 \
-                        libwxgtk3.0-gtk3-dev \
-                        libwxgtk-webview3.0-gtk3-0v5 \
-                        libwxgtk-webview3.0-gtk3-dev \
-                        wx3.0-headers \
-                        libgtk2.0-dev
+sudo apt-get install -y libwxbase3.2-1 \
+                        libwxgtk3.2-dev \
+                        libwxgtk-webview3.2-dev \
+                        wx3.2-headers \
+                        libexpat1-dev
 ```
 
-## 3. Download and Install Impact Acquire
+## 2. Download and Install Impact Acquire
 
 ```bash
 cd ~/Downloads
-wget https://assets-2.balluff.com/mvIMPACT_Acquire/3.6.0/ImpactAcquire-x86_64-linux-3.6.0.sh
-chmod a+x ImpactAcquire-x86_64-linux-3.6.0.sh
-./ImpactAcquire-x86_64-linux-3.6.0.sh
+wget https://assets-2.balluff.com/mvIMPACT_Acquire/3.7.0/ImpactAcquire-x86_64-linux-3.7.0.sh
+chmod a+x ImpactAcquire-x86_64-linux-3.7.0.sh
+./ImpactAcquire-x86_64-linux-3.7.0.sh
 ```
 
-## 4. Optimize USB Performance
+## 3. Optimize USB Performance
 
 Edit GRUB configuration:
 
@@ -51,7 +42,7 @@ Then update GRUB:
 sudo update-grub
 ```
 
-## 5. Modify udev Configuration
+## 4. Modify udev Configuration
 
 Edit the file:
 
@@ -68,7 +59,7 @@ Comment out the following lines:
 #fi
 ```
 
-## 6. Test Applications
+## 5. Test Applications
 
 ### Single Capture Storage
 
@@ -84,7 +75,7 @@ cd /opt/ImpactAcquire/apps/GenICamCommonSettingsUsage/x86_64
 ./GenICamCommonSettingsUsage
 ```
 
-## 7. Launch Impact Acquire GUI
+## 6. Launch Impact Acquire GUI
 
 ```bash
 cd /opt/ImpactAcquire/apps/ImpactControlCenter/x86_64
@@ -93,8 +84,18 @@ cd /opt/ImpactAcquire/apps/ImpactControlCenter/x86_64
 
 When the GUI opens:
 
-- Click **Action → Use Device**,
-- Choose **mvBlueFOX3**.
+- Click **Action → Use Device**
+- Choose **mvBlueFOX3**
+
+## Troubleshooting
+
+### ImpactControlCenter GUI Does Not Open
+
+If the GUI fails to launch, force it to use the X11 backend:
+
+```bash
+GDK_BACKEND=x11 ./ImpactControlCenter
+```
 
 ## References
 

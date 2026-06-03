@@ -2,7 +2,7 @@
 
 This tutorial walks you through creating an AI-powered tolling system that automatically
 detects vehicles, recognizes license plates, and analyzes vehicle attributes in real-time.
-The system leverages Intel's Deep Learning Streamer (DL Streamer) framework with pre-trained
+The system leverages Intel's **Deep Learning Streamer (DL Streamer)** framework with pre-trained
 AI models to process video streams from toll booth cameras, enabling automated toll collection
 and traffic monitoring.
 
@@ -37,7 +37,7 @@ The AI Tolling system consists of several key components:
 
 ### 1. **Create the AI Tolling Application Directory**
 
-Navigate to the metro vision AI recipe directory and create the AI tolling application by copying the Smart Parking template:
+Navigate to the `metro vision AI recipe` directory and create the AI tolling application by copying the Smart Parking template:
 
 ```bash
 cd ./edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe
@@ -109,11 +109,11 @@ EOF
 
 The installation script downloads three essential AI models:
 
-| **Model Name**                              | **Purpose**                     | **Framework**    | **Size** |
-| ------------------------------------------- | ------------------------------- | ---------------- | -------- |
-| YOLOv10s                                    | Vehicle detection and tracking  | PyTorch/OpenVINO | ~20MB    |
-| license-plate-recognition-barrier-0007      | License plate text extraction   | Intel OpenVINO   | ~2MB     |
-| vehicle-attributes-recognition-barrier-0039 | Vehicle type and color analysis | Intel OpenVINO   | ~1MB     |
+| **Model Name**                              | **Purpose**                     | **Framework**     | **Size** |
+| ------------------------------------------- | ------------------------------- | ----------------  | -------- |
+| YOLOv10s                                    | Vehicle detection and tracking  | PyTorch/OpenVINO™ | ~20MB    |
+| license-plate-recognition-barrier-0007      | License plate text extraction   | Intel® OpenVINO™  | ~2MB     |
+| vehicle-attributes-recognition-barrier-0039 | Vehicle type and color analysis | Intel® OpenVINO™  | ~1MB     |
 
 <details>
 <summary>
@@ -125,7 +125,7 @@ The installation script performs the following operations:
 1. Creates the required directory structure under `src/dlstreamer-pipeline-server/models/`
 2. Runs a DL Streamer container to access model download tools
 3. Downloads public YOLO models using the built-in download scripts
-4. Uses OpenVINO Model Zoo downloader for Intel-optimized models
+4. Uses OpenVINO™ Model Zoo downloader for Intel-optimized models
 5. Downloads corresponding model configuration files for proper inference
 6. Sets up proper file permissions for container access
 
@@ -378,7 +378,7 @@ For slow processing or high CPU usage:
 
 After successfully setting up the AI Tolling system, consider these enhancements:
 
-[**Integration with Node Red for enhancing business logic**](./tutorial-2.md)
+[**Integration with Node-RED for enhancing business logic**](./tutorial-2.md)
 
 ## Supporting Resources
 

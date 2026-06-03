@@ -121,6 +121,7 @@ The compose file forwards these to all containers automatically.
 :hidden:
 
 get-started/system-requirements.md
+get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

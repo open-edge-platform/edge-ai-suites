@@ -1,6 +1,6 @@
 # Host Prerequisites
 
-This guide explains how to prepare an Ubuntu host for a native build and run of this project. If you only want to validate the project, prefer the published Docker image in `../docker/README_Docker.md`; after installing Docker Engine and the host driver packages, you can skip the native dependency installation and local build steps below.
+This guide explains how to prepare an Ubuntu host for a native build and run of this project. If you only want to validate the project, choose the published Docker image in the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md); after installing Docker Engine and the host driver packages, you can skip the native dependency installation and local build steps below.
 
 ## Supported Environment
 
@@ -49,23 +49,23 @@ After the script completes:
 
 ## 3. Optional: Validate With The Published Docker Image
 
-If you only need a smoke test of the project, install Docker Engine and Docker Compose by following `../docker/README_Docker.md`, then use the published image:
+If you only need a smoke test of the project, install Docker Engine and Docker Compose by following `https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md`, then use the published image:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To open an interactive shell in the published image:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 ```
 
 If this container workflow is sufficient, you do not need to continue with the native dependency installation below.
