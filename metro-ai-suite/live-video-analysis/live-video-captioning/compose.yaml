@@ -141,7 +141,7 @@ services:
       - app_network
 
   video-caption-service:
-    image: ${REGISTRY:-}video-caption-service:${TAG:-latest}
+    image: ${REGISTRY:-}video-caption-service:${TAG:-2026.1.0-rc2}
     build:
       context: ./app
       args:
@@ -197,7 +197,7 @@ services:
       - app_network
 
   live-metrics-service:
-    image: ${REGISTRY:-}live-metrics-service:${TAG:-latest}
+    image: intel/live-metrics-service:2026.1.0-rc1
     build:
       context: ../live-metrics-service
       args:
@@ -252,7 +252,7 @@ services:
       - app_network
 
   multimodal-embedding-serving:
-    image: ${REGISTRY:-}multimodal-embedding-serving:${TAG:-latest}
+    image: intel/multimodal-embedding-serving:2026.1.0-rc1
     container_name: multimodal-embedding-serving
     ports:
       - '${EMBEDDING_SERVER_PORT:-9777}:8000'
@@ -316,7 +316,7 @@ services:
       - app_network
 
   live-video-captioning-rag:
-    image: ${REGISTRY:-}live-video-captioning-rag:${TAG:-latest}
+    image: ${REGISTRY:-}live-video-captioning-rag:${TAG:-2026.1.0-rc2}
     build:
       context: ../live-video-captioning-rag/app
       args:

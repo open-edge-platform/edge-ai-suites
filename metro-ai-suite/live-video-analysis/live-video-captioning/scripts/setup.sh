@@ -8,9 +8,6 @@ export HOST_IP=$(ip route get 1 | awk '{print $7}')
 # If PROJECT_NAME is set, ensure it ends with a trailing slash
 [[ -n "$PROJECT_NAME" ]] && PROJECT_NAME="${PROJECT_NAME%/}/"
 
-# Set default tag if not already set
-export TAG=${TAG:-latest}
-
 export APP_NAME="multimodal-embedding-serving"
 export APP_DISPLAY_NAME="Multimodal Embedding serving"
 export APP_DESC="Generates embeddings for text, images, and videos using pretrained models"
@@ -87,7 +84,6 @@ export VIDEO_GROUP_ID=$VIDEO_GROUP_ID
 export RENDER_GROUP_ID=$RENDER_GROUP_ID
 
 echo "Environment variables set successfully."
-echo "REGISTRY set to: ${REGISTRY}"
 echo "EMBEDDING_MODEL_NAME set to: ${EMBEDDING_MODEL_NAME}"
 echo "EMBEDDING_DEVICE set to: ${EMBEDDING_DEVICE}"
 echo "EMBEDDING_USE_OV set to: ${EMBEDDING_USE_OV}"
