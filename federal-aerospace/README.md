@@ -10,14 +10,14 @@ The Handheld Multi-Modal application is a full-stack AI inference and observabil
 
 See [`apps/handheld-multi-modal/`](apps/handheld-multi-modal/README.md).
 
-### Deterministic Threat Detection
+### Deterministic Threat Detection (Preview)
 
-[Deterministic Threat Detection](apps/deterministic-threat-detection) : A sample application that showcases Time-Sensitive Networking (TSN) to enable deterministic, low-latency transmission of AI-processed video and sensor data alongside best-effort traffic on a shared network. [User Docs](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/deterministic-threat-detection/docs/user-guide/index.md)
+[Deterministic Threat Detection](apps/deterministic-threat-detection) : A sample application that showcases Time-Sensitive Networking (TSN) to enable deterministic, low-latency transmission of AI-processed video and sensor data alongside best-effort traffic on a shared network. This application is currently in preview. [User Docs](https://github.com/open-edge-platform/edge-ai-suites/blob/main/federal-aerospace/apps/deterministic-threat-detection/docs/user-guide/index.md)
 
 ## Components
 
 | Directory                               | Description                                |
 |-----------------------------------------|--------------------------------------------|
 | `apps/handheld-multi-modal/`            | Handheld multi-modal application           |
-| `apps/deterministic-threat-detection/`  | Deterministic threat detection application |
+| `apps/deterministic-threat-detection/`  | Deterministic threat detection application (Preview) |
 | `docs/`                                 | Documentation                              |

@@ -26,6 +26,10 @@ uv run python src/monitor_stack.py --node /my_node --duration 120 Custom duratio
 uv run python src/monitor_stack.py --duration 30                  Quick 30s check
 uv run python src/monitor_stack.py --duration 300                 Extended 5-minute session
 
+uv run python src/monitor_resources.py --power                    Intel RAPL CPU package power
+uv run python src/monitor_resources.py --memory --npu --power     CPU + NPU + power
+uv run python src/monitor_resources.py --check-hw                 Probe GPU / NPU / RAPL
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🤖 SIMULATIONS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

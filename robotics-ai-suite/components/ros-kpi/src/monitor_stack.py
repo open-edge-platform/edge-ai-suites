@@ -36,6 +36,7 @@ class MonitoringSession:
                  remote_ip: Optional[str] = None, remote_user: str = 'ubuntu',
                  ros_domain_id: Optional[int] = None,
                  enable_gpu: bool = False, enable_npu: bool = False,
+                 enable_power: bool = False,
                  algorithm: Optional[str] = None,
                  use_sim_time: bool = False):
         """
@@ -75,6 +76,7 @@ class MonitoringSession:
         self.ros_domain_id = ros_domain_id  # explicit override; None = auto-detect
         self.enable_gpu = enable_gpu or bool(remote_ip)  # auto-enable GPU when remote
         self.enable_npu = enable_npu  # explicit only — not auto-enabled
+        self.enable_power = enable_power  # explicit only — not auto-enabled
         self.use_sim_time = use_sim_time
 
         # Process tracking
@@ -87,6 +89,7 @@ class MonitoringSession:
         self.resource_log = self.output_dir / "resource_usage.log"
         self.gpu_log = self.output_dir / "gpu_usage.log"
         self.npu_log = self.output_dir / "npu_usage.log"
+        self.cpu_power_log = self.output_dir / "cpu_power.log"
         self.visualization_dir = self.output_dir / "visualizations"
 
         # Setup signal handlers
@@ -115,7 +118,7 @@ class MonitoringSession:
         if str(script_dir) not in sys.path:
             sys.path.insert(0, str(script_dir))
         try:
-            from monitor_resources import probe_gpu_available, probe_npu_available
+            from monitor_resources import probe_gpu_available, probe_npu_available, probe_cpu_power_available
         except ImportError:
             return  # probe functions not available in this install
 
@@ -150,6 +153,22 @@ class MonitoringSession:
                 print(f"   🧠 NPU auto-detected — enabling monitoring ({npu_reason})")
             else:
                 print(f"   ℹ️  NPU monitoring skipped: {npu_reason}")
+
+        # ── RAPL CPU power ────────────────────────────────────────────────────
+        pwr_avail, pwr_reason = probe_cpu_power_available()
+        if self.enable_power:
+            if not pwr_avail:
+                print(f"   ⚠️  CPU power monitoring requested but unavailable: {pwr_reason}")
+                print("       Skipping CPU power monitoring.")
+                self.enable_power = False
+            else:
+                print(f"   ✅ RAPL: {pwr_reason}")
+        else:
+            if pwr_avail:
+                self.enable_power = True
+                print(f"   ⚡ RAPL auto-detected — enabling CPU power monitoring ({pwr_reason})")
+            else:
+                print(f"   ℹ️  CPU power monitoring skipped: {pwr_reason}")
 
     def setup(self):
         """Setup the monitoring session directories and files."""
@@ -317,6 +336,8 @@ class MonitoringSession:
                 cmd.extend(["--gpu", "--gpu-log", str(self.gpu_log)])
             if self.enable_npu:
                 cmd.extend(["--npu", "--npu-log", str(self.npu_log)])
+            if self.enable_power:
+                cmd.extend(["--power", "--power-log", str(self.cpu_power_log)])
 
             if self.remote_ip:
                 cmd.extend(["--remote-ip", self.remote_ip,
