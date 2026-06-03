@@ -8,7 +8,7 @@ from pathlib import Path
 
 logger = logging.getLogger("camera_discovery")
 
-_USABLE_PIXEL_FORMATS = {"NV12", "YUYV", "MJPEG"}
+_USABLE_PIXEL_FORMATS = {"NV12", "YUYV", "UYVY", "MJPEG"}
 _FORMAT_ALIASES = {
     "MJPG": "MJPEG",
     "YUY2": "YUYV",
