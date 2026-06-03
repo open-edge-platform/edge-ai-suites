@@ -1,21 +1,31 @@
 # Release Notes: Smart Traffic Intersection Agent
 
-## Version 2026.1.0-rc1
+## Version 2026.1.0
 
-**May 14, 2026**
+**June 17, 2026**
 
-- Integrate Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm)
-- Update Smart Intersection RI to release-2026.1.0 version
-- Migrate VLM serving from custom container to [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html) for improved inference performance and maintainability
-- Add `response_format` (JSON schema) support for structured VLM output via OVMS structured generation
-- Support configurable VLM model selection — `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` validated
-- Automatic model export and conversion in Helm init container using OVMS export tooling
-- Add alert deduplication and short-analysis fallback for improved VLM response handling
-- Add xPU support, enabling NPU for Smart Intersection, CPU for traffic agent, and GPU for OVMS.
+**New**
+
+- Added `response_format` (JSON schema) support for structured VLM output via OVMS structured generation.
+- Added alert deduplication and short-analysis fallback for improved VLM response handling.
+- Add XPU support, enabling NPU for Smart Intersection, CPU for traffic agent, and GPU for OVMS.
+
+**Improved**
+
+- Integrated Live Metric Service and Collector for telemetry with multi-instance support (Docker and Helm).
+- Updated Smart Intersection RI to the latest release version.
+- Migrated VLM serving from custom container to
+  [OpenVINO Model Server (OVMS)](https://docs.openvino.ai/nightly/model-server/ovms_what_is_openvino_model_server.html)
+  for improved inference performance and maintainability.
+- Support configurable VLM model selection —
+  `OpenVINO/InternVL2-1B-int4-ov` and `OpenVINO/Phi-3.5-vision-instruct-int8-ov` have been validated.
+- Automatic model export and conversion in Helm init container using OVMS export tooling.
 
 **Known Issues**
+
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
 - Vehicle count on UI shows 0 due to issue with Smart Intersection on NPU
+
 
 ## Version 1.0.0
 

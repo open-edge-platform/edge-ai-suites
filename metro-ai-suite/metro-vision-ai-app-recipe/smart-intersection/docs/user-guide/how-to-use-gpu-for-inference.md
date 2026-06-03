@@ -1,8 +1,8 @@
 # How to use GPU for inference
 
-## Pre-requisites
+## Prerequisites
 
-Machine with GPU is available
+- GPU is available
 
 ## Configure and deploy GPU pipelines
 

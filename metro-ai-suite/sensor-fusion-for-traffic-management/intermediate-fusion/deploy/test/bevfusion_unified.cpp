@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
                   << " [--vis] [--save-image] [--save-video] [--display] [--util] [--repeat N]"
                   << " [--dump-pred] [--pred-dir DIR] [--vis-dir DIR]"
                   << " [--recompute-camera-metas] [--cache-camera-metas]"
-                  << " [--filter-labels NAME,...] [--no-filter]" << std::endl;
+                  << " [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]" << std::endl;
         return -1;
     }
 
@@ -141,6 +141,8 @@ int main(int argc, char* argv[]) {
     bool enable_vis = false, save_images = false, save_video = false, enable_display = false;
     bool enable_util = false, dump_pred = false;
     int repeat_count = 1, num_samples = -1;
+    bool bbox_score_filter_set = false;
+    float bbox_score_threshold = 0.0f;
     std::filesystem::path vis_dir = "vis", pred_dir = "pred";
     std::vector<int> filter_labels{7, 8};
 
@@ -181,6 +183,10 @@ int main(int argc, char* argv[]) {
         else if (arg == "--pred-dir") pred_dir = next();
         else if (arg == "--vis-dir") vis_dir = next();
         else if (arg == "--num-samples") num_samples = std::stoi(next());
+        else if (arg == "--bbox-score") {
+            bbox_score_threshold = std::stof(next());
+            bbox_score_filter_set = true;
+        }
         else if (arg == "--no-filter") filter_labels.clear();
         else if (arg == "--filter-labels") {
             static const std::vector<std::string> cn = {
@@ -237,6 +243,9 @@ int main(int argc, char* argv[]) {
         }
         std::cout << std::endl;
     }
+    if (bbox_score_filter_set) {
+        std::cout << "[info] BBox score threshold (override): " << bbox_score_threshold << std::endl;
+    }
 
     UtilizationMonitor::Options util_opts;
     util_opts.enable = enable_util;
@@ -261,6 +270,9 @@ int main(int argc, char* argv[]) {
     bevfusion_unified::apply_unified_dataset_preset(cfg, preset);
     cfg.onnx_path = model_path;
     cfg.filter_labels = filter_labels;
+    if (bbox_score_filter_set) {
+        cfg.post.score_threshold = bbox_score_threshold;
+    }
     BEVFusionUnifiedPipeline pipeline(cfg, queue);
 
     KittiDataLoader loader(dataset_path, KittiDataLoader::createKittiConfig());
