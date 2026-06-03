@@ -42,7 +42,7 @@ This guide explains how to run the Pallet Defect Detection application in an env
    ```
    https://127.0.0.1/mediamtx/pdd/
    ```
-> **Note:** If you experience issues while streaming video on Firefox, it is suggested to use Google Chrome.
+   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 

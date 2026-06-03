@@ -42,7 +42,7 @@ This guide explains how to run the Worker Safety Gear Detection application in a
    ```
    https://127.0.0.1/mediamtx/worker_safety/
    ```
-> **Note:** If you experience issues while streaming video on Firefox, it is suggested to use Google Chrome.
+   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 
