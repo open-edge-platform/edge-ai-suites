@@ -30,7 +30,7 @@ apps/
 |---------|-------|------|
 | `grafana` | `grafana/grafana:latest` | Dashboards — consumes metrics via Grafana Live |
 | `ovms` | `openvino/model_server:latest-gpu` | LLM inference via OpenAI-compatible REST API |
-| `open-webui` | `ghcr.io/open-webui/open-webui:v0.9.5-slim` | Chat UI connected to OVMS |
+| `open-webui` | `ghcr.io/open-webui/open-webui:v0.9.6-slim` | Chat UI connected to OVMS |
 | `whisper-stt` | `whisper-stt:latest` (local build) | Speech-to-text with Prometheus metrics |
 | `nginx-https` | `nginx:alpine` | HTTPS reverse proxy (self-signed cert, enables browser mic) |
 

@@ -12,6 +12,8 @@ spec:
       labels:
         app: mdpnp
     spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: mdpnp
           image: "{{ .Values.mdpnp.image.repository }}/{{ .Values.mdpnp.image.name }}:{{ .Values.mdpnp.image.tag }}"

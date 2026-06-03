@@ -10,6 +10,36 @@ Intel-operated generative artificial intelligence solutions.
 
 ## 🗓️ May 2026 — Latest Updates
 
+### Intel RAPL CPU Package Power Monitoring (0.1.17)
+
+CPU package power is now sampled in the background via the Linux **powercap
+RAPL** sysfs interface — no root, no special capabilities required.
+
+**How it works:**
+
+`monitor_resources.py --power` launches a daemon thread that reads
+`/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj` at the configured
+interval, computes watts from successive delta-energy / delta-time samples
+(handling counter wraparound), and writes JSON-lines to `cpu_power.log`.
+`monitor_stack.py` auto-enables power monitoring when RAPL is available (bare
+metal Intel; unavailable on WSL2 and ARM).
+
+**New `cpu_pkg_power_w` field in the Level 1 KPI `thermal` section:**
+
+| Field | Source | Description |
+|-------|--------|-------------|
+| `cpu_pkg_power_w` | `cpu_power.log` (mean over session) | Mean CPU package power in watts via Intel RAPL powercap sysfs. `null` when RAPL is unavailable (WSL2, ARM, non-Intel). |
+
+**Files changed:**
+
+| File | Change |
+|------|--------|
+| `src/monitor_resources.py` | `probe_cpu_power_available()`, `monitor_cpu_power()`, `--power` / `--power-log` CLI flags; `--check-hw` now shows RAPL status |
+| `src/monitor_stack.py` | `enable_power` param; auto-detects RAPL; passes `--power --power-log` to resource monitor subprocess |
+| `src/analyze_trigger_latency.py` | Reads `cpu_power.log`, averages `power_w` samples → `cpu_pkg_power_w` in thermal section |
+| `schemas/kpi_level1_v1.json` | `cpu_pkg_power_w` (number\|null) added to `thermal` object |
+| `src/prometheus_exporter.py` | `ros2_cpu_package_power_watts` Gauge updated on each scrape from `cpu_power.log` |
+
 ### Bag-Replay & fast_mapping Benchmarking (0.1.16)
 
 Deterministic, reproducible benchmark runs from pre-recorded ROS 2 bags — no
@@ -150,7 +180,7 @@ latency/jitter metrics in the Level 1 KPI JSON produced by
 |-------|--------|-------------|
 | `cpu_temp_c` | `/sys/class/thermal/thermal_zone*/` (`x86_pkg_temp`) | CPU package temperature (°C) at analysis time |
 | `gpu_temp_c` | `gpu_usage.log` (mean over session) | GPU temperature from qmassa / hwmon sysfs |
-| `npu_temp_c` | `npu_usage.log` (mean over session) | NPU junction temperature from Intel PMT |
+| `npu_temp_c` | `npu_usage.log` (mean over session) | NPU junction temperature (°C) |
 | `cpu_throttled` | `cpufreq/scaling_cur_freq` vs `cpuinfo_max_freq` | `true` when CPU freq < 95 % of max |
 | `gpu_throttled` | `gpu_usage.log` | `true` if any sample had GPU throttle active |
 | `npu_throttled` | — | `null` (not exposed via sysfs) |

@@ -39,7 +39,7 @@ spec:
         runAsUser: 1000
       containers:
         - name: prometheus
-          image: prom/prometheus:latest
+          image: prom/prometheus:v3.12.0
           command:
             - /bin/prometheus
             - --config.file=/etc/prometheus/prometheus.yml
