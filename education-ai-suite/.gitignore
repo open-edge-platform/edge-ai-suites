@@ -4,6 +4,7 @@ __pycache__/
 
 # Ignore virtual environments
 *venv*
+smartclassroom/
 
 # Ignore storage directory
 storage/
