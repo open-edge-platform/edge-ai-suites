@@ -16,7 +16,8 @@ class UtilizationMonitor {
         /// GPU sampling interval (ms).  xpu-smi spawns a subprocess, so keep this
         /// higher to avoid excessive process creation overhead.
         int gpu_interval_ms;
-        // Override with env var XPU_SMI_CMD if needed.
+        // Override with env var XPU_SMI_CMD if needed.  The default command is
+        // resolved to the detected xpu-smi device id at start().
         std::string gpu_command;
 
         Options() : enable(true), interval_ms(50), gpu_interval_ms(100), gpu_command("sudo timeout 1 xpu-smi stats -d 0 -j") {}
