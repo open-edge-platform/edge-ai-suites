@@ -84,7 +84,7 @@ The pipeline `weld_porosity_classification_npu` in `pipeline-server-config.json`
 
 ### Intel NPU K8S Extension
 
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel NPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
 npu:
