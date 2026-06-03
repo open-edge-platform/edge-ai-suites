@@ -14,9 +14,9 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
-Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+  Go to the target directory of your choice and clone the suite.
+  If you want to clone a specific release branch, replace `main` with the desired tag.
+  To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
     ```bash
     git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
@@ -46,29 +46,31 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
     SAMPLE_APP=weld-porosity
     ```
 
-4.  Install pre-requisites. Run with sudo if needed.
+4.  Install prerequisites. Run with sudo if needed.
 
     ```bash
     ./setup.sh
     ```
 
-    This sets up application pre-requisites, downloads artifacts, sets executable permissions for scripts etc. Downloaded resource directories are made available to the application via volume mounting in the docker compose file automatically.
+    This sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in the Docker Compose file automatically.
 
 ## Deploy the Application
 
-5.  Start the Docker application:
+1. Start the Docker application:
 
    The Docker daemon service should start automatically at boot. If not, you can start it manually:
+
    ```bash
    sudo systemctl start docker
    ```
-    >If you're running multiple instances of app, start the services using `./run.sh up` instead.
+
+   > **Note:** If you are running multiple instances of the application, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
    ```
 
-6.  Fetch the list of pipeline loaded available to launch
+2. Fetch the list of pipeline loaded available to launch
 
     ```bash
     ./sample_list.sh
@@ -108,15 +110,15 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
     ]
     ```
 
-7.  Start the sample application with a pipeline.
+3. Start the sample application with a pipeline.
 
     ```bash
     ./sample_start.sh -p weld_porosity_classification
     ```
 
-    This command will look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch the a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different options available.
+    This command will look for the payload for the pipeline specified in `-p` argument above, inside the `payload.json` file and launch a pipeline instance in DL Streamer Pipeline Server. Refer to the table, to learn about different options available.
 
-    > **IMPORTANT**: Before you run `sample_start.sh` script, make sure that
+    > **IMPORTANT:** Before you run `sample_start.sh` script, make sure that
     > `jq` is installed on your system. See the
     > [troubleshooting guide](./troubleshooting.md#unable-to-parse-json-payload-due-to-missing-jq-package)
     > for more details.
@@ -141,15 +143,14 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
     ```
 
-    > **NOTE:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
-
-    >If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+    > **Note:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the url below.
+    > If you are running multiple instances of the application, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
     ```bash
     https://<HOST_IP>/mediamtx/weld/
     ```
 
-8.  Get status of pipeline instance(s) running.
+4. Get status of pipeline instance(s) running.
 
     ```bash
     ./sample_status.sh
@@ -175,7 +176,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
     ]
     ```
 
-9.  Stop pipeline instances.
+5. Stop pipeline instances.
 
     ```bash
     ./sample_stop.sh
@@ -208,9 +209,9 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
     To stop a specific instance, identify it with the `--id` argument.
     For example, `./sample_stop.sh --id 0714ca6e5c7611f091f03266c7df2abf`
 
-10. Stop the Docker application.
+6. Stop the Docker application.
 
-    >If you're running multiple instances of app, stop the services using `./run.sh down` instead.
+    > **Note:** If you are running multiple instances of the application, stop the services using `./run.sh down` instead.
 
     ```bash
     docker compose down -v

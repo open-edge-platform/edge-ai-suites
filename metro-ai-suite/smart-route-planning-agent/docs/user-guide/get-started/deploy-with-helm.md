@@ -1,4 +1,4 @@
-# How to Deploy with Helm
+# Deploy with Helm
 
 This guide explains a simple Helm deployment for Smart Route Planning Agent.
 
@@ -90,8 +90,7 @@ namespace=<namespace_name>
 helm upgrade --install srpa . -n ${namespace} --create-namespace -f values_override.yaml
 ```
 
-> __**Note:**__ If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace veriable to required value in step 3.)
-
+> **Note:** If you do not have permission to create a namespace and your cluster admin has already provided a namespace, use the following command instead: `helm upgrade --install srpa . -n ${namespace} -f values_override.yaml`. (Make sure you have already set the namespace variable to the required value in step 3.)
 
 ### Step 5: Wait for Ready Pods
 

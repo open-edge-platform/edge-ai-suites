@@ -1,8 +1,8 @@
-# How to start MQTT publisher
+# Start the MQTT publisher
 
 Bring the services up.
 
->If you're running multiple instances of app, start the services using `./run.sh up` instead.
+> **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
 
 ```sh
 docker compose up -d
@@ -13,8 +13,8 @@ The below CURL command publishes metadata to the MQTT broker and sends frames ov
 Assuming broker is running in the same host over port `1883`, replace the `<HOST_IP>` field with your system IP address.
 WebRTC Stream will be accessible at `https://<HOST_IP>/mediamtx/mqttstream/`.
 
->Note: If you're running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
->If you're running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
 ```sh
 curl -k https://<HOST_IP>/api/pipelines/user_defined_pipelines/worker_safety_gear_detection_mqtt -X POST -H 'Content-Type: application/json' -d '{
@@ -54,7 +54,7 @@ docker run -it --rm \
   eclipse-mosquitto:latest \
   -h mqtt-broker -p 1883 -t worker_safety_gear_detection
 
-# Note: 
+# Note:
 # Update --network above if it is different in your execution. Network can be found using: docker network ls
-# Update --network as <INSTANCE_NAME>_industrial-edge-vision for multi-instance setup 
+# Update --network as <INSTANCE_NAME>_industrial-edge-vision for multi-instance setup
 ```
