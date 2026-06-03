@@ -21,20 +21,20 @@ This project demonstrates two complementary use cases for industrial edge AI, bo
 
 RTSP camera streams from AXIS cameras are processed by DL Streamer for person detection. Inference results and simulated sensor telemetry are published over MQTT with PTP timestamps. An MQTT aggregation node measures end-to-end latency in real time, demonstrating how TSN protects critical streams from iperf3 background congestion.
 
-[Get Started — Use Case 1](./get-started.md)
+[Get Started — Use Case 1](./docs/user-guide/get-started.md)
 
 ### Use Case 2 — SceneScape Multi-Camera Tracking with TSN and PTP
 
 Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects HOTA tracking accuracy and demonstrates that traffic shaping restores accuracy to baseline.
 
-[Get Started — Use Case 2](./get-started-scenescape.md)
+[Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
 
 ## Documentation
 
-- [Get Started — Use Case 1](./get-started.md)
-- [Get Started — Use Case 2](./get-started-scenescape.md)
-- [How-to Guides](./how-to-guides.md)
-- [Release Notes](./release-notes.md)
+- [Get Started — Use Case 1](./docs/user-guide/get-started.md)
+- [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
+- [How-to Guides](./docs/user-guide/how-to-guides.md)
+- [Release Notes](./docs/user-guide/release-notes.md)
 
 ## Key References
 

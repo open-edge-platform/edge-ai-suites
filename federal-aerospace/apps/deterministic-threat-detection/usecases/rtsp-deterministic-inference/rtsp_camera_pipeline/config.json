@@ -1,0 +1,24 @@
+{
+    "config": {
+        "pipelines": [
+            {
+                "name": "rtsp_camera_pipeline",
+                "source": "gstreamer",
+                "queue_maxsize": 50,
+                "pipeline": "rtspsrc location=rtsp://<rtsp-camera-username>:<rtsp-camera-password>@<rtsp-camera-url> latency=100 ! rtph264depay ! gvapython class=PTPFrameTimeStamp function=process module=/home/pipeline-server/ptp_frame_timestamp.py name=ntp ! h264parse ! decodebin ! videoscale ! video/x-raw, width=1920, height=1080 ! videoconvert ! gvadetect name=detection model-instance-id=inst0 ! gvametaconvert add-empty-results=true name=metaconvert ! queue ! gvawatermark ! queue ! gvafpscounter ! queue ! jpegenc ! appsink name=destination",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "detection-properties": {
+                            "element": {
+                                "name": "detection",
+                                "format": "element-properties"
+                            }
+                        }
+                    }
+                },
+                "auto_start": false
+            }
+        ]
+    }
+}

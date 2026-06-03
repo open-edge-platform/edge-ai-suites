@@ -123,6 +123,7 @@ For setup instructions, see [Setup Live Video Captioning RAG along with Live Vid
 
 ./get-started/system-requirements.md
 ./get-started/build-from-source.md
+./get-started/deploy-with-helm.md
 
 :::
 hide_directive-->

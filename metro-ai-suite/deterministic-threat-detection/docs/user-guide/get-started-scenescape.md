@@ -17,7 +17,7 @@ MOTA, and IDF1 metrics.
 
 | Component | Details |
 |-----------|---------|
-| **Basler ace 2 Camera (A2440-20GM)** | GigE Vision camera with IEEE 1588v2 PTP hardware timestamping support |
+| **Basler ace U Camera (acA1920-40GC)** | GigE Vision camera with IEEE 1588v2 PTP hardware timestamping support |
 | **AXIS RTSP Camera P3265-LVE** | General RTSP camera with optional support of NTP |
 | **MOXA TSN Switch** | Managed switch supporting IEEE 802.1AS (gPTP), IEEE 802.1Qbv (Time-Aware Shaper), and IEEE 1588v2 |
 | **Arrow Lake Host Machine** | Linux-based system with an Intel i226 TSN-capable network card |
@@ -37,6 +37,13 @@ The MOXA switch carries both camera traffic and background traffic. In the Basle
 |---------|------|
 | Arrow Lake Host (Machine 1) | Runs SceneScape and the DL Streamer inference pipeline |
 | Traffic Injector (Machine 2) | Injects background traffic with `iperf3` to simulate congestion |
+
+## Prerequisite: Clone SceneScape Repository
+
+```bash
+git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0-rc2
+cd scenescape
+```
 
 ## Prerequisite: Choose Your Camera Setup
 
@@ -89,13 +96,11 @@ For detailed instructions, refer to the
 ### Step 2: Run SceneScape
 
 ```bash
-git clone https://github.com/open-edge-platform/scenescape
 cd scenescape
-git checkout 2026.1.0-rc1 -b 2026.1.0-rc1
 make demo
 ```
 
-> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
 
 > **Basler camera users:** If you completed the Basler prerequisite steps above, the Docker Compose file has already been patched and the custom DL Streamer image with Basler support has been built. Start SceneScape with `make demo` as usual — the patched compose file will be picked up automatically.
 
@@ -105,6 +110,10 @@ Use iPerf3 to simulate network congestion over VLAN 5. Start an iperf3 server on
 Machine 1 and a client on Machine 2:
 
 ```bash
+# Install iPerf3 on both machines if not already installed
+sudo apt-get update
+sudo apt-get install -y iperf3
+
 # Machine 1 — receive congestion traffic on VLAN 5
 iperf3 -s -B <machine1-vlan5-ip>
 
@@ -123,6 +132,8 @@ Configure the Time-Aware Shaper (IEEE 802.1Qbv) on the MOXA switch to schedule a
 prioritize the camera traffic, protecting it from background congestion.
 
 ![MOXA Time Aware Shaper](./_assets/moxa-time-aware-shaper-port-setting.png)
+
+> **Note:** The default MOXA switch username is `admin` and the default password is `moxa`.
 
 > **Note:** Apply the port setting on the switch port that connects to the host running
 > SceneScape.

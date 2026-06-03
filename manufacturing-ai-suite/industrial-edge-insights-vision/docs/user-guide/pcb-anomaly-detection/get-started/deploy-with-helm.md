@@ -75,16 +75,17 @@
    ```sh
    cp helm/values_pcb-anomaly-detection.yaml helm/values.yaml
    ```
+
 3. Optional: Pull the helm chart and replace the existing helm folder with it
 
    - Note: The helm chart should be downloaded when you are not using the helm chart provided in `edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-vision/helm`
 
    - Download helm chart with the following command
 
-       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.3.0-rc1`
+       `helm pull oci://registry-1.docker.io/intel/pcb-anomaly-detection --version 1.3.0-rc2`
    - unzip the package using the following command
 
-       `tar -xvf pcb-anomaly-detection-1.3.0-rc1.tgz`
+       `tar -xvf pcb-anomaly-detection-1.3.0-rc2.tgz`
    - Replace the helm directory
 
        `rm -rf helm && mv pcb-anomaly-detection helm`
@@ -525,7 +526,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
    ]
    ```
 
-10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+10. Start the pipeline with the above payload.
+
+    ```sh
+    ./sample_start.sh helm -p pcb_anomaly_detection_mlops
+    ```
+
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    > **Note:** If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
