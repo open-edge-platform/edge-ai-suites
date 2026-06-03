@@ -15,7 +15,7 @@ services:
     restart: on-failure:5
 
   broker:
-    image: docker.io/library/eclipse-mosquitto:2.0.21
+    image: docker.io/library/eclipse-mosquitto:2.0.22
     environment:
       http_proxy: ${http_proxy}
       https_proxy: ${https_proxy}
@@ -44,7 +44,7 @@ services:
     restart: on-failure:5
 
   node-red:
-    image: docker.io/nodered/node-red:4.0
+    image: docker.io/nodered/node-red:4.1
     user: root
     environment:
       TZ: America/Los_Angeles
@@ -329,7 +329,7 @@ services:
     restart: on-failure:5
 
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:1.30.2-alpine
     container_name: nginx-reverse-proxy
     ports:
       - "80:80"

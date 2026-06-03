@@ -2,19 +2,19 @@
 
 This document describes the executables built under `build/`, their parameters, and the output to expect from a successful run.
 
-For KITTI-format evaluation after inference, see `../tools/README_eval.md`.
+For KITTI-format evaluation after inference, see `https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/tools/README_eval.md`.
 
 For the quickest end-to-end run, prefer the published Docker image:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 ## Common Runtime Setup
@@ -84,16 +84,16 @@ Use the Docker helper when you want to run the deploy workflow inside the contai
 If you already pulled the published image:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
 To run the container autotest on a dataset stored on the host:
 
 ```bash
-bash autotest_docker.sh --image intel/tfcc:bevfusion --dataset-path /path/to/kitti_dataset
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24 --dataset-path /path/to/kitti_dataset
 ```
 
-If you retagged the published image to `tfcc:bevfusion`, or built a local image with that tag, you can omit `--image`.
+If you retagged the published image to `tfcc:2026.1.0-ubuntu24`, or built a local image with that tag, you can omit `--image`.
 
 If the image must be built first:
 
@@ -126,7 +126,7 @@ Usage:
   [--vis] [--save-image] [--save-video] [--display] [--util] \
   [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
   [--vis-dir DIR] [--device DEVICE] \
-    [--filter-labels NAME,...] [--no-filter]
+  [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Key parameters:
@@ -140,6 +140,7 @@ Key parameters:
 - `--int8`: explicitly use all available INT8 component models.
 - `--repeat N`: run the dataset multiple times.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI).
 - `--dump-pred --pred-dir DIR`: write KITTI-format predictions.
 - `--save-image`, `--save-video`, `--display`: enable visualization output.
 
@@ -170,7 +171,7 @@ Usage:
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
   [--vis-dir DIR] [--recompute-camera-metas] [--cache-camera-metas] \
-  [--filter-labels NAME,...] [--no-filter]
+  [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Key parameters:
@@ -182,6 +183,7 @@ Key parameters:
 - `--model PATH`: override the default model path. `--onnx PATH` remains accepted as a compatibility alias.
 - `--recompute-camera-metas`: recompute camera geometry for every frame.
 - `--cache-camera-metas`: compute camera geometry once and reuse it. This is the V2X default; KITTI defaults to per-frame recompute.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI).
 - `--num-samples N`: limit the run to the first `N` discovered samples.
 - `--repeat N`: repeat the selected samples.
 - `--dump-pred --pred-dir DIR`: write KITTI-format predictions.

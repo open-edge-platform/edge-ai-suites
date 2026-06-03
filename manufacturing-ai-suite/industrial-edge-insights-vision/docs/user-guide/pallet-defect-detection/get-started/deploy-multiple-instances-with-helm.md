@@ -3,7 +3,7 @@
 ## Prerequisites
 
 - Ensure you meet the [System Requirements](./system-requirements.md) for this application.
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
 
@@ -61,7 +61,7 @@
 
     > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
 
-4. Install pre-requisites for all instances
+4. Install prerequisites for all instances
 
    ```sh
    ./setup.sh helm
@@ -629,7 +629,7 @@
    }
    ```
 
-## Uninstall Helm Charts
+### Uninstall Helm Charts
 
  ```sh
  ./run.sh helm_uninstall
@@ -639,7 +639,7 @@ Once application has been stopped, remove or rename the `config.yml` file if you
 
 ## Storing frames to S3 storage
 
-Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
@@ -684,9 +684,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-5. Create a S3 bucket using the following script.
+5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Name the file as `create_bucket_<INSTANCE_NAME>.py`.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
 
    ```python
    import boto3
@@ -769,7 +769,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline.
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
    Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
 

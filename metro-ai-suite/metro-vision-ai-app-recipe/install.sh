@@ -62,7 +62,7 @@ SAMPLE_APP=$(grep -E "^SAMPLE_APP=" "$ENV_FILE" | cut -d '=' -f2 | tr -d '"' | t
 # Bring down the application before updating docker compose file
 if docker compose ps >/dev/null 2>&1; then
     echo "Bringing down any running containers..."
-    docker compose down
+    docker compose down -v --remove-orphans
 fi
 
 # Copy appropriate docker-compose file

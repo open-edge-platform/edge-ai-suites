@@ -1,6 +1,6 @@
-# How to use NPU for inference
+# Use NPU for inference
 
-## Pre-requisites
+## Prerequisites
 
 To take full advantage of hardware acceleration, pipelines can be designed so that different stages — such as decoding and inference — are executed on the most suitable hardware devices.
 
@@ -15,11 +15,11 @@ Before running inference on an NPU, ensure that:
 
 For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
 
- For containerized application, following additional changes are required.
+ For containerized applications, the following additional changes are required.
 
 ### Provide NPU access to the container
 
-This can be done by making the following changes to the docker compose file.
+This can be done by making the following changes to the Docker Compose file.
 
 ```yaml
 services:

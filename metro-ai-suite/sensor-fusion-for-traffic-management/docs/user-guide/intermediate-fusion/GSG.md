@@ -1,4 +1,4 @@
-# Getting Started Guide
+# Get Started with Intermediate Fusion
 
 This guide covers two workflows:
 
@@ -7,23 +7,23 @@ This guide covers two workflows:
 
 ## 1. Recommended Quick Run In Docker
 
-Follow `../docker/README_Docker.md` to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
+Follow the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) to install Docker Engine, Docker Compose, and the required host driver packages. Then pull and test the published image:
 
 ```bash
-docker pull intel/tfcc:bevfusion
-bash autotest_docker.sh --image intel/tfcc:bevfusion
+docker pull intel/tfcc:2026.1.0-ubuntu24
+bash autotest_docker.sh --image intel/tfcc:2026.1.0-ubuntu24
 ```
 
-The published image keeps the `intel/tfcc:bevfusion` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
+The published image keeps the `intel/tfcc:2026.1.0-ubuntu24` name after pull. If you want the shorter local tag used by some helper defaults, add it yourself:
 
 ```bash
-docker tag intel/tfcc:bevfusion tfcc:bevfusion
+docker tag intel/tfcc:2026.1.0-ubuntu24 tfcc:2026.1.0-ubuntu24
 ```
 
 To inspect the image or run the binaries interactively:
 
 ```bash
-bash docker/run_docker.sh intel/tfcc:bevfusion
+bash docker/run_docker.sh intel/tfcc:2026.1.0-ubuntu24
 docker exec -it <container id> /bin/bash
 
 cd build
@@ -42,7 +42,7 @@ bash install_driver_related_libs.sh
 bash install_project_related_libs.sh
 ```
 
-See `Prerequisites.md` for the full environment requirements, package versions, and optional environment variables.
+See [Prerequisites](./Prerequisites.md) for the full environment requirements, package versions, and optional environment variables.
 
 ## 3. Build The Project
 
@@ -74,7 +74,7 @@ From `build/`:
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
     [--vis-dir DIR] [--device DEVICE] \
-    [--filter-labels NAME,...] [--no-filter]
+    [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Important options:
@@ -88,6 +88,7 @@ Important options:
 - `--int8`: explicitly use all available INT8 component models.
 - `--repeat N`: run the dataset multiple times.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI). Only boxes with `score >= SCORE` are output.
 - `--dump-pred --pred-dir DIR`: export KITTI-format predictions.
 - `--save-image`, `--save-video`, `--display`: enable visualization outputs.
 
@@ -116,7 +117,7 @@ From `build/`:
     [--vis] [--save-image] [--save-video] [--display] [--util] \
     [--repeat N] [--num-samples N] [--dump-pred] [--pred-dir DIR] \
     [--vis-dir DIR] [--recompute-camera-metas] [--cache-camera-metas] \
-    [--filter-labels NAME,...] [--no-filter]
+    [--bbox-score SCORE] [--filter-labels NAME,...] [--no-filter]
 ```
 
 Important options:
@@ -128,6 +129,7 @@ Important options:
 - `--model PATH`: override the default model path. `--onnx PATH` remains accepted as a compatibility alias.
 - `--recompute-camera-metas`: recompute camera geometry for every frame.
 - `--cache-camera-metas`: compute camera geometry once and reuse it. This is the V2X default; KITTI defaults to per-frame recompute.
+- `--bbox-score SCORE`: override the detection score threshold (default: 0.1 for V2X, 0.5 for KITTI). Only boxes with `score >= SCORE` are output.
 - `--num-samples N`: limit the run to the first `N` discovered samples.
 - `--repeat N`: repeat the selected samples.
 - `--dump-pred --pred-dir DIR`: export KITTI-format predictions.
@@ -229,4 +231,4 @@ Encoded `.bin` image files are decoded through OpenCV. If decoding fails, verify
 
 ## 10. More Detail
 
-Use `Testing.md` for the full executable reference and sample output patterns. Use `../docker/README_Docker.md` for the container workflow.
+Use the [Executable Reference Guide](./Testing.md) for the full executable reference and sample output patterns. Use the [Docker Workflow README on GH](https://github.com/open-edge-platform/edge-ai-suites/blob/main/metro-ai-suite/sensor-fusion-for-traffic-management/intermediate-fusion/deploy/docker/README_Docker.md) for the container workflow.
