@@ -95,6 +95,11 @@
         "npu_throttled": {
           "type": ["boolean", "null"],
           "description": "True if NPU throttling was observed during the session. Null when not monitorable."
+        },
+        "cpu_pkg_power_w": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Mean CPU package power in watts over the session, sampled via Intel RAPL powercap sysfs. Null when RAPL is unavailable (e.g. WSL2)."
         }
       }
     },
