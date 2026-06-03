@@ -37,12 +37,37 @@ to file new tickets there (after learning about the guidelines for [Contributing
 - **Issue**: Camera Streams seem to be stuck when SceneScape UI is accessed with localhost URL.
 - **Solution**: Make sure to access the localhost URL ONLY via RDP/VNC sessions. Opening via browser extensions from a remote machine is NOT recommended.
 
-#### 5. Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
+### 5. Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
 - This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
 
-#### 6. NPU Inference Failures with Geti-Trained Models
+### 6. NPU Inference Failures with Geti-Trained Models
 - **Issue**: If you experience errors or failures when running an NPU workload with a model trained in Intel Geti, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
 - **Solution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+
+### 7. Application Fails to Start in Air-Gapped (No Internet) Environments
+- **Issue**: When running the application on a machine without internet access, containers fail to start with errors like `failed to resolve reference`, or Grafana dashboards show "No data" even though containers appear healthy.
+- **Solution**: While internet is still available, run the following preparation steps after `./install.sh smart-intersection`:
+
+  ```bash
+  # Pre-install Node-RED InfluxDB plugin into the named volume
+  docker compose run --rm --no-deps --entrypoint "npm" node-red install node-red-contrib-influxdb
+
+  # Pre-pull all container images
+  docker compose pull
+  ```
+
+  After disconnecting from the Internet,
+  - Export admin password as environment variable:
+
+     ```bash
+     export SUPASS=$(cat ./smart-intersection/src/secrets/supass)
+     ```
+  - Start the application with proxy variables(if any) unset:
+  
+    ```bash
+    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY no_proxy NO_PROXY
+    docker compose up -d
+    ```
 
 
 ## Troubleshooting Docker Deployments
