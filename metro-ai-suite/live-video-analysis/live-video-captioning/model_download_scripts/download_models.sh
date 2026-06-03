@@ -73,7 +73,7 @@ ensure_model_base_dir_for_current_user() {
       log "Direct chown failed; retrying with docker as root for: $dir_path"
       docker run --rm -u root \
         -v "${dir_path}:/data" \
-        alpine:latest sh -c "chown -R ${uid}:${gid} /data"
+        alpine:3.22 sh -c "chown -R ${uid}:${gid} /data"
       log "Ownership updated via docker for: $dir_path"
     else
       err "Failed to change ownership for $dir_path and docker is not available for root fallback."
@@ -192,11 +192,11 @@ log "Flattening model directory..."
 PARENT_DIR="$(dirname "$MODEL_DOWNLOAD_PATH")"
 docker run --rm -u root \
   -v "${PARENT_DIR}:/parent" \
-  alpine:latest sh -c "chown $(id -u):$(id -g) /parent && chmod u+rwx /parent"
+  alpine:3.22 sh -c "chown $(id -u):$(id -g) /parent && chmod u+rwx /parent"
 
 docker run --rm -u root \
   -v "${MODEL_DOWNLOAD_PATH}:/data" \
-  alpine:latest sh -c "chown -R $(id -u):$(id -g) /data && chmod -R u+rwX /data"
+  alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R u+rwX /data"
 
 if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
   # Find the converted model inside the nested openvino structure
