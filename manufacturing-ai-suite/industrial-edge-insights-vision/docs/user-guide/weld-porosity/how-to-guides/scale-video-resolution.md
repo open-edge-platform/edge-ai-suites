@@ -1,4 +1,4 @@
-# How to Scale Video Resolution
+# Scale Video Resolution
 
 You can scale the video resolution in the following scenarios:
 

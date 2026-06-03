@@ -13,11 +13,11 @@ in the sample application.
 ### Prerequisites
 
 - [System Requirements](./system-requirements.md)
-- K8s installation on single or multi node must be done as pre-requisite to continue the
-following deployment. Note: The kubernetes cluster is set up with `kubeadm`, `kubectl` and
+- K8s installation on single or multi node must be done as prerequisite to continue the
+following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and
 `kubelet` packages on single and multi nodes with `v1.30.2`.
 Refer to online tutorials (such as <https://adamtheautomator.com/install-kubernetes-ubuntu>)
-to setup kubernetes cluster on the web with host OS as Ubuntu 22.04.
+to setup Kubernetes cluster on the web with host OS as Ubuntu 22.04.
 - For Helm installation, refer to the [Helm website](https://helm.sh/docs/intro/install/)
 
 > **Note:**
@@ -30,7 +30,7 @@ Follow this procedure on the target system to download the package.
 
 > **Note:** Skip this step if you have already followed the steps as part of the [Get Started guide](../get-started.md).
 
-Before you can deploy with Helm, you must clone the repository and download the helm chart:
+Before you can deploy with Helm, you must clone the repository and download the Helm chart:
 
 ```bash
 # Clone the repository
@@ -41,9 +41,9 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
 
 ```
 
-Optional: Pull the helm chart and replace the existing helm-chart folder with it
+Optional: Pull the Helm chart and replace the existing helm-chart folder with it
 
-> **Note:** The helm chart should be downloaded when you are not using the helm chart provided
+> **Note:** The Helm chart should be downloaded when you are not using the Helm chart provided
 > in `edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection/helm-chart`.
 
 ```bash
@@ -79,6 +79,7 @@ cd ..
         username: # example: username: myuser
         password: # example: password: mypassword
     ```
+
     > **Note:** To make use of GPU / NPU set the property `privileged_access_required` to `true` in the above `values.yaml` file.
 
 ### Step 3: Deploy the application and Run multiple AI pipelines
@@ -88,7 +89,7 @@ deliver video streams that are connected to AI pipelines to improve the classifi
 recognition accuracy. The following demonstrates running multiple AI pipelines and
 visualization in the Grafana.
 
-1. Deploy Helm chart
+1. Deploy the Helm chart
 
     ```sh
     helm install loitering-detection ./loitering-detection/helm-chart -n ld  --create-namespace --set timezone=$(cat /etc/timezone)
@@ -103,97 +104,97 @@ visualization in the Grafana.
 3. Start the application with the Client URL (cURL) command by replacing the <HOST_IP> with
 the Node IP. (Total 8 places)
 
-``` sh
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_tracking_1",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_tracking_1"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   ``` sh
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/VIRAT_S_000101.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_tracking_1",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_tracking_1"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_tracking_2",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_tracking_2"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/VIRAT_S_000102.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_tracking_2",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_tracking_2"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_tracking_3",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_tracking_3"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/VIRAT_S_000103.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_tracking_3",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_tracking_3"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
 
-curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
-{
-    "source": {
-        "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",
-        "type": "uri"
-    },
-    "destination": {
-        "metadata": {
-            "type": "mqtt",
-            "topic": "object_tracking_4",
-            "publish_frame":false
-        },
-        "frame": {
-            "type": "webrtc",
-            "peer-id": "object_tracking_4"
-        }
-    },
-    "parameters": {
-        "detection-device": "CPU"
-    }
-}'
-```
+   curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_tracking_cpu -X POST -H 'Content-Type: application/json' -d '
+   {
+       "source": {
+           "uri": "file:///home/pipeline-server/videos/VIRAT_S_000104.mp4",
+           "type": "uri"
+       },
+       "destination": {
+           "metadata": {
+               "type": "mqtt",
+               "topic": "object_tracking_4",
+               "publish_frame":false
+           },
+           "frame": {
+               "type": "webrtc",
+               "peer-id": "object_tracking_4"
+           }
+       },
+       "parameters": {
+           "detection-device": "CPU"
+       }
+   }'
+   ```
 
-> **Note:** To run the pipeline on GPU replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change .
+   > **Note:** To run the pipeline on GPU replace `object_tracking_cpu`  with `object_tracking_gpu` and change value of `detection-device` to `GPU` for all the above pipelines . Simimlarly, to run the pipeline on NPU replace `object_tracking_cpu`  with `object_tracking_npu` and change value of  `detection-device` to `NPU` for all the above pipelines and change.
 
 4. View the Grafana and WebRTC streaming on `https://<HOST_IP>:30443/grafana/`.
     - Log in with the following credentials:
@@ -202,8 +203,8 @@ curl -k https://<HOST_IP>:30443/api/pipelines/user_defined_pipelines/object_trac
     - Check under the Dashboards section for the default dashboard named "Video Analytics
     Dashboard".
 
-![Example of Grafana and WebRTC streaming](../_assets/grafana.png)
-*Figure 1: Grafana and WebRTC streaming*
+   ![Example of Grafana and WebRTC streaming](../_assets/grafana.png)
+   *Figure 1: Grafana and WebRTC streaming*
 
 ### Step 4: End the demonstration
 
@@ -225,9 +226,9 @@ Follow this procedure to stop the sample application and end this demonstration.
 
 View the container logs using the following command:
 
-    ```sh
-    kubectl logs -f <pod_name> -n ld
-    ```
+```sh
+kubectl logs -f <pod_name> -n ld
+```
 
 ## Troubleshooting
 
