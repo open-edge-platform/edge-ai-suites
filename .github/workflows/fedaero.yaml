@@ -14,21 +14,15 @@
 #
 #   Where those zips end up depends on what triggered the workflow:
 #
-#   1. Pull request to main
+#   1. Pull request to release-*
 #        - Builds only the components whose files actually changed.
 #        - Uploads the zips as GitHub Actions artifacts (visible on the
 #          PR's checks page, retention follows the repo's Actions settings).
 #        - Does not touch any release.
 #
-#   2. Push to main
+#   2. Push to release*
 #        - Forces a rebuild of all two components (so they stay in sync).
 #        - Uploads Actions artifacts (same as PRs).
-#        - Updates the rolling release `fedaero-latest`:
-#            * tag is force-moved to the new commit
-#            * all two zips on the release are replaced
-#            * marked as a prerelease (this repo ships multiple products,
-#              so neither this release nor the versioned one claims the
-#              repo-wide "Latest release" badge).
 #
 #   3. Manual dispatch from the Actions tab (workflow_dispatch)
 #        - Only allowed from `release-*` branches or any tag. Dispatching
@@ -36,22 +30,7 @@
 #          UI shows all branches; the guard step is what enforces this).
 #        - Always builds all two components (no per-component selection).
 #        - Uploads Actions artifacts.
-#        - Updates `fedaero-latest`.
-#        - If `publish_versioned_release` is ticked:
-#            * publishes a NEW immutable release at tag v$VERSION
-#            * fails fast if v$VERSION already exists (bump VERSION to cut
-#              a new versioned release — this is the only way to publish one)
-#            * not marked as the repo-wide "Latest release" either.
 #
-# End-user mental model:
-#   - v$VERSION releases (e.g. v1.0.0) → frozen, pinned, customer-facing.
-#   - `fedaero-latest` release → rolling dev build from `main`, prerelease,
-#     overwritten on every push. For devs / early testers.
-#
-# To cut a new versioned release:
-#   1. Open a PR bumping `VERSION` below (e.g. 1.0.0 → 1.1.0). Merge it.
-#   2. Go to Actions → "[FedAero] Package" → Run workflow.
-#   3. Tick "Publish a versioned release" and run.
 # =============================================================================
 
 name: "[FedAero] Package"
@@ -69,14 +48,12 @@ concurrency:
 on:
   push:
     branches:
-      - main
       - release-*
     paths:
       - 'federal-aerospace/**'
       - '.github/workflows/fedaero.yaml'
   pull_request:
     branches:
-      - main
       - release-*
     paths:
       - 'federal-aerospace/**'
@@ -127,11 +104,11 @@ jobs:
         with:
           persist-credentials: false
 
-      # Force-build everything on main pushes (so the rolling release stays
+      # Force-build everything on release-* pushes (so the rolling release stays
       # coherent) and on any manual dispatch (always all two components).
       - id: force
         if: >-
-          (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+          (github.event_name == 'push' && github.ref == 'refs/heads/release-*') ||
           github.event_name == 'workflow_dispatch'
         run: |
           echo "handheld-multi-modal=true"           >> "$GITHUB_OUTPUT"
