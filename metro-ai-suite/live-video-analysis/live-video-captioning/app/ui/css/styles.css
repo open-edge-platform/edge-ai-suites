@@ -354,8 +354,15 @@ iframe {
 }
 
 @keyframes pulse-error {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.35; }
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.35;
+    }
 }
 
 .status-connected {
@@ -1007,4 +1014,13 @@ iframe {
     color: var(--text);
     font-size: 0.9rem;
     margin: 0 0 8px;
+}
+
+.stream-source-warning {
+    font-size: 0.78rem;
+    color: #ffb4ad;
+    background: rgba(220, 53, 69, 0.12);
+    border-left: 3px solid #dc3545;
+    border-radius: 4px;
+    padding: 6px 8px;
 }

@@ -5,6 +5,36 @@ from fastapi import HTTPException
 from ..config import PIPELINE_NAME, PIPELINE_SERVER_URL, ENABLE_DETECTION_PIPELINE
 from .http_client import http_json
 
+_PIPELINE_DISPLAY_NAME_MAP = {
+    "GenAI_Camera_Pipeline_on_CPU": "GenAI_Pipeline_on_CPU",
+    "GenAI_Camera_Pipeline_on_GPU": "GenAI_Pipeline_on_GPU",
+    "GenAI_Camera_Detection_Pipeline_on_CPU": "GenAI_Detection_Pipeline_on_CPU",
+    "GenAI_Camera_Detection_Pipeline_on_GPU": "GenAI_Detection_Pipeline_on_GPU",
+}
+
+
+def get_pipeline_display_name(pipeline_name: str) -> str:
+    """Resolve a UI display name for a pipeline while preserving internal IDs."""
+    return _PIPELINE_DISPLAY_NAME_MAP.get(pipeline_name, pipeline_name)
+
+
+def _gpu_device_exists() -> bool:
+    """Detect whether a compute-capable GPU render device is available."""
+    dri_dir = Path("/dev/dri")
+    if not dri_dir.exists() or not dri_dir.is_dir():
+        return False
+    # Prefer render nodes for inference-capable device access.
+    # Card nodes alone are display-oriented and can exist on systems
+    # where GPU compute is not usable for this workload.
+    return any(dri_dir.glob("renderD*"))
+
+
+def _default_pipeline_names(gpu_available: bool) -> set[str]:
+    """Return preferred default pipeline names for current hardware."""
+    if gpu_available:
+        return {"GenAI_Pipeline_on_GPU", "GenAI_Camera_Pipeline_on_GPU"}
+    return {"GenAI_Pipeline_on_CPU", "GenAI_Camera_Pipeline_on_CPU"}
+
 
 def discover_models(root: Path) -> List[str]:
     """Discover available models from the models directory."""
@@ -68,7 +98,9 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
     Discover available pipelines from the pipeline server and return a List of dicts:
     {
       "pipeline_name": <name>,
+            "pipeline_display_name": <display_name>,
       "pipeline_type": "detection" | "non-detection"
+            "pipeline_default": bool
     }
 
     Behavior:
@@ -93,7 +125,13 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         if not isinstance(items, List):
             # Fallback to a single default pipeline
             # Optional filtering: if detection were disabled, 'non-detection' remains
-            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+            return [
+                {
+                    "pipeline_name": PIPELINE_NAME,
+                    "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                    "pipeline_type": "non-detection",
+                }
+            ]
 
         results: List[Dict[str, str]] = []
 
@@ -120,18 +158,53 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
             else:
                 continue
 
-            results.append({"pipeline_name": name, "pipeline_type": pipeline_type})
+            results.append(
+                {
+                    "pipeline_name": name,
+                    "pipeline_display_name": get_pipeline_display_name(name),
+                    "pipeline_type": pipeline_type,
+                }
+            )
 
         # Optional filtering based on your existing flag
         if not ENABLE_DETECTION_PIPELINE:
             results = [r for r in results if r["pipeline_type"] != "detection"]
 
         # Filter out proxy pipelines (hidden from UI, used internally for default resolution)
-        results = [r for r in results if not r["pipeline_name"].endswith("_Default_Resolution")]
+        results = [
+            r for r in results if not r["pipeline_name"].endswith("_Default_Resolution")
+        ]
+
+        gpu_available = _gpu_device_exists()
+        preferred_defaults = _default_pipeline_names(gpu_available)
+        for row in results:
+            row["pipeline_default"] = row["pipeline_name"] in preferred_defaults
+
+        if results and not any(r["pipeline_default"] for r in results):
+            if not gpu_available:
+                # Prefer a non-GPU fallback when GPU is not available.
+                for row in results:
+                    if "_GPU" not in row["pipeline_name"].upper():
+                        row["pipeline_default"] = True
+                        break
+
+        if results and not any(r["pipeline_default"] for r in results):
+            # Fall back to configured default if preferred defaults are not present.
+            for row in results:
+                if row["pipeline_name"] == PIPELINE_NAME:
+                    row["pipeline_default"] = True
+                    break
 
         # Fallback if nothing usable left
         if not results:
-            return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+            return [
+                {
+                    "pipeline_name": PIPELINE_NAME,
+                    "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                    "pipeline_type": "non-detection",
+                    "pipeline_default": True,
+                }
+            ]
 
         return results
 
@@ -139,4 +212,11 @@ def discover_pipelines_remote() -> List[Dict[str, str]]:
         raise
     except Exception:
         # Conservative fallback for parse / unexpected errors
-        return [{"pipeline_name": PIPELINE_NAME, "pipeline_type": "non-detection"}]
+        return [
+            {
+                "pipeline_name": PIPELINE_NAME,
+                "pipeline_display_name": get_pipeline_display_name(PIPELINE_NAME),
+                "pipeline_type": "non-detection",
+                "pipeline_default": True,
+            }
+        ]

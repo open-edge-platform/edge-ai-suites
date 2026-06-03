@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# download_models.sh — Submit a model download job, poll for completion, then flatten results.
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
 
-# ----------- Color codes -----------
+set -Eeuo pipefail
+
 if [[ -t 1 && -z "${NO_COLOR:-}" ]]; then
   RED=$'\033[31m'; GREEN=$'\033[32m'; YELLOW=$'\033[33m'; RESET=$'\033[0m'
 else
@@ -12,49 +14,34 @@ log()  { echo -e "${GREEN}[INFO ] $*${RESET}"; }
 warn() { echo -e "${YELLOW}[WARN ] $*${RESET}" >&2; }
 err()  { echo -e "${RED}[ERROR] $*${RESET}" >&2; }
 
-# ----------- Strict mode / anti-source guard -----------
-if [[ "${BASH_SOURCE[0]}" != "${0}" ]]; then
-  err "This script is designed to be executed, not sourced. Please run: ./download_models.sh"
-  return 1
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+if [[ -f "${ROOT_DIR}/.env" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "${ROOT_DIR}/.env"
+  set +a
 fi
 
-set -Eeuo pipefail
+ROOT="${MODEL_PATH:-${ROOT_DIR}}"
 
-# ----------- Defaults / Config -----------
-ROOT="${MODEL_PATH:-$PWD}"
+# Staging directory for ephemeral container downloads (temporary)
+MODEL_DOWNLOAD_PATH="${ROOT}/ovms_model"
 
-MODEL_DOWNLOAD_PATH=${ROOT}/ovms_model
+# Final model directories
+DEFAULT_MODEL_PATH="${ROOT}/ov_models"
 LLM_MODEL_PATH="${ROOT}/llm_models"
-VLM_MODEL_PATH="${ROOT}/ov_models"
 DETECTION_MODEL_PATH="${ROOT}/ov_detection_models"
 
-API_SCHEME="http"
-API_HOST="$(ip route get 1 | awk '{print $7}')"
-API_HOST="${API_HOST:-127.0.0.1}"
-API_PORT=8200
-
-MODEL_TYPE="vlm"   # or "vision"
+MODEL_TYPE="vlm"
 DEVICE="CPU"
-PRECISION="fp16"
-
-POLL_INTERVAL=10    # seconds between polls
-TIMEOUT_MINUTES=30  # max time to wait for job completion
-
+PRECISION="int8"
 MODEL=""
 
-API_BASE="${API_SCHEME}://${API_HOST}:${API_PORT}"
-JOB_URL_BASE="${API_BASE}/api/v1/jobs"
-MODEL_DOWNLOAD_URL="${API_BASE}/api/v1/models/download"
-MODEL_DOWNLOAD_PATH_QUERY="download_path=ovms_model"
-
-# ----------- Utilities -----------
-have_cmd() { command -v "$1" >/dev/null 2>&1; }
-need_cmd() {
-  if ! have_cmd "$1"; then
-    err "Required command not found: $1"
-    return 1
-  fi
-}
+EPHEMERAL_SCRIPT_URL="${MODEL_DOWNLOAD_EPHEMERAL_SCRIPT_URL:-https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh}"
+IMAGE_TAG="${TAG:-latest}"
+OVMS_RELEASE_TAG="${OVMS_RELEASE_TAG:-v2026.0}"
 
 ensure_model_base_dir_for_current_user() {
   local dir_path="$1"
@@ -82,7 +69,7 @@ ensure_model_base_dir_for_current_user() {
 
     if chown -R "${uid}:${gid}" "$dir_path" 2>/dev/null; then
       log "Ownership updated for: $dir_path"
-    elif have_cmd docker; then
+    elif command -v docker >/dev/null 2>&1; then
       log "Direct chown failed; retrying with docker as root for: $dir_path"
       docker run --rm -u root \
         -v "${dir_path}:/data" \
@@ -101,32 +88,20 @@ Usage:
   $(basename "$0") --model "<model_name>" [options]
 
 Required:
-  --model <model_name>            Model identifier, e.g. "OpenGVLab/InternVL2-1B" or "OpenGVLab/InternVL2-2B"
+  --model <model_name>            Model identifier, e.g. "OpenGVLab/InternVL2-1B" or "yolov8s"
 
 Optional:
   --type <vlm|vision|llm>          Model type (default: ${MODEL_TYPE})
-  --weight-format <int4|int8|fp16> Quantization. Applied only to VLM models not vision models. (default: ${PRECISION})
-                                   fp16 -> FP16 precision (No quantization)
-                                   int8 -> 8-bit integer quantization via NNCF
-                                   int4 -> 4-bit integer quantization via NNCF (best compression if supported by model)
-  --device <CPU|GPU|NPU>           Device. Not required unless using NPU device. Not tested on NPU at the moment. (default: ${DEVICE})
+  --weight-format <int4|int8|fp16> Quantization for VLM/LLM OpenVINO conversion (default: ${PRECISION})
+  --device <CPU|GPU|NPU>           Target device for VLM/LLM OpenVINO conversion (default: ${DEVICE})
   -h, --help                       Show this help
 
-Process:
-  1) POST ${API_SCHEME}/api/v1/models/download?download_path=ov_models/<model_name>
-     -> Parses <job_id> from response
-
-  2) Poll GET ${API_SCHEME}://<host>:<port>/api/v1/jobs/<job_id> every ${POLL_INTERVAL}s
-     until status is "completed", or fails/timeout.
-
-  3) On success:
-     - VLM: flatten to ${VLM_MODEL_PATH}/<model_name>
-     - Vision: flatten to ${DETECTION_MODEL_PATH}/<model_name>
-     - LLM: flatten to ${LLM_MODEL_PATH}/<model_name>
+Examples:
+  ./model_download_scripts/download_models.sh --model OpenGVLab/InternVL2-1B --type vlm --weight-format int8
+  ./model_download_scripts/download_models.sh --model yolov8s --type vision
 EOF
 }
 
-# ----------- Arg parsing -----------
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --model)              MODEL="${2:-}"; shift 2 ;;
@@ -140,7 +115,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "${MODEL}" ]]; then
-  err "--model is required, e.g. --model \"OpenGVLab/InternVL2-1B\""
+  err "--model is required."
   usage
   exit 1
 fi
@@ -150,197 +125,129 @@ if [[ "${PRECISION}" != "int4" && "${PRECISION}" != "int8" && "${PRECISION}" != 
   exit 1
 fi
 
-# Compute max attempts from timeout/poll interval
-if ! [[ "$POLL_INTERVAL" =~ ^[0-9]+$ && "$TIMEOUT_MINUTES" =~ ^[0-9]+$ ]]; then
-  err "--poll-interval and --timeout-minutes must be integers"
-  exit 1
-fi
-MAX_ATTEMPTS=$(( (TIMEOUT_MINUTES * 60 + POLL_INTERVAL - 1) / POLL_INTERVAL ))
-(( MAX_ATTEMPTS > 0 )) || MAX_ATTEMPTS=1
-
-# Ensure base directories exist
-if [[ "$MODEL_TYPE" == "vlm" ]]; then
-  ensure_model_base_dir_for_current_user "$VLM_MODEL_PATH" "VLM"
-elif [[ "$MODEL_TYPE" == "vision" ]]; then
-  ensure_model_base_dir_for_current_user "$DETECTION_MODEL_PATH" "Vision"
-elif [[ "$MODEL_TYPE" == "llm" ]]; then
-  ensure_model_base_dir_for_current_user "$LLM_MODEL_PATH" "LLM"
-else
-  err "Unknown model type: ${MODEL_TYPE}. Please specify a valid type (e.g. --type vlm, --type vision, or --type llm)."
+if ! command -v curl >/dev/null 2>&1; then
+  err "Required command not found: curl"
   exit 1
 fi
 
-# ----------- Step 1: Download -----------
-need_cmd curl
-need_cmd jq
+case "${MODEL_TYPE}" in
+  vlm)
+    HUB="openvino"
+    PLUGINS="huggingface,openvino"
+    EXTRA_ARGS=(--type vlm --is-ovms --precision "${PRECISION}" --device "${DEVICE}")
+    FINAL_DIR="${DEFAULT_MODEL_PATH}"
+    ensure_model_base_dir_for_current_user "$FINAL_DIR" "VLM"
+    ;;
+  llm)
+    HUB="openvino"
+    PLUGINS="huggingface,openvino"
+    EXTRA_ARGS=(--type llm --is-ovms --precision "${PRECISION}" --device "${DEVICE}")
+    FINAL_DIR="${LLM_MODEL_PATH}"
+    ensure_model_base_dir_for_current_user "$FINAL_DIR" "LLM"
+    ;;
+  vision)
+    HUB="ultralytics"
+    PLUGINS="ultralytics"
+    EXTRA_ARGS=(--type vision)
+    FINAL_DIR="${DETECTION_MODEL_PATH}"
+    ensure_model_base_dir_for_current_user "$FINAL_DIR" "Vision"
+    ;;
+  *)
+    err "Unknown model type: ${MODEL_TYPE}. Use vlm, vision, or llm."
+    exit 1
+    ;;
+esac
 
-mkdir -p "$MODEL_DOWNLOAD_PATH"
+mkdir -p "${MODEL_DOWNLOAD_PATH}"
 
-if [[ "$MODEL_TYPE" == "vlm" || "$MODEL_TYPE" == "llm" ]]; then
-  HUB="openvino"
-  IS_OVMS=true
-  PAYLOAD=$(cat <<JSON
-{
-  "models": [
-    {
-      "name": "${MODEL}",
-      "hub": "${HUB}",
-      "type": "${MODEL_TYPE}",
-      "is_ovms": ${IS_OVMS},
-      "config": {
-        "precision": "${PRECISION}",
-        "device": "${DEVICE}"
-      }
-    }
-  ],
-  "parallel_downloads": false
+log "Downloading ${MODEL_TYPE} model '${MODEL}' with the ephemeral model-download container."
+log "Models will be stored under: ${FINAL_DIR}"
+
+EPHEMERAL_SCRIPT=$(curl -fsSL "${EPHEMERAL_SCRIPT_URL}") || {
+  err "Failed to download ephemeral script from: ${EPHEMERAL_SCRIPT_URL}"
+  err "Please verify the URL is correct and accessible."
+  exit 1
 }
-JSON
+
+# Use ovms_model as the staging download path
+DOWNLOAD_ARGS=(
+  --model-name "${MODEL}"
+  --hub "${HUB}"
+  --plugins "${PLUGINS}"
+  --model-path "${ROOT}"
+  --download-path "ovms_model"
+  --image-tag "${IMAGE_TAG}"
+  --ovms-release-tag "${OVMS_RELEASE_TAG}"
 )
-elif [[ "$MODEL_TYPE" == "vision" ]]; then
-  HUB="ultralytics"
-  PAYLOAD=$(cat <<JSON
-{
-  "models": [
-    {
-      "name": "${MODEL}",
-      "hub": "${HUB}",
-      "type": "${MODEL_TYPE}"
-    }
-  ],
-  "parallel_downloads": false
-}
-JSON
-)
-else
-  warn "Unknown model type: ${MODEL_TYPE}. Please specify a valid type (e.g. --type vlm, --type vision, or --type llm)."
-  exit 1
-fi
 
-log "POST ${MODEL_DOWNLOAD_URL}?${MODEL_DOWNLOAD_PATH_QUERY}"
+echo "${EPHEMERAL_SCRIPT}" | bash -s -- \
+  "${DOWNLOAD_ARGS[@]}" \
+  "${EXTRA_ARGS[@]}"
 
-set +e
-RESP="$(curl -sS -X POST "${MODEL_DOWNLOAD_URL}?${MODEL_DOWNLOAD_PATH_QUERY}" \
-  -H "Content-Type: application/json" \
-  -d "${PAYLOAD}")"
-CURL_RC=$?
+# ----------- Flatten directory -----------
+# The ephemeral container runs as root, so fix ownership before moving files.
+log "Flattening model directory..."
 
-set -e
-if (( CURL_RC != 0 )); then
-  err "Download API call failed (curl rc=${CURL_RC})."
-  exit 1
-fi
+# Fix ownership of the staging directory (container creates files as root)
+PARENT_DIR="$(dirname "$MODEL_DOWNLOAD_PATH")"
+docker run --rm -u root \
+  -v "${PARENT_DIR}:/parent" \
+  alpine:3.22 sh -c "chown $(id -u):$(id -g) /parent && chmod u+rwx /parent"
 
-# Check if response contains an error
-if echo "$RESP" | jq -e '.detail' >/dev/null 2>&1; then
-  err "API returned error: $(echo "$RESP" | jq -r '.detail')"
-  exit 1
-fi
+docker run --rm -u root \
+  -v "${MODEL_DOWNLOAD_PATH}:/data" \
+  alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R u+rwX /data"
 
-JOB_ID="$(echo "$RESP" | jq -r '.job_ids[0]')"
-if [[ -z "$JOB_ID" || "$JOB_ID" == "null" ]]; then
-  err "No job_ids returned from download API. Response was:"
-  echo "$RESP"
-  exit 1
-fi
-log "Job submitted. job_id=${JOB_ID}"
+if [[ "${MODEL_TYPE}" == "vlm" || "${MODEL_TYPE}" == "llm" ]]; then
+  # Find the converted model inside the nested openvino structure
+  # Structure: ovms_model/openvino_models/<device>/<precision>/<org>/<model>/
+  DEVICE_LOWER="$(echo "${DEVICE}" | tr '[:upper:]' '[:lower:]')"
+  PRECISION_LOWER="$(echo "${PRECISION}" | tr '[:upper:]' '[:lower:]')"
+  NESTED_DIR="${MODEL_DOWNLOAD_PATH}/openvino_models/${DEVICE_LOWER}/${PRECISION_LOWER}"
 
+  MODEL_BASENAME="${MODEL##*/}"
+  MODEL_SRC="${NESTED_DIR}/${MODEL}"
 
-# ----------- Step 2: Poll job status -----------
-ATTEMPT=0
-JOB_STATUS=""
-JOB_RESULT_SUCCESS=""
-JOB_RESULT_MSG=""
-CONVERSION_PATH=""
-
-log "Polling job status every ${POLL_INTERVAL}s for up to ${TIMEOUT_MINUTES} minute(s)..."
-
-while (( ATTEMPT < MAX_ATTEMPTS )); do
-  log "Attempting to poll job status..."
-  ATTEMPT=$((ATTEMPT + 1))
-  set +e
-  log "GET ${JOB_URL_BASE}/${JOB_ID}"
-  JOB_RESP="$(curl -sS -f -X GET "${JOB_URL_BASE}/${JOB_ID}")"
-  CURL_RC=$?
-  set -e
-  if (( CURL_RC != 0 )); then
-    warn "Failed to GET job status (curl rc=${CURL_RC}); will retry in ${POLL_INTERVAL}s."
-    sleep "${POLL_INTERVAL}"
-    continue
+  if [[ ! -d "${MODEL_SRC}" ]]; then
+    # Try finding it
+    MODEL_SRC=$(find "${NESTED_DIR}" -mindepth 1 -maxdepth 2 -type d -name "${MODEL_BASENAME}" 2>/dev/null | head -1)
   fi
 
-  JOB_STATUS="$(echo "$JOB_RESP" | jq -r '.status // "unknown"')"
-  JOB_RESULT_SUCCESS="$(echo "$JOB_RESP" | jq -r '.result.success // ""')"
-  JOB_RESULT_MSG="$(echo "$JOB_RESP" | jq -r '.result.message // ""')"
-  CONVERSION_PATH="$(echo "$JOB_RESP" | jq -r '.result.conversion_path // .result.download_path // ""')"
-
-  log "Job status: ${JOB_STATUS:-unknown} | success=${JOB_RESULT_SUCCESS:-} | msg=${JOB_RESULT_MSG:-}"
-
-  case "${JOB_STATUS}" in
-    completed)
-      if [[ "${JOB_RESULT_SUCCESS}" == "true" ]]; then
-        log "Job completed successfully."
-        break
-      else
-        err "Job completed but result.success=false. Message: ${JOB_RESULT_MSG}"
-        exit 1
-      fi
-      ;;
-    failed|error|cancelled|canceled)
-      err "Job ended with status=${JOB_STATUS}. Message: ${JOB_RESULT_MSG}"
-      exit 1
-      ;;
-    *)
-      log "Job still in progress (status: ${JOB_STATUS}), waiting ${POLL_INTERVAL}s..."
-      sleep "${POLL_INTERVAL}"
-      ;;
-  esac
-done
-
-if [[ "${JOB_STATUS}" != "completed" || "${JOB_RESULT_SUCCESS}" != "true" ]]; then
-  err "Timed out waiting for job completion after ${TIMEOUT_MINUTES} minute(s)."
-  exit 1
-fi
-
-# ----------- Step 3: Flatten directory -----------
-log "Start flattening model directory..."
-log "Conversion path from API response: ${CONVERSION_PATH}"
-
-if [[ -n "$CONVERSION_PATH" && -d "$CONVERSION_PATH" ]]; then
-  MODEL_ROOT=$(echo "$CONVERSION_PATH" | sed -E "s|(.*ov_[^/]*models/[^/]+).*|\1|")
-  if [[ -d "$MODEL_ROOT" ]]; then
-    log "Fixing ownership and flattening: ${MODEL_ROOT}"
-    # Ensure we can delete MODEL_DOWNLOAD_PATH by fixing parent perms first
-    PARENT_DIR="$(dirname "$MODEL_DOWNLOAD_PATH")"
-    BASENAME="$(basename "$MODEL_DOWNLOAD_PATH")"
-    # Fix ownership
-    # Make sure parent is writable
-    docker run --rm -u root \
-      -v "${PARENT_DIR}:/parent" \
-      alpine:3.22 sh -c "chown $(id -u):$(id -g) /parent && chmod u+rwx /parent"
-
-    # Ensure the target tree is ours and writable
-    docker run --rm -u root \
-      -v "${MODEL_DOWNLOAD_PATH}:/data" \
-      alpine:3.22 sh -c "chown -R $(id -u):$(id -g) /data && chmod -R u+rwX /data"
-
-    # Move files and cleanup
-    if [[ "$MODEL_TYPE" == "vlm" ]]; then
-      MODEL_BASENAME=$(basename "$MODEL")
-      log "Creating model directory for VLM: ${MODEL_BASENAME}"
-      MODEL_DIRNAME="${VLM_MODEL_PATH}/${MODEL_BASENAME}"
-      mkdir -p "$MODEL_DIRNAME"
-      mv "$MODEL_ROOT"/"$MODEL"/* "$MODEL_DIRNAME"/
-    elif [[ "$MODEL_TYPE" == "vision" ]]; then
-      MODEL_DIRNAME="${DETECTION_MODEL_PATH}/${MODEL}"
-      mkdir -p "$MODEL_DIRNAME"
-      mv "$CONVERSION_PATH"/public "$MODEL_DIRNAME"/
-    elif [[ "$MODEL_TYPE" == "llm" ]]; then
-      MODEL_DIRNAME="${LLM_MODEL_PATH}/${MODEL}"
-      mkdir -p "$MODEL_DIRNAME"
-      mv "$MODEL_ROOT"/"$MODEL"/* "$MODEL_DIRNAME"/
-    fi
-    rm -rf "$MODEL_DOWNLOAD_PATH"
-    log "Completed: ${MODEL_DIRNAME}"
+  if [[ "${MODEL_TYPE}" == "vlm" ]]; then
+    TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
+  elif [[ "${MODEL_TYPE}" == "llm" ]]; then
+    # For LLMs, preserve the org/model structure if present
+    TARGET_DIR="${FINAL_DIR}/${MODEL}"
   fi
+
+  if [[ -n "${MODEL_SRC}" && -d "${MODEL_SRC}" ]]; then
+    mkdir -p "${TARGET_DIR}"
+    mv "${MODEL_SRC}"/* "${TARGET_DIR}"/
+    log "Relocated model to: ${TARGET_DIR}"
+  else
+    err "Could not find model files in nested structure at: ${NESTED_DIR}"
+    err "Listing staging directory contents:"
+    find "${MODEL_DOWNLOAD_PATH}" -type d | head -20
+    exit 1
+  fi
+
+elif [[ "${MODEL_TYPE}" == "vision" ]]; then
+  MODEL_BASENAME="${MODEL##*/}"
+  TARGET_DIR="${FINAL_DIR}/${MODEL_BASENAME}"
+  mkdir -p "${TARGET_DIR}"
+  # Vision models may be nested under ultralytics/public/<model>.
+  # Flatten to: ov_detection_models/<model>/public/<model>
+  if [[ -d "${MODEL_DOWNLOAD_PATH}/ultralytics/public" ]]; then
+    mv "${MODEL_DOWNLOAD_PATH}/ultralytics/public" "${TARGET_DIR}"/
+  elif [[ -d "${MODEL_DOWNLOAD_PATH}/public" ]]; then
+    mv "${MODEL_DOWNLOAD_PATH}/public" "${TARGET_DIR}"/
+  else
+    err "Could not find vision model files under ${MODEL_DOWNLOAD_PATH}/ultralytics/public or ${MODEL_DOWNLOAD_PATH}/public"
+    exit 1
+  fi
+  log "Relocated model to: ${TARGET_DIR}"
 fi
+
+# Clean up staging directory
+rm -rf "${MODEL_DOWNLOAD_PATH}"
+log "Completed model download. Check ${FINAL_DIR} for the generated model files."
