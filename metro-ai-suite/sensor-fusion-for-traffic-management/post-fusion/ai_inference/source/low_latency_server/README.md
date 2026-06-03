@@ -8,7 +8,7 @@
   - v1.41.0
 - spdlog
   - v1.8.2
-- boost 
+- boost
   - 1.75.0
 
 ### other dependencies introduced by nodes
@@ -17,12 +17,11 @@
 
 - aws components: s3 and core
   - 1.8.55
-- 
 
 #### Jpeg Decoder
 
 - KMB Stack
-- Gstreamer
+- GStreamer
   - 1.16.0
 
 #### Feature storage sdk
@@ -34,7 +33,7 @@
 
 - KMB Stack
 
-## Sample protocol 
+## Sample protocol
 
 ### Sample input to trigger structuring pipeline
 

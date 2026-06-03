@@ -8,6 +8,7 @@ class YieldingTextStreamer(ov_genai.StreamerBase):
         self.skip_special_tokens = skip_special_tokens
         self._queue = queue.Queue()
         self.total_tokens = 0
+        self.generation_start_time = None
         self._token_cache = []
         self._print_len = 0
 

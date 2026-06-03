@@ -7,7 +7,7 @@ With this feature, during runtime, you can download a new model using the micros
 
 ## Contents
 
-### Pre-requisites
+### Prerequisites
 
 We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`.
 To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#start-with-setup-script)
@@ -59,7 +59,7 @@ If not available, you can simulate this by downloading the sample model from edg
    ./sample_list.sh
    ```
 
-6. Modify the payload in `apps/pcb-anomaly-detection/payload.json` to launch an instance for the mlops pipeline.
+6. Modify the payload in `apps/pcb-anomaly-detection/payload.json` to launch an instance for the MLOps pipeline.
 
    ```json
    [
@@ -101,7 +101,7 @@ If not available, you can simulate this by downloading the sample model from edg
 
    #### Downloading a Model with Model Download
 
-    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
+    At this point, restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti™ models from a running Geti™ server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
 
    For our demonstration, we assume that:
    - the PCB Anomaly Detection model has been retrained and is available for download from a Geti server using the Model Download service.
@@ -141,7 +141,9 @@ If not available, you can simulate this by downloading the sample model from edg
          }
       ]
       ```
+
     Run the following.
+
     ```bash
     ./sample_start.sh -p pcb_anomaly_detection_mlops
     ```

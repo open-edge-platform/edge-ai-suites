@@ -1,6 +1,6 @@
-# How to use NPU for inference
+# Use NPU for inference
 
-## Pre-requisites
+## Prerequisites
 
 To take full advantage of hardware acceleration, pipelines can be designed so that different stages—such as decoding and inference—are executed on the most suitable hardware devices.
 
@@ -15,11 +15,11 @@ Before running inference on an NPU, ensure that:
 
 For detailed setup instructions, refer to the [documentation](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/dlstreamer/dev_guide/advanced_install/advanced_install_guide_prerequisites.html#optional-prerequisite-2-install-intel-npu-drivers).
 
- For containerized application, following additional changes are required.
+ For containerized applications, the following additional changes are required.
 
 ### Provide NPU access to the container
 
-This can be done by making the following changes to the docker compose file.
+This can be done by making the following changes to the Docker Compose file.
 
 ```yaml
 services:
@@ -40,7 +40,7 @@ The changes above add the container user to the `render` group and provide acces
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-Gstreamer has a variety of hardware specific encoders and decoders elements such as Intel specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
 Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel NPUs.
 
@@ -82,9 +82,9 @@ The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contai
 
 ## Deploying with Helm
 
-### Intel GPU K8S Extension
+### Intel® GPU K8S Extension
 
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
 gpu:
@@ -93,9 +93,9 @@ gpu:
   count: 1
 ```
 
-### Without Intel GPU K8S Extension
+### Without Intel® GPU K8S Extension
 
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
 privileged_access_required: true

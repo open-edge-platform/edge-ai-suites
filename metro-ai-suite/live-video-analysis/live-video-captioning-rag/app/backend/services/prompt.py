@@ -55,8 +55,7 @@ model_prompt_templates = {
 
     ### Assistant:
     """,
-    "meta-llama/Llama-3.1-8B-Instruct":
-    """
+    "meta-llama/Llama-3.1-8B-Instruct": """
     <|start_header_id|>system<|end_header_id|>
     Use the following pieces of context from retrieved
     dataset to answer the question. Do not make up an answer if there is no
@@ -90,8 +89,14 @@ model_prompt_templates = {
     <|im_end|>
 
     <|im_start|>assistant
-    """
+    """,
 }
+
+# TODO: Refactor with family-based templates if more models are added in the future
+model_prompt_templates["Qwen/Qwen2.5-3B-Instruct"] = model_prompt_templates[
+    "Qwen/Qwen2.5-7B-Instruct"
+]
+
 
 def get_prompt_template(llm_model_id: str) -> str:
     """

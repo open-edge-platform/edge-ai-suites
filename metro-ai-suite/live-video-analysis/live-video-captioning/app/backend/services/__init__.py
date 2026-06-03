@@ -15,6 +15,7 @@ from .pipeline_health import (
     start_pipeline_health_monitor,
     stop_pipeline_health_monitor,
 )
+from .camera_discovery import discover_capture_cameras
 
 __all__ = [
     "discover_models",
@@ -28,4 +29,5 @@ __all__ = [
     "check_pipeline_health",
     "start_pipeline_health_monitor",
     "stop_pipeline_health_monitor",
+    "discover_capture_cameras",
 ]

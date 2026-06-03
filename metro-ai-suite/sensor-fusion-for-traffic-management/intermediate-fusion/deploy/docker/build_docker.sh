@@ -3,7 +3,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 CUSTOM_OPENVINO_INSTALL_DIR=${1:-${CUSTOM_OPENVINO_INSTALL_DIR:-}}
-IMAGE_TAG=${2:-tfcc:bevfusion}
+IMAGE_TAG=${2:-tfcc:2026.1.0-ubuntu24}
 DOCKERFILE=${3:-Dockerfile.dockerfile}
 BASE=${4:-ubuntu}
 BASE_VERSION=${5:-24.04}
