@@ -45,9 +45,14 @@ services:
       - "/dev:/dev"
       - "/tmp:/tmp"
     group_add:
+      - "44"
       - "109"
       - "110"
+      - "990"
       - "992"
+      - "993"
+      - "994"
+      - "996"
     device_cgroup_rules:
       - "c 189:* rmw"
       - "c 209:* rmw"
