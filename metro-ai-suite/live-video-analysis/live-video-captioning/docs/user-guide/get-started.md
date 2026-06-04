@@ -66,24 +66,14 @@ This script sets these important values:
 
 ### 3. Download Models (one-time)
 
-Download the required captioning model:
+Download a VLM model that is required to generate captions. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh \
-  --model <vlm-model-of-choice-from-huggingface> \
+  --model OpenGVLab/InternVL2-1B \
   --type vlm \
   --weight-format int8
 ```
-
-#### Weight format options
-
-The `--weight-format` flag controls the quantization of the downloaded model. Choose based on your accuracy-vs-memory trade-off:
-
-| Format | Memory use | Accuracy | When to use |
-|--------|-----------|----------|-------------|
-| `int4` | Lowest | Lower | Memory-constrained systems |
-| `int8` | Medium | Good | Recommended default |
-| `fp16` | Highest | Best | Maximum accuracy, more RAM required |
 
 #### Gated Hugging Face models
 
@@ -104,6 +94,8 @@ By default the model is converted on CPU. To explicitly set the device:
   --weight-format int8 \
   --device <CPU|GPU>
 ```
+
+See [Model Preparation](./get-started/model-preparation.md) for detailed usage.
 
 ### 4. Customize your deployment
 
@@ -146,7 +138,7 @@ Set `ENABLE_DETECTION_PIPELINE=true` to pre-filter frames using a YOLO model bef
 ENABLE_DETECTION_PIPELINE=true
 ```
 
-Ensure you have downloaded a detection model.
+Download a detection model. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh --model yolov8s --type vision
@@ -166,7 +158,7 @@ source scripts/setup_embeddings.sh
 
 This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services.
 
-Download a LLM model for RAG.
+Download a LLM model for RAG. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh \
