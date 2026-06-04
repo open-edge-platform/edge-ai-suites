@@ -63,7 +63,7 @@ Valid device values depend on the model-download container and host hardware. CP
 
 ## RAG and LLM models
 
-RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download/README.md).
+RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download.md).
 
 ## Troubleshooting
 

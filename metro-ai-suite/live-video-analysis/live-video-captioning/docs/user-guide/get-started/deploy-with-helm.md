@@ -18,11 +18,13 @@ Before you begin, ensure that you have the following:
 
 [Model Download Service](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) from [Open Edge Platform - Edge AI Libraries](https://github.com/open-edge-platform/edge-ai-libraries) will be used for models management in Live Video Captioning.
 
-1. Install the model-download chart
-   <br>Refer to this [guide section](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
+1. Install the model-download chart.
 
-2. Configure the values.yaml file
-   <br> Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the chart.
+   Refer to this [guide section](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started/deploy-with-helm-chart.html#install-helm-chart-from-docker-hub-or-from-source) to download and install the chart.
+
+2. Configure the values.yaml file.
+
+   Edit the [`values.yaml`](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/model-download/chart/values.yaml) located in the chart.
 
    Configure the following:
 
@@ -39,8 +41,9 @@ Before you begin, ensure that you have the following:
 
    > **Note:** This chart can run on CPU‑only nodes; however, a GPU‑enabled node is strongly recommended to host the models and deliver optimal performance.
 
-3. Deploy the chart
-   <br>Deploy the chart using command below:
+3. Deploy the chart.
+
+   Deploy the chart using command below:
 
       ```bash
       helm install model-download . -n <your-namespace>
@@ -48,8 +51,9 @@ Before you begin, ensure that you have the following:
 
    > **Note:** `model-download` creates and manages a shared PVC that used by live-video-captioning. Hence, do not delete or uninstall helm chart when live-video-captioning chart is running.
 
-4. Verify the deployment
-   <br>Check the status of the deployed resources to ensure they are running correctly.
+4. Verify the deployment.
+
+   Check the status of the deployed resources to ensure they are running correctly.
 
       ```bash
       kubectl get pods -n <your-namespace>

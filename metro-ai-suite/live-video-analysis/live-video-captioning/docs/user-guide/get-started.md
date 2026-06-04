@@ -16,7 +16,7 @@ This section shows how to:
 
 ## Run the Application
 
-### 1. Clone the suite:
+### 1. Clone the suite
 
 Go to the target directory of your choice and clone the suite.
 If you want to clone a specific release branch, replace `main` with the desired tag.
@@ -221,10 +221,12 @@ docker compose down
 :::{toctree}
 :hidden:
 
-get-started/system-requirements.md
-get-started/model-preparation.md
-get-started/build-from-source.md
-get-started/deploy-with-helm.md
+./get-started/system-requirements.md
+./get-started/model-preparation.md
+./get-started/build-from-source.md
+./get-started/deploy-with-helm.md
+./get-started/simulated-rtsp-stream-guide.md
+./get-started/run-unit-tests.md
 
 :::
 hide_directive-->

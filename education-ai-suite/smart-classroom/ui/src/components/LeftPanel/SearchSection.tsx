@@ -476,7 +476,7 @@ const SearchSection: React.FC<SearchSectionProps> = ({ disabled }) => {
             {/* Section Divider */}
             <div className="cs-search-divider" />
 
-            {/* Filter by Label */}
+            {/* Filter by Tag */}
             <div className={`cs-search-filter-section ${!hasSelectedType || !hasValidInput ? "cs-search-filter-disabled" : ""}`}>
               <div className="cs-search-filter-label">{t("searchSection.filterByLabel")}</div>
               <div 
