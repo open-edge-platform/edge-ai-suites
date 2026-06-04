@@ -79,8 +79,13 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
 | `--no-visualize` | Skip auto-visualization on exit |
+| `--gpu` | Enable Intel GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
+| `--npu` | Enable Intel NPU monitoring via sysfs |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
+| `--ros-domain-id ID` | Explicitly set `ROS_DOMAIN_ID` (skips auto-detection) |
+| `--algorithm LABEL` | Group sessions under `monitoring_sessions/<label>/` |
+| `--use-sim-time` | Pass `--use-sim-time` to the graph monitor (auto-detected for Gazebo) |
 | `--list-sessions` | List previous sessions and exit |
 
 ### ros2_graph_monitor.py — Graph and Latency Monitor
@@ -116,7 +121,36 @@ delay is computed for each node automatically — no `--node` filter needed.
 | `visualize_resources.py` | CPU/memory plots, heatmaps, thread-core mapping |
 | `visualize_timing.py` | Message timestamps, frequencies, and delay plots |
 | `visualize_graph.py` | Interactive ROS2 computation graph topology diagram |
+| `visualize_gpu.py` | Intel GPU busy%, frequency, temperature, power, and per-PID usage |
+| `visualize_npu.py` | Intel NPU busy%, clock frequency, and memory utilization |
+| `visualize_thermal.py` | CPU/GPU temperature, throttle state, and package power |
+| `visualize_kpi.py` | KPI summary plots across benchmark sessions |
 | `view_average.py` | Aggregate statistics across multiple sessions |
+| `compare_kpi.py` | Side-by-side comparison of KPI results across runs |
+| `generate_report.py` | Generate a combined benchmark report |
+
+### Analysis Scripts
+
+| Script | Purpose |
+|--------|--------|
+| `analyze_rosbag.py` | Per-topic statistics and latency analysis from SQLite3 bag files |
+| `analyze_bag_e2e.py` | End-to-end latency analysis across a ROS2 bag |
+| `analyze_fastmapping_log.py` | Parse fast_mapping shutdown log and patch `kpi.json` |
+| `analyze_picknplace_log.py` | Parse pick-and-place log and patch `kpi.json` |
+| `analyze_pipeline_latency.py` | Pipeline latency analysis from graph timing CSV |
+| `analyze_trigger_latency.py` | Trigger-based latency breakdown per benchmark run |
+| `aggregate_kpi.py` | Aggregate KPI results across multiple benchmark sessions |
+| `summarize_benchmark.py` | Print a summary table for a completed benchmark directory |
+
+### Benchmark Runner Scripts
+
+| Script | Purpose |
+|--------|--------|
+| `wandering_run.sh` | Single run or benchmark of the Wandering AMR simulation |
+| `picknplace_run.sh` | Single run or benchmark of the Pick & Place simulation |
+| `fastmapping_run.sh` | Single run or benchmark of the FastMapping RGB-D scenario |
+| `bag_replay_run.sh` | Offline bag-replay benchmarking (reproducible, CI-friendly) |
+| `benchmark_runner.sh` | Generic benchmark runner used by the scenario-specific wrappers |
 
 ### visualize_graph.py — Interactive Pipeline Graph
 
@@ -136,13 +170,21 @@ Run with `--show` to enable an interactive window where you can:
 
 ## Session Data Layout
 
-All output is saved in timestamped session folders:
+All output is saved in timestamped session folders. When `--algorithm` is
+provided, sessions are grouped by algorithm label:
 
 ```
 monitoring_sessions/
-└── 20260306_154140/
-    ├── session_info.txt          # Test configuration
-    ├── graph_timing.csv          # Topic timing data
-    ├── resource_usage.log        # CPU/memory usage
-    └── visualizations/           # Auto-generated PNG plots
+└── <algorithm>/                  # optional: set by --algorithm
+    └── 20260306_154140/
+        ├── session_info.txt      # Test configuration
+        ├── graph_timing.csv      # Topic timing data
+        ├── graph_topology.json   # Node/topic topology snapshot
+        ├── resource_usage.log    # CPU/memory usage (pidstat)
+        ├── gpu_usage.log         # GPU metrics (if --gpu)
+        ├── npu_usage.log         # NPU metrics (if --npu)
+        ├── cpu_power.log         # CPU temperature/power (if available)
+        ├── kpi.json              # Level-1 KPI summary
+        ├── kpi_level2.json       # Level-2 chained KPI (if applicable)
+        └── visualizations/       # Auto-generated PNG plots
 ```
