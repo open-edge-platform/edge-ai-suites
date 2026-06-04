@@ -315,7 +315,7 @@ stop_services() {
     print_success "All services stopped."
 }
 
-# ─── Remote mode: split-node deployment ───────────────────────────────
+# ─── Remote mode: distributed node deployment ────────────────────────────
 
 start_si_services() {
     print_header "Starting SI + RTSP Streamer (System 1 / SI-only mode)"
@@ -424,10 +424,10 @@ show_help() {
     echo -e "  ${GREEN}start${NC}          - Single-node: start everything (RTSP + SI + Frigate + event router)"
     echo -e "  ${RED}stop${NC}           - Single-node: stop everything"
     echo -e "  ${YELLOW}restart${NC}        - Single-node: restart everything"
-    echo -e "  ${GREEN}start-si${NC}       - Split-node System 1: start SI + RTSP streamer only"
-    echo -e "  ${RED}stop-si${NC}        - Split-node System 1: stop SI + RTSP streamer"
-    echo -e "  ${GREEN}start-nvr${NC}      - Split-node System 2: start SmartNVR only (requires SCENESCAPE_MQTT_BROKER + RTSP_STREAM_HOST)"
-    echo -e "  ${RED}stop-nvr${NC}       - Split-node System 2: stop SmartNVR"
+  echo -e "  ${GREEN}start-si${NC}       - Distributed Node System 1: start SI + RTSP streamer only"
+  echo -e "  ${RED}stop-si${NC}        - Distributed Node System 1: stop SI + RTSP streamer"
+  echo -e "  ${GREEN}start-nvr${NC}      - Distributed Node System 2: start SmartNVR only (requires SCENESCAPE_MQTT_BROKER + RTSP_STREAM_HOST)"
+  echo -e "  ${RED}stop-nvr${NC}       - Distributed Node System 2: stop SmartNVR"
     echo -e "  ${BLUE}help${NC}           - Display this help message"
     echo ""
     echo -e "${WHITE}Examples:${NC}"
@@ -435,11 +435,11 @@ show_help() {
     echo -e "  ${CYAN}source setup.sh stop${NC}           # Single-node: stop all services"
     echo -e "  ${CYAN}source setup.sh restart${NC}        # Single-node: restart all services"
     echo ""
-    echo -e "  # Split-node — System 1 (SI + RTSP):${NC}"
+    echo -e "  # Distributed Node — System 1 (SI + RTSP):${NC}"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
     echo -e "  ${CYAN}source setup.sh start-si${NC}"
     echo ""
-    echo -e "  # Split-node — System 2 (SmartNVR):${NC}"
+    echo -e "  # Distributed Node — System 2 (SmartNVR):${NC}"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true SCENESCAPE_MQTT_BROKER=<sys1_ip> RTSP_STREAM_HOST=<sys1_ip>${NC}"
     echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
     echo ""

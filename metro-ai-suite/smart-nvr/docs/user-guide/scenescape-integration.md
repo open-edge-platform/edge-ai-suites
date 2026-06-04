@@ -1,10 +1,10 @@
 # Integrate Intel® SceneScape with Smart NVR
 
-This guide covers the integration of Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from smart intersection application.
+This guide covers the integration of Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from the Smart Intersection application.
 
 ## Overview
 
-Smart NVR system integrates with Intel® SceneScape to enable:
+Smart NVR integrates with Intel® SceneScape to enable:
 
 - Real-time object counting and tracking (vehicles, pedestrians)
 - Traffic flow analysis
@@ -13,85 +13,111 @@ Smart NVR system integrates with Intel® SceneScape to enable:
 
 ## Prerequisites
 
-**Smart Intersection Reference Implementation**: We will use the Smart Intersection application to showcase the integration with Intel® SceneScape.
+- Docker and Docker Compose installed
+- The `edge-ai-suites` repository cloned with the `metro-vision-ai-app-recipe` directory adjacent to `smart-nvr`
 
-1. Set up the Smart Intersection application.
+## Deployment Modes
 
-   ```bash
-   # Clone smart intersection repository inside smart nvr directory if not already done
-   git clone https://github.com/open-edge-platform/edge-ai-suites.git -b main
+Smart NVR with SceneScape supports two deployment modes:
 
-   # From the Smart NVR directory, copy the DL Streamer configuration (enables RTSP streaming)
-   cp ./resources/si-rtsp-config.json edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/dlstreamer-pipeline-server/config.json
+| Mode | Description | Command |
+|------|-------------|---------|
+| **Single-Node** | All services (SI + NVR) on one machine | `source setup.sh start` |
+| **Distributed Node** | SI on System 1, NVR on System 2 | `source setup.sh start-si` / `source setup.sh start-nvr` |
 
-   # Copy the SceneScape compose configuration
-   cp ./resources/compose-scenescape-rtsp.yml edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/compose-scenescape.yml
-   ```
+## Single-Node Deployment
 
-2. After copying the files, start the Smart Intersection application:
+All services run on a single machine. The setup script handles everything automatically — downloading demo videos, starting the RTSP streamer, launching Smart Intersection, and starting the NVR stack.
 
-   ```bash
-   # Navigate to metro-vision-ai-app-recipe directory
-   cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/
-
-   # Start Smart Intersection
-   ./install.sh smart-intersection
-   docker compose up -d
-
-   # Navigate back to Smart NVR
-   cd ../../../../smart-nvr
-   ```
-
-   The files provide:
-
-   - RTSP streaming support in the DL Streamer pipeline,
-   - Intel® SceneScape-specific Docker Compose settings.
-
-## Installation and Setup
-
-### Step 1: Get MQTT Credentials
+### Set Environment Variables
 
 ```bash
-# Get MQTT credentials from Smart Intersection
-cat edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-intersection/src/secrets/browser.auth
-# Expected: {"user": "<user>", "password": "<password>"}
-```
-
-### Step 2: Configure Environment Variables
-
-```bash
-# Enable SceneScape Integration
 export NVR_SCENESCAPE=true
-
-# MQTT Configuration (from browser.auth JSON)
-export SCENESCAPE_MQTT_USER="<user>"
-export SCENESCAPE_MQTT_PASSWORD="<password>"
-export SCENESCAPE_THROTTLE_INTERVAL=2.0  # Optional: throttle interval in seconds
+export NVR_GENAI=false
+export MQTT_USER=<mqtt-username>
+export MQTT_PASSWORD=<mqtt-password>
+export VSS_SUMMARY_IP=<vss_ip>
+export VSS_SUMMARY_PORT=<vss_port>
+export VSS_SEARCH_IP=<vss_ip>
+export VSS_SEARCH_PORT=<vss_port>
 ```
 
-### Step 3: Start Smart NVR
+### Start
 
 ```bash
-# Start the application
-./setup.sh start
-
-# Or restart with new configuration
-./setup.sh restart
+source setup.sh start
 ```
 
-> **Note:** The setup script automatically copies Intel® SceneScape certificates
-> from Smart Intersection if available. If certificates are missing, setup will fail with an error message.
+The script automatically:
 
-### Step 4: Verify Integration
+1. Validates required environment variables
+2. Configures DL Streamer and Frigate for SceneScape mode
+3. Downloads demo videos and starts the MediaMTX RTSP streamer
+4. Starts the Smart Intersection stack (runs `install.sh` if first time)
+5. Starts the NVR stack and connects it to the SceneScape network
 
-Check logs to confirm Intel® SceneScape connection:
+### Verify
 
 ```bash
 docker logs nvr-event-router -f
 # Look for: "SceneScape MQTT client started"
 ```
 
-## User Interface Changes
+The UI is available at `http://<host_ip>:7860`.
+
+## Distributed Node Deployment
+
+For distributed setups where Smart Intersection runs on a separate machine from the NVR.
+
+### System 1 (SI Node)
+
+```bash
+export NVR_SCENESCAPE=true
+source setup.sh start-si
+```
+
+This starts the RTSP streamer and Smart Intersection stack. On success, it prints the System 1 IP address needed for System 2 configuration.
+
+### System 2 (NVR Node)
+
+```bash
+export NVR_SCENESCAPE=true
+export NVR_GENAI=false
+export SCENESCAPE_MQTT_BROKER=<system1_ip>
+export RTSP_STREAM_HOST=<system1_ip>
+export MQTT_USER=<mqtt-username>
+export MQTT_PASSWORD=<mqtt-password>
+export VSS_SUMMARY_IP=<vss_ip>
+export VSS_SUMMARY_PORT=<vss_port>
+export VSS_SEARCH_IP=<vss_ip>
+export VSS_SEARCH_PORT=<vss_port>
+source setup.sh start-nvr
+```
+
+The NVR connects to System 1's MQTT broker (port 1883) for SceneScape events and RTSP server (port 8554) for video streams.
+
+## Stop Services
+
+```bash
+# Single-node: stop everything
+source setup.sh stop
+
+# Distributed node
+source setup.sh stop-si   # System 1
+source setup.sh stop-nvr  # System 2
+
+# Restart
+source setup.sh restart
+```
+
+## Verify Integration
+
+```bash
+docker logs nvr-event-router -f
+# Look for: "SceneScape MQTT client started"
+```
+
+## User Interface
 
 ### With Intel® SceneScape Enabled and SceneScape Source Selected
 
@@ -164,59 +190,47 @@ Action: Add to Search
 
 ## Troubleshooting
 
-### Common Issues
-
-**SceneScape features not visible:**
+**SceneScape features not visible in UI:**
 
 ```bash
-# Check and set environment variable
+# Ensure NVR_SCENESCAPE is set
 echo $NVR_SCENESCAPE  # Should show 'true'
 export NVR_SCENESCAPE=true
-./setup.sh restart
+source setup.sh restart
 # Refresh browser (Ctrl+F5)
 ```
 
 **No SceneScape events received:**
 
 ```bash
-# Check MQTT connection
+# Check MQTT connection to SceneScape broker
 docker logs nvr-event-router | grep -i scenescape
+
+# Verify Smart Intersection is running
+docker ps | grep metro-vision-ai-app-recipe
 ```
 
-### Debug Commands
+**Debug commands:**
 
 ```bash
-# Check environment variables
-env | grep NVR_SCENESCAPE
-env | grep SCENESCAPE
-
 # Monitor MQTT messages
 docker logs nvr-event-router -f | grep "scenescape"
 
-# Check UI logs
-docker logs nvr-event-router-ui -f
+# Check all running containers
+docker ps --format "table {{.Names}}\t{{.Status}}"
 
-# Verify SceneScape MQTT connection
-docker logs nvr-event-router | grep "Scenescape MQTT client"
-```
-
-## Monitoring Commands
-
-```bash
-# Check system CPU usage and load
-cat /proc/loadavg && docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
+# Check system resource usage
+docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 ```
 
 ## Support
 
-For Intel® SceneScape integration issues:
+For issues:
 
-1. **Certificate Error**: Ensure Smart Intersection application is running and has generated certificates
-2. **Environment Variables**: Verify `NVR_SCENESCAPE=true` and MQTT credentials are set
-3. **MQTT Connection**: Check logs for "Scenescape MQTT client started" message
-4. **Smart Intersection**: Confirm Smart Intersection application is accessible at expected path
-5. **Performance Issues**: Run `cat /proc/loadavg && docker stats --no-stream` to check CPU usage and system load
-6. **High Resource Usage**: If load average >10 or containers show >500% CPU, restart high-usage containers
-7. Review logs using debug commands above and contact support with relevant excerpts
+1. **Environment Variables**: Verify all required exports are set (`env | grep -E "NVR_|SCENESCAPE|MQTT|VSS"`)
+2. **MQTT Connection**: Check logs for "SceneScape MQTT client started" message
+3. **Smart Intersection**: Confirm SI containers are running (`docker ps | grep metro`)
+4. **Distributed Node Connectivity**: Verify System 2 can reach System 1 on ports 1883 (MQTT) and 8554 (RTSP)
+5. **High Resource Usage**: Run `docker stats --no-stream` to identify heavy containers
 
 For general Smart NVR issues, see the [Troubleshooting Guide](./troubleshooting.md).
