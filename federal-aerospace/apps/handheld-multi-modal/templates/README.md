@@ -13,7 +13,7 @@ This package contains:
 ## Prerequisites
 
 - Docker Engine version 24 and later, with the Docker Compose v2 plugin (`docker compose ...`).
-- Intel® GPU with OpenVINO™ driver (iGPU or discrete Intel® Iris® Xe MAX GPU).
+- Intel® GPU with OpenVINO™ driver (iGPU or discrete GPU based on the Xe architecture).
 
 ## Running
 
