@@ -4,7 +4,7 @@
 
 **2026**
 
-This is the initial release of the application, therefore, it is considered a preview version.
+This is the initial release of the application, therefore, it is a preview version.
 
 **New**
 
