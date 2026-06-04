@@ -82,21 +82,13 @@ The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contai
 
 ## Deploying with Helm
 
-### Intel® GPU K8S Extension
+### Intel NPU K8S Extension
 
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
+If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® NPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
 
 ```sh
-gpu:
+npu:
   enabled: true
-  type: "gpu.intel.com/i915"
+  type: "npu.intel.com/accel"
   count: 1
-```
-
-### Without Intel® GPU K8S Extension
-
-If you are deploying a NPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, `vajpegdec`, etc., and/or with `device=NPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying NPU.
-
-```sh
-privileged_access_required: true
 ```

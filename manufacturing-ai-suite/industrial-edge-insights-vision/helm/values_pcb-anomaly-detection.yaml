@@ -32,10 +32,13 @@ env:
   OPCUA_SERVER_USERNAME:
   OPCUA_SERVER_PASSWORD:
   SAMPLE_APP: pcb-anomaly-detection
-privileged_access_required: false
 gpu:
   enabled: false
   type: "gpu.intel.com/i915"
+  count: 1
+npu:
+  enabled: false
+  type: "npu.intel.com/accel"
   count: 1
 webrtcturnserver:
   username:

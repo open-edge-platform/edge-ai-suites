@@ -21,7 +21,7 @@ spec:
       runtimeClassName: kata-qemu
       {{- end }}
       securityContext:
-        supplementalGroups: [109,110,992]
+        supplementalGroups: [44,109,110,990,992,993,994,996]
       volumes:
       - name: dev-shm
         hostPath:
