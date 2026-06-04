@@ -190,16 +190,30 @@ def _initialize_ocr():
             f"OCR currently only supports English (lang='en'). Got: '{lang}'. "
             f"To use other languages, set 'ocr.enabled: false' in config.yaml."
         )
-    
-    logger.info(f"Initializing OCR models: provider={config.models.ocr.provider}, lang={lang}, device={config.models.ocr.device}")
-    PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
-    
+
+
     if config.models.ocr.provider == "openvino":
         paddle_models_dir = Path(config.models.ocr.model_dir)
-        lang = config.app.language
+        det_model_dir = paddle_models_dir / "det" / lang / config.models.ocr.det_model
+        rec_model_dir = paddle_models_dir / "rec" / lang / config.models.ocr.rec_model
+
+        ir_already_exists = (
+            (det_model_dir / "det_model.xml").exists()
+            and (det_model_dir / "det_model.bin").exists()
+            and (rec_model_dir / "rec_model.xml").exists()
+            and (rec_model_dir / "rec_model.bin").exists()
+        )
+
+        if ir_already_exists:
+            logger.info("OpenVINO IR models already exist, skipping PaddleOCR download/conversion")
+            return
+
+        logger.info(f"Initializing OCR models: provider={config.models.ocr.provider}, lang={lang}, device={config.models.ocr.device}")
+        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
+
         det_dir = paddle_models_dir / "det" / lang
         rec_dir = paddle_models_dir / "rec" / lang
-        
+
         if not det_dir.exists() or not any(det_dir.iterdir()):
             raise RuntimeError(
                 f"{paddle_models_dir}/det/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
@@ -208,10 +222,12 @@ def _initialize_ocr():
             raise RuntimeError(
                 f"{paddle_models_dir}/rec/{lang}/ is empty. Ensure PaddleOCR models are cached before initializing OpenVINO OCR."
             )
-        
+
         logger.info("Converting PaddleOCR models to OpenVINO IR...")
         convert_ppocr_pipeline(models_root=paddle_models_dir, output_root=paddle_models_dir, lang=lang)
         logger.info("OpenVINO IR conversion completed")
+    else:
+        PaddleOCRModelManager.initialize(lang=lang, use_angle_cls=True, device=config.models.ocr.device)
 
 
 def get_model_path() -> str:
