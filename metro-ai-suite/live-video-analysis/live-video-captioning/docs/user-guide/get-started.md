@@ -70,20 +70,10 @@ Download the required captioning model:
 
 ```bash
 ./model_download_scripts/download_models.sh \
-  --model <vlm-model-of-choice-from-huggingface> \
+  --model OpenGVLab/InternVL2-1B \
   --type vlm \
   --weight-format int8
 ```
-
-#### Weight format options
-
-The `--weight-format` flag controls the quantization of the downloaded model. Choose based on your accuracy-vs-memory trade-off:
-
-| Format | Memory use | Accuracy | When to use |
-|--------|-----------|----------|-------------|
-| `int4` | Lowest | Lower | Memory-constrained systems |
-| `int8` | Medium | Good | Recommended default |
-| `fp16` | Highest | Best | Maximum accuracy, more RAM required |
 
 #### Gated Hugging Face models
 
@@ -104,6 +94,8 @@ By default the model is converted on CPU. To explicitly set the device:
   --weight-format int8 \
   --device <CPU|GPU>
 ```
+
+See [Model Preparation](./get-started/model-preparation.md) for detailed usage.
 
 ### 4. Customize your deployment
 
