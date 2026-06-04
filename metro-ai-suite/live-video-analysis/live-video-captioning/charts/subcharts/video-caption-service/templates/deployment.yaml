@@ -97,7 +97,7 @@ spec:
             - name: https_proxy
               value: {{ .Values.global.httpsProxy | quote }}
             - name: no_proxy
-              value: {{ .Values.global.noProxy }},{{ .Values.global.modelDownload.serviceName }}
+              value: {{ printf "%s,%s" (default "" .Values.global.noProxy) .Values.global.modelDownload.serviceName | trimPrefix "," | quote }}
 
           volumeMounts:
             - name: scripts-volume
