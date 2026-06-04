@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # FastMapping
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/run-fastmapping-algorithm.html).
+
 ## Overview
 
 A ROS project to construct and maintain a volumetric map from a moving RGB-D camera, like [octomap_mapping](https://github.com/OctoMap/octomap_mapping), but runs much faster.
@@ -235,10 +239,6 @@ Start rviz2 for visualization.
 ```bash
 rviz2
 ```
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/run-fastmapping-algorithm.html).
 
 ## License
 

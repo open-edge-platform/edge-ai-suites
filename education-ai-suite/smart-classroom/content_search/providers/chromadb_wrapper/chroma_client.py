@@ -4,12 +4,15 @@
 #
 
 import logging
+import threading
 import chromadb
 import os
 
 logger = logging.getLogger(__name__)
 
 _MAX_BATCH_SIZE = 5000
+_HEARTBEAT_INTERVAL = 1800  # 30 min — well under Windows TCP keepalive death (2h)
+
 
 class ChromaClientWrapper:
     def __init__(self, host: str = None, port: int = None):
@@ -23,8 +26,32 @@ class ChromaClientWrapper:
             except ValueError:
                 port = 9090
 
+        self._host = host
+        self._port = port
         self.client = chromadb.HttpClient(host=host, port=port)
         self.collection = None
+        self._start_heartbeat()
+
+    def _start_heartbeat(self):
+        def _ping():
+            stop = threading.Event()
+            while not stop.wait(timeout=_HEARTBEAT_INTERVAL):
+                try:
+                    self.client.heartbeat()
+                except Exception:
+                    logger.warning("[chroma] Heartbeat failed, reconnecting...")
+                    self._reconnect()
+        t = threading.Thread(target=_ping, daemon=True)
+        t.start()
+
+    def _reconnect(self):
+        try:
+            self.client = chromadb.HttpClient(host=self._host, port=self._port)
+            if self.collection:
+                self.load_collection(self.collection.name)
+            logger.info("[chroma] Reconnected successfully.")
+        except Exception as e:
+            logger.error(f"[chroma] Reconnection failed: {e}")
 
     def load_collection(self, collection_name: str):
         try:
@@ -94,13 +121,24 @@ class ChromaClientWrapper:
     def query(self, collection_name: str, query_embeddings: list, where: dict = None, n_results: int = 5):
         if not self.collection or self.collection.name != collection_name:
             self.load_collection(collection_name)
-        
-        results = self.collection.query(
-            query_embeddings=query_embeddings,
-            where=where,
-            n_results=n_results,
-            include=["metadatas", "distances"]
-        )
+
+        try:
+            results = self.collection.query(
+                query_embeddings=query_embeddings,
+                where=where,
+                n_results=n_results,
+                include=["metadatas", "distances"]
+            )
+        except Exception as e:
+            logger.warning(f"[chroma] Query failed ({e}), reconnecting and retrying...")
+            self._reconnect()
+            self.load_collection(collection_name)
+            results = self.collection.query(
+                query_embeddings=query_embeddings,
+                where=where,
+                n_results=n_results,
+                include=["metadatas", "distances"]
+            )
         return results
 
     def query_all(self, collection_name: str, output_fields: list = []):
