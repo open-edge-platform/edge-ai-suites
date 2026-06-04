@@ -242,6 +242,14 @@ class TestStartRun:
     def test_start_run_with_usb_camera_source(self, client):
         """A Linux V4L2 device path is sent using webcam source schema."""
         with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI_Camera_Pipeline_on_CPU",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch(
             "backend.routes.runs.http_json", return_value='"pipeline-usb"'
         ) as mock_http:
             resp = client.post(
@@ -271,7 +279,15 @@ class TestStartRun:
 
     def test_start_run_rejects_usb_camera_with_non_camera_pipeline(self, client):
         """A webcam source with an explicit non-camera pipeline is rejected."""
-        with patch("backend.routes.runs.http_json") as mock_http:
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "genai_pipeline",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json") as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
                 json={
@@ -295,7 +311,15 @@ class TestStartRun:
             status="running",
         )
 
-        with patch("backend.routes.runs.http_json") as mock_http:
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI_Camera_Pipeline_on_CPU",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json") as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
                 json={
