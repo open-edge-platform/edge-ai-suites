@@ -82,13 +82,13 @@
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc1
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc2
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc1.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc2.tgz
      ```
 
    - Replace the helm directory
@@ -530,7 +530,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        }
    ]
 
-10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+10. Start the pipeline with the above payload.
+
+    ```sh
+    ./sample_start.sh helm -p pallet_defect_detection_mlops
+    ```
+
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    > **Note:** If you are running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 

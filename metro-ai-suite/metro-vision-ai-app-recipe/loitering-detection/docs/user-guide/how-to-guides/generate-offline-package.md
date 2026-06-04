@@ -23,10 +23,10 @@ cloud-dependent deployments are not feasible.
 
 > **Note:** Perform this step on a system with internet connectivity.
 
-**Objective**: Create a complete offline deployment package containing all necessary components for the Smart Parking application.
+**Objective**: Create a complete offline deployment package containing all necessary components for the Loitering Detection application.
 
 ```bash
-cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
+cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/loitering-detection
 
 ./offline-package-generator.sh
 ```
@@ -46,20 +46,20 @@ cd edge-ai-suites/metro-ai-suite/metro-vision-ai-app-recipe/smart-parking
 
 ```bash
 # Create a timestamped compressed package for easy identification
-tar -czf smart-parking-offline-$(date +%Y%m%d-%H%M).tar.gz offline-package/
+tar -czf loitering-detection-offline-$(date +%Y%m%d-%H%M).tar.gz offline-package/
 
 # Verify package integrity and size
-ls -lh smart-parking-offline-*.tar.gz
-tar -tzf smart-parking-offline-*.tar.gz | head -10
+ls -lh loitering-detection-offline-*.tar.gz
+tar -tzf loitering-detection-offline-*.tar.gz | head -10
 
 # Generate checksum for integrity verification
-sha256sum smart-parking-offline-*.tar.gz > package-checksum.txt
+sha256sum loitering-detection-offline-*.tar.gz > package-checksum.txt
 ```
 
 **Transfer the tar.gz package and checksum file to your offline environment:**
 
 Both files need to be transferred together for integrity verification
- - smart-parking-offline-YYYYMMDD-HHMM.tar.gz (main package)
+ - loitering-detection-offline-YYYYMMDD-HHMM.tar.gz (main package)
  - package-checksum.txt (integrity verification file)
 
 **Transfer options for offline environments:**
@@ -72,12 +72,12 @@ Both files need to be transferred together for integrity verification
 
 *Execute deployment on the target system without internet connectivity*
 
-**Objective**: Deploy and start the Smart Parking application in a completely offline environment.
+**Objective**: Deploy and start the Loitering Detection application in a completely offline environment.
 
 ### 3.1 Extract and Prepare
 
 ```bash
-tar -xzf smart-parking-offline-*.tar.gz
+tar -xzf loitering-detection-offline-*.tar.gz
 sha256sum -c package-checksum.txt
 
 cd offline-package/
@@ -126,7 +126,7 @@ To stop the pipelines without waiting for video streams to finish replay:
 ./sample_stop.sh
 ```
 
-> **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see smart parking detection.
+> **NOTE:** This will stop all the pipelines and the streams. **DO NOT** run this if you want to see loitering detection.
 
 </details>
 
@@ -153,7 +153,7 @@ To stop the pipelines without waiting for video streams to finish replay:
   - **Password**: `admin` (You will be prompted to change it on first login)
 - The dashboard displays detected cars in the parking lot.
 
-  ![Grafana Dashboard](../_assets/grafana-smart-parking.jpg)
+  ![Grafana Dashboard](../_assets/grafana.png)
 
 ### NodeRED UI
 - **URL**: `https://127.0.0.1/nodered/`
