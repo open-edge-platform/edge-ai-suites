@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # ITS Planner (Intelligent Sampling and Two-Way Search Path Planner)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html).
+
 ## Overview
 
 The ITS Planner is a global path planner module for ROS2 Navigation based on Intelligent Sampling and Two-Way
@@ -190,7 +194,7 @@ After launching the ROS2 navigation and the ITS planner plugin, look at where th
 
 Now a path will be generated and the robot will start following the path to navigate toward the goal position.
 
-For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://navigation.ros.org/getting_started/index.html#navigating)
+For detailed instructions, follow the ROS2 Navigation usage guide: [Navigation usage](https://docs.nav2.org/getting_started/index.html#navigating)
 
 ### Ackermann Steering Support
 
@@ -231,10 +235,6 @@ The Ackermann steering version of this plugin utilizes some additional parameter
 - `robot_radius`: The radius of the robot, in world scale.
 - `yaw_tolerance`: The amount (+/-) by which the heading angles of the end positions of the intermediate Dubins curves may vary, in radians. Does not apply to the final Goal heading.
 - `use_final_heading`: Whether to use the goal heading specified by the `geometry_msgs::msg::PoseStamped` message or not.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/its-path-planner-plugin.html).
 
 ## License
 

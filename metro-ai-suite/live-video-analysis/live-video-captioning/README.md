@@ -22,6 +22,7 @@ For more information see [How it works](./docs/user-guide/how-it-works.md)
 ## Learn More
 
 - [Overview](./docs/user-guide/index.md)
+- [Quick start guide](./docs/user-guide/quick-start-guide.md)
 - [System Requirements](./docs/user-guide/get-started/system-requirements.md)
 - [Get Started](./docs/user-guide/get-started.md)
 - [Deploy with Helm](./docs/user-guide/get-started/deploy-with-helm.md)

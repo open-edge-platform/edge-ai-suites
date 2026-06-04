@@ -9,18 +9,7 @@ User can enable object detection in the pipeline by following the steps below:
 1. Set `ENABLE_DETECTION_PIPELINE` to `true` in the .env file.
 
      ```bash
-     WHIP_SERVER_IP=mediamtx
-     WHIP_SERVER_PORT=8889
-     WHIP_SERVER_TIMEOUT=30s
-     PROJECT_NAME=live-captioning
-     HOST_IP=<HOST_IP>
-     EVAM_HOST_PORT=8040
-     EVAM_PORT=8080
-     DASHBOARD_PORT=4173
-     WEBRTC_PEER_ID=stream
-     ALERT_MODE=False
-     ENABLE_DETECTION_PIPELINE=True  # Enable detection pipeline
-     CAPTION_HISTORY=3
+     ENABLE_DETECTION_PIPELINE=true
      ```
 
 2. Prepare your object-detection models by following the [model preparation guide](../get-started/model-preparation.md).

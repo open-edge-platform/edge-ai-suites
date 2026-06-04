@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Groundfloor Segmentation (Efficient Groundfloor Segmentation for 3D Pointclouds)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation.html).
+
 ## Overview
 
 This repository contains a realization of an efficient groundfloor segmentation approach for 3D pointclouds. The application comes with three default use cases: standalone use with RealSense camera (or other depth cameras), integration with the Wandering demo on Aaeon robot, and direct use with 3D pointcloud input.
@@ -379,10 +383,6 @@ To achieve optimal output quality, it is essential to fulfill following requirem
 - **Failed to install Deb package**: Please make sure to run `sudo apt update` before installing the necessary Deb packages.
 - **Stopping the demo**: You can stop the demo anytime by pressing `ctrl-C`.
 - **Segmentation quality issues**: The quality of the segmentation and labeling depends on the quality of the input data. Noisy data, especially major outliers could result in wrong labels. If this is the case, the input data should be pre-processed to reduce noise.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/perception/pointcloud-groundfloor-segmentation.html).
 
 ## License
 

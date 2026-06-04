@@ -5,7 +5,7 @@ DEVICE="CPU"
 
 export USER_GROUP_ID=$(id -g ${USER})
 export MODEL_CACHE_PATH="$MODEL_CACHE_PATH"
-export LLM_MODEL_ID="microsoft/Phi-3.5-mini-instruct"
+export LLM_MODEL_ID="Qwen/Qwen2.5-3B-Instruct"
 export LLM_DEVICE="$DEVICE"
 
 export EMBEDDING_MODEL_NAME=QwenText/qwen3-embedding-0.6b

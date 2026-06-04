@@ -1,1 +1,2 @@
 prepend-non-duplicate;GZ_SIM_RESOURCE_PATH;share/picknplace/urdf;
+set;CYCLONEDDS_URI;file://@CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@/cyclonedds.xml

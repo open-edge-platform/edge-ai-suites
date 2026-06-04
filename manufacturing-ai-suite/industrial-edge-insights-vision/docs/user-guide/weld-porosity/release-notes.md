@@ -6,6 +6,7 @@
 
 - Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
 - Deprecated EMF deployment packages.
+- This app is planned for removal in the 2026.2 release.
 
 **Improved**
 

@@ -14,6 +14,7 @@ from backend.routes import (
     pipelines_router,
     runs_router,
     health_router,
+    cameras_router,
 )
 from backend.services import get_mqtt_subscriber, shutdown_mqtt_subscriber
 from backend.services import start_pipeline_health_monitor, stop_pipeline_health_monitor
@@ -52,6 +53,7 @@ app.include_router(models_router)
 app.include_router(pipelines_router)
 app.include_router(runs_router)
 app.include_router(health_router)
+app.include_router(cameras_router)
 
 
 @app.get("/")

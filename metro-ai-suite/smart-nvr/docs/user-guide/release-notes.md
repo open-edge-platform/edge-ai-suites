@@ -1,6 +1,7 @@
 # Release Notes
 
-- [Version 1.2.4-rc1](#version-124-rc1)
+- [Version 2026.1.0](#version-202610)
+- [Version 1.2.4](#version-124)
 - [Version 1.2.3](#version-123)
 - [Version 1.2.2](#version-122)
 - [Version 1.2.1](#version-121)
@@ -9,7 +10,30 @@
 
 ## Current Release
 
-### Version 1.2.4-rc1
+### Version 2026.1.0
+
+**June 17, 2026**
+
+**Improved**
+
+- Documentation updates to improve clarity and accuracy.
+
+**Fixed**
+
+- Fixed Dependabot security vulnerabilities in dependencies.
+- Minor bug fixes.
+
+**Known Issues**
+
+- Intel® SceneScape integration is currently not supported when deploying with Helm charts.
+- Smart NVR will not work on either Standalone or Developer Node versions of
+  Edge Microvisor Toolkit due to its incompatibility with Frigate.
+- The AI-Powered Event Viewer feature relies on Frigate GenAI features, which may exhibit
+  instability or bugs, impacting event data processing reliability.
+
+## Previous Releases
+
+### Version 1.2.4
 
 **Release Date**: 17 Feb 2026  
 
@@ -18,15 +42,6 @@
 - Dependabot fixes for security vulnerabilities in dependencies.
 - Documentation updates for clarity and accuracy.
 - Minor bug fixes.
-
-**Known Issues**:
-
-- Intel® SceneScape Integration Limitation: Intel® SceneScape integration is currently not supported when deploying via Helm charts.
-- Edge Manageability Framework and Edge Microvisor Toolkit are not supported yet.
-- SmartNVR will not work on EMT-S and EMT-D due to Frigate incompatibility with Edge Microvisor Toolkit.
-- The **AI-Powered Event Viewer** feature relies on Frigate GenAI features, which may exhibit instability or bugs, impacting event data processing reliability.
-
-## Previous Releases
 
 ### Version 1.2.3
 
