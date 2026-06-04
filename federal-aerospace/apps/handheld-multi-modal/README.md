@@ -44,7 +44,7 @@ All services share the `fedaero` Docker network and are defined in [`docker-comp
 | Docker Compose v2 | Included with Docker Desktop; on Linux OS, install the `docker-compose-plugin` package. Use `docker compose` (space), not `docker-compose` (hyphen). |
 | `render` group | Required for GPU access by OpenVINO model server. Verify with `getent group render`. |
 | Git | Required for `make vippet-get` to do sparse-checkout of Visual Pipeline and Platform Evaluation Tool. |
-| Intel® GPU with OpenVINO driver | iGPU or discrete Intel® Iris® Xe MAX GPU supported. |
+| Intel® GPU with OpenVINO driver | iGPU or discrete GPU based on the Xe architecture. |
 | **CDI only:** CDI drivers configured | Set `CDI_XE_DEVICE_0` in `.env` (see `AGENTS.md` for all env vars). |
 
 Run `make setup` after cloning to auto-detect the `render` the group GID and write the `.env`.
