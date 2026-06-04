@@ -110,6 +110,11 @@ source setup.sh stop-nvr  # System 2
 source setup.sh restart
 ```
 
+### RTSP Streamer Only
+
+To start only the MediaMTX RTSP streamer: `source setup.sh start-streamer`. 
+Stop with: `source setup.sh stop-streamer`.
+
 ## Verify Integration
 
 ```bash
