@@ -17,6 +17,44 @@ FUNASR_MODEL_MAP = {
 VAD_MODEL = "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch"
 PUNC_MODEL = "iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
 
+def merge_vad(vad_result, max_length=15.0, min_length=0):
+    """Merge short VAD segments to reduce fragmentation.
+
+    Args:
+        vad_result (list): VAD segments [{"start": s, "end": s, "text": str}, ...] in seconds.
+        max_length (float): Maximum merged segment length in seconds (default 15.0).
+        min_length (float): Minimum merged segment length; shorter ones get dropped (default 0).
+
+    Returns:
+        list: Merged segments [{"start": s, "end": s, "text": str}, ...].
+    """
+    if len(vad_result) <= 1:
+        return vad_result
+
+    new_result = []
+    cur = {
+        "start": vad_result[0]["start"],
+        "end": vad_result[0]["end"],
+        "text": vad_result[0]["text"],
+    }
+
+    for seg in vad_result[1:]:
+        if seg["end"] - cur["start"] < max_length:
+            cur["end"] = seg["end"]
+            cur["text"] = (cur["text"] + " " + seg["text"]).strip()
+        else:
+            if cur["end"] - cur["start"] > min_length:
+                new_result.append(cur)
+            cur = {
+                "start": seg["start"],
+                "end": seg["end"],
+                "text": seg["text"],
+            }
+
+    new_result.append(cur)
+    return new_result
+
+
 class Paraformer(BaseASR):
     def __init__(self, model_name, device="cpu", revision="v2.0.4"):
         if model_name not in FUNASR_MODEL_MAP:
@@ -63,6 +101,8 @@ class Paraformer(BaseASR):
                         "end": s["end"] / 1000.0,
                         "text": s["text"].strip()
                     })
+
+            segments = merge_vad(segments)
 
             return {
                 "text": out["text"].strip(),
