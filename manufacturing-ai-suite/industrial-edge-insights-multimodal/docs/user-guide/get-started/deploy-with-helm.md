@@ -169,23 +169,50 @@ curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_d
   -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
 ```
 
-> To run on `GPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
-> ```
->
-> To run on `NPU`:
->
-> ```bash
-> cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
-> curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
->   -X POST -H 'Content-Type: application/json' \
->   -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
-> ```
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server;
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' -d @pipeline-request-cpu.json
+  ```
+
+- To run inference on `GPU`,
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
+  ```
+
+- To run inference on `NPU`,
+
+  ```bash
+  cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server
+
+  # Deletes all existing pipelines before starting a new one
+  for id in $(curl -k --location https://localhost:30001/dsps-api/pipelines/status \
+  | grep -oP '"id":\s*"\K[^"]+'); do
+      curl -k --location -X DELETE "https://localhost:30001/dsps-api/pipelines/$id"
+  done;
+
+  curl -k https://localhost:30001/dsps-api/pipelines/user_defined_pipelines/weld_defect_classification \
+    -X POST -H 'Content-Type: application/json' \
+    -d "$(sed 's/"device": "CPU"/"device": "NPU"/' pipeline-request-cpu.json)"
+  ```
 
 **Time Series Analytics Microservice**
 
