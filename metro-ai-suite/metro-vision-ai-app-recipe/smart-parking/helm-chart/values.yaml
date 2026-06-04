@@ -24,7 +24,7 @@ mediamtx:
   imageTag: 1.11.3
 dlstreamer_pipeline_server:
   image: intel/dlstreamer-pipeline-server
-  imageTag: 2026.1.0-ubuntu24-rc1.1
+  imageTag: 2026.1.0-ubuntu24-rc2
 grafana:
   image: grafana/grafana
   imageTag: 11.5.4
@@ -49,10 +49,13 @@ env:
   no_proxy:
   ENABLE_OPEN_TELEMETRY: true
   OTEL_EXPORT_INTERVAL_MILLIS: 5000
-privileged_access_required: false
 gpu:
   enabled: false
   type: "gpu.intel.com/i915"
+  count: 1
+npu:
+  enabled: false
+  type: "npu.intel.com/accel"
   count: 1
 webrtcturnserver:
   username: <WEBRTC_TURN_SERVER_USERNAME>

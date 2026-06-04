@@ -131,6 +131,7 @@
     "totalTokensProcessed": "处理的总 Token 数",
     "timeToGenerateSummary": "生成摘要耗时",
     "totalTimeTaken":"总耗时",
+    "summarizationTime":"摘要生成耗时",
     "loadingConfiguration": "正在加载配置...",
     "cpuUtilization": "CPU 利用率",
     "gpuUtilization": "GPU 利用率",

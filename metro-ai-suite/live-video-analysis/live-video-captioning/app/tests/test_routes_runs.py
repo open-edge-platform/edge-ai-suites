@@ -89,9 +89,10 @@ class TestStartRun:
         body = resp.json()
         assert body["runId"] == "white_car_stream"
         assert len(body["peerId"]) < 9
-        assert mock_http.call_args.kwargs["payload"]["destination"]["frame"]["peer-id"] == body[
-            "peerId"
-        ]
+        assert (
+            mock_http.call_args.kwargs["payload"]["destination"]["frame"]["peer-id"]
+            == body["peerId"]
+        )
 
     def test_start_run_duplicate_long_name_gets_unique_short_peer_id(self, client):
         """Duplicate long names get a suffixed run ID and a distinct short peer ID."""
@@ -167,6 +168,75 @@ class TestStartRun:
             )
         run_id = resp.json()["runId"]
         assert run_id in RUNS
+
+    def test_start_run_with_usb_camera_source(self, client):
+        """A Linux V4L2 device path is sent using webcam source schema."""
+        with patch(
+            "backend.routes.runs.http_json", return_value='"pipeline-usb"'
+        ) as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "GenAI_Camera_Pipeline_on_CPU",
+                },
+            )
+
+        assert resp.status_code == 200
+        payload = mock_http.call_args.kwargs["payload"]
+        assert payload["source"]["device"] == "/dev/video0"
+        assert payload["source"]["type"] == "webcam"
+
+    def test_start_run_rejects_usb_camera_without_camera_pipeline(self, client):
+        """A webcam source must not use a non-camera default pipeline name."""
+        with patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={"rtspUrl": "/dev/video0"},
+            )
+
+        assert resp.status_code == 400
+        assert "camera-compatible pipelineName" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
+
+    def test_start_run_rejects_usb_camera_with_non_camera_pipeline(self, client):
+        """A webcam source with an explicit non-camera pipeline is rejected."""
+        with patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "genai_pipeline",
+                },
+            )
+
+        assert resp.status_code == 400
+        assert "is not camera-compatible" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
+
+    def test_start_run_rejects_duplicate_usb_camera_source(self, client):
+        """Starting a second run on the same camera device returns 409."""
+        RUNS["existing-run"] = RunInfo(
+            runId="existing-run",
+            pipelineId="p-existing",
+            peerId="peer-existing",
+            mqttTopic="t/existing",
+            rtspUrl="/dev/video0",
+            status="running",
+        )
+
+        with patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "/dev/video0",
+                    "pipelineName": "GenAI_Camera_Pipeline_on_CPU",
+                },
+            )
+
+        assert resp.status_code == 409
+        assert "already in use" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
 
 
 # ===================================================================
@@ -264,7 +334,9 @@ class TestRunsHelpers:
         monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_PREFIX", "toolongprefix")
         monkeypatch.setattr(runs_module, "WEBRTC_PEER_ID_MAX_LENGTH", 3)
         with patch.dict(RUNS, {}, clear=True):
-            with pytest.raises(RuntimeError, match="Invalid WebRTC peer ID configuration"):
+            with pytest.raises(
+                RuntimeError, match="Invalid WebRTC peer ID configuration"
+            ):
                 runs_module._generate_peer_id()
 
 
@@ -297,7 +369,9 @@ class TestMetadataStream:
                 )
             },
             clear=True,
-        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+        ), patch(
+            "backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber
+        ), patch(
             "backend.routes.runs.asyncio.wait_for", _raise_timeout
         ):
             gen = runs_module._multiplexed_metadata_generator()
@@ -338,9 +412,13 @@ class TestMetadataStream:
                 )
             },
             clear=True,
-        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+        ), patch(
+            "backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber
+        ), patch(
             "backend.routes.runs.asyncio.wait_for", _raise_runtime
-        ), patch("backend.routes.runs.asyncio.sleep", AsyncMock()):
+        ), patch(
+            "backend.routes.runs.asyncio.sleep", AsyncMock()
+        ):
             gen = runs_module._multiplexed_metadata_generator()
             event = await anext(gen)
             assert event.startswith(": error")
@@ -378,11 +456,18 @@ class TestMetadataStream:
                 )
             },
             clear=True,
-        ), patch("backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber), patch(
+        ), patch(
+            "backend.routes.runs.get_mqtt_subscriber", _fake_get_subscriber
+        ), patch(
             "backend.routes.runs.asyncio.wait_for", _raise_runtime
-        ), patch("backend.routes.runs.asyncio.sleep", sleep_mock), patch(
-            "backend.routes.runs.asyncio.get_event_loop", side_effect=RuntimeError("no-loop")
-        ), patch("backend.routes.runs.logger.error") as error_mock:
+        ), patch(
+            "backend.routes.runs.asyncio.sleep", sleep_mock
+        ), patch(
+            "backend.routes.runs.asyncio.get_event_loop",
+            side_effect=RuntimeError("no-loop"),
+        ), patch(
+            "backend.routes.runs.logger.error"
+        ) as error_mock:
             gen = runs_module._multiplexed_metadata_generator()
             _ = await anext(gen)
 
@@ -396,7 +481,10 @@ class TestMetadataStream:
         async def _dummy_generator():
             yield "data: {}\n\n"
 
-        with patch("backend.routes.runs._multiplexed_metadata_generator", return_value=_dummy_generator()):
+        with patch(
+            "backend.routes.runs._multiplexed_metadata_generator",
+            return_value=_dummy_generator(),
+        ):
             resp = client.get("/api/generate_captions_alerts/metadata-stream")
 
         assert resp.status_code == 200

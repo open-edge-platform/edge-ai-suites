@@ -501,7 +501,7 @@ You can pull latest tfcc docker image through [intel/tfcc - Docker Image](https:
 For example:
 
 ```bash
-docker pull intel/tfcc:latest
+docker pull intel/tfcc:2025.2.0-ubuntu24
 ```
 
 ### Run TFCC docker image on Edge Microvisor Toolkit systems

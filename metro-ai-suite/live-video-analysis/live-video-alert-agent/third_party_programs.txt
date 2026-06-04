@@ -5,6 +5,8 @@ Third party programs and their corresponding required notices and/or license ter
 ===========================================================
 
 1)openai, opencv-python
+Copyright (c) 2022 OpenAI
+Copyright (c) 2015, opencv-python contributors
 Apache License
 
 Version 2.0, January 2004
@@ -57,6 +59,8 @@ While redistributing the Work or Derivative Works thereof, You may choose to off
 2)Jinja2
 BSD License
 
+Copyright (c) 2007 Pallets
+
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -73,6 +77,37 @@ jsonschema-specifications, litellm, mako, markdown-it-py, mcp, mdurl, pyparsing,
 pydantic-settings, pyjwt, pyyaml, referencing, rich, rpds-py, six, sqlalchemy, typer,
 typing-inspection, tzlocal, urllib3, zipp
 MIT License
+
+Copyright (c) 2018 Sebastián Ramírez (fastapi, typer)
+Copyright (c) 2017 to present Pydantic Services Inc. and individual contributors (pydantic, pydantic_core, pydantic-settings, typing-inspection)
+Copyright (c) 2018 Amethyst Reese and contributors (aiosqlite)
+Copyright (c) 2009-2023 SQLAlchemy authors and contributors (alembic, sqlalchemy)
+Copyright (c) 2018 Alex Grönholm (anyio)
+Copyright (c) 2015 Hynek Schlawack and contributors (attrs)
+Copyright (c) 2012-2018 Armin Rigo, Maciej Fijalkowski (cffi)
+Copyright (c) 2019 TAHRI Ahmed R. (charset-normalizer)
+Copyright (c) 2019 Romain Dorgueil (docstring_parser)
+Copyright (c) 2019 David Brochart (fastuuid)
+Copyright (c) 2013-2023 Sebastian Bank (graphviz)
+Copyright (c) 2020 grpc-interceptor contributors (grpc-interceptor)
+Copyright (c) 2006-2021 Armin Rigo and contributors (greenlet)
+Copyright (c) 2016-2019 Nathaniel J. Smith (h11)
+Copyright (c) 2006 Joe Gregorio (httplib2)
+Copyright (c) Florimond Manca (httpx-sse)
+Copyright (c) 2022 Samuel Colvin (jiter, pydantic_core, pydantic-settings)
+Copyright (c) 2013 Julian Berman (jsonschema, jsonschema-specifications, referencing, rpds-py)
+Copyright (c) 2023 BerriAI (litellm)
+Copyright (c) 2006-2022 the Mako authors and contributors (mako)
+Copyright (c) 2020 Executable Books Project (markdown-it-py, mdurl)
+Copyright (c) 2024 Anthropic, PBC (mcp)
+Copyright (c) 2003-2022 Paul McGuire (pyparsing)
+Copyright (c) 2015-2022 José Padilla (pyjwt)
+Copyright (c) 2006 Kirill Simonov (pyyaml)
+Copyright (c) 2020 Will McGuire (rich)
+Copyright (c) 2010-2020 Benjamin Peterson (six)
+Copyright (c) 2011-2019 Lennart Regebro (tzlocal)
+Copyright (c) 2008-2020 Andrey Petrov and contributors (urllib3)
+Copyright (c) 2019 Jason R. Coombs (zipp)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -94,6 +129,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 4)numpy, sse-starlette, uvicorn, authlib, click, cloudpickle, fsspec, httpcore, httpx, markupsafe,
 protobuf, psutil, pycparser, python-dotenv, sqlparse, starlette, websockets
 BSD 3-Clause License
+
+Copyright (c) 2005-2024, NumPy Developers (numpy)
+Copyright (c) 2019 sysid (sse-starlette)
+Copyright (c) 2017-present Encode OSS Ltd. (uvicorn, httpcore, starlette)
+Copyright (c) 2017, Hsiaoming Yang (authlib)
+Copyright (c) 2014 Pallets (click, markupsafe)
+Copyright (c) 2015, Cloudpickle contributors (cloudpickle)
+Copyright (c) 2018, Martin Durant (fsspec)
+Copyright (c) 2019, Tom Christie (httpx)
+Copyright (c) Google LLC (protobuf)
+Copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola (psutil)
+Copyright (c) 2008-2020, Eli Bendersky (pycparser)
+Copyright (c) 2014, Saurabh Kumar (python-dotenv)
+Copyright (c) 2016, Andi Albrecht (sqlparse)
+Copyright (c) 2013-2024 Aymeric Augustin and contributors (websockets)
 
 Redistribution and use in source and binary forms, with or without modification, are permitted
 provided that the following conditions are met:
@@ -117,7 +167,7 @@ WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
 
 -------------------------------------------------------------
 
-5)aiohttp, aiosignal, annotated-doc, annotated-types, cryptography, distro, fastmcp, frozenlist,
+5)aiohttp, aiosignal, annotated-types, cryptography, distro, fastmcp, frozenlist,
 google-adk, google-api-core, google-api-python-client, google-auth, google-auth-httplib2,
 google-cloud-aiplatform, google-cloud-appengine-logging, google-cloud-audit-log,
 google-cloud-bigquery, google-cloud-bigquery-storage, google-cloud-bigtable, google-cloud-core,
@@ -132,6 +182,34 @@ opentelemetry-exporter-otlp-proto-common, opentelemetry-exporter-otlp-proto-http
 opentelemetry-proto, opentelemetry-resourcedetector-gcp, opentelemetry-sdk,
 opentelemetry-semantic-conventions, propcache, pyarrow, pyopenssl, python-multipart, regex,
 requests, sqlalchemy-spanner, tenacity, tokenizers, watchdog, yarl
+Copyright (c) 2013-2024 aio-libs contributors (aiohttp, aiosignal, frozenlist, multidict, propcache, yarl)
+Copyright (c) 2022 Adrian Garcia Badaracco (annotated-types)
+Copyright (c) 2013-2024 The cryptography authors (cryptography)
+Copyright (c) 2015-2016 Nir Cohen (distro)
+Copyright (c) 2024 Jeremiah Lowin (fastmcp)
+Copyright (c) Google LLC (google-adk, google-api-core, google-api-python-client, google-auth,
+    google-auth-httplib2, google-cloud-aiplatform, google-cloud-appengine-logging,
+    google-cloud-audit-log, google-cloud-bigquery, google-cloud-bigquery-storage,
+    google-cloud-bigtable, google-cloud-core, google-cloud-dataplex, google-cloud-discoveryengine,
+    google-cloud-iam, google-cloud-logging, google-cloud-monitoring, google-cloud-pubsub,
+    google-cloud-resource-manager, google-cloud-secret-manager, google-cloud-spanner,
+    google-cloud-speech, google-cloud-storage, google-cloud-trace, google-crc32c, google-genai,
+    google-resumable-media, googleapis-common-protos, grpc-google-iam-v1, sqlalchemy-spanner)
+Copyright (c) 2016 gRPC authors (grpcio, grpcio-status)
+Copyright (c) 2021 HuggingFace, Inc. (hf-xet, huggingface_hub, tokenizers)
+Copyright (c) 2019 Jason R. Coombs (importlib_metadata)
+Copyright (c) OpenTelemetry Authors (opentelemetry-api, opentelemetry-exporter-gcp-logging,
+    opentelemetry-exporter-gcp-monitoring, opentelemetry-exporter-gcp-trace,
+    opentelemetry-exporter-otlp-proto-common, opentelemetry-exporter-otlp-proto-http,
+    opentelemetry-proto, opentelemetry-resourcedetector-gcp, opentelemetry-sdk,
+    opentelemetry-semantic-conventions)
+Copyright (c) 2016-2024 Apache Software Foundation (pyarrow)
+Copyright (c) 2001-2020 Jean-Paul Calderone and contributors (pyopenssl)
+Copyright (c) 2012-2019 Andrew Dunstan (python-multipart)
+Copyright (c) 2022 Matthew Barnett (regex)
+Copyright (c) 2019 Kenneth Reitz (requests)
+Copyright (c) 2016-2021 Julien Danjou, Joshua Harlow and contributors (tenacity)
+Copyright (c) 2011 Yesudeep Mangalapilly and contributors (watchdog)
 Apache License
 
 Version 2.0, January 2004
@@ -189,13 +267,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 Eclipse Public License v2.0 OR BSD 3-Clause License
 
 Eclipse Public License v2.0:
+Copyright (c) 2011-2024 Eclipse Foundation
 https://www.eclipse.org/legal/epl-2.0/
 
-BSD 3-Clause License: see entry 4 for full text.
+BSD 3-Clause License:
+Copyright (c) 2011-2024 Eclipse Foundation
+See entry 4 for full BSD 3-Clause License text.
 
 -------------------------------------------------------------
 
 9)aiohappyeyeballs, typing_extensions
+Copyright (c) 2024 J. Nick Koston (aiohappyeyeballs)
+Copyright (c) 2007 Guido van Rossum and others (typing_extensions)
 Python Software Foundation License Version 2 (PSF-2.0)
 
 https://docs.python.org/3/license.html
@@ -235,6 +318,7 @@ PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2
 -------------------------------------------------------------
 
 10)certifi
+Copyright (c) 2022 Kenneth Reitz
 Mozilla Public License, Version 2.0 (MPL-2.0)
 
 https://www.mozilla.org/en-US/MPL/2.0/
@@ -242,6 +326,8 @@ https://www.mozilla.org/en-US/MPL/2.0/
 -------------------------------------------------------------
 
 11)tqdm
+Copyright (c) 2013 noamraph
+Copyright (c) 2015-2024 Casper da Costa-Luis and contributors
 MPL-2.0 AND MIT License
 
 Mozilla Public License Version 2.0: https://www.mozilla.org/en-US/MPL/2.0/
@@ -251,6 +337,8 @@ MIT License: see entry 3 for full MIT License text.
 
 12)shellingham
 ISC License
+
+Copyright (c) 2018 Tsun-Hsien Liu
 
 Permission to use, copy, modify, and/or distribute this software for any purpose with or without
 fee is hereby granted, provided that the above copyright notice and this permission notice appear
@@ -299,21 +387,35 @@ Refer to: https://www.iana.org/time-zones
 15)python-dateutil
 Dual License: Apache License Version 2.0 AND BSD 3-Clause License
 
-Apache License, Version 2.0: see entry 1 for full text.
-BSD 3-Clause License: see entry 4 for full text.
+Apache License, Version 2.0:
+Copyright (c) 2003-2011 Gustavo Niemeyer
+Copyright (c) 2012-2014 dateutil contributors
+See entry 1 for full text.
+
+BSD 3-Clause License:
+Copyright (c) 2003-2011 Gustavo Niemeyer
+Copyright (c) 2012-2014 dateutil contributors
+See entry 4 for full text.
 
 -------------------------------------------------------------
 
 16)sniffio
 MIT OR Apache-2.0
 
-MIT License: see entry 3 for full text.
-Apache License Version 2.0: see entry 1 for full text.
+MIT License:
+Copyright (c) 2018 Nathaniel J. Smith
+See entry 3 for full MIT License text.
+
+Apache License Version 2.0:
+Copyright (c) 2018 Nathaniel J. Smith
+See entry 1 for full text.
 
 -------------------------------------------------------------
 
 17)idna
 BSD-like License
+
+Copyright (c) 2013-2024, Kim Davies and contributors
 
 Redistribution and use in source and binary forms, with or without modification, are permitted
 provided that the following conditions are met:
@@ -331,12 +433,17 @@ DISCLAIMED.
 -------------------------------------------------------------
 
 18)packaging, uritemplate
+Copyright (c) 2014 Donald Stufft and individual contributors (packaging)
+Copyright (c) 2011-2021 Ian Stapleton Cordasco (uritemplate)
 Apache-2.0 / BSD-2-Clause / BSD-3-Clause
 
 Apache License Version 2.0: see entry 1 for full text.
 BSD 3-Clause License: see entry 4 for full text.
 
 BSD 2-Clause License:
+
+Copyright (c) 2014 Donald Stufft and individual contributors (packaging)
+Copyright (c) 2011-2021 Ian Stapleton Cordasco (uritemplate)
 
 Redistribution and use in source and binary forms, with or without modification, are permitted
 provided that the following conditions are met:
@@ -359,6 +466,7 @@ WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH 
 -------------------------------------------------------------
 
 19)curl, libcurl4t64
+Copyright (c) 1996-2024, Daniel Stenberg
 Multi-license: BSD-3-Clause | BSD-4-Clause-UC | FSFULLR | GPL-2 | GPL-2+ | GPL-3+ | ISC |
 OLDAP-2.8 | X11 | curl
 
@@ -369,6 +477,7 @@ BSD 3-Clause License: see entry 4 for full text.
 -------------------------------------------------------------
 
 20)libgl1, libglvnd0, libglx0
+Copyright (c) 2013-2024 NVIDIA Corporation
 Multi-license: Apache-2.0 | BSD-1-Clause | GPL | GPL-3 | GPL-3+ | MIT
 
 Apache License Version 2.0: see entry 1 for full text.
@@ -378,6 +487,7 @@ BSD 3-Clause License: see entry 4 for full text.
 -------------------------------------------------------------
 
 21)libglib2.0-0t64
+Copyright (c) 1997-2024 The GLib Team
 Multi-license: AFL-2.0 | Apache-2.0 | CC-BY-SA-3.0 | CC0-1.0 | Expat | FSFULLR | GPL-2 |
 GPL-2+ | LGPL-2 | LGPL-2+ | LGPL-2.1 | LGPL-2.1+ | LGPL-3 | LGPL-3+ | MPL-1.1 |
 Unicode-DFS-2016
@@ -388,6 +498,7 @@ https://packages.debian.org/bookworm/libglib2.0-0
 -------------------------------------------------------------
 
 22)libatomic1
+Copyright (c) Free Software Foundation, Inc.
 Multi-license: Artistic | GFDL-1.2 | GPL | GPL-3 | LGPL
 
 Refer to the Debian package copyright file for full license texts:
@@ -400,11 +511,19 @@ libxcb-dri3-0, libxcb-glx0, libxcb-present0, libxcb-randr0, libxcb-shm0, libxcb-
 libxcb-xfixes0, libxshmfence1, libwayland-server0
 MIT License
 
+Copyright (c) 2009-2020 Google LLC (libbrotli1)
+Copyright (c) 2000-2024 The XFree86 Project, VMware Inc. and contributors (libdrm2 and variants)
+Copyright (c) 1998-2024 Thai Open Source Software Center Ltd and Clark Cooper (libexpat1)
+Copyright (c) 2001-2002 Bart Massey, Jamey Sharp, and Josh Triplett (libxcb1 and variants)
+Copyright (c) 2013 Keith Packard (libxshmfence1)
+Copyright (c) 2008-2012 Kristian Høgsberg and contributors (libwayland-server0)
+
 See entry 3 for full MIT License text.
 
 -------------------------------------------------------------
 
 24)libcom-err2
+Copyright (c) 1987-2023 The Regents of the University of California
 Multi-license: 0BSD | Apache-2.0 | BSD-3-Clause | Expat | GPL | GPL-2 | GPL-2+ | ISC |
 Kazlib | LGPL-2 | Latex2e
 
@@ -416,11 +535,14 @@ https://packages.debian.org/bookworm/libcom-err2
 25)libedit2
 BSD 3-Clause License
 
+Copyright (c) 1992 The Regents of the University of California
+
 See entry 4 for full BSD 3-Clause License text.
 
 -------------------------------------------------------------
 
 26)libelf1t64
+Copyright (c) 1995-2019 Michael Riepe
 Multi-license: BSD-2-Clause | GFDL-1.3 | GPL-2 | GPL-3 | GPL-3+ | LGPL-2.1 | LGPL-2.1+ |
 LGPL-3 | LGPL-3+
 
@@ -430,6 +552,7 @@ https://packages.debian.org/bookworm/libelf1
 -------------------------------------------------------------
 
 27)libgbm1, libgl1-mesa-dri, libglx-mesa0, mesa-libgallium
+Copyright (c) 1999-2024 Brian Paul and Mesa contributors
 Multi-license: Apache-2.0 | BSD-2-Clause | GPL | GPL-1 | GPL-1+ | GPL-2 | Khronos | MIT |
 MLAA | SGI
 
@@ -439,6 +562,7 @@ https://packages.debian.org/bookworm/libgbm1
 -------------------------------------------------------------
 
 28)libgnutls30t64
+Copyright (c) 2001-2024 Free Software Foundation, Inc.
 Multi-license: Apache-2.0 | BSD-3-Clause | CC0 | Expat | GFDL-1.3 | GPL | GPL-3 | GPLv3+ |
 LGPL | LGPL-3 | LGPLv2.1+ | LGPLv3+_or_GPLv2+
 
@@ -448,6 +572,7 @@ https://packages.debian.org/bookworm/libgnutls30
 -------------------------------------------------------------
 
 29)libgssapi-krb5-2, libk5crypto3, libkrb5-3, libkrb5support0
+Copyright (c) 1985-2023 Massachusetts Institute of Technology
 GPL-2
 
 https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -455,6 +580,7 @@ https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
 -------------------------------------------------------------
 
 30)libidn2-0
+Copyright (c) 2011-2024 Simon Josefsson
 Multi-license: Expat | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ | LGPL-3 | LGPL-3+ | Unicode
 
 Refer to the Debian package copyright file for full license texts:
@@ -463,6 +589,7 @@ https://packages.debian.org/bookworm/libidn2-0
 -------------------------------------------------------------
 
 31)libkeyutils1
+Copyright (c) 2005-2024 Red Hat, Inc.
 Multi-license: GPL-2 | GPL-2+ | LGPL-2 | LGPL-2+
 
 Refer to the Debian package copyright file for full license texts:
@@ -471,6 +598,7 @@ https://packages.debian.org/bookworm/libkeyutils1
 -------------------------------------------------------------
 
 32)libldap2
+Copyright (c) 1999-2021 The OpenLDAP Foundation
 Multi-license: BSD-3-Clause | Expat | FSF-unlimited | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ |
 OpenLDAP-2.8 | public-domain
 
@@ -480,6 +608,7 @@ https://packages.debian.org/bookworm/libldap-2.5-0
 -------------------------------------------------------------
 
 33)libllvm19
+Copyright (c) 2003-2024 University of Illinois at Urbana-Champaign
 Multi-license: APACHE-2-LLVM-EXCEPTIONS | Apache-2.0 | BSD-3-Clause | MIT | Python |
 solar-public-domain
 
@@ -488,6 +617,7 @@ Refer to: https://llvm.org/docs/DeveloperPolicy.html#license
 -------------------------------------------------------------
 
 34)libnghttp2-14
+Copyright (c) 2012, 2014, 2015, 2016 Tatsuhiro Tsujikawa
 Multi-license: BSD-2-Clause | Expat | GPL-3 | GPL-3+ | MIT | all-permissive
 
 Refer to the Debian package copyright file for full license texts:
@@ -496,6 +626,7 @@ https://packages.debian.org/bookworm/libnghttp2-14
 -------------------------------------------------------------
 
 35)libnghttp3-9
+Copyright (c) 2019 nghttp3 contributors
 Multi-license: FSFAP | FSFUL | FSFULLR | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ | MIT
 
 Refer to the Debian package copyright file for full license texts:
@@ -504,6 +635,7 @@ https://packages.debian.org/bookworm/libnghttp3-9
 -------------------------------------------------------------
 
 36)libp11-kit0
+Copyright (c) 2011-2024 Stef Walter and contributors
 Multi-license: Apache-2.0 | BSD-3-Clause | FSFAP | FSFULLR | GPL-2+ | GPL-3+ | ISC |
 LGPL-2.1 | LGPL-2.1+ | X11
 
@@ -513,6 +645,7 @@ https://packages.debian.org/bookworm/libp11-kit0
 -------------------------------------------------------------
 
 37)libpciaccess0
+Copyright (c) 2007 Intel Corporation
 GPL
 
 https://www.gnu.org/licenses/gpl.html
@@ -522,11 +655,14 @@ https://www.gnu.org/licenses/gpl.html
 38)libpsl5t64
 Multi-license: Chromium | MIT | gnulib
 
-MIT License: see entry 3 for full text.
+MIT License:
+Copyright (c) 2014-2024 Tim Ruehsen
+See entry 3 for full MIT License text.
 
 -------------------------------------------------------------
 
 39)librtmp1
+Copyright (c) 2009-2012 Andrej Stepanchuk, Howard Chu, The RTMPDump project
 Multi-license: GPL-2 | LGPL-2.1
 
 https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
@@ -535,6 +671,7 @@ https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 -------------------------------------------------------------
 
 40)libsasl2-2, libsasl2-modules-db
+Copyright (c) 1998-2003 Carnegie Mellon University
 Multi-license: BSD-2-Clause | BSD-3-Clause | FSFULLR | GPL-3 | GPL-3+ | IBM-as-is |
 MIT-CMU | MIT-Export | MIT-OpenVision | OpenLDAP | RSA-MD
 
@@ -544,6 +681,7 @@ https://packages.debian.org/bookworm/libsasl2-2
 -------------------------------------------------------------
 
 41)libsensors5, libsensors-config
+Copyright (c) 1998-2012 Frodo Looijaard and contributors
 Multi-license: GPL-2 | GPL-2+ | LGPL-2.1 | LGPL-2.1+ | Linux-man-pages-copyleft
 
 https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
@@ -553,12 +691,18 @@ https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html
 42)libssh2-1t64
 Multi-license: BSD-3-Clause | ISC
 
-BSD 3-Clause License: see entry 4 for full text.
-ISC License: see entry 12 for full text.
+BSD 3-Clause License:
+Copyright (c) 2004-2024 Sara Golemon, Daniel Stenberg and contributors
+See entry 4 for full BSD 3-Clause License text.
+
+ISC License:
+Copyright (c) 2004-2024 Sara Golemon, Daniel Stenberg and contributors
+See entry 12 for full ISC License text.
 
 -------------------------------------------------------------
 
 43)libtasn1-6
+Copyright (c) 2002-2024 Free Software Foundation, Inc.
 Multi-license: GFDL-1.3 | GPL-3 | LGPL | LGPL-2.1
 
 https://www.gnu.org/licenses/lgpl-2.1.html
@@ -566,6 +710,7 @@ https://www.gnu.org/licenses/lgpl-2.1.html
 -------------------------------------------------------------
 
 44)libunistring5
+Copyright (c) 2002-2024 Free Software Foundation, Inc.
 Multi-license: BSD-3-Clause | GFDL-1.2+ | GFDL-1.3+ | GPL-2 | GPL-2+ | GPL-3 | GPL-3+ |
 ISC | LGPL-2 | LGPL-2+ | LGPL-2.1 | LGPL-2.1+ | LGPL-3 | LGPL-3+ | Unicode-DFS-2016 |
 X11 | public-domain
@@ -576,6 +721,7 @@ https://packages.debian.org/bookworm/libunistring5
 -------------------------------------------------------------
 
 45)libvulkan1
+Copyright (c) 2015-2024 The Khronos Group Inc.
 Multi-license: Apache-2.0 | MIT
 
 Apache License Version 2.0: see entry 1 for full text.
@@ -585,6 +731,8 @@ MIT License: see entry 3 for full text.
 
 46)libx11-6, libx11-data, libx11-xcb1, libxau6, libxdmcp6, libxext6, libxxf86vm1
 MIT/X11 License
+
+Copyright (c) 1987-2024 The Open Group
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -606,6 +754,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SO
 47)libxml2
 Multi-license: ISC | MIT
 
+Copyright (c) 1998-2012 Daniel Veillard
+
 Permission to use, copy, modify, and distribute this software for any purpose with or without
 fee is hereby granted, provided that the above copyright notice and this permission notice appear
 in all copies.
@@ -616,6 +766,7 @@ INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS.
 -------------------------------------------------------------
 
 48)libz3-4
+Copyright (c) 2006-2019 Microsoft Corporation
 Multi-license: Expat | GPL-2 | GPL-2+
 
 https://www.gnu.org/licenses/old-licenses/gpl-2.0.html

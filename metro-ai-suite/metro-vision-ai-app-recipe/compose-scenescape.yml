@@ -170,9 +170,14 @@ services:
       - "c 209:* rmw"
       - "a 189:* rwm"
     group_add:
+      - "44"
       - "109"
       - "110"
+      - "990"
       - "992"
+      - "993"
+      - "994"
+      - "996"
     depends_on:
       - broker
       - ntpserver
@@ -229,7 +234,7 @@ services:
       start_period: 10s
 
   web:
-    image: intel/scenescape-manager:v2026.1.0-rc1
+    image: intel/scenescape-manager:v2026.1.0-rc2
     init: true
     networks:
       scenescape:
@@ -287,7 +292,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:v2026.1.0-rc1
+    image: intel/scenescape-controller:v2026.1.0-rc2
     init: true
     environment:
       - http_proxy=${http_proxy}

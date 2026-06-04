@@ -1,6 +1,6 @@
 set -e
 
-IMAGE_TAG=${1-tfcc:latest}
+IMAGE_TAG=${1-tfcc:2025.2.0-ubuntu24}
 DOCKERFILE=${2-Dockerfile_TFCC.dockerfile}
 BASE=${3-ubuntu}
 BASE_VERSION=${4-24.04}

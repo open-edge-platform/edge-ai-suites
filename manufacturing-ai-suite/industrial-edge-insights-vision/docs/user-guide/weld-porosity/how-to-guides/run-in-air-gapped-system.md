@@ -37,11 +37,12 @@ This guide explains how to run the Weld Porosity application in an environment w
    ./sample_start.sh -p weld_porosity_classification
    ```
 
-5. Open Google Chrome and navigate to:
+5. Open a browser and navigate to:
 
    ```
    https://127.0.0.1/mediamtx/weld/
    ```
+   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 

@@ -24,27 +24,86 @@ spec:
           args:
             - |
               set -e
+
+              copy_first_match() {
+                dest_dir="$1"
+                description="$2"
+                shift 2
+
+                mkdir -p "$dest_dir"
+
+                for pattern in "$@"; do
+                  for match in $pattern; do
+                    if [ -e "$match" ]; then
+                      cp "$match" "$dest_dir/"
+                      echo "Copied $description from $match"
+                      return 0
+                    fi
+                  done
+                done
+
+                echo "Missing required asset: $description" >&2
+                return 1
+              }
+
               echo "=== Loading NICU Warmer assets from offline bundle ==="
 
               # Models
               echo "Copying detection models..."
-              cp /assets/models/person-detect-fp32.* /models/
-              cp /assets/models/patient-detect-fp32.* /models/
-              cp /assets/models/latch-detect-fp32.* /models/
+              copy_first_match /models "person detection xml" \
+                /assets/models/person-detect-fp32.xml \
+                /assets/person-detect-fp32.xml
+              copy_first_match /models "person detection bin" \
+                /assets/models/person-detect-fp32.bin \
+                /assets/person-detect-fp32.bin
+              copy_first_match /models "patient detection xml" \
+                /assets/models/patient-detect-fp32.xml \
+                /assets/patient-detect-fp32.xml
+              copy_first_match /models "patient detection bin" \
+                /assets/models/patient-detect-fp32.bin \
+                /assets/patient-detect-fp32.bin
+              copy_first_match /models "latch detection xml" \
+                /assets/models/latch-detect-fp32.xml \
+                /assets/latch-detect-fp32.xml
+              copy_first_match /models "latch detection bin" \
+                /assets/models/latch-detect-fp32.bin \
+                /assets/latch-detect-fp32.bin
 
               echo "Copying rPPG models..."
-              mkdir -p /models/rppg
-              cp /assets/models/rppg/mtts_can.* /models/rppg/
+              copy_first_match /models/rppg "rPPG xml" \
+                /assets/models/rppg/mtts_can.xml \
+                /assets/models_rppg/mtts_can.xml
+              copy_first_match /models/rppg "rPPG bin" \
+                /assets/models/rppg/mtts_can.bin \
+                /assets/models_rppg/mtts_can.bin
 
               echo "Copying action recognition models..."
-              mkdir -p /models/action/FP32
-              cp /assets/models/action/FP32/action-recognition-0001-encoder.* /models/action/FP32/
-              cp /assets/models/action/FP32/action-recognition-0001-decoder.* /models/action/FP32/
-              cp /assets/models/action/kinetics.txt /models/action/
+              copy_first_match /models/action/FP32 "action encoder xml" \
+                /assets/models/action/FP32/action-recognition-0001-encoder.xml \
+                /assets/model_artifacts/action/FP32/action-recognition-0001-encoder.xml \
+                /assets/action-recognition-0001-encoder.xml
+              copy_first_match /models/action/FP32 "action encoder bin" \
+                /assets/models/action/FP32/action-recognition-0001-encoder.bin \
+                /assets/model_artifacts/action/FP32/action-recognition-0001-encoder.bin \
+                /assets/action-recognition-0001-encoder.bin
+              copy_first_match /models/action/FP32 "action decoder xml" \
+                /assets/models/action/FP32/action-recognition-0001-decoder.xml \
+                /assets/model_artifacts/action/FP32/action-recognition-0001-decoder.xml \
+                /assets/action-recognition-0001-decoder.xml
+              copy_first_match /models/action/FP32 "action decoder bin" \
+                /assets/models/action/FP32/action-recognition-0001-decoder.bin \
+                /assets/model_artifacts/action/FP32/action-recognition-0001-decoder.bin \
+                /assets/action-recognition-0001-decoder.bin
+              copy_first_match /models/action "kinetics labels" \
+                /assets/models/action/kinetics.txt \
+                /assets/model_artifacts/action/kinetics.txt \
+                /assets/kinetics.txt
 
               # Video
               echo "Copying video assets..."
-              cp /assets/videos/*.mp4 /uploads/
+              copy_first_match /uploads "demo video" \
+                /assets/videos/*.mp4 \
+                /assets/*.mp4
 
               echo "=== All assets loaded successfully ==="
               ls -lhR /models/

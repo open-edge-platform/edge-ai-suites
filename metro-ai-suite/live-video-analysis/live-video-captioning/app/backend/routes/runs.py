@@ -27,6 +27,16 @@ WEBRTC_PEER_ID_MAX_LENGTH = 8
 WEBRTC_PEER_ID_PREFIX = "s"
 
 
+def _is_linux_video_device(source_uri: str) -> bool:
+    source = (source_uri or "").strip()
+    return source.startswith("/dev/video") and source[len("/dev/video") :].isdigit()
+
+
+def _is_camera_pipeline_name(pipeline_name: str) -> bool:
+    """Best-effort check for camera-capable pipeline identifiers."""
+    return "camera" in (pipeline_name or "").strip().lower()
+
+
 def _sanitize_run_name(run_name: str) -> str:
     """Normalize a user-supplied run name into a safe run identifier."""
     sanitized = re.sub(r"\s+", "_", run_name.strip())
@@ -74,7 +84,9 @@ def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
         "detection_threshold": req.detectionThreshold,
         "mqtt_publisher": {
             "topic": f"{MQTT_TOPIC_PREFIX}/{run_id}",
-            "publish_frame": bool(ENABLE_EMBEDDING),  # Only publish frames if embedding is enabled
+            "publish_frame": bool(
+                ENABLE_EMBEDDING
+            ),  # Only publish frames if embedding is enabled
         },
     }
 
@@ -95,8 +107,14 @@ def _build_pipeline_parameters(req: StartRunRequest, run_id: str) -> dict:
 
 
 def _build_start_payload(req: StartRunRequest, run_id: str, peer_id: str) -> dict:
+    source_uri = (req.rtspUrl or "").strip()
+    if _is_linux_video_device(source_uri):
+        source = {"device": source_uri, "type": "webcam"}
+    else:
+        source = {"uri": source_uri, "type": "uri"}
+
     return {
-        "source": {"uri": req.rtspUrl, "type": "uri"},
+        "source": source,
         "destination": {
             "frame": {"type": "webrtc", "peer-id": peer_id, "bitrate": WEBRTC_BITRATE},
         },
@@ -120,6 +138,36 @@ def _extract_pipeline_id(raw: str) -> str:
 @router.post("/generate_captions_alerts")
 async def start_run(req: StartRunRequest) -> RunInfo:
     """Start a new video captioning run and generate captions and alerts."""
+    requested_source = (req.rtspUrl or "").strip()
+    requested_pipeline = (req.pipelineName or "").strip()
+    using_camera_source = _is_linux_video_device(requested_source)
+
+    pipeline_name = requested_pipeline or PIPELINE_NAME
+    if using_camera_source and not _is_camera_pipeline_name(pipeline_name):
+        if requested_pipeline:
+            detail_message = (
+                f"Pipeline '{pipeline_name}' is not camera-compatible. "
+                "Use a camera pipeline for /dev/videoN sources."
+            )
+        else:
+            detail_message = (
+                "Camera sources require a camera-compatible pipelineName when the "
+                "default PIPELINE_NAME is not camera-compatible."
+            )
+        raise HTTPException(status_code=400, detail={"message": detail_message})
+
+    if using_camera_source:
+        for existing in RUNS.values():
+            if (
+                existing.rtspUrl or ""
+            ).strip() == requested_source and existing.status == "running":
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "message": f"Camera device {requested_source} is already in use by run {existing.runId}",
+                    },
+                )
+
     run_name = _build_unique_run_name(req.runName)
 
     # Use runName for run_id if provided, otherwise generate UUID
@@ -132,8 +180,6 @@ async def start_run(req: StartRunRequest) -> RunInfo:
 
     # MQTT topic for this run's metadata
     mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
-
-    pipeline_name = (req.pipelineName or PIPELINE_NAME).strip() or PIPELINE_NAME
 
     start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
     payload = _build_start_payload(req, run_id, peer_id)
