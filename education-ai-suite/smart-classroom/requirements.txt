@@ -41,7 +41,7 @@ sentence-transformers==3.0.1
 # Whisper / audio
 openai-whisper==20250625
 speechbrain==1.0.3
-pyannote.audio==4.0.0
+pyannote.audio==4.0.4
 
 # Vector search
 faiss-cpu==1.11.0
