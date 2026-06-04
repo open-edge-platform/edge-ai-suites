@@ -4,8 +4,11 @@ from utils.model_download_helper import get_or_download_model_dir
 from funasr import AutoModel
 
 import os
+import re
 import logging
 logger = logging.getLogger(__name__)
+
+_SENTENCE_END_RE = re.compile(r'[。！？\.!?]\s*$')
 
 FUNASR_MODEL_MAP = {
     "paraformer-zh": "iic/speech_paraformer-large-vad-punc_asr_nat-zh-cn-16k-common-vocab8404-pytorch",
@@ -17,42 +20,56 @@ FUNASR_MODEL_MAP = {
 VAD_MODEL = "iic/speech_fsmn_vad_zh-cn-16k-common-pytorch"
 PUNC_MODEL = "iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch"
 
-def merge_vad(vad_result, max_length=15.0, min_length=0):
-    """Merge short VAD segments to reduce fragmentation.
+def merge_vad(vad_result, max_length=20.0, turn_threshold=0.8, sentence_end_penalty=0.5):
+    """Merge VAD segments to reduce fragmentation.
+
+    Without diarization labels, silence gap is the best proxy for a speaker turn:
+    within-speaker pauses are short, while turns usually have longer gaps and
+    often follow sentence-final punctuation. Each adjacent boundary gets a cost:
+
+        cost = gap + (sentence_end_penalty if previous segment ends a sentence else 0)
+
+    Boundaries are merged in ascending cost order, skipping any merge that would
+    exceed `max_length` or whose cost is >= `turn_threshold` (a likely turn).
 
     Args:
-        vad_result (list): VAD segments [{"start": s, "end": s, "text": str}, ...] in seconds.
-        max_length (float): Maximum merged segment length in seconds (default 15.0).
-        min_length (float): Minimum merged segment length; shorter ones get dropped (default 0).
+        vad_result (list): Segments [{"start": s, "end": s, "text": str}, ...] in seconds.
+        max_length (float): Hard cap on merged segment length in seconds.
+        turn_threshold (float): Boundaries with cost >= this are treated as speaker turns.
+        sentence_end_penalty (float): Cost added when the prior segment ends with . ! ? 。！？.
 
     Returns:
         list: Merged segments [{"start": s, "end": s, "text": str}, ...].
     """
     if len(vad_result) <= 1:
-        return vad_result
+        return [dict(s) for s in vad_result]
 
-    new_result = []
-    cur = {
-        "start": vad_result[0]["start"],
-        "end": vad_result[0]["end"],
-        "text": vad_result[0]["text"],
-    }
+    segs = [dict(s) for s in vad_result]
 
-    for seg in vad_result[1:]:
-        if seg["end"] - cur["start"] < max_length:
-            cur["end"] = seg["end"]
-            cur["text"] = (cur["text"] + " " + seg["text"]).strip()
-        else:
-            if cur["end"] - cur["start"] > min_length:
-                new_result.append(cur)
-            cur = {
-                "start": seg["start"],
-                "end": seg["end"],
-                "text": seg["text"],
-            }
+    def boundary_cost(left, right):
+        gap = right["start"] - left["end"]
+        penalty = sentence_end_penalty if _SENTENCE_END_RE.search(left["text"]) else 0.0
+        return gap + penalty
 
-    new_result.append(cur)
-    return new_result
+    while len(segs) > 1:
+        best_i = -1
+        best_cost = turn_threshold
+        for i in range(len(segs) - 1):
+            if segs[i + 1]["end"] - segs[i]["start"] > max_length:
+                continue
+            cost = boundary_cost(segs[i], segs[i + 1])
+            if cost < best_cost:
+                best_cost = cost
+                best_i = i
+        if best_i < 0:
+            break
+
+        left, right = segs[best_i], segs[best_i + 1]
+        left["end"] = right["end"]
+        left["text"] = (left["text"] + " " + right["text"]).strip()
+        segs.pop(best_i + 1)
+
+    return segs
 
 
 class Paraformer(BaseASR):
@@ -102,7 +119,10 @@ class Paraformer(BaseASR):
                         "text": s["text"].strip()
                     })
 
-            segments = merge_vad(segments)
+            # temperature controls merge intensity: 0.0 = default merging, 1.0 = minimal
+            turn_threshold = max(0.1, 0.8 - 0.7 * float(temperature))
+            segments = merge_vad(segments, turn_threshold=turn_threshold)
+
 
             return {
                 "text": out["text"].strip(),
