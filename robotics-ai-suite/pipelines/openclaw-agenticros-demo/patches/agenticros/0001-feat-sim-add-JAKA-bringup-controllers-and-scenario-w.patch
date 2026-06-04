@@ -1,0 +1,3975 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+From 7f5deacef0df49de3c1c280475edbb81625f2d12 Mon Sep 17 00:00:00 2001
+From: RoboticsYY <yu.yan@intel.com>
+Date: Wed, 3 Jun 2026 14:26:00 +0800
+Subject: [PATCH 1/4] feat(sim): add JAKA bringup, controllers, and scenario
+ workflows
+
+---
+ ros2_ws/capture_joints.py                     |   38 +
+ ros2_ws/src/agenticros_bringup/README.md      |   12 +-
+ .../agenticros_bringup/cmd_vel_to_stamped.py  |   44 +
+ .../jaka_base_controller.py                   |  147 ++
+ .../agenticros_bringup/jaka_joint_teleop.py   |  286 ++++
+ .../jaka_motion_smoke_test.py                 |  200 +++
+ .../config/jaka_gazebo_gui.config             | 1264 +++++++++++++++++
+ .../launch/gazebo_small_warehouse.launch.py   |  679 +++++++++
+ .../launch/gazebo_turtlebot3.launch.py        |  127 +-
+ .../launch/rosbridge_gazebo.launch.py         |  320 ++++-
+ .../rosbridge_gazebo_jaka_empty.launch.py     |  166 +++
+ .../sim8_small_warehouse_websocket.gzlaunch   |   70 +
+ .../launch/sim8_websocket_only.gzlaunch       |   35 +
+ ros2_ws/src/agenticros_bringup/package.xml    |    2 +
+ ros2_ws/src/agenticros_bringup/setup.py       |    6 +
+ .../worlds/jaka_empty.world                   |   66 +
+ .../follower_controller.py                    |   11 +-
+ .../agenticros_follow_me/person_tracker.py    |   31 +-
+ run_scenario_b.sh                             |   28 +
+ run_scenarios.sh                              |   47 +
+ scripts/cleanup_sim_processes.sh              |   34 +
+ scripts/run_jaka_sim_test.sh                  |   27 +
+ 22 files changed, 3605 insertions(+), 35 deletions(-)
+ create mode 100644 ros2_ws/capture_joints.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/agenticros_bringup/cmd_vel_to_stamped.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_base_controller.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_joint_teleop.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_motion_smoke_test.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/config/jaka_gazebo_gui.config
+ create mode 100644 ros2_ws/src/agenticros_bringup/launch/gazebo_small_warehouse.launch.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo_jaka_empty.launch.py
+ create mode 100644 ros2_ws/src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch
+ create mode 100644 ros2_ws/src/agenticros_bringup/launch/sim8_websocket_only.gzlaunch
+ create mode 100644 ros2_ws/src/agenticros_bringup/worlds/jaka_empty.world
+ create mode 100644 run_scenario_b.sh
+ create mode 100644 run_scenarios.sh
+ create mode 100755 scripts/cleanup_sim_processes.sh
+ create mode 100755 scripts/run_jaka_sim_test.sh
+
+diff --git a/ros2_ws/capture_joints.py b/ros2_ws/capture_joints.py
+new file mode 100644
+index 0000000..bc1cf6f
+--- /dev/null
++++ b/ros2_ws/capture_joints.py
+@@ -0,0 +1,38 @@
++import rclpy
++from rclpy.node import Node
++from sensor_msgs.msg import JointState
++import sys
++
++TARGET_JOINTS = [
++    'body_j1', 'body_j2', 'body_j3', 'body_j4',
++    'arm_lj1', 'arm_lj2', 'arm_lj3', 'arm_lj4',
++    'arm_rj1', 'arm_rj2', 'arm_rj3', 'arm_rj4'
++]
++
++class JointSubscriber(Node):
++    def __init__(self):
++        super().__init__('joint_subscriber')
++        self.subscription = self.create_subscription(
++            JointState,
++            '/joint_states',
++            self.listener_callback,
++            10)
++        self.received = False
++
++    def listener_callback(self, msg):
++        joint_map = dict(zip(msg.name, msg.position))
++        results = []
++        for name in TARGET_JOINTS:
++            val = joint_map.get(name, float('nan'))
++            results.append(f"{name}={val:.6f}")
++        print("; ".join(results))
++        self.received = True
++        rclpy.shutdown()
++
++def main():
++    rclpy.init()
++    node = JointSubscriber()
++    rclpy.spin(node)
++
++if __name__ == '__main__':
++    main()
+diff --git a/ros2_ws/src/agenticros_bringup/README.md b/ros2_ws/src/agenticros_bringup/README.md
+index 35bc1be..8507d49 100644
+--- a/ros2_ws/src/agenticros_bringup/README.md
++++ b/ros2_ws/src/agenticros_bringup/README.md
+@@ -13,6 +13,9 @@ Launch files and an RViz2 config for **TurtleBot3 in Gazebo** aligned with Agent
+ ```bash
+ sudo apt update
+ sudo apt install ros-jazzy-turtlebot3-gazebo ros-jazzy-rviz2 ros-jazzy-rosbridge-suite
++
++# Optional (Gazebo Sim 8 browser websocket via gz-launch)
++sudo apt install ros-jazzy-gz-launch-vendor
+ ```
+ 
+ Gazebo is pulled in as a dependency of **`ros-jazzy-turtlebot3-gazebo`**. If `apt` cannot find that package, run `apt search turtlebot3-gazebo` for your distro’s exact name.
+@@ -32,7 +35,7 @@ On **ARM boards** (e.g. Radxa), the binary packages must exist for your Ubuntu +
+ 
+ ## Namespaced `cmd_vel` (AgenticROS `robot.namespace`)
+ 
+-Real robots often use **`/<namespace>/cmd_vel`** (e.g. `/robot3946b404c33e4aa39a8d16deb1c5c593/cmd_vel`). Stock TurtleBot3 Gazebo subscribes to **`/cmd_vel`**. To use the **same** AgenticROS namespace in sim without editing SDF plugins, pass **`robot_namespace`** (the namespace string **without** slashes—same as the plugin’s `robot.namespace` value):
++Real robots often use **`/<namespace>/cmd_vel`** (e.g. `/robot3946b404c33e4aa39a8d16deb1c5c593/cmd_vel`). Stock TurtleBot3 Gazebo subscribes to **`/cmd_vel`**. To use the **same** AgenticROS namespace in sim without editing robot model assets, pass **`robot_namespace`** (the namespace string **without** slashes—same as the plugin’s `robot.namespace` value):
+ 
+ ```bash
+ ros2 launch agenticros_bringup mode_a_gazebo.launch.py \
+@@ -92,6 +95,7 @@ AgenticROS teleop and many stacks publish **`/<namespace>/cmd_vel`** (e.g. `/rob
+ | `mode_a_gazebo.launch.py` | **Mode A:** Gazebo + TurtleBot3 only; sets **`ROS_DOMAIN_ID`** (default `0`). Use with AgenticROS **local** transport—no rosbridge. |
+ | `mode_a_gazebo_rviz.launch.py` | **Mode A:** Gazebo + RViz + same domain ID setup. |
+ | `cmd_vel_bridge.launch.py` | Relay only: namespaced **`src_cmd_vel`** → **`dst_cmd_vel`** (default `/cmd_vel`). |
++| `sim8_small_warehouse_websocket.gzlaunch` | Gazebo Sim 8 + AWS small warehouse + gz-launch websocket server (`ws://<host>:9002`) for browser clients. |
+ 
+ ### Examples
+ 
+@@ -112,6 +116,12 @@ ros2 launch agenticros_bringup mode_a_gazebo_rviz.launch.py
+ # Simulation + rosbridge (Mode B–style; plugin uses ws://localhost:9090)
+ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py
+ 
++# Gazebo Sim 8 websocket server for browser visualization (requires ros-jazzy-gz-launch-vendor)
++gz launch src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch
++# Optional overrides:
++#   worldPath:=/absolute/path/to/world.world
++#   wsPort:=9002 publicationHz:=30 maxConnections:=-1
++
+ # Gazebo + RViz without forcing ROS_DOMAIN_ID via launch (set export ROS_DOMAIN_ID yourself)
+ ros2 launch agenticros_bringup turtlebot3_gazebo_rviz.launch.py
+ 
+diff --git a/ros2_ws/src/agenticros_bringup/agenticros_bringup/cmd_vel_to_stamped.py b/ros2_ws/src/agenticros_bringup/agenticros_bringup/cmd_vel_to_stamped.py
+new file mode 100644
+index 0000000..6f09c8f
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/agenticros_bringup/cmd_vel_to_stamped.py
+@@ -0,0 +1,44 @@
++#!/usr/bin/env python3
++"""Bridge Twist to TwistStamped on one topic for TurtleBot3 Gazebo."""
++
++import rclpy
++from rclpy.node import Node
++from geometry_msgs.msg import Twist, TwistStamped
++
++
++class CmdVelToStampedNode(Node):
++    def __init__(self) -> None:
++        super().__init__("agenticros_cmd_vel_to_stamped")
++        input_topic = self.declare_parameter("input_topic", "/cmd_vel_unstamped").get_parameter_value().string_value
++        output_topic = self.declare_parameter("output_topic", "/cmd_vel").get_parameter_value().string_value
++        frame_id = self.declare_parameter("frame_id", "base_link").get_parameter_value().string_value
++        self._frame_id = frame_id
++        self._pub = self.create_publisher(TwistStamped, output_topic, 10)
++        self.create_subscription(Twist, input_topic, self._on_twist, 10)
++        self.get_logger().info(
++            f"Bridging Twist {input_topic} -> TwistStamped {output_topic} (frame_id={frame_id})"
++        )
++
++    def _on_twist(self, msg: Twist) -> None:
++        stamped = TwistStamped()
++        stamped.header.stamp = self.get_clock().now().to_msg()
++        stamped.header.frame_id = self._frame_id
++        stamped.twist = msg
++        self._pub.publish(stamped)
++
++
++def main() -> None:
++    rclpy.init()
++    node = CmdVelToStampedNode()
++    try:
++        rclpy.spin(node)
++    except KeyboardInterrupt:
++        pass
++    finally:
++        node.destroy_node()
++        if rclpy.ok():
++            rclpy.shutdown()
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_base_controller.py b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_base_controller.py
+new file mode 100644
+index 0000000..2b9c7bf
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_base_controller.py
+@@ -0,0 +1,147 @@
++import math
++
++import rclpy
++from geometry_msgs.msg import Twist
++from nav_msgs.msg import Odometry
++from rclpy.node import Node
++from std_msgs.msg import Float64
++
++
++DEFAULT_LINEAR_VELOCITY_SCALE = 1.0
++DEFAULT_ANGULAR_VELOCITY_SCALE = 0.5642857142857143
++
++
++def _yaw_to_quaternion(yaw: float) -> tuple[float, float, float, float]:
++    half = yaw * 0.5
++    return (0.0, 0.0, math.sin(half), math.cos(half))
++
++
++class JakaBaseController(Node):
++    def __init__(self) -> None:
++        super().__init__("jaka_base_controller")
++
++        cmd_vel_topic = self.declare_parameter("cmd_vel_topic", "/cmd_vel").get_parameter_value().string_value
++        odom_topic = self.declare_parameter("odom_topic", "/odom").get_parameter_value().string_value
++        x_topic = self.declare_parameter("agv_x_topic", "/jaka_cargo/joints/agv_x/cmd_pos").get_parameter_value().string_value
++        y_topic = self.declare_parameter("agv_y_topic", "/jaka_cargo/joints/agv_y/cmd_pos").get_parameter_value().string_value
++        yaw_topic = self.declare_parameter("agv_yaw_topic", "/jaka_cargo/joints/agv_yaw/cmd_pos").get_parameter_value().string_value
++        update_rate = self.declare_parameter("update_rate_hz", 30.0).get_parameter_value().double_value
++        self._linear_scale = self.declare_parameter(
++            "linear_velocity_scale", DEFAULT_LINEAR_VELOCITY_SCALE
++        ).get_parameter_value().double_value
++        self._angular_scale = self.declare_parameter(
++            "angular_velocity_scale", DEFAULT_ANGULAR_VELOCITY_SCALE
++        ).get_parameter_value().double_value
++        self._max_integration_dt = self.declare_parameter("max_integration_dt", 0.2).get_parameter_value().double_value
++
++        self._x = self.declare_parameter("initial_x", 0.0).get_parameter_value().double_value
++        self._y = self.declare_parameter("initial_y", 0.0).get_parameter_value().double_value
++        self._yaw = self.declare_parameter("initial_yaw", 0.0).get_parameter_value().double_value
++
++        self._cmd_linear_x = 0.0
++        self._cmd_linear_y = 0.0
++        self._cmd_angular_z = 0.0
++        self._last_time = None
++
++        self._agv_x_pub = self.create_publisher(Float64, x_topic, 10)
++        self._agv_y_pub = self.create_publisher(Float64, y_topic, 10)
++        self._agv_yaw_pub = self.create_publisher(Float64, yaw_topic, 10)
++        self._odom_pub = self.create_publisher(Odometry, odom_topic, 10)
++        self.create_subscription(Twist, cmd_vel_topic, self._on_cmd_vel, 10)
++
++        period = 1.0 / max(update_rate, 1.0)
++        self.create_timer(period, self._on_timer)
++        self.get_logger().info(
++            "JAKA base controller: "
++            f"cmd_vel={cmd_vel_topic}, odom={odom_topic}, "
++            f"agv targets=({x_topic}, {y_topic}, {yaw_topic}), "
++            f"linear_velocity_scale={self._linear_scale:.4f}, angular_velocity_scale={self._angular_scale:.4f}, "
++            f"max_integration_dt={self._max_integration_dt:.3f}"
++        )
++
++    def _on_cmd_vel(self, msg: Twist) -> None:
++        self._cmd_linear_x = float(msg.linear.x)
++        self._cmd_linear_y = float(msg.linear.y)
++        self._cmd_angular_z = float(msg.angular.z)
++
++    def _on_timer(self) -> None:
++        now = self.get_clock().now()
++        if self._last_time is None:
++            self._last_time = now
++            self._publish_targets()
++            self._publish_odom(now)
++            return
++
++        dt = (now - self._last_time).nanoseconds / 1e9
++        self._last_time = now
++        if dt <= 0.0:
++            self._publish_targets()
++            self._publish_odom(now)
++            return
++        if dt > self._max_integration_dt:
++            # Ignore discontinuities from /clock jumps to keep integration stable.
++            self.get_logger().warn(
++                f"Skipping integration step with large dt={dt:.3f}s (max {self._max_integration_dt:.3f}s)",
++                throttle_duration_sec=2.0,
++            )
++            self._publish_targets()
++            self._publish_odom(now)
++            return
++
++        effective_linear_x = self._cmd_linear_x * self._linear_scale
++        effective_linear_y = self._cmd_linear_y * self._linear_scale
++        effective_angular_z = self._cmd_angular_z * self._angular_scale
++
++        cos_yaw = math.cos(self._yaw)
++        sin_yaw = math.sin(self._yaw)
++        self._x += (effective_linear_x * cos_yaw - effective_linear_y * sin_yaw) * dt
++        self._y += (effective_linear_x * sin_yaw + effective_linear_y * cos_yaw) * dt
++        self._yaw += effective_angular_z * dt
++        self._yaw = math.atan2(math.sin(self._yaw), math.cos(self._yaw))
++
++        self._publish_targets()
++        self._publish_odom(now)
++
++    def _publish_targets(self) -> None:
++        for pub, value in (
++            (self._agv_x_pub, self._x),
++            (self._agv_y_pub, self._y),
++            (self._agv_yaw_pub, self._yaw),
++        ):
++            msg = Float64()
++            msg.data = float(value)
++            pub.publish(msg)
++
++    def _publish_odom(self, now) -> None:
++        odom = Odometry()
++        odom.header.stamp = now.to_msg()
++        odom.header.frame_id = "odom"
++        odom.child_frame_id = "base_link"
++        odom.pose.pose.position.x = float(self._x)
++        odom.pose.pose.position.y = float(self._y)
++        qx, qy, qz, qw = _yaw_to_quaternion(self._yaw)
++        odom.pose.pose.orientation.x = qx
++        odom.pose.pose.orientation.y = qy
++        odom.pose.pose.orientation.z = qz
++        odom.pose.pose.orientation.w = qw
++        odom.twist.twist.linear.x = float(self._cmd_linear_x * self._linear_scale)
++        odom.twist.twist.linear.y = float(self._cmd_linear_y * self._linear_scale)
++        odom.twist.twist.angular.z = float(self._cmd_angular_z * self._angular_scale)
++        self._odom_pub.publish(odom)
++
++
++def main() -> None:
++    rclpy.init()
++    node = JakaBaseController()
++    try:
++        rclpy.spin(node)
++    except KeyboardInterrupt:
++        pass
++    finally:
++        node.destroy_node()
++        if rclpy.ok():
++            rclpy.shutdown()
++
++
++if __name__ == "__main__":
++    main()
+\ No newline at end of file
+diff --git a/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_joint_teleop.py b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_joint_teleop.py
+new file mode 100644
+index 0000000..37ec012
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_joint_teleop.py
+@@ -0,0 +1,286 @@
++import argparse
++import math
++import sys
++import time
++from typing import Dict
++
++import rclpy
++from rclpy.node import Node
++from sensor_msgs.msg import JointState
++from std_msgs.msg import Float64
++
++
++JOINT_NAMES = [
++    "body_j1",
++    "body_j2",
++    "body_j3",
++    "body_j4",
++    "arm_lj1",
++    "arm_lj2",
++    "arm_lj3",
++    "arm_lj4",
++    "arm_lj5",
++    "arm_lj6",
++    "arm_lj7",
++    "arm_rj1",
++    "arm_rj2",
++    "arm_rj3",
++    "arm_rj4",
++    "arm_rj5",
++    "arm_rj6",
++    "arm_rj7",
++]
++
++ARM_JOINT_NAMES = [
++    "arm_lj1",
++    "arm_lj2",
++    "arm_lj3",
++    "arm_lj4",
++    "arm_lj5",
++    "arm_lj6",
++    "arm_lj7",
++    "arm_rj1",
++    "arm_rj2",
++    "arm_rj3",
++    "arm_rj4",
++    "arm_rj5",
++    "arm_rj6",
++    "arm_rj7",
++]
++
++
++def _pose_from_arm_values(values: list[float], degrees: bool) -> Dict[str, float]:
++    if len(values) != len(ARM_JOINT_NAMES):
++        raise ValueError(f"Expected {len(ARM_JOINT_NAMES)} arm values, got {len(values)}")
++
++    pose = {joint: 0.0 for joint in JOINT_NAMES}
++    for joint_name, value in zip(ARM_JOINT_NAMES, values):
++        pose[joint_name] = math.radians(value) if degrees else value
++    return pose
++
++
++POSES: Dict[str, Dict[str, float]] = {
++    "home": _pose_from_arm_values(
++        [-90.0, 90.0, 0.0, -120.0, 0.0, -60.0, 0.0, 90.0, 90.0, 0.0, -120.0, 0.0, 60.0, 0.0],
++        degrees=True,
++    ),
++    "zero": _pose_from_arm_values(
++        [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
++        degrees=True,
++    ),
++    "pre_camera": _pose_from_arm_values(
++        [0.1, 1.0, -1.2, -1.9, 0.6, 0.6, 1.5, -0.1, 1.0, 1.2, -1.9, -0.6, -0.6, -1.5],
++        degrees=False,
++    ),
++}
++
++
++class JakaJointTeleop(Node):
++    def __init__(self) -> None:
++        super().__init__("jaka_joint_teleop")
++        self._joint_publishers = {
++            joint: self.create_publisher(Float64, f"/jaka_cargo/joints/{joint}/cmd_pos", 10)
++            for joint in JOINT_NAMES
++        }
++        self._joint_state_sub = self.create_subscription(JointState, "/joint_states", self._on_joint_states, 10)
++        self._last_targets = {joint: 0.0 for joint in JOINT_NAMES}
++        self._has_joint_state = False
++        self._warned_no_joint_state = False
++
++    def _on_joint_states(self, msg: JointState) -> None:
++        updated = False
++        for joint_name, value in zip(msg.name, msg.position):
++            if joint_name not in self._last_targets:
++                continue
++            self._last_targets[joint_name] = float(value)
++            updated = True
++
++        if updated:
++            self._has_joint_state = True
++
++    def wait_for_joint_states(self, timeout_sec: float) -> bool:
++        end_time = time.time() + max(0.0, timeout_sec)
++        while rclpy.ok() and time.time() < end_time:
++            rclpy.spin_once(self, timeout_sec=0.1)
++            if self._has_joint_state:
++                return True
++        return self._has_joint_state
++
++    def list_targets(self) -> Dict[str, float]:
++        return dict(self._last_targets)
++
++    def publish_targets(self, targets: Dict[str, float], duration: float = 1.0, rate_hz: float = 20.0) -> None:
++        if not self._has_joint_state and not self.wait_for_joint_states(timeout_sec=1.0) and not self._warned_no_joint_state:
++            self.get_logger().warn("/joint_states not received yet; using last known teleop targets as the command baseline.")
++            self._warned_no_joint_state = True
++
++        start = dict(self._last_targets)
++        merged = dict(start)
++        merged.update(targets)
++
++        if duration <= 0.0:
++            duration = 0.0
++            steps = 1
++        else:
++            steps = max(1, int(duration * rate_hz))
++
++        for step in range(1, steps + 1):
++            alpha = 1.0 if steps == 1 else (step / float(steps))
++            for joint in JOINT_NAMES:
++                value = start[joint] + (merged[joint] - start[joint]) * alpha
++                self._publish_joint(joint, value)
++
++            rclpy.spin_once(self, timeout_sec=0.0)
++            if duration > 0.0:
++                time.sleep(duration / steps)
++
++        self._last_targets = merged
++
++    def publish_pose(self, pose_name: str, duration: float, rate_hz: float) -> None:
++        if pose_name not in POSES:
++            raise ValueError(f"Unknown pose '{pose_name}'. Available: {', '.join(sorted(POSES))}")
++        self.publish_targets(POSES[pose_name], duration=duration, rate_hz=rate_hz)
++
++    def _publish_joint(self, joint_name: str, value: float) -> None:
++        msg = Float64()
++        msg.data = float(value)
++        self._joint_publishers[joint_name].publish(msg)
++
++
++def _build_parser() -> argparse.ArgumentParser:
++    parser = argparse.ArgumentParser(description="JAKA upper-body joint teleop for Gazebo joint position controllers.")
++    parser.add_argument("--pose", choices=sorted(POSES.keys()), help="Send one preset pose and exit.")
++    parser.add_argument("--joint", choices=JOINT_NAMES, help="Send a single joint command and exit.")
++    parser.add_argument("--value", type=float, help="Value for --joint command (rad or m).")
++    parser.add_argument("--duration", type=float, default=1.0, help="Blend duration in seconds.")
++    parser.add_argument("--rate", type=float, default=20.0, help="Interpolation publish rate in Hz.")
++    parser.add_argument("--list", action="store_true", help="List joints and poses, then exit.")
++    parser.add_argument("--interactive", action="store_true", help="Run interactive command loop.")
++    return parser
++
++
++def _print_catalog() -> None:
++    print("Available poses:")
++    for pose_name in sorted(POSES):
++        print(f"  {pose_name}")
++
++    print("\nAvailable joints:")
++    for joint in JOINT_NAMES:
++        print(f"  {joint}")
++
++
++def _interactive_loop(node: JakaJointTeleop, duration: float, rate: float) -> int:
++    print("JAKA joint teleop interactive mode")
++    print("Commands: pose <name> | set <joint> <value> | show | list | help | quit")
++
++    while rclpy.ok():
++        try:
++            line = input("jaka-teleop> ").strip()
++        except EOFError:
++            print("")
++            return 0
++        except KeyboardInterrupt:
++            print("")
++            return 0
++
++        if not line:
++            continue
++
++        parts = line.split()
++        command = parts[0].lower()
++
++        if command in ("quit", "exit"):
++            return 0
++
++        if command == "help":
++            print("pose <name>        Send a preset pose")
++            print("set <joint> <val>  Set one joint target")
++            print("show               Show current commanded targets")
++            print("list               List joints and poses")
++            print("quit               Exit teleop")
++            continue
++
++        if command == "list":
++            _print_catalog()
++            continue
++
++        if command == "show":
++            for joint, value in node.list_targets().items():
++                print(f"  {joint}: {value:.4f}")
++            continue
++
++        if command == "pose":
++            if len(parts) != 2:
++                print("Usage: pose <name>")
++                continue
++            pose_name = parts[1]
++            try:
++                node.publish_pose(pose_name, duration=duration, rate_hz=rate)
++                print(f"Applied pose '{pose_name}'")
++            except ValueError as exc:
++                print(str(exc))
++            continue
++
++        if command == "set":
++            if len(parts) != 3:
++                print("Usage: set <joint> <value>")
++                continue
++            joint_name = parts[1]
++            if joint_name not in JOINT_NAMES:
++                print(f"Unknown joint '{joint_name}'")
++                continue
++            try:
++                value = float(parts[2])
++            except ValueError:
++                print(f"Invalid numeric value '{parts[2]}'")
++                continue
++
++            node.publish_targets({joint_name: value}, duration=duration, rate_hz=rate)
++            print(f"Set {joint_name} -> {value}")
++            continue
++
++        print(f"Unknown command '{command}'. Try: help")
++
++    return 0
++
++
++def main(argv=None) -> int:
++    parser = _build_parser()
++    args = parser.parse_args(argv)
++
++    if args.list:
++        _print_catalog()
++        return 0
++
++    if args.joint and args.value is None:
++        parser.error("--value is required when using --joint")
++
++    rclpy.init(args=None)
++    node = JakaJointTeleop()
++
++    settle_until = time.time() + 0.5
++    while rclpy.ok() and time.time() < settle_until:
++        rclpy.spin_once(node, timeout_sec=0.0)
++        time.sleep(0.05)
++
++    node.wait_for_joint_states(timeout_sec=1.0)
++
++    try:
++        if args.pose:
++            node.publish_pose(args.pose, duration=args.duration, rate_hz=args.rate)
++            node.get_logger().info(f"Applied pose '{args.pose}'")
++            return 0
++
++        if args.joint:
++            node.publish_targets({args.joint: args.value}, duration=args.duration, rate_hz=args.rate)
++            node.get_logger().info(f"Set {args.joint} -> {args.value}")
++            return 0
++
++        return _interactive_loop(node, duration=args.duration, rate=args.rate)
++    finally:
++        node.destroy_node()
++        rclpy.shutdown()
++
++
++if __name__ == "__main__":
++    sys.exit(main())
+\ No newline at end of file
+diff --git a/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_motion_smoke_test.py b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_motion_smoke_test.py
+new file mode 100644
+index 0000000..9258cb3
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/agenticros_bringup/jaka_motion_smoke_test.py
+@@ -0,0 +1,200 @@
++import argparse
++import math
++import time
++from typing import Dict
++
++import rclpy
++from geometry_msgs.msg import Twist
++from nav_msgs.msg import Odometry
++from rclpy.node import Node
++from std_msgs.msg import Float64
++
++
++ARM_JOINTS = [
++    "arm_lj1",
++    "arm_lj2",
++    "arm_lj3",
++    "arm_lj4",
++    "arm_lj5",
++    "arm_lj6",
++    "arm_lj7",
++    "arm_rj1",
++    "arm_rj2",
++    "arm_rj3",
++    "arm_rj4",
++    "arm_rj5",
++    "arm_rj6",
++    "arm_rj7",
++]
++
++
++def _pose_from_arm_values(values: list[float]) -> Dict[str, float]:
++    if len(values) != len(ARM_JOINTS):
++        raise ValueError(f"Expected {len(ARM_JOINTS)} values, got {len(values)}")
++    return {joint: value for joint, value in zip(ARM_JOINTS, values)}
++
++
++ARM_POSES = {
++    "home": _pose_from_arm_values([
++        -math.pi / 2,
++        math.pi / 2,
++        0.0,
++        -2.0944,
++        0.0,
++        -1.0472,
++        0.0,
++        math.pi / 2,
++        math.pi / 2,
++        0.0,
++        -2.0944,
++        0.0,
++        1.0472,
++        0.0,
++    ]),
++    "cross": _pose_from_arm_values([
++        -0.2,
++        1.0,
++        -1.0,
++        -1.8,
++        0.7,
++        0.8,
++        1.2,
++        0.2,
++        1.0,
++        1.0,
++        -1.8,
++        -0.7,
++        -0.8,
++        -1.2,
++    ]),
++}
++
++
++class JakaMotionSmokeTest(Node):
++    def __init__(self) -> None:
++        super().__init__("jaka_motion_smoke_test")
++        self._cmd_vel_pub = self.create_publisher(Twist, "/cmd_vel", 10)
++        self._joint_pubs = {
++            joint: self.create_publisher(Float64, f"/jaka_cargo/joints/{joint}/cmd_pos", 10)
++            for joint in ARM_JOINTS
++        }
++        self._odom_sub = self.create_subscription(Odometry, "/odom", self._on_odom, 10)
++        self._last_odom = None
++
++    def _on_odom(self, msg: Odometry) -> None:
++        self._last_odom = msg
++
++    def wait_for_odom(self, timeout_sec: float) -> bool:
++        start = time.time()
++        while rclpy.ok() and (time.time() - start) < timeout_sec:
++            rclpy.spin_once(self, timeout_sec=0.1)
++            if self._last_odom is not None:
++                return True
++        return False
++
++    def publish_base(self, linear_x: float, angular_z: float, duration: float, hz: float = 20.0) -> None:
++        steps = max(1, int(duration * hz))
++        msg = Twist()
++        msg.linear.x = float(linear_x)
++        msg.angular.z = float(angular_z)
++        for _ in range(steps):
++            self._cmd_vel_pub.publish(msg)
++            rclpy.spin_once(self, timeout_sec=0.0)
++            time.sleep(1.0 / hz)
++
++        stop = Twist()
++        for _ in range(5):
++            self._cmd_vel_pub.publish(stop)
++            rclpy.spin_once(self, timeout_sec=0.0)
++            time.sleep(0.05)
++
++    def publish_arm_pose(self, pose_name: str, duration: float, hz: float = 20.0) -> None:
++        if pose_name not in ARM_POSES:
++            raise ValueError(f"Unknown pose '{pose_name}'. Available: {', '.join(sorted(ARM_POSES))}")
++
++        pose = ARM_POSES[pose_name]
++        steps = max(1, int(duration * hz))
++        for _ in range(steps):
++            for joint, value in pose.items():
++                msg = Float64()
++                msg.data = float(value)
++                self._joint_pubs[joint].publish(msg)
++            rclpy.spin_once(self, timeout_sec=0.0)
++            time.sleep(1.0 / hz)
++
++    def odom_xy(self):
++        if self._last_odom is None:
++            return None
++        p = self._last_odom.pose.pose.position
++        return (float(p.x), float(p.y))
++
++
++def _build_parser() -> argparse.ArgumentParser:
++    parser = argparse.ArgumentParser(description="Scripted JAKA base+arm smoke test for Gazebo empty-world launch.")
++    parser.add_argument("--base-linear", type=float, default=0.5, help="Base linear x velocity (m/s).")
++    parser.add_argument("--base-angular", type=float, default=0.0, help="Base angular z velocity (rad/s).")
++    parser.add_argument("--base-duration", type=float, default=10.0, help="Base command duration (s).")
++    parser.add_argument("--arm-duration", type=float, default=2.0, help="Duration for each arm pose publish stage (s).")
++    parser.add_argument("--hold", type=float, default=1.0, help="Hold time between arm poses (s).")
++    parser.add_argument("--odom-timeout", type=float, default=8.0, help="Seconds to wait for /odom before running.")
++    return parser
++
++
++def main(argv=None) -> int:
++    args = _build_parser().parse_args(argv)
++
++    rclpy.init(args=None)
++    node = JakaMotionSmokeTest()
++
++    try:
++        node.get_logger().info("Waiting for /odom...")
++        has_odom = node.wait_for_odom(args.odom_timeout)
++        if not has_odom:
++            node.get_logger().warn("/odom not received. Base displacement report will be unavailable.")
++
++        start_xy = node.odom_xy()
++
++        node.get_logger().info("Arm test: pose=home")
++        node.publish_arm_pose("home", duration=args.arm_duration)
++        time.sleep(max(0.0, args.hold))
++
++        node.get_logger().info("Arm test: pose=cross")
++        node.publish_arm_pose("cross", duration=args.arm_duration)
++        time.sleep(max(0.0, args.hold))
++
++        node.get_logger().info("Arm test: pose=home")
++        node.publish_arm_pose("home", duration=args.arm_duration)
++
++        node.get_logger().info(
++            f"Base test: linear={args.base_linear:.3f} m/s angular={args.base_angular:.3f} rad/s duration={args.base_duration:.2f}s"
++        )
++        node.publish_base(args.base_linear, args.base_angular, args.base_duration)
++
++        for _ in range(10):
++            rclpy.spin_once(node, timeout_sec=0.05)
++
++        end_xy = node.odom_xy()
++        if start_xy is not None and end_xy is not None:
++            dx = end_xy[0] - start_xy[0]
++            dy = end_xy[1] - start_xy[1]
++            dist = math.hypot(dx, dy)
++            node.get_logger().info(
++                f"Base displacement from odom: dx={dx:.3f} m dy={dy:.3f} m distance={dist:.3f} m"
++            )
++            if dist < 0.08:
++                node.get_logger().warn(
++                    "Base movement was small enough that it may be hard to notice in Gazebo GUI. "
++                    "Try a longer base duration if you need a more obvious motion in the scene."
++                )
++        else:
++            node.get_logger().warn("Could not compute base displacement because /odom was not available.")
++
++        node.get_logger().info("JAKA motion smoke test completed.")
++        return 0
++    finally:
++        node.destroy_node()
++        rclpy.shutdown()
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())
+\ No newline at end of file
+diff --git a/ros2_ws/src/agenticros_bringup/config/jaka_gazebo_gui.config b/ros2_ws/src/agenticros_bringup/config/jaka_gazebo_gui.config
+new file mode 100644
+index 0000000..cc3dd9a
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/config/jaka_gazebo_gui.config
+@@ -0,0 +1,1264 @@
++<?xml version="1.0"?>
++
++<window>
++    <position_x>-1</position_x>
++    <position_y>-1</position_y>
++    <state></state>
++    <width>1000</width>
++    <height>845</height>
++    <style material_theme="Light" material_primary="#ff5722" material_accent="#03a9f4" toolbar_color_light="#f3f3f3" toolbar_text_color_light="#111111" toolbar_color_dark="#414141" toolbar_text_color_dark="#f3f3f3" plugin_toolbar_color_light="" plugin_toolbar_text_color_light="" plugin_toolbar_color_dark="" plugin_toolbar_text_color_dark=""/>
++    <menus>
++        <drawer visible="true" default="false"/>
++        <plugins visible="true" from_paths="true"/>
++    </menus>
++</window>
++<plugin filename="MinimalScene" name="3D View">
++    <gz-gui>
++        <title>3D View</title>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">581</property>
++        <property key="height" type="double">797</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">docked</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">581</property>
++        <property key="availableHeight" type="double">797</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">true</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">50</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">200</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++    <engine>ogre2</engine>
++    <scene>scene</scene>
++    <view_controller>orbit</view_controller>
++    <ambient_light>0.4 0.4 0.4</ambient_light>
++    <background_color>0.8 0.8 0.8</background_color>
++    <camera_pose>-6 0 6 0 0.5 0</camera_pose>
++</plugin>
++<plugin filename="EntityContextMenuPlugin" name="Entity context menu">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">true</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">370</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">370</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="GzSceneManager" name="Scene Manager">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">130</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">130</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="InteractiveViewControl" name="Interactive view control">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">110</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">110</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="CameraTracking" name="Camera Tracking">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">false</property>
++        <property key="visible" type="bool">false</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">260</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">260</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="MarkerManager" name="Marker manager">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">230</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">230</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="SelectEntities" name="Select Entities">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">90</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">90</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="Spawn" name="Spawn Entities">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">110</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">110</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="VisualizationCapabilities" name="Visualization Capabilities">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">5</property>
++        <property key="height" type="double">5</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">5</property>
++        <property key="availableHeight" type="double">5</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">130</property>
++        <property key="cardMinimumWidth" type="int">350</property>
++        <property key="cardMinimumHeight" type="int">130</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="WorldControl" name="World control">
++    <gz-gui>
++        <title>World control</title>
++        <anchors target="3D View">
++            <line own="left" target="left"/>
++            <line own="bottom" target="bottom"/>
++        </anchors>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">725</property>
++        <property key="z" type="double">1</property>
++        <property key="width" type="double">1199</property>
++        <property key="height" type="double">72</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">1199</property>
++        <property key="availableHeight" type="double">72</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">100</property>
++        <property key="cardMinimumWidth" type="int">100</property>
++        <property key="cardMinimumHeight" type="int">100</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++    <play_pause>true</play_pause>
++    <step>true</step>
++    <start_paused>true</start_paused>
++    <use_event>true</use_event>
++</plugin>
++<plugin filename="WorldStats" name="World stats">
++    <gz-gui>
++        <title>World stats</title>
++        <anchors target="3D View">
++            <line own="right" target="right"/>
++            <line own="bottom" target="bottom"/>
++        </anchors>
++        <property key="x" type="double">291</property>
++        <property key="y" type="double">687</property>
++        <property key="z" type="double">1</property>
++        <property key="width" type="double">290</property>
++        <property key="height" type="double">110</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">290</property>
++        <property key="availableHeight" type="double">110</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">110</property>
++    <view_controller>orbit</view_controller>
++        <property key="cardMinimumWidth" type="int">290</property>
++        <property key="cardMinimumHeight" type="int">110</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++    <sim_time>true</sim_time>
++    <real_time>true</real_time>
++    <real_time_factor>true</real_time_factor>
++    <iterations>true</iterations>
++</plugin>
++<plugin filename="Shapes" name="Shapes">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">300</property>
++        <property key="height" type="double">50</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">false</property>
++        <property key="visible" type="bool">false</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">300</property>
++        <property key="availableHeight" type="double">50</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#666666</property>
++        <property key="lastHeight" type="int">100</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">100</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="Lights" name="Lights">
++    <gz-gui>
++        <property key="x" type="double">300</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">150</property>
++        <property key="height" type="double">50</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">150</property>
++        <property key="availableHeight" type="double">50</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#666666</property>
++        <property key="lastHeight" type="int">100</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">100</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="TransformControl" name="Transform control">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">50</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">250</property>
++        <property key="height" type="double">50</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">250</property>
++        <property key="availableHeight" type="double">50</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#777777</property>
++        <property key="lastHeight" type="int">100</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">100</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="Screenshot" name="Screenshot">
++    <gz-gui>
++        <property key="x" type="double">250</property>
++        <property key="y" type="double">50</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">50</property>
++        <property key="height" type="double">50</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">50</property>
++        <property key="availableHeight" type="double">50</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#777777</property>
++        <property key="lastHeight" type="int">150</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">150</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="CopyPaste" name="CopyPaste">
++    <gz-gui>
++        <property key="x" type="double">300</property>
++        <property key="y" type="double">50</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">100</property>
++        <property key="height" type="double">50</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">floating</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">100</property>
++        <property key="availableHeight" type="double">50</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">false</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#777777</property>
++        <property key="lastHeight" type="int">100</property>
++        <property key="cardMinimumWidth" type="int">200</property>
++        <property key="cardMinimumHeight" type="int">100</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="ComponentInspector" name="Component inspector">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">400</property>
++        <property key="height" type="double">375</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">docked</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">400</property>
++        <property key="availableHeight" type="double">375</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">true</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">50</property>
++        <property key="cardMinimumWidth" type="int">400</property>
++        <property key="cardMinimumHeight" type="int">375</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
++<plugin filename="EntityTree" name="Entity tree">
++    <gz-gui>
++        <property key="x" type="double">0</property>
++        <property key="y" type="double">0</property>
++        <property key="z" type="double">0</property>
++        <property key="width" type="double">400</property>
++        <property key="height" type="double">421</property>
++        <property key="opacity" type="double">1</property>
++        <property key="enabled" type="bool">true</property>
++        <property key="visible" type="bool">true</property>
++        <property key="state" type="string">docked</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="clip" type="bool">false</property>
++        <property key="focus" type="bool">false</property>
++        <property key="activeFocus" type="bool">false</property>
++        <property key="activeFocusOnTab" type="bool">false</property>
++        <property key="rotation" type="double">0</property>
++        <property key="scale" type="double">1</property>
++        <property key="smooth" type="bool">true</property>
++        <property key="antialiasing" type="bool">false</property>
++        <property key="implicitWidth" type="double">0</property>
++        <property key="implicitHeight" type="double">0</property>
++        <property key="availableWidth" type="double">400</property>
++        <property key="availableHeight" type="double">421</property>
++        <property key="padding" type="double">0</property>
++        <property key="topPadding" type="double">0</property>
++        <property key="leftPadding" type="double">0</property>
++        <property key="rightPadding" type="double">0</property>
++        <property key="bottomPadding" type="double">0</property>
++        <property key="spacing" type="double">0</property>
++        <property key="mirrored" type="bool">false</property>
++        <property key="visualFocus" type="bool">false</property>
++        <property key="hovered" type="bool">false</property>
++        <property key="hoverEnabled" type="bool">true</property>
++        <property key="wheelEnabled" type="bool">false</property>
++        <property key="baselineOffset" type="double">0</property>
++        <property key="horizontalPadding" type="double">0</property>
++        <property key="verticalPadding" type="double">0</property>
++        <property key="implicitContentWidth" type="double">0</property>
++        <property key="implicitContentHeight" type="double">0</property>
++        <property key="implicitBackgroundWidth" type="double">0</property>
++        <property key="implicitBackgroundHeight" type="double">0</property>
++        <property key="topInset" type="double">0</property>
++        <property key="leftInset" type="double">0</property>
++        <property key="rightInset" type="double">0</property>
++        <property key="bottomInset" type="double">0</property>
++        <property key="contentWidth" type="double">0</property>
++        <property key="contentHeight" type="double">0</property>
++        <property key="minSize" type="int">50</property>
++        <property key="showDockButton" type="bool">true</property>
++        <property key="showCloseButton" type="bool">true</property>
++        <property key="showCollapseButton" type="bool">true</property>
++        <property key="showTitleBar" type="bool">false</property>
++        <property key="resizable" type="bool">true</property>
++        <property key="standalone" type="bool">false</property>
++        <property key="dockIcon" type="string">▁</property>
++        <property key="collapseIcon" type="string">▴</property>
++        <property key="expandIcon" type="string">▾</property>
++        <property key="floatIcon" type="string">□</property>
++        <property key="closeIcon" type="string">✕</property>
++        <property key="cardBackground" type="string">#00000000</property>
++        <property key="lastHeight" type="int">50</property>
++        <property key="cardMinimumWidth" type="int">400</property>
++        <property key="cardMinimumHeight" type="int">375</property>
++        <property key="pluginToolBarColor" type="string">#bbdefb</property>
++        <property key="pluginToolBarTextColor" type="string">#111111</property>
++    </gz-gui>
++</plugin>
+diff --git a/ros2_ws/src/agenticros_bringup/launch/gazebo_small_warehouse.launch.py b/ros2_ws/src/agenticros_bringup/launch/gazebo_small_warehouse.launch.py
+new file mode 100644
+index 0000000..c5d06c8
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/launch/gazebo_small_warehouse.launch.py
+@@ -0,0 +1,679 @@
++"""Gazebo world launcher for JAKA Kargo or TurtleBot3 with optional namespace relay.
++
++This launch starts Gazebo server (and optional GUI) with a configurable world,
++then spawns either:
++- JAKA Kargo (robot_state_publisher + ros_gz_sim create from robot_description)
++- TurtleBot3 (upstream turtlebot3_gazebo spawn + robot_state_publisher)
++
++robot_type:
++- jaka_kargo
++- turtlebot3
++"""
++
++import os
++import re
++import tempfile
++from pathlib import Path
++
++from ament_index_python.packages import PackageNotFoundError, get_package_share_directory
++from launch import LaunchDescription
++from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription, LogInfo, OpaqueFunction, SetEnvironmentVariable, TimerAction
++from launch.conditions import IfCondition
++from launch.launch_description_sources import PythonLaunchDescriptionSource
++from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
++from launch_ros.actions import Node
++from launch_ros.parameter_descriptions import ParameterValue
++from launch_ros.substitutions import FindPackageShare
++
++
++def _resolve_aws_world_root() -> Path | None:
++    try:
++        return Path(get_package_share_directory("aws_robomaker_small_warehouse_world"))
++    except PackageNotFoundError:
++        pass
++
++    this_file = Path(__file__).resolve()
++    source_candidates = [
++        this_file.parents[2] / "aws-robomaker-small-warehouse-world",
++        this_file.parents[5] / "src" / "aws-robomaker-small-warehouse-world",
++    ]
++    for source_candidate in source_candidates:
++        if source_candidate.exists():
++            return source_candidate
++
++    return None
++
++
++def _default_warehouse_world_path() -> str:
++    aws_root = _resolve_aws_world_root()
++    if aws_root is None:
++        return ""
++    return str(aws_root / "worlds" / "small_warehouse" / "small_warehouse.world")
++
++
++def _resolve_jaka_resource_roots() -> list[Path]:
++    roots: list[Path] = []
++
++    try:
++        jaka_share = Path(get_package_share_directory("jaka_kargo_description"))
++        roots.append(jaka_share.parent)
++    except PackageNotFoundError:
++        pass
++
++    this_file = Path(__file__).resolve()
++    source_candidates = [
++        this_file.parents[2],
++        this_file.parents[5] / "src",
++    ]
++    for candidate in source_candidates:
++        if (candidate / "jaka_kargo_description").exists():
++            roots.append(candidate)
++
++    deduped: list[Path] = []
++    seen: set[str] = set()
++    for root in roots:
++        key = str(root)
++        if key in seen:
++            continue
++        seen.add(key)
++        deduped.append(root)
++
++    return deduped
++
++
++def _rewrite_world_model_uris_to_file(world_path: str, enabled: bool, aws_root: Path | None) -> str:
++    if not enabled or aws_root is None:
++        return world_path
++
++    world_file = Path(world_path)
++    if not world_file.exists() or not world_file.is_file():
++        return world_path
++
++    world_text = world_file.read_text(encoding="utf-8")
++    model_root = aws_root / "models"
++
++    rewritten = re.sub(
++        r"model://([A-Za-z0-9_.\-]+)",
++        lambda m: f"file://{model_root / m.group(1)}",
++        world_text,
++    )
++
++    if rewritten == world_text:
++        return world_path
++
++    fd, tmp_path = tempfile.mkstemp(prefix="aws_world_file_uri_", suffix=".world")
++    with os.fdopen(fd, "w", encoding="utf-8") as patched:
++        patched.write(rewritten)
++    return tmp_path
++
++
++def _ensure_world_plugins(world_path: str) -> str:
++    world_file = Path(world_path)
++    if not world_file.exists() or not world_file.is_file():
++        return world_path
++
++    world_text = world_file.read_text(encoding="utf-8")
++    if "</world>" not in world_text:
++        return world_path
++
++    def _force_dart_bullet_physics(text: str) -> str:
++        physics_match = re.search(r"<physics[^>]*>.*?</physics>", text, flags=re.DOTALL)
++        if physics_match is None:
++            return text
++
++        physics_block = physics_match.group(0)
++        patched_block = re.sub(r'type="ode"', 'type="dart"', physics_block, count=1)
++
++        dart_match = re.search(r"<dart>.*?</dart>", patched_block, flags=re.DOTALL)
++        if dart_match is not None:
++            dart_block = dart_match.group(0)
++            if "<collision_detector>" in dart_block:
++                dart_block = re.sub(
++                    r"<collision_detector>[^<]+</collision_detector>",
++                    "<collision_detector>bullet</collision_detector>",
++                    dart_block,
++                    count=1,
++                )
++            else:
++                dart_block = dart_block.replace(
++                    "</dart>",
++                    "\n      <collision_detector>bullet</collision_detector>\n    </dart>",
++                    1,
++                )
++            patched_block = patched_block.replace(dart_match.group(0), dart_block, 1)
++        else:
++            patched_block = patched_block.replace(
++                "</physics>",
++                "\n    <dart>\n      <collision_detector>bullet</collision_detector>\n    </dart>\n  </physics>",
++                1,
++            )
++
++        return text.replace(physics_block, patched_block, 1)
++
++    world_text = _force_dart_bullet_physics(world_text)
++
++    def _set_or_insert(block: str, tag: str, value: str) -> str:
++        if re.search(rf"<{tag}>[^<]*</{tag}>", block):
++            return re.sub(rf"<{tag}>[^<]*</{tag}>", f"<{tag}>{value}</{tag}>", block, count=1)
++        return block.replace("</physics>", f"\n    <{tag}>{value}</{tag}>\n  </physics>", 1)
++
++    physics_match = re.search(r"<physics[^>]*>.*?</physics>", world_text, flags=re.DOTALL)
++    if physics_match is not None:
++        physics_block = physics_match.group(0)
++        patched_block = physics_block
++        patched_block = re.sub(r'type="[^"]+"', 'type="dart"', patched_block, count=1)
++        # Keep simulation pacing consistent across robot/world/headless/GUI modes.
++        patched_block = _set_or_insert(patched_block, "max_step_size", "0.001")
++        patched_block = _set_or_insert(patched_block, "real_time_update_rate", "1000")
++        patched_block = _set_or_insert(patched_block, "real_time_factor", "1.0")
++
++        patched_block = re.sub(r"\s*<ode>.*?</ode>", "", patched_block, flags=re.DOTALL)
++
++        dart_match = re.search(r"<dart>.*?</dart>", patched_block, flags=re.DOTALL)
++        if dart_match is not None:
++            dart_block = dart_match.group(0)
++            if "<collision_detector>" in dart_block:
++                dart_block = re.sub(
++                    r"<collision_detector>[^<]+</collision_detector>",
++                    "<collision_detector>bullet</collision_detector>",
++                    dart_block,
++                    count=1,
++                )
++            else:
++                dart_block = dart_block.replace(
++                    "</dart>",
++                    "\n      <collision_detector>bullet</collision_detector>\n    </dart>",
++                    1,
++                )
++            patched_block = patched_block.replace(dart_match.group(0), dart_block, 1)
++        else:
++            patched_block = patched_block.replace(
++                "</physics>",
++                "\n    <dart>\n"
++                "      <collision_detector>bullet</collision_detector>\n"
++                "    </dart>\n"
++                "  </physics>",
++                1,
++            )
++
++        world_text = world_text.replace(physics_block, patched_block, 1)
++
++    required_plugins = [
++        ("gz::sim::systems::Physics", "gz-sim-physics-system", None),
++        ("gz::sim::systems::UserCommands", "gz-sim-user-commands-system", None),
++        ("gz::sim::systems::SceneBroadcaster", "gz-sim-scene-broadcaster-system", None),
++        ("gz::sim::systems::Sensors", "gz-sim-sensors-system", "<render_engine>ogre2</render_engine>"),
++        ("gz::sim::systems::Imu", "gz-sim-imu-system", None),
++    ]
++
++    blocks_to_add: list[str] = []
++    for system_name, filename, inner_xml in required_plugins:
++        if system_name in world_text:
++            continue
++        if inner_xml is None:
++            blocks_to_add.append(
++                f"\n    <plugin filename=\"{filename}\" name=\"{system_name}\">\n    </plugin>\n"
++            )
++        else:
++            blocks_to_add.append(
++                f"\n    <plugin filename=\"{filename}\" name=\"{system_name}\">\n"
++                f"      {inner_xml}\n"
++                "    </plugin>\n"
++            )
++
++    if not blocks_to_add:
++        return world_path
++
++    if blocks_to_add:
++        world_text = world_text.replace("</world>", "".join(blocks_to_add) + "</world>", 1)
++
++    fd, tmp_path = tempfile.mkstemp(prefix="world_with_required_plugins_", suffix=".world")
++    with os.fdopen(fd, "w", encoding="utf-8") as patched:
++        patched.write(world_text)
++    return tmp_path
++
++
++def _resolve_world_path(context, aws_root: Path | None) -> str:
++    world_path = LaunchConfiguration("warehouse_world").perform(context).strip()
++    if not world_path:
++        world_path = _default_warehouse_world_path()
++
++    if not world_path:
++        raise RuntimeError(
++            "No world path resolved. Pass warehouse_world:=<absolute-world-path> or install aws_robomaker_small_warehouse_world."
++        )
++
++    world_path = _rewrite_world_model_uris_to_file(
++        world_path=world_path,
++        enabled=LaunchConfiguration("rewrite_warehouse_model_uris_for_websocket").perform(context).lower() == "true",
++        aws_root=aws_root,
++    )
++    return _ensure_world_plugins(world_path)
++
++
++def _extract_world_name(world_path: str) -> str:
++    world_file = Path(world_path)
++    if not world_file.exists() or not world_file.is_file():
++        raise RuntimeError(f"World file does not exist: {world_path}")
++
++    world_text = world_file.read_text(encoding="utf-8")
++    match = re.search(r'<world[^>]*name=["\']([^"\']+)["\']', world_text)
++    if match is None:
++        raise RuntimeError(f"Unable to determine world name from: {world_path}")
++    return match.group(1)
++
++
++def _apply_camera_pose_to_gui_config(gui_config_path: str, camera_pose: str) -> str:
++    if not gui_config_path or not camera_pose:
++        return gui_config_path
++
++    cfg_path = Path(gui_config_path)
++    if not cfg_path.exists() or not cfg_path.is_file():
++        return gui_config_path
++
++    cfg_text = cfg_path.read_text(encoding="utf-8")
++    if "<camera_pose>" in cfg_text:
++        patched = re.sub(
++            r"<camera_pose>[^<]*</camera_pose>",
++            f"<camera_pose>{camera_pose}</camera_pose>",
++            cfg_text,
++            count=1,
++        )
++    elif "</plugin>" in cfg_text and 'plugin filename="MinimalScene"' in cfg_text:
++        patched = cfg_text.replace(
++            "</plugin>",
++            f"  <camera_pose>{camera_pose}</camera_pose>\n</plugin>",
++            1,
++        )
++    else:
++        return gui_config_path
++
++    fd, tmp_path = tempfile.mkstemp(prefix="gui_with_camera_pose_", suffix=".config")
++    with os.fdopen(fd, "w", encoding="utf-8") as patched_file:
++        patched_file.write(patched)
++    return tmp_path
++
++
++def _launch_setup(context, *args, **kwargs):
++    robot_type = LaunchConfiguration("robot_type").perform(context).strip().lower()
++    if robot_type not in {"jaka_kargo", "turtlebot3"}:
++        raise RuntimeError("robot_type must be 'jaka_kargo' or 'turtlebot3'")
++
++    ns = LaunchConfiguration("robot_namespace").perform(context).strip()
++    robot_name = ns.strip("/") if ns.strip("/") else ("jaka_kargo" if robot_type == "jaka_kargo" else "turtlebot3")
++    x_pose = LaunchConfiguration("x_pose")
++    y_pose = LaunchConfiguration("y_pose")
++    jaka_z_pose = LaunchConfiguration("jaka_z_pose")
++    jaka_linear_velocity_scale = LaunchConfiguration("jaka_linear_velocity_scale")
++    jaka_angular_velocity_scale = LaunchConfiguration("jaka_angular_velocity_scale")
++    disable_jaka_gazebo_sensors = LaunchConfiguration("disable_jaka_gazebo_sensors")
++    camera_width = LaunchConfiguration("camera_width")
++    camera_height = LaunchConfiguration("camera_height")
++    camera_update_rate = LaunchConfiguration("camera_update_rate")
++    enable_camera_2 = LaunchConfiguration("enable_camera_2")
++    lidar_update_rate = LaunchConfiguration("lidar_update_rate")
++    cmd_vel_unstamped_topic_value = LaunchConfiguration("cmd_vel_unstamped_topic").perform(context).strip()
++    gazebo_gui_config = LaunchConfiguration("gazebo_gui_config").perform(context).strip()
++    gazebo_camera_pose = LaunchConfiguration("gazebo_camera_pose").perform(context).strip()
++
++    aws_root = _resolve_aws_world_root()
++    world_path = _resolve_world_path(context, aws_root)
++    world_name = _extract_world_name(world_path)
++    gazebo_gui_config = _apply_camera_pose_to_gui_config(gazebo_gui_config, gazebo_camera_pose)
++
++    is_jaka = IfCondition(PythonExpression(["'", LaunchConfiguration("robot_type"), "' == 'jaka_kargo'"]))
++    is_tb3 = IfCondition(PythonExpression(["'", LaunchConfiguration("robot_type"), "' == 'turtlebot3'"]))
++
++    sim_server = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution([
++                FindPackageShare("ros_gz_sim"),
++                "launch",
++                "gz_sim.launch.py",
++            ])
++        ),
++        launch_arguments={
++            "gz_args": f"-r -s --headless-rendering --render-engine-server ogre2 -v2 {world_path}",
++            "on_exit_shutdown": "true",
++        }.items(),
++    )
++
++    sim_gui = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution([
++                FindPackageShare("ros_gz_sim"),
++                "launch",
++                "gz_sim.launch.py",
++            ])
++        ),
++        launch_arguments={
++            "gz_args": f"-g -v2 --gui-config {gazebo_gui_config} " if gazebo_gui_config else "-g -v2 ",
++            "on_exit_shutdown": "true",
++        }.items(),
++        condition=IfCondition(LaunchConfiguration("use_gazebo_gui")),
++    )
++
++    spawn_jaka = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution([
++                FindPackageShare("jaka_kargo_description"),
++                "launch",
++                "spawn_jaka_kargo_gazebo.launch.py",
++            ])
++        ),
++        launch_arguments={
++            "robot_name": robot_name,
++            "x_pose": x_pose,
++            "y_pose": y_pose,
++            "z_pose": jaka_z_pose,
++            "disable_gazebo_sensors": disable_jaka_gazebo_sensors,
++            "camera_width": camera_width,
++            "camera_height": camera_height,
++            "camera_update_rate": camera_update_rate,
++            "enable_camera_2": enable_camera_2,
++            "lidar_update_rate": lidar_update_rate,
++            "joint_state_gz_topic": f"/world/{world_name}/model/{robot_name}/joint_state",
++            "use_sensor_bridges": PythonExpression([
++                "'false' if '",
++                disable_jaka_gazebo_sensors,
++                "' == 'true' else 'true'",
++            ]),
++        }.items(),
++        condition=is_jaka,
++    )
++
++    delayed_spawn_jaka = TimerAction(
++        period=LaunchConfiguration("jaka_spawn_delay"),
++        actions=[spawn_jaka],
++        condition=is_jaka,
++    )
++
++    tb3_state_publisher = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution([
++                FindPackageShare("turtlebot3_gazebo"),
++                "launch",
++                "robot_state_publisher.launch.py",
++            ])
++        ),
++        condition=is_tb3,
++    )
++
++    spawn_turtlebot = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution([
++                FindPackageShare("turtlebot3_gazebo"),
++                "launch",
++                "spawn_turtlebot3.launch.py",
++            ])
++        ),
++        launch_arguments={
++            "x_pose": x_pose,
++            "y_pose": y_pose,
++        }.items(),
++        condition=is_tb3,
++    )
++
++    set_tb3_model_env = SetEnvironmentVariable(
++        name="TURTLEBOT3_MODEL",
++        value=LaunchConfiguration("turtlebot3_model"),
++        condition=is_tb3,
++    )
++
++    resource_path_actions: list = [
++        AppendEnvironmentVariable(
++            "GZ_SIM_RESOURCE_PATH",
++            PathJoinSubstitution([FindPackageShare("turtlebot3_gazebo"), "models"]),
++            condition=is_tb3,
++        ),
++    ]
++
++    for jaka_root in _resolve_jaka_resource_roots():
++        resource_path_actions.append(AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(jaka_root), condition=is_jaka))
++
++    if aws_root is not None:
++        resource_path_actions.append(AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(aws_root)))
++        resource_path_actions.append(AppendEnvironmentVariable("GZ_SIM_RESOURCE_PATH", str(aws_root / "models")))
++
++    actions: list = [
++        set_tb3_model_env,
++        *resource_path_actions,
++        sim_server,
++        sim_gui,
++        delayed_spawn_jaka,
++        Node(
++            package="agenticros_bringup",
++            executable="cmd_vel_relay",
++            name="agenticros_cmd_vel_unstamped_to_cmd_vel_jaka",
++            output="screen",
++            parameters=[
++                {
++                    "input_topic": LaunchConfiguration("cmd_vel_unstamped_topic"),
++                    "output_topic": "/cmd_vel",
++                }
++            ],
++            condition=is_jaka,
++        ),
++        Node(
++            package="agenticros_bringup",
++            executable="jaka_base_controller",
++            name="agenticros_jaka_base_controller",
++            output="screen",
++            parameters=[
++                {
++                    "use_sim_time": True,
++                    "initial_x": ParameterValue(x_pose, value_type=float),
++                    "initial_y": ParameterValue(y_pose, value_type=float),
++                    "initial_yaw": 0.0,
++                    "linear_velocity_scale": ParameterValue(jaka_linear_velocity_scale, value_type=float),
++                    "angular_velocity_scale": ParameterValue(jaka_angular_velocity_scale, value_type=float),
++                }
++            ],
++            condition=is_jaka,
++        ),
++        tb3_state_publisher,
++        spawn_turtlebot,
++        Node(
++            package="agenticros_bringup",
++            executable="cmd_vel_to_stamped",
++            name="agenticros_cmd_vel_to_stamped",
++            output="screen",
++            parameters=[
++                {
++                    "input_topic": LaunchConfiguration("cmd_vel_unstamped_topic"),
++                    "output_topic": "/cmd_vel",
++                    "frame_id": "base_link",
++                }
++            ],
++            condition=IfCondition(
++                PythonExpression(
++                    [
++                        "'",
++                        LaunchConfiguration("robot_type"),
++                        "' == 'turtlebot3' and '",
++                        LaunchConfiguration("use_cmd_vel_twist_bridge"),
++                        "' == 'true'",
++                    ]
++                )
++            ),
++        ),
++    ]
++
++    if ns:
++        ns_clean = ns.strip("/")
++        in_topic = f"/{ns_clean}/cmd_vel"
++        actions.append(
++            Node(
++                package="agenticros_bringup",
++                executable="cmd_vel_relay",
++                name="agenticros_cmd_vel_to_gazebo_jaka",
++                output="screen",
++                parameters=[{"input_topic": in_topic, "output_topic": "/cmd_vel"}],
++                condition=is_jaka,
++            )
++        )
++        actions.append(
++            Node(
++                package="agenticros_bringup",
++                executable="cmd_vel_relay",
++                name="agenticros_cmd_vel_to_gazebo_tb3",
++                output="screen",
++                parameters=[
++                    {
++                        "input_topic": in_topic,
++                        "output_topic": LaunchConfiguration("cmd_vel_unstamped_topic"),
++                    }
++                ],
++                condition=is_tb3,
++            )
++        )
++
++    if robot_type == "jaka_kargo":
++        namespaced_source = f"/{ns.strip('/')}/cmd_vel" if ns.strip("/") else "(disabled)"
++        actions.append(
++            LogInfo(
++                msg=(
++                    "JAKA cmd_vel path: "
++                    f"Twist {cmd_vel_unstamped_topic_value} -> /cmd_vel (unstamped relay), "
++                    f"Twist {namespaced_source} -> /cmd_vel (namespace relay), "
++                    "controller subscribes /cmd_vel"
++                )
++            )
++        )
++
++    if robot_type == "turtlebot3":
++        namespaced_source = f"/{ns.strip('/')}/cmd_vel" if ns.strip("/") else "(disabled)"
++        use_stamped_bridge = LaunchConfiguration("use_cmd_vel_twist_bridge").perform(context).strip().lower() == "true"
++        actions.append(
++            LogInfo(
++                msg=(
++                    "TurtleBot3 cmd_vel path: "
++                    f"Twist {namespaced_source} -> {cmd_vel_unstamped_topic_value} (namespace relay), "
++                    f"Twist {cmd_vel_unstamped_topic_value} -> /cmd_vel (TwistStamped bridge {'enabled' if use_stamped_bridge else 'disabled'})"
++                )
++            )
++        )
++
++    return actions
++
++
++def generate_launch_description():
++    return LaunchDescription(
++        [
++            DeclareLaunchArgument(
++                "robot_type",
++                default_value="jaka_kargo",
++                description="Robot to spawn: jaka_kargo | turtlebot3",
++            ),
++            DeclareLaunchArgument(
++                "turtlebot3_model",
++                default_value="waffle_pi",
++                description="TurtleBot3 model when robot_type=turtlebot3: burger | waffle | waffle_pi",
++            ),
++            DeclareLaunchArgument(
++                "warehouse_world",
++                default_value=_default_warehouse_world_path(),
++                description="Absolute world path override. Defaults to AWS small warehouse world when available.",
++            ),
++            DeclareLaunchArgument(
++                "rewrite_warehouse_model_uris_for_websocket",
++                default_value="false",
++                description="Rewrite model:// URIs in world to file:// for websocket clients.",
++            ),
++            DeclareLaunchArgument(
++                "robot_namespace",
++                default_value="",
++                description="Same as AgenticROS robot.namespace (no slashes). When non-empty, relays /<namespace>/cmd_vel.",
++            ),
++            DeclareLaunchArgument(
++                "cmd_vel_unstamped_topic",
++                default_value="/cmd_vel_unstamped",
++                description="TurtleBot3 Twist topic before TwistStamped bridge.",
++            ),
++            DeclareLaunchArgument(
++                "use_cmd_vel_twist_bridge",
++                default_value="true",
++                description="Run Twist->TwistStamped bridge when robot_type=turtlebot3.",
++            ),
++            DeclareLaunchArgument(
++                "use_gazebo_gui",
++                default_value="false",
++                description="Start Gazebo GUI client in addition to server.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_gui_config",
++                default_value=PathJoinSubstitution([
++                    FindPackageShare("agenticros_bringup"),
++                    "config",
++                    "jaka_gazebo_gui.config",
++                ]),
++                description="Gazebo GUI configuration file used when launching the GUI client.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_camera_pose",
++                default_value="3.2 -0.5 2.0 0 0.35 3.14159",
++                description="Override camera pose (x y z roll pitch yaw) for the 3D View at startup.",
++            ),
++            DeclareLaunchArgument(
++                "x_pose",
++                default_value="0.0",
++                description="Initial robot x position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "y_pose",
++                default_value="0.0",
++                description="Initial robot y position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_z_pose",
++                default_value="0.32",
++                description="Initial JAKA z position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "disable_jaka_gazebo_sensors",
++                default_value="false",
++                description="Disable JAKA camera/lidar Gazebo sensors to reduce rendering load.",
++            ),
++            DeclareLaunchArgument(
++                "camera_width",
++                default_value="1280",
++                description="JAKA camera width override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_height",
++                default_value="720",
++                description="JAKA camera height override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_update_rate",
++                default_value="20",
++                description="JAKA camera update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "enable_camera_2",
++                default_value="true",
++                description="Enable second JAKA camera sensor and /camera_2/image_raw bridge.",
++            ),
++            DeclareLaunchArgument(
++                "lidar_update_rate",
++                default_value="10",
++                description="JAKA lidar update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_spawn_delay",
++                default_value="3.0",
++                description="Seconds to wait after Gazebo startup before spawning the JAKA robot.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_linear_velocity_scale",
++                default_value="1.0",
++                description="AGV base linear odometry scale.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_angular_velocity_scale",
++                default_value="0.5642857142857143",
++                description="AGV base angular odometry scale.",
++            ),
++            OpaqueFunction(function=_launch_setup),
++        ]
++    )
+diff --git a/ros2_ws/src/agenticros_bringup/launch/gazebo_turtlebot3.launch.py b/ros2_ws/src/agenticros_bringup/launch/gazebo_turtlebot3.launch.py
+index 086607d..e90388e 100644
+--- a/ros2_ws/src/agenticros_bringup/launch/gazebo_turtlebot3.launch.py
++++ b/ros2_ws/src/agenticros_bringup/launch/gazebo_turtlebot3.launch.py
+@@ -1,4 +1,4 @@
+-"""TurtleBot3 in Gazebo (TurtleBot3 world). Matches AgenticROS turtlebot examples: /cmd_vel, /scan.
++"""TurtleBot3 in Gazebo headless (server only). Matches AgenticROS turtlebot examples: /cmd_vel, /scan.
+ 
+ Optional **robot_namespace**: when set to the same value as AgenticROS **robot.namespace** (no
+ leading slash), launches a **topic_tools relay** from `/<namespace>/cmd_vel` to `/cmd_vel` so
+@@ -6,7 +6,8 @@ the diff_drive plugin (which listens on `/cmd_vel`) receives commands from the p
+ """
+ 
+ from launch import LaunchDescription
+-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
++from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
++from launch.conditions import IfCondition
+ from launch.launch_description_sources import PythonLaunchDescriptionSource
+ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+ from launch_ros.actions import Node
+@@ -16,21 +17,110 @@ from launch_ros.substitutions import FindPackageShare
+ def _launch_setup(context, *args, **kwargs):
+     model = LaunchConfiguration("turtlebot3_model").perform(context)
+     ns = LaunchConfiguration("robot_namespace").perform(context).strip()
++    x_pose = LaunchConfiguration("x_pose")
++    y_pose = LaunchConfiguration("y_pose")
+ 
+-    inc = IncludeLaunchDescription(
++    sim_server = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution(
++                [
++                    FindPackageShare("ros_gz_sim"),
++                    "launch",
++                    "gz_sim.launch.py",
++                ]
++            )
++        ),
++        launch_arguments={
++            "gz_args": [
++                "-r -s -v2 ",
++                PathJoinSubstitution(
++                    [
++                        FindPackageShare("turtlebot3_gazebo"),
++                        "worlds",
++                        "turtlebot3_world.world",
++                    ]
++                ),
++            ],
++            "on_exit_shutdown": "true",
++        }.items(),
++    )
++
++    sim_gui = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution(
++                [
++                    FindPackageShare("ros_gz_sim"),
++                    "launch",
++                    "gz_sim.launch.py",
++                ]
++            )
++        ),
++        launch_arguments={
++            "gz_args": "-g -v2 ",
++            "on_exit_shutdown": "true",
++        }.items(),
++        condition=IfCondition(LaunchConfiguration("use_gazebo_gui")),
++    )
++
++    robot_state_publisher = IncludeLaunchDescription(
+         PythonLaunchDescriptionSource(
+             PathJoinSubstitution(
+                 [
+                     FindPackageShare("turtlebot3_gazebo"),
+                     "launch",
+-                    "turtlebot3_world.launch.py",
++                    "robot_state_publisher.launch.py",
+                 ]
+             )
+         )
+     )
++
++    spawn_turtlebot = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution(
++                [
++                    FindPackageShare("turtlebot3_gazebo"),
++                    "launch",
++                    "spawn_turtlebot3.launch.py",
++                ]
++            )
++        ),
++        launch_arguments={
++            "x_pose": x_pose,
++            "y_pose": y_pose,
++        }.items(),
++    )
++
++    set_resources = AppendEnvironmentVariable(
++        "GZ_SIM_RESOURCE_PATH",
++        PathJoinSubstitution(
++            [
++                FindPackageShare("turtlebot3_gazebo"),
++                "models",
++            ]
++        ),
++    )
++
+     actions: list = [
+         SetEnvironmentVariable(name="TURTLEBOT3_MODEL", value=model),
+-        inc,
++        set_resources,
++        sim_server,
++        sim_gui,
++        spawn_turtlebot,
++        robot_state_publisher,
++        Node(
++            package="agenticros_bringup",
++            executable="cmd_vel_to_stamped",
++            name="agenticros_cmd_vel_to_stamped",
++            output="screen",
++            parameters=[
++                {
++                    "input_topic": LaunchConfiguration("cmd_vel_unstamped_topic"),
++                    "output_topic": "/cmd_vel",
++                    "frame_id": "base_link",
++                },
++            ],
++            condition=IfCondition(LaunchConfiguration("use_cmd_vel_twist_bridge")),
++        ),
+     ]
+ 
+     if ns:
+@@ -43,7 +133,7 @@ def _launch_setup(context, *args, **kwargs):
+                 name="agenticros_cmd_vel_to_gazebo",
+                 output="screen",
+                 parameters=[
+-                    {"input_topic": in_topic, "output_topic": "/cmd_vel"},
++                    {"input_topic": in_topic, "output_topic": LaunchConfiguration("cmd_vel_unstamped_topic")},
+                 ],
+             )
+         )
+@@ -64,6 +154,31 @@ def generate_launch_description():
+                 default_value="",
+                 description="Same as AgenticROS robot.namespace (no slashes). When non-empty, relays /<namespace>/cmd_vel -> /cmd_vel for Gazebo (built-in cmd_vel_relay node).",
+             ),
++            DeclareLaunchArgument(
++                "cmd_vel_unstamped_topic",
++                default_value="/cmd_vel_unstamped",
++                description="Twist topic consumed by the local bridge before conversion to /cmd_vel TwistStamped.",
++            ),
++            DeclareLaunchArgument(
++                "use_cmd_vel_twist_bridge",
++                default_value="true",
++                description="Run Twist->TwistStamped bridge on /cmd_vel so AgenticROS teleop Twist works with TurtleBot3 Gazebo bridge TwistStamped.",
++            ),
++            DeclareLaunchArgument(
++                "use_gazebo_gui",
++                default_value="false",
++                description="Start Gazebo GUI client in addition to server.",
++            ),
++            DeclareLaunchArgument(
++                "x_pose",
++                default_value="-2.0",
++                description="Initial TurtleBot3 x position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "y_pose",
++                default_value="-0.5",
++                description="Initial TurtleBot3 y position in world frame.",
++            ),
+             OpaqueFunction(function=_launch_setup),
+         ]
+     )
+diff --git a/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo.launch.py b/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo.launch.py
+index aa85328..f27894c 100644
+--- a/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo.launch.py
++++ b/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo.launch.py
+@@ -1,12 +1,146 @@
+-"""Rosbridge WebSocket + TurtleBot3 Gazebo world — same topology the AgenticROS Docker image expects (ws://…:9090)."""
++"""Rosbridge + Gazebo launcher for a single robot in selectable worlds.
+ 
++Supported combos:
++- robot_type:=jaka_kargo | turtlebot3
++- world_name:=no_roof_small_warehouse | small_warehouse | turtlebot3_world
++
++This launch always starts rosbridge_websocket and includes
++agenticros_bringup/launch/gazebo_small_warehouse.launch.py with
++robot/world arguments mapped accordingly.
++"""
++
++from pathlib import Path
++
++from ament_index_python.packages import get_package_share_directory
+ from launch import LaunchDescription
+-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
++from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, OpaqueFunction, TimerAction
+ from launch.launch_description_sources import AnyLaunchDescriptionSource, PythonLaunchDescriptionSource
+ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+ from launch_ros.substitutions import FindPackageShare
+ 
+ 
++def _resolve_world_path_from_name(world_name: str) -> str:
++    name = world_name.strip().lower()
++
++    if name == "jaka_empty":
++        bringup_share = Path(get_package_share_directory("agenticros_bringup"))
++        return str(bringup_share / "worlds" / "jaka_empty.world")
++
++    if name == "no_roof_small_warehouse":
++        aws_share = Path(get_package_share_directory("aws_robomaker_small_warehouse_world"))
++        return str(aws_share / "worlds" / "no_roof_small_warehouse" / "no_roof_small_warehouse.world")
++
++    if name == "small_warehouse":
++        return ""
++
++    if name == "turtlebot3_world":
++        tb3_share = Path(get_package_share_directory("turtlebot3_gazebo"))
++        return str(tb3_share / "worlds" / "turtlebot3_world.world")
++
++    raise RuntimeError(
++        "world_name must be 'jaka_empty', 'no_roof_small_warehouse', 'small_warehouse', or 'turtlebot3_world'"
++    )
++
++
++def _maybe_start_gz_websocket_sidecar(context, *args, **kwargs):
++    enabled = LaunchConfiguration("enable_gz_websocket_sidecar").perform(context).strip().lower() == "true"
++    if not enabled:
++        return []
++
++    gzlaunch_path = Path(__file__).resolve().parent / "sim8_websocket_only.gzlaunch"
++    ws_port = LaunchConfiguration("gz_websocket_port").perform(context)
++    publication_hz = LaunchConfiguration("gz_websocket_publication_hz").perform(context)
++    max_connections = LaunchConfiguration("gz_websocket_max_connections").perform(context)
++    verbose = LaunchConfiguration("gz_websocket_sidecar_verbose").perform(context)
++    start_delay_s = float(LaunchConfiguration("gz_websocket_sidecar_start_delay_s").perform(context))
++    respawn = LaunchConfiguration("gz_websocket_sidecar_respawn").perform(context).strip().lower() == "true"
++    respawn_delay_s = float(LaunchConfiguration("gz_websocket_sidecar_respawn_delay_s").perform(context))
++
++    sidecar = ExecuteProcess(
++        cmd=[
++            "bash",
++            "-lc",
++            (
++                "source /opt/ros/jazzy/setup.bash && "
++                f"GZ_VERBOSE={verbose} gz launch -v {verbose} {gzlaunch_path} "
++                f"wsPort:={ws_port} publicationHz:={publication_hz} maxConnections:={max_connections}"
++            ),
++        ],
++        output="screen",
++        respawn=respawn,
++        respawn_delay=respawn_delay_s,
++    )
++
++    if start_delay_s > 0.0:
++        return [TimerAction(period=start_delay_s, actions=[sidecar])]
++
++    return [sidecar]
++
++
++def _include_gazebo(context, *args, **kwargs):
++    legacy_gazebo_launch = LaunchConfiguration("gazebo_launch").perform(context).strip()
++    robot_type = LaunchConfiguration("robot_type").perform(context).strip().lower()
++    world_name = LaunchConfiguration("world_name").perform(context)
++
++    if robot_type not in {"jaka_kargo", "turtlebot3"}:
++        raise RuntimeError("robot_type must be 'jaka_kargo' or 'turtlebot3'")
++
++    if legacy_gazebo_launch:
++        if legacy_gazebo_launch == "gazebo_turtlebot3.launch.py":
++            robot_type = "turtlebot3"
++            world_name = "turtlebot3_world"
++        elif legacy_gazebo_launch == "gazebo_small_warehouse.launch.py":
++            robot_type = "jaka_kargo"
++            world_name = "small_warehouse"
++        else:
++            raise RuntimeError(
++                "Unsupported gazebo_launch value. Expected one of: "
++                "gazebo_turtlebot3.launch.py, gazebo_small_warehouse.launch.py"
++            )
++
++    world_override = LaunchConfiguration("warehouse_world").perform(context).strip()
++
++    if not world_override:
++        world_override = _resolve_world_path_from_name(world_name)
++
++    return [
++        IncludeLaunchDescription(
++            PythonLaunchDescriptionSource(
++                PathJoinSubstitution(
++                    [
++                        FindPackageShare("agenticros_bringup"),
++                        "launch",
++                        "gazebo_small_warehouse.launch.py",
++                    ]
++                )
++            ),
++            launch_arguments={
++                "robot_type": robot_type,
++                "turtlebot3_model": LaunchConfiguration("turtlebot3_model"),
++                "warehouse_world": world_override,
++                "rewrite_warehouse_model_uris_for_websocket": LaunchConfiguration("enable_gz_websocket_sidecar"),
++                "gazebo_gui_config": LaunchConfiguration("gazebo_gui_config"),
++                "gazebo_camera_pose": LaunchConfiguration("gazebo_camera_pose"),
++                "robot_namespace": LaunchConfiguration("robot_namespace"),
++                "use_gazebo_gui": LaunchConfiguration("use_gazebo_gui"),
++                "cmd_vel_unstamped_topic": LaunchConfiguration("cmd_vel_unstamped_topic"),
++                "use_cmd_vel_twist_bridge": LaunchConfiguration("use_cmd_vel_twist_bridge"),
++                "x_pose": LaunchConfiguration("x_pose"),
++                "y_pose": LaunchConfiguration("y_pose"),
++                "jaka_z_pose": LaunchConfiguration("jaka_z_pose"),
++                "disable_jaka_gazebo_sensors": LaunchConfiguration("disable_jaka_gazebo_sensors"),
++                "camera_width": LaunchConfiguration("camera_width"),
++                "camera_height": LaunchConfiguration("camera_height"),
++                "camera_update_rate": LaunchConfiguration("camera_update_rate"),
++                "enable_camera_2": LaunchConfiguration("enable_camera_2"),
++                "lidar_update_rate": LaunchConfiguration("lidar_update_rate"),
++                "jaka_linear_velocity_scale": LaunchConfiguration("jaka_linear_velocity_scale"),
++                "jaka_angular_velocity_scale": LaunchConfiguration("jaka_angular_velocity_scale"),
++            }.items(),
++        )
++    ]
++
++
+ def generate_launch_description():
+     rosbridge = IncludeLaunchDescription(
+         AnyLaunchDescriptionSource(
+@@ -17,38 +151,178 @@ def generate_launch_description():
+                     "rosbridge_websocket_launch.xml",
+                 ]
+             )
+-        ),
+-    )
+-
+-    gazebo = IncludeLaunchDescription(
+-        PythonLaunchDescriptionSource(
+-            PathJoinSubstitution(
+-                [
+-                    FindPackageShare("agenticros_bringup"),
+-                    "launch",
+-                    "gazebo_turtlebot3.launch.py",
+-                ]
+-            )
+-        ),
+-        launch_arguments={
+-            "turtlebot3_model": LaunchConfiguration("turtlebot3_model"),
+-            "robot_namespace": LaunchConfiguration("robot_namespace"),
+-        }.items(),
++            ),
++            launch_arguments={
++                "port": LaunchConfiguration("port"),
++            }.items(),
+     )
+ 
+     return LaunchDescription(
+         [
++            DeclareLaunchArgument(
++                    "port",
++                    default_value="9090",
++                    description="ROS bridge websocket port.",
++                ),
++            DeclareLaunchArgument(
++                "gazebo_launch",
++                default_value="",
++                description=(
++                    "Backward compatibility alias. When set to gazebo_turtlebot3.launch.py or "
++                    "gazebo_small_warehouse.launch.py, it overrides robot_type/world_name defaults."
++                ),
++            ),
++            DeclareLaunchArgument(
++                "robot_type",
++                default_value="jaka_kargo",
++                description="Robot to spawn: jaka_kargo | turtlebot3",
++            ),
++            DeclareLaunchArgument(
++                "world_name",
++                default_value="no_roof_small_warehouse",
++                description="World preset: jaka_empty | no_roof_small_warehouse | small_warehouse | turtlebot3_world",
++            ),
+             DeclareLaunchArgument(
+                 "turtlebot3_model",
+-                default_value="burger",
+-                description="TurtleBot3 model: burger | waffle | waffle_pi",
++                default_value="waffle_pi",
++                description="TurtleBot3 model when robot_type=turtlebot3: burger | waffle | waffle_pi",
++            ),
++            DeclareLaunchArgument(
++                "warehouse_world",
++                default_value="",
++                description="Optional absolute world path override. If empty, world_name preset is used.",
+             ),
+             DeclareLaunchArgument(
+                 "robot_namespace",
+                 default_value="",
+-                description="Same as AgenticROS robot.namespace; enables cmd_vel relay to /cmd_vel",
++                description="Same as AgenticROS robot.namespace; enables cmd_vel relay to Gazebo input topics.",
++            ),
++            DeclareLaunchArgument(
++                "cmd_vel_unstamped_topic",
++                default_value="/cmd_vel_unstamped",
++                description="Twist topic consumed by TurtleBot3 local bridge before conversion to /cmd_vel TwistStamped.",
++            ),
++            DeclareLaunchArgument(
++                "use_cmd_vel_twist_bridge",
++                default_value="true",
++                description="Run Twist->TwistStamped bridge when robot_type=turtlebot3.",
++            ),
++            DeclareLaunchArgument(
++                "use_gazebo_gui",
++                default_value="false",
++                description="Start Gazebo GUI client in addition to server.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_gui_config",
++                default_value=PathJoinSubstitution([
++                    FindPackageShare("agenticros_bringup"),
++                    "config",
++                    "jaka_gazebo_gui.config",
++                ]),
++                description="Gazebo GUI configuration file used when launching the GUI client.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_camera_pose",
++                default_value="3.2 -0.5 2.0 0 0.35 3.14159",
++                description="Override camera pose (x y z roll pitch yaw) for the GUI 3D view.",
++            ),
++            DeclareLaunchArgument(
++                "enable_gz_websocket_sidecar",
++                default_value="false",
++                description="Start Gazebo Sim 8 websocket sidecar for browser clients.",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_port",
++                default_value="9002",
++                description="Port for Gazebo Sim 8 websocket sidecar.",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_publication_hz",
++                default_value="30",
++                description="Publication rate for Gazebo Sim 8 websocket sidecar.",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_max_connections",
++                default_value="-1",
++                description="Maximum websocket sidecar client connections (-1 means unlimited).",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_sidecar_verbose",
++                default_value="3",
++                description="Gazebo launch verbosity for websocket sidecar (0-4).",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_sidecar_start_delay_s",
++                default_value="2.0",
++                description="Delay before starting websocket sidecar to reduce startup races with Gazebo server.",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_sidecar_respawn",
++                default_value="true",
++                description="Respawn websocket sidecar if it exits unexpectedly.",
++            ),
++            DeclareLaunchArgument(
++                "gz_websocket_sidecar_respawn_delay_s",
++                default_value="1.0",
++                description="Delay before websocket sidecar respawn.",
++            ),
++            DeclareLaunchArgument(
++                "x_pose",
++                default_value="0.0",
++                description="Initial robot x position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "y_pose",
++                default_value="0.0",
++                description="Initial robot y position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_z_pose",
++                default_value="0.35",
++                description="Initial JAKA z position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "disable_jaka_gazebo_sensors",
++                default_value="false",
++                description="Disable JAKA camera/lidar Gazebo sensors to reduce rendering load.",
++            ),
++            DeclareLaunchArgument(
++                "camera_width",
++                default_value="640",
++                description="JAKA camera width override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_height",
++                default_value="480",
++                description="JAKA camera height override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_update_rate",
++                default_value="20",
++                description="JAKA camera update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "enable_camera_2",
++                default_value="true",
++                description="Enable second JAKA camera sensor and /camera_2/image_raw bridge.",
++            ),
++            DeclareLaunchArgument(
++                "lidar_update_rate",
++                default_value="10",
++                description="JAKA lidar update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_linear_velocity_scale",
++                default_value="1.0",
++                description="AGV base linear odometry scale for JAKA.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_angular_velocity_scale",
++                default_value="0.5642857142857143",
++                description="AGV base angular odometry scale for JAKA.",
+             ),
+             rosbridge,
+-            gazebo,
++            OpaqueFunction(function=_include_gazebo),
++            OpaqueFunction(function=_maybe_start_gz_websocket_sidecar),
+         ]
+     )
+diff --git a/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo_jaka_empty.launch.py b/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo_jaka_empty.launch.py
+new file mode 100644
+index 0000000..d7e7159
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/launch/rosbridge_gazebo_jaka_empty.launch.py
+@@ -0,0 +1,166 @@
++"""Rosbridge + Gazebo empty-world launcher for JAKA Kargo only.
++
++This launch avoids the AWS small warehouse world and starts JAKA Kargo in
++a local minimal world.
++"""
++
++from pathlib import Path
++
++from ament_index_python.packages import get_package_share_directory
++
++from launch import LaunchDescription
++from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
++from launch.launch_description_sources import AnyLaunchDescriptionSource, PythonLaunchDescriptionSource
++from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
++from launch_ros.substitutions import FindPackageShare
++
++
++def _default_empty_world_path() -> str:
++    bringup_share = get_package_share_directory("agenticros_bringup")
++    return str(Path(bringup_share) / "worlds" / "jaka_empty.world")
++
++
++def generate_launch_description():
++    rosbridge = IncludeLaunchDescription(
++        AnyLaunchDescriptionSource(
++            PathJoinSubstitution(
++                [
++                    FindPackageShare("rosbridge_server"),
++                    "launch",
++                    "rosbridge_websocket_launch.xml",
++                ]
++            )
++        ),
++        launch_arguments={
++            "port": LaunchConfiguration("port"),
++        }.items(),
++    )
++
++    gazebo_jaka_empty = IncludeLaunchDescription(
++        PythonLaunchDescriptionSource(
++            PathJoinSubstitution(
++                [
++                    FindPackageShare("agenticros_bringup"),
++                    "launch",
++                    "gazebo_small_warehouse.launch.py",
++                ]
++            )
++        ),
++        launch_arguments={
++            "robot_type": "jaka_kargo",
++            "warehouse_world": LaunchConfiguration("empty_world"),
++            "use_gazebo_gui": LaunchConfiguration("use_gazebo_gui"),
++            "robot_namespace": LaunchConfiguration("robot_namespace"),
++            "x_pose": LaunchConfiguration("x_pose"),
++            "y_pose": LaunchConfiguration("y_pose"),
++            "jaka_z_pose": LaunchConfiguration("jaka_z_pose"),
++            "disable_jaka_gazebo_sensors": LaunchConfiguration("disable_jaka_gazebo_sensors"),
++            "camera_width": LaunchConfiguration("camera_width"),
++            "camera_height": LaunchConfiguration("camera_height"),
++            "camera_update_rate": LaunchConfiguration("camera_update_rate"),
++            "enable_camera_2": LaunchConfiguration("enable_camera_2"),
++            "lidar_update_rate": LaunchConfiguration("lidar_update_rate"),
++            "jaka_linear_velocity_scale": LaunchConfiguration("jaka_linear_velocity_scale"),
++            "jaka_angular_velocity_scale": LaunchConfiguration("jaka_angular_velocity_scale"),
++            "gazebo_gui_config": LaunchConfiguration("gazebo_gui_config"),
++            "gazebo_camera_pose": LaunchConfiguration("gazebo_camera_pose"),
++        }.items(),
++    )
++
++    return LaunchDescription(
++        [
++            DeclareLaunchArgument(
++                "port",
++                default_value="9090",
++                description="ROS bridge websocket port.",
++            ),
++            DeclareLaunchArgument(
++                "empty_world",
++                default_value=_default_empty_world_path(),
++                description="Absolute path to Gazebo empty world file.",
++            ),
++            DeclareLaunchArgument(
++                "use_gazebo_gui",
++                default_value="false",
++                description="Start Gazebo GUI client in addition to server.",
++            ),
++            DeclareLaunchArgument(
++                "robot_namespace",
++                default_value="",
++                description="Optional AgenticROS robot namespace for cmd_vel relay.",
++            ),
++            DeclareLaunchArgument(
++                "x_pose",
++                default_value="0.0",
++                description="Initial robot x position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "y_pose",
++                default_value="0.0",
++                description="Initial robot y position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_z_pose",
++                default_value="0.32",
++                description="Initial robot z position in world frame.",
++            ),
++            DeclareLaunchArgument(
++                "disable_jaka_gazebo_sensors",
++                default_value="false",
++                description="Disable JAKA camera/lidar Gazebo sensors to reduce rendering load.",
++            ),
++            DeclareLaunchArgument(
++                "camera_width",
++                default_value="1280",
++                description="JAKA camera width override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_height",
++                default_value="720",
++                description="JAKA camera height override applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "camera_update_rate",
++                default_value="20",
++                description="JAKA camera update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "enable_camera_2",
++                default_value="true",
++                description="Enable second JAKA camera sensor and /camera_2/image_raw bridge.",
++            ),
++            DeclareLaunchArgument(
++                "lidar_update_rate",
++                default_value="10",
++                description="JAKA lidar update rate override (Hz) applied at spawn time.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_linear_velocity_scale",
++                default_value="1.0",
++                description="AGV base linear odometry scale.",
++            ),
++            DeclareLaunchArgument(
++                "jaka_angular_velocity_scale",
++                default_value="0.5642857142857143",
++                description="AGV base angular odometry scale.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_gui_config",
++                default_value=PathJoinSubstitution(
++                    [
++                        FindPackageShare("agenticros_bringup"),
++                        "config",
++                        "jaka_gazebo_gui.config",
++                    ]
++                ),
++                description="Gazebo GUI configuration file used when launching the GUI client.",
++            ),
++            DeclareLaunchArgument(
++                "gazebo_camera_pose",
++                default_value="3.2 -0.5 2.0 0 0.35 3.14159",
++                description="Override camera pose (x y z roll pitch yaw) for the GUI 3D view.",
++            ),
++            rosbridge,
++            gazebo_jaka_empty,
++        ]
++    )
+diff --git a/ros2_ws/src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch b/ros2_ws/src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch
+new file mode 100644
+index 0000000..eaf41f2
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch
+@@ -0,0 +1,70 @@
++<?xml version='1.0'?>
++<!--
++Usage:
++  source /opt/ros/jazzy/setup.bash
++  cd /home/dev/agenticros/ros2_ws
++  gz launch src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch
++
++Optional args:
++  worldPath:=/absolute/path/to/world.world
++  wsPort:=9002
++  publicationHz:=30
++  maxConnections:=-1
++
++Example:
++  gz launch src/agenticros_bringup/launch/sim8_small_warehouse_websocket.gzlaunch \
++    worldPath:=/home/dev/agenticros/ros2_ws/src/aws-robomaker-small-warehouse-world/worlds/no_roof_small_warehouse/no_roof_small_warehouse.world \
++    wsPort:=9002
++-->
++<%
++  if !defined?(worldPath) || worldPath == nil || worldPath.empty?
++    worldPath = "/home/dev/agenticros/ros2_ws/src/aws-robomaker-small-warehouse-world/worlds/small_warehouse/small_warehouse.world"
++  end
++
++  if !defined?(wsPort) || wsPort == nil || wsPort.empty?
++    wsPort = "9002"
++  end
++
++  if !defined?(publicationHz) || publicationHz == nil || publicationHz.empty?
++    publicationHz = "30"
++  end
++
++  if !defined?(maxConnections) || maxConnections == nil || maxConnections.empty?
++    maxConnections = "-1"
++  end
++
++  awsRoot = File.expand_path("../..", File.dirname(worldPath))
++
++  # Ensure Gazebo can resolve nested file://models/... URIs used by AWS model SDFs.
++  extraResourcePaths = [awsRoot, File.join(awsRoot, "models")]
++  existingResourcePath = ENV["GZ_SIM_RESOURCE_PATH"].to_s
++  ENV["GZ_SIM_RESOURCE_PATH"] = ([existingResourcePath] + extraResourcePaths)
++    .reject { |p| p.nil? || p.empty? }
++    .join(":")
++
++  # Convert model:// URIs to absolute file:// URIs so this launch works
++  # without requiring external GZ_SIM_RESOURCE_PATH exports.
++  modelRoot = File.expand_path("../../models", File.dirname(worldPath))
++  worldText = File.read(worldPath)
++  worldText = worldText.gsub(/model:\/\/([A-Za-z0-9_.\-]+)/) do
++    "file://#{File.join(modelRoot, $1)}"
++  end
++
++  generatedWorldPath = "/tmp/sim8_small_warehouse_websocket_#{Process.pid}.world"
++  File.write(generatedWorldPath, worldText)
++%>
++<gz version='1.0'>
++  <plugin name="gz::launch::WebsocketServer"
++          filename="gz-launch-websocket-server">
++    <publication_hz><%= publicationHz %></publication_hz>
++    <port><%= wsPort %></port>
++    <max_connections><%= maxConnections %></max_connections>
++  </plugin>
++
++  <plugin name="gz::launch::SimServer"
++          filename="gz-launch-sim">
++    <world_file><%= generatedWorldPath %></world_file>
++    <run>true</run>
++    <levels>false</levels>
++  </plugin>
++</gz>
+diff --git a/ros2_ws/src/agenticros_bringup/launch/sim8_websocket_only.gzlaunch b/ros2_ws/src/agenticros_bringup/launch/sim8_websocket_only.gzlaunch
+new file mode 100644
+index 0000000..a7c4d97
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/launch/sim8_websocket_only.gzlaunch
+@@ -0,0 +1,35 @@
++<?xml version='1.0'?>
++<!--
++Starts only the Gazebo Sim 8 websocket bridge (no SimServer).
++Use this alongside an already-running Gazebo Sim instance.
++
++Usage:
++  source /opt/ros/jazzy/setup.bash
++  gz launch src/agenticros_bringup/launch/sim8_websocket_only.gzlaunch
++
++Optional args:
++  wsPort:=9002
++  publicationHz:=30
++  maxConnections:=-1
++-->
++<%
++  if !defined?(wsPort) || wsPort == nil || wsPort.empty?
++    wsPort = "9002"
++  end
++
++  if !defined?(publicationHz) || publicationHz == nil || publicationHz.empty?
++    publicationHz = "30"
++  end
++
++  if !defined?(maxConnections) || maxConnections == nil || maxConnections.empty?
++    maxConnections = "-1"
++  end
++%>
++<gz version='1.0'>
++  <plugin name="gz::launch::WebsocketServer"
++          filename="gz-launch-websocket-server">
++    <publication_hz><%= publicationHz %></publication_hz>
++    <port><%= wsPort %></port>
++    <max_connections><%= maxConnections %></max_connections>
++  </plugin>
++</gz>
+diff --git a/ros2_ws/src/agenticros_bringup/package.xml b/ros2_ws/src/agenticros_bringup/package.xml
+index 857b308..9065462 100644
+--- a/ros2_ws/src/agenticros_bringup/package.xml
++++ b/ros2_ws/src/agenticros_bringup/package.xml
+@@ -17,6 +17,8 @@
+   <exec_depend>turtlebot3_gazebo</exec_depend>
+   <exec_depend>rclpy</exec_depend>
+   <exec_depend>geometry_msgs</exec_depend>
++  <exec_depend>nav_msgs</exec_depend>
++  <exec_depend>std_msgs</exec_depend>
+ 
+   <export>
+     <build_type>ament_python</build_type>
+diff --git a/ros2_ws/src/agenticros_bringup/setup.py b/ros2_ws/src/agenticros_bringup/setup.py
+index 234cda3..5884b9a 100644
+--- a/ros2_ws/src/agenticros_bringup/setup.py
++++ b/ros2_ws/src/agenticros_bringup/setup.py
+@@ -12,12 +12,18 @@ setup(
+         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
+         ("share/" + package_name, ["package.xml"]),
+         ("share/" + package_name + "/launch", glob("launch/*.py")),
++        ("share/" + package_name + "/config", glob("config/*")),
++        ("share/" + package_name + "/worlds", glob("worlds/*")),
+         ("share/" + package_name + "/rviz", glob("rviz/*.rviz")),
+     ],
+     install_requires=["setuptools"],
+     entry_points={
+         "console_scripts": [
+             "cmd_vel_relay = agenticros_bringup.cmd_vel_relay:main",
++            "cmd_vel_to_stamped = agenticros_bringup.cmd_vel_to_stamped:main",
++            "jaka_base_controller = agenticros_bringup.jaka_base_controller:main",
++            "jaka_joint_teleop = agenticros_bringup.jaka_joint_teleop:main",
++            "jaka_motion_smoke_test = agenticros_bringup.jaka_motion_smoke_test:main",
+         ],
+     },
+     zip_safe=True,
+diff --git a/ros2_ws/src/agenticros_bringup/worlds/jaka_empty.world b/ros2_ws/src/agenticros_bringup/worlds/jaka_empty.world
+new file mode 100644
+index 0000000..4d29233
+--- /dev/null
++++ b/ros2_ws/src/agenticros_bringup/worlds/jaka_empty.world
+@@ -0,0 +1,66 @@
++<?xml version="1.0" ?>
++<sdf version="1.9">
++  <world name="jaka_empty">
++    <gravity>0 0 -9.8</gravity>
++
++    <physics name="default_physics" type="dart">
++      <max_step_size>0.001</max_step_size>
++      <real_time_update_rate>1000</real_time_update_rate>
++      <real_time_factor>1.0</real_time_factor>
++    </physics>
++
++    <model name="ground_plane">
++      <static>true</static>
++      <link name="link">
++        <collision name="collision">
++          <geometry>
++            <plane>
++              <normal>0 0 1</normal>
++              <size>200 200</size>
++            </plane>
++          </geometry>
++          <surface>
++            <friction>
++              <ode>
++                <mu>1.0</mu>
++                <mu2>1.0</mu2>
++              </ode>
++            </friction>
++          </surface>
++        </collision>
++        <visual name="visual">
++          <geometry>
++            <plane>
++              <normal>0 0 1</normal>
++              <size>200 200</size>
++            </plane>
++          </geometry>
++          <material>
++            <ambient>0.8 0.8 0.8 1</ambient>
++            <diffuse>0.8 0.8 0.8 1</diffuse>
++          </material>
++        </visual>
++      </link>
++    </model>
++
++    <light name="sun" type="directional">
++      <cast_shadows>true</cast_shadows>
++      <pose>0 0 20 0 0 0</pose>
++      <diffuse>0.8 0.8 0.8 1</diffuse>
++      <specular>0.2 0.2 0.2 1</specular>
++      <attenuation>
++        <range>1000</range>
++        <constant>0.9</constant>
++        <linear>0.01</linear>
++        <quadratic>0.001</quadratic>
++      </attenuation>
++      <direction>-0.5 0.1 -0.9</direction>
++    </light>
++
++    <scene>
++      <ambient>0.4 0.4 0.4 1</ambient>
++      <background>0.7 0.7 0.8 1</background>
++      <shadows>true</shadows>
++    </scene>
++  </world>
++</sdf>
+diff --git a/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/follower_controller.py b/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/follower_controller.py
+index fd6a97c..6beea65 100644
+--- a/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/follower_controller.py
++++ b/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/follower_controller.py
+@@ -410,6 +410,13 @@ class FollowerController:
+                 self.enabled = False
+                 print("[CONTROLLER] Command sequence complete")
+ 
++    def _manual_command_twist(self) -> Twist:
++        """Return the active manual command twist, or a zero twist when idle."""
++        cmd = self._manual_command
++        if cmd is None:
++            return Twist()
++        return Twist(linear_x=cmd.linear_vel, angular_z=cmd.angular_vel)
++
+     def _update_manual_command(self) -> Twist:
+         """Update manual command execution and return twist."""
+         if not self._manual_command:
+@@ -438,9 +445,7 @@ class FollowerController:
+             cmd.completed = True
+             print(f"[CONTROLLER] Manual command completed")
+             self._start_next_queued_command()
+-            if self._manual_command is None:
+-                return Twist()
+-            cmd = self._manual_command
++            return self._manual_command_twist()
+         
+         return Twist(linear_x=cmd.linear_vel, angular_z=cmd.angular_vel)
+ 
+diff --git a/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/person_tracker.py b/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/person_tracker.py
+index 124443b..960c745 100644
+--- a/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/person_tracker.py
++++ b/ros2_ws/src/agenticros_follow_me/agenticros_follow_me/person_tracker.py
+@@ -187,8 +187,10 @@ class PersonTracker:
+     
+     def _get_pose_model_path(self) -> str:
+         """Get or download the pose landmarker model."""
++        import http.client
+         import os
+-        import urllib.request
++        import ssl
++        import urllib.parse
+         
+         model_dir = os.path.expanduser("~/.cache/mediapipe")
+         os.makedirs(model_dir, exist_ok=True)
+@@ -197,7 +199,32 @@ class PersonTracker:
+         if not os.path.exists(model_path):
+             print("[INFO] Downloading MediaPipe pose model...")
+             url = "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+-            urllib.request.urlretrieve(url, model_path)
++            parsed_url = urllib.parse.urlparse(url)
++            if parsed_url.scheme != "https" or parsed_url.netloc != "storage.googleapis.com":
++                raise ValueError("unexpected pose model URL")
++
++            request_path = parsed_url.path
++            if parsed_url.query:
++                request_path = f"{request_path}?{parsed_url.query}"
++
++            connection = http.client.HTTPSConnection(
++                parsed_url.netloc,
++                context=ssl.create_default_context(),
++            )
++            temp_path = f"{model_path}.tmp"
++            try:
++                connection.request("GET", request_path)
++                response = connection.getresponse()
++                if response.status != 200:
++                    raise RuntimeError(f"failed to download pose model: HTTP {response.status}")
++
++                with open(temp_path, "wb") as model_file:
++                    model_file.write(response.read())
++                os.replace(temp_path, model_path)
++            finally:
++                connection.close()
++                if os.path.exists(temp_path):
++                    os.remove(temp_path)
+             print("[INFO] Model downloaded")
+         
+         return model_path
+diff --git a/run_scenario_b.sh b/run_scenario_b.sh
+new file mode 100644
+index 0000000..641ca51
+--- /dev/null
++++ b/run_scenario_b.sh
+@@ -0,0 +1,28 @@
++#!/bin/bash
++source /opt/ros/jazzy/setup.bash
++cd /home/dev/agenticros/ros2_ws
++. install/setup.bash
++
++echo "--- Scenario B (No Sensors) ---"
++/home/dev/agenticros/scripts/cleanup_sim_processes.sh > /dev/null 2>&1
++ros2 launch agenticros_bringup rosbridge_gazebo.launch.py robot_type:=jaka_kargo use_gazebo_gui:=false disable_jaka_gazebo_sensors:=true > /tmp/launch_b.log 2>&1 &
++LPID=$!
++
++echo "Waiting for launch (60s)..."
++for i in {1..60}; do
++    if ros2 topic list | grep -q "/clock"; then 
++        echo "Clock found!"
++        break
++    fi
++    sleep 2
++done
++
++echo -n "/odom: "
++timeout 10s ros2 topic hz /odom | grep "average rate:" || echo "Topic not found or no data"
++echo -n "/clock: "
++timeout 10s ros2 topic hz /clock | grep "average rate:" || echo "Topic not found or no data"
++echo -n "Check cameras: "
++ros2 topic list | grep -E '/camera_1/image_raw|/camera_2/image_raw' || echo "No camera topics"
++
++kill $LPID
++/home/dev/agenticros/scripts/cleanup_sim_processes.sh > /dev/null 2>&1
+diff --git a/run_scenarios.sh b/run_scenarios.sh
+new file mode 100644
+index 0000000..802e184
+--- /dev/null
++++ b/run_scenarios.sh
+@@ -0,0 +1,47 @@
++#!/bin/bash
++source /opt/ros/jazzy/setup.bash
++cd /home/dev/agenticros/ros2_ws
++. install/setup.bash
++
++run_scenario() {
++    local NAME=$1
++    local EXTRA_ARGS=$2
++    local TOPICS=($3)
++    echo "--- Scenario $NAME ---"
++    /home/dev/agenticros/scripts/cleanup_sim_processes.sh > /dev/null 2>&1
++    
++    ros2 launch agenticros_bringup rosbridge_gazebo.launch.py robot_type:=jaka_kargo use_gazebo_gui:=false $EXTRA_ARGS > /tmp/launch.log 2>&1 &
++    LPID=$!
++
++    echo "Waiting for launch..."
++    for i in {1..30}; do
++        if ros2 topic list | grep -q "/clock"; then break; fi
++        sleep 2
++    done
++
++    # Additional wait for images if baseline
++    if [[ "$EXTRA_ARGS" != *"disable_jaka_gazebo_sensors:=true"* ]]; then
++      for i in {1..20}; do
++          if ros2 topic list | grep -q "/camera_1/image_raw"; then break; fi
++          sleep 2
++      done
++    fi
++
++    for topic in "${TOPICS[@]}"; do
++        echo -n "$topic: "
++        timeout 10s ros2 topic hz $topic | grep "average rate:" || echo "Topic not found or no data"
++    done
++    
++    if [[ "$EXTRA_ARGS" == *"disable_jaka_gazebo_sensors:=true"* ]]; then
++        echo -n "Check cameras: "
++        ros2 topic list | grep -E '/camera_1/image_raw|/camera_2/image_raw' || echo "No camera topics"
++    fi
++
++    kill $LPID
++    /home/dev/agenticros/scripts/cleanup_sim_processes.sh > /dev/null 2>&1
++    sleep 5
++}
++
++run_scenario "A (Baseline)" "" "/camera_1/image_raw /camera_2/image_raw /odom /clock"
++run_scenario "B (No Sensors)" "disable_jaka_gazebo_sensors:=true" "/odom /clock"
++run_scenario "C (Baseline Redux)" "" "/camera_1/image_raw /odom /clock"
+diff --git a/scripts/cleanup_sim_processes.sh b/scripts/cleanup_sim_processes.sh
+new file mode 100755
+index 0000000..b21be66
+--- /dev/null
++++ b/scripts/cleanup_sim_processes.sh
+@@ -0,0 +1,34 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++# Cleans Gazebo and ROS simulation processes used by the bringup tests.
++# Includes ROS 1 style process names as well because some environments still spawn them.
++# Also catches lingering agenticros_bringup Python nodes launched from install/ paths.
++PATTERN="ros2 launch agenticros_bringup rosbridge_gazebo.launch.py|gz sim|gazebo|ign gazebo|ros_gz_sim|parameter_bridge|image_bridge|rosbridge_websocket|rosapi_node|robot_state_publisher|joint_state_publisher|joint_state_publisher_gui|rviz2|static_transform_publisher|ros2-daemon|ros2cli\.daemon\.daemonize|roscore|rosmaster|rosout|roslaunch|rosrun|agenticros_bringup/.*/(jaka_base_controller|cmd_vel_relay|cmd_vel_to_stamped)|/agenticros_bringup/(jaka_base_controller|cmd_vel_relay|cmd_vel_to_stamped)([[:space:]]|$)|(^|[[:space:]/])ros([[:space:]]|$)"
++
++term_kill() {
++  pkill -f "$PATTERN" || true
++}
++
++force_kill() {
++  pkill -9 -f "$PATTERN" || true
++}
++
++show_remaining() {
++  pgrep -af "$PATTERN" || true
++}
++
++term_kill
++sleep 1
++if pgrep -af "$PATTERN" >/dev/null 2>&1; then
++  force_kill
++  sleep 1
++fi
++
++if pgrep -af "$PATTERN" >/dev/null 2>&1; then
++  echo "Cleanup incomplete: some processes are still alive"
++  show_remaining
++  exit 1
++fi
++
++echo "Simulation cleanup complete: no matching Gazebo/ROS test processes remain"
+diff --git a/scripts/run_jaka_sim_test.sh b/scripts/run_jaka_sim_test.sh
+new file mode 100755
+index 0000000..4b1ec0b
+--- /dev/null
++++ b/scripts/run_jaka_sim_test.sh
+@@ -0,0 +1,27 @@
++#!/usr/bin/env bash
++set -euo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++WS_DIR="$ROOT_DIR/ros2_ws"
++CLEANUP="$ROOT_DIR/scripts/cleanup_sim_processes.sh"
++
++TIMEOUT_SECONDS="${1:-90}"
++
++cleanup_on_exit() {
++  "$CLEANUP" >/dev/null 2>&1 || true
++}
++trap cleanup_on_exit EXIT INT TERM
++
++"$CLEANUP"
++
++set +u
++source /opt/ros/jazzy/setup.bash
++cd "$WS_DIR"
++source install/setup.bash
++set -u
++
++timeout "$TIMEOUT_SECONDS" ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
++  robot_type:=jaka_kargo \
++  use_gazebo_gui:=false \
++  port:=9290 \
++  safe_physics_profile:=true
+-- 
+2.43.0
+
