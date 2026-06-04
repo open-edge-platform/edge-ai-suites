@@ -66,7 +66,7 @@ This script sets these important values:
 
 ### 3. Download Models (one-time)
 
-Download the required captioning model:
+Download a VLM model that is required to generate captions. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh \
@@ -138,7 +138,7 @@ Set `ENABLE_DETECTION_PIPELINE=true` to pre-filter frames using a YOLO model bef
 ENABLE_DETECTION_PIPELINE=true
 ```
 
-Ensure you have downloaded a detection model.
+Download a detection model. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh --model yolov8s --type vision
@@ -158,7 +158,7 @@ source scripts/setup_embeddings.sh
 
 This sets `ENABLE_EMBEDDING=true`, activates the `EMBEDDING` Compose profile, and configures the additional services.
 
-Download a LLM model for RAG.
+Download a LLM model for RAG. For example:
 
 ```bash
 ./model_download_scripts/download_models.sh \
