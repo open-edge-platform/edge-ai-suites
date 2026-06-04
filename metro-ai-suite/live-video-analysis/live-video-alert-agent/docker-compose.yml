@@ -18,8 +18,8 @@ services:
       - NO_PROXY=${no_proxy}
       - VLM_REPO=${OVMS_SOURCE_MODEL:-OpenVINO/Phi-3.5-vision-instruct-int4-ov}
       - LLM_REPO=${LLM_MODEL:-OpenVINO/Phi-4-mini-instruct-int4-ov}
-      - VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
-      - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-CPU}}
+      - VLM_TARGET_DEVICE=${VLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-GPU}}
+      - LLM_TARGET_DEVICE=${LLM_TARGET_DEVICE:-${OVMS_TARGET_DEVICE:-GPU}}
     volumes:
       - ovms-models:/models
       - ./scripts/init_ovms.sh:/init_ovms.sh:ro
@@ -43,7 +43,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - TARGET_DEVICE=${VLM_TARGET_DEVICE:-CPU}
+      - TARGET_DEVICE=${VLM_TARGET_DEVICE:-GPU}
     volumes:
       - ovms-models:/models
     ulimits:
@@ -86,7 +86,7 @@ services:
       - HTTP_PROXY=${http_proxy}
       - https_proxy=${https_proxy}
       - HTTPS_PROXY=${https_proxy}
-      - TARGET_DEVICE=${LLM_TARGET_DEVICE:-CPU}
+      - TARGET_DEVICE=${LLM_TARGET_DEVICE:-GPU}
     volumes:
       - ovms-models:/models
     ulimits:
@@ -164,9 +164,6 @@ services:
     depends_on:
       ovms-vlm:
         condition: service_healthy
-      ovms-llm:
-        condition: service_healthy
-        required: ${USE_ADK:-true}
     networks:
       - app_network
 
