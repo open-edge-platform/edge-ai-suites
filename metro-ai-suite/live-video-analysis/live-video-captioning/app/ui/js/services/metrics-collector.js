@@ -2,7 +2,7 @@
  * Metrics collector service for WebSocket-based system metrics
  * Connects to the external live-metrics-service for real-time metrics streaming
  */
-const MetricsCollectorService = (function() {
+const MetricsCollectorService = (function () {
     let metricsWS = null;
     let reconnectTimeout = null;
     let reconnectAttempts = 0;
@@ -10,7 +10,7 @@ const MetricsCollectorService = (function() {
     const reconnectDelay = 3000;
 
     // Data structures for tracking GPU engine metrics
-    const gpuEngineData = {};
+    const gpuEngineData = new Map();
     // Track GPU power values separately for combining
     let gpuPowerValue = null;
     let pkgPowerValue = null;
@@ -71,12 +71,12 @@ const MetricsCollectorService = (function() {
                     break;
 
                 case 'gpu_engine_usage':
-                    if (fields.usage !== undefined && tags.engine) {
+                    if (fields.usage !== undefined && tags && tags.engine) {
                         const engineName = tags.engine.toUpperCase();
                         const usage = fields.usage;
 
                         // Store engine data
-                        gpuEngineData[engineName] = usage;
+                        gpuEngineData.set(engineName, usage);
                     }
                     break;
 
@@ -137,10 +137,10 @@ const MetricsCollectorService = (function() {
         }
 
         // Update GPU engines display
-        const engineNames = Object.keys(gpuEngineData);
+        const engineNames = Array.from(gpuEngineData.keys());
         if (gpuEngines && engineNames.length > 0) {
             const engineList = engineNames
-                .map(name => `${formatEngineName(name)}: ${gpuEngineData[name].toFixed(1)}%`)
+                .map(name => `${formatEngineName(name)}: ${gpuEngineData.get(name).toFixed(1)}%`)
                 .join(' | ');
             gpuEngines.textContent = engineList;
             gpuEngines.style.display = 'block';
