@@ -30,6 +30,7 @@ struct DatasetPresetGeometry {
     float split_post_out_size_factor;
     std::array<float, 3> post_center_min;
     std::array<float, 3> post_center_max;
+    float default_score_threshold;
 };
 
 const DatasetPresetGeometry& dataset_preset_geometry(DatasetPreset preset);

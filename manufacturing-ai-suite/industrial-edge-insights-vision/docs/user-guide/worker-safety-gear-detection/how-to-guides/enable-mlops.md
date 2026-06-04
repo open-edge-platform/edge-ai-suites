@@ -3,11 +3,11 @@
 Applications for industrial edge insights vision can also be used to demonstrate MLOps workflow using Model Download microservice.
 With this feature, during runtime, you can download a new model using the microservice and restart the pipeline with the new model.
 
->To simplify this demonstration, we assume that models have already been downloaded to an accessible location (`/tmp/models`) using the Model Download from a running Geti server before restarting the pipeline.
+> To simplify this demonstration, we assume that models have already been downloaded to an accessible location (`/tmp/models`) using the Model Download from a running Geti server before restarting the pipeline.
 
 ## Contents
 
-### Pre-requisites
+### Prerequisites
 
 We assume that Model Download service has already downloaded the model to be updated to `/tmp/models`.
 To learn how to setup Model Download, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#start-with-setup-script)
@@ -19,7 +19,7 @@ If not available, you can simulate this by downloading the sample model from edg
 > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
-1.  Set up the sample application to start a pipeline. A pipeline named `worker_safety_gear_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Worker Safety Gear Detection sample app.
+1. Set up the sample application to start a pipeline. A pipeline named `worker_safety_gear_detection_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Worker Safety Gear Detection sample app.
 
     > Ensure that the pipeline inference element such as gvadetect/gvaclassify/gvainference should not have a `model-instance-id` property set. If set, this would not allow the new model to be run with the same value provided in the model-instance-id.
 
@@ -59,7 +59,7 @@ If not available, you can simulate this by downloading the sample model from edg
     ./sample_list.sh
     ```
 
-6. Modify the payload in `apps/worker-safety-gear-detection/payload.json` to launch an instance for the mlops pipeline
+6. Modify the payload in `apps/worker-safety-gear-detection/payload.json` to launch an instance for the MLOps pipeline
 
     ```json
     [
@@ -97,22 +97,23 @@ If not available, you can simulate this by downloading the sample model from edg
 
     ![WebRTC streaming](../_assets/webrtc-streaming.png)
 
-    #### Downloading a Model with Model Download
+#### Downloading a Model with Model Download
 
-    At this point, user would like to restart the pipeline with a newer model. The new model can bea retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading  public models as well as geti models from a running Geti server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
+At this point, restart the pipeline with a newer model. The new model can be a retrained version of the existing model or a different model altogether. We use [Model Download](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/index.html) microservice to help download the model. It supports downloading public models as well as Geti™ models from a running Geti™ server. To learn more about it, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html).
 
-   For our demonstration, we assume that:
-   - the Worker Safety Gear Detection model has been retrained and is available for download from a Geti server using the Model Download service.
-   - the downloaded location is accessible by the DL Streamer Pipeline Server. In our example, it is `/tmp/models`.
-   - the `/tmp` directory is already accessible by the sample application. If not, add it to the `volumes` section of `dlstreamer-pipeline-server` service in the docker-compose file.
+For our demonstration, we assume that:
 
-9. Stop the running pipeline by using the pipeline instance "id".
+- the Worker Safety Gear Detection model has been retrained and is available for download from a Geti server using the Model Download service.
+- the downloaded location is accessible by the DL Streamer Pipeline Server. In our example, it is `/tmp/models`.
+- the `/tmp` directory is already accessible by the sample application. If not, add it to the `volumes` section of `dlstreamer-pipeline-server` service in the Docker Compose file.
+
+1. Stop the running pipeline by using the pipeline instance "id".
 
    ```sh
    curl -k --location -X DELETE https://<HOST_IP>/api/pipelines/{instance_id}
    ```
 
-10. Start a new pipeline with this new model. Before that modify the payload.json to use this new model in `apps/worker-safety-gear-detection/payload.json`. Notice the model path in the payload has changed to the new model.
+2. Start a new pipeline with this new model. Before that modify the payload.json to use this new model in `apps/worker-safety-gear-detection/payload.json`. Notice the model path in the payload has changed to the new model.
 
     ```json
     [
@@ -146,7 +147,7 @@ If not available, you can simulate this by downloading the sample model from edg
     ./sample_start.sh -p worker_safety_gear_detection_mlops
     ```
 
-11. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+3. View the WebRTC streaming on `https://<HOST_IP>/mediamtx/<peer-str-id>` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
 ## Additional resources
 
@@ -154,4 +155,8 @@ If not available, you can simulate this by downloading the sample model from edg
 
 To learn how to download models from a running Geti server, see [here](https://docs.openedgeplatform.intel.com/dev/edge-ai-libraries/model-download/get-started.html#sample-usage-with-curl-command).
 
-> **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in compose file, and restart the DLSPS service.
+> **Note:** The downloaded model(s) must be accessible to the DL Streamer Pipeline Server container. If necessary, add it to volumes section of `dlstreamer-pipeline-server` in Docker Compose file, and restart the DLSPS service.
+
+---
+
+*Intel, the Intel logo and Intel Geti are trademarks of Intel Corporation or its subsidiaries.*

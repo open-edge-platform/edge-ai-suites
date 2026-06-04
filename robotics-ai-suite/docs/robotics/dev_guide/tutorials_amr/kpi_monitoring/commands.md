@@ -55,8 +55,13 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
 | `--no-visualize` | Skip auto-visualization on exit |
+| `--gpu` | Enable Intel GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
+| `--npu` | Enable Intel NPU monitoring via sysfs |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
+| `--ros-domain-id ID` | Explicitly set `ROS_DOMAIN_ID` (skips auto-detection) |
+| `--algorithm LABEL` | Group sessions under `monitoring_sessions/<label>/` |
+| `--use-sim-time` | Pass `--use-sim-time` to the graph monitor |
 | `--list-sessions` | List previous sessions and exit |
 
 ```bash
@@ -133,7 +138,160 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --no-show --outp
 uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 ```
 
+## visualize_gpu.py
 
+Generates a 5-panel Intel GPU dashboard: busy percentage, GT frequency,
+temperature, package power, and per-PID GPU contribution bar chart.
+
+```bash
+uv run python src/visualize_gpu.py <session_dir>
+uv run python src/visualize_gpu.py gpu_usage.log --session monitoring_sessions/wandering/20260513_003015 --save
+uv run python src/visualize_gpu.py <session_dir> --summary
+```
+
+| Option | Description |
+|--------|-------------|
+| `log_file` | Path to `gpu_usage.log` or a session directory (auto-detected if omitted) |
+| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
+| `--sessions-dir DIR` | Root directory for sessions (default: `monitoring_sessions`) |
+| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
+| `--save` | Write PNG to the `visualizations/` directory |
+| `--show` | Open an interactive matplotlib window |
+| `--no-show` | Never open a window (useful for CI/headless) |
+| `--top N` | Number of top PIDs in the per-PID bar chart (default: 10) |
+| `--lines` | Use line plots instead of filled area plots |
+| `--summary` | Print text summary only, no plot |
+| `--pid-bar` | Show per-PID GPU usage bar chart panel |
+
+> Install `qmassa` first with `make install-qmassa`. The `--gpu` flag on
+> `monitor_stack.py` auto-enables GPU logging when hardware is detected.
+
+## visualize_npu.py
+
+Generates a 3-panel Intel NPU dashboard: busy percentage, clock frequency,
+and memory utilization.
+
+```bash
+uv run python src/visualize_npu.py <session_dir>
+uv run python src/visualize_npu.py npu_usage.log --session monitoring_sessions/wandering/20260513_003015
+uv run python src/visualize_npu.py <session_dir> --no-show
+```
+
+| Option | Description |
+|--------|-------------|
+| `log` | Path to `npu_usage.log` or a session directory (auto-detected if omitted) |
+| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
+| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
+| `--no-show` | Never open a window |
+| `--no-save` | Do not write a PNG file |
+
+> NPU monitoring requires the `--npu` flag on `monitor_stack.py`. No
+> special hardware capabilities are needed — data is read from sysfs.
+
+## visualize_thermal.py
+
+Generates a 3-panel thermal & throttle dashboard: CPU/GPU temperature,
+throttle state, and CPU package power.
+
+```bash
+uv run python src/visualize_thermal.py <session_dir>
+uv run python src/visualize_thermal.py --session monitoring_sessions/wandering/20260513_003015 --save
+uv run python src/visualize_thermal.py cpu_power.log --gpu-log gpu_usage.log
+uv run python src/visualize_thermal.py <session_dir> --summary
+```
+
+| Option | Description |
+|--------|-------------|
+| `log_file` | Path to `cpu_power.log` or a session directory (auto-detected if omitted) |
+| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
+| `--gpu-log FILE` | Explicit path to `gpu_usage.log` (auto-found alongside `cpu_power.log`) |
+| `--sessions-dir DIR` | Root directory for sessions (default: `monitoring_sessions`) |
+| `--output-dir DIR` | Directory to write the PNG file (default: session `visualizations/`) |
+| `--save` | Save PNG to the session `visualizations/` directory |
+| `--show` | Open an interactive matplotlib window |
+| `--no-show` | Never open a window (useful in headless CI) |
+| `--summary` | Print text summary only, no plot |
+
+## visualize_kpi.py
+
+Generates publication-ready charts from `kpi.json` files produced by the
+benchmark framework. Supports latency histograms, cross-SKU comparisons,
+resource utilization breakdowns, and Level-2 throughput/drop-rate charts.
+
+```bash
+# All charts for a session directory
+uv run python src/visualize_kpi.py --session monitoring_sessions/<name>
+
+# Cross-SKU comparison
+uv run python src/visualize_kpi.py \
+    --kpi mtl.json arl.json ptl.json \
+    --label MTL ARL PTL \
+    --output-dir charts/
+
+# SVG output
+uv run python src/visualize_kpi.py --session <dir> --format svg
+```
+
+| Option | Description |
+|--------|-------------|
+| `--session DIR` | Session directory containing `kpi.json` |
+| `--kpi FILE [FILE ...]` | One or more `kpi.json` paths (for cross-SKU comparison) |
+| `--label LABEL [...]` | SKU labels matching `--kpi` files (e.g. `MTL ARL PTL`) |
+| `--kpi2 FILE` | Path to `kpi_level2.json` for Level-2 charts |
+| `--output-dir DIR` | Output directory for charts (default: `<session>/charts` or `./charts`) |
+| `--format {png,svg}` | Output image format (default: `png`) |
+
+## analyze_rosbag.py
+
+Analyses a ROS2 bag file and prints per-topic statistics, message latency,
+and node graph information. Accepts SQLite3 `.db3` or `.mcap` bag files.
+
+```bash
+uv run python src/analyze_rosbag.py path/to/bag.db3
+uv run python src/analyze_rosbag.py path/to/bag.mcap
+```
+
+All analysis is run automatically and printed to stdout.
+
+## bag_replay_run.sh / make bag-replay
+
+Replays a previously recorded bag file through the monitoring stack,
+enabling reproducible offline benchmarking and CI integration.
+
+```bash
+# Via Makefile (recommended)
+make bag-replay BAG=/path/to/bag.db3
+make bag-replay BAG=/path/to/bag.db3 RATE=0.5 RUNS=5
+
+# Directly
+./src/bag_replay_run.sh /path/to/bag.db3
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BAG` | (required) | Path to the bag file to replay |
+| `RATE` | `1.0` | Playback rate multiplier |
+| `LOOP` | `false` | Loop the bag continuously |
+| `RUNS` | `1` | Number of benchmark repetitions |
+| `PAUSE` | `5` | Seconds to pause between runs |
+
+## fastmapping_run.sh / make fastmapping
+
+Runs the FastMapping RGB-D SLAM benchmark, which exercises the fast-mapping
+pipeline across a sequence of depth images.
+
+```bash
+# Single run
+make fastmapping
+
+# Multiple runs (benchmark mode)
+make fastmapping-benchmark RUNS=10
+
+# Visualize results
+make fastmapping-plot
+```
+
+See [FastMapping Benchmark](fastmapping-benchmark.md) for a complete walkthrough.
 
 ## Grafana Dashboard Commands
 

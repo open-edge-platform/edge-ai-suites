@@ -44,6 +44,7 @@ The key features are:
 :hidden:
 
 get-started.md
+quick-start-guide.md
 how-to-guides.md
 how-it-works.md
 api-reference.md

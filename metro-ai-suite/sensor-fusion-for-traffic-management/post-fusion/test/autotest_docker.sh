@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="${PROJECT_DIR:-$(cd -- "$SCRIPT_DIR/.." && pwd)}"
 
-IMAGE="${IMAGE:-intel/tfcc:latest}"
+IMAGE="${IMAGE:-intel/tfcc:2025.2.0-ubuntu24}"
 # Default matches docker/run_docker.sh and the image's built project directory.
 CONTAINER_WORKDIR="${CONTAINER_WORKDIR:-/home/tfcc/metro}"
 AUTOTEST_CMD_IN_CONTAINER="${AUTOTEST_CMD_IN_CONTAINER:-bash test/autotest.sh}"

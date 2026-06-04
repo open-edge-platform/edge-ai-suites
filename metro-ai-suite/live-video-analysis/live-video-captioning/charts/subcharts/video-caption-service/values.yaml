@@ -85,7 +85,16 @@ modelsPvcName: ""
 detectionModelsPvcName: ""
 
 podSecurityContext: {}
-securityContext: {}
+securityContext:
+  privileged: true
+  allowPrivilegeEscalation: true
+
+# Extra supplemental group IDs for host video/render device access.
+# These mirror the defaults used by dlstreamer-pipeline-server.
+supplementalGroups:
+- "109" # render — Ubuntu 20.04
+- "110" # render — Ubuntu 22.04
+- "992" # render — Ubuntu 24.04
 
 resources:
   requests:
