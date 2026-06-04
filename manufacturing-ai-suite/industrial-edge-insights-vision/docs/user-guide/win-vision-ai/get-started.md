@@ -86,7 +86,7 @@ Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries Git
 .\src\setup_genicam_runtime.ps1
 ```
 
-> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/release-2026.1.0/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 
