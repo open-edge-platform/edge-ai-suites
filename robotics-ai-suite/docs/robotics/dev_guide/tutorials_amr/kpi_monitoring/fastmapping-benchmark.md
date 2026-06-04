@@ -7,7 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 # FastMapping RGB-D Benchmark
 
 This benchmark measures KPI performance of the FastMapping RGB-D SLAM pipeline
-— a depth-camera mapping scenario that processes a bundled Intel spinning RGB-D
+— a depth-camera mapping scenario that processes a bundled Intel&trade; spinning RGB-D
 bag (`~12 s`, 175 depth frames) and reports real-time frame throughput, compute
 latency, and timing jitter.
 
