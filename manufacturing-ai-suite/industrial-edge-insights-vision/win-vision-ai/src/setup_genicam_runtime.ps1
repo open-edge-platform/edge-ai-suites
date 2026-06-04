@@ -171,7 +171,7 @@ try {
     Write-Host ""
     Write-Host "Next steps - set these environment variables before running gst-inspect-1.0 gencamsrc:"
     Write-Host "  `$genicamRuntime = `"$OutDir`""
-    Write-Host "  `$env:PATH = `"`$BinDir;`$genicamRuntime;`$env:PATH`"
+    Write-Host "  `$env:PATH = `"`$BinDir;`$genicamRuntime;`$env:PATH`""
 
 } catch {
     Write-Error "GenICam runtime setup failed: $_"
