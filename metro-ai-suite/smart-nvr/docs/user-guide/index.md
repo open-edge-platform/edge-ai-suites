@@ -79,6 +79,7 @@ support the features.
 - [Build from source](./get-started/build-from-source.md): How to build and deploy the application using Docker Compose.
 - [Deploy with Helm](./get-started/deploy-with-helm.md): How to deploy the application with Helm.
 - [How to Use the Application](./how-to-use-application.md): Explore the application's features and verify its functionality.
+- [Development Guide](./development-guide.md): Quick reference for developers contributing to Smart NVR.
 - [Support and Troubleshooting](./troubleshooting.md): Find solutions to common issues and troubleshooting steps.
 
 <!--hide_directive
@@ -88,6 +89,7 @@ support the features.
 get-started
 how-to-use-application
 scenescape-integration
+development-guide
 api-reference
 troubleshooting
 release-notes

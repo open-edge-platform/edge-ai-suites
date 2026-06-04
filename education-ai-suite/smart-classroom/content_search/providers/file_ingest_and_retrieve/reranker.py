@@ -433,9 +433,18 @@ class PostProcessor:
         """Assign 0-100 relevance score: sigmoid(reranker logit) for docs, sigmoid(k*(sim-center)) for visual."""
         for r in results:
             if r.get("reranker_score") is not None:
+                if not math.isfinite(r["reranker_score"]):
+                    logger.warning("[reranker] Non-finite reranker_score for id=%s, defaulting to 0", r.get("id"))
+                    r["score"] = 0.0
+                    continue
                 r["score"] = round(1.0 / (1.0 + math.exp(-r["reranker_score"])) * 100, 2)
             else:
-                similarity = 1.0 - r["distance"]
+                distance = r["distance"]
+                if not math.isfinite(distance):
+                    logger.warning("[reranker] Non-finite distance for id=%s, defaulting to 0", r.get("id"))
+                    r["score"] = 0.0
+                    continue
+                similarity = 1.0 - distance
                 r["score"] = round(1.0 / (1.0 + math.exp(-visual_sigmoid_k * (similarity - visual_sigmoid_center))) * 100, 2)
 
     @staticmethod

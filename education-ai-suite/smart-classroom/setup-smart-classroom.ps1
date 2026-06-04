@@ -319,7 +319,7 @@ try {
     $memInfo = Get-CimInstance -ClassName Win32_ComputerSystem
     $totalMemGB = [math]::Round($memInfo.TotalPhysicalMemory / 1GB, 1)
     
-    if ($totalMemGB -ge 32) {
+    if ($totalMemGB -ge 30) {
         Write-Host "  [OK] $totalMemGB GB RAM" -ForegroundColor Green
     } elseif ($totalMemGB -ge 16) {
         Write-Host "  [WARN] $totalMemGB GB RAM (32 GB recommended)" -ForegroundColor Yellow
@@ -492,7 +492,7 @@ function Install-NPUDriver {
     Write-Host ""
     
     $npuDevicesRecheck = Get-PnpDevice -ErrorAction SilentlyContinue | 
-                        Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" }
+                        Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
     
     if ($npuDevicesRecheck) {
         $npuName = ($npuDevicesRecheck | Select-Object -First 1).FriendlyName
@@ -506,12 +506,14 @@ function Install-NPUDriver {
 
 Write-Host "Checking NPU..." -ForegroundColor White
 try {
-    $npuDevices = Get-PnpDevice -Class "System" -ErrorAction SilentlyContinue | 
-                  Where-Object { $_.FriendlyName -match "NPU|Neural" }
+    # Check multiple device classes where NPU might appear (System, Compute, SoftwareComponent)
+    $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
+                  Where-Object { $_.FriendlyName -match "NPU|Neural|AI Boost|VPU" -and $_.FriendlyName -match "Intel" }
     
     if (-not $npuDevices) {
+        # Broader search including Accelerator keyword
         $npuDevices = Get-PnpDevice -ErrorAction SilentlyContinue | 
-                      Where-Object { $_.FriendlyName -match "Intel.*NPU|Intel.*Neural" }
+                      Where-Object { $_.FriendlyName -match "Intel.*(NPU|Neural|AI Boost|VPU|Accelerator)" }
     }
     
     if ($npuDevices) {
@@ -1255,7 +1257,7 @@ if (-not (Test-Path $configPath)) {
 }
 
 # Read config file
-$configContent = Get-Content $configPath -Raw
+$configContent = Get-Content $configPath -Raw -Encoding UTF8
 
 # Function to update YAML value (simple string replacement)
 function Update-YamlValue {
@@ -1513,7 +1515,7 @@ Write-Host ""
 Write-Host "----------------------------------------" -ForegroundColor DarkGray
 Write-Host "Saving configuration..." -ForegroundColor Yellow
 
-Set-Content -Path $configPath -Value $configContent -NoNewline
+Set-Content -Path $configPath -Value $configContent -NoNewline -Encoding UTF8
 Write-Host "Configuration saved to: $configPath" -ForegroundColor Green
 Write-Host ""
 
@@ -1526,7 +1528,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # Re-read to show final values
-$finalConfig = Get-Content $configPath -Raw
+$finalConfig = Get-Content $configPath -Raw -Encoding UTF8
 
 $finalLang = if ($finalConfig -match "language:\s*(\S+)") { $Matches[1] } else { "en (default)" }
 $finalProvider = if ($finalConfig -match "asr:[\s\S]*?provider:\s*(\S+)") { $Matches[1] } else { "unknown" }

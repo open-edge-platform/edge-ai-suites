@@ -1,0 +1,109 @@
+# Copyright (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Run profile for the fast-mapping benchmark scenario.
+# Scenario name is derived from the ROS package in launch.cmd: "fast_mapping".
+#
+# NOTE: This is a bag-REPLAY scenario.  fast_mapping.launch.py starts both
+#       fast_mapping_node and a ros2 bag play of the bundled spinning bag at
+#       /opt/ros/<distro>/share/bagfiles/spinning/.  The bag is not recorded
+#       during the run; the 'bag.topics' section documents the topics present
+#       in the input bag for reference.
+#
+# Load with:
+#   uv run python src/benchmark_profiler.py --config config/fastmapping_run.yaml --show
+#
+# Use in bash run scripts:
+#   TOPICS=$(uv run python src/benchmark_profiler.py --config config/fastmapping_run.yaml --topics)
+#   LAUNCH=$(uv run python src/benchmark_profiler.py --config config/fastmapping_run.yaml --launch-cmd)
+#   SLEEP=$(uv run python src/benchmark_profiler.py  --config config/fastmapping_run.yaml --init-sleep)
+
+---
+launch:
+  # fast_mapping.launch.py starts fast_mapping_node + ros2 bag play together.
+  # Scenario is derived from package name: "fast_mapping".
+  # For RTAB-Map variant use: "ros2 launch fast_mapping fast_mapping_rtabmap.launch.py"
+  cmd: "ros2 launch fast_mapping fast_mapping.launch.py"
+
+  # Optional extra arguments appended to cmd (e.g. ["bag_path:=/path/to/bag"])
+  args: []
+
+  # Seconds to wait after launch before starting monitoring.
+  # The launch file starts the node and bag replay together; allow time
+  # for the node to initialise and TF tree to settle before the first frames arrive.
+  # On WSL ~5s is enough for the bag to start but TF errors appear briefly;
+  # 10s avoids the unconnected-tree errors at startup.
+  init_sleep: 5
+
+stop:
+  # No goal events in fast-mapping; the run completes when the bag finishes.
+  goal_pattern: ""
+  goal_count: 0
+
+  # Hard stop after N seconds (0 = off).
+  # The spinning bag is 11.9s of data and finishes replaying in ~14s wall time.
+  timeout: 20
+
+  # Stop as soon as bag_playback exits — this fires naturally at the end of the
+  # replay regardless of hardware speed.  benchmark_runner.sh then sends SIGINT,
+  # which causes fast_mapping_node to flush its procedure table (including the
+  # "Total elapsed time" line) before exiting.  analyze_fastmapping_log.py reads
+  # that table from the log after the run.
+  done_pattern: "bag_playback.*process has finished cleanly"
+
+  # Count image-processing cycles for the run summary.
+  task_pattern: "fast_mapping got [0-9]+ images"
+
+monitor:
+  # Full resource monitoring (CPU, memory, GPU, NPU) enabled alongside the
+  # graph timing monitor so we can correlate image throughput with system load.
+  graph_only: false
+
+gazebo:
+  # No Gazebo — this is a bag-replay pipeline.
+  press_play: false
+
+cleanup:
+  # Sweep pattern for pkill -f used before and after each run.
+  # Includes rviz2 because fast_mapping.launch.py starts it alongside the node.
+  sweep: "ros2 |fast_mapping_node|fast_mapping.launch|ros2 bag play|rviz2"
+
+session:
+  # Subdirectory under monitoring_sessions/ where sessions are stored.
+  output_subdir: "fastmapping"
+  # Prefix for log filenames.
+  log_prefix: "fastmapping"
+  # Path for the ros2 bag record stderr log (unused in replay mode).
+  record_log: "/tmp/fastmapping_record.log"
+
+post_run:
+  # Parse fast_mapping_node throughput and procedure timings from the launch log
+  # and write kpi.json (plus fastmapping_procedures.json) into SESSION_DIR.
+  # SESSION_DIR is substituted by benchmark_runner.sh at runtime.
+  cmd: "uv run python src/analyze_fastmapping_log.py --session SESSION_DIR"
+
+bag:
+  # Topics present in the input bag (e.g. the bundled spinning bag).
+  # These are replayed into fast_mapping_node; they are not recorded.
+  # Update this list if your input bag uses different topic names.
+  topics:
+    # ── RGB-D camera inputs (primary camera) ─────────────────────────────────
+    - /camera/aligned_depth_to_color/camera_info
+    - /camera/aligned_depth_to_color/image_raw
+
+    # ── RGB-D camera inputs (multi-camera rigs) ───────────────────────────────
+    - /camera_left/aligned_depth_to_color/image_raw
+    - /camera_right/aligned_depth_to_color/image_raw
+    - /camera_rear/aligned_depth_to_color/image_raw
+
+    # ── Transforms ───────────────────────────────────────────────────────────
+    - /tf
+    - /tf_static
+
+    # ── Map outputs published by fast_mapping / maps_publisher_node ──────────
+    - /world/map
+    - /world/fused_map
+    - /world/occupancy
+
+    # ── Bag replay events ────────────────────────────────────────────────────
+    - /events/read_split

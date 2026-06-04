@@ -243,6 +243,39 @@ def _derive_kpis(parsed: dict) -> dict:
     }
 
 
+def _create_kpi(kpi_path: Path, session_dir: Path) -> None:
+    """Write a minimal kpi.json skeleton when none exists (e.g. no --record run)."""
+    import datetime
+    import os
+    import platform
+    import socket
+    kpi = {
+        'schema_version': 'level1_v1',
+        'throughput_hz': None, 'mean_latency_ms': None,
+        'max_jitter_ms': None, 'min_jitter_ms': None,
+        'mean_jitter_ms': None, 'jitter_stdev_ms': None,
+        'cpu_mean_pct': None, 'cpu_max_pct': None,
+        'thermal': {
+            'cpu_temp_c': None, 'gpu_temp_c': None, 'npu_temp_c': None,
+            'cpu_throttled': None, 'gpu_throttled': None, 'npu_throttled': None,
+        },
+        'per_node': {}, 'pairs': [],
+        'metadata': {
+            'name': session_dir.name,
+            'datetime': datetime.datetime.now(datetime.timezone.utc).isoformat().replace('+00:00', 'Z'),
+            'hostname': socket.gethostname(),
+            'arch': platform.machine(),
+            'os': f'{platform.system()} {platform.release()}',
+            'data_path': str(session_dir),
+            'framework_version': '0.1.15',
+            'ros_distro': os.environ.get('ROS_DISTRO', 'unknown'),
+            'hardware': {'cpu_model': None, 'cpu_cores': None, 'gpu_model': None, 'total_ram_gb': None},
+        },
+    }
+    kpi_path.write_text(json.dumps(kpi, indent=2))
+    print(f'  kpi.json created   → {kpi_path}')
+
+
 def _patch_kpi(kpi_path: Path, parsed: dict, kpis: dict,
                input_topic: str, output_topic: str) -> None:
     """Load kpi.json, fill in real values, and write back."""
@@ -421,7 +454,16 @@ def main() -> int:
     # Resolve paths
     if args.session:
         session_dir = Path(args.session).resolve()
-        log_path = Path(args.log).resolve() if args.log else session_dir / 'fast_mapping_node.log'
+        if args.log:
+            log_path = Path(args.log).resolve()
+        else:
+            # Support both legacy name and the name used by benchmark_runner.sh
+            for _candidate in ('fast_mapping_node.log', 'fastmapping_launch.log'):
+                log_path = session_dir / _candidate
+                if log_path.exists():
+                    break
+            else:
+                log_path = session_dir / 'fast_mapping_node.log'  # will emit clear error below
         kpi_path = Path(args.kpi).resolve() if args.kpi else session_dir / 'kpi.json'
     elif args.log:
         log_path = Path(args.log).resolve()
@@ -454,10 +496,9 @@ def main() -> int:
 
     _write_procedures(session_dir, parsed, kpis)
 
-    if kpi_path.exists():
-        _patch_kpi(kpi_path, parsed, kpis, args.input_topic, args.output_topic)
-    else:
-        print(f'  ⚠ kpi.json not found at {kpi_path} — skipping patch', file=sys.stderr)
+    if not kpi_path.exists():
+        _create_kpi(kpi_path, session_dir)
+    _patch_kpi(kpi_path, parsed, kpis, args.input_topic, args.output_topic)
 
     return 0
 

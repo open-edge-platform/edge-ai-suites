@@ -18,6 +18,32 @@ The provided helper uses the ephemeral model-download container flow from the [M
   export MODEL_PATH=~/edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning-rag
   ```
 
+## Usage
+
+Use the helper script with the following arguments:
+
+```bash
+./model_download_scripts/download_models.sh \
+  --model <huggingface-model-id> \
+  --type <vlm|vision|llm> \
+  --weight-format <int4|int8|fp16> \
+  --device <CPU|GPU>
+```
+
+**Parameters:**
+- `--model`: Hugging Face model identifier (for example, `OpenGVLab/InternVL2-1B`).
+- `--type`: Model category. Use `vlm` for Vision Language Models, `vision` for object-detection models, or `llm` for text-only LLMs.
+- `--weight-format`: Precision/quantization format. Supported values are `int4`, `int8`, and `fp16`.
+- `--device`: Target conversion device (for example, `CPU` or `GPU`, depending on host support).
+
+**Weight format options:**
+
+| Format | Memory use | Accuracy | When to use |
+|--------|-----------|----------|-------------|
+| `int4` | Lowest | Lower | Memory-constrained systems |
+| `int8` | Medium | Good | Recommended default |
+| `fp16` | Highest | Best | Maximum accuracy, more RAM required |
+
 ## Download a VLM model
 
 ```bash
@@ -63,7 +89,7 @@ Valid device values depend on the model-download container and host hardware. CP
 
 ## RAG and LLM models
 
-RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download/README.md).
+RAG is optional and not required for the base Live Video Captioning application. For LLM and RAG model setup, see [RAG Model Download](../how-to-guides/rag-model-download.md).
 
 ## Troubleshooting
 

@@ -403,9 +403,15 @@ if ($Restart) {
     }
     
     Write-Host ""
-    Write-Host "  Starting all services fresh..." -ForegroundColor Green
+    Write-Host "  Starting all services..." -ForegroundColor Green
     
-    Remove-VirtualEnvironments
+    $deleteVenvs = Read-Host "  Do you want to reinstall virtual environments? (Y/N, default: N)"
+    if ($deleteVenvs.ToUpper() -eq "Y") {
+        Remove-VirtualEnvironments
+        Write-Host "  Virtual environments will be recreated." -ForegroundColor Green
+    } else {
+        Write-Host "  Using existing virtual environments (faster startup)." -ForegroundColor Gray
+    }
 }
 
 # Summary
