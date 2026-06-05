@@ -84,14 +84,6 @@ gpu:
    count: 1
 ```
 
-## Deploying without Intel® GPU K8S Extension
-
-If you're deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-
-```sh
-privileged_access_required: true
-```
-
 ## Inferencing on NPU
 
 To perform inferencing on an NPU device (for platforms with NPU accelerators such as Ultra Core processors), ensure you have completed the required prerequisites. Refer to
@@ -130,7 +122,7 @@ There are a few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from [OpenVINO documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from [OpenVINO™ documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
 
 ## Deploying on Edge Microvisor Toolkit
 
@@ -149,4 +141,4 @@ To install `jq`, refer to the following
 
 ---
 
-*Intel, the Intel logo and Intel Geti are trademarks of Intel Corporation or its subsidiaries.*
+*Intel, the Intel logo, OpenVINO, the OpenVINO logo and Intel Geti are trademarks of Intel Corporation or its subsidiaries.*

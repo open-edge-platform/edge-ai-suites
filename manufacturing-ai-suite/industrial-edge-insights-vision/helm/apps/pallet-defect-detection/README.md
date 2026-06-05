@@ -146,7 +146,7 @@
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
    ```
 
-   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/pdd/ for Pallet Defect Detection.
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection.
 
 5. Get status of pipeline instance(s) running.
 

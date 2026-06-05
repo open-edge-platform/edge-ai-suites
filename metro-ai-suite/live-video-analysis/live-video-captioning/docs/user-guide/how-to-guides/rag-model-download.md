@@ -49,4 +49,4 @@ LLM_MODEL_ID=Qwen/Qwen2.5-3B-Instruct
 
 ## Enable RAG services
 
-After downloading the LLM model, follow [Configure Embedding Creation with RAG](../configure-embedding-creation-with-rag.md) to enable the compose profile and start the RAG services.
+After downloading the LLM model, follow [Configure Embedding Creation with RAG](./configure-embedding-creation-with-rag.md) to enable the compose profile and start the RAG services.

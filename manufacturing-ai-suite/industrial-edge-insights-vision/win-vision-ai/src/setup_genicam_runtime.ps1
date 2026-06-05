@@ -1,52 +1,104 @@
 # ==============================================================================
 # setup_genicam_runtime.ps1
 #
-# Downloads the EMVA GenICam Package 2018.06 and extracts the Win64 VC120
-# runtime DLLs into the win-vision-ai bin\Win64_x64\ folder.
+# Sets up the full binary dependencies for the gstgencamsrc GStreamer plugin:
 #
-# The extracted DLLs are required at runtime for the gstgencamsrc GStreamer
-# plugin (bin\gstgencamsrc.dll) to load on Windows.
+#   1. Downloads gstgencamsrc.dll from the "Edge AI Libraries" GitHub release
+#      (gstgencamsrc-plugin.zip) and places it in bin\
+#
+#   2. Downloads the EMVA GenICam Package 2018.06 and extracts the Win64 VC120
+#      runtime DLLs into bin\Win64_x64\
+#
+# Neither DLL is committed to the repository; this script must be run once
+# before using GenICam camera input.
 #
 # Usage
 #   .\src\setup_genicam_runtime.ps1
-#   .\src\setup_genicam_runtime.ps1 -OutDir "D:\my\folder"
-#   .\src\setup_genicam_runtime.ps1 -TempDir "D:\tmp"
+#   .\src\setup_genicam_runtime.ps1 -ReleaseTag "v2026.1.0-rc2"
+#   .\src\setup_genicam_runtime.ps1 -BinDir "D:\my\bin" -TempDir "D:\tmp"
 #
 # Parameters
-#   -OutDir   Destination folder for the runtime DLLs.
-#             Default: <repo-root>\bin\Win64_x64  (relative to this script's location)
+#   -ReleaseTag  GitHub release tag for edge-ai-libraries containing
+#                gstgencamsrc-plugin.zip with gstgencamsrc.dll.
+#                Default: v2026.1.0-rc2
+#   -BinDir   Destination folder for gstgencamsrc.dll.
+#             Default: <repo-root>\bin  (relative to this script's location)
+#   -OutDir   Destination folder for the GenICam VC120 runtime DLLs.
+#             Default: <BinDir>\Win64_x64
 #   -TempDir  Short-path temp dir for zip extraction (avoids Windows MAX_PATH issues).
 #             Default: C:\tmp
 # ==============================================================================
 
 param(
-    [string]$OutDir  = "$PSScriptRoot\..\bin\Win64_x64",
+    [string]$ReleaseTag = "v2026.1.0-rc2",
+    [string]$BinDir  = "$PSScriptRoot\..\bin",
+    [string]$OutDir  = "",
     [string]$TempDir = "C:\tmp"
 )
 
-$ErrorActionPreference = "Stop"
+# Derive OutDir from BinDir if not explicitly supplied
+if (-Not $OutDir) { $OutDir = "$BinDir\Win64_x64" }
 
+$ErrorActionPreference = "Stop"
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+
+$DLSTREAMER_ZIP_URL   = "https://github.com/open-edge-platform/edge-ai-libraries/releases/download/$ReleaseTag/gstgencamsrc-plugin.zip"
+$DLSTREAMER_ZIP       = "$env:TEMP\gstgencamsrc-plugin.zip"
 $GENICAM_DOWNLOAD_URL = "https://www.emva.org/wp-content/uploads/GenICam_Package_2018.06.zip"
 $GENICAM_ZIP          = "$env:TEMP\GenICam_Package_2018.06.zip"
 
-# Resolve and create output directory
+# Resolve and create directories
+$BinDir = [System.IO.Path]::GetFullPath($BinDir)
 $OutDir = [System.IO.Path]::GetFullPath($OutDir)
+if (-Not (Test-Path $BinDir)) { New-Item -ItemType Directory -Path $BinDir -Force | Out-Null }
 if (-Not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
 Write-Host ""
-Write-Host "========== GenICam Runtime DLL Setup =========="
-Write-Host "Output : $OutDir"
-Write-Host "URL    : $GENICAM_DOWNLOAD_URL"
+Write-Host "========== Win Vision AI Binary Setup =========="
+Write-Host "Release : $ReleaseTag"
+Write-Host "BinDir  : $BinDir"
+Write-Host "OutDir  : $OutDir"
 Write-Host ""
 
 # ============================================================================
-# Download
+# Step 1 — Download gstgencamsrc.dll from the Edge AI Libraries GitHub release
 # ============================================================================
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+Write-Host "[1/2] Downloading gstgencamsrc.dll from release '$ReleaseTag'..."
+Write-Host "      URL: $DLSTREAMER_ZIP_URL"
+try {
+    Invoke-WebRequest -Uri $DLSTREAMER_ZIP_URL -OutFile $DLSTREAMER_ZIP -UseBasicParsing
+} catch {
+    Write-Error "Failed to download gstgencamsrc-plugin.zip: $_"
+    exit 1
+}
 
-Write-Host "Downloading GenICam Package 2018.06..."
+try {
+    $DLSTREAMER_EXTRACT_DIR = "$TempDir\_dls_$PID"
+    if (-Not (Test-Path $TempDir)) { New-Item -ItemType Directory -Path $TempDir | Out-Null }
+    if (Test-Path $DLSTREAMER_EXTRACT_DIR) { Remove-Item -Recurse -Force $DLSTREAMER_EXTRACT_DIR }
+    Expand-Archive -Path $DLSTREAMER_ZIP -DestinationPath $DLSTREAMER_EXTRACT_DIR -Force
+
+    $gstDll = Get-ChildItem $DLSTREAMER_EXTRACT_DIR -Filter "gstgencamsrc.dll" -Recurse | Select-Object -First 1
+    if (-Not $gstDll) {
+        Write-Host "Contents of extracted zip:"
+        Get-ChildItem $DLSTREAMER_EXTRACT_DIR -Recurse | ForEach-Object { Write-Host "  $($_.FullName)" }
+        throw "gstgencamsrc.dll not found in gstgencamsrc-plugin.zip."
+    }
+    Copy-Item -Path $gstDll.FullName -Destination "$BinDir\gstgencamsrc.dll" -Force
+    Write-Host "      -> $BinDir\gstgencamsrc.dll"
+} finally {
+    if (Test-Path $DLSTREAMER_EXTRACT_DIR) { Remove-Item -Recurse -Force $DLSTREAMER_EXTRACT_DIR -ErrorAction SilentlyContinue }
+    if (Test-Path $DLSTREAMER_ZIP)          { Remove-Item -Force $DLSTREAMER_ZIP -ErrorAction SilentlyContinue }
+}
+
+# ============================================================================
+# Step 2 — Download EMVA GenICam Package 2018.06 and extract VC120 runtime DLLs
+# ============================================================================
+Write-Host ""
+Write-Host "[2/2] Downloading GenICam Package 2018.06..."
+Write-Host "      URL: $GENICAM_DOWNLOAD_URL"
 Invoke-WebRequest -Uri $GENICAM_DOWNLOAD_URL -OutFile $GENICAM_ZIP -UseBasicParsing
-Write-Host "Download complete."
+Write-Host "      Download complete."
 
 # ============================================================================
 # Extract to short temp path (avoids MAX_PATH issues)
@@ -113,11 +165,13 @@ try {
 
     $dllCount = (Get-ChildItem $OutDir -Filter "*.dll" -ErrorAction SilentlyContinue).Count
     Write-Host ""
-    Write-Host "GenICam runtime DLLs extracted to: $OutDir ($dllCount file(s))"
+    Write-Host "========== Setup Complete =========="
+    Write-Host "gstgencamsrc.dll : $BinDir\gstgencamsrc.dll"
+    Write-Host "GenICam runtime  : $OutDir ($dllCount file(s))"
     Write-Host ""
     Write-Host "Next steps - set these environment variables before running gst-inspect-1.0 gencamsrc:"
     Write-Host "  `$genicamRuntime = `"$OutDir`""
-    Write-Host "  `$env:PATH = `"`$genicamRuntime;`$env:PATH`""
+    Write-Host "  `$env:PATH = `"`$BinDir;`$genicamRuntime;`$env:PATH`""
 
 } catch {
     Write-Error "GenICam runtime setup failed: $_"

@@ -210,7 +210,7 @@
     "durationMismatch":"⚠️ Audio and video durations don't match. Please ensure both files have similar lengths.",
     "durationExtractionFailed":"⚠️ Unable to extract audio or video duration. Please check your files and try again.",
     "contentPreparationFailed":"Content preparation failed. Please try again.",
-    "noLabels":"No labels available",
+    "noLabels":"No tags available",
     "processing":"Some files are still processing. You can search now; results may expand once processing finishes."
   },
   "contentSearch": {
@@ -266,7 +266,7 @@
     "images": "Images",
     "videos": "Videos",
     "selectAtLeastOneType": "Please select at least one type",
-    "filterByLabel": "Filter by labels",
+    "filterByLabel": "Filter by tags",
     "topResults": "Top Results:",
     "searching": "Searching...",
     "search": "Search",
@@ -280,7 +280,7 @@
     "notAvailable": "Q&A Not Available",
     "uploadHint": "Upload files to start chatting",
     "processingHint": "Files are still uploading...",
-    "filterByLabel": "Filter by label:",
+    "filterByLabel": "Filter by tag:",
     "allContent": "All content",
     "clearChat": "Clear conversation",
     "emptyHint": "Ask anything about your uploaded content.",

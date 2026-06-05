@@ -46,10 +46,13 @@ The benchmark target runs the simulation `RUNS` times (default: 25), pausing
 between runs, and then aggregates KPI statistics across all sessions.
 
 ```bash
-# Default benchmark (25 runs, 120s each)
-for i in $(seq 1 25); do bash src/wandering_run.sh --timeout 120; done
+# Default benchmark (25 runs) via Makefile (recommended)
+make wandering-benchmark
 
-# Custom parameters (10 runs, 120s each)
+# Custom number of runs
+make wandering-benchmark RUNS=10
+
+# Using the script directly
 for i in $(seq 1 10); do bash src/wandering_run.sh --timeout 120; done
 
 # Re-aggregate KPIs from a completed benchmark directory
@@ -58,6 +61,7 @@ uv run python src/aggregate_kpi.py monitoring_sessions/wandering/bench_20260319_
 
 | Parameter | Description | Default |
 |-----------|-------------|--------|
+| `RUNS` | Number of benchmark repetitions | 25 |
 | `--timeout N` | Max duration per run (seconds) | off |
 | `--record` | Record KPI topics to a rosbag | — |
 | `--plot` | Save trigger-timeline PNG plots | — |

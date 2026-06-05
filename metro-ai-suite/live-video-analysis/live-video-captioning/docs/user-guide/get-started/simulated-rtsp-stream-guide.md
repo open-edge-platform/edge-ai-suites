@@ -29,6 +29,7 @@ It exits with an error on `Edge Microvisor Toolkit` and other non-Ubuntu distrib
 ✅ Required Tools
 
 The script automatically installs:
+
 - ffmpeg
 
 Ensure that `Docker` is installed on your system.
@@ -37,15 +38,15 @@ Ensure that `Docker` is installed on your system.
 
 1. Go to the scripts directory.
 
-```bash
-cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning/scripts
-```
+   ```bash
+   cd edge-ai-suites/metro-ai-suite/live-video-analysis/live-video-captioning/scripts
+   ```
 
 2. Make the script executable.
 
-```bash
-chmod +x setup_proxy_rtsp.sh
-```
+   ```bash
+   chmod +x setup_proxy_rtsp.sh
+   ```
 
 ## Usage
 
@@ -58,6 +59,7 @@ Before running the command, make sure the video file exists.
 ```
 
 👉 Default stream URL for one input:
+
 ```text
 rtsp://127.0.0.1:8554/stream1
 ```
@@ -73,6 +75,7 @@ Each input video is published to its own RTSP endpoint in this mode (one-to-one 
 ```
 
 👉 Auto-generated default stream URLs:
+
 ```text
 rtsp://127.0.0.1:8554/stream1  # video1.mp4
 rtsp://127.0.0.1:8554/stream2  # video2.mp4
@@ -86,6 +89,7 @@ rtsp://127.0.0.1:8554/stream3  # video3.mp4
 ```
 
 👉 Custom stream URL:
+
 ```text
 rtsp://127.0.0.1:8554/cam1
 ```
@@ -96,9 +100,9 @@ Use `-o` multiple times to map each input video to a specific output URL.
 
 ```bash
 ./setup_proxy_rtsp.sh \
-	-i video1.mp4 -i video2.mp4 \
-	-o rtsp://127.0.0.1:8554/cam1 \
-	-o rtsp://127.0.0.1:8554/cam2
+   -i video1.mp4 -i video2.mp4 \
+   -o rtsp://127.0.0.1:8554/cam1 \
+   -o rtsp://127.0.0.1:8554/cam2
 ```
 
 ### Config File Input (JSON)
@@ -107,48 +111,48 @@ For multiple streams, you can provide all input/output mappings in a JSON file.
 
 1. Create a JSON config file.
 
-Example with custom outputs:
+   Example with custom outputs:
 
-```json
-{
-	"inputs": [
-		"video1.mp4",
-		"video2.mp4"
-	],
-	"outputs": [
-		"rtsp://127.0.0.1:8554/cam1",
-		"rtsp://127.0.0.1:8554/cam2"
-	]
-}
-```
+   ```json
+   {
+      "inputs": [
+         "video1.mp4",
+         "video2.mp4"
+      ],
+      "outputs": [
+         "rtsp://127.0.0.1:8554/cam1",
+         "rtsp://127.0.0.1:8554/cam2"
+      ]
+   }
+   ```
 
-Example without outputs (auto-generates `stream1`, `stream2`, ...):
+   Example without outputs (auto-generates `stream1`, `stream2`, ...):
 
-```json
-{
-	"inputs": [
-		"video1.mp4",
-		"video2.mp4"
-	]
-}
-```
+   ```json
+   {
+      "inputs": [
+         "video1.mp4",
+         "video2.mp4"
+      ]
+   }
+   ```
 
-2. Run the script with the config file.
+2. Run the script with the config file..
 
-```bash
-./setup_proxy_rtsp.sh -c <your-config-file>.json
-```
+   ```bash
+   ./setup_proxy_rtsp.sh -c <your-config-file>.json
+   ```
 
-Notes:
+> **Note:**
+>
+> - Use either `-c` or `-i`/`-o` in a single run (do not mix them).
+> - Relative input paths in JSON are resolved relative to the JSON file location.
+> - `-c` mode uses `jq`, and the script installs it automatically if missing.
 
-- Use either `-c` or `-i`/`-o` in a single run (do not mix them).
-- Relative input paths in JSON are resolved relative to the JSON file location.
-- `-c` mode uses `jq`, and the script installs it automatically if missing.
-
-Important:
-
-- If `-o` is omitted, the script auto-generates `stream1`, `stream2`, ...
-- If `-o` is provided, the number of `-o` values must match the number of `-i` values.
+> **Important:**
+>
+> - If `-o` is omitted, the script auto-generates `stream1`, `stream2`, ...
+> - If `-o` is provided, the number of `-o` values must match the number of `-i` values.
 
 ### Help Option
 

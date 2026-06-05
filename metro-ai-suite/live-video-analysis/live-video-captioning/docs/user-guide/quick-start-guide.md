@@ -4,9 +4,10 @@ Get the application up and running with USB/webcam in 5 steps!
 
 Live Video Captioning uses VLM to automatically describe what is happening in a live video stream — from a camera or an RTSP feed — and displays those descriptions in real time on a web dashboard.
 
-Note:
-1. The time taken is a function of network bandwidth. Model and image download time will determine how fast the user is up and running with the application.
-2. If there is no USB/webcam device attached, user can configure a test RTSP stream following [these](./get-started/simulated-rtsp-stream-guide.md) instructions.
+> **Note:**
+>
+> 1. The time taken is a function of network bandwidth. Model and image download time will determine how fast the user is up and running with the application.
+> 2. If there is no USB/webcam device attached, user can configure a test RTSP stream following [these](./get-started/simulated-rtsp-stream-guide.md) instructions.
 
 ---
 
@@ -83,7 +84,7 @@ Docker pulls the required containers and starts all services in the background. 
 
 Once the services are running, open a web browser and go to:
 
-```
+```text
 http://<YOUR_IP>:4173
 ```
 
@@ -117,6 +118,7 @@ docker compose down
 | "permission denied" with Docker | Run `sudo usermod -aG docker $USER`, then log out and back in |
 | "failed to resolve reference docker.io" with Docker | Docker daemon cannot reach Docker Hub over the network to download the microservices. This could be due to missing organization proxy configuration in docker setup. Follow [this](https://docs.docker.com/engine/daemon/proxy/) instruction to set it up. |
 | Hardware-encoded camera not supported | This application does not supported hardware-encoded format webcam (for example, H.264). Use a compatible webcam that provides raw video output(for example, YUYV/MJPEG). |
+
 ---
 
 ## Next Steps

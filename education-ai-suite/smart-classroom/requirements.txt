@@ -18,11 +18,11 @@ uvicorn==0.35.0
 WMI==1.5.1
 
 # Scientific stack (stability-critical)
-numpy==1.26.4
-pandas==2.2.2
+numpy==2.2.6
+pandas==2.2.3
 pyarrow==16.1.0
-scikit-learn==1.5.1
-scipy==1.14.1
+scikit-learn==1.6.1
+scipy==1.15.3
 
 # Torch stack
 torch==2.8.0
@@ -41,7 +41,7 @@ sentence-transformers==3.0.1
 # Whisper / audio
 openai-whisper==20250625
 speechbrain==1.0.3
-pyannote.audio==3.3.2
+pyannote.audio==4.0.4
 
 # Vector search
 faiss-cpu==1.11.0
@@ -56,9 +56,10 @@ hf_xet==1.4.3
 ultralytics==8.4.39
 
 # OCR dependencies
+paddleocr==2.10.0
 pyclipper
 PyMuPDF==1.26.3
-paddlepaddle==2.6.2
+paddlepaddle==3.3.1
 beautifulsoup4==4.13.4
 fire==0.7.1
 rapidfuzz==3.13.0
@@ -67,7 +68,7 @@ lmdb==1.7.3
 attrdict==2.0.1
 lxml==6.0.0
 scikit-image==0.25.2
-imgaug==0.4.0
+albumentations>=1.4.0
 
 # SSL certificates
 certifi>=2025.7.14
