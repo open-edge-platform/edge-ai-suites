@@ -37,11 +37,12 @@ This guide explains how to run the Worker Safety Gear Detection application in a
    ./sample_start.sh -p worker_safety_gear_detection
    ```
 
-5. Open Google Chrome and navigate to:
+5. Open a browser and navigate to:
 
    ```
    https://127.0.0.1/mediamtx/worker_safety/
    ```
+   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 

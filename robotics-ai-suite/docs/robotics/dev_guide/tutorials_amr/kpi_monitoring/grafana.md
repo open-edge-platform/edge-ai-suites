@@ -14,11 +14,9 @@ processing delays, CPU/memory usage, and more.
 
 Complete the [KPI Framework Installation Guide](installation.md) before continuing.
 
-Install Docker and Docker Compose:
+Install Docker and Docker Compose. Follow the [official Docker Engine installation guide](https://docs.docker.com/engine/install/ubuntu/) for Ubuntu, then:
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose
 sudo usermod -aG docker $USER   # log out and back in after this
 ```
 

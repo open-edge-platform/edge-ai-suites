@@ -78,15 +78,15 @@ gst-inspect-1.0 gvadetect
 
 To use a GenICam-compatible camera (e.g., Basler, Balluff, HikRobot), download the GenICam runtime DLLs and set the required environment variables.
 
-The `gstgencamsrc.dll` plugin is pre-built and included in the `bin\` folder — no build step is required. If you prefer to build the plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
+##### Download gstgencamsrc.dll and GenICam Runtime DLLs
 
-##### Download GenICam Runtime DLLs
-
-Run this once to download the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
+Run this once to download `bin\gstgencamsrc.dll` (from the Edge AI Libraries GitHub release) and the EMVA GenICam v3.1 VC120 runtime DLLs into `bin\Win64_x64\`:
 
 ```powershell
 .\src\setup_genicam_runtime.ps1
 ```
+
+> **Note:** If you prefer to build the gstgencamsrc plugin from source yourself, see the [src-gst-gencamsrc README (Windows)](https://github.com/open-edge-platform/edge-ai-libraries/blob/main/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/README.md#windows).
 
 ##### Set Camera Environment Variables
 

@@ -66,11 +66,4 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 ```
-
-### Without Intel® GPU K8S Extension
-
-If you are deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) without Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
-
-```sh
-privileged_access_required: true
-```
+> **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.

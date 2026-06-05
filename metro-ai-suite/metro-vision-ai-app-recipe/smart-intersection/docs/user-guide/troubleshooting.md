@@ -37,12 +37,37 @@ to file new tickets there (after learning about the guidelines for [Contributing
 - **Issue**: Camera Streams seem to be stuck when SceneScape UI is accessed with localhost URL.
 - **Solution**: Make sure to access the localhost URL ONLY via RDP/VNC sessions. Opening via browser extensions from a remote machine is NOT recommended.
 
-#### 5. Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
+### 5. Inaccurate detections seen when running the NPU inference pipeline on ARL and MTL NPUs
 - This is a known issue tracked [here](https://github.com/open-edge-platform/edge-ai-suites/issues/2230).
 
-#### 6. NPU Inference Failures with Geti-Trained Models
+### 6. NPU Inference Failures with Geti-Trained Models
 - **Issue**: If you experience errors or failures when running an NPU workload with a model trained in Intel Geti, this may be caused by **Non-Maximum Suppression (NMS)** being embedded within the model graph. The NPU does not support dynamic shapes, and NMS operations with dynamic output shapes are incompatible with NPU execution.
 - **Solution**: Follow the [Export and Optimize Geti Model](./export-and-optimize-geti-model.md) guide to generate a model with NMS removed from the model graph. NMS will then be handled by DL Streamer.
+
+### 7. Application Fails to Start in Air-Gapped (No Internet) Environments
+- **Issue**: When running the application on a machine without internet access, containers fail to start with errors like `failed to resolve reference`, or Grafana dashboards show "No data" even though containers appear healthy.
+- **Solution**: While internet is still available, run the following preparation steps after `./install.sh smart-intersection`:
+
+  ```bash
+  # Pre-install Node-RED InfluxDB plugin into the named volume
+  docker compose run --rm --no-deps --entrypoint "npm" node-red install node-red-contrib-influxdb
+
+  # Pre-pull all container images
+  docker compose pull
+  ```
+
+  After disconnecting from the Internet,
+  - Export admin password as environment variable:
+
+     ```bash
+     export SUPASS=$(cat ./smart-intersection/src/secrets/supass)
+     ```
+  - Start the application with proxy variables(if any) unset:
+  
+    ```bash
+    unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY no_proxy NO_PROXY
+    docker compose up -d
+    ```
 
 
 ## Troubleshooting Docker Deployments
@@ -120,6 +145,26 @@ to file new tickets there (after learning about the guidelines for [Contributing
     ```
 
 
+### 9. Accessing the MQTT Broker Externally
+   - **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics.
+   - **Solution**: Expose port 1883 on the broker service by adding a `ports` section in `docker-compose.yml`:
+     ```yaml
+     broker:
+       ports:
+         - "1883:1883"
+     ```
+   - Then restart the broker:
+     ```bash
+     docker compose up -d --force-recreate broker
+     ```
+   - Connect using an MQTT client with TLS and the CA certificate:
+     ```bash
+     mosquitto_sub -h <HOST_IP> -p 1883 \
+       --cafile ./smart-intersection/src/secrets/certs/scenescape-ca.pem \
+       -t '#' -v
+     ```
+   - **Note**: The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.
+
 ## Troubleshooting Helm Deployments
 
 ### 1. Helm Chart Not Found:
@@ -179,3 +224,18 @@ to file new tickets there (after learning about the guidelines for [Contributing
    - **Solution**: Ensure the [Intel Device Plugins for Kubernetes](https://github.com/intel/intel-device-plugins-for-kubernetes) (NFD + GPU plugin + NPU plugin) are installed on your cluster and that the target node has the required hardware. See the [Prerequisites](./get-started/deploy-with-helm.md#prerequisites) section for installation steps.
 
      > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `gpu.intel.com/xe` in `values.yaml`.
+
+### 5. Accessing the MQTT Broker Externally
+
+   - **Issue**: You want to connect an external MQTT client to the broker for debugging or monitoring topics in a Helm deployment.
+   - **Solution**: Use `kubectl port-forward` to expose the broker service locally:
+     ```bash
+     kubectl port-forward svc/smart-intersection-broker -n smart-intersection 1883:1883
+     ```
+   - Then connect using an MQTT client with TLS:
+     ```bash
+     mosquitto_sub -h localhost -p 1883 \
+       --cafile <path-to-scenescape-ca.pem> \
+       -t '#' -v
+     ```
+   - **Note**: The broker uses TLS (TLSv1.3) but allows anonymous connections — no username/password is required. You must use an MQTT client (not a web browser) since MQTT is a TCP protocol, not HTTP.

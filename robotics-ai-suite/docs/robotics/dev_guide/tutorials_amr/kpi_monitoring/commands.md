@@ -29,6 +29,10 @@ SPDX-License-Identifier: Apache-2.0
 | Remote system (PID mode) | `./grafana-monitor.sh --remote-ip <ip> --pid-only` | until Ctrl-C |
 | Pipeline graph (interactive) | `uv run python src/visualize_graph.py <session> --show` | — |
 | Pipeline graph (PNG) | `uv run python src/visualize_graph.py <session> --no-show` | — |
+| KPI charts + report | `make results` | — |
+| Thermal dashboard | `make visualize-thermal` | — |
+| GPU dashboard | `uv run python src/visualize_gpu.py <session> --show` | — |
+| NPU dashboard | `uv run python src/visualize_npu.py <session> --show` | — |
 | List sessions | `uv run python src/monitor_stack.py --list-sessions` | — |
 | Re-visualize last session | `uv run python src/visualize_timing.py <session>/graph_timing.csv --show` | — |
 | Clean all data | `make clean` | — |
@@ -55,8 +59,8 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
 | `--no-visualize` | Skip auto-visualization on exit |
-| `--gpu` | Enable Intel GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
-| `--npu` | Enable Intel NPU monitoring via sysfs |
+| `--gpu` | Enable Intel&trade; GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
+| `--npu` | Enable Intel&trade; NPU monitoring via sysfs |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
 | `--ros-domain-id ID` | Explicitly set `ROS_DOMAIN_ID` (skips auto-detection) |
@@ -138,79 +142,41 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --no-show --outp
 uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 ```
 
-## visualize_gpu.py
+## Hardware Visualizers (GPU / NPU / Thermal)
 
-Generates a 5-panel Intel GPU dashboard: busy percentage, GT frequency,
-temperature, package power, and per-PID GPU contribution bar chart.
+All three visualizers accept a session directory or log file as their first
+argument and auto-detect the latest session when omitted.
 
 ```bash
+# GPU dashboard (5 panels: busy%, frequency, temperature, power, per-PID)
 uv run python src/visualize_gpu.py <session_dir>
-uv run python src/visualize_gpu.py gpu_usage.log --session monitoring_sessions/wandering/20260513_003015 --save
+uv run python src/visualize_gpu.py <session_dir> --save
 uv run python src/visualize_gpu.py <session_dir> --summary
-```
 
-| Option | Description |
-|--------|-------------|
-| `log_file` | Path to `gpu_usage.log` or a session directory (auto-detected if omitted) |
-| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
-| `--sessions-dir DIR` | Root directory for sessions (default: `monitoring_sessions`) |
-| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
-| `--save` | Write PNG to the `visualizations/` directory |
-| `--show` | Open an interactive matplotlib window |
-| `--no-show` | Never open a window (useful for CI/headless) |
-| `--top N` | Number of top PIDs in the per-PID bar chart (default: 10) |
-| `--lines` | Use line plots instead of filled area plots |
-| `--summary` | Print text summary only, no plot |
-| `--pid-bar` | Show per-PID GPU usage bar chart panel |
-
-> Install `qmassa` first with `make install-qmassa`. The `--gpu` flag on
-> `monitor_stack.py` auto-enables GPU logging when hardware is detected.
-
-## visualize_npu.py
-
-Generates a 3-panel Intel NPU dashboard: busy percentage, clock frequency,
-and memory utilization.
-
-```bash
+# NPU dashboard (3 panels: busy%, clock frequency, memory)
 uv run python src/visualize_npu.py <session_dir>
-uv run python src/visualize_npu.py npu_usage.log --session monitoring_sessions/wandering/20260513_003015
 uv run python src/visualize_npu.py <session_dir> --no-show
-```
 
-| Option | Description |
-|--------|-------------|
-| `log` | Path to `npu_usage.log` or a session directory (auto-detected if omitted) |
-| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
-| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
-| `--no-show` | Never open a window |
-| `--no-save` | Do not write a PNG file |
-
-> NPU monitoring requires the `--npu` flag on `monitor_stack.py`. No
-> special hardware capabilities are needed — data is read from sysfs.
-
-## visualize_thermal.py
-
-Generates a 3-panel thermal & throttle dashboard: CPU/GPU temperature,
-throttle state, and CPU package power.
-
-```bash
+# Thermal & throttle dashboard (3 panels: temperature, throttle state, power)
 uv run python src/visualize_thermal.py <session_dir>
-uv run python src/visualize_thermal.py --session monitoring_sessions/wandering/20260513_003015 --save
-uv run python src/visualize_thermal.py cpu_power.log --gpu-log gpu_usage.log
 uv run python src/visualize_thermal.py <session_dir> --summary
+
+# Makefile shortcut (thermal)
+make visualize-thermal
+make visualize-thermal SESSION=monitoring_sessions/<name>
 ```
 
-| Option | Description |
-|--------|-------------|
-| `log_file` | Path to `cpu_power.log` or a session directory (auto-detected if omitted) |
-| `--session PATH` | Explicit session directory or `monitoring_sessions/<name>` |
-| `--gpu-log FILE` | Explicit path to `gpu_usage.log` (auto-found alongside `cpu_power.log`) |
-| `--sessions-dir DIR` | Root directory for sessions (default: `monitoring_sessions`) |
-| `--output-dir DIR` | Directory to write the PNG file (default: session `visualizations/`) |
-| `--save` | Save PNG to the session `visualizations/` directory |
+| Common option | Description |
+|---------------|-------------|
+| `--session PATH` | Explicit session directory |
+| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
+| `--save` | Write PNG without opening a window |
 | `--show` | Open an interactive matplotlib window |
-| `--no-show` | Never open a window (useful in headless CI) |
+| `--no-show` | Never open a window (headless / CI) |
 | `--summary` | Print text summary only, no plot |
+
+> Enable GPU logging with `--gpu` and NPU logging with `--npu` on
+> `monitor_stack.py`. Intel&trade; GPU monitoring requires `qmassa` (`make install-qmassa`).
 
 ## visualize_kpi.py
 

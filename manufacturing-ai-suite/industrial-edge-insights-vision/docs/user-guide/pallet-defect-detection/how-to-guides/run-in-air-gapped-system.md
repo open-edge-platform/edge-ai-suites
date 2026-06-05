@@ -37,11 +37,12 @@ This guide explains how to run the Pallet Defect Detection application in an env
    ./sample_start.sh -p pallet_defect_detection
    ```
 
-5. Open Google Chrome and navigate to:
+5. Open a browser and navigate to:
 
    ```
    https://127.0.0.1/mediamtx/pdd/
    ```
+   > **Note:** If you experience issues while streaming video on Firefox, it is recommended to use Google Chrome.
 
 ## Stop the Application
 
