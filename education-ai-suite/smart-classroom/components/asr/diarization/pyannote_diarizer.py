@@ -40,7 +40,7 @@ class PyannoteDiarizer:
         waveform, sample_rate = torchaudio.load(audio_path)
         audio_input = {"waveform": waveform, "sample_rate": sample_rate}
         output = self.pipeline(audio_input)
-        diarization = output.speaker_diarization
+        diarization = output.exclusive_speaker_diarization
         segments = []
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             segments.append({
