@@ -7,10 +7,6 @@
 - Qualified on the Intel® Core™ Series 3 processor (Wildcat Lake).
 - Deprecated EMF deployment packages.
 
-**Improved**
-
-- DL Streamer Pipeline Server version upgraded to 2026.1.0.
-
 ## Version 2.6.0
 
 **New**
@@ -21,7 +17,7 @@
 host via Docker Compose tool and Helm chart.
 - MLOps is now demonstrated with the Model Download microservice instead of
 the Model Registry.
-	
+
 **Improved**
 
 - Consumed the latest DL Streamer Pipeline Server 2026.0.0 image. Ubuntu24 variant of the image is the default now.
