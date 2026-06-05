@@ -343,15 +343,6 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
-# === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
-# When pods fail to become Ready within the timeout (common on slow / shared
-# GitHub-hosted runners where InfluxDB takes longer to initialise its data dir
-# or where Telegraf/Nginx restart-loop until InfluxDB is reachable), the bare
-# "Timeout reached" log line above does not tell us *why* a pod is unhealthy.
-# This helper captures `kubectl describe pod` + current & previous container
-# logs for every non-Running pod so the CI job log surfaces the actual root
-# cause (CrashLoop reason, OOMKilled, ImagePullBackOff, init script error...).
-# Remove this whole block to revert to silent-timeout behaviour.
 def _gh_dump_unhealthy_pods(namespace):
     """Dump describe + logs for every non-Running pod in *namespace*.
 
@@ -392,12 +383,12 @@ def _gh_dump_unhealthy_pods(namespace):
                 pods.append(name)
 
         if not pods:
-            logger.error(f"[GH_RUNNER_FIX] no unhealthy pods found to dump in '{namespace}'.")
+            logger.error(f"no unhealthy pods found to dump in '{namespace}'.")
             return
 
-        logger.error(f"[GH_RUNNER_FIX] dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
+        logger.error(f"dumping diagnostics for {len(pods)} unhealthy pod(s): {pods}")
         for pod in pods:
-            logger.error(f"\n===== [GH_RUNNER_FIX] describe pod {pod} =====")
+            logger.error(f"\n===== describe pod {pod} =====")
             try:
                 desc = subprocess.run(
                     ["kubectl", "describe", "pod", "-n", namespace, pod],
@@ -407,9 +398,9 @@ def _gh_dump_unhealthy_pods(namespace):
                 if desc.stderr:
                     logger.error(f"[stderr] {desc.stderr}")
             except Exception as e:
-                logger.error(f"[GH_RUNNER_FIX] describe failed: {e}")
+                logger.error(f"describe failed: {e}")
 
-            logger.error(f"\n===== [GH_RUNNER_FIX] logs {pod} (current, --tail=200) =====")
+            logger.error(f"\n===== logs {pod} (current, --tail=200) =====")
             try:
                 cur = subprocess.run(
                     ["kubectl", "logs", "-n", namespace, pod,
@@ -420,9 +411,9 @@ def _gh_dump_unhealthy_pods(namespace):
                 if cur.stderr:
                     logger.error(f"[stderr] {cur.stderr}")
             except Exception as e:
-                logger.error(f"[GH_RUNNER_FIX] current logs failed: {e}")
+                logger.error(f"current logs failed: {e}")
 
-            logger.error(f"\n===== [GH_RUNNER_FIX] logs {pod} (previous, --tail=200) =====")
+            logger.error(f"\n===== logs {pod} (previous, --tail=200) =====")
             try:
                 prev = subprocess.run(
                     ["kubectl", "logs", "-n", namespace, pod,
@@ -433,9 +424,9 @@ def _gh_dump_unhealthy_pods(namespace):
                 if prev.stderr:
                     logger.error(f"[stderr] {prev.stderr}")
             except Exception as e:
-                logger.error(f"[GH_RUNNER_FIX] previous logs failed: {e}")
+                logger.error(f"previous logs failed: {e}")
 
-        logger.error(f"\n===== [GH_RUNNER_FIX] recent events in '{namespace}' =====")
+        logger.error(f"\n===== recent events in '{namespace}' =====")
         try:
             evs = subprocess.run(
                 ["kubectl", "get", "events", "-n", namespace,
@@ -444,10 +435,9 @@ def _gh_dump_unhealthy_pods(namespace):
             )
             logger.error(evs.stdout)
         except Exception as e:
-            logger.error(f"[GH_RUNNER_FIX] events dump failed: {e}")
+            logger.error(f"events dump failed: {e}")
     except Exception as e:
-        logger.error(f"[GH_RUNNER_FIX] _gh_dump_unhealthy_pods crashed: {e}")
-# === [GH_RUNNER_FIX END] ===
+        logger.error(f"_gh_dump_unhealthy_pods crashed: {e}")
 
 
 def verify_pods(namespace, timeout=300, interval=5):
@@ -482,9 +472,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     logger.error("Timeout reached. No pods found in namespace.")
-                    # === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
                     _gh_dump_unhealthy_pods(namespace)
-                    # === [GH_RUNNER_FIX END] ===
                     return False
                 time.sleep(interval)
                 continue
@@ -537,9 +525,7 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
-                # === [GH_RUNNER_FIX BEGIN] verify_pods diagnostic dump only ===
                 _gh_dump_unhealthy_pods(namespace)
-                # === [GH_RUNNER_FIX END] ===
                 return False
 
             # Wait before checking again
@@ -1543,12 +1529,7 @@ def verify_influxdb_retention(namespace, chart_path, response):
         return None, False
 
 def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
-    """Run `make gen_helm_charts SAMPLE_APP=<sample_app>` in the parent directory.
-
-    The Makefile target reads `${SAMPLE_APP}` (not `${app}`), so the variable
-    name must match exactly or the cp commands silently target empty paths and
-    Make aborts before populating helm/{nginx,influxdb,Telegraf}.conf etc.
-    """
+    """Run `make gen_helm_charts app=<sample_app>` in the parent directory."""
     original_dir = os.getcwd()
     try:
 
@@ -1557,9 +1538,9 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         list_directory_contents()
 
         # Run the make command
-        logger.info(f"Generating Helm chart for SAMPLE_APP={sample_app}...")
+        logger.info(f"Generating Helm chart for app={sample_app}...")
         result = subprocess.run(
-            ["make", "gen_helm_charts", "SAMPLE_APP=" + sample_app],
+            ["make", "gen_helm_charts", "app=" + sample_app],
             capture_output=True, text=True, check=True,
         )
         logger.info(result.stdout)
@@ -1575,16 +1556,6 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         logger.info(f"Restored working directory to: {os.getcwd()}")
 
 
-# === [GH_RUNNER_FIX BEGIN] ensure helm chart files generated once per session ===
-# Files like helm/nginx.conf, helm/influxdb.conf, helm/init-influxdb.sh and
-# helm/Telegraf.conf are NOT tracked in git -- they're produced by
-# `make gen_helm_charts SAMPLE_APP=<app>`. On a fresh CI checkout they don't
-# exist, and Helm's {{ .Files.Get "<missing>" }} silently returns an empty
-# string, so the chart installs with EMPTY ConfigMaps. nginx then crashloops
-# with `no "events" section`, influxd with `Meta.Dir must be specified`, and
-# telegraf exits 0 immediately. Locally tests pass only because a prior manual
-# `make gen_helm_charts` left those files behind. Run generation once per
-# (sample_app) per pytest session.
 _gh_generated_for_sample_app = set()
 
 
@@ -1602,7 +1573,6 @@ def ensure_chart_generated(chart_path, sample_app):
     if ok:
         _gh_generated_for_sample_app.add(sample_app)
     return ok
-# === [GH_RUNNER_FIX END] ===
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""

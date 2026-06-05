@@ -364,8 +364,6 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info("TC_013: Testing MQTT alerts functionality")
     context = setup_wind_turbine_environment
 
-    # ================================================================== #
-    # === [GH_RUNNER_FIX BEGIN] TC_013 only — pre-flight UDF reset ===== #
     # Block 0/4 (defense-in-depth) — Even though TC_014's finalizer      #
     # resets the loaded UDF back to MQTT, a cancelled or crashed prior   #
     # CI run can leave an OPC-UA TICK loaded in TSAM (docker volumes     #
@@ -374,10 +372,9 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # MQTT TICK, and re-uploads only when needed.  This makes TC_013     #
     # deterministic regardless of execution order or prior-run state.    #
     # ================================================================== #
-    logger.info("[GH_RUNNER_FIX] Pre-flight: ensuring loaded UDF is in MQTT mode")
+    logger.info("Pre-flight: ensuring loaded UDF is in MQTT mode")
     if not docker_utils.reset_loaded_udf_to("mqtt"):
-        pytest.fail("[GH_RUNNER_FIX] reset_loaded_udf_to('mqtt') failed — see logs above")
-    # === [GH_RUNNER_FIX END] ========================================== #
+        pytest.fail("reset_loaded_udf_to('mqtt') failed — see logs above")
 
     # ------------------------------------------------------------------
     # Phase 1: Deploy MQTT stack
@@ -419,8 +416,6 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     logger.info(f"[DEBUG]   wait_until_service_ready={svc_ready}")
     assert svc_ready, "ts-api health endpoint did not become ready before MQTT alert validation"
 
-    # ================================================================== #
-    # === [GH_RUNNER_FIX BEGIN] TC_013 only ============================ #
     # Purpose: stabilize TC_013 on GitHub-hosted runners (2 vCPU / 7 GB)  #
     # where the default budgets are too tight and lead to:               #
     #   "MQTT alert system validation failed"                            #
@@ -429,14 +424,14 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # ================================================================== #
     # Block 1/3 — Strict readiness: require HTTP 200 (not 503) so we do  #
     # not POST /ts-api/config while Kapacitor is still initialising.     #
-    logger.info("[GH_RUNNER_FIX] Phase 2b: strict ts-api readiness (HTTP 200 only)...")
+    logger.info("Phase 2b: strict ts-api readiness (HTTP 200 only)...")
     svc_ready_strict = docker_utils.wait_until_service_ready(
         timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
         accept_503=False,
     )
-    logger.info(f"[GH_RUNNER_FIX]   strict wait_until_service_ready={svc_ready_strict}")
+    logger.info(f"  strict wait_until_service_ready={svc_ready_strict}")
     assert svc_ready_strict, (
-        "[GH_RUNNER_FIX] ts-api did not return HTTP 200 in time — Kapacitor "
+        "ts-api did not return HTTP 200 in time — Kapacitor "
         "likely still loading; raise WIND_TURBINE_CONTAINER_READY_TIMEOUT."
     )
     # Block 2/3 — Re-confirm the publisher is still running. On slow      #
@@ -444,7 +439,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     # before the config POST, leaving no data for Kapacitor.            #
     if not docker_utils.container_is_running(mqtt_publisher_name):
         logger.error(
-            "[GH_RUNNER_FIX] mqtt-publisher exited before validation — check "
+            "mqtt-publisher exited before validation — check "
             "CONTINUOUS_SIMULATOR_INGESTION=true in .env on the runner."
         )
         try:
@@ -452,11 +447,10 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
                 ["docker", "logs", "--tail", "80", mqtt_publisher_name],
                 capture_output=True, text=True, timeout=15,
             ).stdout.strip()
-            logger.error(f"[GH_RUNNER_FIX] mqtt-publisher tail:\n{pub_logs}")
+            logger.error(f"mqtt-publisher tail:\n{pub_logs}")
         except Exception as _exc:
-            logger.warning(f"[GH_RUNNER_FIX] Could not tail publisher: {_exc}")
-        pytest.fail("[GH_RUNNER_FIX] mqtt-publisher not running before validation")
-    # === [GH_RUNNER_FIX END] ========================================== #
+            logger.warning(f"Could not tail publisher: {_exc}")
+        pytest.fail("mqtt-publisher not running before validation")
 
     # Snapshot of running containers + their status — useful when triaging
     # failures that show up later as "container X not running".
@@ -471,9 +465,6 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
 
     # ------------------------------------------------------------------
     # Phase 3: Run the actual validation helper
-    # ------------------------------------------------------------------
-    # ================================================================== #
-    # === [GH_RUNNER_FIX BEGIN] TC_013 only — extended timeouts ======== #
     # Block 3/3 — Temporarily extend two module-level constants so the   #
     # validation helper (called below) gets a larger window on slow CI.  #
     # Values are restored in the finally: block so no other test sees   #
@@ -486,7 +477,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE = _GH_CI_CONFIG_POST_STABILIZE
     constants.WIND_TURBINE_ALERT_LOG_TIMEOUT          = _GH_CI_ALERT_LOG_TIMEOUT
     logger.info(
-        f"[GH_RUNNER_FIX] Temporarily set CONFIG_POST_POST_STABILIZE="
+        f"Temporarily set CONFIG_POST_POST_STABILIZE="
         f"{_GH_CI_CONFIG_POST_STABILIZE}s (was {_orig_post_stabilize}s), "
         f"ALERT_LOG_TIMEOUT={_GH_CI_ALERT_LOG_TIMEOUT}s (was {_orig_alert_timeout}s)"
     )
@@ -497,8 +488,7 @@ def test_mqtt_alerts(setup_wind_turbine_environment):
     finally:
         constants.WIND_TURBINE_CONFIG_POST_POST_STABILIZE = _orig_post_stabilize
         constants.WIND_TURBINE_ALERT_LOG_TIMEOUT          = _orig_alert_timeout
-        logger.info("[GH_RUNNER_FIX] Restored original CONFIG_POST_POST_STABILIZE / ALERT_LOG_TIMEOUT")
-    # === [GH_RUNNER_FIX END] ========================================== #
+        logger.info("Restored original CONFIG_POST_POST_STABILIZE / ALERT_LOG_TIMEOUT")
 
     # ------------------------------------------------------------------
     # Phase 4: On failure, dump container state + key logs so the CI
@@ -559,8 +549,6 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
     logger.info("TC_014: Testing OPCUA alerts functionality")
     context = setup_wind_turbine_environment
 
-    # ================================================================== #
-    # === [GH_RUNNER_FIX BEGIN] TC_014 only — leave-no-trace finalizer = #
     # This test ships an OPC-UA TICK to TSAM via upload_udf_tar_package. #
     # Without cleanup, later MQTT-mode tests (e.g. TC_013) inherit the   #
     # stale OPC-UA UDF because update_config_file() only POSTs config    #
@@ -571,11 +559,10 @@ def test_opcua_alerts(setup_wind_turbine_environment, request):
     def _reset_to_mqtt_baseline():
         try:
             ok = docker_utils.reset_loaded_udf_to("mqtt")
-            logger.info(f"[GH_RUNNER_FIX] TC_014 teardown: reset_loaded_udf_to('mqtt') -> {ok}")
+            logger.info(f"TC_014 teardown: reset_loaded_udf_to('mqtt') -> {ok}")
         except Exception as exc:
-            logger.warning(f"[GH_RUNNER_FIX] TC_014 teardown reset failed: {exc}")
+            logger.warning(f"TC_014 teardown reset failed: {exc}")
     request.addfinalizer(_reset_to_mqtt_baseline)
-    # === [GH_RUNNER_FIX END] ========================================== #
 
     # ------------------------------------------------------------------
     # Phase 1: Deploy OPC-UA stack

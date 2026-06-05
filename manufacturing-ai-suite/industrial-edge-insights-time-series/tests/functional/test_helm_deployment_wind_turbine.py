@@ -147,7 +147,6 @@ def test_verify_pods_opcua_for_5mins(setup_helm_environment, telegraf_input_plug
 @pytest.mark.parametrize("telegraf_input_plugin", [constants.TELEGRAF_OPCUA_PLUGIN])
 def test_verify_pods_stability_after_udf_activation(setup_helm_environment, telegraf_input_plugin, request):
     logger.info("TC_009: Testing pods stability after UDF activation for OPC UA input plugin, checking helm install, pod logs and uninstall with valid values in values.yaml")
-    # === [GH_RUNNER_FIX BEGIN] TC_009 cross-test TICK reset ===
     # setup_opcua_alerts(chart_path) below rewrites the on-disk TICK script
     # (tick_scripts/windturbine_anomaly_detector.tick) to .post('/opcua_alerts').
     # That mutation persists on the filesystem and is silently re-packaged
@@ -161,7 +160,6 @@ def test_verify_pods_stability_after_udf_activation(setup_helm_environment, tele
         except Exception as e:
             logger.warning(f"TC_009 finalizer: failed to reset TICK to mqtt mode: {e}")
     request.addfinalizer(_restore_tick_to_mqtt)
-    # === [GH_RUNNER_FIX END] ===
     result = helm_utils.verify_pods(namespace)
     logger.info(f"verify_pods result: {result}")
     assert result is True, "Failed to verify pods for OPC UA input plugin."
@@ -208,7 +206,6 @@ def test_verify_pods_stability_after_influxdb_restart(setup_helm_environment, te
     assert result is True, "Failed to verify pods for OPC UA input plugin."
     logger.info("All pods are running for opcua input plugin")
     time.sleep(3)  # Wait for the pods to stabilize
-    # === [GH_RUNNER_FIX BEGIN] TC_010 opcua-mode UDF only ===
     # Chart is deployed with the OPC UA telegraf plugin (no MQTT broker),
     # so the UDF must POST alerts to the OPC UA endpoint. Configure the
     # TICK alert handler and activate the UDF in opcua mode -- matches
@@ -217,7 +214,6 @@ def test_verify_pods_stability_after_influxdb_restart(setup_helm_environment, te
     result = helm_utils.setup_opcua_alerts(chart_path)
     assert result == True, "Failed to configure OPC UA alert in TICK script."
     result = helm_utils.setup_sample_app_udf_deployment_package(chart_path, sample_app=constants.WIND_SAMPLE_APP, alert_mode="opcua")
-    # === [GH_RUNNER_FIX END] ===
     logger.info(f"setup_sample_app_udf_deployment_package result: {result}")
     assert result == True, "Failed to activate UDF deployment package."
     logger.info(f"UDF deployment package is activated and waiting for {wait_time} seconds for pods to stabilize")
@@ -516,8 +512,6 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     assert result == True, "Failed to activate UDF deployment package."
     logger.info("UDF package copied and activated successfully")
 
-    # ================================================================== #
-    # === [GH_RUNNER_FIX BEGIN] TC_016 only ============================ #
     # Purpose: stabilize TC_016 on GitHub-hosted runners (2 vCPU / 7 GB) #
     # where pip install of the wind-turbine UDF deps (numpy / scipy /    #
     # sklearn / pandas) inside the TSAM pod after /ts-api/restart can    #
@@ -540,7 +534,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     _GH_CI_KAPACITOR_POLL_INTERVAL = 10     # seconds between probes
     _GH_CI_KAPACITOR_TASK_MARKER   = "windturbine"  # substring expected in /tasks JSON
     logger.info(
-        "[GH_RUNNER_FIX] Smart-waiting for Kapacitor UDF task "
+        "Smart-waiting for Kapacitor UDF task "
         f"(marker={_GH_CI_KAPACITOR_TASK_MARKER!r}, ceiling={_GH_CI_KAPACITOR_READY_TIMEOUT}s, "
         f"interval={_GH_CI_KAPACITOR_POLL_INTERVAL}s) instead of fixed sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
     )
@@ -549,7 +543,7 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     )
     if not tsam_pod:
         logger.warning(
-            "[GH_RUNNER_FIX] TSAM pod not found within 120s \u2014 falling back to "
+            "TSAM pod not found within 120s \u2014 falling back to "
             f"original sleep({constants.UDF_DEPLOYMENT_TIMEOUT}s)"
         )
         time.sleep(constants.UDF_DEPLOYMENT_TIMEOUT)
@@ -582,35 +576,35 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
                 _gh_last_body = (_gh_probe.stdout or _gh_probe.stderr or "").strip()[:200]
                 if _gh_probe.returncode == 0:
                     logger.info(
-                        f"[GH_RUNNER_FIX] Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
+                        f"Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
                         f"live after ~{_gh_elapsed}s "
                         f"(saved up to {max(0, constants.UDF_DEPLOYMENT_TIMEOUT - _gh_elapsed)}s vs fixed sleep)"
                     )
                     _gh_ready = True
                     break
                 logger.info(
-                    f"[GH_RUNNER_FIX] Task not loaded yet at ~{_gh_elapsed}s "
+                    f"Task not loaded yet at ~{_gh_elapsed}s "
                     f"(rc={_gh_probe.returncode}); next probe in {_GH_CI_KAPACITOR_POLL_INTERVAL}s"
                 )
             except _gh_subprocess.TimeoutExpired:
-                logger.info(f"[GH_RUNNER_FIX] kubectl exec probe timed out at ~{_gh_elapsed}s")
+                logger.info(f"kubectl exec probe timed out at ~{_gh_elapsed}s")
             except Exception as _gh_exc:
-                logger.info(f"[GH_RUNNER_FIX] probe error at ~{_gh_elapsed}s: {_gh_exc}")
+                logger.info(f"probe error at ~{_gh_elapsed}s: {_gh_exc}")
             time.sleep(_GH_CI_KAPACITOR_POLL_INTERVAL)
 
         if not _gh_ready:
-            logger.error(f"[GH_RUNNER_FIX] Last probe stdout/stderr: {_gh_last_body!r}")
+            logger.error(f"Last probe stdout/stderr: {_gh_last_body!r}")
             # Capture last-80 lines of TSAM log to make CI triage one-shot.
             try:
                 _gh_tsam_logs = _gh_subprocess.run(
                     ["kubectl", "logs", "-n", namespace, tsam_pod, "--tail", "80"],
                     capture_output=True, text=True, timeout=15,
                 ).stdout.strip()
-                logger.error(f"[GH_RUNNER_FIX] TSAM pod tail (last 80):\n{_gh_tsam_logs}")
+                logger.error(f"TSAM pod tail (last 80):\n{_gh_tsam_logs}")
             except Exception as _gh_exc:
-                logger.warning(f"[GH_RUNNER_FIX] Failed to tail TSAM logs: {_gh_exc}")
+                logger.warning(f"Failed to tail TSAM logs: {_gh_exc}")
             pytest.fail(
-                f"[GH_RUNNER_FIX] Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
+                f"Kapacitor UDF task '{_GH_CI_KAPACITOR_TASK_MARKER}' "
                 f"not loaded within {_GH_CI_KAPACITOR_READY_TIMEOUT}s after /ts-api/restart \u2014 "
                 f"likely a slow PyPI pip install of UDF deps; bump _GH_CI_KAPACITOR_READY_TIMEOUT "
                 f"or pre-bake UDF deps into the TSAM image."
@@ -625,18 +619,17 @@ def test_influxdb_data_with_mqtt(setup_helm_environment, telegraf_input_plugin):
     _GH_CI_MQTT_SAMPLE_TIMEOUT = 240   # was 120
     _GH_CI_MQTT_BROKER_TOPIC   = "wind-simulation-data"  # actual wire topic
     logger.info(
-        f"[GH_RUNNER_FIX] Calling wait_for_mqtt_sample(topic="
+        f"Calling wait_for_mqtt_sample(topic="
         f"{_GH_CI_MQTT_BROKER_TOPIC!r}, timeout={_GH_CI_MQTT_SAMPLE_TIMEOUT}s) "
         f"(was topic={constants.WIND_TURBINE_INGESTED_TOPIC!r}, timeout=120s)"
     )
-    # === [GH_RUNNER_FIX END] ========================================== #
 
     # Verify MQTT data is being published before checking InfluxDB
     logger.info("Verifying MQTT data ingestion from publisher pod...")
     result = helm_utils.wait_for_mqtt_sample(
         namespace,
-        _GH_CI_MQTT_BROKER_TOPIC,            # [GH_RUNNER_FIX] was constants.WIND_TURBINE_INGESTED_TOPIC
-        timeout=_GH_CI_MQTT_SAMPLE_TIMEOUT,  # [GH_RUNNER_FIX] was 120
+        _GH_CI_MQTT_BROKER_TOPIC,            # was constants.WIND_TURBINE_INGESTED_TOPIC
+        timeout=_GH_CI_MQTT_SAMPLE_TIMEOUT,  # was 120
     )
     logger.info(f"wait_for_mqtt_sample result: {result}")
     assert result == True, "Failed to observe MQTT data before InfluxDB verification."

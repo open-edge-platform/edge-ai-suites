@@ -1800,8 +1800,6 @@ def execute_gpu_config_curl(device="gpu"):
         logger.error(f"Error executing curl command: {e}")
         return False
 
-# ====================================================================== #
-# === [GH_RUNNER_FIX BEGIN] Cross-test alert-mode reset helpers ======== #
 # Problem these helpers solve                                            #
 # ----------------------------                                           #
 # ``test_opcua_alerts`` calls ``upload_udf_tar_package`` which deposits  #
@@ -1889,7 +1887,6 @@ def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
         return False
     logger.info(f"[reset_loaded_udf_to] Reset to '{alert_mode}' completed")
     return True
-# === [GH_RUNNER_FIX END] ============================================== #
 
 
 def validate_mqtt_alert_system(sample_app=constants.WIND_SAMPLE_APP):
