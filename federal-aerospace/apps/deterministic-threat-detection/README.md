@@ -25,7 +25,7 @@ Deep Learning Streamer (DL Streamer) processes the RTSP camera streams from AXIS
 
 ### Use Case 2 — SceneScape Multi-Camera Tracking with TSN and PTP
 
-Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores the accuracy to the baseline.
+Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Time Protocol (PTP). A patched GStreamer pipeline propagates these timestamps through DL Streamer into Intel® SceneScape for 3D multi-camera tracking. This use case measures how TSN congestion affects Higher Order Tracking Accuracy (HOTA) and demonstrates that traffic shaping restores accuracy to the baseline.
 
 [Get Started — Use Case 2](./docs/user-guide/get-started-scenescape.md)
 
