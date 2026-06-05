@@ -18,7 +18,7 @@ This package contains:
 ## Running
 
 ```bash
-./run.sh up      # Deploy Visual Pipeline and Platform Evaluation Tool and HandHeld Multi-Modal stack by default
+./run.sh up      # Deploy Visual Pipeline and Platform Evaluation Tool and HandHeld Multi-Modal stack (default)
 ./run.sh down    # Stop both stacks
 ./run.sh logs    # Tail logs from the HandHeld Multi-Modal stack
 ```
