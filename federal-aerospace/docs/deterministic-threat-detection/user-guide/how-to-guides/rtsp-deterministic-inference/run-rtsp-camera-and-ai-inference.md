@@ -35,13 +35,14 @@ Copy the `ptp_frame_timestamp.py` and `config.json` from the `deterministic-thre
 module to the current docker directory.
 
 ```bash
-cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/rtsp_camera_stream/ptp_frame_timestamp.py .
-cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/rtsp_camera_stream/config.json .
+cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/rtsp_camera_pipeline/ptp_frame_timestamp.py .
+cp edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/rtsp_camera_pipeline/config.json .
 ```
 
-> **Note:** Make sure to update the RTSP camera `<rtsp-camera-username>`,
-`<rtsp-camera-password>`, and `<rtsp-camera-url>` in the `config.json` file before proceeding.
-Also, add the RTSP camera IP to the `no_proxy environment` variable if you are behind a proxy.
+> **Notes for this step:**
+> - If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
+> - Update `<rtsp-camera-username>`, `<rtsp-camera-password>`, and `<rtsp-camera-url>` in `config.json` before proceeding.
+> - If you are behind a proxy, add the RTSP camera IP to the `no_proxy` environment variable.
 
 ## Update Docker Compose File
 
