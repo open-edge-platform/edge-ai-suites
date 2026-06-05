@@ -49,7 +49,30 @@ Start all services (default mixed-optimized device profile):
 make run
 ```
 
-This builds and starts 5 containers:
+By default, `make run` pulls the prebuilt images from Docker Hub.
+
+To build the images locally instead:
+
+```bash
+make run REGISTRY=false
+```
+
+To pull a specific release tag:
+
+```bash
+make run TAG=2026.1.0-rc2
+```
+
+You can also override individual image references if needed:
+
+```bash
+make run \
+  NICU_BACKEND_IMAGE=intel/hl-ai-nicu-backend:1.0.0 \
+  NICU_UI_IMAGE=intel/hl-ai-nicu-ui:1.0.0 \
+  NICU_DLSPS_IMAGE=intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1
+```
+
+This pulls and starts 5 containers:
 
 | Service                  | Port | Purpose                                  |
 | ------------------------ | ---- | ---------------------------------------- |
