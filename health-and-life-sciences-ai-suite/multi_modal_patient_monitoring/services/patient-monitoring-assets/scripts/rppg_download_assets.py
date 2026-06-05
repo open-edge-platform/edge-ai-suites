@@ -133,6 +133,16 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
     """Download file with progress bar."""
     dest.parent.mkdir(parents=True, exist_ok=True)
 
+    # Some hosts (e.g. Pexels) block the default Python user-agent.
+    # Use a per-request opener so we don't leak headers to other downloads.
+    opener = urllib.request.build_opener()
+    opener.addheaders = [
+        ("User-Agent",
+         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+         "(KHTML, like Gecko) Chrome/120.0 Safari/537.36"),
+        ("Referer", "https://www.pexels.com/"),
+    ]
+
     class DownloadProgressBar(tqdm):
         def update_to(self, b=1, bsize=1, tsize=None):
             if tsize is not None:
@@ -145,7 +155,8 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
         miniters=1,
         desc=desc
     ) as t:
-        urllib.request.urlretrieve(url, dest, reporthook=t.update_to)
+        # Use opener.retrieve instead of global urlretrieve
+        opener.retrieve(url, dest, reporthook=t.update_to)
 
 
 def download_model() -> None:
