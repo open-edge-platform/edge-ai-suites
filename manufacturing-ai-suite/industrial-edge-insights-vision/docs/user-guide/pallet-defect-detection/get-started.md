@@ -64,7 +64,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    sudo systemctl start docker
    ```
 
-    > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+    > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -207,7 +207,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 6. Stop the Docker application.
 
-    > **Note:** If you are running multiple instances of app, stop the services using `./run.sh down` instead.
+    > **Note:** If you are running multiple instances of the app, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v
