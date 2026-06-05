@@ -10,7 +10,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 2. Bring up the containers.
 
-   > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+   > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
    ```sh
    docker compose up -d
@@ -69,7 +69,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 5. Start the pipeline with the following cURL command  with `<HOST_IP>` set to system IP. Ensure to give the correct path to the model as seen below. This example starts an AI pipeline.
 
-    > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ```sh
@@ -95,7 +95,7 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
 
 6. Go to MinIO console on `https://<HOST_IP>/minio` and login with `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` provided in `.env` file. After logging into console, you can go to `ecgdemo` bucket and check the frames stored.
 
-    > **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+    > **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
     > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
    ![S3 minio image storage](../_assets/s3-minio-storage.png)

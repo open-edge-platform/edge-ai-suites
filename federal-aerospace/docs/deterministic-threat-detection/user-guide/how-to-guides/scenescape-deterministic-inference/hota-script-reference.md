@@ -1,8 +1,8 @@
 # HOTA Script Reference
 
-## [mqtt_camera_capture_processor.py](../../../../usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/mqtt_camera_capture_processor.py)
+## [mqtt_camera_capture_processor.py](../../../../../apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/mqtt_camera_capture_processor.py)
 
-**Location:** `usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/`
+**Location:** `apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/hota-metrics/`
 
 **Purpose:** Subscribes to MQTT camera detection topics, captures a fixed number of frames, reconstructs a clean dataset with no gaps, and triggers the HOTA evaluation pipeline.
 
@@ -38,9 +38,9 @@ OUTPUT_DIRECTORY = "dataset"     # Where reconstructed JSON files are written
 
 ---
 
-## [traffic_generator.py](../../../../usecases/scenescape-deterministic-inference/hota/scripts/traffic_generator.py)
+## [traffic_generator.py](../../../../../apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/traffic_generator.py)
 
-**Location:** `usecases/scenescape-deterministic-inference/hota/scripts/`
+**Location:** `apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/`
 
 **Purpose:** Injects controlled network congestion using `iperf3`, gated by MQTT camera frame numbers so it does not interfere with the capture start or end.
 
@@ -66,9 +66,9 @@ OUTPUT_DIRECTORY = "dataset"     # Where reconstructed JSON files are written
 
 ---
 
-## [sei_parser.py](../../../../usecases/scenescape-deterministic-inference/hota/scripts/gvapython/sei_parser.py)
+## [sei_parser.py](../../../../../apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/gvapython/sei_parser.py)
 
-**Location:** `usecases/scenescape-deterministic-inference/hota/scripts/gvapython/`
+**Location:** `apps/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/scripts/gvapython/`
 
 **Purpose:** GVAPython plugin that extracts the SEI-embedded frame number from each H.264 buffer before inference and adds it as `sei_frame_num` to the MQTT detection message.
 

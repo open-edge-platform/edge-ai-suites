@@ -16,7 +16,7 @@ If not available, you can simulate this by downloading the sample model from the
 
 ### Steps
 
-> **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+> **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 1. Set up the sample application to start a pipeline. A pipeline named `weld_porosity_classification_mlops` is already provided in the `pipeline-server-config.json` for this demonstration with the Weld Porosity classification sample app.
