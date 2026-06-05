@@ -38,7 +38,7 @@ Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 Precision Tim
 
 ## Key References
 
-- **Moxa Managed Switch TSN-G5000 Series:** [PTP Grandmaster, VLAN segmentation, and IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5004-series)
+- **Moxa Managed Switch TSN-G5000 Series:** [PTP Grandmaster, VLAN segmentation, and IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5008-series)
 - **Intel Ethernet Network Adapter I226:** TSN-capable Ethernet controller for Arrow Lake hosts
 - **IEEE 802.1Qbv standard:** Time-Aware Scheduler for traffic isolation
 - **Intel SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
