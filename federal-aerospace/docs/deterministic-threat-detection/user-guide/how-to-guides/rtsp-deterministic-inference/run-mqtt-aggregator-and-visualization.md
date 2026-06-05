@@ -21,17 +21,17 @@ TSN setup. It is a Dash application that:
 Before running the script, ensure you have Python 3 and the required libraries installed.
 
 ```bash
-cd deterministic-threat-detection/mqtt_data_aggregator
+cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/mqtt_data_aggregator
 pip install -r requirements.txt
 ```
 
 ## Running the Script
 
-Navigate to the `deterministic-threat-detection/mqtt_data_aggregator` directory and run the
+Navigate to the `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/mqtt_data_aggregator` directory and run the
 script. You will need to provide the correct broker IP addresses for each topic.
 
 ```bash
-cd deterministic-threat-detection/mqtt_data_aggregator
+cd federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/mqtt_data_aggregator
 python3 mqtt_data_aggregator.py --topic-brokers "tsn_demo/camera1/inference:<CAMERA1_BROKER_IP>" "tsn_demo/camera2/inference:<CAMERA2_BROKER_IP>" "sample/sensor/data:<SENSOR_BROKER_IP>"
 ```
 

@@ -24,7 +24,7 @@ SceneScape's evaluation framework uses the [TrackEval](https://github.com/Jonath
 scenescape/tools/tracker/evaluation/
 ```
 
-For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tools/tracker/evaluation/README.md).
+For a full reference, see the [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tools/tracker/evaluation/README.md).
 
 ### How the Existing Evaluation Pipeline Works
 
@@ -63,6 +63,13 @@ The key challenge is **frame ordering and dropped frames**: under congestion, so
 ## Prerequisites
 
 - A MOXA TSN switch and three machines with the VLAN configured as per the [HOST VLAN Configuration Guide](../common/create-vlan-on-all-machines.md).
+
+- Ensure iPerf3 is installed on both the client and server machines.
+
+```bash
+sudo apt-get update
+sudo apt-get install -y iperf3
+```
 
 ---
 
@@ -138,13 +145,12 @@ ffmpeg \
 If you have not yet started SceneScape, run the following. Otherwise, skip to creating the scene and cameras.
 
 ```bash
-git clone https://github.com/open-edge-platform/scenescape
+git clone https://github.com/open-edge-platform/scenescape --branch 2026.1.0-rc2
 cd scenescape
-git checkout 2026.1.0-rc1 -b 2026.1.0-rc1
 make demo
 ```
 
-> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
+> **Note:** Use the instructions in the [SceneScape prebuilt containers guide](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/docs/user-guide/how-to-guides/deploy-scenescape-using-prebuilt-containers.md#31-configure-docker-compose-to-use-prebuilt-images) to use the prebuilt images.
 
 Create the `hota-scene` scene and its two cameras, then run the setup script:
 
@@ -152,8 +158,9 @@ Create the `hota-scene` scene and its two cameras, then run the setup script:
 cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection
 bash usecases/scenescape-deterministic-inference/hota/scripts/setup-hota-scene.sh
 ```
+> Note: If you downloaded and extracted the zip file, replace `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/` with the path to your extracted `deterministic-threat-detection/` folder.
 
-This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the SceneScape REST API. See the [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/docs/user-guide/api-reference.md) for details.
+This creates the scene `hota-scene` and registers cameras `Cam_x1_0` and `Cam_x2_0` via the SceneScape REST API. See the [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/docs/user-guide/api-reference.md) for details.
 
 ### 2b. Install the SEI Frame-Number Parser
 
@@ -174,7 +181,7 @@ A ready-made pipeline configuration is provided at:
 usecases/scenescape-deterministic-inference/hota/configs/hota-metrics-config.json
 ```
 
-It already includes the `sei_parser.py` GVAPython element in the pipeline configuration. The only change required is to substitute `<machine2-tsn-vlan1-ip>` with the actual TSN IP address of Machine 2.
+It already includes the `sei_parser.py` GVAPython element in the pipeline configuration. The only change required is to substitute `<machine2-tsn-vlan1-ip>` with the actual TSN IP address of Machine 2 in the `hota-metrics-config.json` file.
 
 ### 2d. Point Docker Compose to the New Config
 
@@ -195,16 +202,26 @@ git -C /path/to/scenescape apply \
   /path/to/deterministic-threat-detection/usecases/scenescape-deterministic-inference/hota/patches/sscape_adapter_frame_insertion.patch
 ```
 
-### 2f. Restart the Pipeline Service
+Also expose port 1883 of the broker service in `sample_data/docker-compose-dl-streamer-example.yml` to allow the capture script to connect to the MQTT broker from outside the container network, if not already configured:
 
-Apply the new configuration by restarting the `queuing-video` container:
+```yaml
+   broker:
+     image: eclipse-mosquitto:2.0.22
+     ports:
+       - "1883:1883"
+```
+
+### 2f. Restart SceneScape
+
+Apply the new configuration by restarting SceneScape:
 
 ```bash
 export no_proxy=$no_proxy,<machine2-tsn-vlan1-ip>
-docker restart scenescape-queuing-video-1
+docker compose down --remove-orphans
+make demo
 ```
 
-Verify it started successfully:
+Verify that it started successfully and the changes are applied:
 
 ```bash
 docker logs -f scenescape-queuing-video-1
@@ -312,12 +329,12 @@ Results are stored in timestamped subdirectories under `/tmp/tracker-evaluation/
 ## References
 
 - [HOTA Script Reference](./hota-script-reference.md)
-- [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/2026.1.0-rc1/tools/tracker/evaluation/README.md)
+- [Tracker Evaluation Pipeline README](https://github.com/open-edge-platform/scenescape/tree/2026.1.0-rc2/tools/tracker/evaluation/README.md)
 - [TrackEval Toolkit](https://github.com/JonathonLuiten/TrackEval)
 - [TSN Traffic Shaping Guide](../common/enable-tsn-traffic-shaping.md)
-- [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/docs/user-guide/api-reference.md)
+- [SceneScape API Reference](https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/docs/user-guide/api-reference.md)
 
-[cam-x1-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tests/system/metric/dataset/Cam_x1_0.mp4
-[cam-x2-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tests/system/metric/dataset/Cam_x2_0.mp4
-[cam-x1-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tests/system/metric/dataset/Cam_x1_0.json
-[cam-x2-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc1/tests/system/metric/dataset/Cam_x2_0.json
+[cam-x1-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.mp4
+[cam-x2-mp4]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.mp4
+[cam-x1-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x1_0.json
+[cam-x2-json]: https://github.com/open-edge-platform/scenescape/blob/2026.1.0-rc2/tests/system/metric/dataset/Cam_x2_0.json

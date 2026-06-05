@@ -99,12 +99,12 @@ const TranscriptsTab: React.FC = () => {
       const speakerMatch = speaker.match(/speaker_(\d+)/i);
       if (speakerMatch) {
         const speakerNumber = speakerMatch[1];
-        const baseLabel = currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
+        const baseLabel = currentLanguage === "zh" ? labels.student : labels.student.toUpperCase();
         return `${baseLabel}_${speakerNumber}`;
       }
-    
+
       if (speaker.toLowerCase() === 'speaker') {
-        return currentLanguage === "zh" ? "说话人" : labels.student.toUpperCase();
+        return currentLanguage === "zh" ? labels.student : labels.student.toUpperCase();
       }
       return speaker;
     }

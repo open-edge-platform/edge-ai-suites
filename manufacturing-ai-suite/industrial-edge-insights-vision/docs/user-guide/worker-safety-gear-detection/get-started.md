@@ -58,7 +58,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 1. Start the Docker application:
 
-   > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+   > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -137,7 +137,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    ```
 
    > **Note:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the url below.
-   > If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+   > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
    ```sh
    https://<HOST_IP>/mediamtx/worker_safety/
@@ -204,7 +204,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 6. Stop the Docker application.
 
-   > **Note:** If you are running multiple instances of app, stop the services using `./run.sh down` instead.
+   > **Note:** If you are running multiple instances of the app, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v
