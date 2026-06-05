@@ -29,6 +29,10 @@ SPDX-License-Identifier: Apache-2.0
 | Remote system (PID mode) | `./grafana-monitor.sh --remote-ip <ip> --pid-only` | until Ctrl-C |
 | Pipeline graph (interactive) | `uv run python src/visualize_graph.py <session> --show` | — |
 | Pipeline graph (PNG) | `uv run python src/visualize_graph.py <session> --no-show` | — |
+| KPI charts + report | `make results` | — |
+| Thermal dashboard | `make visualize-thermal` | — |
+| GPU dashboard | `uv run python src/visualize_gpu.py <session> --show` | — |
+| NPU dashboard | `uv run python src/visualize_npu.py <session> --show` | — |
 | List sessions | `uv run python src/monitor_stack.py --list-sessions` | — |
 | Re-visualize last session | `uv run python src/visualize_timing.py <session>/graph_timing.csv --show` | — |
 | Clean all data | `make clean` | — |
@@ -55,8 +59,13 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
 | `--no-visualize` | Skip auto-visualization on exit |
+| `--gpu` | Enable Intel&trade; GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
+| `--npu` | Enable Intel&trade; NPU monitoring via sysfs |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
+| `--ros-domain-id ID` | Explicitly set `ROS_DOMAIN_ID` (skips auto-detection) |
+| `--algorithm LABEL` | Group sessions under `monitoring_sessions/<label>/` |
+| `--use-sim-time` | Pass `--use-sim-time` to the graph monitor |
 | `--list-sessions` | List previous sessions and exit |
 
 ```bash
@@ -133,7 +142,122 @@ uv run python src/visualize_graph.py monitoring_sessions/<name> --no-show --outp
 uv run python src/visualize_graph.py monitoring_sessions/<name> --show
 ```
 
+## Hardware Visualizers (GPU / NPU / Thermal)
 
+All three visualizers accept a session directory or log file as their first
+argument and auto-detect the latest session when omitted.
+
+```bash
+# GPU dashboard (5 panels: busy%, frequency, temperature, power, per-PID)
+uv run python src/visualize_gpu.py <session_dir>
+uv run python src/visualize_gpu.py <session_dir> --save
+uv run python src/visualize_gpu.py <session_dir> --summary
+
+# NPU dashboard (3 panels: busy%, clock frequency, memory)
+uv run python src/visualize_npu.py <session_dir>
+uv run python src/visualize_npu.py <session_dir> --no-show
+
+# Thermal & throttle dashboard (3 panels: temperature, throttle state, power)
+uv run python src/visualize_thermal.py <session_dir>
+uv run python src/visualize_thermal.py <session_dir> --summary
+
+# Makefile shortcut (thermal)
+make visualize-thermal
+make visualize-thermal SESSION=monitoring_sessions/<name>
+```
+
+| Common option | Description |
+|---------------|-------------|
+| `--session PATH` | Explicit session directory |
+| `--output-dir DIR` | Save PNG here (default: session `visualizations/`) |
+| `--save` | Write PNG without opening a window |
+| `--show` | Open an interactive matplotlib window |
+| `--no-show` | Never open a window (headless / CI) |
+| `--summary` | Print text summary only, no plot |
+
+> Enable GPU logging with `--gpu` and NPU logging with `--npu` on
+> `monitor_stack.py`. Intel&trade; GPU monitoring requires `qmassa` (`make install-qmassa`).
+
+## visualize_kpi.py
+
+Generates publication-ready charts from `kpi.json` files produced by the
+benchmark framework. Supports latency histograms, cross-SKU comparisons,
+resource utilization breakdowns, and Level-2 throughput/drop-rate charts.
+
+```bash
+# All charts for a session directory
+uv run python src/visualize_kpi.py --session monitoring_sessions/<name>
+
+# Cross-SKU comparison
+uv run python src/visualize_kpi.py \
+    --kpi mtl.json arl.json ptl.json \
+    --label MTL ARL PTL \
+    --output-dir charts/
+
+# SVG output
+uv run python src/visualize_kpi.py --session <dir> --format svg
+```
+
+| Option | Description |
+|--------|-------------|
+| `--session DIR` | Session directory containing `kpi.json` |
+| `--kpi FILE [FILE ...]` | One or more `kpi.json` paths (for cross-SKU comparison) |
+| `--label LABEL [...]` | SKU labels matching `--kpi` files (e.g. `MTL ARL PTL`) |
+| `--kpi2 FILE` | Path to `kpi_level2.json` for Level-2 charts |
+| `--output-dir DIR` | Output directory for charts (default: `<session>/charts` or `./charts`) |
+| `--format {png,svg}` | Output image format (default: `png`) |
+
+## analyze_rosbag.py
+
+Analyses a ROS2 bag file and prints per-topic statistics, message latency,
+and node graph information. Accepts SQLite3 `.db3` or `.mcap` bag files.
+
+```bash
+uv run python src/analyze_rosbag.py path/to/bag.db3
+uv run python src/analyze_rosbag.py path/to/bag.mcap
+```
+
+All analysis is run automatically and printed to stdout.
+
+## bag_replay_run.sh / make bag-replay
+
+Replays a previously recorded bag file through the monitoring stack,
+enabling reproducible offline benchmarking and CI integration.
+
+```bash
+# Via Makefile (recommended)
+make bag-replay BAG=/path/to/bag.db3
+make bag-replay BAG=/path/to/bag.db3 RATE=0.5 RUNS=5
+
+# Directly
+./src/bag_replay_run.sh /path/to/bag.db3
+```
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BAG` | (required) | Path to the bag file to replay |
+| `RATE` | `1.0` | Playback rate multiplier |
+| `LOOP` | `false` | Loop the bag continuously |
+| `RUNS` | `1` | Number of benchmark repetitions |
+| `PAUSE` | `5` | Seconds to pause between runs |
+
+## fastmapping_run.sh / make fastmapping
+
+Runs the FastMapping RGB-D SLAM benchmark, which exercises the fast-mapping
+pipeline across a sequence of depth images.
+
+```bash
+# Single run
+make fastmapping
+
+# Multiple runs (benchmark mode)
+make fastmapping-benchmark RUNS=10
+
+# Visualize results
+make fastmapping-plot
+```
+
+See [FastMapping Benchmark](fastmapping-benchmark.md) for a complete walkthrough.
 
 ## Grafana Dashboard Commands
 

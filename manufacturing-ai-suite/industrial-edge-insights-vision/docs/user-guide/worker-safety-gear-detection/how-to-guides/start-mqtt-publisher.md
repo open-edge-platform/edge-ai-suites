@@ -2,7 +2,7 @@
 
 Bring the services up.
 
-> **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+> **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
 ```sh
 docker compose up -d
@@ -13,7 +13,7 @@ The below CURL command publishes metadata to the MQTT broker and sends frames ov
 Assuming broker is running in the same host over port `1883`, replace the `<HOST_IP>` field with your system IP address.
 WebRTC Stream will be accessible at `https://<HOST_IP>/mediamtx/mqttstream/`.
 
-> **Note:** If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
+> **Note:** If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>`with `<HOST_IP>:<NGINX_HTTPS_PORT>`
 
 ```sh

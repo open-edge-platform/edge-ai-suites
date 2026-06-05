@@ -19,6 +19,7 @@ commands
 grafana
 wandering-benchmark
 picknplace-benchmark
+fastmapping-benchmark
 examples
 
 :::

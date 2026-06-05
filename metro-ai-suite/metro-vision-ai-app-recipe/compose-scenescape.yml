@@ -234,7 +234,7 @@ services:
       start_period: 10s
 
   web:
-    image: intel/scenescape-manager:v2026.1.0-rc1
+    image: intel/scenescape-manager:v2026.1.0-rc2
     init: true
     networks:
       scenescape:
@@ -292,7 +292,7 @@ services:
     restart: on-failure:5
 
   scene:
-    image: intel/scenescape-controller:v2026.1.0-rc1
+    image: intel/scenescape-controller:v2026.1.0-rc2
     init: true
     environment:
       - http_proxy=${http_proxy}

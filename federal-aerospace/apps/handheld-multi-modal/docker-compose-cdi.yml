@@ -1,0 +1,186 @@
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# Fed-Aero Application Blueprint
+# Grafana + LLM Services (OVMS + OpenWebUI)
+# CDI variant - OVMS uses CDI GPU allocation, all services pinned to CPUs 4-11
+
+services:
+  # Init - creates bind-mount directories with correct ownership before any
+  # service starts.
+  init:
+    image: alpine
+    network_mode: none
+    restart: "no"
+    volumes:
+      - ./data:/data
+    command: >
+      sh -c "
+        mkdir -p /data/grafana /data/ovms-models /data/open-webui /data/whisper-cache /data/nginx-certs &&
+        chown 472:472 /data/grafana &&
+        chown 5000:5000 /data/ovms-models &&
+        chmod 750 /data/ovms-models
+      "
+
+  # Grafana - Dashboard with provisioned dashboards
+  grafana:
+    image: grafana/grafana:13.1.0-25893932881
+    container_name: grafana
+    restart: on-failure:5
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+      GF_LIVE_ALLOWED_ORIGINS: "*"
+      GF_LIVE_MAX_MESSAGE_SIZE: "128000"
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: "${no_proxy},fedaero.intel.com"
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./apps/grafana/provisioning:/etc/grafana/provisioning
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      fedaero:
+        aliases:
+          - grafana.fedaero.intel.com
+
+  # OpenVINO Model Server
+  ovms:
+    image: openvino/model_server:latest-gpu
+    container_name: ovms
+    restart: unless-stopped
+    init: true
+    group_add:
+      - "${RENDER_GID:-109}"
+    devices:
+      - ${CDI_XE_DEVICE_0}
+      # alternatively without the environment variable for PF
+      # - intel.com/xe=pf0
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    networks:
+      fedaero:
+        aliases:
+          - ovms.fedaero.intel.com
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: "${no_proxy},fedaero.intel.com"
+    volumes:
+      - ./data/ovms-models:/models
+    command: >
+      --rest_port 8000
+      --source_model OpenVINO/Phi-3.5-mini-instruct-int4-ov
+      --model_repository_path /models
+      --task text_generation
+      --target_device GPU
+      --metrics_enable
+      --plugin_config '{"GPU_ENABLE_SDPA_OPTIMIZATION":"NO","KV_CACHE_PRECISION":"f16","ENABLE_MMAP":"NO"}'
+
+  # OpenWebUI - LLM Chat Interface
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    networks:
+      fedaero:
+        aliases:
+          - webui.fedaero.intel.com
+    environment:
+      - OPENAI_API_BASE_URL=http://ovms.fedaero.intel.com:8000/v3
+      - OPENAI_API_KEY=unused
+      - ENABLE_OLLAMA_API=false
+      - ENABLE_AUDIO_TRANSCRIPTION=true
+      - WHISPER_MODEL=base
+      - WHISPER_COMPUTE_TYPE=float32
+      - WEBUI_AUTH=False
+      - WEBUI_SECRET_KEY=dummy
+      - ENABLE_RAG_LOCAL_WEB_FETCH=true
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},fedaero.intel.com
+      # ONLY NEEDED IF OFFLINE MODE IS DESIRED
+      # - OFFLINE_MODE=true
+      # - HF_HUB_OFFLINE=1
+    volumes:
+      - ./data/open-webui:/app/backend/data
+    depends_on:
+      ovms:
+        condition: service_started
+      init:
+        condition: service_completed_successfully
+
+  # Whisper STT - Speech-to-Text Service
+  whisper-stt:
+    build:
+      context: ./apps/speech-to-text
+      args:
+        WHISPER_MODEL: base
+    image: whisper-stt:latest
+    container_name: whisper-stt
+    restart: unless-stopped
+    networks:
+      fedaero:
+        aliases:
+          - whisper.fedaero.intel.com
+    environment:
+      - WHISPER_MODEL=base
+      - http_proxy=${http_proxy}
+      - https_proxy=${https_proxy}
+      - no_proxy=${no_proxy},fedaero.intel.com
+    volumes:
+      - ./data/whisper-cache:/app/.cache/whisper
+    depends_on:
+      init:
+        condition: service_completed_successfully
+
+  # HTTPS reverse proxy for Open WebUI and Whisper STT
+  # Enables microphone access in the browser (requires secure context)
+  nginx-https:
+    image: nginx:alpine
+    container_name: nginx-https
+    restart: unless-stopped
+    environment:
+      http_proxy: ${http_proxy}
+      https_proxy: ${https_proxy}
+      no_proxy: "${no_proxy},fedaero.intel.com"
+    networks:
+      - fedaero
+    ports:
+      - "127.0.0.1:443:443"     # VIPPET UI over HTTPS
+      - "127.0.0.1:7443:7443"   # Grafana over HTTPS
+      - "127.0.0.1:8443:8443"   # Open WebUI over HTTPS
+      - "127.0.0.1:5443:5443"   # Whisper STT over HTTPS
+    volumes:
+      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./data/nginx-certs:/etc/nginx/certs
+    # Generate a self-signed cert on first start if not present, then start nginx
+    command: >-
+      sh -c "
+        if [ ! -f /etc/nginx/certs/cert.pem ]; then
+          apk add --no-cache openssl &&
+          openssl req -x509 -nodes -days 365 -newkey rsa:3072 -keyout /etc/nginx/certs/key.pem -out /etc/nginx/certs/cert.pem -subj '/CN=localhost' -addext 'subjectAltName=DNS:localhost,IP:127.0.0.1';
+        fi &&
+        nginx -g 'daemon off;'
+      "
+    depends_on:
+      grafana:
+        condition: service_started
+      open-webui:
+        condition: service_started
+      whisper-stt:
+        condition: service_started
+      init:
+        condition: service_completed_successfully
+
+networks:
+  fedaero:
+    external: true
+    name: visual-pipeline-and-platform-evaluation-tool_default

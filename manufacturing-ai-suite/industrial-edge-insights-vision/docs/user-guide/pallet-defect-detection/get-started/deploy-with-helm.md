@@ -84,13 +84,13 @@
    - Download helm chart with the following command
 
      ```bash
-     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc1
+     helm pull oci://registry-1.docker.io/intel/pallet-defect-detection-reference-implementation --version 2.7.0-rc2
      ```
 
    - Unzip the package using the following command
 
      ```bash
-     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc1.tgz
+     tar -xvf pallet-defect-detection-reference-implementation-2.7.0-rc2.tgz
      ```
 
    - Replace the helm directory
@@ -223,7 +223,7 @@
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "99ac50d852b511f09f7c2242868ff651"
    ```
 
-   > **Note:**- This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to https://<HOST_IP>:30443/mediamtx/pdd/ for Pallet Defect Detection. If you're running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
+   > **Note:** This starts the pipeline. You can view the inference stream on WebRTC by opening a browser and navigating to `https://<HOST_IP>:30443/mediamtx/pdd/` for Pallet Defect Detection. If you are running Helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 
 ### Starting GPU and NPU based pipelines
 
@@ -532,7 +532,13 @@ Applications can take advantage of the S3 publish feature from DL Streamer Pipel
        }
    ]
 
-10. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
+10. Start the pipeline with the above payload.
+
+    ```sh
+    ./sample_start.sh helm -p pallet_defect_detection_mlops
+    ```
+
+11. View the WebRTC streaming on `https://<HOST_IP>:30443/mediamtx/<peer-str-id>/` by replacing `<peer-str-id>` with the value used in the original cURL command to start the pipeline.
 
    > **Note:** If you are running helm using an `NGINX_HTTPS_PORT` other than the default 30443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
 

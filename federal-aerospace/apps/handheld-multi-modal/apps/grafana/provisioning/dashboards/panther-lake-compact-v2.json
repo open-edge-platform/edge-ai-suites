@@ -1,0 +1,997 @@
+{
+  "apiVersion": "dashboard.grafana.app/v2",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "ptl-compact-v2",
+    "namespace": "default",
+    "uid": "0277ad27-1eaf-43b6-a489-74f780576a42",
+    "resourceVersion": "1776935059626996",
+    "generation": 18,
+    "creationTimestamp": "2026-04-23T08:47:32Z",
+    "labels": {
+      "grafana.app/deprecatedInternalID": "2601685640572928"
+    },
+    "annotations": {
+      "grafana.app/createdBy": "access-policy:service",
+      "grafana.app/folder": "",
+      "grafana.app/managedBy": "classic-file-provisioning",
+      "grafana.app/managerAllowsEdits": "true",
+      "grafana.app/managerId": "Fed-Aero Dashboards",
+      "grafana.app/saved-from-ui": "Grafana v13.0.0 (e9de482b)",
+      "grafana.app/sourceChecksum": "14edd3301a4a854bdb3006b39b36c4b5",
+      "grafana.app/sourcePath": "/etc/grafana/dashboards/panther-lake-compact-v2.json",
+      "grafana.app/sourceTimestamp": "1776933954000",
+      "grafana.app/updatedBy": "anonymous:0",
+      "grafana.app/updatedTimestamp": "2026-04-23T09:04:19Z"
+    }
+  },
+  "spec": {
+    "annotations": [
+      {
+        "kind": "AnnotationQuery",
+        "spec": {
+          "query": {
+            "kind": "DataQuery",
+            "group": "grafana",
+            "version": "v0",
+            "datasource": {
+              "name": "-- Grafana --"
+            },
+            "spec": {}
+          },
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "builtIn": true
+        }
+      }
+    ],
+    "cursorSync": "Crosshair",
+    "description": "Panther Lake compact live view — KPIs + power + utilization side by side. Quarter-screen.",
+    "editable": true,
+    "elements": {
+      "panel-1": {
+        "kind": "Panel",
+        "spec": {
+          "id": 1,
+          "title": "FPS",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/fps",
+                        "fields": [
+                          {
+                            "name": "fps"
+                          }
+                        ],
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {
+                "maxDataPoints": 100
+              }
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "vertical",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "last"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {},
+                "textMode": "value",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "fps",
+                  "decimals": 1,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "blue"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value ptl"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "FPS"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-2": {
+        "kind": "Panel",
+        "spec": {
+          "id": 2,
+          "title": "CPU / NPU",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/cpu",
+                        "filter": {
+                          "fields": [
+                            "time",
+                            "usage_user"
+                          ]
+                        },
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/npu",
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "filterFieldsByName",
+                  "spec": {
+                    "options": {
+                      "byVariable": false,
+                      "include": {
+                        "names": [
+                          "time",
+                          "usage_user {cpu=\"cpu-total\", host=\"ptl\"}",
+                          "utilization {host=\"ptl\"}"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {
+                "maxDataPoints": 100
+              }
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "vertical",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "last"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {},
+                "textMode": "value_and_name",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 0,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "usage_user {cpu=\"cpu-total\", host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "CPU"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "utilization {host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "NPU"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-3": {
+        "kind": "Panel",
+        "spec": {
+          "id": 3,
+          "title": "Power (W)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/gpu_power",
+                        "filter": {
+                          "fields": [
+                            "time",
+                            "value"
+                          ]
+                        },
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/npu",
+                        "filter": {
+                          "fields": [
+                            "time",
+                            "power"
+                          ]
+                        },
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {}
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "stat",
+            "version": "13.0.0",
+            "spec": {
+              "options": {
+                "colorMode": "none",
+                "graphMode": "none",
+                "justifyMode": "center",
+                "orientation": "vertical",
+                "percentChangeColorMode": "standard",
+                "reduceOptions": {
+                  "calcs": [
+                    "last"
+                  ],
+                  "fields": "",
+                  "values": false
+                },
+                "showPercentChange": false,
+                "text": {},
+                "textMode": "value_and_name",
+                "wideLayout": true
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "watt",
+                  "decimals": 1,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "yellow"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "thresholds"
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value {gpu_id=\"0\", host=\"ptl\", type=\"gpu_cur_power\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "GPU"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value {gpu_id=\"0\", host=\"ptl\", type=\"pkg_cur_power\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Pkg"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "power {host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "NPU"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-4": {
+        "kind": "Panel",
+        "spec": {
+          "id": 4,
+          "title": "Power (W)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/gpu_power",
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/npu",
+                        "filter": {
+                          "fields": [
+                            "time",
+                            "power"
+                          ]
+                        },
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [],
+              "queryOptions": {
+                "maxDataPoints": 200
+              }
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.0",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "watt",
+                  "decimals": 1,
+                  "min": 0,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 15,
+                    "gradientMode": "opacity",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value {gpu_id=\"0\", host=\"ptl\", type=\"gpu_cur_power\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "GPU"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "value {gpu_id=\"0\", host=\"ptl\", type=\"pkg_cur_power\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Pkg"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "power {host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "NPU"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "panel-5": {
+        "kind": "Panel",
+        "spec": {
+          "id": 5,
+          "title": "Utilization (%)",
+          "description": "",
+          "links": [],
+          "data": {
+            "kind": "QueryGroup",
+            "spec": {
+              "queries": [
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/cpu",
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "A",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/gpu_engine_usage",
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "B",
+                    "hidden": false
+                  }
+                },
+                {
+                  "kind": "PanelQuery",
+                  "spec": {
+                    "query": {
+                      "kind": "DataQuery",
+                      "group": "datasource",
+                      "version": "v0",
+                      "datasource": {
+                        "name": "grafana"
+                      },
+                      "spec": {
+                        "channel": "stream/ptl/npu",
+                        "filter": {
+                          "fields": [
+                            "time",
+                            "utilization"
+                          ]
+                        },
+                        "queryType": "measurements"
+                      }
+                    },
+                    "refId": "C",
+                    "hidden": false
+                  }
+                }
+              ],
+              "transformations": [
+                {
+                  "kind": "Transformation",
+                  "group": "filterFieldsByName",
+                  "spec": {
+                    "options": {
+                      "include": {
+                        "names": [
+                          "time",
+                          "usage_user {cpu=\"cpu-total\", host=\"ptl\"}",
+                          "usage {engine=\"vcs\", gpu_id=\"0\", host=\"ptl\", type=\"vcs\"}",
+                          "usage {engine=\"ccs\", gpu_id=\"0\", host=\"ptl\", type=\"ccs\"}",
+                          "usage {engine=\"bcs\", gpu_id=\"0\", host=\"ptl\", type=\"bcs\"}",
+                          "usage {engine=\"rcs\", gpu_id=\"0\", host=\"ptl\", type=\"rcs\"}",
+                          "usage {engine=\"vecs\", gpu_id=\"0\", host=\"ptl\", type=\"vecs\"}",
+                          "utilization {host=\"ptl\"}"
+                        ]
+                      }
+                    }
+                  }
+                }
+              ],
+              "queryOptions": {
+                "maxDataPoints": 200
+              }
+            }
+          },
+          "vizConfig": {
+            "kind": "VizConfig",
+            "group": "timeseries",
+            "version": "13.0.0",
+            "spec": {
+              "options": {
+                "annotations": {
+                  "clustering": -1,
+                  "multiLane": false
+                },
+                "legend": {
+                  "calcs": [],
+                  "displayMode": "list",
+                  "placement": "bottom",
+                  "showLegend": true
+                },
+                "tooltip": {
+                  "hideZeros": false,
+                  "mode": "multi",
+                  "sort": "none"
+                }
+              },
+              "fieldConfig": {
+                "defaults": {
+                  "unit": "percent",
+                  "decimals": 1,
+                  "min": 0,
+                  "max": 100,
+                  "thresholds": {
+                    "mode": "absolute",
+                    "steps": [
+                      {
+                        "value": 0,
+                        "color": "green"
+                      }
+                    ]
+                  },
+                  "color": {
+                    "mode": "palette-classic"
+                  },
+                  "custom": {
+                    "axisBorderShow": false,
+                    "axisCenteredZero": false,
+                    "axisColorMode": "text",
+                    "axisLabel": "",
+                    "axisPlacement": "auto",
+                    "barAlignment": 0,
+                    "barWidthFactor": 0.6,
+                    "drawStyle": "line",
+                    "fillOpacity": 10,
+                    "gradientMode": "opacity",
+                    "hideFrom": {
+                      "legend": false,
+                      "tooltip": false,
+                      "viz": false
+                    },
+                    "insertNulls": false,
+                    "lineInterpolation": "smooth",
+                    "lineWidth": 2,
+                    "pointSize": 3,
+                    "scaleDistribution": {
+                      "type": "linear"
+                    },
+                    "showPoints": "never",
+                    "showValues": false,
+                    "spanNulls": false,
+                    "stacking": {
+                      "group": "A",
+                      "mode": "none"
+                    },
+                    "thresholdsStyle": {
+                      "mode": "off"
+                    }
+                  }
+                },
+                "overrides": [
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "usage_user {cpu=\"cpu-total\", host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "CPU"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byName",
+                      "options": "utilization {host=\"ptl\"}"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "NPU"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/engine=.*rcs.*/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Render"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/engine=.*ccs.*/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Compute"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/engine=.*vcs.*/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Video"
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/engine=.*vecs.*/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Video Enh."
+                      }
+                    ]
+                  },
+                  {
+                    "matcher": {
+                      "id": "byRegexp",
+                      "options": "/engine=.*bcs.*/"
+                    },
+                    "properties": [
+                      {
+                        "id": "displayName",
+                        "value": "Copy"
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "layout": {
+      "kind": "GridLayout",
+      "spec": {
+        "items": [
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 0,
+              "width": 8,
+              "height": 3,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-1"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 8,
+              "y": 0,
+              "width": 8,
+              "height": 3,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-2"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 16,
+              "y": 0,
+              "width": 8,
+              "height": 3,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-3"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 0,
+              "y": 3,
+              "width": 12,
+              "height": 10,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-4"
+              }
+            }
+          },
+          {
+            "kind": "GridLayoutItem",
+            "spec": {
+              "x": 12,
+              "y": 3,
+              "width": 12,
+              "height": 10,
+              "element": {
+                "kind": "ElementReference",
+                "name": "panel-5"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "links": [],
+    "liveNow": true,
+    "preload": false,
+    "tags": [],
+    "timeSettings": {
+      "timezone": "browser",
+      "from": "now-5m",
+      "to": "now",
+      "autoRefresh": "",
+      "autoRefreshIntervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m"
+      ],
+      "hideTimepicker": false,
+      "fiscalYearStartMonth": 0
+    },
+    "title": "Panther Lake Compact Live v2",
+    "variables": []
+  }
+}

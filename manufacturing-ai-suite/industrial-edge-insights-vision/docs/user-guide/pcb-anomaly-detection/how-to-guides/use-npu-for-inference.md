@@ -40,9 +40,9 @@ The changes above add the container user to the `render` group and provide acces
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-GStreamer has a variety of hardware specific encoders and decoders elements such as Intel specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
-Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel NPUs.
+Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® NPUs.
 
 Read DL Streamer [documentation on GPU device selection](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
@@ -60,7 +60,7 @@ The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contai
 
 1. Ensure that the sample application is up and running. If not, follow the steps [here](../get-started.md#setup-the-application) to setup the application and then bring the services up
 
-    > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+    > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
     ```sh
     docker compose up -d
@@ -74,7 +74,7 @@ The pipeline `pcb_anomaly_detection_npu` in `pipeline-server-config.json` contai
 
     This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the following url:
 
-    > If you are running multiple instances of app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
+    > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
     ```bash
     https://<HOST_IP>/mediamtx/anomaly/
