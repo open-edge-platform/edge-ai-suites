@@ -1,4 +1,4 @@
-# Configure Embedding Creation with RAG
+# Caption Embedding with RAG
 
 This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-suites/live-captioning-rag/index.html) service for Retrieval-Augmented Generation (RAG) chat.
 
