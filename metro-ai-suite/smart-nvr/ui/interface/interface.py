@@ -610,9 +610,9 @@ def create_ui():
             with gr.TabItem("Auto-Route Events"):
                 with gr.Row():
                     source_dropdown = gr.Dropdown(
-                        choices=["frigate"] + (["scenescape"] if show_scenescape_source else []),
+                        choices=["scenescape"] if show_scenescape_source else ["frigate"],
                         label="Select Source",
-                        value="frigate",
+                        value="scenescape" if show_scenescape_source else "frigate",
                     )
 
                     camera_dropdown = gr.Dropdown(
@@ -622,10 +622,11 @@ def create_ui():
                     )
 
                     if show_scenescape_source:
-                        # scenescape on detection label before the count
+                        # SceneScape: fixed labels, count visible by default
+                        SCENESCAPE_LABELS = ["vehicle", "pedestrian"]
                         label_filter = gr.Dropdown(
-                            choices=[],
-                            value=None,
+                            choices=SCENESCAPE_LABELS,
+                            value=SCENESCAPE_LABELS[0],
                             label="Detection Labels"
                         )
 
@@ -634,7 +635,7 @@ def create_ui():
                             value=0,
                             precision=0,
                             interactive=True,
-                            visible=False,  
+                            visible=True,
                         )
                     else:
                         # Original layout for frigate-only
@@ -673,25 +674,27 @@ def create_ui():
                     )
                     add_rule_btn = gr.Button("➕ Add Rule")
 
-                # 🔄 Trigger label load when dropdown loads (first time)
-                ui.load(
-                    fn=get_labels_for_camera,
-                    inputs=[camera_dropdown],
-                    outputs=[label_filter]
-                )
+                #  Trigger label load when dropdown loads (first time)
+                if not show_scenescape_source:
+                    ui.load(
+                        fn=get_labels_for_camera,
+                        inputs=[camera_dropdown],
+                        outputs=[label_filter]
+                    )
 
-                # 🔄 Also update labels when dropdown changes
-                camera_dropdown.change(
-                    fn=get_labels_for_camera,
-                    inputs=[camera_dropdown],
-                    outputs=[label_filter]
-                )
+                #  Also update labels when dropdown changes
+                if not show_scenescape_source:
+                    camera_dropdown.change(
+                        fn=get_labels_for_camera,
+                        inputs=[camera_dropdown],
+                        outputs=[label_filter]
+                    )
 
 
                 with gr.Row():
                     add_rule_alert = gr.Textbox(label="Status", visible=False)
 
-                # 🔘 Callback to add rule and show alert
+                # Callback to add rule and show alert
                 def add_rule_callback(camera, label, action, source, count_value):
                     resp = add_rule(
                         camera,
@@ -703,13 +706,13 @@ def create_ui():
                     message = resp
                     return gr.update(value=message, visible=True)
 
-                # ⏳ Hide alert after delay
+                #  Hide alert after delay
                 def delayed_hide():
                     time.sleep(5)
                     return gr.update(visible=False)
 
-                # 🚀 Show alert on rule add
-                # 🔘 Combined logic: show message, sleep, hide
+                #  Show alert on rule add
+                #  Combined logic: show message, sleep, hide
                 def add_rule_with_auto_hide(source, count_value, camera, label, action):
                     threshold = None
                     if source == "scenescape":
@@ -740,7 +743,7 @@ def create_ui():
                     # Show message
                     yield gr.update(value=message, visible=True)
 
-                    # Keep it visible for 5 seconds
+                    # Keep it visible for 3 seconds
                     time.sleep(3)
 
                     # Hide message
@@ -752,7 +755,7 @@ def create_ui():
                     outputs=[add_rule_alert],
                 )
 
-                # ⏱️ Automatically hide after 5 seconds
+                #  Automatically hide after 5 seconds
                 # add_rule_event.then(
                 #     fn=delayed_hide,
                 #     inputs=[],
@@ -804,7 +807,7 @@ def create_ui():
 
                         except Exception as e:
                             logger.error(f"Error deleting rule: {str(e)}")
-                            return f"❌ Error: {str(e)}", load_rules()
+                            return f" Error: {str(e)}", load_rules()
 
                     return "Click the delete icon (🗑️) to remove a rule", load_rules()
 
