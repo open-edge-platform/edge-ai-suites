@@ -18,7 +18,7 @@ rppg:
       model_file: mtts_can.hdf5
       model_url: https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5
       video_dir: /videos/rppg
-      video_url: https://github.com/opencv/opencv/raw/master/samples/data/vtest.avi
+      video_url: https://www.pexels.com/download/video/6010959
 
 pose-3d:
   models:

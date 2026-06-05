@@ -57,8 +57,7 @@ def predict_ecg(filename: str):
         return {
             "file": filename,
             "signal": h_pred["signal"],
-            # No AF classifier is attached; expose embedding only.
-            "result": "N/A",
+            "result": h_pred["classification"],
             "inference_ms": h_pred["inference_ms"],
             "length": h_pred["length"],
             "hubert_embedding": h_pred["embedding"],
@@ -94,7 +93,7 @@ def predict_stream_next():
         return {
             "file": filename,
             "signal": h_pred["signal"],
-            "result": "N/A",
+            "result": h_pred["classification"],
             "inference_ms": h_pred["inference_ms"],
             "length": h_pred["length"],
             "hubert_embedding": h_pred["embedding"],
