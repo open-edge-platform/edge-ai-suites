@@ -611,7 +611,7 @@ async def get_metrics_status():
     """Application-level metrics for monitoring."""
     return {
         "active_streams": len(manager.streams) if manager else 0,
-        "active_agents": sum(1 for a in manager.agents_config if a.get('enabled', False)) if manager else 0,
+        "active_agents": sum(1 for a in manager.alerts if a.enabled) if manager else 0,
         "total_alerts": sum(
             1 for results in (manager.latest_results.values() if manager else [])
             for r in results.values() if r.get('answer', '').lower() == 'yes'
