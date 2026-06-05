@@ -37,4 +37,4 @@ In the **PTP** feature group, configure the following settings to match the MOXA
 
 ## Verification
 
-Once configured, the camera will synchronize its PTP clock to the MOXA switch Grandmaster. You can verify the sync status in pylon Viewer under the **PTP** feature group — look for a `Synchronized` or `Master` indicator.
+Once configured, the camera will synchronize its PTP clock to the MOXA switch Grandmaster. You can verify the `IEEE 1588 Parent Clock ID` in pylon Viewer under the **PTP** feature group — it should match the Grandmaster clock ID (MAC address) of the MOXA switch.
