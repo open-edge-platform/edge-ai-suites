@@ -1,4 +1,4 @@
-# Configure Embedding Creation with RAG
+# Caption Embedding with RAG
 
 This guide explains how to enable caption embedding creation in Live Video Captioning and connect it with the [Live Video Captioning RAG](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/live-captioning-rag/index.html) service for Retrieval-Augmented Generation (RAG) chat.
 
@@ -22,7 +22,7 @@ When enabled:
 - Docker Engine software and Docker Compose tool are installed.
 - Complete the base setup in [Get Started](../get-started.md).
 - VLM models are prepared for the captioning pipeline (`ov_models/`). See [Model Preparation](../get-started/model-preparation.md).
-- LLM models are prepared for the RAG pipeline (`llm_models/`). See [RAG Model Download](./rag-model-download/README.md).
+- LLM models are prepared for the RAG pipeline (`llm_models/`). See [RAG Model Download](./rag-model-download.md).
 - Ensure that this is a fresh installation. If you have deployed only live-video-captioning or only live-video-captioning-rag previously, stop those deployments and follow the instructions in this section to deploy both together.
 
 ## Enabling Embedding Creation with RAG
@@ -109,6 +109,6 @@ docker compose down
 ## Supporting Resources
 
 - [Get Started](../get-started.md) - Base setup and deployment flow
-- [RAG Model Download](./rag-model-download/README.md) - Optional LLM model setup for RAG
+- [RAG Model Download](./rag-model-download.md) - Optional LLM model setup for RAG
 - [API Reference](../api-reference.md) - Live Video Captioning API endpoints
 - [System Requirements](../get-started/system-requirements.md) - Hardware and software requirements
