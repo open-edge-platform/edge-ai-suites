@@ -194,7 +194,7 @@ following cURL command.
     -d "$(sed 's/"device": "CPU"/"device": "GPU"/' pipeline-request-cpu.json)"
   ```
 
-- To run inference on `GPU`,
+- To run inference on `NPU`,
 
   ```bash
   cd edge-ai-suites/manufacturing-ai-suite/industrial-edge-insights-multimodal/configs/dlstreamer-pipeline-server

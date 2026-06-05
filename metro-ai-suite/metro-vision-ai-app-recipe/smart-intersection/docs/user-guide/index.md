@@ -40,8 +40,6 @@ with existing cameras and deliver real-time, coordinated insights for smarter tr
 - **Reduced TCO**: works with the existing cameras, and makes scaling with additional sensors
   and cameras easy. This simplifies business logic development, and future-proofs the solution.
 
-
-
 ## Learn More
 
 - [Security Enablement](https://docs.openedgeplatform.intel.com/2026.1/OEP-articles/application-security.html)
@@ -52,13 +50,14 @@ with existing cameras and deliver real-time, coordinated insights for smarter tr
 :::{toctree}
 :hidden:
 
-get-started
-how-it-works
-how-to-use-gpu-for-inference
-how-to-use-npu-for-inference
-export-and-optimize-geti-model
-troubleshooting
-release-notes
+./get-started.md
+./how-it-works.md
+./how-to-use-gpu-for-inference.md
+./how-to-use-npu-for-inference.md
+RTSP Stream Setup <./how-to-setup-rtsp.md>
+./export-and-optimize-geti-model.md
+./troubleshooting.md
+./release-notes.md
 
 :::
 hide_directive-->

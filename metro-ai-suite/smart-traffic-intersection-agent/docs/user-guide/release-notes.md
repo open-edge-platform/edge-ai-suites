@@ -8,6 +8,7 @@
 
 - Added `response_format` (JSON schema) support for structured VLM output via OVMS structured generation.
 - Added alert deduplication and short-analysis fallback for improved VLM response handling.
+- Add XPU support, enabling NPU for Smart Intersection, CPU for traffic agent, and GPU for OVMS.
 
 **Improved**
 
@@ -23,6 +24,7 @@
 **Known Issues**
 
 - VLM Openvino Serving container supported additional telemetry data that OpenVINO Model Server (OVMS) does not expose which may result in loss of telemetry information.
+- Vehicle count on UI shows 0 due to issue with Smart Intersection on Arrow Lake, Meteor Lake NPU
 
 
 ## Version 1.0.0

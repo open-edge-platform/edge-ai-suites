@@ -2,10 +2,10 @@
 
 <!--hide_directive
 <div class="component_card_widget">
-   <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/release-2026.1.0/education-ai-suite/smart-classroom">
+  <a class="icon_github" href="https://github.com/open-edge-platform/edge-ai-suites/tree/main/education-ai-suite/smart-classroom">
      GitHub
   </a>
-   <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/release-2026.1.0/education-ai-suite/smart-classroom/README.md">
+  <a class="icon_document" href="https://github.com/open-edge-platform/edge-ai-suites/blob/main/education-ai-suite/smart-classroom/README.md">
      Readme
   </a>
 </div>
@@ -48,8 +48,8 @@ The main features are as follows:
 :::{toctree}
 :hidden:
 
-./quick-start
 ./get-started
+./advance-setup-guide
 ./how-it-works
 ./application-flow
 Release Notes <./release-notes>

@@ -169,7 +169,7 @@ check_and_setup_dependencies() {
         # Run git clone to fetch the dependencies (sparse, shallow)
         echo -e "${YELLOW}Dependencies not found. Cloning repository...${NC}"
         git clone --filter=blob:none --sparse --depth 1 \
-            --branch release-2026.0.0 \
+            --branch release-2026.1.0 \
             https://github.com/open-edge-platform/edge-ai-suites.git \
             "$CLONE_PATH"
         git -C "$CLONE_PATH" sparse-checkout set metro-ai-suite/metro-vision-ai-app-recipe

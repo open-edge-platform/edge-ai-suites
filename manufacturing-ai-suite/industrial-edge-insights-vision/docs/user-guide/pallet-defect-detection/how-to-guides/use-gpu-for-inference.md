@@ -28,9 +28,9 @@ The changes above adds the container user to the `render` group and provides acc
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-GStreamer has a variety of hardware specific encoders and decoders elements such as Intel specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
-Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated and discrete).
+Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® GPUs (integrated and discrete).
 
 Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
@@ -44,7 +44,7 @@ If you have multiple GPUs (integrated/discrete), please follow [this](https://do
 
 ## Tutorial on how to use GPU specific pipelines
 
-> Note - This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
+> **Note:** This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
 The pipeline `pallet_defect_detection_gpu` contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
 
