@@ -30,9 +30,9 @@ openvino==2025.4.0
 openvino-genai==2025.4.0.0
 openvino-telemetry==2025.2.0
 openvino-tokenizers==2025.4.0.0
-optimum @ git+https://github.com/huggingface/optimum@cebb682db5873a3f47fb92cd0cac492b2f592b72
+optimum @ git+https://github.com/huggingface/optimum
 optimum-intel @ git+https://github.com/huggingface/optimum-intel.git@af22fd6ec41fd5fa5c525846778c6c4f9397db21
-optimum-onnx @ git+https://github.com/huggingface/optimum-onnx.git@de1c547971a2215e4ea355fa1c9dcbf38fa3d83a
+optimum-onnx @ git+https://github.com/huggingface/optimum-onnx.git@transformers-v5
 packaging==26.1
 pillow==12.2.0
 protobuf==7.34.1

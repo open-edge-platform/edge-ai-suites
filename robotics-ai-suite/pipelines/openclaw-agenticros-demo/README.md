@@ -46,6 +46,8 @@ The system enables natural language control of the robot, including:
 
 ## Installation
 
+> Path note: this guide uses `~/edge-ai-suites/...` as an example checkout root. If you cloned the repository elsewhere, replace those paths with your local repository root.
+
 ### 0. Clone Deployment Repository
 
 First, clone this deployment folder with all submodules:
@@ -81,10 +83,8 @@ python3 -m venv ~/env_hf
 source ~/env_hf/bin/activate
 pip install -U "huggingface_hub[cli]"
 
-# Login to Hugging Face (requires token with Qwen model access)
-huggingface-cli login
-
 # Download Qwen3-VL-8B-Instruct model
+# Login is not required for the public download used in this setup
 mkdir -p ~/models
 cd ~/models
 hf download Qwen/Qwen3-VL-8B-Instruct --local-dir qwen3-vl-8b-instruct
@@ -128,6 +128,8 @@ The `qwen3_vl_openvino_requirements.txt` includes:
 - `optimum` and `optimum-intel` - Hugging Face model conversion tools
 - `nncf==3.1.0` - Neural Network Compression Framework
 - `transformers==5.0.0` - Hugging Face transformers
+
+**Validated on this host:** the public model download worked without Hugging Face login. If your environment enforces model access control, authenticate before downloading.
 - `qwen-vl-utils==0.0.14` - Qwen VL utilities
 - Additional dependencies for model conversion and quantization
 
@@ -145,6 +147,8 @@ cd ~/models
 # Pull OVMS Docker image (OVMS 2026.1 or later required for Qwen3-VL)
 docker pull openvino/model_server:latest-gpu
 
+> Note: if the image pull times out behind a corporate proxy, configure the Docker daemon proxy before retrying.
+
 # Start OVMS container
 docker run -d --rm \
   --name ovms-qwen3-vl \
@@ -153,7 +157,7 @@ docker run -d --rm \
   -v $(pwd):/models:rw \
   -p 8000:8000 \
   openvino/model_server:latest-gpu \
-  --model_repository_path /models \
+  --model_path /models/qwen3-vl-8b-ov-int4 \
   --model_name qwen3-vl-8b-ov-int4 \
   --rest_port 8000 \
   --target_device "$TARGET_DEVICE" \
@@ -390,6 +394,8 @@ sudo apt install -y \
   ros-jazzy-moveit-ros-planning-interface \
   ros-jazzy-moveit-visual-tools \
   ros-jazzy-rviz2
+
+> Note: on the validation host, `ros-jazzy-gazebo-ros-pkgs` was not available from the configured apt repositories. `ros-jazzy-rosbridge-suite` installed successfully, and `apt-cache search '^ros-jazzy-.*gazebo.*'` can be used to find distro-available Gazebo packages if you hit the same gap.
 
 # Verify ROS2 installation
 source /opt/ros/jazzy/setup.bash
