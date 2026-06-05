@@ -15,7 +15,7 @@ The Deterministic Threat Detection with Time-Sensitive Networking (TSN) project 
 | **Camera(s)** | Video source; supports cameras that use the Real-Time Streaming Protocol (RTSP) with either the Network Time Protocol (NTP) or the generalized Precision Time Protocol (gPTP), or the Basler GigE cameras that use IEEE 1588 version 2 hardware Precision Time Protocol (PTP). |
 | **Traffic Injector** | Runs `iperf3` to generate background congestion and demonstrate TSN protection |
 
-This project demonstrates two complementary use cases for industrial edge AI, both use the TSN infrastructure to protect latency-sensitive streams from background congestion:
+This project demonstrates two complementary use cases for industrial edge AI, both using the TSN infrastructure to protect latency-sensitive streams from background congestion:
 
 ### Use Case 1 — Multi-Camera AI Inference with Deterministic Delivery
 
