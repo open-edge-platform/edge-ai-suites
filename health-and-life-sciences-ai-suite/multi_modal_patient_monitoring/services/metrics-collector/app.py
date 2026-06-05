@@ -668,7 +668,7 @@ def get_platform_info() -> Dict[str, Any]:
                     return line.split(":", 1)[-1].strip()
         except Exception:
             pass
-        return "Intel AI Boost"
+        return None
 
     # Processor
     processor = detect_cpu_model()
