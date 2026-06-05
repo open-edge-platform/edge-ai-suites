@@ -167,10 +167,15 @@ def convert_model(
     dynamic_width: bool = False,
 ) -> tuple:
 
+    output_dir = output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     stem = model_name or pdmodel_path.stem
     xml_path = output_dir / f"{stem}.xml"
     bin_path = output_dir / f"{stem}.bin"
+
+    if xml_path.exists() and bin_path.exists():
+        log.info("Skipping conversion, IR already exists: %s", xml_path)
+        return xml_path, bin_path
 
     log.info("Reading model: %s", pdmodel_path)
     ov_model = ov.convert_model(str(pdmodel_path))
