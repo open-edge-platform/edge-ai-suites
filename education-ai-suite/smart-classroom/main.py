@@ -1,4 +1,7 @@
 import sys
+import warnings
+warnings.filterwarnings("ignore", message=r"[\s\S]*torchcodec is not installed correctly")
+
 from utils import system_checker
 
 from utils.logger_config import setup_logger

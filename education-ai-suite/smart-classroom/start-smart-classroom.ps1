@@ -620,13 +620,11 @@ Write-Host ""
 Write-Host "[3/4] CHECKING CONFIGURATION" -ForegroundColor Green
 Write-Host "----------------------------" -ForegroundColor Green
 
-$ocrEnabled = $false
 $configPath = Join-Path $ScriptDir "config.yaml"
 if (Test-Path $configPath) {
     $configContent = Get-Content $configPath -Raw
     if ($configContent -match "ocr:\s*\n\s*enabled:\s*true") {
-        $ocrEnabled = $true
-        Write-Host "  OCR: Enabled (will install paddleocr)" -ForegroundColor Yellow
+        Write-Host "  OCR: Enabled" -ForegroundColor Yellow
     } else {
         Write-Host "  OCR: Disabled" -ForegroundColor Gray
     }
@@ -811,16 +809,6 @@ if ($IsWindowsOS) {
     } else {
         Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
         
-        # Build paddleocr install command if OCR enabled
-        $paddleocrCmd = ""
-        if ($ocrEnabled) {
-            $paddleocrCmd = @"
-
-Write-Host ''
-Write-Host 'Installing PaddleOCR (OCR enabled in config)...' -ForegroundColor Yellow
-pip install paddleocr==2.7.0.3 --no-deps
-"@
-        }
         
         $backendScript = @"
 `$ErrorActionPreference = 'Continue'
@@ -871,7 +859,6 @@ Write-Host ''
 Write-Host 'Upgrading pip and installing requirements...' -ForegroundColor Yellow
 python -m pip install --upgrade pip
 pip install --upgrade -r requirements.txt
-$paddleocrCmd
 
 Write-Host ''
 Write-Host 'Starting Backend Service (port 8000)...' -ForegroundColor Green
@@ -1078,7 +1065,6 @@ npm run dev -- --host 0.0.0.0 --port 5173
         Write-Host "Skipping Backend (already running on port 8000)" -ForegroundColor Yellow
     } else {
         Write-Host "Launching Terminal 1: Backend..." -ForegroundColor Yellow
-        $paddleCmd = if ($ocrEnabled) { "pip install paddleocr==2.7.0.3 --no-deps; " } else { "" }
         $parentDir = Split-Path $ScriptDir -Parent
         $be_bash = @"
 $proxyExport
@@ -1094,7 +1080,6 @@ source smartclassroom/bin/activate
 cd smart-classroom
 pip install --upgrade pip
 pip install -r requirements.txt
-$paddleCmd
 echo 'Starting Backend (port 8000)...'
 python main.py
 exec bash

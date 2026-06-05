@@ -1,0 +1,132 @@
+mqtt:
+  enabled: false
+
+auth:
+  enabled: false
+
+logger:
+  default: info
+
+go2rtc:
+  streams:
+    backyard:
+      - ffmpeg:/videos/backyard.mp4#video=copy#loop
+    livingroom:
+      - ffmpeg:/videos/livingroom.mp4#video=copy#loop
+    garage:
+      - ffmpeg:/videos/garage.mp4#video=copy#loop
+    warehouse:
+      - ffmpeg:/videos/warehouse.mp4#video=copy#loop
+
+record:
+  enabled: true
+  retain:
+    days: 7
+    mode: all
+
+cameras:
+  backyard:
+    ffmpeg:
+      inputs:
+        - path: /videos/backyard.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [bicycle, car, motorcycle, person]
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+
+  livingroom:
+    ffmpeg:
+      inputs:
+        - path: /videos/livingroom.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [person]
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+
+  garage:
+    ffmpeg:
+      inputs:
+        - path: /videos/garage.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [bicycle, car, motorcycle, person]
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+
+  warehouse:
+    ffmpeg:
+      inputs:
+        - path: /videos/warehouse.mp4
+          input_args: -re -stream_loop -1 -fflags +genpts
+          roles:
+            - detect
+            - record
+    detect:
+      enabled: true
+      max_disappeared: 30
+    objects:
+      track: [bicycle, car, motorcycle, person]
+      filters:
+        person:
+          min_score: 0.6
+          threshold: 0.80
+    record:
+      enabled: true
+      retain:
+        days: 1
+    snapshots:
+      enabled: true
+      retain:
+        default: 1
+
+version: 0.15-1

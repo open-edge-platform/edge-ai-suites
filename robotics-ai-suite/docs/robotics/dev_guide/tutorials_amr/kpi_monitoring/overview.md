@@ -15,8 +15,11 @@ distribution.
 - Real-time ROS2 graph monitoring: nodes, topics, message rates, processing delays
 - Automatic **per-node** input→output processing delay for every node in the graph (no `--node` flag required)
 - CPU, memory, and I/O monitoring via `pidstat` (thread-level or PID-only)
+- Intel&trade; GPU and NPU hardware monitoring (`--gpu`, `--npu`)
 - Cross-machine monitoring via `--remote-ip` (DDS peer discovery + SSH)
-- Interactive visualizations: heatmaps, timelines, core utilization, scatter plots
+- Interactive visualizations: heatmaps, timelines, core utilization, scatter plots, GPU/NPU/thermal dashboards
+- Grafana + Prometheus integration for live dashboards and metric export
+- Automated benchmark scripts for Wandering AMR, Pick & Place, FastMapping, and bag-replay scenarios
 - ROS bag analysis with latency tracking and CPU-cycle estimation
 - Organized session output with auto-generated visualizations
 
@@ -79,8 +82,8 @@ uv run python src/monitor_stack.py [OPTIONS]
 | `--resources-only` | Skip graph monitoring |
 | `--pid-only` | Process-level only, no thread details |
 | `--no-visualize` | Skip auto-visualization on exit |
-| `--gpu` | Enable Intel GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
-| `--npu` | Enable Intel NPU monitoring via sysfs |
+| `--gpu` | Enable Intel&trade; GPU monitoring (uses `qmassa`; falls back to sysfs remotely) |
+| `--npu` | Enable Intel&trade; NPU monitoring via sysfs |
 | `--remote-ip IP` | Monitor a remote machine |
 | `--remote-user USER` | SSH user for remote machine (default: ubuntu) |
 | `--ros-domain-id ID` | Explicitly set `ROS_DOMAIN_ID` (skips auto-detection) |
@@ -121,8 +124,8 @@ delay is computed for each node automatically — no `--node` filter needed.
 | `visualize_resources.py` | CPU/memory plots, heatmaps, thread-core mapping |
 | `visualize_timing.py` | Message timestamps, frequencies, and delay plots |
 | `visualize_graph.py` | Interactive ROS2 computation graph topology diagram |
-| `visualize_gpu.py` | Intel GPU busy%, frequency, temperature, power, and per-PID usage |
-| `visualize_npu.py` | Intel NPU busy%, clock frequency, and memory utilization |
+| `visualize_gpu.py` | Intel&trade; GPU busy%, frequency, temperature, power, and per-PID usage |
+| `visualize_npu.py` | Intel&trade; NPU busy%, clock frequency, and memory utilization |
 | `visualize_thermal.py` | CPU/GPU temperature, throttle state, and package power |
 | `visualize_kpi.py` | KPI summary plots across benchmark sessions |
 | `view_average.py` | Aggregate statistics across multiple sessions |

@@ -1,0 +1,60 @@
+# Copyright (C) 2025 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+
+# VMS Plugin Microservice : Default Configuration
+# All ${ENV_VAR} references are resolved from environment variables at startup.
+
+vms_instances:
+  - name: frigate-main
+    vendor: frigate
+    base_url: "http://${FRIGATE_HOST}:5000"
+    auth:
+      auth_type: none
+
+  - name: nx-main
+    vendor: nx_witness
+    base_url: "https://${NX_HOST}:7001"
+    tls_verify: ${NX_TLS_VERIFY:-false}
+    tls_ca_bundle: "${NX_CA_BUNDLE:-}"
+    auth:
+      username: "${NX_USERNAME}"
+      password: "${NX_PASSWORD}"
+      auth_type: digest
+
+analytics_apps:
+  - type: live_captioning
+    base_url: "http://${LVC_HOST:-host.docker.internal}:${LVC_PORT:-4173}"
+    mediamtx_url: "http://${MEDIAMTX_HOST:-host.docker.internal}:${MEDIAMTX_PORT:-8889}"
+
+  - type: object_detection
+    app_id: "dls_vision"
+    display_name: "Loitering Detection"
+    base_url: "https://${DLS_VISION_HOST:-host.docker.internal}:${DLS_VISION_PORT:-443}/api"
+    tls_verify: ${DLS_VISION_TLS_VERIFY:-false}
+    tls_ca_bundle: "${DLS_VISION_CA_BUNDLE:-}"
+    mqtt_host: "${MQTT_HOST:-host.docker.internal}"
+    mqtt_port: ${MQTT_PORT:-1883}
+    pipeline_server_mqtt_host: "${PIPELINE_SERVER_MQTT_HOST:-172.18.0.1}"
+    pipeline_server_mqtt_port: ${PIPELINE_SERVER_MQTT_PORT:-1883}
+    # Map detection labels (case-insensitive) to Nx Witness object typeIds.
+    # Labels not listed here fall back to "python.detected.object".
+    # These types are also registered in the Nx manifest automatically at startup.
+    label_type_map:
+      vehicle: vap.vehicle
+      pedestrian: vap.pedestrian
+      background: vap.background
+
+api:
+  host: "0.0.0.0"
+  port: 8080
+  api_key: "${VMS_PLUGIN_API_KEY:-}"
+
+mqtt:
+  host: "${MQTT_BROKER_HOST:-}"
+  port: ${MQTT_BROKER_PORT:-1883}
+
+database:
+  url: "postgresql+asyncpg://${PG_USER:-vms}:${PG_PASSWORD:-vms}@${PG_HOST:-postgres}:${PG_PORT:-5434}/vms_plugin"
+
+logging:
+  level: "info"
