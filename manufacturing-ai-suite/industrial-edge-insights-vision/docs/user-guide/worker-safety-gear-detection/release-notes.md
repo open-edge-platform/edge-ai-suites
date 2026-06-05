@@ -8,10 +8,6 @@
 - Deprecated EMF deployment packages.
 - This app is planned for removal in the 2026.2 release.
 
-**Improved**
-
-- DL Streamer Pipeline Server version upgraded to 2026.1.0.
-
 ## Version 1.2.0
 
 **New**
