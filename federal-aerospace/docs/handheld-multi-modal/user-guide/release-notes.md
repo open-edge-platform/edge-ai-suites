@@ -4,11 +4,11 @@
 
 **2026**
 
-This is the initial release of the application, therefore, it is considered a preview version.
+This is the initial release of the application, therefore, it is a preview version.
 
 **New**
 
-The initial feature set of the application is now available:
+The application has the following features:
 
 - Scripts to build power-optimized OS with built-in drivers for hardware, for example, GPU, NPU, and Single Root I/O Virtualization (SR-IOV).
 - Local LLM inference server
@@ -18,4 +18,4 @@ The initial feature set of the application is now available:
 
 **Known issues**
 
-- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The virtual function works correctly when the physical function is used.
+- When the virtual function is used for GPU, metrics in the Visual Pipeline and Platform Evaluation Tool are not available. The metrics are exposed correctly when the physical function is used.
