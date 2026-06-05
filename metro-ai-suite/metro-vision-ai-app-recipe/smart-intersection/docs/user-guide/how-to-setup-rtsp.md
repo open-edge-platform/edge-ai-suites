@@ -1,4 +1,4 @@
-# RTSP Stream Setup for Smart Intersection
+# RTSP Stream Setup
 
 Steps to serve the intersection `.ts` video files over RTSP using mediamtx and ffmpeg.
 
