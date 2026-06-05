@@ -13,6 +13,9 @@ from api.endpoints.summarization_api import SummarizationService
 from service.vms_service import VmsService
 from service import redis_store
 import requests
+import logging
+
+logger = logging.getLogger(__name__)
 
 class CameraWatcherRequest(BaseModel):
     cameras: List[Dict[str, bool]]
@@ -116,7 +119,8 @@ async def get_search_responses(request: Request):
         return output
 
     except Exception as e:
-        return {"error": str(e)}
+        logger.error("Failed to fetch search responses: %s", e, exc_info=True)
+        return {"error": "Failed to fetch search responses. Please try again later."}
 
 
 class Rule(BaseModel):
@@ -212,8 +216,8 @@ async def get_camera_watcher_mapping(request: Request = None):
             # Merge so that any runtime changes override persisted values
             merged = {**persisted, **runtime_mapping}
     except Exception as e:
-        # Include error info but still return something useful
-        return {"mapping": merged, "warning": f"Redis load failed: {e}"}
+        logger.error("Redis load failed for camera watcher mapping: %s", e, exc_info=True)
+        return {"mapping": merged}
     return {"mapping": merged}
 
 
