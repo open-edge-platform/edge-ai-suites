@@ -7,6 +7,7 @@ import logging
 import re
 import uuid
 from typing import AsyncGenerator, Optional
+from urllib.parse import quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from ..config import (
@@ -18,13 +19,14 @@ from ..config import (
 )
 from ..models import RunInfo, StartRunRequest
 from ..models.requests import DEFAULT_PROMPT
-from ..services import http_json, get_mqtt_subscriber
+from ..services import discover_pipelines_remote, http_json, get_mqtt_subscriber
 from ..state import RUNS
 
 router = APIRouter(prefix="/api", tags=["captions"])
 logger = logging.getLogger("app.runs")
 WEBRTC_PEER_ID_MAX_LENGTH = 8
 WEBRTC_PEER_ID_PREFIX = "s"
+DEFAULT_RESOLUTION_SUFFIX = "_Default_Resolution"
 
 
 def _is_linux_video_device(source_uri: str) -> bool:
@@ -35,6 +37,39 @@ def _is_linux_video_device(source_uri: str) -> bool:
 def _is_camera_pipeline_name(pipeline_name: str) -> bool:
     """Best-effort check for camera-capable pipeline identifiers."""
     return "camera" in (pipeline_name or "").strip().lower()
+
+
+def _resolve_pipeline_name(requested_pipeline: str) -> str:
+    """Resolve requested pipeline name against discovered pipeline identifiers."""
+    normalized = (requested_pipeline or "").strip()
+    if not normalized:
+        return PIPELINE_NAME
+
+    discovered = discover_pipelines_remote()
+    allowed_names = {
+        (item.get("pipeline_name") or "").strip()
+        for item in discovered
+        if isinstance(item, dict)
+    }
+    # The /api/pipelines response intentionally hides proxy pipelines ending with
+    # _Default_Resolution. Accept those internal aliases only for discovered base names.
+    allowed_names.update(
+        {
+            f"{name}{DEFAULT_RESOLUTION_SUFFIX}"
+            for name in allowed_names
+            if name and not name.endswith(DEFAULT_RESOLUTION_SUFFIX)
+        }
+    )
+    for allowed_name in allowed_names:
+        if allowed_name == normalized:
+            return allowed_name
+
+    raise HTTPException(
+        status_code=400,
+        detail={
+            "message": f"Unknown pipelineName '{normalized}'. Choose one from /api/pipelines.",
+        },
+    )
 
 
 def _sanitize_run_name(run_name: str) -> str:
@@ -142,7 +177,7 @@ async def start_run(req: StartRunRequest) -> RunInfo:
     requested_pipeline = (req.pipelineName or "").strip()
     using_camera_source = _is_linux_video_device(requested_source)
 
-    pipeline_name = requested_pipeline or PIPELINE_NAME
+    pipeline_name = _resolve_pipeline_name(requested_pipeline)
     if using_camera_source and not _is_camera_pipeline_name(pipeline_name):
         if requested_pipeline:
             detail_message = (
@@ -181,11 +216,11 @@ async def start_run(req: StartRunRequest) -> RunInfo:
     # MQTT topic for this run's metadata
     mqtt_topic = f"{MQTT_TOPIC_PREFIX}"
 
-    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{pipeline_name}"
+    encoded_pipeline_name = quote(pipeline_name, safe="")
+    start_url = f"{PIPELINE_SERVER_URL.rstrip('/')}/pipelines/user_defined_pipelines/{encoded_pipeline_name}"
     payload = _build_start_payload(req, run_id, peer_id)
 
-    logger.debug(f"Starting pipeline {pipeline_name} with URL: {start_url}")
-    logger.debug(f"Pipeline payload: {json.dumps(payload, indent=2)}")
+    logger.debug("Starting caption pipeline request")
 
     raw = http_json("POST", start_url, payload=payload)
     pipeline_id = _extract_pipeline_id(raw)
