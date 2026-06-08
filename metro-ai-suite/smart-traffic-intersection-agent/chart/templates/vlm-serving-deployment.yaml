@@ -7,7 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 {{- $needsGpu := contains "GPU" $targetDevice -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}
 {{- $sanitized := .Values.vlmServing.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
-{{- $storageName := printf "%s_%s_%s" $sanitized $targetDevice $weightFormat -}}
+{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.vlmServing.env.modelName -}}
+{{- $storageName := ternary (printf "%s_%s" $sanitized $targetDevice) (printf "%s_%s_%s" $sanitized $targetDevice $weightFormat) $isOpenvino -}}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -85,13 +86,7 @@ spec:
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.httpsProxy | quote }}
-            - name: HTTP_PROXY
-              value: {{ .Values.global.proxy.httpProxy | quote }}
-            - name: HTTPS_PROXY
-              value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
-              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
-            - name: NO_PROXY
               value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
             - name: PIP_TRUSTED_HOST
               value: "storage.openvinotoolkit.org download.pytorch.org"

@@ -7,7 +7,7 @@
 # Pattern aligned with edge-ai-libraries sample apps (VSS, DocSum).
 #
 # Args (passed via Kubernetes args field):
-#   $0 = VLM model name (e.g. OpenVINO/Phi-3.5-vision-instruct-int8-ov)
+#   $0 = VLM model name (e.g. microsoft/Phi-3.5-vision-instruct)
 #   $1 = VLM weight format (e.g. int4)
 #   $2 = HuggingFace token (optional)
 #   $3 = VLM target device (e.g. GPU, CPU)
@@ -21,7 +21,10 @@ target_device=$3
 
 # Compute storage-aware model name: {sanitized}_{device}_{format}
 sanitized=$(printf '%s' "$model" | sed 's#[^A-Za-z0-9_.-]#_#g')
-storage_name="${sanitized}_${target_device}_${weight_format}"
+case "$model" in
+    OpenVINO/*) storage_name="${sanitized}_${target_device}" ;;
+    *)          storage_name="${sanitized}_${target_device}_${weight_format}" ;;
+esac
 
 case "$target_device" in
     *GPU*|*NPU*) cache_size=2 ;;
