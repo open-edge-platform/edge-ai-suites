@@ -12,6 +12,9 @@ from fastapi import HTTPException
 from backend.services.http_client import http_json, try_get_json
 
 
+TRUSTED_BASE = "http://dlstreamer-pipeline-server:8080"
+
+
 class TestHttpJsonSuccess:
     """Happy-path tests for http_json."""
 
@@ -26,7 +29,7 @@ class TestHttpJsonSuccess:
             "backend.services.http_client.urllib_request.urlopen",
             return_value=mock_resp,
         ):
-            result = http_json("GET", "http://example.com/api")
+            result = http_json("GET", f"{TRUSTED_BASE}/api")
         assert result == '{"ok": true}'
 
     def test_post_request_with_payload(self):
@@ -40,7 +43,7 @@ class TestHttpJsonSuccess:
             "backend.services.http_client.urllib_request.urlopen",
             return_value=mock_resp,
         ) as mock_open:
-            result = http_json("POST", "http://example.com/api", payload={"key": "val"})
+            result = http_json("POST", f"{TRUSTED_BASE}/api", payload={"key": "val"})
 
         assert result == '"pipeline-123"'
         # Verify the request was constructed with data
@@ -66,7 +69,7 @@ class TestHttpJsonErrors:
             "backend.services.http_client.urllib_request.urlopen", side_effect=err
         ):
             with pytest.raises(HTTPException) as exc_info:
-                http_json("GET", "http://example.com/api")
+                http_json("GET", f"{TRUSTED_BASE}/api")
         assert exc_info.value.status_code == 502
         assert "Pipeline server error" in str(exc_info.value.detail)
 
@@ -77,7 +80,7 @@ class TestHttpJsonErrors:
             side_effect=URLError("Connection refused"),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                http_json("GET", "http://unreachable:8080/api")
+                http_json("GET", f"{TRUSTED_BASE}/api")
         assert exc_info.value.status_code == 502
         assert "unreachable" in str(exc_info.value.detail)
 
@@ -94,7 +97,7 @@ class TestHttpJsonErrors:
             "backend.services.http_client.urllib_request.urlopen", side_effect=err
         ):
             with pytest.raises(HTTPException) as exc_info:
-                http_json("DELETE", "http://example.com/api")
+                http_json("DELETE", f"{TRUSTED_BASE}/api")
         assert exc_info.value.status_code == 502
 
     def test_os_error_raises_502(self):
@@ -104,10 +107,20 @@ class TestHttpJsonErrors:
             side_effect=OSError("broken pipe"),
         ):
             with pytest.raises(HTTPException) as exc_info:
-                http_json("GET", "http://example.com/api")
+                http_json("GET", f"{TRUSTED_BASE}/api")
 
         assert exc_info.value.status_code == 502
         assert "connection failed" in str(exc_info.value.detail)
+
+    def test_untrusted_url_rejected_before_request(self):
+        """Requests to non-configured hosts are rejected without making network calls."""
+        with patch("backend.services.http_client.urllib_request.urlopen") as mock_open:
+            with pytest.raises(HTTPException) as exc_info:
+                http_json("GET", "http://example.com/api")
+
+        assert exc_info.value.status_code == 400
+        assert "not allowed" in str(exc_info.value.detail)
+        mock_open.assert_not_called()
 
 
 class TestTryGetJson:
@@ -125,7 +138,7 @@ class TestTryGetJson:
             "backend.services.http_client.urllib_request.urlopen",
             return_value=mock_resp,
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
 
         assert status == 200
         assert body == {"ok": True}
@@ -142,7 +155,7 @@ class TestTryGetJson:
             "backend.services.http_client.urllib_request.urlopen",
             return_value=mock_resp,
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
 
         assert status == 200
         assert body is None
@@ -160,7 +173,7 @@ class TestTryGetJson:
         with patch(
             "backend.services.http_client.urllib_request.urlopen", side_effect=err
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
 
         assert status == 503
         assert body == {"error": "down"}
@@ -178,7 +191,7 @@ class TestTryGetJson:
         with patch(
             "backend.services.http_client.urllib_request.urlopen", side_effect=err
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
 
         assert status == 500
         assert body is None
@@ -189,7 +202,7 @@ class TestTryGetJson:
             "backend.services.http_client.urllib_request.urlopen",
             side_effect=URLError("connection refused"),
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
         assert status is None
         assert body is None
 
@@ -197,6 +210,12 @@ class TestTryGetJson:
             "backend.services.http_client.urllib_request.urlopen",
             side_effect=OSError("network down"),
         ):
-            status, body = try_get_json("http://example.com/status")
+            status, body = try_get_json(f"{TRUSTED_BASE}/status")
+        assert status is None
+        assert body is None
+
+    def test_untrusted_url_returns_none_tuple(self):
+        """Untrusted target URLs are rejected as connection failures for callers."""
+        status, body = try_get_json("https://example.com/status")
         assert status is None
         assert body is None

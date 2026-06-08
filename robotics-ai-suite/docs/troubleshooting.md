@@ -3,7 +3,7 @@
 ## Quick Navigation
 
 - [Humanoid Imitation Learning](#humanoid_embodied_troubleshooting)
-- [Stationary Robot Vision & Control](#rvc_troubleshooting)
+- [Stationary Robot](#rvc_troubleshooting)
 
 (humanoid_embodied_troubleshooting)=
 ## Humanoid Imitation Learning
@@ -103,7 +103,7 @@
    When passthrough the iGPU to Guest VM based on ACRN, the performance of iGPU running AI models will degrade compared to the performance on native.
 
 (rvc_troubleshooting)=
-## Stationary Robot Vision & Control
+## Stationary Robot
 
 1. Inference on GPU does not work?
 
