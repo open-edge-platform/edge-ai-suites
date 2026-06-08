@@ -309,6 +309,20 @@ def build_gpu_series() -> List[List[float]]:
     if not isinstance(states, list) or not states:
         return []
 
+    def collect_engine_values(eng_usage: Any) -> List[float]:
+        values: List[float] = []
+        if not isinstance(eng_usage, dict):
+            return values
+
+        for samples in eng_usage.values():
+            if not isinstance(samples, list) or not samples:
+                continue
+            try:
+                values.append(float(samples[-1]))
+            except Exception:
+                continue
+        return values
+
     # Sampling interval in seconds (default 1.5s if missing)
     ms_interval = 1500
     try:
@@ -325,31 +339,19 @@ def build_gpu_series() -> List[List[float]]:
                 continue
             dev = devs_state[0]
 
-            # Prefer per-process engine usage from clis_stats when available.
-            clis_stats = dev.get("clis_stats") or []
-
             values: List[float] = []
+            # Prefer per-process engine usage when available, but fall back to
+            # device-level engine counters if qmassa does not expose a compute
+            # entry for the current device/driver combination.
+            clis_stats = dev.get("clis_stats") or []
             if clis_stats:
                 for cli in clis_stats:
-                    eng_usage = (cli.get("eng_usage") or {}).get("compute") or []
-                    if not eng_usage:
-                        continue
-                    try:
-                        values.append(float(eng_usage[-1]))
-                    except Exception:
-                        continue
-            else:
-                # Fallback to device-level eng_usage if clis_stats is missing.
+                    values.extend(collect_engine_values(cli.get("eng_usage") or {}))
+
+            if not values:
+                # Fallback to device-level eng_usage if per-process values are absent.
                 dev_stats = dev.get("dev_stats") or {}
-                eng_usage = dev_stats.get("eng_usage") or {}
-                if isinstance(eng_usage, dict) and eng_usage:
-                    for _, arr in eng_usage.items():
-                        if not arr:
-                            continue
-                        try:
-                            values.append(float(arr[-1]))
-                        except Exception:
-                            continue
+                values.extend(collect_engine_values(dev_stats.get("eng_usage") or {}))
 
             if not values:
                 continue
