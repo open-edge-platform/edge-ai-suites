@@ -1,6 +1,6 @@
 # Integrate Intel® SceneScape with Smart NVR
 
-This guide covers the integration of Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from the Smart Intersection application.
+This guide describes how to integrate Intel® SceneScape with Smart NVR for enhanced traffic monitoring using live data from the Smart Intersection application.
 
 ## Overview
 
@@ -27,7 +27,13 @@ Smart NVR with SceneScape supports two deployment modes:
 
 ## Single-Node Deployment
 
-All services run on a single machine. The setup script handles everything automatically — downloading demo videos, starting the RTSP streamer, launching Smart Intersection, and starting the NVR stack.
+In single-node mode, all services run on one machine. The setup script performs the following steps automatically:
+
+1. Validates required environment variables
+2. Configures DL Streamer and Frigate for SceneScape mode
+3. Downloads demo videos and starts the MediaMTX RTSP streamer
+4. Starts the Smart Intersection stack (runs `install.sh` on first launch)
+5. Starts the NVR stack and connects it to the SceneScape network
 
 ### Set Environment Variables
 
@@ -48,26 +54,18 @@ export VSS_SEARCH_PORT=<vss_port>
 source setup.sh start
 ```
 
-The script automatically:
-
-1. Validates required environment variables
-2. Configures DL Streamer and Frigate for SceneScape mode
-3. Downloads demo videos and starts the MediaMTX RTSP streamer
-4. Starts the Smart Intersection stack (runs `install.sh` if first time)
-5. Starts the NVR stack and connects it to the SceneScape network
-
 ### Verify
 
 ```bash
 docker logs nvr-event-router -f
-# Look for: "SceneScape MQTT client started"
+# Expected output: "SceneScape MQTT client started"
 ```
 
 The UI is available at `http://<host_ip>:7860`.
 
 ## Distributed Node Deployment
 
-For distributed setups where Smart Intersection runs on a separate machine from the NVR.
+In distributed mode, Smart Intersection runs on a dedicated machine (System 1) while the NVR stack runs on a separate machine (System 2).
 
 ### System 1 (SI Node)
 
@@ -76,7 +74,7 @@ export NVR_SCENESCAPE=true
 source setup.sh start-si
 ```
 
-This starts the RTSP streamer and Smart Intersection stack. On success, it prints the System 1 IP address needed for System 2 configuration.
+Upon successful startup, the script outputs the System 1 IP address required for System 2 configuration.
 
 ### System 2 (NVR Node)
 
@@ -94,12 +92,12 @@ export VSS_SEARCH_PORT=<vss_port>
 source setup.sh start-nvr
 ```
 
-The NVR connects to System 1's MQTT broker (port 1883) for SceneScape events and RTSP server (port 8554) for video streams.
+System 2 connects to System 1's MQTT broker (port 1883) for SceneScape events and RTSP server (port 8554) for video streams.
 
 ## Stop Services
 
 ```bash
-# Single-node: stop everything
+# Single-node
 source setup.sh stop
 
 # Distributed node
@@ -112,65 +110,52 @@ source setup.sh restart
 
 ### RTSP Streamer Only
 
-To start only the MediaMTX RTSP streamer: `source setup.sh start-streamer`. 
-Stop with: `source setup.sh stop-streamer`.
+To start only the MediaMTX RTSP streamer without launching the full NVR or Smart Intersection stack, use the following command. This is intended for development and testing scenarios where video stream availability needs to be verified independently.
+
+```bash
+source setup.sh start-streamer
+```
+
+To stop the streamer:
+
+```bash
+source setup.sh stop-streamer
+```
 
 ## Verify Integration
 
 ```bash
 docker logs nvr-event-router -f
-# Look for: "SceneScape MQTT client started"
+# Expected output: "SceneScape MQTT client started"
 ```
 
 ## User Interface
 
-### With Intel® SceneScape Enabled and SceneScape Source Selected
+### With Intel® SceneScape Enabled
 
 ![SceneScape Enabled Interface](./_assets/Scenescape_enabled.png)
 
-When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`) and **"scenescape"** source is selected:
+When Intel® SceneScape is enabled (`NVR_SCENESCAPE=true`):
 
-- Source dropdown shows both **"frigate"** and **"scenescape"** options
-- **Count** field becomes visible and editable
-- Users can set minimum count threshold for rule triggering (e.g., 5, 10, 15)
-- Rules table includes "Count" column for tracking thresholds
-- Count validation ensures non-negative integers only
-
-### With Intel® SceneScape Enabled but Frigate Source Selected
-
-![Frigate Selected Interface](./_assets/Scenescape_enabled_frigate.png)
-
-When Intel® SceneScape is enabled but Frigate source is selected:
-
-- Currently Frigate object detection is disabled in this mode
-- Source dropdown still shows both **"frigate"** and **"scenescape"** options
-- **Count** field is automatically hidden (not applicable for Frigate)
-- Standard Frigate rule configuration with detection labels
-- Rules table shows "Count" column but displays "-" for Frigate rules
-- Full Frigate functionality remains available
+- Source dropdown shows only **"scenescape"** (Frigate source is not available in this mode)
+- **Count** field is visible and editable
+- Minimum count threshold for rule triggering can be configured (e.g., 5, 10, 15)
+- Rules table includes a "Count" column for tracking thresholds
+- Count validation enforces non-negative integers
 
 ## Auto-Route Events Configuration
 
 ### Creating Rules
 
-**Steps (both sources):**
+1. Navigate to the **Auto-Route Events** tab
+2. **Source** is pre-set to "scenescape"
+3. **Set Count:** Define the minimum detection threshold (e.g., 5)
+4. **Select Camera:** Choose the target camera
+5. **Choose Detection Label:** Select the object type ("vehicle" or "pedestrian")
+6. **Select Action:** Choose "Summarize" or "Add to Search"
+7. Click **Add Rule**
 
-1. Navigate to **Auto-Route Events** tab
-2. **Select Source:** "scenescape" or "frigate"
-3. **Set Count:** (SceneScape only) Define minimum threshold (e.g., 5)
-4. **Select Camera:** Choose target camera
-5. **Choose Detection Label:** Select object type
-6. **Select Action:** "Summarize" or "Add to Search"
-7. **Click Add Rule**
-
-**Key Differences:**
-
-- **SceneScape:** Count field visible when selected
-- **Frigate:** Count field hidden
-
-### Rule Behavior Examples
-
-**SceneScape Rule Example:**
+### Rule Behavior Example
 
 ```text
 Source: scenescape
@@ -180,62 +165,53 @@ Label: vehicle
 Action: Summarize
 ```
 
-*Triggers video summarization when 5+ vehicles detected in camera1*
-
-**Frigate Rule Example:**
-
-```text
-Source: frigate
-Camera: livingroom
-Label: person
-Action: Add to Search
-```
-
-*Adds person detection events to search index for livingroom camera*
+This rule triggers video summarization when 5 or more vehicles are detected in camera1.
 
 ## Troubleshooting
 
-**SceneScape features not visible in UI:**
+**SceneScape features not visible in UI**
+
+Verify that `NVR_SCENESCAPE` is set to `true` and restart the services:
 
 ```bash
-# Ensure NVR_SCENESCAPE is set
-echo $NVR_SCENESCAPE  # Should show 'true'
+echo $NVR_SCENESCAPE
 export NVR_SCENESCAPE=true
 source setup.sh restart
-# Refresh browser (Ctrl+F5)
 ```
 
-**No SceneScape events received:**
+After restarting, perform a hard refresh in the browser (`Ctrl+Shift+R` or `Cmd+Shift+R`).
+
+**No SceneScape events received**
 
 ```bash
-# Check MQTT connection to SceneScape broker
+# Check MQTT connectivity to the SceneScape broker
 docker logs nvr-event-router | grep -i scenescape
 
-# Verify Smart Intersection is running
+# Verify Smart Intersection containers are running
 docker ps | grep metro-vision-ai-app-recipe
 ```
 
-**Debug commands:**
+**Diagnostic commands**
 
 ```bash
-# Monitor MQTT messages
+# Monitor live SceneScape MQTT messages
 docker logs nvr-event-router -f | grep "scenescape"
 
-# Check all running containers
+# List all running containers with status
 docker ps --format "table {{.Names}}\t{{.Status}}"
 
-# Check system resource usage
+# Check container resource utilization
 docker stats --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}"
 ```
 
 ## Support
 
-For issues:
+When reporting issues, verify the following:
 
-1. **Environment Variables**: Verify all required exports are set (`env | grep -E "NVR_|SCENESCAPE|MQTT|VSS"`)
-2. **MQTT Connection**: Check logs for "SceneScape MQTT client started" message
-3. **Smart Intersection**: Confirm SI containers are running (`docker ps | grep metro`)
-4. **Distributed Node Connectivity**: Verify System 2 can reach System 1 on ports 1883 (MQTT) and 8554 (RTSP)
-5. **High Resource Usage**: Run `docker stats --no-stream` to identify heavy containers
+1. **Environment variables** — Confirm all required variables are exported: `env | grep -E "NVR_|SCENESCAPE|MQTT|VSS"`
+2. **MQTT connectivity** — Check logs for the message: `"SceneScape MQTT client started"`
+3. **Smart Intersection** — Confirm SI containers are running: `docker ps | grep metro`
+4. **Distributed node connectivity** — Confirm System 2 can reach System 1 on port 1883 (MQTT) and port 8554 (RTSP)
+5. **Resource utilization** — Run `docker stats --no-stream` to identify resource-constrained containers
 
-For general Smart NVR issues, see the [Troubleshooting Guide](./troubleshooting.md).
+For general Smart NVR issues, refer to the [Troubleshooting Guide](./troubleshooting.md).
