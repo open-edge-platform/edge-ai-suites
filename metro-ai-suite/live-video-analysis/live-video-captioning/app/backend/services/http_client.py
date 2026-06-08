@@ -2,12 +2,47 @@ import json
 from typing import Any, Optional, Tuple
 from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException
+from ..config import PIPELINE_SERVER_URL
+
+
+def _effective_port(scheme: str, port: Optional[int]) -> Optional[int]:
+    if port is not None:
+        return port
+    if scheme == "http":
+        return 80
+    if scheme == "https":
+        return 443
+    return None
+
+
+def _assert_trusted_pipeline_url(url: str) -> None:
+    """Reject outbound requests that do not target the configured pipeline server."""
+    candidate = urlsplit((url or "").strip())
+    trusted = urlsplit(PIPELINE_SERVER_URL.strip())
+
+    if (
+        candidate.scheme not in {"http", "https"}
+        or candidate.scheme != trusted.scheme
+        or not candidate.hostname
+        or not trusted.hostname
+        or candidate.hostname.lower() != trusted.hostname.lower()
+        or _effective_port(candidate.scheme, candidate.port)
+        != _effective_port(trusted.scheme, trusted.port)
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "message": "Outbound URL is not allowed",
+            },
+        )
 
 
 def http_json(method: str, url: str, payload: Optional[dict[str, Any]] = None) -> str:
     """Make an HTTP request with JSON payload and return response text."""
+    _assert_trusted_pipeline_url(url)
     headers = {
         "Accept": "application/json",
     }
@@ -61,6 +96,10 @@ def try_get_json(url: str, timeout: int = 10) -> Tuple[Optional[int], Optional[d
         A tuple of (status_code, body). status_code is None on connection
         failure; body is None when the response is not valid JSON.
     """
+    try:
+        _assert_trusted_pipeline_url(url)
+    except HTTPException:
+        return None, None
     req = urllib_request.Request(
         url=url, headers={"Accept": "application/json"}, method="GET"
     )
