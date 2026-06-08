@@ -62,11 +62,6 @@ README.md          @xwu2intel
 /metro-ai-suite/                                                 @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard
 /metro-ai-suite/README.md                                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard  @open-edge-platform/open-edge-platform-docs-write
 
-/metro-ai-suite/deterministic-threat-detection/                  @rrajore @sugnanprabhu @xwu2intel @ajagadi1
-/metro-ai-suite/deterministic-threat-detection/docs/             @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
-/metro-ai-suite/deterministic-threat-detection/README.md         @rrajore @sugnanprabhu @xwu2intel @ajagadi1 @open-edge-platform/open-edge-platform-docs-write
-
-
 /metro-ai-suite/image-based-video-search/                        @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol
 /metro-ai-suite/image-based-video-search/docs/                   @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
 /metro-ai-suite/image-based-video-search/README.md               @rrajore @vagheshp @xwu2intel @ajagadi1 @ArokiEdgard @rohitkatakol  @open-edge-platform/open-edge-platform-docs-write
@@ -145,3 +140,14 @@ README.md          @xwu2intel
 /robotics-ai-suite/README.md           @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel @DrewBearly  @open-edge-platform/open-edge-platform-docs-write
 /robotics-ai-suite/**/docs/            @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel @DrewBearly  @open-edge-platform/open-edge-platform-docs-write
 /robotics-ai-suite/**/README.md        @jouillet @jb-balaji @pirouf @mohitmeh12 @pperycz @xwu2intel @seanohair22 @zschafft-intel @DrewBearly  @open-edge-platform/open-edge-platform-docs-write
+
+# ============================================================================
+# Federal & Aerospace AI Suite
+# ============================================================================
+
+/‎federal-aerospace/                                          @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel
+/federal-aerospace/apps/deterministic-threat-detection/      @rrajore @sugnanprabhu @ajagadi1 @xwu2intel
+/federal-aerospace/apps/deterministic-threat-detection/docs/ @rrajore @sugnanprabhu @ajagadi1 @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-aerospace/apps/handheld-multi-modal/                @pperycz @jakubsikorski @ikyrycho @xwu2intel
+/federal-aerospace/apps/handheld-multi-modal/docs/           @pperycz @jakubsikorski @ikyrycho @xwu2intel @open-edge-platform/open-edge-platform-docs-write
+/federal-aerospace/docs/                                     @pperycz @jakubsikorski @ikyrycho @rrajore @xwu2intel @open-edge-platform/open-edge-platform-docs-write
