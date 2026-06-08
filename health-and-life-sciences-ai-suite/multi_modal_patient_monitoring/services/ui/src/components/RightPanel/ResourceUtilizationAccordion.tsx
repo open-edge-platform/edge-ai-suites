@@ -117,11 +117,24 @@ export function ResourceUtilizationAccordion() {
   };
 
   // NPU Chart
+  const npuSeries = resourceData.npu_utilization.length > 0
+    ? resourceData.npu_utilization
+    : (() => {
+        const fallbackTimestamps =
+          resourceData.cpu_utilization.length > 0
+            ? resourceData.cpu_utilization.map((item: any) => item[0])
+            : resourceData.memory.length > 0
+              ? resourceData.memory.map((item: any) => item[0])
+              : [new Date().toISOString()];
+
+        return fallbackTimestamps.map((timestamp: string) => [timestamp, 0]);
+      })();
+
   const npuChartData = {
-    labels: resourceData.npu_utilization.map((item: any) => formatTimestamp(item[0])),
+    labels: npuSeries.map((item: any) => formatTimestamp(item[0])),
     datasets: [{
       label: 'NPU %',
-      data: resourceData.npu_utilization.map((item: any) => item[1] || 0),
+      data: npuSeries.map((item: any) => item[1] || 0),
       borderColor: 'rgb(153, 102, 255)',
       backgroundColor: 'rgba(153, 102, 255, 0.5)',
       tension: 0.4,
@@ -173,14 +186,12 @@ export function ResourceUtilizationAccordion() {
           )}
 
           {/* NPU Chart */}
-          {resourceData.npu_utilization.length > 0 && (
-            <div className="graph-container">
-              <h4>NPU Utilization</h4>
-              <div style={{ height: '200px' }}>
-                <Line data={npuChartData} options={chartOptions} />
-              </div>
+          <div className="graph-container">
+            <h4>NPU Utilization</h4>
+            <div style={{ height: '200px' }}>
+              <Line data={npuChartData} options={chartOptions} />
             </div>
-          )}
+          </div>
         </div>
       </div>
     </Accordion>

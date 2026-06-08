@@ -14,10 +14,13 @@ Usage:
 """
 
 import urllib.request
+import socket
+import time
 from pathlib import Path
 from tqdm import tqdm
 import logging
 import argparse
+from urllib.error import URLError
 
 import yaml
 import tensorflow as tf
@@ -149,14 +152,58 @@ def download_file(url: str, dest: Path, desc: str = "Downloading") -> None:
                 self.total = tsize
             self.update(b * bsize - self.n)
 
-    with DownloadProgressBar(
-        unit='B',
-        unit_scale=True,
-        miniters=1,
-        desc=desc
-    ) as t:
-        # Use opener.retrieve instead of global urlretrieve
-        opener.retrieve(url, dest, reporthook=t.update_to)
+    def is_transient_error(error: Exception) -> bool:
+        if isinstance(error, URLError):
+            return isinstance(getattr(error, "reason", None), (socket.gaierror, TimeoutError, OSError))
+        return isinstance(error, (socket.gaierror, TimeoutError, OSError))
+
+    attempts = 3
+    last_error: Exception | None = None
+
+    for attempt in range(1, attempts + 1):
+        try:
+            with DownloadProgressBar(
+                unit='B',
+                unit_scale=True,
+                miniters=1,
+                desc=desc
+            ) as t:
+                tmp_dest = dest.with_suffix(dest.suffix + ".part")
+                try:
+                    with opener.open(url) as response, tmp_dest.open("wb") as output:
+                        total_size = response.headers.get("Content-Length")
+                        if total_size is not None:
+                            t.total = int(total_size)
+
+                        while True:
+                            chunk = response.read(1024 * 1024)
+                            if not chunk:
+                                break
+                            output.write(chunk)
+                            t.update(len(chunk))
+                    tmp_dest.replace(dest)
+                except Exception:
+                    if tmp_dest.exists():
+                        tmp_dest.unlink()
+                    raise
+            return
+        except Exception as error:
+            last_error = error
+            if attempt >= attempts or not is_transient_error(error):
+                raise
+            wait_seconds = 2 ** (attempt - 1)
+            logger.warning(
+                "Download attempt %s/%s failed for %s: %s; retrying in %ss",
+                attempt,
+                attempts,
+                url,
+                error,
+                wait_seconds,
+            )
+            time.sleep(wait_seconds)
+
+    if last_error is not None:
+        raise last_error
 
 
 def download_model() -> None:
