@@ -80,10 +80,7 @@ spec:
               fi
 
               if [ "$needs_init" = true ]; then
-                curl -fsSL "https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh" \
-                    -o /tmp/get_model.sh
-                chmod +x /tmp/get_model.sh
-                bash /tmp/get_model.sh --internal \
+                bash /opt/scripts/get_model.sh --internal \
                     --model-name {{ .Values.vlmServing.env.modelName | quote }} \
                     --hub huggingface \
                     --type vlm \
