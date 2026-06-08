@@ -9,15 +9,15 @@
 
 **New**
 
-- The deterministic threat detection subproject with SceneScape-specific changes
+- The deterministic threat detection subproject with Intel® Scenescape-specific changes
   and a use case for testing purposes.
 
 - Documentation for setting up, configuring, and capturing HOTA metrics with
-  SceneScape, both with and without traffic shaping.
+  Intel Scenescape, both with and without traffic shaping.
 
 **Improved**
 
-- Restructured the documentation to separate the SceneScape-specific
+- Restructured the documentation to separate the Intel Scenescape-specific
   content into its own section, while keeping the original RTSP use case
   documentation intact.
 
