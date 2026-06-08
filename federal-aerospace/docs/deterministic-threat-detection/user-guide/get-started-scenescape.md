@@ -13,7 +13,15 @@ background traffic and then enabling TSN features, this demonstration shows how 
 preserves tracking accuracy even under network congestion — quantified using HOTA,
 MOTA, and IDF1 metrics.
 
-## Hardware Requirements
+
+## System Requirements
+
+### Software Requirements
+- **Operating System:** Ubuntu 24.04 or later
+- **Docker Engine** with Docker Compose V2
+- [**SceneScape**](https://github.com/open-edge-platform/scenescape/tree/2026.1.0-rc2)
+
+### Hardware Requirements
 
 | Component | Details |
 |-----------|---------|
