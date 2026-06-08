@@ -76,11 +76,10 @@ vlmServing:
     tag: "2026.1"
     gpuTag: "2026.1-gpu"
     pullPolicy: IfNotPresent
-  # Init container image for model export (needs python3, pip3)
-  # Aligned with edge-ai-libraries sample apps (VSS, DocSum)
+  # Init container image — runs get_model.sh in --internal mode (no Docker required)
   initImage:
-    repository: python
-    tag: "3.12-slim"
+    repository: intel/model-download
+    tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 1
   service:

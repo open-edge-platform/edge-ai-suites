@@ -311,13 +311,7 @@ export_model_for_ovms() {
         -o "$get_model_script" || { echo -e "${RED}ERROR: Failed to download get_model.sh${NC}"; return 1; }
     chmod +x "$get_model_script"
 
-    # Determine hub: OpenVINO-namespace models are pre-converted; others need HuggingFace + conversion.
-    local hub
-    if is_openvino_namespace_model "$source_model"; then
-        hub="openvino"
-    else
-        hub="huggingface"
-    fi
+    local hub="huggingface"
 
     echo -e "${BLUE}==> Downloading/converting model via model-download ephemeral container...${NC}"
     echo -e "[ovms-service] ${BLUE}Hub:           ${YELLOW}${hub}${NC}"
@@ -330,8 +324,7 @@ export_model_for_ovms() {
     bash "$get_model_script" \
         --model-name "$source_model" \
         --hub "$hub" \
-        --type vlm \
-        --is-ovms \
+        --type vision \
         --precision "$weight_format" \
         --device "$target_device" \
         --model-path "${OVMS_CONFIG_DIR}/models" \

@@ -74,28 +74,30 @@ spec:
               fi
 
               if [ "$needs_init" = true ]; then
-                . /config/ovms-init.sh
+                curl -fsSL "https://raw.githubusercontent.com/open-edge-platform/edge-ai-libraries/main/microservices/model-download/scripts/get_model.sh" \
+                    -o /tmp/get_model.sh
+                chmod +x /tmp/get_model.sh
+                bash /tmp/get_model.sh --internal \
+                    --model-name {{ .Values.vlmServing.env.modelName | quote }} \
+                    --hub huggingface \
+                    --type vision \
+                    --precision {{ $weightFormat | quote }} \
+                    --device {{ $targetDevice | quote }}
               fi
-          args:
-            - {{ .Values.vlmServing.env.modelName | quote }}
-            - {{ $weightFormat | quote }}
-            - {{ .Values.vlmServing.huggingfaceToken | quote }}
-            - {{ $targetDevice | quote }}
           env:
+            - name: MODEL_PATH
+              value: /models
+            - name: HF_TOKEN
+              value: {{ .Values.vlmServing.huggingfaceToken | quote }}
             - name: http_proxy
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
               value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
-            - name: PIP_TRUSTED_HOST
-              value: "storage.openvinotoolkit.org download.pytorch.org"
           volumeMounts:
             - name: ov-models
               mountPath: /models
-            - name: init-script
-              mountPath: /config
-              readOnly: true
       containers:
         - name: {{ .Values.vlmServing.name }}
           image: "{{- if $needsGpu -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.gpuTag }}{{- else -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}{{- end -}}"
@@ -164,10 +166,6 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
-        - name: init-script
-          configMap:
-            name: {{ include "stia.vlmServing.fullname" . }}-init-script
-            defaultMode: 0755
         {{- if $needsGpu }}
         - name: dri-device
           hostPath:
