@@ -47,7 +47,7 @@ All services share the `fedaero` Docker network and are defined in [`docker-comp
 | Intel® GPU with OpenVINO driver | iGPU or discrete GPU based on the Xe architecture. |
 | **CDI only:** CDI drivers configured | Set `CDI_XE_DEVICE_0` in `.env` (see `AGENTS.md` for all env vars). |
 
-Run `make setup` after cloning to auto-detect the `render` the group GID and write the `.env`.
+Run `make setup` after cloning to auto-detect the `render` group GID and write the `.env`.
 
 ## Quick Start
 
