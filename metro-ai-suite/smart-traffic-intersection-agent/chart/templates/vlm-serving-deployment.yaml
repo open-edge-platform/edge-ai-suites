@@ -46,7 +46,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              # Storage-aware model detection
+              # Storage-aware model detection — skip download if model already on PVC
               vlm_storage_name="{{ $storageName }}"
               vlm_model_path="/models/${vlm_storage_name}"
 
@@ -66,7 +66,7 @@ spec:
                   needs_init=true
                 fi
                 if [ "$needs_init" = false ]; then
-                  echo "Model ${vlm_storage_name} already exists with correct config."
+                  echo "Model ${vlm_storage_name} already exists with correct config. Skipping."
                 fi
               else
                 echo "No config.json found, building OVMS model repository."
@@ -74,7 +74,9 @@ spec:
               fi
 
               if [ "$needs_init" = true ]; then
-                bash /opt/scripts/get_model.sh --internal \
+                exec /opt/entrypoint.sh \
+                    --plugins huggingface \
+                    --ephemeral \
                     --model-name {{ .Values.vlmServing.env.modelName | quote }} \
                     --hub huggingface \
                     --type vlm \
@@ -82,7 +84,7 @@ spec:
                     --device {{ $targetDevice | quote }}
               fi
           env:
-            - name: MODEL_PATH
+            - name: MODELS_DIR
               value: /models
             - name: HF_TOKEN
               value: {{ .Values.vlmServing.huggingfaceToken | quote }}
