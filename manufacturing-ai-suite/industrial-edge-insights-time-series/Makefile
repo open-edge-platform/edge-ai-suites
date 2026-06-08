@@ -344,19 +344,25 @@ gen_helm_charts:
 	@sed -i "s/weekly_build_date: .*/weekly_build_date: \"$(WEEKLY_BUILD_DATE)\"/" "helm/values.yaml"
 	@echo "Helm packages generated with version: ${version}"
 
-# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
-# and have logged into that. Applies mainly when one is dealing with internal docker registry.
-# If you are using docker hub, ensure to have logged in with `docker login` command
-# before running this command.
-.PHONY: push_helm_charts
-push_helm_charts: gen_helm_charts
+# To generate the helm charts in tar.gz file format
+.PHONY: gen_helm_charts_targz
+gen_helm_charts_targz: gen_helm_charts
 	@echo "Packaging Helm chart for ${SAMPLE_APP}"
 	@mkdir -p helm-packages
 	@rm -f helm-packages/*.tgz
 	@pkg_file=$$(helm package helm/ -d helm-packages/ | awk '{print $$NF}'); \
 	echo "Helm chart packaged successfully: $$pkg_file"; \
+
+# To push the helm charts to docker registry, ensure to configure DOCKER_REGISTRY in .env
+# and have logged into that. Applies mainly when one is dealing with internal docker registry.
+# If you are using docker hub, ensure to have logged in with `docker login` command
+# before running this command.
+.PHONY: push_helm_charts
+push_helm_charts: gen_helm_charts_targz
+	@echo "Pushing helm charts for ${SAMPLE_APP}"
 	helm push $$pkg_file $(HELM_REGISTRY) && echo "Helm chart package pushed successfully to $(HELM_REGISTRY)"; \
 	cd ..
+
 # Help
 .PHONY: help
 help:
