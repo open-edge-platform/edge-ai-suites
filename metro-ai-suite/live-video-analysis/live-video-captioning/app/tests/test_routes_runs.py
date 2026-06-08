@@ -169,9 +169,87 @@ class TestStartRun:
         run_id = resp.json()["runId"]
         assert run_id in RUNS
 
+    def test_start_run_rejects_unknown_pipeline_name(self, client):
+        """Unknown pipelineName values are rejected before upstream requests."""
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {"pipeline_name": "genai_pipeline", "pipeline_type": "non-detection"}
+            ],
+        ), patch("backend.routes.runs.http_json") as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "pipelineName": "does-not-exist",
+                },
+            )
+
+        assert resp.status_code == 400
+        assert "Unknown pipelineName" in resp.json()["detail"]["message"]
+        mock_http.assert_not_called()
+
+    def test_start_run_uses_discovered_pipeline_name_in_start_url(self, client):
+        """A discovered pipelineName is accepted and used in the upstream start URL."""
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI Camera Pipeline (CPU)",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json", return_value='"p-url"') as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "pipelineName": "GenAI Camera Pipeline (CPU)",
+                },
+            )
+
+        assert resp.status_code == 200
+        called_url = mock_http.call_args.args[1]
+        assert called_url.endswith(
+            "/pipelines/user_defined_pipelines/GenAI%20Camera%20Pipeline%20%28CPU%29"
+        )
+
+    def test_start_run_accepts_internal_default_resolution_pipeline_alias(self, client):
+        """Internal _Default_Resolution aliases are accepted for discovered base pipelines."""
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI_Pipeline_on_CPU",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json", return_value='"p-default"') as mock_http:
+            resp = client.post(
+                "/api/generate_captions_alerts",
+                json={
+                    "rtspUrl": "rtsp://10.0.0.1/stream",
+                    "pipelineName": "GenAI_Pipeline_on_CPU_Default_Resolution",
+                },
+            )
+
+        assert resp.status_code == 200
+        called_url = mock_http.call_args.args[1]
+        assert called_url.endswith(
+            "/pipelines/user_defined_pipelines/GenAI_Pipeline_on_CPU_Default_Resolution"
+        )
+
     def test_start_run_with_usb_camera_source(self, client):
         """A Linux V4L2 device path is sent using webcam source schema."""
         with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI_Camera_Pipeline_on_CPU",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch(
             "backend.routes.runs.http_json", return_value='"pipeline-usb"'
         ) as mock_http:
             resp = client.post(
@@ -201,7 +279,15 @@ class TestStartRun:
 
     def test_start_run_rejects_usb_camera_with_non_camera_pipeline(self, client):
         """A webcam source with an explicit non-camera pipeline is rejected."""
-        with patch("backend.routes.runs.http_json") as mock_http:
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "genai_pipeline",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json") as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
                 json={
@@ -225,7 +311,15 @@ class TestStartRun:
             status="running",
         )
 
-        with patch("backend.routes.runs.http_json") as mock_http:
+        with patch(
+            "backend.routes.runs.discover_pipelines_remote",
+            return_value=[
+                {
+                    "pipeline_name": "GenAI_Camera_Pipeline_on_CPU",
+                    "pipeline_type": "non-detection",
+                }
+            ],
+        ), patch("backend.routes.runs.http_json") as mock_http:
             resp = client.post(
                 "/api/generate_captions_alerts",
                 json={
