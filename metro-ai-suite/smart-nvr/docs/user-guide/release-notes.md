@@ -35,7 +35,7 @@
 
 ### Version 1.2.4
 
-**Release Date**: 17 Feb 2026  
+**Release Date**: 17 Feb 2026
 
 **New Features**:
 

@@ -59,7 +59,7 @@ backend:
   image:
     repository: intel
     name: hl-ai-nicu-backend
-    tag: "2026.1.0-rc1"
+    tag: "2026.1.0-rc2"
     pullPolicy: IfNotPresent
   resources: {}
 
@@ -67,14 +67,14 @@ ui:
   image:
     repository: intel
     name: hl-ai-nicu-ui
-    tag: "2026.1.0-rc1"
+    tag: "2026.1.0-rc2"
     pullPolicy: IfNotPresent
 
 metrics:
   image:
     repository: intel
     name: hl-ai-metrics-collector
-    tag: "2026.0-rc1"
+    tag: "2026.0-rc2"
     pullPolicy: IfNotPresent
 
 # DLSPS + MQTT (required for inference pipeline)
@@ -83,7 +83,7 @@ dlsps:
   image:
     repository: intel
     name: dlstreamer-pipeline-server
-    tag: "2026.1.0-ubuntu24-rc1"
+    tag: "2026.1.0-ubuntu24-rc2"
     pullPolicy: IfNotPresent
   resources: {}
 

@@ -15,7 +15,7 @@ application.
 Before running the script, ensure you have Python 3 and the `paho-mqtt` library installed.
 
 ```bash
-cd deterministic-threat-detection/sensor_data_producer
+cd federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/sensor_data_producer
 pip install -r requirements.txt
 ```
 
@@ -25,7 +25,7 @@ If you do not have an MQTT broker set up, you can quickly run one using Docker. 
 command will start an Eclipse Mosquitto MQTT broker on your machine:
 
 ```bash
-cd deterministic-threat-detection/sensor_data_producer
+cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/sensor_data_producer
 docker run -d \
   --name mqtt-broker \
   --network host \
@@ -35,12 +35,12 @@ docker run -d \
 
 ## Running the Script
 
-Navigate to the `deterministic-threat-detection` directory and run the script from there. You
+Navigate to the `edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/sensor_data_producer` directory and run the script from there. You
 need to provide the IP address of the machine where the MQTT aggregator is running or assume
 `localhost` if --broker is not specified.
 
 ```bash
-cd deterministic-threat-detection/sensor_data_producer
+cd edge-ai-suites/federal-aerospace/apps/deterministic-threat-detection/usecases/rtsp-deterministic-inference/sensor_data_producer
 python3 sensor_data_producer.py --broker <MQTT_BROKER_IP>
 ```
 

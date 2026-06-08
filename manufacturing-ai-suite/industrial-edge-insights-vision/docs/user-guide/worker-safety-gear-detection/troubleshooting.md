@@ -122,7 +122,7 @@ There are a few options to fix this.
 
 One is updating the kernel to `6.11.11-061111-generic` in the host system.
 
-Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from [OpenVINO documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
+Alternatively, install OpenCL runtime packages in the host system. Refer to the instructions from [OpenVINO™ documentation](https://docs.openvino.ai/2026/get-started/install-openvino/configurations/configurations-intel-gpu.html#linux) to install GPU drivers.
 
 ## Deploying on Edge Microvisor Toolkit
 
@@ -141,4 +141,4 @@ To install `jq`, refer to the following
 
 ---
 
-*Intel, the Intel logo and Intel Geti are trademarks of Intel Corporation or its subsidiaries.*
+*Intel, the Intel logo, OpenVINO, the OpenVINO logo and Intel Geti are trademarks of Intel Corporation or its subsidiaries.*

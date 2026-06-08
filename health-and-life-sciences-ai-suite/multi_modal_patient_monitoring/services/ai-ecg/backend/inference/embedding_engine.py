@@ -7,6 +7,7 @@ from openvino import Core, PartialShape, Type, save_model
 from openvino import opset13 as opset
 
 import load
+from inference.signal_classifier import classify_ecg
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -105,9 +106,16 @@ class HubertECGInferenceEngine:
         # Mean-pool over time dimension to obtain a single embedding vector
         embedding = hidden.mean(axis=1).squeeze(0)  # (D,)
 
+        # Signal-based rhythm classification
+        try:
+            classification = classify_ecg(ecg)
+        except Exception:
+            classification = "Unknown"
+
         return {
             "signal": ecg.tolist(),
             "embedding": embedding.tolist(),
             "inference_ms": round(infer_ms, 2),
             "length": int(ecg.size),
+            "classification": classification,
         }
