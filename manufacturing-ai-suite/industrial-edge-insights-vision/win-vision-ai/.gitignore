@@ -1,8 +1,8 @@
 # Python virtual environment
 venv/
 
-# GenICam runtime DLLs - downloaded by src/setup_genicam_runtime.ps1
-bin/Win64_x64/
+# bin/ is fully populated by src/setup_genicam_runtime.ps1 — never commit DLLs
+bin/
 
 # Python cache
 __pycache__/

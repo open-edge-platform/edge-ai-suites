@@ -1,5 +1,41 @@
 # Release Notes: Autonomous Mobile Robot
 
+
+## Version 2026.1
+
+**June 17, 2026**
+
+**New**
+
+- Added automated one-command ROS 2 environment setup scripts (setup-robotics-humble.sh and setup-robotics-jazzy.sh) that install the full AMR stack (ROS 2, OpenVINO, Intel RealSense SDK, Robotics SDK, Collaborative SLAM) for Ubuntu Humble and Jazzy respectively.
+- Added ISX031 industrial camera support in multicam-demo with a new config/config_isx031_4cameras.js configuration file and extended CameraCapWrapper to accept Linux device paths (e.g. /dev/video-isx031-a-0) in addition to integer camera indices.
+- Added Level 2 end-to-end pipeline KPI analysis to ros-kpi via a new analyze_pipeline_latency.py tool that computes per-stage latency, throughput, and drop rate across the full AMR processing pipeline.
+- Added Grafana live metrics dashboard integration for ros-kpi, including a new demo_interactive_heatmap.py script for interactive visualization of KPI data and a GRAFANA_QUICKSTART.md guide for rapid dashboard setup.
+- Added JSON schema files (kpi_level1_v1.json, kpi_level2_v1.json) for structured validation of KPI output data.
+
+**Improved**
+
+- ros-kpi: ros2_graph_monitor.py now uses ROS message header timestamps instead of wall-clock time for accurate latency measurement in both real-time and Gazebo simulated environments; added \--use-sim-time CLI flag and auto-detection of the /clock topic.
+- ros-kpi: Added \--csv-out and \--xlsx-out flags to analyze_trigger_latency.py for exporting KPI results to CSV and Excel formats; added a smoke-test suite (tests/test_csv_export.py) for the export functionality.
+- ros-kpi: Standalone wandering-benchmark, picknplace-benchmark, and analyze-benchmark Makefile targets, replacing the former delegating approach; added a Level 2 KPI option (option 6) to the interactive quickstart menu.
+- Multicam-demo: Camera configuration files now support per-camera width, height, and format (FOURCC pixel format, e.g. YUYV, MJPG) fields passed directly to CameraCapWrapper; added \--duration flag for headless timed runs; added run summary with per-camera FPS and pre/submit timing statistics; improved async inference thread cleanup on shutdown by draining in-flight inferences.
+- Multicam-demo: Added \--no-display flag for fully headless operation and \--verbose flag for per-camera frame statistics printed every two seconds.
+- PicknPlace simulation (Gazebo): CMake build for ROS Jazzy corrected by adding find_package for gz-sim8, gz-msgs10, sdformat14, and Protobuf and fixing imported target names; added libprotobuf-dev build dependency; added pytest-based functional test suite covering launch file structure and UR5 robot configuration.
+- Intel oneAPI runtime, compiler, and MKL packages pinned to version 2025.3.* in both collaborative-slam and multicam-demo, preventing unintended automatic upgrades that could break compatibility.
+- Setup scripts hardened with set -o errexit, set -o errtrace, set -o pipefail, and a failure handler ERR trap, so installation failures are reported with the failing step name instead of silently continuing.
+- Setup scripts: Changed all apt calls to apt-get for scripting best-practice compliance; added \--allow-downgrades when installing ros-*-librealsense2 to accommodate pinned version constraints; reordered RealSense installation to run the ROS wrapper package before the DKMS kernel module and SDK.
+
+**Fixed**
+
+- adbscan (Follow-Me): Initialized new_target_loc to zero before use in adbscan_sub.cpp, adbscan_sub_w_gesture.cpp, and adbscan_sub_w_gesture_audio.cpp, preventing potential undefined behavior when no target has been detected yet; fixed an uninitialized pointer in doDBSCAN.cpp.
+- adbscan: Fixed the license-check Makefile target to reference the public fsfe/reuse:5.0.2 Docker image instead of an internal registry path, allowing license checks to run without internal network access.
+- Multicam-demo: Fixed hardcoded absolute model path (/opt/ros/humble/share/pyrealsense2-ai-demo/...) to use a relative models/yolov8/FP16/... path, restoring compatibility with uv-managed Python environments.
+- Multicam-demo: Fixed generate_ai_models.sh model conversion script to call mo.py directly rather than capturing its output, correcting exit-code handling.
+- Security: Updated opencv-python to 4.8.0.78 in the Follow-Me (adbscan Jazzy) requirements and bumped pillow to >=12.2.0 in ros-kpi to resolve Dependabot-flagged vulnerabilities.
+- ros-kpi: Fixed the Debian packaging rules for both Humble and Jazzy to include the schemas/ directory in the installed package.
+- Removed obsolete deprecated files: collaborative-slam trajectory comparison script (traj-compare.py), ITS planner run script (run_its.sh), and Debian preinst scripts from multicam-demo.
+
+
 ## Version 2026.0
 
 **April 01, 2026**

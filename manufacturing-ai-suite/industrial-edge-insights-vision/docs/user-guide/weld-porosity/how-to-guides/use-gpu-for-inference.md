@@ -28,9 +28,9 @@ The changes above adds the container user to the `render` group and provides acc
 
 Unlike the changes done for the container above, the following requires a modification to the media pipeline itself.
 
-GStreamer has a variety of hardware specific encoders and decoders elements such as Intel specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
+GStreamer has a variety of hardware specific encoders and decoders elements such as Intel® specific VA-API elements that you can benefit from by adding them into your media pipeline. Examples of such elements are `vah264dec`, `vah264enc`, `vajpegdec`, etc.
 
-Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel GPUs (integrated and discrete).
+Additionally, you can also enforce zero-copy of buffers using GStreamer caps (capabilities) to the pipeline by adding `video/x-raw(memory: VAMemory)` for Intel® GPUs (integrated and discrete).
 
 Read DL Streamer [docs](https://docs.openedgeplatform.intel.com/2026.1/edge-ai-libraries/dlstreamer/dev_guide/gpu_device_selection.html) for more details.
 
@@ -44,7 +44,7 @@ If you have multiple GPUs (integrated/discrete), please follow [this](https://do
 
 ## Tutorial on how to use GPU specific pipelines
 
-> **Note:** - This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
+> **Note:** This sample application already provides a default `docker-compose.yml` file that includes the necessary GPU access to the containers.
 
 The pipeline `weld_porosity_classification_gpu` contains GPU specific elements and uses GPU backend for inferencing. We can start the pipeline as follows:
 
@@ -56,9 +56,9 @@ Go to grafana as explained in [get-started](../get-started.md) to view the dashb
 
 ## Deploying with Helm
 
-### Intel GPU K8S Extension
+### Intel® GPU K8S Extension
 
-If you're deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec` etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
+If you are deploying a GPU based pipeline (example: with VA elements like `vapostproc`, `vah264dec`, etc., and/or with `device=GPU` in `gvadetect` in `dlstreamer_pipeline_server_config.json`) with Intel® GPU k8s Extension, ensure to set the below details in the file `helm/values.yaml` appropriately in order to utilize the underlying GPU.
 
 ```sh
 gpu:
@@ -66,4 +66,5 @@ gpu:
   type: "gpu.intel.com/i915"
   count: 1
 ```
+
 > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu.type` to `"gpu.intel.com/xe"`.

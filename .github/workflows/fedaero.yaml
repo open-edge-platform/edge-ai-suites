@@ -1,0 +1,174 @@
+---
+# SPDX-FileCopyrightText: (C) 2026 Intel Corporation
+# SPDX-License-Identifier: Apache-2.0
+#
+# =============================================================================
+# Federal & Aerospace packaging workflow
+# =============================================================================
+#
+# What this workflow does, in plain terms:
+#
+#   It builds two zip artifacts from the `federal-aerospace/` directory:
+#     - handheld-multi-modal.zip         (one app)
+#     - deterministic-threat-detection.zip (the other app)
+#
+#   Where those zips end up depends on what triggered the workflow:
+#
+#   1. Pull request to release-*
+#        - Builds only the components whose files actually changed.
+#        - Uploads the zips as GitHub Actions artifacts (visible on the
+#          PR's checks page, retention follows the repo's Actions settings).
+#        - Does not touch any release.
+#
+#   2. Push to release*
+#        - Forces a rebuild of all two components (so they stay in sync).
+#        - Uploads Actions artifacts (same as PRs).
+#
+#   3. Manual dispatch from the Actions tab (workflow_dispatch)
+#        - Only allowed from `release-*` branches or any tag. Dispatching
+#          from any other ref fails fast with a clear error (the dispatch
+#          UI shows all branches; the guard step is what enforces this).
+#        - Always builds all two components (no per-component selection).
+#        - Uploads Actions artifacts.
+#
+# =============================================================================
+
+name: "[FedAero] Package"
+run-name: "[FedAero] package (by @${{ github.actor }} via ${{ github.event_name }})"
+
+# Versioned release tag. Bump this when cutting a new immutable release,
+# then trigger the workflow manually with `publish_versioned_release: true`.
+env:
+  VERSION: "1.0.0"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+on:
+  push:
+    branches:
+      - release-*
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  pull_request:
+    branches:
+      - release-*
+    paths:
+      - 'federal-aerospace/**'
+      - '.github/workflows/fedaero.yaml'
+  workflow_dispatch:
+    inputs:
+      vippet_ref:
+        description: "Optional override for the vippet ref (defaults to VIPPET_REF file)"
+        required: false
+        default: ""
+      publish_versioned_release:
+        description: "Publish an immutable versioned release at v$VERSION (fails if tag exists)"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  changes:
+    name: Detect changed components
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      handheld-multi-modal: ${{ steps.force.outputs.handheld-multi-modal || steps.filter.outputs.handheld-multi-modal }}
+      deterministic-threat-detection: ${{ steps.force.outputs.deterministic-threat-detection || steps.filter.outputs.deterministic-threat-detection }}
+    steps:
+      # Guard for manual dispatches: only allow runs from a release-* branch
+      # or a tag. The Actions UI shows every branch in its ref dropdown, so
+      # this step is what actually enforces the restriction. Folded into this
+      # job (rather than living in its own job we `needs:` on) to avoid the
+      # GitHub Actions quirk where downstream `needs.changes.outputs.*` are
+      # not propagated when the chain involves `if: always() && ...`.
+      - name: Guard manual dispatch ref
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          ref="${GITHUB_REF}"
+          echo "Triggered from ref: $ref"
+          if [[ "$ref" == refs/heads/release-* ]] || [[ "$ref" == refs/tags/* ]]; then
+            echo "OK — $ref is allowed for manual dispatch."
+          else
+            echo "::error::Manual dispatch is only allowed from a release-* branch or a tag. Got: $ref"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+
+      # Force-build everything on release-* pushes (so the rolling release stays
+      # coherent) and on any manual dispatch (always all two components).
+      - id: force
+        if: >-
+          (github.event_name == 'push' && github.ref == 'refs/heads/release-*') ||
+          github.event_name == 'workflow_dispatch'
+        run: |
+          echo "handheld-multi-modal=true"           >> "$GITHUB_OUTPUT"
+          echo "deterministic-threat-detection=true" >> "$GITHUB_OUTPUT"
+
+      - id: filter
+        if: github.event_name != 'workflow_dispatch'
+        uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36
+        with:
+          filters: |
+            handheld-multi-modal:
+              - 'federal-aerospace/apps/handheld-multi-modal/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+            deterministic-threat-detection:
+              - 'federal-aerospace/apps/deterministic-threat-detection/**'
+              - 'federal-aerospace/Makefile'
+              - '.github/workflows/fedaero.yaml'
+
+  handheld-multi-modal:
+    name: Build handheld-multi-modal
+    needs: changes
+    if: needs.changes.outputs.handheld-multi-modal == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - name: Build
+        env:
+          VIPPET_REF: ${{ github.event.inputs.vippet_ref }}
+        run: |
+          if [[ -n "$VIPPET_REF" ]]; then
+            make -C federal-aerospace handheld-multi-modal VIPPET_REF="$VIPPET_REF"
+          else
+            unset VIPPET_REF
+            make -C federal-aerospace handheld-multi-modal
+          fi
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: handheld-multi-modal
+          path: federal-aerospace/dist/handheld-multi-modal.zip
+          if-no-files-found: error
+
+  deterministic-threat-detection:
+    name: Build deterministic-threat-detection
+    needs: changes
+    if: needs.changes.outputs.deterministic-threat-detection == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@8edcb1bdb4e267140fa742c62e395cd74f332709
+        with:
+          persist-credentials: false
+      - run: make -C federal-aerospace deterministic-threat-detection
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        with:
+          name: deterministic-threat-detection
+          path: federal-aerospace/dist/deterministic-threat-detection.zip
+          if-no-files-found: error

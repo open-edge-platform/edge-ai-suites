@@ -59,6 +59,9 @@ ls monitoring_sessions/latest/visualizations/
 | `message_frequencies.png` | Topic Hz over time |
 | `cpu_usage_timeline.png` | CPU usage over time |
 | `cpu_heatmap.png` | CPU distribution across cores |
+| `gpu_usage.log` | Intel™ GPU metrics (present when `--gpu` used) |
+| `npu_usage.log` | Intel™ NPU metrics (present when `--npu` used) |
+| `kpi.json` | KPI summary for the session |
 
 ## Monitor a Specific Node
 
