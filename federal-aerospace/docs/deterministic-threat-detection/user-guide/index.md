@@ -9,9 +9,9 @@
 </div>
 hide_directive-->
 
-# Deterministic Threat Detection
+# Deterministic Threat Detection (Preview)
 
-Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks.
+Welcome to the documentation for the Deterministic Threat Detection project—a Time-Sensitive Networking (TSN) demonstration showing how to deliver deterministic, low-latency AI and sensor workloads in shared networks. This application is currently in preview.
 
 ## Overview
 
@@ -47,7 +47,7 @@ Basler GigE cameras hardware-timestamp each frame with IEEE 1588v2 PTP. A patche
 
 ## Key References
 
-- **MOXA TSN-G5000:** [PTP Grandmaster, VLAN segmentation, IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5004-series)
+- **MOXA TSN-G5000:** [PTP Grandmaster, VLAN segmentation, IEEE 802.1Qbv shaping](https://www.moxa.com/en/products/industrial-network-infrastructure/ethernet-switches/layer-2-managed-switches/tsn-g5008-series)
 - **Intel i226 NIC:** TSN-capable Ethernet controller for Arrow Lake hosts
 - **IEEE 802.1Qbv:** Time-Aware Scheduler for traffic isolation
 - **Intel® SceneScape:** [3D multi-camera object tracking](https://github.com/open-edge-platform/scenescape)
