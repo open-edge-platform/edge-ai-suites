@@ -7,8 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 {{- $needsGpu := contains "GPU" $targetDevice -}}
 {{- $weightFormat := default (ternary "int4" "int8" (or (contains "GPU" $targetDevice) (contains "NPU" $targetDevice))) .Values.vlmServing.env.weightFormat -}}
 {{- $sanitized := .Values.vlmServing.env.modelName | replace "/" "_" | replace ":" "_" | replace " " "_" -}}
-{{- $isOpenvino := hasPrefix "OpenVINO/" .Values.vlmServing.env.modelName -}}
-{{- $storageName := ternary (printf "%s_%s" $sanitized $targetDevice) (printf "%s_%s_%s" $sanitized $targetDevice $weightFormat) $isOpenvino -}}
+{{- $storageName := printf "%s_%s_%s" $sanitized $targetDevice $weightFormat -}}
 
 apiVersion: apps/v1
 kind: Deployment
@@ -46,7 +45,7 @@ spec:
             - /bin/sh
             - -c
             - |
-              # Storage-aware model detection — skip download if model already on PVC
+              # Storage-aware model detection
               vlm_storage_name="{{ $storageName }}"
               vlm_model_path="/models/${vlm_storage_name}"
 
@@ -66,7 +65,7 @@ spec:
                   needs_init=true
                 fi
                 if [ "$needs_init" = false ]; then
-                  echo "Model ${vlm_storage_name} already exists with correct config. Skipping."
+                  echo "Model ${vlm_storage_name} already exists with correct config."
                 fi
               else
                 echo "No config.json found, building OVMS model repository."
@@ -74,29 +73,34 @@ spec:
               fi
 
               if [ "$needs_init" = true ]; then
-                exec /opt/entrypoint.sh \
-                    --plugins huggingface \
-                    --ephemeral \
-                    --model-name {{ .Values.vlmServing.env.modelName | quote }} \
-                    --hub huggingface \
-                    --type vlm \
-                    --precision {{ $weightFormat | quote }} \
-                    --device {{ $targetDevice | quote }}
+                . /config/ovms-init.sh
               fi
+          args:
+            - {{ .Values.vlmServing.env.modelName | quote }}
+            - {{ $weightFormat | quote }}
+            - {{ .Values.vlmServing.huggingfaceToken | quote }}
+            - {{ $targetDevice | quote }}
           env:
-            - name: MODELS_DIR
-              value: /models
-            - name: HF_TOKEN
-              value: {{ .Values.vlmServing.huggingfaceToken | quote }}
             - name: http_proxy
               value: {{ .Values.global.proxy.httpProxy | quote }}
             - name: https_proxy
               value: {{ .Values.global.proxy.httpsProxy | quote }}
+            - name: HTTP_PROXY
+              value: {{ .Values.global.proxy.httpProxy | quote }}
+            - name: HTTPS_PROXY
+              value: {{ .Values.global.proxy.httpsProxy | quote }}
             - name: no_proxy
               value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
+            - name: NO_PROXY
+              value: "{{ .Values.global.proxy.noProxy }},.svc,.svc.cluster.local,.cluster.local"
+            - name: PIP_TRUSTED_HOST
+              value: "storage.openvinotoolkit.org download.pytorch.org"
           volumeMounts:
             - name: ov-models
               mountPath: /models
+            - name: init-script
+              mountPath: /config
+              readOnly: true
       containers:
         - name: {{ .Values.vlmServing.name }}
           image: "{{- if $needsGpu -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.gpuTag }}{{- else -}}{{ .Values.vlmServing.image.repository }}:{{ .Values.vlmServing.image.tag }}{{- end -}}"
@@ -165,6 +169,10 @@ spec:
           {{- else }}
           emptyDir: {}
           {{- end }}
+        - name: init-script
+          configMap:
+            name: {{ include "stia.vlmServing.fullname" . }}-init-script
+            defaultMode: 0755
         {{- if $needsGpu }}
         - name: dri-device
           hostPath:
