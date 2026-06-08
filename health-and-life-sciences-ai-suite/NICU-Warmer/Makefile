@@ -2,6 +2,9 @@
 
 # Default device profile (mixed-optimized: detection=GPU, rPPG=CPU, action=NPU)
 DEVICE_ENV ?= configs/res/mixed-optimized.env
+REGISTRY ?= true
+TAG ?= 2026.1.0-rc2
+export TAG
 
 setup:
 	@echo "Downloading models + video (first-time setup)..."
@@ -18,8 +21,14 @@ test-mvp:
 run:
 	@echo "Using device profile: $(DEVICE_ENV)"
 	@echo "Clearing stale metrics data..."
-	rm -rf metrics/*.csv metrics/*.log metrics/*.json 2>/dev/null || true
-	DEVICE_ENV=$(DEVICE_ENV) docker compose -f docker-compose.yaml --profile dlsps up --build --remove-orphans -d
+	@rm -rf metrics/*.csv metrics/*.log metrics/*.json 2>/dev/null || true
+	@if [ "$(REGISTRY)" = "true" ]; then \
+		echo "Using prebuilt registry images (TAG=$(TAG))..."; \
+		DEVICE_ENV=$(DEVICE_ENV) ./run_compose.sh --profile dlsps up --remove-orphans -d; \
+	else \
+		echo "Building local images from source..."; \
+		DEVICE_ENV=$(DEVICE_ENV) ./run_compose.sh --profile dlsps up --build --remove-orphans -d; \
+	fi
 	@echo ""
 	@echo "All services starting. Open http://localhost:3001 once ready."
 	@echo "Run 'make down' to stop."
@@ -42,8 +51,14 @@ run-mixed:
 
 run-without-dlsps:
 	@echo "Clearing stale metrics data..."
-	rm -rf metrics/*.csv metrics/*.log metrics/*.json 2>/dev/null || true
-	docker compose -f docker-compose.yaml up --build --remove-orphans -d nicu-metrics-collector nicu-backend nicu-ui
+	@rm -rf metrics/*.csv metrics/*.log metrics/*.json 2>/dev/null || true
+	@if [ "$(REGISTRY)" = "true" ]; then \
+		echo "Using prebuilt registry images (TAG=$(TAG))..."; \
+		DEVICE_ENV=$(DEVICE_ENV) ./run_compose.sh up --remove-orphans -d nicu-metrics-collector nicu-backend nicu-ui; \
+	else \
+		echo "Building local images from source..."; \
+		DEVICE_ENV=$(DEVICE_ENV) ./run_compose.sh up --build --remove-orphans -d nicu-metrics-collector nicu-backend nicu-ui; \
+	fi
 
 down:
 	docker compose -f docker-compose.yaml --profile dlsps down

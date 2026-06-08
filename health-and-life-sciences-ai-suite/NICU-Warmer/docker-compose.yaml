@@ -22,7 +22,6 @@ services:
       - dlsps-shared:/shared
     devices:
       - /dev/dri:/dev/dri          # Intel iGPU
-      - /dev/accel:/dev/accel      # Intel NPU
     group_add:
       - "44"       # video
       - "992"      # render
@@ -62,7 +61,7 @@ services:
         condition: service_healthy
 
   nicu-metrics-collector:
-    image: intel/hl-ai-metrics-collector:2026.0-rc1
+    image: intel/hl-ai-metrics-collector:${TAG:-1.0.0}
     container_name: nicu-metrics-collector
     pid: host
     ports:
@@ -91,7 +90,7 @@ services:
     privileged: true
 
   nicu-dlsps:
-    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc1.1}
+    image: ${NICU_DLSPS_IMAGE:-intel/dlstreamer-pipeline-server:2026.1.0-ubuntu24-rc2}
     container_name: nicu-dlsps
     user: "0:0"
     profiles: ["dlsps"]
@@ -101,7 +100,6 @@ services:
       - "8080:8080"
     devices:
       - /dev/dri:/dev/dri          # Intel iGPU (Arc / Meteor Lake)
-      - /dev/accel:/dev/accel      # Intel NPU
     group_add:
       - "44"       # video
       - "992"      # render
