@@ -324,11 +324,26 @@ export_model_for_ovms() {
     bash "$get_model_script" \
         --model-name "$source_model" \
         --hub "$hub" \
-        --type vision \
+        --type vlm \
         --precision "$weight_format" \
         --device "$target_device" \
         --model-path "${OVMS_CONFIG_DIR}/models" \
-        --plugins "${hub}" || return 1
+        --plugins "${hub}"
+
+    local exit_code=$?
+    if [ $exit_code -ne 0 ]; then
+        echo -e "${RED}ERROR: Model download/conversion failed for '${source_model}' (exit code: ${exit_code}).${NC}"
+        local log_dir="${PWD}/.model_download_logs"
+        local latest_log
+        latest_log=$(ls -t "${log_dir}"/model_download_*.log 2>/dev/null | head -1)
+        if [ -n "$latest_log" ]; then
+            echo -e "${YELLOW}==> Last 30 lines from log: ${latest_log}${NC}"
+            tail -30 "$latest_log"
+        else
+            echo -e "${YELLOW}No model download log found in: ${log_dir}${NC}"
+        fi
+        return 1
+    fi
 
     echo "$storage_model_name"
 }

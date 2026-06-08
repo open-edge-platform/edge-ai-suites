@@ -80,7 +80,7 @@ spec:
                 bash /tmp/get_model.sh --internal \
                     --model-name {{ .Values.vlmServing.env.modelName | quote }} \
                     --hub huggingface \
-                    --type vision \
+                    --type vlm \
                     --precision {{ $weightFormat | quote }} \
                     --device {{ $targetDevice | quote }}
               fi
