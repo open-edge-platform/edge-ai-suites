@@ -1,4 +1,4 @@
-﻿app:
+app:
   name: Smart Classroom
   cleanup_on_exit: true
   use_ov_genai: False # True or False, applicable for provider: openvino
@@ -13,8 +13,8 @@ monitoring:
 
 models:
   asr:
-    provider: funasr # openvino, funasr and openai supported
-    name: paraformer-zh  # can be (whisper-base, whisper-small etc) or paraformer-zh
+    provider: openai # openvino, funasr and openai supported
+    name: whisper-small  # can be (whisper-base, whisper-small etc) or paraformer-zh
     device: CPU # CPU Recommended
     temperature: 0.0
     diarization: False
@@ -28,7 +28,7 @@ models:
   
   diarization: #Only applicable when diarization is set to True for ASR
     provider: "huggingface"
-    name: "pyannote/speaker-diarization-community-1"
+    name: "pyannote/speaker-diarization-3.1"
     models_base_path: "models"
 
   summarizer:
