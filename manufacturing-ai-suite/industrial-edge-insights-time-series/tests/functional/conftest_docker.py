@@ -328,13 +328,7 @@ def setup_wind_turbine_environment(request):
             pytest.fail("Wind Turbine OPC-UA deployment failed")
             return False
         opcua_name = constants.CONTAINERS["opcua_server"]["name"]
-        # The constant captures the single-stream / replica-1 container name
-        # (e.g. "timeseriessoftware-ia-opcua-server-1"). For scaled deployments
-        # docker-compose creates replicas "...-server-1", "...-server-2", ...,
-        # so a prefix match must strip the trailing "-1" — otherwise the poll
-        # only sees replica 1 and fails with "only some ...-server-1* replicas
-        # came up" even when all replicas are healthy.
-        opcua_scale_prefix = opcua_name.rsplit("-", 1)[0] + "-"
+        opcua_replica_prefix = opcua_name.rsplit("-", 1)[0] + "-"
         base = [c for c in _WIND_OPCUA_CONTAINERS if c != opcua_name]
         if num_of_streams is None:
             base.append(opcua_name)
@@ -343,10 +337,10 @@ def setup_wind_turbine_environment(request):
             return False
         if num_of_streams is not None and int(num_of_streams) >= 1:
             if not docker_utils.wait_until_scaled_containers_up(
-                opcua_scale_prefix, int(num_of_streams),
+                opcua_replica_prefix, int(num_of_streams),
                 timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT,
             ):
-                pytest.fail(f"Wind Turbine OPC-UA: only some '{opcua_scale_prefix}*' replicas came up")
+                pytest.fail(f"Wind Turbine OPC-UA: only some '{opcua_replica_prefix}*' replicas came up")
                 return False
         if not docker_utils.wait_until_service_ready(timeout=constants.WIND_TURBINE_CONTAINER_READY_TIMEOUT):
             pytest.fail("Wind Turbine OPC-UA: ts-api health endpoint did not respond in time")

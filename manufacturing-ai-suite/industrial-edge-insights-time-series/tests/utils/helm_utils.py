@@ -343,7 +343,7 @@ def update_values_yaml(file_path, values):
         logger.error(f"Failed to update values.yaml: {e}")
         return False
 
-def _gh_dump_unhealthy_pods(namespace):
+def _dump_unhealthy_pods(namespace):
     """Dump describe + logs for every non-Running pod in *namespace*.
 
     Best-effort: every kubectl invocation is wrapped so a failure here never
@@ -437,7 +437,7 @@ def _gh_dump_unhealthy_pods(namespace):
         except Exception as e:
             logger.error(f"events dump failed: {e}")
     except Exception as e:
-        logger.error(f"_gh_dump_unhealthy_pods crashed: {e}")
+        logger.error(f"_dump_unhealthy_pods crashed: {e}")
 
 
 def verify_pods(namespace, timeout=300, interval=5):
@@ -472,7 +472,7 @@ def verify_pods(namespace, timeout=300, interval=5):
                 elapsed_time = time.time() - start_time
                 if elapsed_time > timeout:
                     logger.error("Timeout reached. No pods found in namespace.")
-                    _gh_dump_unhealthy_pods(namespace)
+                    _dump_unhealthy_pods(namespace)
                     return False
                 time.sleep(interval)
                 continue
@@ -525,7 +525,7 @@ def verify_pods(namespace, timeout=300, interval=5):
             elapsed_time = time.time() - start_time
             if elapsed_time > timeout:
                 logger.error(f"Timeout reached. Not all pods are healthy after {timeout}s.")
-                _gh_dump_unhealthy_pods(namespace)
+                _dump_unhealthy_pods(namespace)
                 return False
 
             # Wait before checking again
@@ -1555,24 +1555,6 @@ def generate_helm_chart(chart_path, sample_app=constants.WIND_SAMPLE_APP):
         os.chdir(original_dir)
         logger.info(f"Restored working directory to: {os.getcwd()}")
 
-
-_gh_generated_for_sample_app = set()
-
-
-def ensure_chart_generated(chart_path, sample_app):
-    """Ensure helm chart runtime files are generated for `sample_app`.
-
-    Idempotent: only invokes `make gen_helm_charts` the first time it is
-    called for a given sample_app within the current process.
-    """
-    if not sample_app:
-        return True
-    if sample_app in _gh_generated_for_sample_app:
-        return True
-    ok = generate_helm_chart(chart_path, sample_app=sample_app)
-    if ok:
-        _gh_generated_for_sample_app.add(sample_app)
-    return ok
 
 def helm_install(release_name, chart_path, namespace, telegraf_input_plugin, continuous_simulator_ingestion="True", val="false", sample_app=None):
     """Install a Helm chart with specified parameters."""

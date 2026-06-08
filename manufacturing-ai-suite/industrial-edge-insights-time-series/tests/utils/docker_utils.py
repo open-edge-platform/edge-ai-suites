@@ -1846,27 +1846,7 @@ def _kapacitor_task_alert_mode_matches(alert_mode):
 
 
 def reset_loaded_udf_to(alert_mode, sample_app=constants.WIND_SAMPLE_APP):
-    """Ensure TSAM's loaded UDF package and config are in `alert_mode`.
-
-    Idempotent: if Kapacitor's running task already matches `alert_mode`,
-    returns True fast without re-tar/re-upload.  Otherwise:
-      1. Rewrites the on-disk TICK script to `alert_mode`.
-      2. Re-tars and POSTs the UDF package to ``/ts-api/udfs/package``.
-      3. POSTs ``/ts-api/config`` so Kapacitor reloads the task from the
-         freshly-uploaded package.
-
-    Used both as a finalizer in state-mutating tests (e.g. the OPC-UA
-    alert test resets back to MQTT baseline on teardown) and as an
-    optional pre-check at the top of state-consuming tests for
-    self-sufficiency in any execution order.
-
-    Args:
-        alert_mode: "mqtt" or "opcua".
-        sample_app: Sample app name passed to ``upload_udf_tar_package``.
-
-    Returns:
-        bool: True if the loaded UDF is in the requested mode after the call.
-    """
+    """Idempotently ensure TSAM's loaded UDF package and config match alert_mode (mqtt/opcua), rewriting TICK and re-uploading only if needed."""
     if alert_mode not in ("mqtt", "opcua"):
         logger.error(f"[reset_loaded_udf_to] Invalid alert_mode '{alert_mode}'")
         return False
