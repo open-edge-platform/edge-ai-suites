@@ -128,6 +128,9 @@ elif [ "$1" = "--stop" ] || [ "$1" = "--clean" ]; then
             docker volume ls --format '{{.Name}}' | grep "$PROJECT_NAME" | xargs -r docker volume rm 2>/dev/null || true
             if [ -d "${OVMS_CONFIG_DIR}" ]; then
                 echo -e "${YELLOW}Removing OVMS model cache (${OVMS_CONFIG_DIR})...${NC}"
+                # Model files may be root-owned (created inside Docker container).
+                # Fix ownership first so rm -rf can delete them.
+                docker run --rm -v "${OVMS_CONFIG_DIR}:/ovms_dir" busybox chown -R "$(id -u):$(id -g)" /ovms_dir 2>/dev/null || true
                 rm -rf "${OVMS_CONFIG_DIR}"
             fi
         fi
@@ -366,12 +369,13 @@ export_model_for_ovms() {
 
     bash "$get_model_script" \
         --model-name "$source_model" \
-        --hub "$hub" \
+        --hub openvino \
         --type vlm \
+	--is-ovms \
         --precision "$weight_format" \
         --device "$target_device" \
         --model-path "${OVMS_CONFIG_DIR}/models" \
-        --plugins "${hub}"
+        --plugins openvino
 
     local exit_code=$?
     if [ $exit_code -ne 0 ]; then
@@ -388,6 +392,43 @@ export_model_for_ovms() {
         return 1
     fi
 
+    # get_model.sh places config_all.json under openvino_models/{device}/{precision}/
+    # and uses the source model name (e.g. "microsoft/Phi-3.5-vision-instruct") as
+    # the OVMS model name.  OVMS needs config.json at the root of /models, and
+    # the traffic agent calls OVMS using storage_model_name.  Fix both here.
+    local models_root="${OVMS_CONFIG_DIR}/models"
+    local generated_config
+    generated_config=$(find "${models_root}/openvino_models" -name "config_all.json" 2>/dev/null | head -1)
+
+    if [ -n "$generated_config" ]; then
+        # Relative path of the generated config's directory from models root
+        local config_rel_dir
+        config_rel_dir=$(dirname "${generated_config#${models_root}/}")
+
+        # base_path inside the generated config is relative to that directory
+        local inner_base_path
+        inner_base_path=$(grep -oP '"base_path":\s*"\K[^"]+' "$generated_config" | head -1)
+
+        local abs_base_path="${config_rel_dir}/${inner_base_path}"
+
+        cat > "${models_root}/config.json" << OVMS_CFG
+{
+    "model_config_list": [
+        {
+            "config": {
+                "name": "${storage_model_name}",
+                "base_path": "${abs_base_path}",
+                "target_device": "${target_device}"
+            }
+        }
+    ]
+}
+OVMS_CFG
+        echo -e "${GREEN}==> Created config.json: name=${storage_model_name}, base_path=${abs_base_path}${NC}"
+    else
+        echo -e "${YELLOW}WARNING: Could not find generated config_all.json under ${models_root}/openvino_models. OVMS may not start.${NC}"
+    fi
+
     echo "$storage_model_name"
 }
 
@@ -397,22 +438,13 @@ ensure_ovms_model() {
     local weight_format="$3"
     local ovms_model_config="${OVMS_CONFIG_DIR}/models/config.json"
     local storage_model_name
-    local model_path
 
     storage_model_name=$(get_ovms_storage_model_name "$model_name" "$target_device" "$weight_format")
-    model_path="${OVMS_CONFIG_DIR}/models/${storage_model_name}"
 
     echo -e "[ovms-service] ${BLUE}Checking for model: ${YELLOW}${storage_model_name}${NC}" >&2
 
-    if [ -d "$model_path" ] && [ -f "${model_path}/graph.pbtxt" ]; then
-        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already exists. Skipping export.${NC}" >&2
-
-        if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
-            echo -e "[ovms-service] ${GREEN}Model is registered in OVMS config.${NC}" >&2
-        else
-            echo -e "[ovms-service] ${YELLOW}Model exists but not in config. Will re-register.${NC}" >&2
-        fi
-
+    if [ -f "${ovms_model_config}" ] && ovms_config_has_model "${ovms_model_config}" "${storage_model_name}"; then
+        echo -e "[ovms-service] ${GREEN}Model ${YELLOW}${storage_model_name}${GREEN} already registered in OVMS config. Skipping export.${NC}"
         echo "$storage_model_name"
     else
         echo -e "[ovms-service] ${YELLOW}Model ${RED}${storage_model_name}${YELLOW} not found. Exporting...${NC}" >&2
