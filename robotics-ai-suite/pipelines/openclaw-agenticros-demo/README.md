@@ -85,6 +85,7 @@ pip install -U "huggingface_hub[cli]"
 
 # Download Qwen3-VL-8B-Instruct model
 # Login is not required for the public download used in this setup
+export HF_ENDPOINT="https://hf-mirror.com"
 mkdir -p ~/models
 cd ~/models
 hf download Qwen/Qwen3-VL-8B-Instruct --local-dir qwen3-vl-8b-instruct
@@ -102,7 +103,7 @@ source ~/env_openvino/bin/activate
 
 # Install OpenVINO conversion tools from requirements file
 # Use the included requirements file (or download from robot-claw repo)
-pip install -r ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/requirements/qwen3_vl_openvino_requirements.txt
+pip install -r ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/requirements/qwen3_vl_openvino_requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Convert the model
 optimum-cli export openvino \
@@ -165,9 +166,11 @@ docker run -d --rm \
   --tool_parser hermes3
 
 # Verify OVMS is running
-docker logs ovms-qwen3-vl 2>&1 | grep -E "Server started|Model loaded"
+docker logs ovms-qwen3-vl 2>&1 | grep -E "Started|Loaded"
 
-# Quick functional test
+# Quick functional test (set NO_PROXY to bypass proxy for localhost)
+export NO_PROXY="localhost,127.0.0.0/8"
+
 curl -s http://localhost:8000/v3/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
@@ -180,6 +183,30 @@ curl -s http://localhost:8000/v3/chat/completions \
       { "role": "user", "content": "What are the 3 main tourist attractions in Paris?" }
     ]
   }' | jq .
+
+# The output should be like:
+{
+  "choices": [
+    {
+      "finish_reason": "length",
+      "index": 0,
+      "logprobs": null,
+      "message": {
+        "content": "While Paris has countless iconic sights, three of the **most famous and must-see tourist attractions** are:\n\n1. **The Eiffel Tower",
+        "role": "assistant",
+        "tool_calls": []
+      }
+    }
+  ],
+  "created": 1780986249,
+  "model": "qwen3-vl-8b-ov-int4",
+  "object": "chat.completion",
+  "usage": {
+    "prompt_tokens": 30,
+    "completion_tokens": 30,
+    "total_tokens": 60
+  }
+}
 
 # Tool-calling validation (OpenAI-compatible)
 # Step 1: Request a tool call and confirm finish_reason is "tool_calls"
@@ -291,12 +318,15 @@ npm install -g pnpm
 pnpm install
 pnpm build
 
+# Install OpenClaw CLI globally (allows 'openclaw' command from any terminal)
+npm install -g .
+
 # Run OpenClaw onboarding (initial setup - creates ~/.openclaw/openclaw.json)
 # This interactive wizard guides you through:
 # - Gateway setup (authentication, port configuration)
 # - Workspace directory configuration
 # - Channel and skill setup
-./openclaw.mjs onboard
+openclaw onboard
 
 # After onboarding completes, configure OpenClaw for Intel OVMS backend
 # OpenClaw creates ~/.openclaw/openclaw.json by default during installation
@@ -387,7 +417,8 @@ After base ROS2 installation, install simulation dependencies:
 sudo apt update
 sudo apt install -y \
   python3-colcon-common-extensions \
-  ros-jazzy-gazebo-ros-pkgs \
+  ros-jazzy-ros-gz \
+  ros-jazzy-ros-gz-sim \
   ros-jazzy-rosbridge-suite \
   ros-jazzy-control-msgs \
   ros-jazzy-moveit-msgs \
@@ -395,11 +426,11 @@ sudo apt install -y \
   ros-jazzy-moveit-visual-tools \
   ros-jazzy-rviz2
 
-> Note: on the validation host, `ros-jazzy-gazebo-ros-pkgs` was not available from the configured apt repositories. `ros-jazzy-rosbridge-suite` installed successfully, and `apt-cache search '^ros-jazzy-.*gazebo.*'` can be used to find distro-available Gazebo packages if you hit the same gap.
+> Note: the launch files in this demo use Gazebo Sim through `ros_gz_sim`, so `ros-jazzy-ros-gz-sim` and `ros-jazzy-rosbridge-suite` must be installed. On the validation host.
 
 # Verify ROS2 installation
 source /opt/ros/jazzy/setup.bash
-ros2 pkg list | grep -E "gazebo|rosbridge" | head -5
+ros2 pkg list | grep -E "gz|rosbridge"
 ```
 
 ### 4. AgenticROS Setup
@@ -447,11 +478,13 @@ ln -sf ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/aws
 # Install Node.js dependencies and build TypeScript packages
 cd ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros
 pnpm install
-pnpm typecheck
 
 # Build the packages for OpenClaw plugin integration
 pnpm --filter @agenticros/core build
 pnpm --filter @agenticros/ros-camera build
+
+# Run TypeScript type checking to verify the build
+pnpm typecheck
 
 # Build ROS2 workspace (including JAKA_KARGO and warehouse world)
 cd ros2_ws
@@ -481,7 +514,7 @@ mkdir -p ~/.local/bin
 
 cat > ~/.local/bin/openclaw-gateway-with-ros.sh << 'EOF'
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 source /opt/ros/jazzy/setup.bash
 source ~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/install/setup.bash
@@ -607,6 +640,10 @@ ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
     gazebo_launch:=gazebo_small_warehouse.launch.py \
     use_gazebo_gui:=true
 
+# Note: `use_gazebo_gui:=true` requires a graphical desktop session with a valid
+# display. In pure tty sessions, use `use_gazebo_gui:=false` (or the xvfb path
+# in Troubleshooting).
+
 # Wait for Gazebo to fully load (you should see the warehouse and robot)
 ```
 
@@ -641,15 +678,20 @@ ss -ltn '( sport = :9090 )'
 
 ```bash
 # AWS Small Warehouse without GUI (headless mode)
+# Use Ogre renderer if Ogre2 render came across crash error.
 ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
     gazebo_launch:=gazebo_small_warehouse.launch.py \
+    gazebo_render_engine:=ogre \
     use_gazebo_gui:=false
 
 # AWS Small Warehouse no-roof variant
 ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
     gazebo_launch:=gazebo_small_warehouse.launch.py \
-    warehouse_world:=~/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/src/aws-robomaker-small-warehouse-world/worlds/no_roof_small_warehouse/no_roof_small_warehouse.world \
+    warehouse_world:=$HOME/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/src/aws-robomaker-small-warehouse-world/worlds/no_roof_small_warehouse/no_roof_small_warehouse.world \
     use_gazebo_gui:=true
+
+# If `gz sim` is missing, ensure the Gazebo tools registry path is present.
+export GZ_CONFIG_PATH="/opt/ros/jazzy/opt/gz_tools_vendor/share/gz:${GZ_CONFIG_PATH:-}"
 ```
 
 ### Step 2: Start OpenClaw Dashboard
@@ -675,6 +717,13 @@ systemctl --user status openclaw-gateway
 # Expected: Active: active (running)
 ```
 
+**Chat with Qwen3-VL in OpenClaw UI**
+
+<p align="center">
+  <img src="README.assets/openclaw-ovms-validation.png" alt="OpenClaw OVMS Validation"><br>
+  <em>Validate the OpenClaw and OVMS setup through the OpenClaw UI chat</em>
+</p>
+
 ### Step 3: Interact with the Robot
 
 **Open the OpenClaw web UI in your browser using the URL shown by the dashboard command.**
@@ -691,6 +740,11 @@ What does the robot see
 2. ✅ AgenticROS subscribes to `/camera/image_raw/compressed`
 3. ✅ Image is captured and displayed in OpenClaw UI
 4. ✅ Qwen3-VL model analyzes the image and responds with description
+
+<p align="center">
+  <img src="README.assets/camera_snapshot_validation.png" alt="Camera Snapshot Validation"><br>
+  <em>Validate the camera snapshot feature: OpenClaw captures and analyzes the robot's camera view</em>
+</p>
 
 #### Movement Commands
 ```
@@ -728,8 +782,17 @@ gazebo --version
 rm -rf ~/.gazebo/
 mkdir -p ~/.gazebo/models
 
+# Restore the Gazebo tools registry path if `gz` is missing commands
+export GZ_CONFIG_PATH="/opt/ros/jazzy/opt/gz_tools_vendor/share/gz:${GZ_CONFIG_PATH:-}"
+source /opt/ros/jazzy/setup.bash
+source ~/yy/edge-ai-suites/robotics-ai-suite/pipelines/openclaw-agenticros-demo/agenticros/ros2_ws/install/setup.bash
+
 # Try launching with verbose output
-ros2 launch agenticros_bringup jaka_gazebo_aws_warehouse.launch.py --ros-args --log-level debug
+ros2 launch agenticros_bringup rosbridge_gazebo.launch.py \
+  gazebo_launch:=gazebo_small_warehouse.launch.py \
+  gazebo_render_engine:=ogre \
+  use_gazebo_gui:=false \
+  --ros-args --log-level debug
 ```
 
 ### OVMS Connection Failed
@@ -762,6 +825,9 @@ ps aux | grep rosbridge
 
 # Verify WebSocket port is open
 netstat -tuln | grep 9090
+
+# If launch reports "Address already in use", find and stop the existing listener first
+ss -ltnp '( sport = :9090 )'
 
 # Restart rosbridge
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
