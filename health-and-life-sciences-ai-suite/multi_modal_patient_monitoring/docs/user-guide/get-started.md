@@ -83,6 +83,13 @@ models/downloads/
    --local-dir models/downloads/ai-ecg/hubert-ecg-small
    ```
 
+
+> **Third-Party Content**
+> 
+> *In the course of using these Intel-provided instruction, users may choose to download content (e.g., models, dataset, etc.) created and distributed by third parties. In doing so, these users acknowledge and agree that they have done so after reviewing background information about the content and agreeing to the license governing the content they select.*
+> 
+> ***Notice**: Intel does not create the content and does not warrant its accuracy or quality. By accessing the third-party content, or using materials trained on or with such content, you are indicating your acceptance of the terms associated with that content and warranting that your use complies with the applicable license.*
+
 ### Verify the contents:
 
 ```bash
