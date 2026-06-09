@@ -1,0 +1,399 @@
+# Copyright (c) 2026 Intel Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+From 48c3c511a44b200dbc883555aee926b631d44576 Mon Sep 17 00:00:00 2001
+From: RoboticsYY <yu.yan@intel.com>
+Date: Tue, 2 Jun 2026 14:07:24 +0800
+Subject: [PATCH] Update warehouse model URIs and gazebo dependency exports
+
+---
+ CMakeLists.txt                                          | 2 --
+ models/aws_robomaker_warehouse_Bucket_01/model.sdf      | 4 ++--
+ models/aws_robomaker_warehouse_ClutteringA_01/model.sdf | 4 ++--
+ models/aws_robomaker_warehouse_ClutteringC_01/model.sdf | 4 ++--
+ models/aws_robomaker_warehouse_ClutteringD_01/model.sdf | 4 ++--
+ models/aws_robomaker_warehouse_DeskC_01/model.sdf       | 4 ++--
+ models/aws_robomaker_warehouse_GroundB_01/model.sdf     | 6 +++---
+ models/aws_robomaker_warehouse_Lamp_01/model.sdf        | 4 ++--
+ models/aws_robomaker_warehouse_PalletJackB_01/model.sdf | 4 ++--
+ models/aws_robomaker_warehouse_RoofB_01/model.sdf       | 6 +++---
+ models/aws_robomaker_warehouse_ShelfD_01/model.sdf      | 4 ++--
+ models/aws_robomaker_warehouse_ShelfE_01/model.sdf      | 4 ++--
+ models/aws_robomaker_warehouse_ShelfF_01/model.sdf      | 4 ++--
+ models/aws_robomaker_warehouse_TrashCanC_01/model.sdf   | 4 ++--
+ models/aws_robomaker_warehouse_WallB_01/model.sdf       | 4 ++--
+ package.xml                                             | 2 +-
+ 16 files changed, 31 insertions(+), 33 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 9f26253..50dd742 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -8,7 +8,6 @@ project(aws_robomaker_small_warehouse_world)
+ # Find ament packages and libraries for ament and system dependencies
+ ################################################################################
+ find_package(ament_cmake REQUIRED)
+-find_package(gazebo_ros REQUIRED)
+ 
+ ################################################################################
+ # Install
+@@ -21,7 +20,6 @@ install(
+ ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/env-hooks/aws_robomaker_small_warehouse_world.dsv.in")
+ 
+ ament_export_dependencies(ament_cmake)
+-ament_export_dependencies(gazebo_ros)
+ 
+ ################################################################################
+ # Macro for ament package
+diff --git a/models/aws_robomaker_warehouse_Bucket_01/model.sdf b/models/aws_robomaker_warehouse_Bucket_01/model.sdf
+index 1a11c29..f6f3a13 100644
+--- a/models/aws_robomaker_warehouse_Bucket_01/model.sdf
++++ b/models/aws_robomaker_warehouse_Bucket_01/model.sdf
+@@ -21,7 +21,7 @@
+       <visual name='visual'>
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_Bucket_01/meshes/aws_robomaker_warehouse_Bucket_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_Bucket_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+ 		<meta> <layer> 1 </layer></meta>
+@@ -32,7 +32,7 @@
+         <pose frame=''>0 0 0 0 -0 0</pose>
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_Bucket_01/meshes/aws_robomaker_warehouse_Bucket_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_Bucket_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+diff --git a/models/aws_robomaker_warehouse_ClutteringA_01/model.sdf b/models/aws_robomaker_warehouse_ClutteringA_01/model.sdf
+index e0ab80f..22be363 100644
+--- a/models/aws_robomaker_warehouse_ClutteringA_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ClutteringA_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringA_01/meshes/aws_robomaker_warehouse_ClutteringA_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringA_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -44,7 +44,7 @@
+       <visual name="visual">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringA_01/meshes/aws_robomaker_warehouse_ClutteringA_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringA_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+         <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_ClutteringC_01/model.sdf b/models/aws_robomaker_warehouse_ClutteringC_01/model.sdf
+index 0a1802a..5e4c459 100644
+--- a/models/aws_robomaker_warehouse_ClutteringC_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ClutteringC_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringC_01/meshes/aws_robomaker_warehouse_ClutteringC_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringC_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -44,7 +44,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringC_01/meshes/aws_robomaker_warehouse_ClutteringC_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringC_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+         <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_ClutteringD_01/model.sdf b/models/aws_robomaker_warehouse_ClutteringD_01/model.sdf
+index 31da401..94e0956 100644
+--- a/models/aws_robomaker_warehouse_ClutteringD_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ClutteringD_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringD_01/meshes/aws_robomaker_warehouse_ClutteringD_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringD_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -44,7 +44,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ClutteringD_01/meshes/aws_robomaker_warehouse_ClutteringD_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ClutteringD_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_DeskC_01/model.sdf b/models/aws_robomaker_warehouse_DeskC_01/model.sdf
+index 3fcbd97..62b3717 100644
+--- a/models/aws_robomaker_warehouse_DeskC_01/model.sdf
++++ b/models/aws_robomaker_warehouse_DeskC_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_DeskC_01/meshes/aws_robomaker_warehouse_DeskC_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_DeskC_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_DeskC_01/meshes/aws_robomaker_warehouse_DeskC_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_DeskC_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_GroundB_01/model.sdf b/models/aws_robomaker_warehouse_GroundB_01/model.sdf
+index abab8b4..0472e5d 100644
+--- a/models/aws_robomaker_warehouse_GroundB_01/model.sdf
++++ b/models/aws_robomaker_warehouse_GroundB_01/model.sdf
+@@ -8,7 +8,7 @@
+           <ixx>1200083.33</ixx>
+           <ixy>0</ixy>
+           <ixz>0</ixz>
+-          <iyy>8333416.66</iyy>
++          <iyy>833341.66</iyy>
+           <iyz>0</iyz>
+           <izz>2033333.33</izz>
+         </inertia>
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_GroundB_01/meshes/aws_robomaker_warehouse_GroundB_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_GroundB_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_GroundB_01/meshes/aws_robomaker_warehouse_GroundB_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_GroundB_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_Lamp_01/model.sdf b/models/aws_robomaker_warehouse_Lamp_01/model.sdf
+index 8b636c8..3ae7ba4 100644
+--- a/models/aws_robomaker_warehouse_Lamp_01/model.sdf
++++ b/models/aws_robomaker_warehouse_Lamp_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_Lamp_01/meshes/aws_robomaker_warehouse_Lamp_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_Lamp_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_Lamp_01/meshes/aws_robomaker_warehouse_Lamp_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_Lamp_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_PalletJackB_01/model.sdf b/models/aws_robomaker_warehouse_PalletJackB_01/model.sdf
+index b6568b1..4dd52c5 100644
+--- a/models/aws_robomaker_warehouse_PalletJackB_01/model.sdf
++++ b/models/aws_robomaker_warehouse_PalletJackB_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_PalletJackB_01/meshes/aws_robomaker_warehouse_PalletJackB_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_PalletJackB_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_PalletJackB_01/meshes/aws_robomaker_warehouse_PalletJackB_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_PalletJackB_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_RoofB_01/model.sdf b/models/aws_robomaker_warehouse_RoofB_01/model.sdf
+index 11f8fb6..a865c2c 100644
+--- a/models/aws_robomaker_warehouse_RoofB_01/model.sdf
++++ b/models/aws_robomaker_warehouse_RoofB_01/model.sdf
+@@ -11,13 +11,13 @@
+           <ixz>0</ixz>
+           <iyy>459441.200</iyy>
+           <iyz>0</iyz>
+-          <izz>1302083.333</izz>
++          <izz>1290000.000</izz>
+         </inertia>
+       </inertial>
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_RoofB_01/meshes/aws_robomaker_warehouse_RoofB_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_RoofB_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -45,7 +45,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_RoofB_01/meshes/aws_robomaker_warehouse_RoofB_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_RoofB_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 3 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_ShelfD_01/model.sdf b/models/aws_robomaker_warehouse_ShelfD_01/model.sdf
+index 3b4f0ed..9e74ce7 100644
+--- a/models/aws_robomaker_warehouse_ShelfD_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ShelfD_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfD_01/meshes/aws_robomaker_warehouse_ShelfD_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfD_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfD_01/meshes/aws_robomaker_warehouse_ShelfD_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfD_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_ShelfE_01/model.sdf b/models/aws_robomaker_warehouse_ShelfE_01/model.sdf
+index 5c043ec..1d09ae3 100644
+--- a/models/aws_robomaker_warehouse_ShelfE_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ShelfE_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfE_01/meshes/aws_robomaker_warehouse_ShelfE_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfE_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfE_01/meshes/aws_robomaker_warehouse_ShelfE_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfE_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_ShelfF_01/model.sdf b/models/aws_robomaker_warehouse_ShelfF_01/model.sdf
+index c140f01..a92817b 100644
+--- a/models/aws_robomaker_warehouse_ShelfF_01/model.sdf
++++ b/models/aws_robomaker_warehouse_ShelfF_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfF_01/meshes/aws_robomaker_warehouse_ShelfF_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfF_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_ShelfF_01/meshes/aws_robomaker_warehouse_ShelfF_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_ShelfF_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_TrashCanC_01/model.sdf b/models/aws_robomaker_warehouse_TrashCanC_01/model.sdf
+index c5915e1..e8134b8 100644
+--- a/models/aws_robomaker_warehouse_TrashCanC_01/model.sdf
++++ b/models/aws_robomaker_warehouse_TrashCanC_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_TrashCanC_01/meshes/aws_robomaker_warehouse_TrashCanC_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_TrashCanC_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_TrashCanC_01/meshes/aws_robomaker_warehouse_TrashCanC_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_TrashCanC_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 1 </layer></meta>
+diff --git a/models/aws_robomaker_warehouse_WallB_01/model.sdf b/models/aws_robomaker_warehouse_WallB_01/model.sdf
+index e1695f3..b9f3dac 100644
+--- a/models/aws_robomaker_warehouse_WallB_01/model.sdf
++++ b/models/aws_robomaker_warehouse_WallB_01/model.sdf
+@@ -16,7 +16,7 @@
+       <collision name="collision">
+         <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_WallB_01/meshes/aws_robomaker_warehouse_WallB_01_collision.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_WallB_01_collision.DAE</uri>
+             <scale>1 1 1</scale>
+           </mesh>
+         </geometry>
+@@ -35,7 +35,7 @@
+       <visual name="visual">
+ 	    <geometry>
+           <mesh>
+-            <uri>file://models/aws_robomaker_warehouse_WallB_01/meshes/aws_robomaker_warehouse_WallB_01_visual.DAE</uri>
++            <uri>meshes/aws_robomaker_warehouse_WallB_01_visual.DAE</uri>
+           </mesh>
+         </geometry>
+       <meta> <layer> 2 </layer></meta>
+diff --git a/package.xml b/package.xml
+index 8ce31c0..da6f309 100644
+--- a/package.xml
++++ b/package.xml
+@@ -11,7 +11,7 @@
+ 
+   <buildtool_depend>ament_cmake</buildtool_depend>
+   
+-  <depend>gazebo_ros</depend>
++  <exec_depend>gazebo_ros</exec_depend>
+   <exec_depend>gazebo</exec_depend>
+   <exec_depend>gazebo_plugins</exec_depend>
+ 
+-- 
+2.43.0
+
