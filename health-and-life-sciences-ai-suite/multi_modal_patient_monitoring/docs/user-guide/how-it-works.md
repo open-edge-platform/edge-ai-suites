@@ -97,8 +97,7 @@ Putting the pieces together:
 
 1. **Assets initialization** – patient-monitoring-assets populates the shared `models` and
    `videos` volumes.
-2. **RPPG inference** – the rPPG service reads video frames, preprocesses them, and runs the
-   MTTS‑CAN model on Intel hardware (CPU/GPU/NPU) via OpenVINO.
+2. **RPPG inference** – the rPPG service reads video frames, preprocesses them, and runs the model on Intel hardware (CPU/GPU/NPU) via OpenVINO.
 3. **Vitals aggregation** – rPPG streams waveform and numeric vitals to
    patient-monitoring-aggregator over gRPC.
 4. **Monitoring and observability** – metrics-collector continuously records hardware
