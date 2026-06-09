@@ -39,13 +39,13 @@ In single-node mode, all services run on one machine. The setup script performs 
 
 ```bash
 export NVR_SCENESCAPE=true
-export NVR_GENAI=false
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
 export VSS_SUMMARY_IP=<vss_ip>
 export VSS_SUMMARY_PORT=<vss_port>
 export VSS_SEARCH_IP=<vss_ip>
 export VSS_SEARCH_PORT=<vss_port>
+# export RTSP_STREAM_PORT=<rtsp port>      # optional default 8554
 ```
 
 ### Start
@@ -71,6 +71,7 @@ In distributed mode, Smart Intersection runs on a dedicated machine (System 1) w
 
 ```bash
 export NVR_SCENESCAPE=true
+# export RTSP_STREAM_PORT=<rtsp port>      # optional default 8554
 source setup.sh start-si
 ```
 
@@ -79,20 +80,22 @@ Upon successful startup, the script outputs the System 1 IP address required for
 ### System 2 (NVR Node)
 
 ```bash
+# Required
 export NVR_SCENESCAPE=true
-export NVR_GENAI=false
-export SCENESCAPE_MQTT_BROKER=<system1_ip>
-export RTSP_STREAM_HOST=<system1_ip>
 export MQTT_USER=<mqtt-username>
 export MQTT_PASSWORD=<mqtt-password>
+export SCENESCAPE_MQTT_BROKER=<system1_ip>
+export RTSP_STREAM_HOST=<system1_ip>
 export VSS_SUMMARY_IP=<vss_ip>
 export VSS_SUMMARY_PORT=<vss_port>
 export VSS_SEARCH_IP=<vss_ip>
 export VSS_SEARCH_PORT=<vss_port>
+# Optional 
+# export RTSP_STREAM_PORT=<rtsp port>      # default 8554
 source setup.sh start-nvr
 ```
 
-System 2 connects to System 1's MQTT broker (port 1883) for SceneScape events and RTSP server (port 8554) for video streams.
+System 2 connects to System 1's MQTT broker (port `1883` by default) for SceneScape events and RTSP server (port `8554` by default) for video streams.
 
 ## Stop Services
 

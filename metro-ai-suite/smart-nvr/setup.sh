@@ -191,19 +191,22 @@ stop_scenescape() {
 }
 
 validate_environment() {
-    if [ -z "${NVR_GENAI}" ]; then
-        print_error "NVR_GENAI environment variable is required (true/false)"
-        return 1
-    fi
     if [ -z "${NVR_SCENESCAPE}" ]; then
         print_error "NVR_SCENESCAPE environment variable is required (true/false)"
         return 1
     fi
-    # Scenescape and GenAI are mutually exclusive
-    if ([ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]) && ([ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]); then
-        print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
-        print_info "Please set NVR_GENAI to 'false' if using SceneScape, or disable NVR_SCENESCAPE"
-        return 1
+
+    if [ "${NVR_SCENESCAPE}" = "True" ] || [ "${NVR_SCENESCAPE}" = "true" ]; then
+        if [ "${NVR_GENAI}" = "True" ] || [ "${NVR_GENAI}" = "true" ]; then
+            print_error "NVR_GENAI cannot be enabled when NVR_SCENESCAPE is enabled"
+            return 1
+        fi
+        export NVR_GENAI=false
+    else
+        if [ -z "${NVR_GENAI}" ]; then
+            print_error "NVR_GENAI environment variable is required (true/false)"
+            return 1
+        fi
     fi
     
     # Check for VSS IP and port
@@ -348,9 +351,16 @@ start_si_services() {
     print_info "System 1 IP: ${CYAN}${HOST_IP}${NC}"
     print_info "On System 2 (SmartNVR machine), run:"
     echo -e "  ${CYAN}export NVR_SCENESCAPE=true${NC}"
+    echo -e "  ${CYAN}export MQTT_USER=<mqtt-username>${NC}"
+    echo -e "  ${CYAN}export MQTT_PASSWORD=<mqtt-password>${NC}"
     echo -e "  ${CYAN}export SCENESCAPE_MQTT_BROKER=${HOST_IP}${NC}"
     echo -e "  ${CYAN}export RTSP_STREAM_HOST=${HOST_IP}${NC}"
-    echo -e "  ${CYAN}# ...plus VSS_*, MQTT_USER, MQTT_PASSWORD, etc.${NC}"
+    echo -e "  ${CYAN}export VSS_SUMMARY_IP=<vss_ip>${NC}"
+    echo -e "  ${CYAN}export VSS_SUMMARY_PORT=<vss_port>${NC}"
+    echo -e "  ${CYAN}export VSS_SEARCH_IP=<vss_ip>${NC}"
+    echo -e "  ${CYAN}export VSS_SEARCH_PORT=<vss_port>${NC}"
+    echo -e "  ${CYAN}# export SCENESCAPE_MQTT_PORT=<port>  # optional, default 1883${NC}"
+    echo -e "  ${CYAN}# export RTSP_STREAM_PORT=<port>      # optional, default ${RTSP_STREAM_PORT}${NC}"
     echo -e "  ${CYAN}source setup.sh start-nvr${NC}"
 }
 
