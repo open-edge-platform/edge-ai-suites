@@ -57,7 +57,7 @@ ocr:
 
 ### F. Install Content Search Dependencies
 
-Run the installation script in PowerShell with Administrator privileges:
+Run the installation script in **PowerShell** with Administrator privileges:
 
 ```PowerShell
 cd smart-classroom\content_search
