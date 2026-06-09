@@ -30,12 +30,11 @@ To see the system requirements and other installations, see the following guides
 
 Before running `make run`, place source models in these exact paths:
 
-- `models/downloads/rppg/mtts_can.hdf5`
-- `models/downloads/3d-pose/human-pose-estimation-3d.tar.gz`
-- `models/downloads/ai-ecg/hubert-ecg-small/` (local Hugging Face model folder)
+- `models/downloads/rppg/`
+- `models/downloads/3d-pose/`
+- `models/downloads/ai-ecg/` (local Hugging Face model folder)
 
-`make run` now validates these paths and then performs only local conversion/quantization
-steps. Model downloads are no longer performed automatically during startup.
+`make run` validates these paths.
 
 ## How It Works
 
