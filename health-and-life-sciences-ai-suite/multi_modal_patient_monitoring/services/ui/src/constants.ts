@@ -6,7 +6,10 @@ export const constants = {
   VERSION: 'v1.0.0',
 };
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+export const API_BASE_URL = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${API_HOST}:8001`
+  : `http://${API_HOST}:8001`;
 
 export const WORKLOADS = [
   {

@@ -8,11 +8,14 @@ export type StartResponse = {
 };
 export type StopResponse = { status: string; message: string };
 
-// Derive API base URL from env or the host the UI is served from
-const API_HOST = import.meta.env.VITE_API_HOST || window.location.hostname;
-const API_PORT = import.meta.env.VITE_API_PORT || '8001';
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
-const AGGREGATOR_URL = import.meta.env.VITE_API_BASE_URL || `http://${API_HOST}:${API_PORT}`;
+// Derive the backend origin from the browser host so prebuilt UI images
+// still call the machine that actually served the page.
+const API_HOST = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+const API_PORT = (import.meta as any).env?.VITE_API_PORT || '8001';
+const BASE_URL = typeof window !== 'undefined'
+  ? `${window.location.protocol}//${API_HOST}:${API_PORT}`
+  : `http://${API_HOST}:${API_PORT}`;
+const AGGREGATOR_URL = BASE_URL;
 // const METRICS_URL = import.meta.env.VITE_METRICS_BASE_URL || `http://${API_HOST}:${METRICS_PORT}`;
 
 // console.log('[API] Aggregator URL:', AGGREGATOR_URL);
