@@ -9,19 +9,17 @@
 
 **New**
 
-- **Deterministic Threat Detection**:
-	Initial release of the deterministic threat detection subproject with SceneScape-specific changes. This feature provides a real-time threat detection system for time-sensitive networks.
+- The deterministic threat detection subproject with Intel® Scenescape-specific changes
+  and a use case for testing purposes.
 
-- **Use Case Implementation**:
-	Includes the required code to test the deterministic threat detection use case with SceneScape.
-
-- **Documentation**:
-	- Comprehensive documentation for setting up, configuring, and running use case tests with SceneScape.
-	- Comprehensive documentation for setting up, configuring, and capturing HOTA metrics with SceneScape, both with and without traffic shaping.
+- Documentation for setting up, configuring, and capturing HOTA metrics with
+  Intel Scenescape, both with and without traffic shaping.
 
 **Improved**
-- **Documentation Updates**
-    - Restructure the older documentation to separate the SceneScape-specific content into its own section, while keeping the original RTSP use case documentation intact.
+
+- Restructured the documentation to separate the Intel Scenescape-specific
+  content into its own section, while keeping the original RTSP use case
+  documentation intact.
 
 ## Version 1.0.0
 
@@ -29,11 +27,11 @@
 
 **New**
 
-Deterministic Threat Detection: 
+Deterministic Threat Detection:
 Initial release of the deterministic threat detection subproject. This feature provides a real-time threat detection system for time-sensitive networks.
 
-Use Case Implementation: 
+Use Case Implementation:
 Includes the necessary code to test the deterministic threat detection use case.
 
-Documentation: 
+Documentation:
 Comprehensive documentation on how to set up, configure, and run tests for the use case.
