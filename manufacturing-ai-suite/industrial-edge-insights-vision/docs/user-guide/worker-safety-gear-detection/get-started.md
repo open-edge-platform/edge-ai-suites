@@ -54,8 +54,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
-   > **Note:** The setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md).
-
 ## Deploy the Application
 
 1. Start the Docker application:
@@ -138,8 +136,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'worker_safety_gear_detection' posted successfully. Response: "784b87b45d1511f08ab0da88aa49c01e"
    ```
 
-   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Intel® Geti™, follow [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
-
    > **Note:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser, at the url below.
    > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace <HOST_IP> with <HOST_IP>:<NGINX_HTTPS_PORT>
 
@@ -218,7 +214,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
-- [Generate a custom model with Intel® Geti™](./how-to-guides/generating-model-from-geti.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances using Helm charts](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)

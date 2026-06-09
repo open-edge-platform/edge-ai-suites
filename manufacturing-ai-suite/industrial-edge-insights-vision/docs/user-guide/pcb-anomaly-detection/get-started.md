@@ -54,8 +54,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up application prerequisites, downloads artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
-   > **Note:** The setup script downloads a pre-trained anomaly classification model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md).
-
 ## Deploy the Application
 
 1. Start the Docker application:
@@ -137,8 +135,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'pcb_anomaly_detection' posted successfully. Response: "f0c0b5aa5d4911f0bca7023bb629a486"
    ```
 
-   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own PCB data using Intel® Geti™, follow [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
-
    > **Note:** This will start the pipeline. The inference stream can be viewed on WebRTC, in a browser at the following url:
    >If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e. replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`
    >If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
@@ -218,7 +214,6 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
-- [Generate a custom model with Intel® Geti™](./how-to-guides/generating-model-from-geti.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
