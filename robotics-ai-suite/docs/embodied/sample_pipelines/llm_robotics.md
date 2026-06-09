@@ -397,9 +397,9 @@ ROS2 component, and non-real-time LLM component.
 
     If the ROS2 node launches successfully, RVIZ2 will display the following:
 
-    ![image](README.assets/jaka-robot-arm.png)
+    ![jaka-robot-arm](./assets/images/jaka-robot-arm.png)
 
-5.  Launch the LLM application:
+6.  Launch the LLM application:
 
     ``` bash
     cd <path_to_llm-robotics-demo>/LLM/
@@ -410,7 +410,7 @@ ROS2 component, and non-real-time LLM component.
     If the LLM application launches successfully, the demo UI will
     display the following:
 
-    > ![image](README.assets/llm-robotics-demo-UI.png)
+    > ![llm-robotics-demo-UI](./assets/images/llm-robotics-demo-UI.png)
 
     - Camera Stream & Depth Stream: displays the real-time color and
       depth streams from the camera.
@@ -424,4 +424,4 @@ ROS2 component, and non-real-time LLM component.
     Attach a demo picture with the prompt (Please pick up the black
     computer mouse and place it in the target position) as shown below:
 
-    > ![image](README.assets/llm-robotics-demo.png)
+    > ![llm-robotics-demo](./assets/images/llm-robotics-demo.png)
