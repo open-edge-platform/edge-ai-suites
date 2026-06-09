@@ -43,7 +43,30 @@ When you run `make run` or `make run REGISTRY=false`, the compose file reads
 inference engine compiles its OpenVINO model on the requested device, with automatic fallback
 to CPU when necessary.
 
-## 3. Run the Sample
+## 3. Stage Models Manually
+
+Before running the stack, place source models under the repository-local folder:
+
+```bash
+models/downloads/
+├── ai-ecg/hubert-ecg-small/
+├── rppg/mtts_can.hdf5
+└── 3d-pose/human-pose-estimation-3d.tar.gz
+```
+
+Required artifacts:
+
+- `models/downloads/rppg/mtts_can.hdf5`
+- `models/downloads/3d-pose/human-pose-estimation-3d.tar.gz`
+- `models/downloads/ai-ecg/hubert-ecg-small/` (full local Hugging Face model directory)
+
+The `make run` target validates these paths first. If any artifact is missing, startup fails
+with an actionable error before containers are launched.
+
+During startup, the assets service now only performs local preparation (conversion/quantization
+steps) from these staged model files and does not download model files automatically.
+
+## 4. Run the Sample
 
 ### Run Using Pre‑Built Images (Registry Mode)
 
@@ -81,7 +104,7 @@ To stop and remove all containers when you are done:
 make down
 ```
 
-## 4. Access the UI
+## 5. Access the UI
 
 By default, the UI service exposes port 3000 on the host:
 
@@ -90,7 +113,7 @@ By default, the UI service exposes port 3000 on the host:
 From there you can observe heart rate and respiratory rate estimates, along with waveforms
 produced by the rPPG service and aggregated by the patient‑monitoring‑aggregator.
 
-## 5. Control RPPG Streaming
+## 6. Control RPPG Streaming
 
 The rPPG service provides a simple HTTP control API (hosted by an internal FastAPI server) to
 start and stop streaming:
@@ -103,7 +126,7 @@ start and stop streaming:
 Exact URLs and endpoints may differ slightly depending on how the control API is exposed in
 your environment; refer to the rPPG service documentation for details.
 
-## 6. View Hardware Metrics
+## 7. View Hardware Metrics
 
 The metrics-collector service writes telemetry (GPU, NPU, CPU, power, and other metrics) into
 the `metrics` directory on the host, and may also expose summarized metrics via its own API:

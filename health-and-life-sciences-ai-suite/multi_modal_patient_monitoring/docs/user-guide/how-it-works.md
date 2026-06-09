@@ -25,8 +25,8 @@ The following sections describe each service in more detail.
 The **patient-monitoring-assets** service is responsible for preparing all AI assets required
 by the workload:
 
-- Downloads or generates AI models (for example, the MTTS‑CAN model used by the rPPG service)
-  and converts them to OpenVINO IR format.
+- Reads manually staged source models from the shared `models/downloads` folder and converts
+  or quantizes them into runtime artifacts (for example, OpenVINO IR format).
 - Downloads reference video assets and places them in shared volumes (for example, the `videos`
   volume consumed by rPPG).
 - Writes models into a shared `models` volume, making them available to downstream services

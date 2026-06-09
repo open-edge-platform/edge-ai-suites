@@ -84,8 +84,8 @@ The application bundles several AI workloads, each with its own model and inputs
 
 - **Network Access:**
   - Local network connectivity to access the UI (default: `http://<HOST_IP>:3000`).
-  - Optional outbound internet access to download Docker base images, models, and assets
-    (if not pre‑cached).
+  - Optional outbound internet access to download Docker base images and reference video assets
+    (if not pre‑cached). Model files are expected to be staged manually.
 
 - **Proxy Support (optional):**
   - If your environment uses HTTP/HTTPS proxies, configure:
