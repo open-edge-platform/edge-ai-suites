@@ -338,10 +338,13 @@ To uninstall the application, follow these steps:
 
 1. **Delete the Python virtual environment folder:** \
    Navigate to the directory and remove \
-   For base environment : *education-ai-suite/smartclassroom*. \
-   For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*.
+  For base environment : *education-ai-suite/smartclassroom*. \
+  For IPEX environemnt : *education-ai-suite/smartclassroom_ipex*. \
+  For content search environment: *education-ai-suite/smart-classroom/content_search/venv_content_search*.
 2. **Remove the models directory:**
-   Remove the models folder located under *education-ai-suite/smart-classroom*.
+  Remove the models folder located under *education-ai-suite/smart-classroom*.
+3. **Remove the content search database:**
+  Remove uploaded files, vector database and upload record at *education-ai-suite/smart-classroom/content_search/data*.
 
 <!--hide_directive
 :::{toctree}
