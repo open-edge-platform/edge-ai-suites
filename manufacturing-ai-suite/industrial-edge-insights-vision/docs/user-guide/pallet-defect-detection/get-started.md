@@ -54,6 +54,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
    This script sets up application prerequisites, download artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
+   > **Note:** The setup script downloads a pre-trained detection model by default. If you want to train and use your own custom model, see [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md).
+
 ## Deploy the Application
 
 1. Start the Docker application:
@@ -142,6 +144,8 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
    Payload for pipeline 'pallet_defect_detection' posted successfully. Response: "4b36b3ce52ad11f0ad60863f511204e2"
    ```
 
+   > **Note:** The pipeline uses the pre-trained model downloaded during setup. To replace it with a custom model trained on your own data using Intel® Geti™, follow [Generating a Model from Geti™](./how-to-guides/generating-model-from-geti.md) and replace the `model.xml` and `model.bin` files in your resources accordingly.
+
    > **Note:** This will start the pipeline. To view the inference stream on WebRTC, open a browser and navigate to https://<HOST_IP>/mediamtx/pdd/ for Pallet Defect Detection
    > If you are running multiple instances of the app, ensure to provide `NGINX_HTTPS_PORT` number in the url for the app instance, i.e., replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
    > If you are running a single instance and using an `NGINX_HTTPS_PORT` other than the default 443, replace `<HOST_IP>` with `<HOST_IP>:<NGINX_HTTPS_PORT>`.
@@ -217,6 +221,7 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 ## Further Reading
 
+- [Generate a custom model with Intel® Geti™](./how-to-guides/generating-model-from-geti.md)
 - [Deploy with Helm](./get-started/deploy-with-helm.md)
 - [Deploy multiple instances with Helm](./get-started/deploy-multiple-instances-with-helm.md)
 - [Enable MLOps](./how-to-guides/enable-mlops.md)
