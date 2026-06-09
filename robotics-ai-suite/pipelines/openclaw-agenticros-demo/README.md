@@ -85,6 +85,7 @@ pip install -U "huggingface_hub[cli]"
 
 # Download Qwen3-VL-8B-Instruct model
 # Login is not required for the public download used in this setup
+export HF_ENDPOINT="https://hf-mirror.com"
 mkdir -p ~/models
 cd ~/models
 hf download Qwen/Qwen3-VL-8B-Instruct --local-dir qwen3-vl-8b-instruct
