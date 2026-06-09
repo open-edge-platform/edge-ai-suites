@@ -107,7 +107,37 @@ function Stop-AllServices {
         }
         Write-Host "    ChromaDB stopped." -ForegroundColor Gray
     }
-    
+
+    $connections = Get-NetTCPConnection -LocalPort 9900 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping VLM (port 9900)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    VLM stopped." -ForegroundColor Gray
+    }
+
+    $connections = Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping Preprocess (port 8001)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    Preprocess stopped." -ForegroundColor Gray
+    }
+
+    $connections = Get-NetTCPConnection -LocalPort 9990 -ErrorAction SilentlyContinue
+    if ($connections) {
+        Write-Host "  Stopping Ingest (port 9990)..." -ForegroundColor Yellow
+        $procIds = $connections | Select-Object -ExpandProperty OwningProcess -Unique
+        foreach ($procId in $procIds) {
+            Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host "    Ingest stopped." -ForegroundColor Gray
+    }
+
     $connections = Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue
     if ($connections) {
         Write-Host "  Stopping Frontend (port 5173)..." -ForegroundColor Yellow
@@ -307,10 +337,13 @@ if ($Restart) {
     # -Restart flag: stop all running services and start fresh
     Write-Host "  -Restart flag specified. Stopping all running services..." -ForegroundColor Yellow
     if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-    if ($contentSearchRunning) { 
+    if ($contentSearchRunning) {
         Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
     }
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+    Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
+    Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
+    Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
     if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
     
     $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
@@ -339,10 +372,13 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Restarting all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+            Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
+            Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
+            Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
             
             $deleteVenvs = Read-Host "  Delete virtual environments and create new? (Y/N)"
@@ -368,10 +404,13 @@ if ($Restart) {
             Write-Host ""
             Write-Host "  Stopping all services..." -ForegroundColor Yellow
             if ($backendRunning) { Stop-ServiceOnPort -Port 8000 -ServiceName "Backend" }
-            if ($contentSearchRunning) { 
+            if ($contentSearchRunning) {
                 Stop-ServiceOnPort -Port 9011 -ServiceName "Content Search"
             }
             Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+            Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
+            Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
+            Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
             if ($frontendRunning) { Stop-ServiceOnPort -Port 5173 -ServiceName "Frontend" }
             Write-Host "  All services stopped. Exiting." -ForegroundColor Green
             exit 0
@@ -390,9 +429,12 @@ if ($Restart) {
 } else {
     Write-Host "  No main services detected." -ForegroundColor Green
     Write-Host ""
-    Write-Host "  Stopping any orphaned processes (ChromaDB, Python)..." -ForegroundColor Yellow
-    
+    Write-Host "  Stopping any orphaned processes (ChromaDB, VLM, Preprocess, Ingest, Python)..." -ForegroundColor Yellow
+
     Stop-ServiceOnPort -Port 9090 -ServiceName "ChromaDB"
+    Stop-ServiceOnPort -Port 9900 -ServiceName "VLM"
+    Stop-ServiceOnPort -Port 8001 -ServiceName "Preprocess"
+    Stop-ServiceOnPort -Port 9990 -ServiceName "Ingest"
     
     Get-Process -Name "python" -ErrorAction SilentlyContinue | ForEach-Object {
         $procPath = $_.Path
