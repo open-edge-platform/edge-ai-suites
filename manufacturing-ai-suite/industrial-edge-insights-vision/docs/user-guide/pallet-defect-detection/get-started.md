@@ -14,18 +14,18 @@ If not, follow the [installation guide for docker engine](https://docs.docker.co
 
 1. Clone the **edge-ai-suites** repository and change into industrial-edge-insights-vision directory. The directory contains the utility scripts required in the instructions that follows.
 
-Go to the target directory of your choice and clone the suite.
-If you want to clone a specific release branch, replace `main` with the desired tag.
-To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
+   Go to the target directory of your choice and clone the suite.
+   If you want to clone a specific release branch, replace `main` with the desired tag.
+   To learn more on partial cloning, check the [Repository Cloning guide](https://docs.openedgeplatform.intel.com/dev/OEP-articles/contribution-guide.html#repository-cloning-partial-cloning).
 
    ```bash
    git clone --filter=blob:none --sparse --branch main https://github.com/open-edge-platform/edge-ai-suites.git
    cd edge-ai-suites
    git sparse-checkout set manufacturing-ai-suite
    cd manufacturing-ai-suite/industrial-edge-insights-vision
-```
+   ```
 
-2. Set app-specific environment variable file
+2. Set the app-specific environment variable file
 
    ```bash
    cp .env_pallet-defect-detection .env
@@ -46,13 +46,13 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
    SAMPLE_APP=pallet-defect-detection
    ```
 
-4. Install the pre-requisites. Run with sudo if needed.
+4. Install the prerequisites. Run with sudo if needed.
 
    ```bash
    ./setup.sh
    ```
 
-   This script sets up application pre-requisites, download artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in docker compose file automatically.
+   This script sets up application prerequisites, download artifacts, sets executable permissions for scripts, etc. Downloaded resource directories are made available to the application via volume mounting in Docker Compose file automatically.
 
 ## Deploy the Application
 
@@ -64,7 +64,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
    sudo systemctl start docker
    ```
 
-    > **Note:** If you are running multiple instances of app, start the services using `./run.sh up` instead.
+    > **Note:** If you are running multiple instances of the app, start the services using `./run.sh up` instead.
 
    ```bash
    docker compose up -d
@@ -207,7 +207,7 @@ To learn more on partial cloning, check the [Repository Cloning guide](https://d
 
 6. Stop the Docker application.
 
-    > **Note:** If you are running multiple instances of app, stop the services using `./run.sh down` instead.
+    > **Note:** If you are running multiple instances of the app, stop the services using `./run.sh down` instead.
 
    ```bash
    docker compose down -v

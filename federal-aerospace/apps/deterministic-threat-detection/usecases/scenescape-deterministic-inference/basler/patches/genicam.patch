@@ -1,10 +1,10 @@
 diff --git a/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.cc b/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.cc
-index d1ea4c39..24ce3981 100755
+index 9e85c2d3..ea3c2829 100644
 --- a/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.cc
 +++ b/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.cc
-@@ -30,6 +30,9 @@
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  */
+@@ -4,6 +4,9 @@
+ # SPDX-License-Identifier: Apache-2.0
+ */
  
 +#include <stdio.h>
 +#include <time.h>
@@ -12,7 +12,7 @@ index d1ea4c39..24ce3981 100755
  #include "genicam.h"
  #include "gstgencamsrc.h"
  
-@@ -700,6 +703,28 @@ Genicam::Stop (void)
+@@ -677,6 +680,28 @@ Genicam::Stop (void)
  }
  
  
@@ -41,7 +41,7 @@ index d1ea4c39..24ce3981 100755
  bool Genicam::Create (GstBuffer ** buf, GstMapInfo * mapInfo)
  {
    /* Grab the buffer, copy and release, set framenum */
-@@ -741,6 +766,9 @@ bool Genicam::Create (GstBuffer ** buf, GstMapInfo * mapInfo)
+@@ -718,6 +743,9 @@ bool Genicam::Create (GstBuffer ** buf, GstMapInfo * mapInfo)
        return FALSE;
      }
      GST_BUFFER_PTS (*buf) = timestampNS;
@@ -52,10 +52,10 @@ index d1ea4c39..24ce3981 100755
  
      memcpy (mapInfo->data, buffer->getGlobalBase (), mapInfo->size);
 diff --git a/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.h b/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.h
-index afcfcb28..17826b7f 100755
+index c3f47f92..84d85be0 100755
 --- a/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.h
 +++ b/microservices/dlstreamer-pipeline-server/plugins/camera/src-gst-gencamsrc/plugins/genicam.h
-@@ -316,6 +316,9 @@ private:
+@@ -290,6 +290,9 @@ private:
  
    /* Sets Device Link Throughput Limit */
    bool setDeviceLinkThroughputLimit (void);

@@ -6,6 +6,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # ADBSCAN (Adaptive Density-Based Spatial Clustering of Applications with Noise)
 
+## Documentation
+
+Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/adbscan/index.html)
+
 ## Overview
 
 ADBSCAN is an advanced unsupervised clustering algorithm that groups high-dimensional points based on their distribution density. It is an improvement over the classic DBSCAN algorithm where the clustering parameters are adaptive based on the range, making it especially suitable for processing LiDAR data. ADBSCAN is an Intel-patented algorithm which improves the object detection range by 20-30%
@@ -176,10 +180,6 @@ This package provides a ROS2 tutorial for the **gesture-based follow-me applicat
 ### package/tutorial_aaeon_adbscan
 
 This package provides a ROS2 tutorial focused on **running the ADBSCAN algorithm itself** on a custom AAEON robot. It shows how to deploy and configure the ADBSCAN ROS2 node for obstacle clustering and object detection, without the full follow-me behavior.
-
-## Documentation
-
-Comprehensive documentation on this component is available here: [dev guide](https://docs.openedgeplatform.intel.com/dev/edge-ai-suites/robotics-ai-suite/robotics/dev_guide/tutorials_amr/navigation/adbscan/index.html)
 
 ## License
 

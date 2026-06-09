@@ -26,27 +26,30 @@ service:
 
 ingress:
   enabled: true
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/proxy-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-request-buffering: "off"
-    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
-    nginx.ingress.kubernetes.io/chunked-transfer-encoding: "on"
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  # NOTE: The community kubernetes/ingress-nginx controller was RETIRED in March 2026
+  # (no further bug fixes or security updates) and must NOT be used. See:
+  # https://github.com/kubernetes/ingress-nginx#retiring
+  #
+  # This chart is intentionally ingress-controller-agnostic. All traffic (UI and /api)
+  # is routed to the nicu-ui service, whose internal reverse proxy forwards /api/*
+  # requests to the backend (stripping the /api prefix). Because of this, NO
+  # controller-specific rewrite/regex annotations are required and the chart works with
+  # any actively-maintained ingress controller (Traefik, HAProxy, Contour, etc.).
+  #
+  # `className` defaults to Traefik — an actively maintained, CNCF-graduated controller
+  # that ships by default with K3s. Override it to match your cluster's IngressClass,
+  # set it to "" to use the cluster's default IngressClass, or set `ingress.enabled:
+  # false` to use port-forwarding instead.
+  className: traefik
+  # Add any controller-specific annotations here if your environment needs them.
+  annotations: {}
   hosts:
     - host: nicu-warmer.local
       paths:
-        # Backend API
-        - path: /api(/|$)(.*)
-          pathType: ImplementationSpecific
-          service: nicu-backend
-          port: 80
-        # Frontend UI (catch-all)
-        - path: /()(.*)
-          pathType: ImplementationSpecific
+        # Single route: the UI service serves the frontend and reverse-proxies /api/*
+        # to the backend, so no path-rewrite annotations are needed.
+        - path: /
+          pathType: Prefix
           service: nicu-ui
           port: 80
   tls: []
@@ -56,7 +59,7 @@ backend:
   image:
     repository: intel
     name: hl-ai-nicu-backend
-    tag: "2026.1.0-rc1"
+    tag: "2026.1.0-rc2"
     pullPolicy: IfNotPresent
   resources: {}
 
@@ -64,14 +67,14 @@ ui:
   image:
     repository: intel
     name: hl-ai-nicu-ui
-    tag: "2026.1.0-rc1"
+    tag: "2026.1.0-rc2"
     pullPolicy: IfNotPresent
 
 metrics:
   image:
     repository: intel
     name: hl-ai-metrics-collector
-    tag: "2026.0-rc1"
+    tag: "2026.0-rc2"
     pullPolicy: IfNotPresent
 
 # DLSPS + MQTT (required for inference pipeline)
@@ -80,7 +83,7 @@ dlsps:
   image:
     repository: intel
     name: dlstreamer-pipeline-server
-    tag: "2026.1.0-ubuntu24-rc1"
+    tag: "2026.1.0-ubuntu24-rc2"
     pullPolicy: IfNotPresent
   resources: {}
 
@@ -115,6 +118,13 @@ assets:
     #   <hostPath>/extensions/rppg_gva.py
     #   <hostPath>/extensions/action_gva.py
     #   <hostPath>/extensions/publisher_utils_patched.py
+    # Legacy flat bundles are also accepted, including:
+    #   <hostPath>/person-detect-fp32.{xml,bin}
+    #   <hostPath>/patient-detect-fp32.{xml,bin}
+    #   <hostPath>/latch-detect-fp32.{xml,bin}
+    #   <hostPath>/action-recognition-0001-{encoder,decoder}.{xml,bin}
+    #   <hostPath>/models_rppg/mtts_can.{xml,bin}
+    #   <hostPath>/Warmer_Testbed_YTHD.mp4
     hostPath: /opt/nicu-warmer-assets
 
 # Device configuration — controls which Intel accelerator each workload uses.

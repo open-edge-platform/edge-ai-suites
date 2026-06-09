@@ -3,9 +3,59 @@
 ## Prerequisites
 
 - Ensure you meet the [System Requirements](./system-requirements.md) for this application.
-- K8s installation on single or multi node must be done as pre-requisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
+- K8s installation on single or multi node must be done as prerequisite to continue the following deployment. Note: The Kubernetes cluster is set up with `kubeadm`, `kubectl` and `kubelet` packages on single and multi nodes with `v1.30.2`.
   Refer to tutorials online to setup kubernetes cluster on the web with host OS as ubuntu 22.04 and/or ubuntu 24.04.
 - For Helm installation, refer to [Helm website](https://helm.sh/docs/intro/install/)
+- **Intel NFD and Device Plugins** (required for GPU/NPU workloads): Install [Node Feature Discovery (NFD)](https://github.com/intel/intel-device-plugins-for-kubernetes) and the Intel GPU/NPU device plugins to enable hardware detection and scheduling. This ensures pods requesting GPU or NPU resources are only deployed on nodes with available hardware. Refer to [release tags](https://github.com/intel/intel-device-plugins-for-kubernetes/tags) for available versions (tested with `v0.35.0`):
+
+  ```bash
+  # Pick a release version compatible with your cluster
+  export RELEASE_VERSION=v0.35.0
+
+  # Step 1: Create namespace for the Intel device plugins
+  kubectl create namespace intel-device-plugins
+
+  # Step 2: Allow privileged pods in the device plugin namespace
+  # Required because the plugin needs hostPath mounts and access to host device files.
+  kubectl label namespace intel-device-plugins \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 3: Install Node Feature Discovery (NFD)
+  # NFD uses its own namespace: node-feature-discovery
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd?ref=${RELEASE_VERSION}"
+
+  # Step 4: Allow privileged pods in the NFD namespace
+  kubectl label namespace node-feature-discovery \
+    pod-security.kubernetes.io/enforce=privileged \
+    pod-security.kubernetes.io/audit=privileged \
+    pod-security.kubernetes.io/warn=privileged \
+    --overwrite
+
+  # Step 5: Install Intel GPU NodeFeatureRules
+  # These rules let NFD detect and label Intel GPU nodes.
+  kubectl apply -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/nfd/overlays/node-feature-rules?ref=${RELEASE_VERSION}"
+
+  # Step 6: Verify NFD pods are running
+  kubectl get pods -n node-feature-discovery
+
+  # Step 7: Verify the node got Intel GPU and NPU labels
+  kubectl get node $(hostname) --show-labels | tr ',' '\n' | grep intel
+
+  # Step 8: Install the Intel GPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/gpu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+
+  # Step 9: Install the Intel NPU device plugin
+  kubectl apply -n intel-device-plugins -k "https://github.com/intel/intel-device-plugins-for-kubernetes/deployments/npu_plugin/overlays/nfd_labeled_nodes?ref=${RELEASE_VERSION}"
+  ```
+
+  Verify the GPU and NPU resources are advertised on nodes:
+  ```bash
+  kubectl get nodes -o json | jq '.items[] | {name: .metadata.name, gpu: .status.allocatable["gpu.intel.com/i915"], npu: .status.allocatable["npu.intel.com/accel"]}'
+  ```
+  > **Note:** If your node uses Intel Xe discrete GPUs (Arc), set `gpu:` to `.status.allocatable["gpu.intel.com/xe"]`.
 
 ## Setup the application
 
@@ -59,9 +109,9 @@
    MTX_WEBRTCICESERVERS2_0_PASSWORD=<password>
    ```
 
-    > **Note:** For GPU/NPU based pipelines, set `privileged_access_required: true` in the `helm/values_<SAMPLE_APP>.yaml` file to enable access to host hardware devices.
+   > **Note:** To run the pipeline on GPU, set `gpu.enabled:true` in `values.yaml`. To run the pipeline on NPU, set `npu.enabled:true` - this also requires a GPU resource since NPU pipelines use VA-API (GPU) for video decoding. For Intel Arc (Xe) discrete GPUs, set `gpu.type: "gpu.intel.com/xe"`.
 
-4. Install pre-requisites for all instances
+4. Install prerequisites for all instances
 
    ```sh
    ./setup.sh helm
@@ -629,7 +679,7 @@
    }
    ```
 
-## Uninstall Helm Charts
+### Uninstall Helm Charts
 
  ```sh
  ./run.sh helm_uninstall
@@ -639,7 +689,7 @@ Once application has been stopped, remove or rename the `config.yml` file if you
 
 ## Storing frames to S3 storage
 
-Applications can take advantage of S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
+Applications can take advantage of the S3 publish feature from DL Streamer Pipeline Server and use it to save frames to an S3 compatible storage.
 
 1. Run all the steps mentioned in above [section](#setup-the-application) to setup the application.
 
@@ -684,9 +734,9 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
 
    > **Note:** DL Streamer Pipeline Server expects the bucket to be already present in the database. The next step will help you create one.
 
-5. Create a S3 bucket using the following script.
+5. Create an S3 bucket using the following script.
 
-   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Name the file as `create_bucket_<INSTANCE_NAME>.py`.
+   Update the `HOST_IP` and `S3_STORAGE_PORT` mentioned in `config.yml` for each instance and credentials with that of the running MinIO server. Use `create_bucket_<INSTANCE_NAME>.py` as the file name.
 
    ```python
    import boto3
@@ -769,7 +819,7 @@ Applications can take advantage of S3 publish feature from DL Streamer Pipeline 
    kubectl cp resources/pallet-defect-detection/models/* $POD_NAME:/home/pipeline-server/resources/models/ -c dlstreamer-pipeline-server -n <INSTANCE_NAME>
    ```
 
-4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the mlops pipeline.
+4. Modify the payload in `helm/temp_apps/<SAMPLE_APP>/<INSTANCE_NAME>/payload.json` to launch an instance for the MLOps pipeline.
 
    Below is an example for pallet-defect-detection. Please modify the payload for other sample applications.
 

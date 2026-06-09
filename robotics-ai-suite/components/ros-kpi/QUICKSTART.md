@@ -145,8 +145,8 @@ Outputs per session: `kpi.json` (Level 1), `kpi_level2.json` (Level 2).
 
 ### fast_mapping RGB-D Benchmark
 
-Benchmark Intel's `fast_mapping_node` using the bundled spinning RGB-D bag
-(`/opt/ros/jazzy/share/bagfiles/spinning`):
+Benchmark Intel's `fast_mapping_node` using `ros2 launch fast_mapping fast_mapping.launch.py`,
+which replays the bundled spinning RGB-D bag automatically:
 
 ```bash
 # Single run
@@ -155,8 +155,8 @@ make fastmapping
 # 10-run benchmark
 make fastmapping-benchmark RUNS=10
 
-# Custom bag or replay speed
-make fastmapping BAG=/path/to/bag RATE=2.0
+# With trigger-timeline plots
+make fastmapping-plot
 ```
 
 Results include `kpi.json`, `kpi_level2.json`, and `fastmapping_procedures.json`

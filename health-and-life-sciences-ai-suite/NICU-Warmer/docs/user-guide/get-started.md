@@ -49,7 +49,21 @@ Start all services (default mixed-optimized device profile):
 make run
 ```
 
-This builds and starts 5 containers:
+By default, `make run` pulls the prebuilt images from Docker Hub.
+
+To build the images locally instead:
+
+```bash
+make run REGISTRY=false
+```
+
+To pull a specific release tag:
+
+```bash
+make run TAG=2026.1.0-rc2
+```
+
+This pulls and starts 5 containers:
 
 | Service                  | Port | Purpose                                  |
 | ------------------------ | ---- | ---------------------------------------- |
@@ -121,6 +135,7 @@ The compose file forwards these to all containers automatically.
 :hidden:
 
 get-started/system-requirements.md
+get-started/deploy-with-helm.md
 
 :::
 hide_directive-->
