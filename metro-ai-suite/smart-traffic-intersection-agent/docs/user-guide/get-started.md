@@ -76,6 +76,8 @@ cd metro-ai-suite/smart-traffic-intersection-agent/
 export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
 ```
 
+> **Note:** Only pre-converted OpenVINO models (models under the `OpenVINO/` namespace on Hugging Face) are currently supported. Raw Hugging Face models that require conversion (for example, `microsoft/Phi-3.5-vision-instruct`) are not supported at this time.
+
 > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 ### 3. Run the Complete Setup
@@ -174,6 +176,8 @@ locations on the same machine for `n` required instances.
    export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
    ```
 
+   > **Note:** Only pre-converted OpenVINO models (models under the `OpenVINO/` namespace on Hugging Face) are currently supported. Raw Hugging Face models that require conversion (for example, `microsoft/Phi-3.5-vision-instruct`) are not supported at this time.
+
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
 4. Run the setup for instance #1:
@@ -216,6 +220,8 @@ locations on the same machine for `n` required instances.
    ```bash
    export VLM_MODEL_NAME=<supported_model_name>  # eg. OpenVINO/Phi-3.5-vision-instruct-int8-ov, OpenVINO/InternVL2-1B-int4-ov
    ```
+
+   > **Note:** Only pre-converted OpenVINO models (models under the `OpenVINO/` namespace on Hugging Face) are currently supported. Raw Hugging Face models that require conversion (for example, `microsoft/Phi-3.5-vision-instruct`) are not supported at this time.
 
    > **IMPORTANT:** See this [disclaimer](#disclaimer-for-using-third-party-ai-models) before using any AI Model.
 
