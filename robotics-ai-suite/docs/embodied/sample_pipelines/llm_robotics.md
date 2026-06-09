@@ -10,7 +10,7 @@ This tutorial will provide a step-by-step guide to set up a real-time
 system to control a JAKA robot arm with movement commands generated
 using an LLM. The picture below shows the architecture of the demo:
 
-![image](README.assets/llm-robotics-demo-arch.png)
+![llm-robotics-demo-arch](./assets/images/llm-robotics-demo-arch.png)
 
 ## Component Documentation
 
