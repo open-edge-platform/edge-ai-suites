@@ -22,7 +22,7 @@
 # Configuration:
 #   REGISTRY_URL              - Image registry prefix (default: intel)
 #   TAG                       - Shared image tag (default: latest)
-#   DEVICE                    - CPU (default) or GPU for embeddings
+#   DEVICE                    - GPU (default) or CPU
 #   EMBEDDING_MODEL_NAME      - Embedding model (default: CLIP/clip-vit-b-32)
 #   APP_HOST_PORT             - Main app port (default: 12345)
 #
@@ -89,16 +89,16 @@ COMPONENTS := $(VSS_COMPONENTS) $(SMART_NVR_COMPONENTS)
 # Deployment Configuration
 # ==============================================================================
 
-DEVICE ?= CPU
+DEVICE ?= GPU
 EMBEDDING_MODEL_NAME ?= CLIP/clip-vit-b-32
-ENABLE_EMBEDDING_GPU ?= false
+ENABLE_EMBEDDING_GPU ?= true
 FRAME_INTERVAL ?= 15
 ROI_CONSOLIDATION_ENABLED ?= false
 ROI_CONSOLIDATION_IOU_THRESHOLD ?= 0.2
 ROI_CONSOLIDATION_CLASS_AWARE ?= true
 ROI_CONSOLIDATION_CONTEXT_SCALE ?= 0.2
-VDMS_DATAPREP_DEVICE ?= CPU
-EMBEDDING_DEVICE ?= CPU
+VDMS_DATAPREP_DEVICE ?= GPU
+EMBEDDING_DEVICE ?= GPU
 
 # Deployment mode: default | rtsp-test | usb-camera
 START_MODE ?= default
