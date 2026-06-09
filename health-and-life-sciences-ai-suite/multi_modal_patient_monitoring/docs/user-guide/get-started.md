@@ -49,22 +49,51 @@ Before running the stack, place source models under the repository-local folder:
 
 ```bash
 models/downloads/
-├── ai-ecg/hubert-ecg-small/
-├── rppg/mtts_can.hdf5
-└── 3d-pose/human-pose-estimation-3d.tar.gz
+├── ai-ecg/
+├── rppg/
+└── 3d-pose/
 ```
 
-Required artifacts:
 
-- `models/downloads/rppg/mtts_can.hdf5`
-- `models/downloads/3d-pose/human-pose-estimation-3d.tar.gz`
-- `models/downloads/ai-ecg/hubert-ecg-small/` (full local Hugging Face model directory)
+### Example Models
+
+1. RPPG Model - [MTTS-CAN](https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5)
+
+   Place the model file at: `models/downloads/rppg/mtts_can.hdf5`
+   
+2. 3D Pose Model - [Human Pose Estimation 3D 0001](https://storage.openvinotoolkit.org/repositories/open_model_zoo/public/2022.1/human-pose-estimation-3d-0001/human-pose-estimation-3d.tar.gz)
+
+   Place the archive at: `models/downloads/3d-pose/human-pose-estimation-3d.tar.gz`
+   
+3. AI-ECG Model - HuBERT-ECG Small
+   
+   a. Create and activate a Python virtual environment:
+   ```bash
+   python3 -m venv hf-venv
+   source hf-venv/bin/activate
+   ```
+   b. Install the Hugging Face Hub CLI:
+   ```bash
+   pip install --upgrade pip
+   pip install huggingface_hub
+   ```
+   c. Download the model repository into the staging directory:
+   ```bash
+   hf download Edoardo-BS/hubert-ecg-small \
+   --local-dir models/downloads/ai-ecg/hubert-ecg-small
+   ```
+
+### Verify the contents:
+
+```bash
+ls models/downloads/ai-ecg/hubert-ecg-small
+```
+
+The directory should contain the model weights, configuration files, and any custom model implementation files required.
 
 The `make run` target validates these paths first. If any artifact is missing, startup fails
 with an actionable error before containers are launched.
 
-During startup, the assets service now only performs local preparation (conversion/quantization
-steps) from these staged model files and does not download model files automatically.
 
 ## 4. Run the Sample
 
