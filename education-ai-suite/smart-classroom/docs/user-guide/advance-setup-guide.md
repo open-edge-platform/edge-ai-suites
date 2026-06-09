@@ -149,12 +149,14 @@ Content Search provides multimodal semantic search, AI-driven video summarizatio
 
 > **Prerequisite:** Complete [Step 1F](#f-install-content-search-dependencies) first.
 
+Open a new **Powershell** window:
+
 ### A. Create Content Search Virtual Environment
 
 ```PowerShell
 cd smart-classroom\content_search
 python -m venv venv_content_search
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
@@ -162,7 +164,7 @@ python -m pip install -r requirements.txt
 ### B. Launch Content Search Services
 
 ```PowerShell
-.\venv_content_search\Scripts\Activate.ps1
+.\venv_content_search\Scripts\activate
 python .\start_services.py
 ```
 
