@@ -6,6 +6,9 @@
 ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROS_DISTRO ?= humble
 
+# Use uv when available (dev workflow), otherwise fall back to plain python3 (installed package)
+PYTHON := $(if $(shell command -v uv 2>/dev/null),uv run python,python3)
+
 ifeq ($(ROS_DISTRO),humble)
 	UBUNTU_CODENAME := jammy
 else
@@ -33,25 +36,25 @@ help:
 	@echo "  ./quickstart                              - Interactive menu"
 	@echo ""
 	@echo "MONITORING (run directly with uv):"
-	@echo "  uv run python src/monitor_stack.py --help"
-	@echo "  uv run python src/monitor_stack.py --duration 60"
-	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --duration 60"
-	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --gpu --npu"
-	@echo "  uv run python src/monitor_stack.py --pid-only --duration 300"
+	@echo "  $(PYTHON) src/monitor_stack.py --help"
+	@echo "  $(PYTHON) src/monitor_stack.py --duration 60"
+	@echo "  $(PYTHON) src/monitor_stack.py --remote-ip <ip> --duration 60"
+	@echo "  $(PYTHON) src/monitor_stack.py --remote-ip <ip> --gpu --npu"
+	@echo "  $(PYTHON) src/monitor_stack.py --pid-only --duration 300"
 	@echo ""
 	@echo "VISUALIZATION:"
-	@echo "  uv run python src/visualize_timing.py <session>/graph_timing.csv --help"
-	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
-	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
-	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
-	@echo "  uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
-	@echo "  uv run python demo_interactive_heatmap.py [SESSION_DIR]"
+	@echo "  $(PYTHON) src/visualize_timing.py <session>/graph_timing.csv --help"
+	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_gpu.py <session>/gpu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_npu.py <session>/npu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
+	@echo "  $(PYTHON) demo_interactive_heatmap.py [SESSION_DIR]"
 	@echo ""
 	@echo "ANALYSIS:"
-	@echo "  uv run python src/view_average.py --help"
-	@echo "  uv run python src/analyze_trigger_latency.py --help"
-	@echo "  uv run python src/analyze_rosbag.py <path/to/bag.db3>"
-	@echo "  uv run python src/gpu_pid_analyzer.py --help"
+	@echo "  $(PYTHON) src/view_average.py --help"
+	@echo "  $(PYTHON) src/analyze_trigger_latency.py --help"
+	@echo "  $(PYTHON) src/analyze_rosbag.py <path/to/bag.db3>"
+	@echo "  $(PYTHON) src/gpu_pid_analyzer.py --help"
 	@echo ""
 	@echo "SIMULATIONS:"
 	@echo "  bash src/wandering_run.sh --help"
@@ -60,7 +63,7 @@ help:
 	@echo "GRAFANA + PROMETHEUS:"
 	@echo "  ./start_grafana.sh                        - Start stack"
 	@echo "  ./stop_grafana.sh                         - Stop stack"
-	@echo "  uv run python src/prometheus_exporter.py --help"
+	@echo "  $(PYTHON) src/prometheus_exporter.py --help"
 	@echo "  ./grafana-monitor.sh --remote-ip <ip>     - Monitor + live Grafana export"
 	@echo "  ./grafana-monitor.sh --help"
 	@echo ""
@@ -176,12 +179,12 @@ setup-remote-gpu:
 
 # One-shot snapshot (local)
 gpu-pids:
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--interval $(if $(INTERVAL),$(INTERVAL),2)
 
 # Live watch mode – keep refreshing until Ctrl-C (local)
 gpu-pids-watch:
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--watch \
 		--interval $(if $(INTERVAL),$(INTERVAL),2)
 
@@ -189,7 +192,7 @@ gpu-pids-watch:
 gpu-pids-csv:
 	@CSV=gpu_pids_$$(date +%Y%m%d_%H%M%S).csv; \
 	echo "Recording GPU PID metrics → $$CSV"; \
-	uv run python src/gpu_pid_analyzer.py \
+	$(PYTHON) src/gpu_pid_analyzer.py \
 		--interval $(if $(INTERVAL),$(INTERVAL),2) \
 		--duration $(if $(DURATION),$(DURATION),60) \
 		--csv $$CSV; \
@@ -202,7 +205,7 @@ gpu-pids-remote:
 		echo "Example: make gpu-pids-remote REMOTE_IP=192.168.1.100"; \
 		exit 1; \
 	fi
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--remote-ip $(REMOTE_IP) \
 		$(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		--interval $(if $(INTERVAL),$(INTERVAL),2) \
@@ -309,10 +312,10 @@ check-deps:
 	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Next steps:"
-	@echo "  • uv run python src/monitor_stack.py --duration 30       # Quick local test"
-	@echo "  • uv run python src/monitor_stack.py --node /my_node     # Monitor specific node"
+	@echo "  • $(PYTHON) src/monitor_stack.py --duration 30       # Quick local test"
+	@echo "  • $(PYTHON) src/monitor_stack.py --node /my_node     # Monitor specific node"
 	@if [ -n "$(REMOTE_IP)" ]; then \
-		echo "  • uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP)   # Monitor remote system"; \
+		echo "  • $(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP)   # Monitor remote system"; \
 	fi
 
 # Build PDF documentation
@@ -408,14 +411,14 @@ grafana-export:
 		LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
 		if [ -z "$$LAST_SESSION" ]; then \
 			echo "❌ No monitoring sessions found"; \
-			echo "Run 'uv run python src/monitor_stack.py' first to create a session"; \
+			echo "Run '$(PYTHON) src/monitor_stack.py' first to create a session"; \
 			exit 1; \
 		fi; \
 		echo "📊 Exporting metrics from latest session: $$LAST_SESSION"; \
-		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$LAST_SESSION; \
+		$(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$$LAST_SESSION; \
 	else \
 		echo "📊 Exporting metrics from session: $(SESSION)"; \
-		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(SESSION); \
+		$(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$(SESSION); \
 	fi
 
 # Start Prometheus exporter in live mode
@@ -424,7 +427,7 @@ grafana-export-live:
 	@sleep 0.3
 	@echo "📊 Starting live metrics exporter on port 9092..."
 	@echo "   Watching monitoring_sessions/ for the latest session"
-	@uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092
+	@$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092
 
 # Remote monitoring with simultaneous live Grafana export
 monitor-remote-grafana:
@@ -439,7 +442,7 @@ monitor-remote-grafana:
 	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "Exporter started (PID $$EXPORTER_PID, logs: /tmp/grafana-exporter.log)"; \
 	_stop() { \
@@ -450,7 +453,7 @@ monitor-remote-grafana:
 		echo "Done."; \
 	}; \
 	trap _stop INT TERM; \
-	uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
+	$(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		$(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)); \
 	_stop; \
 	echo ""; \
@@ -461,8 +464,8 @@ monitor-remote-grafana:
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
 		echo "   Avg plots   : monitoring_sessions/average_5/"; \
-		echo "   Pipeline    : uv run python src/visualize_graph.py <session>/graph_timing.csv --show"; \
-			echo "   Avg review  : uv run python src/view_average.py --runs 5"; \
+		echo "   Pipeline    : $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --show"; \
+			echo "   Avg review  : $(PYTHON) src/view_average.py --runs 5"; \
 	fi
 
 # Remote PID-only monitoring + live Grafana export
@@ -478,7 +481,7 @@ monitor-remote-pid-grafana:
 	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "Exporter started (PID $$EXPORTER_PID, logs: /tmp/grafana-exporter.log)"; \
 	_stop() { \
@@ -489,7 +492,7 @@ monitor-remote-pid-grafana:
 		echo "Done."; \
 	}; \
 	trap _stop INT TERM; \
-	uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
+	$(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		--pid-only \
 		$(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)) \
 		$(if $(ALGORITHM),--algorithm '$(ALGORITHM)') $(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)); \
@@ -501,7 +504,7 @@ monitor-remote-pid-grafana:
 	SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
-		echo "   Pipeline    : uv run python src/visualize_graph.py $$SESSION_DIR/graph_timing.csv --show"; \
+		echo "   Pipeline    : $(PYTHON) src/visualize_graph.py $$SESSION_DIR/graph_timing.csv --show"; \
 	fi
 
 # Run remote monitoring N times back-to-back (e.g. once per algorithm run)
@@ -526,7 +529,7 @@ monitor-remote-repeat:
 	DURATION=$(if $(DURATION),$(DURATION),60); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),5); \
 	fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 \
 		> /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "📊 Exporter started (PID $$EXPORTER_PID)"; \
@@ -545,7 +548,7 @@ monitor-remote-repeat:
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		echo "▶  Run $$i / $$REPEAT"; \
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
-		uv run python src/monitor_stack.py \
+		$(PYTHON) src/monitor_stack.py \
 			--remote-ip $(REMOTE_IP) \
 			$(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 			$(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)) \
@@ -567,10 +570,10 @@ monitor-remote-repeat:
 	echo "✅ All $$REPEAT runs complete."; \
 	echo ""; \
 	echo "📁 Cross-session average (last $$REPEAT runs):"; \
-	uv run python src/view_average.py --plot --runs $$REPEAT --no-show \
+	$(PYTHON) src/view_average.py --plot --runs $$REPEAT --no-show \
 		--output-dir monitoring_sessions/average_$${REPEAT} 2>/dev/null || true; \
-	echo "   uv run python src/view_average.py --runs $$REPEAT"; \
-	echo "   uv run python src/visualize_graph.py <session>/graph_timing.csv --show"
+	echo "   $(PYTHON) src/view_average.py --runs $$REPEAT"; \
+	echo "   $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --show"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking
@@ -654,7 +657,7 @@ grafana-status:
 			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
 		else \
 			echo "⚠️  Metrics exporter not running"; \
-			echo "   Start with: uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$(ls -t monitoring_sessions | head -1)"; \
+			echo "   Start with: $(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$$(ls -t monitoring_sessions | head -1)"; \
 		fi; \
 	else \
 		echo "⚠️  Services not running"; \

@@ -34,12 +34,14 @@ Wandering:
   bash src/wandering_run.sh --goals 3 --timeout 120
   bash src/wandering_run.sh --goals 3 --timeout 120 --record
   bash src/wandering_run.sh --goals 3 --timeout 120 --record --plot
+  bash src/wandering_run.sh --show                              # record + plot + auto-open report
   (use ./quickstart for multi-run benchmark mode)
 
 Pick-n-Place:
   bash src/picknplace_run.sh --timeout 300
   bash src/picknplace_run.sh --timeout 300 --record
   bash src/picknplace_run.sh --timeout 300 --record --plot
+  bash src/picknplace_run.sh --show                             # record + plot + auto-open report
   (use ./quickstart for multi-run benchmark mode)
 
 Analyze:
