@@ -22,25 +22,57 @@ cd health-and-life-sciences-ai-suite/NICU-Warmer
 
 ## 2. Manual Model Staging
 
-Before running `make run`, place the required model files in these exact paths:
+Before running `make run`, stage the workload models in these locations:
 
 - Repository root:
-  - `person-detect-fp32.xml`
-  - `person-detect-fp32.bin`
-  - `patient-detect-fp32.xml`
-  - `patient-detect-fp32.bin`
-  - `latch-detect-fp32.xml`
-  - `latch-detect-fp32.bin`
-  - `action-recognition-0001-encoder.xml`
-  - `action-recognition-0001-encoder.bin`
-  - `action-recognition-0001-decoder.xml`
-  - `action-recognition-0001-decoder.bin`
-- `models_rppg/`
-  - `mtts_can.hdf5`
+  - patient detection model files: `.xml` and `.bin`
+  - person detection model files: `.xml` and `.bin`
+  - latch detection model files: `.xml` and `.bin`
+  - action recognition encoder model files: `.xml` and `.bin`
+  - action recognition decoder model files: `.xml` and `.bin`
+- `models_rppg/`:
+  - rPPG workload source model: `.hdf5`
 
-The rPPG model is staged as HDF5 only. If `models_rppg/mtts_can.xml` and
-`models_rppg/mtts_can.bin` are missing, the converter container creates them
-from `models_rppg/mtts_can.hdf5`.
+`make run` expects these files to exist.
+
+### Example Models
+
+1. Patient Detection Model - [patient-present](https://huggingface.co/Intel/patient-present/tree/main)*
+   
+2. Person Detection Model - [people-present](https://huggingface.co/Intel/people-present/tree/main)*
+   
+3. Latch Detection Model - [latch-detect](https://huggingface.co/Intel/latch-detect/tree/main)*
+> *Download the above model artifacts (`.xml` and `.bin`) from Hugging Face and place them in the appropriate model directory structure. Only these files are required for inference; downloading the remaining repository contents is optional.
+   
+4. RPPG Model - [MTTS-CAN](https://github.com/xliucs/MTTS-CAN/raw/main/mtts_can.hdf5)
+
+5. Action Recognition Models -
+   - Action Recognition Encoder (.xml)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.xml
+     ```
+
+   - Action Recognition Encoder (.bin)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-encoder/FP16/action-recognition-0001-encoder.bin
+     ```
+
+   - Action Recognition Decoder (.xml)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.xml
+     ```
+
+   - Action Recognition Decoder (.bin)
+     ```bash
+     wget https://storage.openvinotoolkit.org/repositories/open_model_zoo/temp/action-recognition-0001/action-recognition-0001-decoder/FP16/action-recognition-0001-decoder.bin
+     ```     
+
+> **Third-Party Content**
+> 
+> *In the course of using these Intel-provided instruction, users may choose to download content (e.g., models, dataset, etc.) created and distributed by third parties. In doing so, these users acknowledge and agree that they have done so after reviewing background information about the content and agreeing to the license governing the content they select.*
+> 
+> ***Notice**: Intel does not create the content and does not warrant its accuracy or quality. By accessing the third-party content, or using materials trained on or with such content, you are indicating your acceptance of the terms associated with that content and warranting that your use complies with the applicable license.*
+
 
 ## 3. Prepare Local Assets
 
@@ -53,11 +85,8 @@ make setup
 This step:
 
 - checks the staged model files already present in the repo
-- converts `models_rppg/mtts_can.hdf5` to `models_rppg/mtts_can.{xml,bin}` when needed
+- converts `.hdf5` to `.{xml,bin}`
 - preserves existing local assets on repeated runs
-
-Make sure `Warmer_Testbed_YTHD.mp4` is present in the repository root before
-starting the application.
 
 > **Important**: `make setup` must complete before `make run`. If `docker compose up`
 > runs first, Docker creates empty directories for missing bind-mount sources, causing
