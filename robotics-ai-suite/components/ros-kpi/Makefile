@@ -7,6 +7,9 @@ ROOT_DIR := $(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
 ROS_DISTRO ?= humble
 RUN_CONFIG ?=   # Optional: path to a YAML run profile (e.g. config/wandering_run.yaml)
 
+# Use uv when available (dev workflow), otherwise fall back to plain python3 (installed package)
+PYTHON := $(if $(shell command -v uv 2>/dev/null),uv run python,python3)
+
 ifeq ($(ROS_DISTRO),humble)
 	UBUNTU_CODENAME := jammy
 else
@@ -37,34 +40,34 @@ help:
 	@echo "  ./quickstart                              - Interactive menu"
 	@echo ""
 	@echo "MONITORING (run directly with uv):"
-	@echo "  uv run python src/monitor_stack.py --help"
-	@echo "  uv run python src/monitor_stack.py --duration 60"
-	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --duration 60"
-	@echo "  uv run python src/monitor_stack.py --remote-ip <ip> --gpu --npu"
-	@echo "  uv run python src/monitor_stack.py --pid-only --duration 300"
+	@echo "  $(PYTHON) src/monitor_stack.py --help"
+	@echo "  $(PYTHON) src/monitor_stack.py --duration 60"
+	@echo "  $(PYTHON) src/monitor_stack.py --remote-ip <ip> --duration 60"
+	@echo "  $(PYTHON) src/monitor_stack.py --remote-ip <ip> --gpu --npu"
+	@echo "  $(PYTHON) src/monitor_stack.py --pid-only --duration 300"
 	@echo ""
 	@echo "VISUALIZATION:"
-	@echo "  uv run python src/visualize_timing.py <session>/graph_timing.csv --help"
-	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
-	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
-	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
-	@echo "  uv run python src/visualize_timing.py <session>/graph_timing.csv --help"
-	@echo "  uv run python src/visualize_resources.py <session>/resource_usage.log --help"
-	@echo "  uv run python src/visualize_gpu.py <session>/gpu_usage.log --help"
-	@echo "  uv run python src/visualize_npu.py <session>/npu_usage.log --help"
-	@echo "  uv run python src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
-	@echo "  uv run python src/visualize_kpi.py --session <session>              - KPI latency histogram"
-	@echo "  uv run python src/visualize_kpi.py --kpi a.json b.json --label A B  - Cross-SKU comparison"
+	@echo "  $(PYTHON) src/visualize_timing.py <session>/graph_timing.csv --help"
+	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_gpu.py <session>/gpu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_npu.py <session>/npu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_timing.py <session>/graph_timing.csv --help"
+	@echo "  $(PYTHON) src/visualize_resources.py <session>/resource_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_gpu.py <session>/gpu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_npu.py <session>/npu_usage.log --help"
+	@echo "  $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --topology <session>/graph_topology.json"
+	@echo "  $(PYTHON) src/visualize_kpi.py --session <session>              - KPI latency histogram"
+	@echo "  $(PYTHON) src/visualize_kpi.py --kpi a.json b.json --label A B  - Cross-SKU comparison"
 	@echo "  make visualize-kpi SESSION=<session>                               - Same via make"
 	@echo "  make results [SESSION=<session>]                                   - KPI charts + HTML report for latest (or given) session"
 	@echo "  make visualize-thermal [SESSION=<session>]                         - CPU/GPU temperature + throttle + power plot"
 	@echo "  uv run python demo_interactive_heatmap.py [SESSION_DIR]"
 	@echo ""
 	@echo "ANALYSIS:"
-	@echo "  uv run python src/view_average.py --help"
-	@echo "  uv run python src/analyze_trigger_latency.py --help"
-	@echo "  uv run python src/analyze_rosbag.py <path/to/bag.db3>"
-	@echo "  uv run python src/gpu_pid_analyzer.py --help"
+	@echo "  $(PYTHON) src/view_average.py --help"
+	@echo "  $(PYTHON) src/analyze_trigger_latency.py --help"
+	@echo "  $(PYTHON) src/analyze_rosbag.py <path/to/bag.db3>"
+	@echo "  $(PYTHON) src/gpu_pid_analyzer.py --help"
 	@echo ""
 	@echo "SIMULATIONS:"
 	@echo "  bash src/wandering_run.sh --help"
@@ -86,7 +89,7 @@ help:
 	@echo "GRAFANA + PROMETHEUS:"
 	@echo "  ./start_grafana.sh                        - Start stack"
 	@echo "  ./stop_grafana.sh                         - Stop stack"
-	@echo "  uv run python src/prometheus_exporter.py --help"
+	@echo "  $(PYTHON) src/prometheus_exporter.py --help"
 	@echo "  ./grafana-monitor.sh --remote-ip <ip>     - Monitor + live Grafana export"
 	@echo "  ./grafana-monitor.sh --help"
 	@echo ""
@@ -112,7 +115,7 @@ help:
 
 # Show all monitoring session data
 show-sessions:
-	uv run python src/show_sessions.py $(if $(ROOT),--root $(ROOT))
+	$(PYTHON) src/show_sessions.py $(if $(ROOT),--root $(ROOT))
 
 # Clean all monitoring data
 clean:
@@ -248,12 +251,12 @@ install:
 
 # One-shot snapshot (local)
 gpu-pids:
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--interval $(if $(INTERVAL),$(INTERVAL),2)
 
 # Live watch mode – keep refreshing until Ctrl-C (local)
 gpu-pids-watch:
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--watch \
 		--interval $(if $(INTERVAL),$(INTERVAL),2)
 
@@ -261,7 +264,7 @@ gpu-pids-watch:
 gpu-pids-csv:
 	@CSV=gpu_pids_$$(date +%Y%m%d_%H%M%S).csv; \
 	echo "Recording GPU PID metrics → $$CSV"; \
-	uv run python src/gpu_pid_analyzer.py \
+	$(PYTHON) src/gpu_pid_analyzer.py \
 		--interval $(if $(INTERVAL),$(INTERVAL),2) \
 		--duration $(if $(DURATION),$(DURATION),60) \
 		--csv $$CSV; \
@@ -274,7 +277,7 @@ gpu-pids-remote:
 		echo "Example: make gpu-pids-remote REMOTE_IP=192.168.1.100"; \
 		exit 1; \
 	fi
-	@uv run python src/gpu_pid_analyzer.py \
+	@$(PYTHON) src/gpu_pid_analyzer.py \
 		--remote-ip $(REMOTE_IP) \
 		$(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		--interval $(if $(INTERVAL),$(INTERVAL),2) \
@@ -282,7 +285,7 @@ gpu-pids-remote:
 
 # Probe GPU and NPU tool availability
 check-hw:
-	@uv run python src/monitor_resources.py --check-hw; exit 0
+	@$(PYTHON) src/monitor_resources.py --check-hw; exit 0
 
 # Check all dependencies
 check-deps:
@@ -385,10 +388,10 @@ check-deps:
 	@echo "╚════════════════════════════════════════════════════════════════╝"
 	@echo ""
 	@echo "Next steps:"
-	@echo "  • uv run python src/monitor_stack.py --duration 30       # Quick local test"
-	@echo "  • uv run python src/monitor_stack.py --node /my_node     # Monitor specific node"
+	@echo "  • $(PYTHON) src/monitor_stack.py --duration 30       # Quick local test"
+	@echo "  • $(PYTHON) src/monitor_stack.py --node /my_node     # Monitor specific node"
 	@if [ -n "$(REMOTE_IP)" ]; then \
-		echo "  • uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP)   # Monitor remote system"; \
+		echo "  • $(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP)   # Monitor remote system"; \
 	fi
 
 # Build PDF documentation
@@ -484,14 +487,14 @@ grafana-export:
 		LAST_SESSION=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -n1 | xargs basename 2>/dev/null); \
 		if [ -z "$$LAST_SESSION" ]; then \
 			echo "❌ No monitoring sessions found"; \
-			echo "Run 'uv run python src/monitor_stack.py' first to create a session"; \
+			echo "Run '$(PYTHON) src/monitor_stack.py' first to create a session"; \
 			exit 1; \
 		fi; \
 		echo "📊 Exporting metrics from latest session: $$LAST_SESSION"; \
-		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$LAST_SESSION; \
+		$(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$$LAST_SESSION; \
 	else \
 		echo "📊 Exporting metrics from session: $(SESSION)"; \
-		uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$(SESSION); \
+		$(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$(SESSION); \
 	fi
 
 # Start Prometheus exporter in live mode
@@ -500,7 +503,7 @@ grafana-export-live:
 	@sleep 0.3
 	@echo "📊 Starting live metrics exporter on port 9092..."
 	@echo "   Watching monitoring_sessions/ for the latest session"
-	@uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092
+	@$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092
 
 # Remote monitoring with simultaneous live Grafana export
 monitor-remote-grafana:
@@ -515,7 +518,7 @@ monitor-remote-grafana:
 	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "Exporter started (PID $$EXPORTER_PID, logs: /tmp/grafana-exporter.log)"; \
 	_stop() { \
@@ -526,7 +529,7 @@ monitor-remote-grafana:
 		echo "Done."; \
 	}; \
 	trap _stop INT TERM; \
-	uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
+	$(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		$(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)); \
 	_stop; \
 	echo ""; \
@@ -537,8 +540,8 @@ monitor-remote-grafana:
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
 		echo "   Avg plots   : monitoring_sessions/average_5/"; \
-		echo "   Pipeline    : uv run python src/visualize_graph.py <session>/graph_timing.csv --show"; \
-			echo "   Avg review  : uv run python src/view_average.py --runs 5"; \
+		echo "   Pipeline    : $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --show"; \
+			echo "   Avg review  : $(PYTHON) src/view_average.py --runs 5"; \
 	fi
 
 # Remote PID-only monitoring + live Grafana export
@@ -554,7 +557,7 @@ monitor-remote-pid-grafana:
 	@echo "   Grafana      : http://localhost:30000"
 	@echo ""
 	@fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 > /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "Exporter started (PID $$EXPORTER_PID, logs: /tmp/grafana-exporter.log)"; \
 	_stop() { \
@@ -565,7 +568,7 @@ monitor-remote-pid-grafana:
 		echo "Done."; \
 	}; \
 	trap _stop INT TERM; \
-	uv run python src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
+	$(PYTHON) src/monitor_stack.py --remote-ip $(REMOTE_IP) $(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 		--pid-only \
 		$(if $(DURATION),--duration $(DURATION)) $(if $(NODE),--node $(NODE)) $(if $(INTERVAL),--interval $(INTERVAL)) \
 		$(if $(ALGORITHM),--algorithm '$(ALGORITHM)') $(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)); \
@@ -577,7 +580,7 @@ monitor-remote-pid-grafana:
 	SESSION_DIR=$$(ls -td monitoring_sessions/[0-9]*/ 2>/dev/null | head -1 | sed 's|/$$||'); \
 	if [ -n "$$SESSION_DIR" ]; then \
 		echo "   Plots       : $$SESSION_DIR/visualizations/"; \
-		echo "   Pipeline    : uv run python src/visualize_graph.py $$SESSION_DIR/graph_timing.csv --show"; \
+		echo "   Pipeline    : $(PYTHON) src/visualize_graph.py $$SESSION_DIR/graph_timing.csv --show"; \
 	fi
 
 # Run remote monitoring N times back-to-back (e.g. once per algorithm run)
@@ -602,7 +605,7 @@ monitor-remote-repeat:
 	DURATION=$(if $(DURATION),$(DURATION),60); \
 	PAUSE=$(if $(PAUSE),$(PAUSE),5); \
 	fuser -k 9092/tcp 2>/dev/null || true; sleep 0.3; \
-	uv run python src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 \
+	$(PYTHON) src/prometheus_exporter.py --mode live --sessions-dir monitoring_sessions --port 9092 \
 		> /tmp/grafana-exporter.log 2>&1 & \
 	EXPORTER_PID=$$!; \
 	echo "📊 Exporter started (PID $$EXPORTER_PID)"; \
@@ -621,7 +624,7 @@ monitor-remote-repeat:
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
 		echo "▶  Run $$i / $$REPEAT"; \
 		echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"; \
-		uv run python src/monitor_stack.py \
+		$(PYTHON) src/monitor_stack.py \
 			--remote-ip $(REMOTE_IP) \
 			$(if $(REMOTE_USER),--remote-user $(REMOTE_USER)) \
 			$(if $(DOMAIN_ID),--ros-domain-id $(DOMAIN_ID)) \
@@ -643,10 +646,10 @@ monitor-remote-repeat:
 	echo "✅ All $$REPEAT runs complete."; \
 	echo ""; \
 	echo "📁 Cross-session average (last $$REPEAT runs):"; \
-	uv run python src/view_average.py --plot --runs $$REPEAT --no-show \
+	$(PYTHON) src/view_average.py --plot --runs $$REPEAT --no-show \
 		--output-dir monitoring_sessions/average_$${REPEAT} 2>/dev/null || true; \
-	echo "   uv run python src/view_average.py --runs $$REPEAT"; \
-	echo "   uv run python src/visualize_graph.py <session>/graph_timing.csv --show"
+	echo "   $(PYTHON) src/view_average.py --runs $$REPEAT"; \
+	echo "   $(PYTHON) src/visualize_graph.py <session>/graph_timing.csv --show"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Simulation benchmarking
@@ -657,16 +660,16 @@ monitor-remote-repeat:
 # ─────────────────────────────────────────────────────────────────────────────
 
 wandering:
-	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record:
-	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-plot:
-	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-record-plot:
-	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SIDE_TERMINALS),--side-terminals)
+	bash src/wandering_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(TIMEOUT),--timeout $(TIMEOUT)) $(if $(SHOW),--show) $(if $(SIDE_TERMINALS),--side-terminals)
 
 wandering-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
@@ -694,22 +697,24 @@ wandering-benchmark:
 			$(if $(GOALS), --goals $$GOALS); \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
-	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
 	echo ""; \
 	echo "▶  Level 2 e2e analysis ready to run:"; \
 	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
 
 picknplace-run:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
 
 picknplace-record:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
 
 picknplace-plot:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
 
 picknplace-record-plot:
-	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300)
+	bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(PN_TIMEOUT),--timeout $(PN_TIMEOUT),--timeout 300) $(if $(SHOW),--show)
 
 picknplace-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),25); \
@@ -733,7 +738,9 @@ picknplace-benchmark:
 		bash src/picknplace_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --timeout $$TIMEOUT --record --output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
-	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE)); \
 	echo ""; \
 	echo "▶  Level 2 e2e analysis ready to run:"; \
 	echo "   make analyze-e2e BENCH=$$BENCH_DIR"
@@ -790,7 +797,7 @@ bag-replay-benchmark:
 			--output-parent "$$BENCH_DIR"; \
 		[ $$i -lt $$RUNS ] && sleep $$PAUSE; \
 	done; \
-	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Fast Mapping benchmarking
@@ -803,10 +810,10 @@ bag-replay-benchmark:
 # ─────────────────────────────────────────────────────────────────────────────
 
 fastmapping:
-	bash src/fastmapping_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
+	bash src/fastmapping_run.sh $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) --record --plot $(if $(SHOW),--show)
 
 fastmapping-plot:
-	bash src/fastmapping_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG))
+	bash src/fastmapping_run.sh --plot $(if $(RUN_CONFIG),--run-config $(RUN_CONFIG)) $(if $(SHOW),--show)
 
 fastmapping-benchmark:
 	@RUNS=$(if $(RUNS),$(RUNS),10); \
@@ -824,9 +831,11 @@ fastmapping-benchmark:
 	echo ""; \
 	echo "▶  Analysing fast_mapping_node logs..."; \
 	for sess in "$$BENCH_DIR"/*/; do \
-		[ -d "$$sess" ] && uv run python src/analyze_fastmapping_log.py --session "$$sess" || true; \
+		[ -d "$$sess" ] && $(PYTHON) src/analyze_fastmapping_log.py --session "$$sess" || true; \
 	done; \
-	uv run python src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
+	echo ""; \
+	echo "▶  All $$RUNS runs complete. Aggregating KPI across runs..."; \
+	$(PYTHON) src/aggregate_kpi.py "$$BENCH_DIR" $(if $(NODE),--node $(NODE))
 
 # ═══════════════════════════════════════════════════════════════
 # HTML REPORT
@@ -842,7 +851,7 @@ report:
 		echo "Example: make report SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
 		exit 1; \
 	fi
-	uv run python src/generate_report.py --session "$(SESSION)" $(if $(OUTPUT),--output $(OUTPUT))
+	$(PYTHON) src/generate_report.py --session "$(SESSION)" $(if $(OUTPUT),--output $(OUTPUT))
 
 # Generate KPI charts (latency histogram + more) from a session directory.
 # Usage: make visualize-kpi SESSION=<session_dir> [FORMAT=svg]
@@ -852,7 +861,7 @@ visualize-kpi:
 		echo "Example: make visualize-kpi SESSION=monitoring_sessions/fastmapping/20260513_130427"; \
 		exit 1; \
 	fi
-	uv run python src/visualize_kpi.py \
+	$(PYTHON) src/visualize_kpi.py \
 		--session "$(SESSION)" \
 		$(if $(FORMAT),--format $(FORMAT))
 
@@ -862,7 +871,7 @@ visualize-kpi:
 results:
 	@SESSION="$(SESSION)"; \
 	if [ -z "$$SESSION" ]; then \
-		SESSION=$$(find monitoring_sessions -mindepth 2 -maxdepth 3 -name 'kpi.json' \
+		SESSION=$$(find "$(CURDIR)/monitoring_sessions" -mindepth 2 -maxdepth 3 -name 'kpi.json' \
 			-printf '%T@ %h\n' 2>/dev/null | sort -n | tail -1 | awk '{print $$2}'); \
 	fi; \
 	if [ -z "$$SESSION" ]; then \
@@ -871,24 +880,54 @@ results:
 	fi; \
 	echo "📊  Session: $$SESSION"; \
 	echo ""; \
+	if [ ! -f "$$SESSION/kpi.json" ] && [ -d "$$SESSION/bag" ]; then \
+		echo "[0/2] kpi.json missing — regenerating from bag..."; \
+		_TOPO=""; \
+		[ -f "$$SESSION/graph_topology.json" ] && _TOPO="--topology $$SESSION/graph_topology.json"; \
+		[ -f "$$SESSION/bag/graph_topology.json" ] && _TOPO="--topology $$SESSION/bag/graph_topology.json"; \
+		$(PYTHON) src/analyze_trigger_latency.py \
+			--bag "$$SESSION/bag" --summary-only \
+			--json-out "$$SESSION/kpi.json" $$_TOPO || \
+			echo "  ⚠ kpi.json regeneration failed — report may be incomplete"; \
+		echo ""; \
+	fi; \
 	echo "[1/2] Generating KPI charts..."; \
-	uv run python src/visualize_kpi.py --session "$$SESSION" && \
+	$(PYTHON) src/visualize_kpi.py --session "$$SESSION" && \
 	echo ""; \
 	echo "[2/2] Generating HTML report..."; \
-	uv run python src/generate_report.py --session "$$SESSION"; \
+	$(PYTHON) src/generate_report.py --session "$$SESSION"; \
 	REPORT="$$SESSION/report.html"; \
+	case "$$REPORT" in \
+		/*) REPORT_ABS="$$REPORT" ;; \
+		*)  REPORT_ABS="$(CURDIR)/$$REPORT" ;; \
+	esac; \
 	echo ""; \
 	echo "✅  Done.  Open report:"; \
-	echo "      file://$$PWD/$$REPORT"; \
-	if [ -n "$$DISPLAY" ]; then \
-		xdg-open "$$REPORT" 2>/dev/null & \
+	REPORT_DIR="$$(dirname $$REPORT_ABS)"; \
+	PORT=8080; \
+	while ss -tlnp 2>/dev/null | grep -q ":$$PORT "; do PORT=$$((PORT+1)); done; \
+	setsid nohup python3 -m http.server "$$PORT" --directory "$$REPORT_DIR" \
+		>/tmp/benchmark_report_server.log 2>&1 & \
+	SERVER_PID=$$!; \
+	sleep 0.5; \
+	if kill -0 $$SERVER_PID 2>/dev/null; then \
+		echo "      http://localhost:$$PORT/report.html"; \
+		echo "      (HTTP server PID $$SERVER_PID — kill with: kill $$SERVER_PID)"; \
+		if [ -n "$$DISPLAY" ]; then \
+			xdg-open "http://localhost:$$PORT/report.html" 2>/dev/null & \
+		fi; \
+	else \
+		echo "      file://$$REPORT_ABS"; \
+		if [ -n "$$DISPLAY" ]; then \
+			xdg-open "$$REPORT_ABS" 2>/dev/null & \
+		fi; \
 	fi
 
 # Generate CPU/GPU thermal + throttle time-series plot from a session.
 # Usage: make visualize-thermal                  (auto-detects latest session)
 #        make visualize-thermal SESSION=<path>
 visualize-thermal:
-	uv run python src/visualize_thermal.py \
+	$(PYTHON) src/visualize_thermal.py \
 		$(if $(SESSION),"$(SESSION)") \
 		--save $(if $(SHOW),--show) $(if $(NO_SHOW),--no-show)
 
@@ -898,7 +937,7 @@ analyze-benchmark:
 		echo "Example: make analyze-benchmark BENCH=monitoring_sessions/wandering/bench_20260421_120000"; \
 		exit 1; \
 	fi
-	uv run python src/aggregate_kpi.py "$(BENCH)" $(if $(NODE),--node $(NODE))
+	$(PYTHON) src/aggregate_kpi.py "$(BENCH)" $(if $(NODE),--node $(NODE))
 
 summarize-benchmark:
 	@if [ -z "$(BENCH)" ]; then \
@@ -906,7 +945,7 @@ summarize-benchmark:
 		echo "Example: make summarize-benchmark BENCH=monitoring_sessions/wandering/bench_20260521_123522"; \
 		exit 1; \
 	fi
-	uv run python src/summarize_benchmark.py "$(BENCH)"
+	$(PYTHON) src/summarize_benchmark.py "$(BENCH)"
 
 analyze-e2e:
 	@if [ -z "$(BENCH)" ]; then \
@@ -919,13 +958,13 @@ analyze-e2e:
 		bag="$$sess_dir/bag"; \
 		if [ -f "$$kpi" ] && [ -f "$$bag/metadata.yaml" ]; then \
 			echo "  → $$(basename $$sess_dir)"; \
-			uv run python src/analyze_bag_e2e.py \
+			$(PYTHON) src/analyze_bag_e2e.py \
 				--bag "$$bag" \
 				--kpi "$$kpi" \
 				--json-out "$$sess_dir/kpi_level2_traced.json" || true; \
 		fi; \
 	done
-	uv run python src/summarize_benchmark.py "$(BENCH)"
+	$(PYTHON) src/summarize_benchmark.py "$(BENCH)"
 
 regression-check:
 	@# Help: Compare two Level 1 KPI JSON files for regressions (exit 1 if any KPI exceeds threshold)
@@ -971,7 +1010,7 @@ grafana-status:
 			echo "✅ Metrics exporter: http://localhost:9092/metrics"; \
 		else \
 			echo "⚠️  Metrics exporter not running"; \
-			echo "   Start with: uv run python src/prometheus_exporter.py --session-dir monitoring_sessions/$$(ls -t monitoring_sessions | head -1)"; \
+			echo "   Start with: $(PYTHON) src/prometheus_exporter.py --session-dir monitoring_sessions/$$(ls -t monitoring_sessions | head -1)"; \
 		fi; \
 	else \
 		echo "⚠️  Services not running"; \

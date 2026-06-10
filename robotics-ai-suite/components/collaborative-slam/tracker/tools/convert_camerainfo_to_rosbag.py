@@ -11,7 +11,6 @@ Author: Ming
 from __future__ import print_function
 import time
 import sys
-import os
 from ros import rosbag
 import roslib
 import rospy
@@ -22,8 +21,6 @@ from sensor_msgs.msg import CameraInfo
 
 def CreateBag(args):  # Directory
     """Creates a bag file with camera images"""
-    if not os.path.exists(args[1]):
-        os.system(r'touch %s' % args[1])
     bag = rosbag.Bag(args[1], 'w')
 
     # camera_info msg.  just copy from file. TODO: read from yaml file

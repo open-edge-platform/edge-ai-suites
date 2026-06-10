@@ -1,3 +1,28 @@
+ros-humble-benchmark-framework (0.2.1) UNRELEASED; urgency=low
+
+  * final_fixes: power monitoring, thermal charts, default record-plot, report.
+    - src/monitor_stack.py: add --power CLI flag for RAPL CPU package power
+      monitoring; wired to enable_power in MonitoringSession.
+    - src/benchmark_runner.sh: pass --power to monitor_stack so cpu_power.log
+      is always written; add [N/6] stage progress labels throughout each run;
+      add --show flag (implies --record --plot) that auto-invokes make results
+      after the run.
+    - src/visualize_thermal.py: add plot_temperature_only() and plot_power_only()
+      producing standalone thermal_temperature.png and thermal_power.png
+      alongside the existing combined thermal_throttle.png when --save is used.
+    - src/generate_report.py: handle missing kpi.json gracefully (warn + write
+      partial report) instead of crashing with FileNotFoundError.
+    - Makefile: plain make wandering / fastmapping / picknplace-run now default
+      to --record --plot; add SHOW= passthrough to all scenario targets;
+      results target adds [0/2] kpi.json recovery step from bag when missing,
+      fixes file:// URL for absolute SESSION paths, uses $(CURDIR) for
+      find auto-detect, adds headless http.server hint; benchmark targets
+      print aggregate progress note before aggregate_kpi.py call.
+    - debian/rules: add config/ to cp -r install so YAML run profiles are
+      shipped in the package.
+
+ -- ECI Maintainer <eci.maintainer@intel.com>  Sun, 08 Jun 2026 00:00:00 +0000
+
 ros-humble-benchmark-framework (0.2.0) UNRELEASED; urgency=low
 
   * YAML-driven run profiles and generic benchmark orchestrator.
