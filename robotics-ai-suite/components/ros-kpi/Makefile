@@ -94,7 +94,9 @@ help:
 	@echo "  ./grafana-monitor.sh --help"
 	@echo ""
 	@echo "INFRASTRUCTURE (make targets):"
-	@echo "  make install                              - Install all dependencies"
+	@echo "  make install                              - Install all dependencies (run from a user-writable dir;"
+	@echo "                                              if using the Debian pkg, copy first:"
+	@echo "                                              cp -r /opt/ros/jazzy/benchmarking ~/ros-kpi && cd ~/ros-kpi)"
 	@echo "  make install-qmassa                       - Compile and install qmassa/qmmd (xe GPU monitoring)"
 	@echo "  make enable-power-mon                     - Install udev rule to allow RAPL power reading without root"
 	@echo "  make check-deps                           - Check all dependencies"
@@ -187,10 +189,10 @@ enable-power-mon:
 install:
 	@echo "Installing required dependencies..."
 	@echo ""
-	@echo "[1/4] Installing system packages (sysstat, python3-tk, curl)..."
+	@echo "[1/3] Installing system packages (sysstat, python3-tk, curl)..."
 	@sudo apt-get update -qq && sudo apt-get install -y sysstat python3-tk curl
 	@echo ""
-	@echo "[2/4] Installing uv (Astral)..."
+	@echo "[2/3] Installing uv (Astral)..."
 	@if command -v uv >/dev/null 2>&1; then \
 		echo "  ✅ uv already installed: $$(uv --version)"; \
 	else \
@@ -201,11 +203,13 @@ install:
 		echo "  ℹ️  Add to PATH permanently: export PATH=\"\$$HOME/.local/bin:\$$PATH\""; \
 	fi
 	@echo ""
-	@echo "[3/4] Installing Python dependencies with uv..."
-	@PATH="$$HOME/.local/bin:$$PATH" uv sync
-	@sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg 2>/dev/null || true
+	@echo "  ℹ️  Python dependencies are NOT installed automatically."
+	@echo "     Run the following in this directory to create the virtualenv:"
+	@echo "       uv sync"
+	@echo "     Then patch it to use ROS 2 system site-packages:"
+	@echo "       sed -i 's/include-system-site-packages = false/include-system-site-packages = true/' .venv/pyvenv.cfg"
 	@echo ""
-	@echo "[4/4] Checking Docker (needed for Grafana dashboard)..."
+	@echo "[3/3] Checking Docker (needed for Grafana dashboard)..."
 	@if command -v docker >/dev/null 2>&1; then \
 		if docker info >/dev/null 2>&1; then \
 			echo "  ✅ Docker is installed and running: $$(docker --version)"; \
