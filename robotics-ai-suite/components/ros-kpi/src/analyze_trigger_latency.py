@@ -699,6 +699,90 @@ def _read_cpu_thermal_sysfs() -> dict:
     return {'temp_c': temp_c, 'throttled': throttled}
 
 
+def _compute_resource_cpu_stats(session_dir: Path):
+    """
+    Parse ``resource_usage.log`` (pidstat format) and return
+    ``(cpu_mean_pct, cpu_max_pct)`` as percentage of total system capacity
+    (0-100), or ``(None, None)`` if the log is absent or unreadable.
+
+    pidstat lines may wrap onto a continuation line that starts with
+    whitespace; we join them before parsing.  Only TGID rows (TID == '-')
+    are summed per timestamp to avoid double-counting threads.
+    """
+    log = session_dir / 'resource_usage.log'
+    if not log.exists():
+        return None, None
+
+    try:
+        raw_lines = log.read_text(errors='replace').splitlines()
+    except OSError:
+        return None, None
+
+    num_cpus = 0
+    # Merge wrapped continuation lines into full records
+    merged: list[str] = []
+    for raw in raw_lines:
+        if not num_cpus:
+            m = re.search(r'\((\d+) CPU\)', raw)
+            if m:
+                num_cpus = int(m.group(1))
+        stripped = raw.rstrip()
+        if stripped and stripped[0] == ' ' and merged:
+            merged[-1] += stripped  # continuation
+        else:
+            merged.append(stripped)
+
+    if not num_cpus:
+        num_cpus = 1  # safe fallback
+
+    # Sum TGID CPU per timestamp
+    ts_cpu: dict = {}  # timestamp str -> total %CPU
+    _ts_re = re.compile(r'^(\d{2}:\d{2}:\d{2}(?:\s+[AP]M)?)\s+')
+    for line in merged:
+        m = _ts_re.match(line)
+        if not m:
+            continue
+        parts = line.split()
+        # Thread mode:  Time UID TGID TID %usr %system %guest %wait %CPU CPU ...
+        # TGID row: parts[2]=TGID(int), parts[3]='-' → parts[8] is %CPU
+        # Thread row: parts[2]='-', parts[3]=TID(int)
+        # PID mode:   Time UID PID %usr %system %guest %wait %CPU CPU ...
+        #             parts[2]=PID, parts[3]=%usr (float)
+        try:
+            tgid_col = parts[2]
+            tid_col  = parts[3]
+        except IndexError:
+            continue
+        if tid_col == '-':
+            # TGID aggregate row in thread mode — parts[8] is %CPU
+            try:
+                cpu_pct = float(parts[8])
+            except (ValueError, IndexError):
+                continue
+        elif tgid_col == '-':
+            # Thread row — skip to avoid double-counting
+            continue
+        elif '.' in parts[3] or not parts[3].lstrip('-').isdigit():
+            # PID-only mode — parts[7] is %CPU
+            try:
+                cpu_pct = float(parts[7])
+            except (ValueError, IndexError):
+                continue
+        else:
+            continue  # unrecognised
+        ts = parts[0]
+        ts_cpu[ts] = ts_cpu.get(ts, 0.0) + cpu_pct
+
+    if not ts_cpu:
+        return None, None
+
+    totals = list(ts_cpu.values())
+    scale = num_cpus * 100.0
+    cpu_mean = round(statistics.mean(totals) / scale * 100.0, 1)
+    cpu_max = round(max(totals) / scale * 100.0, 1)
+    return cpu_mean, cpu_max
+
+
 def _load_resource_thermal(session_dir: Path) -> dict:
     """
     Build a session-level thermal summary from the resource logs in *session_dir*.
@@ -935,6 +1019,7 @@ def build_performance_kpi(
             'pipeline_stage':   _classify_node(node_name),
         }
 
+    _cpu_mean, _cpu_max = _compute_resource_cpu_stats(session_dir)
     return {
         'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
@@ -943,8 +1028,8 @@ def build_performance_kpi(
         'min_jitter_ms':    sys_jit_min,
         'mean_jitter_ms':   sys_jit_mean,
         'jitter_stdev_ms':  sys_jit_std,
-        'cpu_mean_pct':     None,
-        'cpu_max_pct':      None,
+        'cpu_mean_pct':     _cpu_mean,
+        'cpu_max_pct':      _cpu_max,
         'thermal':          _load_resource_thermal(session_dir),
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
@@ -1117,7 +1202,9 @@ def main() -> None:
         bag_input = Path(args.bag).resolve()
         # Accept both the bag directory AND a direct path to a .mcap/.db3 file
         bag_dir = bag_input.parent if bag_input.is_file() else bag_input
-        session_dir = bag_dir   # exports / plots land in the bag dir
+        # resource_usage.log and other session logs live in the parent of the
+        # bag directory (e.g. session_dir/bag/ → session_dir/)
+        session_dir = bag_dir.parent if (bag_dir.parent / 'resource_usage.log').exists() else bag_dir
 
         bag_files = sorted(bag_dir.glob('*.mcap')) + sorted(bag_dir.glob('*.db3'))
         if not bag_files:
