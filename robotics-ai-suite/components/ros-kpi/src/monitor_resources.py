@@ -282,35 +282,36 @@ def list_ros2_processes(remote_ip: str = None, remote_user: str = 'ubuntu'):
         print(f"Error listing processes: {e}", file=sys.stderr)
 
 
-_IGT_BIN = '~/.local/bin/intel_gpu_top'  # default path on the remote machine
-
-# Candidate paths for a locally installed intel_gpu_top binary
-_LOCAL_IGT_CANDIDATES = [
-    '/usr/bin/intel_gpu_top',
-    '/usr/local/bin/intel_gpu_top',
-    os.path.expanduser('~/.local/bin/intel_gpu_top'),
+# Candidate paths for a locally installed qmassa binary (xe driver support)
+_QMASSA_CANDIDATES = [
+    '/usr/bin/qmassa',
+    '/usr/local/bin/qmassa',
+    os.path.expanduser('~/.cargo/bin/qmassa'),
+    os.path.expanduser('~/.local/bin/qmassa'),
 ]
 
 # sysfs DRM card paths to probe for hwmon temperature data
 _DRM_CARDS_TEMP = ['/sys/class/drm/card0', '/sys/class/drm/card1']
 
-# Engine-class patterns (display name → regex on JSON key)
+# Engine-class patterns (display name → regex on JSON key).
+# Covers both i915 names ("Render/3D 0", "Video 0", …) and xe names (rcs, bcs, ccs, vcs, vecs).
 import re as _re  # noqa: E402
 _ENGINE_CLASS_RE = {
-    'Render/3D': _re.compile(r'render|3d',                      _re.I),
-    'Blitter':   _re.compile(r'blitter|blt',                    _re.I),
-    'Video':     _re.compile(r'^video$',                        _re.I),
-    'VE':        _re.compile(r'videoenhance|video_enhance|ve\b', _re.I),
+    'Render/3D': _re.compile(r'render|3d|^rcs\d*$',                        _re.I),
+    'Blitter':   _re.compile(r'blitter|blt|^bcs\d*$',                      _re.I),
+    'Compute':   _re.compile(r'^compute$|^ccs\d*$',                        _re.I),
+    'Video':     _re.compile(r'^video$|^vcs\d*$',                          _re.I),
+    'VE':        _re.compile(r'videoenhance|video_enhance|ve\b|^vecs\d*$', _re.I),
 }
 
 
-def _find_local_igt() -> Optional[str]:
-    """Return the path to a locally installed intel_gpu_top binary, or None."""
-    for p in _LOCAL_IGT_CANDIDATES:
+def _find_local_qmassa() -> Optional[str]:
+    """Return the path to a locally installed qmassa binary, or None."""
+    for p in _QMASSA_CANDIDATES:
         if os.path.isfile(p) and os.access(p, os.X_OK):
             return p
     try:
-        r = subprocess.run(['which', 'intel_gpu_top'],
+        r = subprocess.run(['which', 'qmassa'],
                            capture_output=True, text=True, timeout=3)
         path = r.stdout.strip()
         if path and os.path.isfile(path):
@@ -318,6 +319,59 @@ def _find_local_igt() -> Optional[str]:
     except Exception:
         pass
     return None
+
+
+def _detect_gpu_driver() -> str:
+    """
+    Return the active Intel GPU kernel driver name ('xe', 'i915', or 'unknown')
+    by reading the driver symlink from DRM sysfs.
+    """
+    for drv_link in glob.glob('/sys/class/drm/card*/device/driver'):
+        try:
+            drv = os.path.basename(os.readlink(drv_link))
+            if drv in ('xe', 'i915'):
+                return drv
+        except OSError:
+            continue
+    return 'unknown'
+
+
+def probe_gpu_available() -> tuple:
+    """
+    Probe local Intel GPU monitoring availability without collecting any data.
+
+    Returns ``(available, tool, reason)`` where:
+      - ``available`` – True if a usable monitoring tool was found
+      - ``tool``      – 'qmassa' or '' when unavailable
+      - ``reason``    – human-readable string suitable for log output
+    """
+    driver = _detect_gpu_driver()
+    if driver in ('xe', 'i915'):
+        qmassa = _find_local_qmassa()
+        if qmassa:
+            return True, 'qmassa', f'{driver} driver detected, qmassa at {qmassa}'
+        return (False, '',
+                f'{driver} driver detected but qmassa not found '
+                '(install: make install-qmassa)')
+    return False, '', 'no Intel GPU driver found in DRM sysfs'
+
+
+def probe_npu_available() -> tuple:
+    """
+    Probe local Intel NPU monitoring availability via sysfs.
+
+    Returns ``(available, reason)`` where:
+      - ``available`` – True if the NPU sysfs is present and readable
+      - ``reason``    – human-readable string suitable for log output
+    """
+    busy_file = f'{_NPU_SYSFS}/npu_busy_time_us'
+    if not os.path.exists(busy_file):
+        return False, f'NPU sysfs not found ({busy_file})'
+    try:
+        open(busy_file).read()
+        return True, f'Intel NPU sysfs accessible at {_NPU_SYSFS}'
+    except OSError as exc:
+        return False, f'NPU sysfs exists but not readable: {exc}'
 
 
 def _read_gpu_temp_sysfs(remote_ip: str = None,
@@ -351,51 +405,150 @@ def _read_gpu_temp_sysfs(remote_ip: str = None,
     return None
 
 
-def _parse_igt_clients(sample: dict) -> list:
+def _read_cpu_thermal_sysfs() -> dict:
     """
-    Extract per-PID GPU utilisation from intel_gpu_top JSON "clients" field
-    (available in intel_gpu_top ≥ 1.27).  Returns a list sorted by total
-    GPU busy % descending:
-        [{ pid, name, engines: {class: busy%}, total }, …]
+    Read CPU package temperature and throttle state from local sysfs.
+
+    Temperature source: the ``x86_pkg_temp`` thermal zone in
+    ``/sys/class/thermal/thermal_zone*/``.
+
+    Throttle detection: compares ``scaling_cur_freq`` against
+    ``cpuinfo_max_freq`` for CPU 0 via cpufreq sysfs; throttling is
+    assumed when the current frequency falls below 95 % of the maximum.
+
+    Returns a dict with:
+        temp_c     - CPU package temperature in °C (float), or None
+        throttled  - True when throttling detected, False when not, or None
     """
-    clients_raw = sample.get('clients', {})
-    if not clients_raw:
-        return []
-    items = list(clients_raw.values()) if isinstance(clients_raw, dict) \
-            else list(clients_raw)
-    result = []
-    for c in items:
-        if not isinstance(c, dict):
-            continue
-        pid_raw = c.get('pid') or c.get('id')
-        name = (c.get('name') or c.get('comm') or '?')[:28]
+    temp_c: Optional[float] = None
+    throttled: Optional[bool] = None
+
+    for zone_dir in sorted(glob.glob('/sys/class/thermal/thermal_zone*')):
         try:
-            pid = int(pid_raw)
-        except (TypeError, ValueError):
+            zone_type = open(f'{zone_dir}/type').read().strip()
+            if zone_type == 'x86_pkg_temp':
+                raw = int(open(f'{zone_dir}/temp').read().strip())
+                temp_c = round(raw / 1000.0, 1)
+                break
+        except (OSError, ValueError):
             continue
-        pid_engines = {k: 0.0 for k in _ENGINE_CLASS_RE}
-        total_busy = 0.0
-        eng_data = c.get('engine-classes') or c.get('engines') or {}
-        if isinstance(eng_data, dict):
-            for key, val in eng_data.items():
-                busy = float(val.get('busy', 0)) if isinstance(val, dict) \
-                       else float(val) if isinstance(val, (int, float)) else 0.0
-                for cls_name, pat in _ENGINE_CLASS_RE.items():
-                    if pat.search(key):
-                        pid_engines[cls_name] += busy
-                        total_busy += busy
-                        break
-        else:
-            total_busy = float(c.get('busy', 0))
-            eng_cls = c.get('engine-class', '')
-            for cls_name, pat in _ENGINE_CLASS_RE.items():
-                if pat.search(eng_cls):
-                    pid_engines[cls_name] = total_busy
-                    break
-        result.append({'pid': pid, 'name': name,
-                       'engines': pid_engines, 'total': round(total_busy, 2)})
-    result.sort(key=lambda x: x['total'], reverse=True)
-    return result
+
+    try:
+        cur  = int(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq').read().strip())
+        mxf  = int(open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read().strip())
+        throttled = cur < mxf * 0.95
+    except (OSError, ValueError):
+        throttled = None
+
+    return {'temp_c': temp_c, 'throttled': throttled}
+
+
+def probe_cpu_power_available() -> tuple:
+    """
+    Probe Intel RAPL CPU package power availability via powercap sysfs.
+
+    Returns ``(available, reason)`` where:
+      - ``available`` - True if the energy counter exists and is readable
+      - ``reason``    - human-readable string suitable for log output
+    """
+    if not os.path.exists(_RAPL_PKG_ENERGY):
+        return False, f'RAPL sysfs not found ({_RAPL_PKG_ENERGY}) — WSL2 or non-Intel?'
+    try:
+        int(open(_RAPL_PKG_ENERGY).read().strip())
+        return True, f'Intel RAPL accessible at {_RAPL_PKG_ENERGY}'
+    except (OSError, ValueError) as exc:
+        return False, f'RAPL sysfs exists but not readable: {exc}'
+
+
+def _read_rapl_energy_uj() -> Optional[int]:
+    """Read the current CPU package energy counter in µJ. Returns None on error."""
+    try:
+        return int(open(_RAPL_PKG_ENERGY).read().strip())
+    except (OSError, ValueError):
+        return None
+
+
+def _read_rapl_max_uj() -> int:
+    """Read the RAPL counter wraparound value in µJ (default 262143 µJ if unreadable)."""
+    try:
+        return int(open(_RAPL_PKG_MAX).read().strip())
+    except (OSError, ValueError):
+        return 262_143_000_000  # ~262 kJ, typical Sandy Bridge wrap value
+
+
+def monitor_cpu_power(interval: float = 2.0,
+                      cpu_power_log: str = None,
+                      stop_event: threading.Event = None):
+    """
+    Sample Intel RAPL CPU package power at *interval* seconds and write
+    JSON-lines to *cpu_power_log*.
+
+    Each record contains:
+        ts        - ISO-8601 timestamp
+        power_w   - mean CPU package power over the sampling window (watts)
+        temp_c    - CPU package temperature at sample time (°C), or null
+        throttled - True when CPU frequency dropped below 95 % of max, or null
+
+    Runs until *stop_event* is set or KeyboardInterrupt.
+    Silently exits if RAPL sysfs is not available.
+    """
+    avail, reason = probe_cpu_power_available()
+    if not avail:
+        print(f'[PWR] RAPL not available — CPU power monitoring skipped ({reason})')
+        return
+
+    log_fp = None
+    if cpu_power_log:
+        log_fp = open(cpu_power_log, 'a')
+        log_fp.write(json.dumps({'event': 'start',
+                                  'ts': datetime.now().isoformat()}) + '\n')
+        log_fp.flush()
+
+    if stop_event is None:
+        stop_event = threading.Event()
+
+    print(f'[PWR] Monitoring Intel RAPL CPU package power (interval={interval}s)...')
+
+    max_uj = _read_rapl_max_uj()
+
+    try:
+        e0 = _read_rapl_energy_uj()
+        t0 = time.monotonic()
+
+        while not stop_event.is_set():
+            stop_event.wait(timeout=interval)
+            e1 = _read_rapl_energy_uj()
+            t1 = time.monotonic()
+
+            if e0 is not None and e1 is not None:
+                # Handle counter wraparound
+                delta_uj = e1 - e0 if e1 >= e0 else (max_uj - e0 + e1)
+                elapsed_s = t1 - t0
+                power_w = round(delta_uj / 1_000_000.0 / max(elapsed_s, 1e-6), 2)
+
+                thermal = _read_cpu_thermal_sysfs()
+                record = {
+                    'ts':       datetime.now().isoformat(),
+                    'power_w':  power_w,
+                    'temp_c':   thermal.get('temp_c'),
+                    'throttled': thermal.get('throttled'),
+                }
+                print(f'[PWR] pkg={power_w:.2f} W'
+                      + (f'  🌡{thermal["temp_c"]}°C' if thermal.get('temp_c') else '')
+                      + ('  ⚠THROTTLE' if thermal.get('throttled') else ''))
+                if log_fp:
+                    log_fp.write(json.dumps(record) + '\n')
+                    log_fp.flush()
+
+            e0, t0 = e1, t1
+    except KeyboardInterrupt:
+        pass
+    finally:
+        if log_fp:
+            log_fp.write(json.dumps({'event': 'stop',
+                                      'ts': datetime.now().isoformat()}) + '\n')
+            log_fp.close()
+        print('[PWR] CPU power monitor stopped.')
 
 
 def _ssh(remote_ip: str, remote_user: str, cmd: str,
@@ -409,184 +562,161 @@ def _ssh(remote_ip: str, remote_user: str, cmd: str,
     )
 
 
-def _try_intel_gpu_top(remote_ip: str, remote_user: str,
-                       interval: float = 2.0) -> dict:
+def _try_qmassa_local(interval: float = 2.0) -> dict:
     """
-    Run intel_gpu_top -J -s <ms> -n 2 on the remote and return the second
-    (i.e. the real measurement) JSON object as a normalised dict.
+    Run qmassa headlessly (-x, -n 2) and parse the JSON output file.
 
-    Returns an empty dict on ANY error (binary missing, PMU blocked, parse
-    failure, SSH timeout …).  The caller should fall back to sysfs in that case.
+    Requires qmassa installed (``cargo install --locked qmassa``) and the
+    running user in the ``video``, ``render``, and ``power`` groups (or root).
 
-    Normalised dict keys
-    --------------------
-    source          – 'intel_gpu_top'
-    busy_pct        – Render/3D engine busy % (primary GPU load indicator)
-    act_freq_mhz    – actual GT frequency (MHz)
-    req_freq_mhz    – requested GT frequency (MHz)
-    rc6_pct         – RC6 residency % (longer value = more idle)
-    power_gpu_w     – GPU power draw (W) — 0 if RAPL unavailable
-    power_pkg_w     – Package power draw (W) — 0 if RAPL unavailable
-    engines         – dict { engine_name: {busy, sema, wait} } in percent
-    period_ms       – actual measurement window length (ms)
+    JSON file format (from qmassa app_data.rs):
+      Line 1 - version string  e.g. "2.0"
+      Line 2 - CliArgs JSON object
+      Line 3+ - one AppDataState JSON object per iteration
+
+    Key schema details:
+      ``dev_stats.eng_usage``    - dict {engine: [ratio, …]} (0.0-1.0, NOT %)
+      ``dev_stats.freqs``        - [[{act_freq: Hz, throttle_reasons: {status: bool}}, …], …]
+      ``dev_stats.power``        - [{gpu_cur_power: W, pkg_cur_power: W}, …]
+      ``dev_stats.temps``        - [[{name: str, temp: °C}, …], …]  (dGPU only)
+      ``dev_stats.mem_info``     - [{smem_used: bytes, vram_used: bytes, …}, …]
+      ``clis_stats``             - [{pid, comm, eng_usage: {engine: [ratio,…]}, …}, …]
+
+    Returns a normalized dict (same schema as the rest of the GPU monitoring
+    pipeline), or {} on any error (binary missing, permission denied, parse failure …).
     """
+    import tempfile
+
+    qmassa_bin = _find_local_qmassa()
+    if not qmassa_bin:
+        return {}
+
     interval_ms = max(500, int(interval * 1000))
-    cmd = f'{_IGT_BIN} -J -s {interval_ms} -n 2 2>/dev/null'
+    tmp_path = None
     try:
-        r = _ssh(remote_ip, remote_user, cmd, timeout=interval_ms // 1000 + 10)
-    except Exception:
-        return {}
+        with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as tf:
+            tmp_path = tf.name
 
-    # intel_gpu_top -J emits a JSON *array* that it streams open-endedly.
-    # With -n 2 the output is:  [\n{sample0},\n{sample1}\n]\n
-    # We want sample1 (the real interval measurement).
-    raw = r.stdout.strip()
-    if not raw or r.returncode != 0:
-        return {}
-    # Extract all top-level JSON objects from the stream
-    samples = []
-    depth = 0
-    start = None
-    for i, ch in enumerate(raw):
-        if ch == '{':
-            if depth == 0:
-                start = i
-            depth += 1
-        elif ch == '}':
-            depth -= 1
-            if depth == 0 and start is not None:
-                try:
-                    samples.append(json.loads(raw[start:i + 1]))
-                except json.JSONDecodeError:
-                    pass
-    if len(samples) < 2:
-        return {}
-    s = samples[-1]  # last (actual measurement) sample
-
-    def _fget(obj, *keys, default=0.0):
-        for k in keys:
-            if isinstance(obj, dict):
-                obj = obj.get(k, default)
-            else:
-                return default
-        try:
-            return float(obj)
-        except (TypeError, ValueError):
-            return default
-
-    engines_raw = s.get('engines', {})
-    engines_out = {}
-    render_busy = 0.0
-    for name, data in engines_raw.items():
-        if isinstance(data, dict) and 'busy' in data:
-            busy = _fget(data, 'busy')
-            engines_out[name] = {
-                'busy': busy,
-                'sema': _fget(data, 'sema'),
-                'wait': _fget(data, 'wait'),
-            }
-            if 'Render' in name or '3D' in name:
-                render_busy = busy
-
-    # overall busy = max engine busy if no Render/3D found
-    if not render_busy and engines_out:
-        render_busy = max(v['busy'] for v in engines_out.values())
-
-    return {
-        'source':       'intel_gpu_top',
-        'busy_pct':     round(render_busy, 1),
-        'act_freq_mhz': int(_fget(s, 'frequency', 'actual')),
-        'req_freq_mhz': int(_fget(s, 'frequency', 'requested')),
-        'rc6_pct':      round(_fget(s, 'rc6', 'value'), 1),
-        'power_gpu_w':  round(_fget(s, 'power', 'GPU'), 2),
-        'power_pkg_w':  round(_fget(s, 'power', 'Package'), 2),
-        'engines':      engines_out,
-        'clients':      _parse_igt_clients(s),
-        'period_ms':    round(_fget(s, 'period', 'duration'), 1),
-    }
-
-
-def _try_intel_gpu_top_local(interval: float = 2.0) -> dict:
-    """
-    Run intel_gpu_top locally (no SSH) and return a normalised dict identical
-    in structure to the one returned by _try_intel_gpu_top().
-    Returns an empty dict on any error (binary missing, PMU blocked, …).
-    """
-    igt_bin = _find_local_igt()
-    if not igt_bin:
-        return {}
-    interval_ms = max(500, int(interval * 1000))
-    try:
-        r = subprocess.run(
-            [igt_bin, '-J', '-s', str(interval_ms), '-n', '2'],
+        subprocess.run(
+            [qmassa_bin, '-x', '-n', '2', '-m', str(interval_ms), '-t', tmp_path],
             capture_output=True, text=True,
-            timeout=interval_ms // 1000 + 12,
+            timeout=interval_ms // 1000 * 3 + 15,
         )
-        raw = r.stdout.strip()
+
+        with open(tmp_path) as f:
+            lines = [ln for ln in f.read().splitlines() if ln.strip()]
     except Exception:
         return {}
-    if not raw:
-        return {}
-    # Reuse the same JSON parsing logic as the remote path
-    samples = []
-    depth = 0
-    start = None
-    for i, ch in enumerate(raw):
-        if ch == '{':
-            if depth == 0:
-                start = i
-            depth += 1
-        elif ch == '}':
-            depth -= 1
-            if depth == 0 and start is not None:
-                try:
-                    samples.append(json.loads(raw[start:i + 1]))
-                except json.JSONDecodeError:
-                    pass
-    if len(samples) < 2:
-        return {}
-    s = samples[-1]
+    finally:
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
 
-    def _fget(obj, *keys, default=0.0):
-        for k in keys:
-            if isinstance(obj, dict):
-                obj = obj.get(k, default)
-            else:
-                return default
-        try:
-            return float(obj)
-        except (TypeError, ValueError):
-            return default
+    # Need at least: version + args + 1 state line
+    if len(lines) < 3:
+        return {}
 
-    engines_raw = s.get('engines', {})
+    try:
+        state = json.loads(lines[-1])   # last AppDataState (most recent iteration)
+    except json.JSONDecodeError:
+        return {}
+
+    devs = state.get('devs_state', [])
+    if not devs:
+        return {}
+    dev = devs[0]
+    dev_stats = dev.get('dev_stats', {})
+
+    def _last(lst):
+        return lst[-1] if lst else None
+
+    # ── Engine utilization (ratios → %) ────────────────────────────────────────
+    eng_usage_raw = dev_stats.get('eng_usage', {})
     engines_out = {}
     render_busy = 0.0
-    for name, data in engines_raw.items():
-        if isinstance(data, dict) and 'busy' in data:
-            busy = _fget(data, 'busy')
-            engines_out[name] = {
-                'busy': busy,
-                'sema': _fget(data, 'sema'),
-                'wait': _fget(data, 'wait'),
-            }
-            if 'Render' in name or '3D' in name:
-                render_busy = busy
+    for eng_name, usage_list in eng_usage_raw.items():
+        last_val = _last(usage_list)
+        if last_val is None:
+            continue
+        busy_pct = round(float(last_val), 1)   # qmassa eng_usage is already in %
+        engines_out[eng_name] = {'busy': busy_pct, 'sema': 0.0, 'wait': 0.0}
+        if _ENGINE_CLASS_RE['Render/3D'].search(eng_name):
+            render_busy = busy_pct
+
     if not render_busy and engines_out:
         render_busy = max(v['busy'] for v in engines_out.values())
 
-    return {
-        'source':       'intel_gpu_top',
+    # ── Frequencies (Hz → MHz) + throttle ─────────────────────────────────────
+    last_freqs = _last(dev_stats.get('freqs', []))      # Vec<DrmDeviceFreqs>
+    act_freq_mhz = 0
+    throttled = False
+    if last_freqs and isinstance(last_freqs, list) and last_freqs:
+        gt0 = last_freqs[0]
+        act_freq_mhz = int(gt0.get('act_freq', 0) / 1_000_000)
+        throttled = bool(gt0.get('throttle_reasons', {}).get('status', False))
+
+    # ── Power (already in watts) ───────────────────────────────────────────────
+    last_power = _last(dev_stats.get('power', []))
+    power_gpu_w = 0.0
+    power_pkg_w = 0.0
+    if isinstance(last_power, dict):
+        power_gpu_w = round(float(last_power.get('gpu_cur_power', 0)), 2)
+        power_pkg_w = round(float(last_power.get('pkg_cur_power', 0)), 2)
+
+    # ── Temperature (dGPU only, °C already) ───────────────────────────────────
+    last_temps = _last(dev_stats.get('temps', []))      # Vec<DrmDeviceTemperature>
+    temp_c = None
+    if last_temps and isinstance(last_temps, list) and last_temps:
+        temp_c = round(float(last_temps[0].get('temp', 0)), 1)
+
+    # ── Memory ────────────────────────────────────────────────────────────────
+    last_mem = _last(dev_stats.get('mem_info', []))
+    vram_used_mb = 0.0
+    smem_used_mb = 0.0
+    if isinstance(last_mem, dict):
+        vram_used_mb = round(last_mem.get('vram_used', 0) / (1024 * 1024), 1)
+        smem_used_mb = round(last_mem.get('smem_used', 0) / (1024 * 1024), 1)
+
+    # ── Per-PID DRM clients ────────────────────────────────────────────────────
+    clients = []
+    for cst in dev.get('clis_stats', []):
+        pid = cst.get('pid', 0)
+        name = (cst.get('comm') or '?')[:28]
+        cli_engs = {k: 0.0 for k in _ENGINE_CLASS_RE}
+        total_busy = 0.0
+        for eng_name, usage_list in cst.get('eng_usage', {}).items():
+            last_val = _last(usage_list)
+            if last_val is None:
+                continue
+            busy = float(last_val)   # qmassa eng_usage is already in %
+            for cls_name, pat in _ENGINE_CLASS_RE.items():
+                if pat.search(eng_name):
+                    cli_engs[cls_name] = cli_engs.get(cls_name, 0.0) + busy
+                    total_busy += busy
+                    break
+        clients.append({'pid': pid, 'name': name,
+                        'engines': cli_engs, 'total': round(total_busy, 2)})
+    clients.sort(key=lambda x: x['total'], reverse=True)
+
+    result = {
+        'source':       'qmassa',
         'busy_pct':     round(render_busy, 1),
-        'act_freq_mhz': int(_fget(s, 'frequency', 'actual')),
-        'req_freq_mhz': int(_fget(s, 'frequency', 'requested')),
-        'rc6_pct':      round(_fget(s, 'rc6', 'value'), 1),
-        'power_gpu_w':  round(_fget(s, 'power', 'GPU'), 2),
-        'power_pkg_w':  round(_fget(s, 'power', 'Package'), 2),
+        'act_freq_mhz': act_freq_mhz,
+        'power_gpu_w':  power_gpu_w,
+        'power_pkg_w':  power_pkg_w,
         'engines':      engines_out,
-        'clients':      _parse_igt_clients(s),
-        'period_ms':    round(_fget(s, 'period', 'duration'), 1),
-        'igt_bin':      igt_bin,
+        'clients':      clients,
+        'throttled':    throttled,
+        'period_ms':    float(interval_ms),
+        'drv_name':     dev.get('drv_name', 'xe'),
+        'vram_used_mb': vram_used_mb,
+        'smem_used_mb': smem_used_mb,
     }
+    if temp_c is not None:
+        result['temp_c'] = temp_c
+    return result
 
 
 def _read_sysfs_gpu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
@@ -705,8 +835,9 @@ def monitor_gpu(interval: float = 2.0,
                 stop_event: threading.Event = None):
     """
     Poll Intel GPU metrics at `interval` seconds and write JSON-lines to
-    `gpu_log`.  Tries intel_gpu_top -J first (rich data: per-engine busy%,
-    power, rc6%); falls back to sysfs RC6 residency if PMU is blocked.
+    `gpu_log`.  Uses qmassa locally (rich data: per-engine busy%,
+    power, VRAM, per-PID); falls back to sysfs RC6 residency for remote
+    sessions or when qmassa is unavailable.
     Runs until stop_event is set or KeyboardInterrupt.
     """
     log_fp = None
@@ -732,61 +863,51 @@ def monitor_gpu(interval: float = 2.0,
             print('[GPU] Could not reach remote for GPU check — skipping.')
             return
 
-    # Probe whether intel_gpu_top with PMU works on this machine
-    use_igt = False
-    if remote_ip:
-        probe = _try_intel_gpu_top(remote_ip, remote_user, interval=max(interval, 1.0))
+    # Probe: try qmassa first; fall back to sysfs if unavailable.
+    use_qmassa = False
+    if not remote_ip:
+        probe = _try_qmassa_local(interval=max(interval, 1.0))
         if probe:
-            use_igt = True
-            print(f'[GPU] Using intel_gpu_top on remote (engines, power, RC6, per-PID) '
+            use_qmassa = True
+            drv = probe.get('drv_name', 'xe')
+            print(f'[GPU] Using qmassa ({drv} driver, engines/power/per-PID)  '
                   f'interval={interval}s')
         else:
-            print('[GPU] intel_gpu_top unavailable on remote (PMU blocked?) — '
-                  'falling back to sysfs RC6 monitoring.')
-            print('[GPU] Run on the remote to enable:  '
-                  'sudo setcap cap_perfmon+eip ~/.local/bin/intel_gpu_top')
-    else:
-        probe = _try_intel_gpu_top_local(interval=max(interval, 1.0))
-        if probe:
-            use_igt = True
-            print(f'[GPU] Using local intel_gpu_top [{probe.get("igt_bin", "")}] '
-                  f'(engines, power, RC6, per-PID)  interval={interval}s')
-        else:
-            local_igt = _find_local_igt()
-            if local_igt:
-                print(f'[GPU] intel_gpu_top found at {local_igt} but PMU is blocked.')
-                print(f'[GPU] Enable with:  sudo setcap cap_perfmon+eip {local_igt}')
+            qmassa_bin = _find_local_qmassa()
+            if qmassa_bin:
+                print(f'[GPU] qmassa found at {qmassa_bin} but probe failed '
+                      f'(check video/render/power group membership).')
             else:
-                print('[GPU] intel_gpu_top not found — falling back to sysfs monitoring.')
-                print('[GPU] Install:  sudo apt install intel-gpu-tools')
+                print('[GPU] qmassa not found — falling back to sysfs monitoring.')
+                print('[GPU] Install:  make install-qmassa')
 
-    if not use_igt:
+    if not use_qmassa:
         print(f'[GPU] Monitoring Intel GPU via sysfs (interval={interval}s)...')
 
-    def _fmt_igt(stats: dict) -> str:
+    def _fmt_rich(stats: dict) -> str:
         engs     = stats.get('engines', {})
         render_b = stats.get('busy_pct', 0.0)
+        src      = stats.get('source', '')
         pwr      = f"  ⚡{stats['power_gpu_w']:.1f}W" if stats.get('power_gpu_w') else ''
         temp     = (f"  🌡{stats['temp_c']:.0f}°C"
                     if stats.get('temp_c') is not None else '')
-        # Build per-engine summary  e.g.  Render/3D:28.1%  Video:0.0%
+        # Build per-engine summary  e.g.  Render/3D:28.1%  Compute:12.0%
         eng_parts = []
         for cls, pat in _ENGINE_CLASS_RE.items():
-            # Find matching key in engines dict (raw key e.g. "Render/3D 0")
             for k, v in engs.items():
                 if pat.search(k) and isinstance(v, dict):
                     eng_parts.append(f'{cls}:{v.get("busy", 0.0):.1f}%')
                     break
         eng_str = '  ' + '  '.join(eng_parts) if eng_parts else ''
-        # Top PID if available
         clients = stats.get('clients', [])
         pid_str = ''
         if clients:
             top = clients[0]
             pid_str = f'  top-pid={top["pid"]}({top["name"]}):{top["total"]:.1f}%'
-        return (f"[GPU] busy={render_b:5.1f}%  "
-                f"freq={stats.get('act_freq_mhz', 0)}/{stats.get('req_freq_mhz', 0)} MHz  "
-                f"rc6={stats.get('rc6_pct', 0.0):.1f}%{pwr}{temp}{eng_str}{pid_str}")
+        rc6_str = ''
+        return (f"[GPU/{src}] busy={render_b:5.1f}%  "
+                f"freq={stats.get('act_freq_mhz', 0)} MHz"
+                f"{rc6_str}{pwr}{temp}{eng_str}{pid_str}")
 
     def _fmt_sysfs(stats: dict) -> str:
         return (f"[GPU] busy={stats['busy_pct']:5.1f}%  "
@@ -796,34 +917,50 @@ def monitor_gpu(interval: float = 2.0,
     try:
         while not stop_event.is_set():
             t0 = time.monotonic()
-            if use_igt:
-                if remote_ip:
-                    stats = _try_intel_gpu_top(remote_ip, remote_user, interval=interval)
-                else:
-                    stats = _try_intel_gpu_top_local(interval=interval)
+            if use_qmassa:
+                stats = _try_qmassa_local(interval=interval)
                 if not stats:
-                    # Transient failure — fall back to sysfs for this sample
-                    stats = _read_sysfs_gpu(remote_ip=remote_ip, remote_user=remote_user)
+                    stats = _read_sysfs_gpu()
             else:
                 stats = _read_sysfs_gpu(remote_ip=remote_ip, remote_user=remote_user)
 
             if stats:
                 ts = datetime.now().isoformat()
-                # Attach temperature to every record
-                temp_c = _read_gpu_temp_sysfs(
-                    remote_ip=remote_ip, remote_user=remote_user)
-                if temp_c is not None:
-                    stats['temp_c'] = round(temp_c, 1)
+                # Attach temperature from hwmon sysfs when not already present
+                # (qmassa populates temp_c for dGPUs; sysfs path always supplements)
+                if stats.get('temp_c') is None:
+                    temp_c = _read_gpu_temp_sysfs(
+                        remote_ip=remote_ip, remote_user=remote_user)
+                    if temp_c is not None:
+                        stats['temp_c'] = round(temp_c, 1)
+                # Supplement frequency from sysfs when qmassa on i915 reports 0
+                # (i915 fdinfo does not expose GT frequency; xe driver does)
+                if stats.get('act_freq_mhz', 0) == 0 and stats.get('drv_name') == 'i915':
+                    try:
+                        import glob as _glob  # noqa: E402
+                        _cards = sorted(_glob.glob('/sys/class/drm/card[0-9]'))
+                        _card = _cards[-1] if _cards else '/sys/class/drm/card0'
+                        with open(f'{_card}/gt_act_freq_mhz') as _f:
+                            _act = int(_f.read().strip())
+                        if _act > 0:
+                            stats['act_freq_mhz'] = _act
+                            try:
+                                with open(f'{_card}/gt_max_freq_mhz') as _f:
+                                    stats['max_freq_mhz'] = int(_f.read().strip())
+                            except (OSError, ValueError):
+                                pass
+                    except (OSError, ValueError):
+                        pass
                 record = {'ts': ts, **stats}
                 line = json.dumps(record)
-                print(_fmt_igt(stats) if stats.get('source') == 'intel_gpu_top'
-                      else _fmt_sysfs(stats))
+                src = stats.get('source', '')
+                print(_fmt_rich(stats) if src == 'qmassa' else _fmt_sysfs(stats))
                 if log_fp:
                     log_fp.write(line + '\n')
                     log_fp.flush()
 
-            # intel_gpu_top already consumed ~interval seconds; sysfs consumes 1s.
-            # Sleep the remainder so we don't drift shorter than the interval.
+            # qmassa already consumed ~interval seconds internally;
+            # sysfs consumes 1 s.  Sleep the remainder to avoid drift.
             elapsed = time.monotonic() - t0
             remaining = interval - elapsed
             if remaining > 0.05:
@@ -847,6 +984,10 @@ _NPU_SYSFS_FILES = [
     'npu_memory_utilization',
 ]
 
+# Intel RAPL powercap sysfs — CPU package energy counter (µJ, no root required)
+_RAPL_PKG_ENERGY  = '/sys/class/powercap/intel-rapl/intel-rapl:0/energy_uj'
+_RAPL_PKG_MAX     = '/sys/class/powercap/intel-rapl/intel-rapl:0/max_energy_range_uj'
+
 
 def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
     """
@@ -856,10 +997,11 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
         busy% = delta_busy_us / (delta_wall_us) * 100
 
     Returns a dict with:
-        busy_pct          – NPU compute utilisation %
-        cur_freq_mhz      – current clock frequency
-        max_freq_mhz      – maximum clock frequency
-        memory_used_mb    – memory utilisation (bytes → MB)
+        busy_pct          - NPU compute utilisation %
+        cur_freq_mhz      - current clock frequency
+        max_freq_mhz      - maximum clock frequency
+        memory_used_mb    - memory utilisation (bytes → MB)
+        throttled         - True when cur_freq_mhz < max_freq_mhz * 0.95
     Returns an empty dict on any failure.
     """
 
@@ -907,12 +1049,18 @@ def _read_sysfs_npu(remote_ip: str = None, remote_user: str = 'ubuntu') -> dict:
     busy_pct = round(min(delta_busy / elapsed_us * 100.0, 100.0), 1) if elapsed_us > 0 else 0.0
 
     mem_bytes = _int(s1, 'npu_memory_utilization')
-    return {
+    cur_freq = _int(s1, 'npu_current_frequency_mhz')
+    max_freq = _int(s1, 'npu_max_frequency_mhz')
+    # Throttle detection: current frequency dropped below 95 % of maximum.
+    throttled = bool(0 < cur_freq < max_freq * 0.95 and max_freq > 0)
+    result = {
         'busy_pct':       busy_pct,
-        'cur_freq_mhz':   _int(s1, 'npu_current_frequency_mhz'),
-        'max_freq_mhz':   _int(s1, 'npu_max_frequency_mhz'),
+        'cur_freq_mhz':   cur_freq,
+        'max_freq_mhz':   max_freq,
         'memory_used_mb': round(mem_bytes / (1024 * 1024), 1),
+        'throttled':      throttled,
     }
+    return result
 
 
 def monitor_npu(interval: float = 2.0,
@@ -960,9 +1108,17 @@ def monitor_npu(interval: float = 2.0,
             if stats:
                 ts = datetime.now().isoformat()
                 record = {'ts': ts, **stats}
+                pwr_str  = (f"  ⚡{stats['power_w']:.2f}W"
+                            if 'power_w' in stats else '')
+                temp_str = (f"  🌡{stats['temp_c']}°C"
+                            if 'temp_c' in stats else '')
+                bw_str   = (f"  bw={stats['bw_mbps']:.1f} MB/s"
+                            if 'bw_mbps' in stats else '')
+                throttle_str = '  ⚠THROTTLE' if stats.get('throttled') else ''
                 print(f"[NPU] busy={stats['busy_pct']:5.1f}%  "
                       f"freq={stats['cur_freq_mhz']}/{stats['max_freq_mhz']} MHz  "
-                      f"mem={stats['memory_used_mb']:.1f} MB")
+                      f"mem={stats['memory_used_mb']:.1f} MB"
+                      f"{pwr_str}{temp_str}{bw_str}{throttle_str}")
                 if log_fp:
                     log_fp.write(json.dumps(record) + '\n')
                     log_fp.flush()
@@ -1039,12 +1195,55 @@ Examples:
                         help='Also collect Intel NPU metrics via sysfs (writes npu_usage.log alongside --log)')
     parser.add_argument('--npu-log', type=str, default=None,
                         help='Explicit path for NPU JSON-lines log (auto-derived from --log if omitted)')
+    parser.add_argument('--power', action='store_true',
+                        help='Also collect Intel RAPL CPU package power via powercap sysfs (writes cpu_power.log)')
+    parser.add_argument('--power-log', type=str, default=None,
+                        help='Explicit path for CPU power JSON-lines log (auto-derived from --log if omitted)')
     parser.add_argument('--remote-ip', type=str, default=None,
                         help='IP address of the remote system running the ROS2 pipeline')
     parser.add_argument('--remote-user', type=str, default='ubuntu',
                         help='SSH username for the remote system (default: ubuntu)')
+    parser.add_argument('--check-hw', action='store_true',
+                        help='Probe local GPU and NPU monitoring availability then exit')
 
     args = parser.parse_args()
+
+    if args.check_hw:
+        driver = _detect_gpu_driver()
+        gpu_avail, gpu_tool, gpu_reason = probe_gpu_available()
+        npu_avail, npu_reason = probe_npu_available()
+        print('\u2554' + '\u2550' * 64 + '\u2557')
+        print('\u2551' + '  Hardware Monitoring Probe'.ljust(64) + '\u2551')
+        print('\u255a' + '\u2550' * 64 + '\u255d')
+        print()
+        print(f'[GPU] Kernel driver : {driver}')
+        if gpu_avail:
+            print(f'[GPU] Status        : \u2705 AVAILABLE  (tool: {gpu_tool})')
+        else:
+            print('[GPU] Status        : \u274c UNAVAILABLE')
+        print(f'[GPU] Detail        : {gpu_reason}')
+        print()
+        print(f'[NPU] Sysfs path    : {_NPU_SYSFS}')
+        if npu_avail:
+            print('[NPU] Status        : \u2705 AVAILABLE')
+        else:
+            print('[NPU] Status        : \u274c UNAVAILABLE')
+        print(f'[NPU] Detail        : {npu_reason}')
+        print()
+        pwr_avail, pwr_reason = probe_cpu_power_available()
+        print(f'[PWR] RAPL path     : {_RAPL_PKG_ENERGY}')
+        if pwr_avail:
+            print('[PWR] Status        : \u2705 AVAILABLE')
+        else:
+            print('[PWR] Status        : \u274c UNAVAILABLE')
+        print(f'[PWR] Detail        : {pwr_reason}')
+        print()
+        print('Auto-monitoring summary:')
+        print(f'  GPU will be monitored   : {"yes" if gpu_avail else "no"}')
+        print(f'  NPU will be monitored   : {"yes" if npu_avail else "no"}')
+        print(f'  RAPL power monitored    : {"yes" if pwr_avail else "no"}')
+        import sys as _sys
+        _sys.exit(0 if (gpu_avail or npu_avail) else 1)
 
     if args.list:
         list_ros2_processes(remote_ip=args.remote_ip, remote_user=args.remote_user)
@@ -1088,6 +1287,21 @@ Examples:
         )
         _npu_thread.start()
 
+    _pwr_stop = None
+    if args.power:
+        pwr_log = args.power_log
+        if pwr_log is None and args.log:
+            pwr_log = os.path.join(os.path.dirname(os.path.abspath(args.log)), 'cpu_power.log')
+        if pwr_log is None:
+            pwr_log = 'cpu_power.log'
+        _pwr_stop = threading.Event()
+        _pwr_thread = threading.Thread(
+            target=monitor_cpu_power,
+            args=(args.interval, pwr_log, _pwr_stop),
+            daemon=True,
+        )
+        _pwr_thread.start()
+
     try:
         monitor_ros2_pidstat(
             interval=args.interval,
@@ -1105,6 +1319,8 @@ Examples:
             _gpu_stop.set()
         if _npu_stop is not None:
             _npu_stop.set()
+        if _pwr_stop is not None:
+            _pwr_stop.set()
 
 
 if __name__ == '__main__':

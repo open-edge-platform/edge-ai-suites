@@ -10,14 +10,14 @@ Intel GPU Metrics Visualizer
 Reads gpu_usage.log (JSON-lines produced by monitor_resources --gpu or
 gpu_pid_analyzer.py) and generates a multi-panel plot with:
 
-  Panel 1 – GPU Busy % (overall) + per-engine-class overlay
+  Panel 1 - GPU Busy % (overall) + per-engine-class overlay
             (Render/3D  Blitter  Video  VE/VideoEnhance)
-  Panel 2 – GT Frequency: actual vs requested (MHz)  + RC6 residency %
-  Panel 3 – GPU Temperature (°C)          [if temp_c field present]
-  Panel 4 – Power: GPU (W) + Package (W)  [if power fields present]
-  Panel 5 – Per-PID GPU usage (top N)     [if clients field present]
+  Panel 2 - GT Frequency: actual (MHz)
+  Panel 3 - GPU Temperature (°C)          [if temp_c field present]
+  Panel 4 - Power: GPU (W) + Package (W)  [if power fields present]
+  Panel 5 - Per-PID GPU usage (top N)     [if clients field present]
 
-Both intel_gpu_top (rich) records and sysfs-fallback records are handled.
+Both qmassa (rich) records and sysfs-fallback records are handled.
 Engine keys in the log may be raw ("Render/3D 0") or canonical ("Render/3D");
 both are mapped to the four canonical classes automatically.
 
@@ -40,6 +40,7 @@ from typing import Dict, List, Optional, Tuple
 
 import matplotlib.dates as mdates  # pylint: disable=import-error
 import matplotlib.pyplot as plt  # pylint: disable=import-error
+from matplotlib.ticker import MaxNLocator  # pylint: disable=import-error
 import numpy as np  # pylint: disable=import-error
 
 from gpu_engine_defs import ENGINE_CLASSES as _ENGINE_CLASSES, ENG_COLORS as _ENG_COLORS
@@ -128,7 +129,6 @@ def print_summary(records: List[dict]):  # pylint: disable=too-many-locals
     temps = [r['temp_c'] for r in records if r.get('temp_c') is not None]
     pwr_g = [r.get('power_gpu_w', 0) for r in records]
     pwr_p = [r.get('power_pkg_w', 0) for r in records]
-    rc6 = [r.get('rc6_pct', 0) for r in records]
 
     print(f'\n{"═"*60}')
     print(f'  Intel GPU Summary  ({source})  –  {n} samples')
@@ -141,10 +141,8 @@ def print_summary(records: List[dict]):  # pylint: disable=too-many-locals
         print(f'  GPU W    : avg={sum(pwr_g)/n:.2f}  max={max(pwr_g):.2f}')
     if any(p > 0 for p in pwr_p):
         print(f'  Pkg W    : avg={sum(pwr_p)/n:.2f}  max={max(pwr_p):.2f}')
-    if rc6:
-        print(f'  RC6 %    : avg={sum(rc6)/n:.1f}')
 
-    if source == 'intel_gpu_top':
+    if any(r.get('engines') for r in records):
         print('\n  Engine-class averages:')
         for cls in _ENGINE_CLASSES:
             vals = [_canonical_engines(r)[cls]['busy'] for r in records]
@@ -246,8 +244,7 @@ def _panel_engines(ax, times, records):  # pylint: disable=too-many-locals
     fill_busy = ax.fill_between(times, busy, alpha=0.12, color='steelblue')
     line_busy, = ax.plot(times, busy, color='steelblue', linewidth=1.8, label='Overall busy %')
 
-    source = records[0].get('source', 'sysfs')
-    has_engines = source == 'intel_gpu_top' and any(r.get('engines') for r in records)
+    has_engines = any(r.get('engines') for r in records)
     engine_lines = []
     if has_engines:
         for cls in _ENGINE_CLASSES:
@@ -257,8 +254,11 @@ def _panel_engines(ax, times, records):  # pylint: disable=too-many-locals
                                 color=_ENG_COLORS[cls], label=f'{cls} busy %', alpha=0.8)
                 engine_lines.append(line)
 
-    ax.set_ylabel('GPU Busy (%)', fontsize=9)
-    ax.set_ylim(-2, 108)
+    all_vals = [r.get('busy_pct', 0.0) for r in records]
+    y_max = max(all_vals + [1.0])
+    ax.set_ylabel('GPU Engine Busy (%)', fontsize=9)
+    ax.set_ylim(bottom=-2, top=y_max * 1.08 + 2)
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
     ax.grid(True, alpha=0.25)
     _fmt_xaxis(ax, times)
     leg = ax.legend(loc='upper right', fontsize=7, ncol=2)
@@ -274,8 +274,7 @@ def _panel_engines(ax, times, records):  # pylint: disable=too-many-locals
 
 def _panel_engines_stacked(ax, times, records):
     """Alternative Panel 1: stacked area for engine classes when all add up to ~100%."""
-    source = records[0].get('source', 'sysfs')
-    has_engines = source == 'intel_gpu_top' and any(r.get('engines') for r in records)
+    has_engines = any(r.get('engines') for r in records)
     if not has_engines:
         _panel_engines(ax, times, records)
         return
@@ -285,23 +284,21 @@ def _panel_engines_stacked(ax, times, records):
         vals = [_canonical_engines(r)[cls]['busy'] for r in records]
         cls_vals[cls] = vals
 
-    # If stacked max never exceeds 105% use stacked fill, else fall back to lines
+    # Stacked fill — always show (values may exceed 100% when summed across DRM clients)
     stacked = [sum(cls_vals[c][i] for c in _ENGINE_CLASSES) for i in range(len(records))]
-    if max(stacked, default=0) <= 105:
-        y_stack = np.zeros(len(records))
-        poly_map = {}
-        for cls in _ENGINE_CLASSES:
-            vals = np.array(cls_vals[cls])
-            poly = ax.fill_between(times, y_stack, y_stack + vals,
-                                   alpha=0.55, color=_ENG_COLORS[cls], label=cls)
-            poly_map[cls] = poly
-            y_stack += vals
-    else:
-        _panel_engines(ax, times, records)
-        return
+    y_stack = np.zeros(len(records))
+    poly_map = {}
+    for cls in _ENGINE_CLASSES:
+        vals = np.array(cls_vals[cls])
+        poly = ax.fill_between(times, y_stack, y_stack + vals,
+                               alpha=0.55, color=_ENG_COLORS[cls], label=cls)
+        poly_map[cls] = poly
+        y_stack += vals
 
+    y_max = max(stacked + [1.0])
     ax.set_ylabel('Engine Busy (%)', fontsize=9)
-    ax.set_ylim(-2, 108)
+    ax.set_ylim(bottom=-2, top=y_max * 1.08 + 2)
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
     ax.grid(True, alpha=0.25)
     _fmt_xaxis(ax, times)
     leg = ax.legend(loc='upper right', fontsize=7, ncol=2)
@@ -314,47 +311,87 @@ def _panel_engines_stacked(ax, times, records):
     _wire_legend(ax.get_figure(), leg, handle_map)
 
 
+def _panel_engine_detail(ax, times, records):  # pylint: disable=too-many-locals
+    """
+    Panel: per-engine-class busy % as individual solid lines.
+
+    Shows one line per canonical engine class that has ANY non-zero activity
+    across the session.  Engines that are entirely idle (0 throughout) are
+    omitted to keep the chart readable.
+    """
+    has_engines = any(r.get('engines') for r in records)
+    if not has_engines:
+        ax.text(0.5, 0.5,
+                'Per-engine data not available\n'
+                '(requires qmassa; install with: make install-qmassa)',
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=9, color='grey', multialignment='center')
+        ax.set_ylabel('Engine Busy (%)', fontsize=9)
+        return
+
+    cls_series = {}
+    for cls in _ENGINE_CLASSES:
+        vals = [_canonical_engines(r)[cls]['busy'] for r in records]
+        if any(v > 0.05 for v in vals):
+            cls_series[cls] = vals
+
+    if not cls_series:
+        ax.text(0.5, 0.5, 'All engine classes reported 0% usage',
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=9, color='grey')
+        ax.set_ylabel('Engine Busy (%)', fontsize=9)
+        return
+
+    engine_lines = []
+    for cls, vals in cls_series.items():
+        line, = ax.plot(times, vals, linewidth=1.8, linestyle='-',
+                        color=_ENG_COLORS[cls], label=f'{cls}', alpha=0.9)
+        engine_lines.append(line)
+
+    all_eng_vals = [v for cls, vals in cls_series.items() for v in vals]
+    y_max = max(all_eng_vals + [1.0])
+    ax.set_ylabel('Engine Busy (%)', fontsize=9)
+    ax.set_ylim(bottom=-2, top=y_max * 1.08 + 2)
+    ax.yaxis.set_major_locator(MaxNLocator(nbins=8, integer=True))
+    if y_max > 105:  # annotate when values exceed 100% (multi-client sum)
+        ax.annotate('Note: values > 100% reflect sum of per-process usage',
+                    xy=(0.01, 0.97), xycoords='axes fraction',
+                    fontsize=7, color='grey', va='top')
+    ax.grid(True, alpha=0.25)
+    _fmt_xaxis(ax, times)
+    leg = ax.legend(loc='upper right', fontsize=7, ncol=2)
+    handles = _legend_handles(leg)
+    handle_map = dict(zip(handles, engine_lines))
+    _wire_legend(ax.get_figure(), leg, handle_map)
+
+
 def _panel_freq(ax, times, records):  # pylint: disable=too-many-locals
-    """Panel 2: Frequency + RC6."""
-    source = records[0].get('source', 'sysfs')
+    """Panel 2: Frequency."""
     act_freq = [r.get('act_freq_mhz', 0) for r in records]
+    max_freq = [r.get('max_freq_mhz', 0) for r in records]
     fig = ax.get_figure()
 
-    if source == 'intel_gpu_top':
-        req_freq = [r.get('req_freq_mhz', 0) for r in records]
-        rc6_pct = [r.get('rc6_pct', 0.0) for r in records]
-        line_act, = ax.plot(times, act_freq, color='darkorange', linewidth=1.3, label='Actual freq')
-        line_req, = ax.plot(times, req_freq, color='#f0c040', linewidth=1.0, linestyle='--',
-                            label='Requested freq')
+    if not any(v > 0 for v in act_freq) and not any(v > 0 for v in max_freq):
+        ax.text(0.5, 0.5,
+                'Frequency data not available\n'
+                '(qmassa on i915 may not expose GT frequency via fdinfo)',
+                ha='center', va='center', transform=ax.transAxes,
+                fontsize=9, color='grey', multialignment='center')
         ax.set_ylabel('Frequency (MHz)', fontsize=9)
-        ax2_rc6 = ax.twinx()
-        line_rc6, = ax2_rc6.plot(times, rc6_pct, color='#888', linewidth=0.8,
-                                 linestyle=':', label='RC6 %', alpha=0.7)
-        ax2_rc6.set_ylabel('RC6 (%)', fontsize=8, color='#888')
-        ax2_rc6.tick_params(axis='y', labelcolor='#888')
-        lines, labels = ax.get_legend_handles_labels()
-        l2, lb2 = ax2_rc6.get_legend_handles_labels()
-        leg = ax.legend(lines + l2, labels + lb2, loc='upper right', fontsize=7)
-        handles = _legend_handles(leg)
-        handle_map = dict(zip(handles, [line_act, line_req, line_rc6]))
-        _wire_legend(fig, leg, handle_map)
-    else:
-        cur_freq = [r.get('cur_freq_mhz', 0) for r in records]
-        max_freq = [r.get('max_freq_mhz', 0) for r in records]
-        line_act, = ax.plot(times, act_freq, color='darkorange', linewidth=1.3, label='Actual freq')
-        line_cur, = ax.plot(times, cur_freq, color='#f0c040', linewidth=1.0, linestyle='--',
-                            label='Current freq')
-        sysfs_lines = [line_act, line_cur]
-        if any(m > 0 for m in max_freq):
-            line_max, = ax.plot(times, max_freq, color='lightcoral', linewidth=0.8,
-                                linestyle=':', label='Max freq')
-            sysfs_lines.append(line_max)
-        leg = ax.legend(loc='upper right', fontsize=7)
-        handles = _legend_handles(leg)
-        handle_map = dict(zip(handles, sysfs_lines))
-        _wire_legend(fig, leg, handle_map)
-        ax.set_ylabel('Frequency (MHz)', fontsize=9)
+        _fmt_xaxis(ax, times)
+        return
 
+    line_act, = ax.plot(times, act_freq, color='darkorange', linewidth=1.3, label='Actual freq')
+    freq_lines = [line_act]
+    if any(m > 0 for m in max_freq):
+        line_max, = ax.plot(times, max_freq, color='lightcoral', linewidth=0.8,
+                            linestyle=':', label='Max freq')
+        freq_lines.append(line_max)
+    ax.set_ylabel('Frequency (MHz)', fontsize=9)
+    leg = ax.legend(loc='upper right', fontsize=7)
+    handles = _legend_handles(leg)
+    handle_map = dict(zip(handles, freq_lines))
+    _wire_legend(fig, leg, handle_map)
     ax.grid(True, alpha=0.25)
     _fmt_xaxis(ax, times)
 
@@ -424,7 +461,7 @@ def _panel_pids(ax, times, records, top_n: int = 8):  # pylint: disable=too-many
     if not pid_series:
         ax.text(0.5, 0.5,
                 'Per-PID data not available\n'
-                '(requires intel_gpu_top ≥ 1.27 + CAP_PERFMON)',
+                '(requires qmassa; install with: make install-qmassa)',
                 ha='center', va='center', transform=ax.transAxes,
                 fontsize=9, color='grey', multialignment='center')
         ax.set_ylabel('GPU per-PID (%)', fontsize=9)
@@ -568,10 +605,11 @@ def plot_gpu_full(  # pylint: disable=too-many-locals,too-many-statements
 
     source = records[0].get('source', 'sysfs')
     has_temp = any(r.get('temp_c') is not None for r in records)
-    has_power = source == 'intel_gpu_top' and any(r.get('power_gpu_w', 0) for r in records)
+    has_power = any(r.get('power_gpu_w', 0) for r in records)
     has_clients = any(r.get('clients') for r in records)
+    has_engine_detail = any(r.get('engines') for r in records)
 
-    nrows = 2 + has_temp + has_power + has_clients
+    nrows = 2 + has_engine_detail + has_temp + has_power + has_clients
     fig, axes = plt.subplots(nrows, 1,
                              figsize=(15, 3.8 * nrows),
                              sharex=False)
@@ -592,20 +630,27 @@ def plot_gpu_full(  # pylint: disable=too-many-locals,too-many-statements
 
     ax_iter = iter(axes)
 
-    # Panel 1 – engines
+    # Panel 1 – engines (stacked overall)
     ax1 = next(ax_iter)
     if stacked_engines:
         _panel_engines_stacked(ax1, times, records)
-        ax1.set_title('Engine-Class Busy %  (stacked · click legend to toggle)',
+        ax1.set_title('GPU Busy %  —  engine-class stacked  (click legend to toggle)',
                       fontsize=9, pad=3)
     else:
         _panel_engines(ax1, times, records)
-        ax1.set_title('Engine-Class Busy %  (click legend to toggle)', fontsize=9, pad=3)
+        ax1.set_title('GPU Busy %  (click legend to toggle)', fontsize=9, pad=3)
+
+    # Panel 1b – per-engine detail lines (conditional on qmassa data)
+    if has_engine_detail:
+        ax1b = next(ax_iter)
+        _panel_engine_detail(ax1b, times, records)
+        ax1b.set_title('Per-Engine Class Busy %  —  Render / Video / Compute / Blitter / VE'
+                       '  (click legend to toggle)', fontsize=9, pad=3)
 
     # Panel 2 – frequency
     ax2 = next(ax_iter)
     _panel_freq(ax2, times, records)
-    ax2.set_title('GT Frequency (MHz) + RC6 Residency %', fontsize=9, pad=3)
+    ax2.set_title('GT Frequency (MHz)', fontsize=9, pad=3)
 
     # Panel 3 – temperature (conditional)
     if has_temp:

@@ -661,6 +661,253 @@ def _hardware_info() -> dict:
     }
 
 
+def _read_cpu_thermal_sysfs() -> dict:
+    """
+    Read CPU package temperature and throttle state from local sysfs.
+
+    Temperature source: the ``x86_pkg_temp`` thermal zone under
+    ``/sys/class/thermal/thermal_zone*/``.
+
+    Throttle detection: compares ``scaling_cur_freq`` against
+    ``cpuinfo_max_freq`` for CPU 0; throttling is assumed when the current
+    frequency falls below 95 % of the maximum.
+
+    Returns ``{'temp_c': float|None, 'throttled': bool|None}``.
+    """
+    import glob as _glob
+
+    temp_c: Optional[float] = None
+    throttled: Optional[bool] = None
+
+    for zone_dir in sorted(_glob.glob('/sys/class/thermal/thermal_zone*')):
+        try:
+            zone_type = open(f'{zone_dir}/type').read().strip()
+            if zone_type == 'x86_pkg_temp':
+                raw = int(open(f'{zone_dir}/temp').read().strip())
+                temp_c = round(raw / 1000.0, 1)
+                break
+        except (OSError, ValueError):
+            continue
+
+    try:
+        cur = int(open('/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq').read().strip())
+        mxf = int(open('/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').read().strip())
+        throttled = cur < mxf * 0.95
+    except (OSError, ValueError):
+        throttled = None
+
+    return {'temp_c': temp_c, 'throttled': throttled}
+
+
+def _compute_resource_cpu_stats(session_dir: Path):
+    """
+    Parse ``resource_usage.log`` (pidstat format) and return
+    ``(cpu_mean_pct, cpu_max_pct)`` as percentage of total system capacity
+    (0-100), or ``(None, None)`` if the log is absent or unreadable.
+
+    pidstat lines may wrap onto a continuation line that starts with
+    whitespace; we join them before parsing.  Only TGID rows (TID == '-')
+    are summed per timestamp to avoid double-counting threads.
+    """
+    log = session_dir / 'resource_usage.log'
+    if not log.exists():
+        return None, None
+
+    try:
+        raw_lines = log.read_text(errors='replace').splitlines()
+    except OSError:
+        return None, None
+
+    num_cpus = 0
+    # Merge wrapped continuation lines into full records
+    merged: list[str] = []
+    for raw in raw_lines:
+        if not num_cpus:
+            m = re.search(r'\((\d+) CPU\)', raw)
+            if m:
+                num_cpus = int(m.group(1))
+        stripped = raw.rstrip()
+        if stripped and stripped[0] == ' ' and merged:
+            merged[-1] += stripped  # continuation
+        else:
+            merged.append(stripped)
+
+    if not num_cpus:
+        num_cpus = 1  # safe fallback
+
+    # Sum TGID CPU per timestamp
+    ts_cpu: dict = {}  # timestamp str -> total %CPU
+    _ts_re = re.compile(r'^(\d{2}:\d{2}:\d{2}(?:\s+[AP]M)?)\s+')
+    for line in merged:
+        m = _ts_re.match(line)
+        if not m:
+            continue
+        parts = line.split()
+        # Thread mode:  Time UID TGID TID %usr %system %guest %wait %CPU CPU ...
+        # TGID row: parts[2]=TGID(int), parts[3]='-' → parts[8] is %CPU
+        # Thread row: parts[2]='-', parts[3]=TID(int)
+        # PID mode:   Time UID PID %usr %system %guest %wait %CPU CPU ...
+        #             parts[2]=PID, parts[3]=%usr (float)
+        try:
+            tgid_col = parts[2]
+            tid_col  = parts[3]
+        except IndexError:
+            continue
+        if tid_col == '-':
+            # TGID aggregate row in thread mode — parts[8] is %CPU
+            try:
+                cpu_pct = float(parts[8])
+            except (ValueError, IndexError):
+                continue
+        elif tgid_col == '-':
+            # Thread row — skip to avoid double-counting
+            continue
+        elif '.' in parts[3] or not parts[3].lstrip('-').isdigit():
+            # PID-only mode — parts[7] is %CPU
+            try:
+                cpu_pct = float(parts[7])
+            except (ValueError, IndexError):
+                continue
+        else:
+            continue  # unrecognised
+        ts = parts[0]
+        ts_cpu[ts] = ts_cpu.get(ts, 0.0) + cpu_pct
+
+    if not ts_cpu:
+        return None, None
+
+    totals = list(ts_cpu.values())
+    scale = num_cpus * 100.0
+    cpu_mean = round(statistics.mean(totals) / scale * 100.0, 1)
+    cpu_max = round(max(totals) / scale * 100.0, 1)
+    return cpu_mean, cpu_max
+
+
+def _load_resource_thermal(session_dir: Path) -> dict:
+    """
+    Build a session-level thermal summary from the resource logs in *session_dir*.
+
+    Reads:
+      - ``gpu_usage.log``  - JSON-lines written by monitor_resources.monitor_gpu()
+      - ``npu_usage.log``  - JSON-lines written by monitor_resources.monitor_npu()
+      - sysfs live read    - CPU package temperature at analysis time
+
+    Returns a dict with the keys expected by the Level 1 KPI ``thermal`` section:
+      cpu_temp_c     - mean CPU package temperature (°C), or None
+      gpu_temp_c     - mean GPU temperature (°C), or None
+      npu_temp_c     - mean NPU temperature (°C), or None
+      cpu_throttled  - True if CPU throttling was observed, False/None otherwise
+      gpu_throttled  - True if GPU throttling was observed during the session
+      npu_throttled  - True/False when NPU monitoring was active (cur_freq < max_freq*0.95),
+                       None when npu_usage.log is absent
+    """
+    result: dict = {
+        'cpu_temp_c':      None,
+        'gpu_temp_c':      None,
+        'npu_temp_c':      None,
+        'cpu_throttled':   None,
+        'gpu_throttled':   None,
+        'npu_throttled':   None,
+        'cpu_pkg_power_w': None,
+    }
+
+    # ── GPU: read gpu_usage.log ──────────────────────────────────────────────
+    gpu_log = session_dir / 'gpu_usage.log'
+    if gpu_log.exists():
+        gpu_temps: List[float] = []
+        gpu_throttled_any = False
+        try:
+            for raw in gpu_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('temp_c') is not None:
+                    gpu_temps.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    gpu_throttled_any = True
+        except OSError:
+            pass
+        if gpu_temps:
+            result['gpu_temp_c']    = round(statistics.mean(gpu_temps), 1)
+            result['gpu_throttled'] = gpu_throttled_any
+
+    # ── NPU: read npu_usage.log ──────────────────────────────────────────────
+    npu_log = session_dir / 'npu_usage.log'
+    if npu_log.exists():
+        npu_temps: List[float] = []
+        npu_throttled_any = False
+        try:
+            for raw in npu_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('temp_c') is not None:
+                    npu_temps.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    npu_throttled_any = True
+        except OSError:
+            pass
+        if npu_temps:
+            result['npu_temp_c'] = round(statistics.mean(npu_temps), 1)
+        if npu_temps or npu_throttled_any:
+            result['npu_throttled'] = npu_throttled_any
+
+    # ── CPU: read cpu_power.log (recorded during the session) ───────────────
+    # This is accurate: throttle status was sampled live during the run.
+    # Fall back to a live sysfs snapshot only when the log is absent.
+    cpu_power_log = session_dir / 'cpu_power.log'
+    if cpu_power_log.exists():
+        power_samples: List[float] = []
+        cpu_throttled_any = False
+        cpu_temps_log: List[float] = []
+        try:
+            for raw in cpu_power_log.read_text().splitlines():
+                raw = raw.strip()
+                if not raw:
+                    continue
+                try:
+                    rec = json.loads(raw)
+                except json.JSONDecodeError:
+                    continue
+                if rec.get('event'):
+                    continue
+                if rec.get('power_w') is not None:
+                    power_samples.append(float(rec['power_w']))
+                if rec.get('temp_c') is not None:
+                    cpu_temps_log.append(float(rec['temp_c']))
+                if rec.get('throttled'):
+                    cpu_throttled_any = True
+        except OSError:
+            pass
+        if power_samples:
+            result['cpu_pkg_power_w'] = round(statistics.mean(power_samples), 2)
+        if cpu_temps_log:
+            result['cpu_temp_c'] = round(statistics.mean(cpu_temps_log), 1)
+        result['cpu_throttled'] = cpu_throttled_any
+    else:
+        # Fallback: live sysfs snapshot (less accurate — post-run state)
+        try:
+            cpu_thermal = _read_cpu_thermal_sysfs()
+            result['cpu_temp_c']    = cpu_thermal.get('temp_c')
+            result['cpu_throttled'] = cpu_thermal.get('throttled')
+        except Exception:
+            pass
+
+    return result
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 #  JSON schema validation
 # ──────────────────────────────────────────────────────────────────────────────
@@ -772,6 +1019,7 @@ def build_performance_kpi(
             'pipeline_stage':   _classify_node(node_name),
         }
 
+    _cpu_mean, _cpu_max = _compute_resource_cpu_stats(session_dir)
     return {
         'schema_version':   'level1_v1',
         'throughput_hz':    sys_fps,
@@ -780,8 +1028,9 @@ def build_performance_kpi(
         'min_jitter_ms':    sys_jit_min,
         'mean_jitter_ms':   sys_jit_mean,
         'jitter_stdev_ms':  sys_jit_std,
-        'cpu_mean_pct':     None,
-        'cpu_max_pct':      None,
+        'cpu_mean_pct':     _cpu_mean,
+        'cpu_max_pct':      _cpu_max,
+        'thermal':          _load_resource_thermal(session_dir),
         'per_node': per_node,
         'pairs': [{k: r[k] for k in _SCALAR_KEYS if k in r} for r in deduped],
         'metadata': {
@@ -953,7 +1202,9 @@ def main() -> None:
         bag_input = Path(args.bag).resolve()
         # Accept both the bag directory AND a direct path to a .mcap/.db3 file
         bag_dir = bag_input.parent if bag_input.is_file() else bag_input
-        session_dir = bag_dir   # exports / plots land in the bag dir
+        # resource_usage.log and other session logs live in the parent of the
+        # bag directory (e.g. session_dir/bag/ → session_dir/)
+        session_dir = bag_dir.parent if (bag_dir.parent / 'resource_usage.log').exists() else bag_dir
 
         bag_files = sorted(bag_dir.glob('*.mcap')) + sorted(bag_dir.glob('*.db3'))
         if not bag_files:
